@@ -39,6 +39,14 @@ testem.log
 /typings
 __screenshots__/
 
+# Playwright
+/playwright-report
+/test-results
+/.playwright-mcp
+
+# Generated assets
+/public/coverage-summary.json
+
 # System files
 .DS_Store
 Thumbs.db

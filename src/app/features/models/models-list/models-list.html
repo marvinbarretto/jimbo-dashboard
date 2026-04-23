@@ -1,0 +1,54 @@
+<div class="models-list">
+  <header class="models-list__header">
+    <h1>Models</h1>
+    <a routerLink="new" class="btn btn--primary">Add model</a>
+  </header>
+
+  <table class="models-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Display name</th>
+        <th>Provider</th>
+        <th>Tier</th>
+        <th>Context</th>
+        <th>Input $/M</th>
+        <th>Output $/M</th>
+        <th>Active</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (model of models(); track model.id) {
+        <tr [class.inactive]="!model.is_active">
+          <td class="model-id">
+            <a [routerLink]="modelLink(model.id)">{{ model.id }}</a>
+          </td>
+          <td>{{ model.display_name }}</td>
+          <td>{{ model.provider }}</td>
+          <td>
+            <span class="tier-badge tier-badge--{{ model.tier }}">
+              {{ tierLabel(model.tier) }}
+            </span>
+          </td>
+          <td class="num">{{ model.context_window ? (model.context_window / 1000) + 'k' : '—' }}</td>
+          <td class="num">{{ model.input_cost_per_mtok ?? '—' }}</td>
+          <td class="num">{{ model.output_cost_per_mtok ?? '—' }}</td>
+          <td>
+            <span [class]="model.is_active ? 'status status--active' : 'status status--inactive'">
+              {{ model.is_active ? 'Yes' : 'No' }}
+            </span>
+          </td>
+          <td class="actions">
+            <a [routerLink]="editLink(model.id)">Edit</a>
+            <button (click)="remove(model.id)">Remove</button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="9" class="empty">No models registered.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

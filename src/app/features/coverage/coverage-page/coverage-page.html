@@ -1,0 +1,56 @@
+@if (total(); as t) {
+  <div class="coverage-page">
+    <header class="coverage-page__header">
+      <h1>Test Coverage</h1>
+      <p class="coverage-page__hint">Run <code>npm run coverage:update</code> to refresh.</p>
+    </header>
+
+    <section class="coverage-summary">
+      <div class="metric-card">
+        <span class="metric-card__label">Statements</span>
+        <span [class]="pctClass(t.statements.pct)">{{ t.statements.pct | number:'1.1-1' }}%</span>
+        <span class="metric-card__detail">{{ t.statements.covered }}/{{ t.statements.total }}</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-card__label">Branches</span>
+        <span [class]="pctClass(t.branches.pct)">{{ t.branches.pct | number:'1.1-1' }}%</span>
+        <span class="metric-card__detail">{{ t.branches.covered }}/{{ t.branches.total }}</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-card__label">Functions</span>
+        <span [class]="pctClass(t.functions.pct)">{{ t.functions.pct | number:'1.1-1' }}%</span>
+        <span class="metric-card__detail">{{ t.functions.covered }}/{{ t.functions.total }}</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-card__label">Lines</span>
+        <span [class]="pctClass(t.lines.pct)">{{ t.lines.pct | number:'1.1-1' }}%</span>
+        <span class="metric-card__detail">{{ t.lines.covered }}/{{ t.lines.total }}</span>
+      </div>
+    </section>
+
+    <table class="coverage-table">
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>Lines</th>
+          <th>Stmts</th>
+          <th>Funcs</th>
+          <th>Branches</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (file of files(); track file.path) {
+          <tr>
+            <td class="coverage-table__file">{{ file.label }}</td>
+            <td><span [class]="pctClass(file.lines)">{{ file.lines | number:'1.1-1' }}%</span></td>
+            <td><span [class]="pctClass(file.statements)">{{ file.statements | number:'1.1-1' }}%</span></td>
+            <td><span [class]="pctClass(file.functions)">{{ file.functions | number:'1.1-1' }}%</span></td>
+            <td><span [class]="pctClass(file.branches)">{{ file.branches | number:'1.1-1' }}%</span></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+} @else {
+  <p class="coverage-page__empty">No coverage data. Run <code>npm run coverage:update</code> first.</p>
+}

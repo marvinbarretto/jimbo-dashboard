@@ -53,3 +53,12 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Design services around a single responsibility
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
+
+## Testing Philosophy
+
+- **Prefer E2E over component tests.** For a control-plane dashboard, Playwright covering real user flows catches more real bugs than DOM assertions.
+- **Unit test logic, not rendering.** Service methods, computed signals, state transitions, guards — yes. "Did Angular render my template" — no.
+- **Delete low-value tests.** A test that only checks `expect(component).toBeTruthy()` is noise. If you can't describe what breaks when it fails, delete it.
+- **Component tests earn their place.** Only add one if it tests a non-trivial branching behaviour (e.g. conditional logic, confirm dialogs, form validation) that E2E can't cheaply cover.
+- **Humour is welcome, subtly.** A wry scenario name or variable is fine. One or two per describe block. Never at the cost of readability.
+- Run unit tests with `ng test --no-watch`. Run E2E with `npx playwright test`.

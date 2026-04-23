@@ -1,0 +1,42 @@
+@if (model(); as m) {
+  <div class="model-detail">
+    <header class="model-detail__header">
+      <a routerLink="/models" class="back-link">← Models</a>
+      <h1>{{ m.display_name }}</h1>
+      <a routerLink="edit" class="btn btn--secondary">Edit</a>
+    </header>
+
+    <section class="model-detail__meta">
+      <dl>
+        <dt>ID</dt><dd><code>{{ m.id }}</code></dd>
+        <dt>Provider</dt><dd>{{ m.provider }}</dd>
+        <dt>Tier</dt><dd>{{ m.tier }}</dd>
+        <dt>Context window</dt><dd>{{ m.context_window ? (m.context_window / 1000) + 'k tokens' : '—' }}</dd>
+        <dt>Input cost</dt><dd>{{ m.input_cost_per_mtok != null ? '$' + m.input_cost_per_mtok + ' / M tokens' : '—' }}</dd>
+        <dt>Output cost</dt><dd>{{ m.output_cost_per_mtok != null ? '$' + m.output_cost_per_mtok + ' / M tokens' : '—' }}</dd>
+        <dt>Active</dt><dd>{{ m.is_active ? 'Yes' : 'No' }}</dd>
+        @if (m.notes) {
+          <dt>Notes</dt><dd>{{ m.notes }}</dd>
+        }
+      </dl>
+    </section>
+
+    @if (stats(); as s) {
+      <section class="model-detail__stats">
+        <h2>Observed performance</h2>
+        <dl>
+          <dt>Total runs</dt><dd>{{ s.total_runs }}</dd>
+          <dt>Mean cost / run</dt><dd>{{ s.mean_cost_per_run != null ? '$' + s.mean_cost_per_run.toFixed(4) : '—' }}</dd>
+          <dt>Mean duration</dt><dd>{{ s.mean_duration_ms != null ? s.mean_duration_ms + 'ms' : '—' }}</dd>
+          <dt>Timeout rate</dt><dd>{{ s.timeout_rate != null ? (s.timeout_rate * 100).toFixed(0) + '%' : '—' }}</dd>
+        </dl>
+      </section>
+    } @else {
+      <section class="model-detail__stats">
+        <p class="empty">No benchmark runs recorded yet.</p>
+      </section>
+    }
+  </div>
+} @else {
+  <p>Model not found.</p>
+}
