@@ -4,29 +4,29 @@
     <h1>{{ isEdit() ? 'Edit skill' : 'New skill' }}</h1>
   </header>
 
-  <form [formRoot]="skillForm" (ngSubmit)="submit()" class="form">
+  <form [formGroup]="form" (ngSubmit)="submit()" class="form">
     <div class="field">
       <label for="id">ID <span class="hint">(matches hermes/skills/ slug)</span></label>
       @if (isEdit()) {
-        <input id="id" type="text" [value]="formModel().id" readonly />
+        <input id="id" type="text" [value]="form.getRawValue().id" readonly />
       } @else {
-        <input id="id" type="text" [formField]="skillForm.id" />
+        <input id="id" type="text" formControlName="id" />
       }
     </div>
 
     <div class="field">
       <label for="display_name">Display name</label>
-      <input id="display_name" type="text" [formField]="skillForm.display_name" />
+      <input id="display_name" type="text" formControlName="display_name" />
     </div>
 
     <div class="field">
       <label for="description">Description</label>
-      <textarea id="description" rows="3" [formField]="skillForm.description"></textarea>
+      <textarea id="description" rows="3" formControlName="description"></textarea>
     </div>
 
     <div class="field">
       <label for="model_stack_id">Model stack</label>
-      <select id="model_stack_id" [formField]="skillForm.model_stack_id">
+      <select id="model_stack_id" formControlName="model_stack_id">
         <option value="">— None —</option>
         @for (stack of availableStacks(); track stack.id) {
           <option [value]="stack.id">{{ stack.display_name }}</option>
@@ -35,13 +35,13 @@
     </div>
 
     <div class="field field--checkbox">
-      <input id="is_active" type="checkbox" [formField]="skillForm.is_active" />
+      <input id="is_active" type="checkbox" formControlName="is_active" />
       <label for="is_active">Active</label>
     </div>
 
     <div class="field">
       <label for="notes">Notes</label>
-      <textarea id="notes" rows="3" [formField]="skillForm.notes"></textarea>
+      <textarea id="notes" rows="3" formControlName="notes"></textarea>
     </div>
 
     <div class="form-actions">

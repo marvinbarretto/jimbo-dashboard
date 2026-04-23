@@ -13,7 +13,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 
 - We are happy to use Angular experimental APIs. This is a showcase project and being on the leading edge is the point.
 - When using an experimental API, note it with a brief comment so we know where the risk surface is.
-- Current experimental APIs in use: `@angular/forms/signals` (`form()`, `FormField`, validators)
+- **Signal forms (`@angular/forms/signals`) are NOT used for this Angular version.** Playwright's synthetic DOM events do not trigger `FormField` listeners in a zoneless app, making E2E impossible. Revisit when Angular upgrades. The diagnostic page at `/test-forms` documents this finding.
 
 ## Angular Best Practices
 
@@ -37,7 +37,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use `computed()` for derived state
 - Set `changeDetection: ChangeDetectionStrategy.OnPush` in `@Component` decorator
 - Prefer inline templates for small components
-- Use signal forms (`@angular/forms/signals`) for all new forms. Migrate existing ReactiveFormsModule forms opportunistically.
+- Use **ReactiveFormsModule** (`FormBuilder`, `formControlName`, `formGroup`) for all forms. Signal forms are blocked — see Experimental APIs note above.
 - Do NOT use `ngClass`, use `class` bindings instead
 - Do NOT use `ngStyle`, use `style` bindings instead
 - When using external templates/styles, use paths relative to the component TS file.
