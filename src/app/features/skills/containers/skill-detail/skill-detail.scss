@@ -1,14 +1,1 @@
-.status {
-  font-size: 0.75rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: var(--radius);
-  background: var(--color-border);
-  color: var(--color-text-muted);
-
-  &--active {
-    background: color-mix(in srgb, var(--color-success) 15%, transparent);
-    color: var(--color-success);
-  }
-}
-
-.muted { color: var(--color-text-muted); }
+// .status and .detail-grid live in global styles.scss

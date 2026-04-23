@@ -17,5 +17,9 @@ export const routes: Routes = [
     path: 'coverage',
     loadComponent: () => import('./features/coverage/coverage-page/coverage-page').then(m => m.CoveragePage),
   },
+  {
+    path: 'test-forms',
+    loadComponent: () => import('./features/test-forms/test-forms-page').then(m => m.TestFormsPage),
+  },
   { path: '', redirectTo: 'models', pathMatch: 'full' },
 ];
