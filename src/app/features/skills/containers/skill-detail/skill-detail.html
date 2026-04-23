@@ -1,0 +1,49 @@
+@if (skill(); as skill) {
+  <div class="page">
+    <header class="page-header">
+      <a routerLink="/skills" class="back-link">← Skills</a>
+      <div class="page-header__title">
+        <h1>{{ skill.display_name }}</h1>
+        <span class="status" [class.status--active]="skill.is_active">
+          {{ skill.is_active ? 'Active' : 'Inactive' }}
+        </span>
+      </div>
+      <a [routerLink]="['edit']" class="btn">Edit</a>
+    </header>
+
+    <dl class="detail-grid">
+      <dt>ID</dt>
+      <dd><code>{{ skill.id }}</code></dd>
+
+      <dt>Hub path</dt>
+      <dd><code>{{ hubPath() }}</code></dd>
+
+      @if (skill.description) {
+        <dt>Description</dt>
+        <dd>{{ skill.description }}</dd>
+      }
+
+      <dt>Model stack</dt>
+      <dd>
+        @if (stack(); as stack) {
+          <a [routerLink]="['/model-stacks', stack.id]">{{ stack.display_name }}</a>
+        } @else {
+          <span class="muted">{{ skill.model_stack_id ?? 'None assigned' }}</span>
+        }
+      </dd>
+
+      @if (skill.notes) {
+        <dt>Notes</dt>
+        <dd>{{ skill.notes }}</dd>
+      }
+
+      <dt>Updated</dt>
+      <dd>{{ skill.updated_at | date:'medium' }}</dd>
+    </dl>
+  </div>
+} @else {
+  <div class="page">
+    <p class="muted">Skill not found.</p>
+    <a routerLink="/skills">← Back to skills</a>
+  </div>
+}

@@ -11,6 +11,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       <ul>
         <li><a routerLink="/models" routerLinkActive="active">Models</a></li>
         <li><a routerLink="/model-stacks" routerLinkActive="active">Stacks</a></li>
+        <li><a routerLink="/skills" routerLinkActive="active">Skills</a></li>
         <li><a routerLink="/coverage" routerLinkActive="active">Coverage</a></li>
       </ul>
     </nav>

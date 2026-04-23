@@ -1,0 +1,52 @@
+<div class="page">
+  <header class="page-header">
+    <a routerLink="/skills" class="back-link">← Skills</a>
+    <h1>{{ isEdit() ? 'Edit skill' : 'New skill' }}</h1>
+  </header>
+
+  <form [formRoot]="skillForm" (ngSubmit)="submit()" class="form">
+    <div class="field">
+      <label for="id">ID <span class="hint">(matches hermes/skills/ slug)</span></label>
+      @if (isEdit()) {
+        <input id="id" type="text" [value]="formModel().id" readonly />
+      } @else {
+        <input id="id" type="text" [formField]="skillForm.id" />
+      }
+    </div>
+
+    <div class="field">
+      <label for="display_name">Display name</label>
+      <input id="display_name" type="text" [formField]="skillForm.display_name" />
+    </div>
+
+    <div class="field">
+      <label for="description">Description</label>
+      <textarea id="description" rows="3" [formField]="skillForm.description"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="model_stack_id">Model stack</label>
+      <select id="model_stack_id" [formField]="skillForm.model_stack_id">
+        <option value="">— None —</option>
+        @for (stack of availableStacks(); track stack.id) {
+          <option [value]="stack.id">{{ stack.display_name }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field field--checkbox">
+      <input id="is_active" type="checkbox" [formField]="skillForm.is_active" />
+      <label for="is_active">Active</label>
+    </div>
+
+    <div class="field">
+      <label for="notes">Notes</label>
+      <textarea id="notes" rows="3" [formField]="skillForm.notes"></textarea>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn--primary">{{ isEdit() ? 'Save' : 'Create' }}</button>
+      <a routerLink="/skills" class="btn--ghost">Cancel</a>
+    </div>
+  </form>
+</div>

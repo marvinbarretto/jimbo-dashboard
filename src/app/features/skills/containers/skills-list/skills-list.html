@@ -1,0 +1,34 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Skills</h1>
+    <a routerLink="new" class="btn btn--primary">Add skill</a>
+  </header>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Stack</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (skill of skills(); track skill.id) {
+        <tr [class.inactive]="!skill.is_active">
+          <td><code>{{ skill.id }}</code></td>
+          <td>
+            <a [routerLink]="skill.id">{{ skill.display_name }}</a>
+          </td>
+          <td>{{ skill.model_stack_id ?? '—' }}</td>
+          <td>{{ skill.is_active ? 'Active' : 'Inactive' }}</td>
+          <td class="row-actions">
+            <a [routerLink]="[skill.id, 'edit']" class="btn">Edit</a>
+            <button (click)="remove(skill.id)">Remove</button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
