@@ -1,0 +1,51 @@
+<div class="version-form">
+  <header class="version-form__header">
+    <a [routerLink]="['/tools', toolId()]" class="back-link">← {{ tool()?.display_name ?? 'Tool' }}</a>
+    <h1>Add version</h1>
+  </header>
+
+  @if (tool()?.current_version_id) {
+    <p class="version-form__hint">
+      Branching from the current version. The new version will be set as current automatically.
+    </p>
+  } @else {
+    <p class="version-form__hint">This will be the first version and set as current.</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label for="description">Description <span class="hint">(shown to the model)</span></label>
+      <textarea id="description" rows="6" formControlName="description"
+        placeholder="Search the web for a given query and return the top results."></textarea>
+    </div>
+
+    <div class="field">
+      <label for="input_schema">
+        Input schema
+        <span class="hint">(optional — JSON Schema for parameters)</span>
+      </label>
+      <textarea id="input_schema" rows="8" formControlName="input_schema"
+        placeholder='{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}'></textarea>
+    </div>
+
+    <div class="field">
+      <label for="output_schema">
+        Output schema
+        <span class="hint">(optional — expected return shape)</span>
+      </label>
+      <textarea id="output_schema" rows="6" formControlName="output_schema"
+        placeholder='{"type":"array","items":{"type":"string"}}'></textarea>
+    </div>
+
+    <div class="field">
+      <label for="notes">Notes <span class="hint">(what changed, why)</span></label>
+      <input id="notes" type="text" formControlName="notes"
+        placeholder="Added required query param; tightened output schema" />
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn--primary">Save version</button>
+      <a [routerLink]="['/tools', toolId()]" class="btn btn--ghost">Cancel</a>
+    </div>
+  </form>
+</div>

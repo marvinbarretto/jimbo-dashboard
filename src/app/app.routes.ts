@@ -18,6 +18,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/prompts/prompts.routes').then(m => m.promptsRoutes),
   },
   {
+    path: 'tools',
+    loadChildren: () => import('./features/tools/tools.routes').then(m => m.toolsRoutes),
+  },
+  {
     path: 'coverage',
     loadComponent: () => import('./features/coverage/coverage-page/coverage-page').then(m => m.CoveragePage),
   },
