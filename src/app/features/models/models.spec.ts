@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
-import { ModelsService } from './models';
-import type { CreateModelPayload } from './model';
+import { ModelsService } from './data-access/models.service';
+import type { CreateModelPayload } from './utils/model.types';
 
 describe('ModelsService', () => {
   let service: ModelsService;
@@ -50,6 +50,7 @@ describe('ModelsService', () => {
         display_name: 'Llama 3 8B',
         provider: 'meta',
         tier: 'free',
+        capabilities: [],
         context_window: 8192,
         input_cost_per_mtok: 0,
         output_cost_per_mtok: 0,
@@ -66,6 +67,7 @@ describe('ModelsService', () => {
         display_name: 'Test Model X',
         provider: 'openai',
         tier: 'fast',
+        capabilities: [],
         context_window: null,
         input_cost_per_mtok: null,
         output_cost_per_mtok: null,

@@ -1,0 +1,33 @@
+.model-form {
+  padding: 2rem;
+  max-width: 560px;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+  }
+}
+
+.capability-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  cursor: pointer;
+
+  input[type="checkbox"] { width: auto; }
+}
+
+.back-link {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}

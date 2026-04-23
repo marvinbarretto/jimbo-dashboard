@@ -3,18 +3,18 @@ import { Routes } from '@angular/router';
 export const modelsRoutes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./models-list/models-list').then(m => m.ModelsList),
+    loadComponent: () => import('./containers/models-list/models-list').then(m => m.ModelsList),
   },
   {
     path: 'new',
-    loadComponent: () => import('./model-form/model-form').then(m => m.ModelForm),
+    loadComponent: () => import('./containers/model-form/model-form').then(m => m.ModelForm),
   },
   {
     path: ':provider/:name',
-    loadComponent: () => import('./model-detail/model-detail').then(m => m.ModelDetail),
+    loadComponent: () => import('./containers/model-detail/model-detail').then(m => m.ModelDetail),
   },
   {
     path: ':provider/:name/edit',
-    loadComponent: () => import('./model-form/model-form').then(m => m.ModelForm),
+    loadComponent: () => import('./containers/model-form/model-form').then(m => m.ModelForm),
   },
 ];

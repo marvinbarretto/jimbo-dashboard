@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import type { Model, CreateModelPayload, UpdateModelPayload, ModelStats } from './model';
+import type { Model, CreateModelPayload, UpdateModelPayload, ModelStats } from '../utils/model.types';
 
 const MOCK_MODELS: Model[] = [
   {
@@ -7,6 +7,7 @@ const MOCK_MODELS: Model[] = [
     display_name: 'Claude Sonnet 4.6',
     provider: 'anthropic',
     tier: 'balanced',
+    capabilities: ['code', 'text', 'reasoning'],
     context_window: 200000,
     input_cost_per_mtok: 3.00,
     output_cost_per_mtok: 15.00,
@@ -20,6 +21,7 @@ const MOCK_MODELS: Model[] = [
     display_name: 'Claude Opus 4.7',
     provider: 'anthropic',
     tier: 'powerful',
+    capabilities: ['code', 'text', 'reasoning', 'math'],
     context_window: 200000,
     input_cost_per_mtok: 15.00,
     output_cost_per_mtok: 75.00,
@@ -33,6 +35,7 @@ const MOCK_MODELS: Model[] = [
     display_name: 'Gemini 2.5 Flash',
     provider: 'google',
     tier: 'fast',
+    capabilities: ['text', 'vision', 'video'],
     context_window: 1000000,
     input_cost_per_mtok: 0.15,
     output_cost_per_mtok: 0.60,
@@ -46,6 +49,7 @@ const MOCK_MODELS: Model[] = [
     display_name: 'Gemini 2.5 Flash Lite',
     provider: 'google',
     tier: 'free',
+    capabilities: ['text'],
     context_window: 1000000,
     input_cost_per_mtok: 0.075,
     output_cost_per_mtok: 0.30,
@@ -59,6 +63,7 @@ const MOCK_MODELS: Model[] = [
     display_name: 'GPT-5 Nano',
     provider: 'openai',
     tier: 'fast',
+    capabilities: ['text', 'reasoning'],
     context_window: 128000,
     input_cost_per_mtok: 0.15,
     output_cost_per_mtok: 0.60,
@@ -72,6 +77,7 @@ const MOCK_MODELS: Model[] = [
     display_name: 'GPT-4o Mini',
     provider: 'openai',
     tier: 'fast',
+    capabilities: ['text', 'vision', 'reasoning'],
     context_window: 128000,
     input_cost_per_mtok: 0.15,
     output_cost_per_mtok: 0.60,
@@ -85,6 +91,7 @@ const MOCK_MODELS: Model[] = [
     display_name: 'DeepSeek Chat v3.1',
     provider: 'deepseek',
     tier: 'balanced',
+    capabilities: ['code', 'reasoning', 'math'],
     context_window: 64000,
     input_cost_per_mtok: 0.27,
     output_cost_per_mtok: 1.10,

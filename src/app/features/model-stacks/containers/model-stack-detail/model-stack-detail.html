@@ -1,0 +1,44 @@
+@if (stack(); as s) {
+  <div class="stack-detail">
+    <header class="stack-detail__header">
+      <a routerLink="/model-stacks" class="back-link">← Model Stacks</a>
+      <h1>{{ s.display_name }}</h1>
+      <a routerLink="edit" class="btn btn--secondary">Edit</a>
+    </header>
+
+    <section class="stack-detail__meta">
+      <dl>
+        <dt>ID</dt><dd><code>{{ s.id }}</code></dd>
+        @if (s.description) {
+          <dt>Description</dt><dd>{{ s.description }}</dd>
+        }
+        <dt>Active</dt><dd>{{ s.is_active ? 'Yes' : 'No' }}</dd>
+      </dl>
+    </section>
+
+    <section class="stack-detail__cascade">
+      <h2>Fallback cascade</h2>
+      <ol class="cascade-list">
+        @for (model of cascade(); track model.id; let i = $index) {
+          <li class="cascade-item">
+            <span class="cascade-item__rank">{{ i === 0 ? 'Primary' : 'Fallback ' + i }}</span>
+            <a [routerLink]="['/models', ...model.id.split('/')]" class="cascade-item__name">
+              {{ model.display_name }}
+            </a>
+            <code class="cascade-item__id">{{ model.id }}</code>
+          </li>
+        }
+      </ol>
+    </section>
+
+    @if (fastModel(); as fm) {
+      <section class="stack-detail__fast">
+        <h2>Fast model</h2>
+        <a [routerLink]="['/models', ...fm.id.split('/')]">{{ fm.display_name }}</a>
+        <code>{{ fm.id }}</code>
+      </section>
+    }
+  </div>
+} @else {
+  <p>Stack not found.</p>
+}

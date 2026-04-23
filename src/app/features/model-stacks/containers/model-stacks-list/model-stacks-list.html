@@ -1,0 +1,48 @@
+<div class="stacks-list">
+  <header class="stacks-list__header">
+    <h1>Model Stacks</h1>
+    <a routerLink="new" class="btn btn--primary">Add stack</a>
+  </header>
+
+  <table class="stacks-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Models (cascade)</th>
+        <th>Fast model</th>
+        <th>Active</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (stack of stacks(); track stack.id) {
+        <tr [class.inactive]="!stack.is_active">
+          <td class="stack-id">
+            <a [routerLink]="[stack.id]">{{ stack.id }}</a>
+          </td>
+          <td>{{ stack.display_name }}</td>
+          <td class="stack-models">
+            @for (id of stack.model_ids; track id; let i = $index) {
+              <span class="model-badge" [class.model-badge--primary]="i === 0">{{ id }}</span>
+            }
+          </td>
+          <td>{{ stack.fast_model_id ?? '—' }}</td>
+          <td>
+            <span [class]="stack.is_active ? 'status status--active' : 'status status--inactive'">
+              {{ stack.is_active ? 'Yes' : 'No' }}
+            </span>
+          </td>
+          <td class="actions">
+            <a [routerLink]="[stack.id, 'edit']">Edit</a>
+            <button (click)="remove(stack.id)">Remove</button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6" class="empty">No stacks configured.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

@@ -1,11 +1,19 @@
+// String unions over enums: values serialize cleanly to/from JSON and Postgres
+// with no conversion layer. Enums create a runtime object and require mapping
+// at every API boundary — not worth it when the string IS the value.
 export type ModelTier = 'free' | 'fast' | 'balanced' | 'powerful';
 export type ModelProvider = 'anthropic' | 'google' | 'openai' | 'x-ai' | 'deepseek' | 'meta';
+export type ModelCapability = 'code' | 'text' | 'vision' | 'reasoning' | 'math' | 'video';
+
+// Exported constant so templates and forms can iterate without duplicating the union members.
+export const MODEL_CAPABILITIES: ModelCapability[] = ['code', 'text', 'vision', 'reasoning', 'math', 'video'];
 
 export interface Model {
   id: string;               // OpenRouter format: 'anthropic/claude-sonnet-4-6'
   display_name: string;
   provider: ModelProvider;
   tier: ModelTier;
+  capabilities: ModelCapability[];
   context_window: number | null;
   input_cost_per_mtok: number | null;   // nominal, from OpenRouter
   output_cost_per_mtok: number | null;

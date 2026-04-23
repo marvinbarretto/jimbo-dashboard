@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
-import { ModelsService } from '../models';
+import { ModelsService } from '../../data-access/models.service';
 
 @Component({
   selector: 'app-model-detail',

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { ModelsList } from './models-list';
-import { ModelsService } from '../models';
+import { ModelsService } from '../../data-access/models.service';
 
 describe('ModelsList', () => {
   let component: ModelsList;

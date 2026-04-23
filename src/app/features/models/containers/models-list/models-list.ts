@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ModelsService } from '../models';
-import type { Model } from '../model';
+import { ModelsService } from '../../data-access/models.service';
+import type { Model } from '../../utils/model.types';
 
 @Component({
   selector: 'app-models-list',

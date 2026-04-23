@@ -6,6 +6,14 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use strict type checking
 - Prefer type inference when the type is obvious
 - Avoid the `any` type; use `unknown` when type is uncertain
+- Make TypeScript work for you — use mapped types, `Record`, template literals, discriminated unions, and `satisfies` where they eliminate duplication or enforce correctness. If you're writing the same shape twice, there's a type for that.
+- String literal unions over enums: they serialise cleanly across API boundaries with no conversion layer
+
+## Experimental APIs
+
+- We are happy to use Angular experimental APIs. This is a showcase project and being on the leading edge is the point.
+- When using an experimental API, note it with a brief comment so we know where the risk surface is.
+- Current experimental APIs in use: `@angular/forms/signals` (`form()`, `FormField`, validators)
 
 ## Angular Best Practices
 
@@ -29,7 +37,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use `computed()` for derived state
 - Set `changeDetection: ChangeDetectionStrategy.OnPush` in `@Component` decorator
 - Prefer inline templates for small components
-- Prefer Reactive forms instead of Template-driven ones
+- Use signal forms (`@angular/forms/signals`) for all new forms. Migrate existing ReactiveFormsModule forms opportunistically.
 - Do NOT use `ngClass`, use `class` bindings instead
 - Do NOT use `ngStyle`, use `style` bindings instead
 - When using external templates/styles, use paths relative to the component TS file.
@@ -53,6 +61,15 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Design services around a single responsibility
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
+
+## UX Philosophy
+
+- Prefer errors over disabled states. Let users act; explain what went wrong. Disabled fields are silent failures.
+- Exception: truly read-only fields (computed values, audit fields) may be disabled.
+
+## Comments
+
+Comment on the WHY, not the what. Capture design decisions and rejected alternatives so we can reason with them later. Skip anything the code already says.
 
 ## Testing Philosophy
 
