@@ -1,0 +1,80 @@
+@if (prompt(); as p) {
+  <div class="prompt-detail">
+    <header class="prompt-detail__header">
+      <a routerLink="/prompts" class="back-link">← Prompts</a>
+      <h1>{{ p.display_name }}</h1>
+      <div class="prompt-detail__actions">
+        <a [routerLink]="['/prompts', p.id, 'versions', 'new']" class="btn btn--primary">Add version</a>
+        <a routerLink="edit" class="btn btn--secondary">Edit</a>
+      </div>
+    </header>
+
+    <section class="prompt-detail__meta">
+      <dl>
+        <dt>ID</dt><dd><code>{{ p.id }}</code></dd>
+        @if (p.description) {
+          <dt>Description</dt><dd>{{ p.description }}</dd>
+        }
+        <dt>Active</dt><dd>{{ p.is_active ? 'Yes' : 'No' }}</dd>
+      </dl>
+    </section>
+
+    <section class="prompt-detail__versions">
+      <h2>Versions</h2>
+      @if (versionsLoading()) {
+        <p class="loading">Loading versions…</p>
+      } @else if (versions().length === 0) {
+        <p class="empty">
+          No versions yet.
+          <a [routerLink]="['/prompts', p.id, 'versions', 'new']">Add the first one.</a>
+        </p>
+      } @else {
+        <table class="versions-table">
+          <thead>
+            <tr>
+              <th>Version</th>
+              <th>Notes</th>
+              <th>Parent</th>
+              <th>Created</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (v of versions(); track v.id) {
+              <tr [class.current]="v.id === p.current_version_id">
+                <td>
+                  v{{ v.version }}
+                  @if (v.id === p.current_version_id) {
+                    <span class="badge badge--current">current</span>
+                  }
+                </td>
+                <td>{{ v.notes ?? '—' }}</td>
+                <td>{{ v.parent_version_id ? 'branched' : '—' }}</td>
+                <td>{{ v.created_at | date:'d MMM y, HH:mm' }}</td>
+                <td class="actions">
+                  @if (v.id !== p.current_version_id) {
+                    <button (click)="promote(v.id)">Set as current</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        @if (currentVersion(); as cv) {
+          <div class="prompt-detail__content">
+            <h3>Current version — v{{ cv.version }}</h3>
+            <h4>System</h4>
+            <pre class="prompt-content">{{ cv.system_content }}</pre>
+            @if (cv.user_content) {
+              <h4>User template</h4>
+              <pre class="prompt-content">{{ cv.user_content }}</pre>
+            }
+          </div>
+        }
+      }
+    </section>
+  </div>
+} @else {
+  <p class="not-found">Prompt not found.</p>
+}

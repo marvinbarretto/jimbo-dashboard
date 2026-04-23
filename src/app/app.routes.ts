@@ -14,6 +14,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/skills/skills.routes').then(m => m.skillsRoutes),
   },
   {
+    path: 'prompts',
+    loadChildren: () => import('./features/prompts/prompts.routes').then(m => m.promptsRoutes),
+  },
+  {
     path: 'coverage',
     loadComponent: () => import('./features/coverage/coverage-page/coverage-page').then(m => m.CoveragePage),
   },

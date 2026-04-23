@@ -1,0 +1,50 @@
+<div class="prompts-list">
+  <header class="prompts-list__header">
+    <h1>Prompts</h1>
+    <a routerLink="new" class="btn btn--primary">Add prompt</a>
+  </header>
+
+  <table class="prompts-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Versions</th>
+        <th>Active</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (prompt of prompts(); track prompt.id) {
+        <tr [class.inactive]="!prompt.is_active">
+          <td class="prompt-id">
+            <a [routerLink]="[prompt.id]">{{ prompt.id }}</a>
+          </td>
+          <td>{{ prompt.display_name }}</td>
+          <td class="description">{{ prompt.description ?? '—' }}</td>
+          <td>
+            @if (prompt.current_version_id) {
+              <span class="badge badge--active">versioned</span>
+            } @else {
+              <span class="badge badge--empty">no versions</span>
+            }
+          </td>
+          <td>
+            <span [class]="prompt.is_active ? 'status status--active' : 'status status--inactive'">
+              {{ prompt.is_active ? 'Yes' : 'No' }}
+            </span>
+          </td>
+          <td class="actions">
+            <a [routerLink]="[prompt.id, 'edit']">Edit</a>
+            <button (click)="remove(prompt.id)">Remove</button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6" class="empty">No prompts configured.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

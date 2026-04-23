@@ -1,0 +1,39 @@
+<div class="prompt-form">
+  <header class="prompt-form__header">
+    <a routerLink="/prompts" class="back-link">← Prompts</a>
+    <h1>{{ isEdit() ? 'Edit prompt' : 'Add prompt' }}</h1>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label for="id">ID <span class="hint">(slug: e.g. classify-intent)</span></label>
+      @if (isEdit()) {
+        <input id="id" type="text" [value]="form.getRawValue().id" readonly />
+      } @else {
+        <input id="id" type="text" formControlName="id" />
+      }
+    </div>
+
+    <div class="field">
+      <label for="display_name">Display name</label>
+      <input id="display_name" type="text" formControlName="display_name" />
+    </div>
+
+    <div class="field">
+      <label for="description">Description</label>
+      <textarea id="description" rows="2" formControlName="description"></textarea>
+    </div>
+
+    <div class="field field--checkbox">
+      <input id="is_active" type="checkbox" formControlName="is_active" />
+      <label for="is_active">Active</label>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn--primary">
+        {{ isEdit() ? 'Save changes' : 'Add prompt' }}
+      </button>
+      <a routerLink="/prompts" class="btn btn--ghost">Cancel</a>
+    </div>
+  </form>
+</div>

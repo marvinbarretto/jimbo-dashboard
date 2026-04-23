@@ -1,0 +1,13 @@
+.prompt-form {
+  padding: 1.5rem;
+  max-width: 640px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+
+    h1 { flex: 1; }
+  }
+}
