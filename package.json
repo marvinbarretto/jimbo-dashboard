@@ -8,6 +8,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "coverage:update": "ng test --no-watch --coverage && node scripts/coverage-report.mjs",
+    "db:migrate": "bash ../postgres/migrate.sh",
+    "db:migrate:live": "bash ../postgres/migrate.sh --live",
     "release": "standard-version",
     "release:minor": "standard-version --release-as minor",
     "release:major": "standard-version --release-as major",
