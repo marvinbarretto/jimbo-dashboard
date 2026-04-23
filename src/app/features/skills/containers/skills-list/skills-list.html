@@ -28,6 +28,8 @@
             <button (click)="remove(skill.id)">Remove</button>
           </td>
         </tr>
+      } @empty {
+        <tr><td colspan="5" class="empty">No skills configured.</td></tr>
       }
     </tbody>
   </table>
