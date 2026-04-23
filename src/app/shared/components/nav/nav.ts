@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import pkg from '../../../../../package.json';
 
 @Component({
   selector: 'app-nav',
@@ -7,7 +8,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <nav class="app-nav">
-      <span class="app-nav__logo">jimbo</span>
+      <span class="app-nav__logo">jimbo <span class="app-nav__version">v{{ version }}</span></span>
       <ul>
         <li><a routerLink="/models" routerLinkActive="active">Models</a></li>
         <li><a routerLink="/model-stacks" routerLinkActive="active">Stacks</a></li>
@@ -38,6 +39,13 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       color: var(--color-accent);
     }
 
+    .app-nav__version {
+      font-size: 0.65rem;
+      font-weight: 400;
+      opacity: 0.5;
+      letter-spacing: 0;
+    }
+
     ul {
       list-style: none;
       display: flex;
@@ -58,4 +66,6 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
     }
   `],
 })
-export class Nav {}
+export class Nav {
+  readonly version = pkg.version;
+}
