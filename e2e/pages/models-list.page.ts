@@ -18,4 +18,13 @@ export class ModelsListPage {
   async clickAddModel(): Promise<void> {
     await this.page.getByRole('link', { name: 'Add model' }).click();
   }
+
+  rowFor(id: string): Locator {
+    return this.page.locator('tbody tr', { has: this.page.locator(`a:text-is("${id}")`) });
+  }
+
+  async removeRow(id: string): Promise<void> {
+    this.page.once('dialog', d => d.accept());
+    await this.rowFor(id).getByRole('button', { name: 'Remove' }).click();
+  }
 }

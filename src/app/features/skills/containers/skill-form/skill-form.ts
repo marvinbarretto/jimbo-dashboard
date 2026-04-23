@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
+import { filter, map, take } from 'rxjs';
 import { SkillsService } from '../../data-access/skills.service';
 import { ModelStacksService } from '../../../model-stacks/data-access/model-stacks.service';
 
@@ -13,7 +13,7 @@ import { ModelStacksService } from '../../../model-stacks/data-access/model-stac
   styleUrl: './skill-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SkillForm implements OnInit {
+export class SkillForm {
   private readonly service = inject(SkillsService);
   private readonly stacksService = inject(ModelStacksService);
   private readonly route = inject(ActivatedRoute);
@@ -25,6 +25,9 @@ export class SkillForm implements OnInit {
 
   readonly availableStacks = this.stacksService.activeStacks;
 
+  // toObservable must be created in the constructor/field context to have an injector.
+  private readonly skills$ = toObservable(this.service.skills);
+
   readonly form = this.fb.nonNullable.group({
     id: ['', Validators.required],
     display_name: ['', Validators.required],
@@ -34,11 +37,14 @@ export class SkillForm implements OnInit {
     notes: [''],
   });
 
-  ngOnInit(): void {
+  constructor() {
+    // Patch the form once the service has loaded and the route ID is known.
+    // take(1) auto-unsubscribes after the first non-empty emission.
     const id = this.routeId();
     if (id) {
-      const skill = this.service.getById(id);
-      if (skill) {
+      this.skills$.pipe(filter(ss => ss.length > 0), take(1)).subscribe(skills => {
+        const skill = skills.find(s => s.id === id);
+        if (!skill) return;
         this.form.patchValue({
           id: skill.id,
           display_name: skill.display_name,
@@ -47,7 +53,7 @@ export class SkillForm implements OnInit {
           is_active: skill.is_active,
           notes: skill.notes ?? '',
         });
-      }
+      });
     }
   }
 

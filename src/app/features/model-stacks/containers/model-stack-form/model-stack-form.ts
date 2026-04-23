@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
+import { filter, map, take } from 'rxjs';
 import { ModelStacksService } from '../../data-access/model-stacks.service';
 import { ModelsService } from '../../../models/data-access/models.service';
 
@@ -13,7 +13,7 @@ import { ModelsService } from '../../../models/data-access/models.service';
   styleUrl: './model-stack-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ModelStackForm implements OnInit {
+export class ModelStackForm {
   private readonly service = inject(ModelStacksService);
   private readonly modelsService = inject(ModelsService);
   private readonly route = inject(ActivatedRoute);
@@ -29,6 +29,9 @@ export class ModelStackForm implements OnInit {
   // management, not a form field, so a signal is cleaner than FormArray.
   readonly modelIds = signal<string[]>([]);
 
+  // toObservable must be created in the constructor/field context to have an injector.
+  private readonly stacks$ = toObservable(this.service.stacks);
+
   readonly form = this.fb.nonNullable.group({
     id: ['', Validators.required],
     display_name: ['', Validators.required],
@@ -37,11 +40,12 @@ export class ModelStackForm implements OnInit {
     is_active: [true],
   });
 
-  ngOnInit(): void {
+  constructor() {
     const id = this.routeId();
     if (id) {
-      const stack = this.service.getById(id);
-      if (stack) {
+      this.stacks$.pipe(filter(ss => ss.length > 0), take(1)).subscribe(stacks => {
+        const stack = stacks.find(s => s.id === id);
+        if (!stack) return;
         this.form.patchValue({
           id: stack.id,
           display_name: stack.display_name,
@@ -50,7 +54,7 @@ export class ModelStackForm implements OnInit {
           is_active: stack.is_active,
         });
         this.modelIds.set([...stack.model_ids]);
-      }
+      });
     }
   }
 

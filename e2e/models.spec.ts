@@ -1,7 +1,8 @@
 import { test, expect } from './fixtures';
 
 test.describe('Models CRUD', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, apiMock }) => {
+    void apiMock;
     await page.goto('/models');
   });
 
@@ -44,5 +45,21 @@ test.describe('Models CRUD', () => {
 
   test('inactive models have inactive row class', async ({ modelsListPage }) => {
     await expect(modelsListPage.inactiveRows).not.toHaveCount(0);
+  });
+
+  test('deletes a model — severance, effective immediately', async ({ modelsListPage }) => {
+    const doomed = 'deepseek/deepseek-chat-v3.1';
+    await expect(modelsListPage.rowFor(doomed)).toHaveCount(1);
+    await modelsListPage.removeRow(doomed);
+    await expect(modelsListPage.rowFor(doomed)).toHaveCount(0);
+  });
+
+  test('rejects id without provider/name — the router is not your therapist', async ({ page, modelFormPage }) => {
+    await page.goto('/models/new');
+    await modelFormPage.fill({ id: 'bad-id', displayName: 'Bad Id', provider: 'meta', tier: 'free' });
+    await modelFormPage.submit();
+    // Must not navigate away from the form, must not crash the router.
+    await expect(page).toHaveURL('/models/new');
+    await expect(page.locator('.field-error, [role="alert"]')).toContainText(/provider\/name/i);
   });
 });

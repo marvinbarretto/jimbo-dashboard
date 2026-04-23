@@ -1,7 +1,10 @@
 import { test, expect } from './fixtures';
 
 test.describe('Skills CRUD', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, apiMock }) => {
+    // apiMock requested here installs route interceptors before navigation.
+    // Every test in this block runs against the in-memory mock, never the real VPS.
+    void apiMock;
     await page.goto('/skills');
   });
 
@@ -44,5 +47,12 @@ test.describe('Skills CRUD', () => {
 
   test('inactive skills have inactive row class', async ({ skillsListPage }) => {
     await expect(skillsListPage.inactiveRows).not.toHaveCount(0);
+  });
+
+  test('deletes a skill — no ceremony, just gone', async ({ skillsListPage }) => {
+    const doomed = 'distill-lessons';
+    await expect(skillsListPage.rowFor(doomed)).toHaveCount(1);
+    await skillsListPage.removeRow(doomed);
+    await expect(skillsListPage.rowFor(doomed)).toHaveCount(0);
   });
 });

@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
+import { filter, map, take } from 'rxjs';
 import { ModelsService } from '../../data-access/models.service';
 import { MODEL_CAPABILITIES } from '../../utils/model.types';
 import type { ModelProvider, ModelTier, ModelCapability } from '../../utils/model.types';
@@ -14,7 +14,7 @@ import type { ModelProvider, ModelTier, ModelCapability } from '../../utils/mode
   styleUrl: './model-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ModelForm implements OnInit {
+export class ModelForm {
   private readonly service = inject(ModelsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -23,14 +23,18 @@ export class ModelForm implements OnInit {
   private readonly id = toSignal(this.route.paramMap.pipe(
     map(p => p.get('provider') ? `${p.get('provider')}/${p.get('name')}` : null),
   ));
+  private readonly models$ = toObservable(this.service.models);
   readonly isEdit = computed(() => !!this.id());
 
   readonly tiers: ModelTier[] = ['free', 'fast', 'balanced', 'powerful'];
   readonly providers: ModelProvider[] = ['anthropic', 'google', 'openai', 'x-ai', 'deepseek', 'meta'];
   readonly capabilities = MODEL_CAPABILITIES;
 
+  // Model ids follow OpenRouter convention: provider/name (slugs either side of a slash).
+  private readonly idPattern = /^[a-z0-9][a-z0-9.-]*\/[a-z0-9][a-z0-9.-]*$/i;
+
   readonly form = this.fb.nonNullable.group({
-    id: ['', Validators.required],
+    id: ['', [Validators.required, Validators.pattern(this.idPattern)]],
     display_name: ['', Validators.required],
     provider: ['anthropic' as ModelProvider, Validators.required],
     tier: ['balanced' as ModelTier, Validators.required],
@@ -50,11 +54,12 @@ export class ModelForm implements OnInit {
     notes: [null as string | null],
   });
 
-  ngOnInit(): void {
+  constructor() {
     const id = this.id();
     if (id) {
-      const model = this.service.getById(id);
-      if (model) {
+      this.models$.pipe(filter(ms => ms.length > 0), take(1)).subscribe(models => {
+        const model = models.find(m => m.id === id);
+        if (!model) return;
         this.form.patchValue({
           ...model,
           cap_code:      model.capabilities.includes('code'),
@@ -64,7 +69,7 @@ export class ModelForm implements OnInit {
           cap_math:      model.capabilities.includes('math'),
           cap_video:     model.capabilities.includes('video'),
         });
-      }
+      });
     }
   }
 
@@ -81,7 +86,11 @@ export class ModelForm implements OnInit {
   }
 
   submit(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      // Mark so validation errors render — silent return would hide the problem.
+      this.form.markAllAsTouched();
+      return;
+    }
     const v = this.form.getRawValue();
     const payload = {
       id: v.id,

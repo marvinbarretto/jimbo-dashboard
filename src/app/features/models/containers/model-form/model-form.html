@@ -8,6 +8,9 @@
     <div class="field">
       <label for="id">ID <span class="hint">(OpenRouter format: provider/model-name)</span></label>
       <input id="id" formControlName="id" [attr.disabled]="isEdit() ? true : null" />
+      @if (form.controls.id.touched && form.controls.id.errors?.['pattern']) {
+        <p class="field-error" role="alert">ID must be in the format provider/name (e.g. openai/gpt-5-nano).</p>
+      }
     </div>
 
     <div class="field">
@@ -71,7 +74,7 @@
     </div>
 
     <div class="form-actions">
-      <button type="submit" class="btn btn--primary" [disabled]="form.invalid">
+      <button type="submit" class="btn btn--primary">
         {{ isEdit() ? 'Save changes' : 'Add model' }}
       </button>
       <a routerLink="/models" class="btn btn--ghost">Cancel</a>

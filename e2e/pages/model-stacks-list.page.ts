@@ -1,6 +1,6 @@
 import type { Page, Locator } from '@playwright/test';
 
-export class SkillsListPage {
+export class ModelStacksListPage {
   readonly heading: Locator;
   readonly rows: Locator;
   readonly inactiveRows: Locator;
@@ -11,17 +11,16 @@ export class SkillsListPage {
     this.inactiveRows = page.locator('tbody tr.inactive');
   }
 
-  async clickFirstSkill(): Promise<void> {
+  async clickFirstStack(): Promise<void> {
     await this.page.locator('tbody td a').first().click();
   }
 
-  async clickAddSkill(): Promise<void> {
-    await this.page.getByRole('link', { name: 'Add skill' }).click();
+  async clickAddStack(): Promise<void> {
+    await this.page.getByRole('link', { name: 'Add stack' }).click();
   }
 
   rowFor(id: string): Locator {
-    // Skills list shows id in <code>, display_name in <a> — match the code cell.
-    return this.page.locator('tbody tr', { has: this.page.locator(`code:text-is("${id}")`) });
+    return this.page.locator('tbody tr', { has: this.page.locator(`a:text-is("${id}")`) });
   }
 
   async removeRow(id: string): Promise<void> {
