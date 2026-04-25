@@ -1,11 +1,11 @@
-// NOTE: The /projects endpoint does not yet exist in jimbo-api (Hono + SQLite on VPS).
-// This service scaffolds the pattern so the frontend is ready when the backend catches up.
+// Reads projects from the dashboard's new Hono+Drizzle API at /api/projects
+// (jimbo_pg-backed). Mutations still hit the legacy PostgREST surface.
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import type { Project, CreateProjectPayload, UpdateProjectPayload } from '@domain/projects';
+import type { Project, ProjectStatus, CreateProjectPayload, UpdateProjectPayload } from '@domain/projects';
 import type { ActorId, ProjectId } from '@domain/ids';
-import { actorId } from '@domain/ids';
+import { actorId, projectId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
@@ -35,9 +35,9 @@ export class ProjectsService {
       this._loading.set(false);
       return;
     }
-    this.http.get<Project[]>(`${this.url}?order=display_name`).subscribe({
-      next: data => { this._projects.set(data); this._loading.set(false); },
-      error: ()   => this._loading.set(false),
+    this.http.get<{ items: ApiProject[] }>(`/api/projects`).subscribe({
+      next: ({ items }) => { this._projects.set(items.map(toProject)); this._loading.set(false); },
+      error: ()         => this._loading.set(false),
     });
   }
 
@@ -117,11 +117,11 @@ export class ProjectsService {
   // Compares the prior project row to the post-update row and posts one event per
   // changed field. Order is fixed (criteria, owner, archive) so the activity log
   // reads predictably when multiple fields change in one save.
-  private emitDiffEvents(projectId: ProjectId, prior: Project, next: Project): void {
+  private emitDiffEvents(projectIdTyped: ProjectId, prior: Project, next: Project): void {
     if (prior.criteria !== next.criteria) {
       this.activityService.post({
         type: 'project_criteria_changed',
-        project_id: projectId,
+        project_id: projectIdTyped,
         actor_id: this.currentActorId,
         from: prior.criteria,
         to: next.criteria,
@@ -130,7 +130,7 @@ export class ProjectsService {
     if (prior.owner_actor_id !== next.owner_actor_id) {
       this.activityService.post({
         type: 'project_owner_changed',
-        project_id: projectId,
+        project_id: projectIdTyped,
         actor_id: this.currentActorId,
         from_actor_id: prior.owner_actor_id,
         to_actor_id: next.owner_actor_id,
@@ -141,18 +141,52 @@ export class ProjectsService {
       if (next.status === 'archived') {
         this.activityService.post({
           type: 'project_archived',
-          project_id: projectId,
+          project_id: projectIdTyped,
           actor_id: this.currentActorId,
           note: null,
         });
       } else {
         this.activityService.post({
           type: 'project_unarchived',
-          project_id: projectId,
+          project_id: projectIdTyped,
           actor_id: this.currentActorId,
           note: null,
         });
       }
     }
   }
+}
+
+// ── API response adaptation ────────────────────────────────────────────────
+// Production schema is narrower than dashboard's Project — no description,
+// no owner_actor_id, no criteria, no repo_url. Synthesize defaults; richer
+// fields filled in once production tracks them.
+
+interface ApiProject {
+  id: string;
+  display_name: string;
+  status: string;                 // 'active' | 'paused' | 'archived' (CHECK-bound)
+  color_token: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+function narrowStatus(s: string): ProjectStatus {
+  // Dashboard collapses 'paused' into 'active' — see project.ts comment.
+  return s === 'archived' ? 'archived' : 'active';
+}
+
+function toProject(p: ApiProject): Project {
+  return {
+    id: projectId(p.id),
+    display_name: p.display_name,
+    description: null,
+    status: narrowStatus(p.status),
+    // Default ownership to marvin until production tracks it. Synthesized
+    // projects from tag conventions have no owner stored.
+    owner_actor_id: actorId('marvin'),
+    criteria: null,
+    repo_url: null,
+    created_at: p.created_at,
+  };
 }

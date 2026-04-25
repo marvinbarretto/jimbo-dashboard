@@ -1,9 +1,10 @@
-// NOTE: The /actors endpoint does not yet exist in jimbo-api (Hono + SQLite on VPS).
-// This service scaffolds the pattern so the frontend is ready when the backend catches up.
+// Reads actors from the dashboard's new Hono+Drizzle API at /api/actors
+// (jimbo_pg-backed). Mutations still hit the legacy PostgREST surface.
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import type { Actor, CreateActorPayload, UpdateActorPayload } from '@domain/actors';
+import type { Actor, ActorKind, ActorRuntime, CreateActorPayload, UpdateActorPayload } from '@domain/actors';
+import { actorId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
@@ -28,9 +29,9 @@ export class ActorsService {
       this._loading.set(false);
       return;
     }
-    this.http.get<Actor[]>(`${this.url}?order=display_name`).subscribe({
-      next: data => { this._actors.set(data); this._loading.set(false); },
-      error: ()   => this._loading.set(false),
+    this.http.get<{ items: ApiActor[] }>(`/api/actors`).subscribe({
+      next: ({ items }) => { this._actors.set(items.map(toActor)); this._loading.set(false); },
+      error: ()         => this._loading.set(false),
     });
   }
 
@@ -60,4 +61,44 @@ export class ActorsService {
     this.http.delete(this.url, { params })
       .subscribe({ next: () => this._actors.update(as => as.filter(a => a.id !== id)) });
   }
+}
+
+// ── API response adaptation ────────────────────────────────────────────────
+// Production schema is narrower than dashboard's Actor — no runtime/description
+// /is_active. Synthesize sensible defaults from kind.
+
+interface ApiActor {
+  id: string;
+  display_name: string;
+  kind: string;
+  color_token: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+function narrowKind(k: string): ActorKind {
+  return k === 'human' || k === 'agent' || k === 'system' ? k : 'agent';
+}
+
+// Best-effort runtime mapping per known agent. ralph/boris are the production
+// executors; richer mapping comes when the production schema acquires the column.
+function inferRuntime(id: string, kind: ActorKind): ActorRuntime {
+  if (kind === 'human') return null;
+  if (id === 'ralph') return 'ollama';
+  if (id === 'boris') return 'openrouter';
+  return null;
+}
+
+function toActor(a: ApiActor): Actor {
+  const kind = narrowKind(a.kind);
+  return {
+    id: actorId(a.id),
+    display_name: a.display_name,
+    kind,
+    runtime: inferRuntime(a.id, kind),
+    description: null,
+    is_active: true,
+    created_at: a.created_at,
+    updated_at: a.updated_at,
+  };
 }

@@ -1,11 +1,12 @@
-// NOTE: The /dispatch-queue endpoint exists in jimbo-api (Hono + SQLite on VPS),
-// populated by hermes's pipeline-pump cron. The dashboard is read-mostly here —
-// the only mutation is operator-triggered retry of a failed dispatch.
+// Reads dispatch_queue rows from the dashboard's new Hono+Drizzle API at
+// /api/dispatches (jimbo_pg-backed). Mutations (retry) still go via the
+// legacy PostgREST path until write endpoints land.
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import type { DispatchQueueEntry } from '@domain/dispatch';
-import type { DispatchId, VaultItemId } from '@domain/ids';
+import type { DispatchQueueEntry, DispatchStatus } from '@domain/dispatch';
+import type { DispatchId, VaultItemId, ActorId, SkillId } from '@domain/ids';
+import { dispatchId, vaultItemId, actorId, skillId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
@@ -29,9 +30,12 @@ export class DispatchService {
       this._loading.set(false);
       return;
     }
-    this.http.get<DispatchQueueEntry[]>(`${this.url}?order=created_at.desc`).subscribe({
-      next: data => { this._entries.set(data); this._loading.set(false); },
-      error: ()   => this._loading.set(false),
+    // /api/dispatches returns the production schema (6 status values, more
+    // columns). Map at the service boundary to the dashboard's narrower
+    // DispatchQueueEntry shape.
+    this.http.get<ApiDispatchesResponse>(`/api/dispatches?limit=500`).subscribe({
+      next: ({ items }) => { this._entries.set(items.map(toDispatchEntry)); this._loading.set(false); },
+      error: ()         => this._loading.set(false),
     });
   }
 
@@ -81,4 +85,73 @@ export class DispatchService {
         error: ()          => this._entries.update(es => es.map(e => e.id === id ? prior : e)),
       });
   }
+}
+
+// ── API response adaptation ────────────────────────────────────────────────
+// Production has six status values (proposed, approved, rejected, completed,
+// failed, removed) plus more columns; dashboard's DispatchStatus is five
+// (approved, dispatching, running, completed, failed). Map at the boundary.
+
+interface ApiDispatchEntry {
+  id: number;
+  task_id: string;
+  task_source: string;
+  flow: string;
+  agent_type: string;
+  executor: string | null;
+  skill: string | null;
+  skill_context: unknown;
+  status: 'proposed' | 'approved' | 'rejected' | 'completed' | 'failed' | 'removed';
+  result_summary: string | null;
+  error_message: string | null;
+  retry_count: number;
+  proposed_at: string | null;
+  approved_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  task_title: string | null;
+  task_seq: number | null;
+}
+
+interface ApiDispatchesResponse {
+  items: ApiDispatchEntry[];
+  total: number;
+  limit: number;
+}
+
+// Production statuses → dashboard DispatchStatus union.
+//   proposed  → approved   (queued, awaiting work — same UI semantics)
+//   rejected  → failed     (operator declined; surface in Failed column)
+//   removed   → failed     (reaped/removed; surface in Failed column)
+//   approved/completed/failed → as-is
+// 'dispatching' and 'running' are dashboard-only states with no corresponding
+// production data — those columns will be empty until we add a real-time
+// status propagation.
+function narrowStatus(s: ApiDispatchEntry['status']): DispatchStatus {
+  switch (s) {
+    case 'proposed':  return 'approved';
+    case 'rejected':  return 'failed';
+    case 'removed':   return 'failed';
+    case 'approved':  return 'approved';
+    case 'completed': return 'completed';
+    case 'failed':    return 'failed';
+  }
+}
+
+function toDispatchEntry(a: ApiDispatchEntry): DispatchQueueEntry {
+  return {
+    id: dispatchId(String(a.id)),
+    task_id: vaultItemId(a.task_id),
+    skill: skillId(a.skill ?? a.agent_type),       // fall back to agent_type when skill not set
+    status: narrowStatus(a.status),
+    executor: actorId(a.executor ?? 'unassigned'),
+    started_at: a.started_at,
+    completed_at: a.completed_at,
+    retry_count: a.retry_count,
+    skill_context: a.skill_context,
+    result_summary: a.result_summary,
+    error: a.error_message,
+    created_at: a.created_at,
+  };
 }

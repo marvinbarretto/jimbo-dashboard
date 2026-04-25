@@ -16,6 +16,10 @@ import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { cors } from 'hono/cors';
 import { vaultItemsRoute } from './routes/vault-items';
+import { dispatchesRoute } from './routes/dispatches';
+import { actorsRoute } from './routes/actors';
+import { projectsRoute } from './routes/projects';
+import { vaultItemProjectsRoute } from './routes/vault-item-projects';
 
 const app = new Hono();
 
@@ -31,6 +35,10 @@ app.get('/api/health', (c) => c.json({
 }));
 
 app.route('/api/vault-items', vaultItemsRoute);
+app.route('/api/dispatches', dispatchesRoute);
+app.route('/api/actors', actorsRoute);
+app.route('/api/projects', projectsRoute);
+app.route('/api/vault-item-projects', vaultItemProjectsRoute);
 
 const port = Number(process.env.API_PORT ?? 3200);
 serve({ fetch: app.fetch, port }, ({ port }) => {
