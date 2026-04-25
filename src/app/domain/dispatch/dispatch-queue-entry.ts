@@ -19,6 +19,35 @@ export type DispatchStatus =
   | 'completed'     // finished successfully; result_summary populated
   | 'failed';       // errored or reaped; error populated
 
+// Canonical left-to-right column order for the execution kanban. `satisfies`
+// ensures every DispatchStatus value appears exactly once — adding a new state
+// to the union without updating this array would fail to compile.
+export const DISPATCH_STATUS_ORDER = [
+  'approved',
+  'dispatching',
+  'running',
+  'completed',
+  'failed',
+] as const satisfies readonly DispatchStatus[];
+
+// Display labels for column headers. Kept here so the kanban and any other
+// projection share one vocabulary.
+export const DISPATCH_STATUS_LABELS: Record<DispatchStatus, string> = {
+  approved:    'Approved',
+  dispatching: 'Dispatching',
+  running:     'Running',
+  completed:   'Completed',
+  failed:      'Failed',
+};
+
+// `running` and `dispatching` are system-managed: the operator can't drag a
+// card into them — only hermes / pipeline-pump puts items here. Used by the
+// execution board to mark those columns dropDisabled.
+export const DISPATCH_STATUS_SYSTEM_MANAGED: readonly DispatchStatus[] = [
+  'dispatching',
+  'running',
+];
+
 export interface DispatchQueueEntry {
   id:             DispatchId;
   task_id:        VaultItemId;          // the vault item being worked on

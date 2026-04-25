@@ -1,0 +1,54 @@
+<article
+  class="card"
+  [class.card--failed]="dispatch().status === 'failed'"
+  [class.card--running]="dispatch().status === 'running'"
+>
+  <header class="card__header">
+    @if (taskSeq(); as seq) {
+      <a [routerLink]="['/vault-items', seq]" class="card__seq">#{{ seq }}</a>
+    }
+
+    @if (project(); as proj) {
+      <app-project-chip [projectId]="proj.id" [displayName]="proj.display_name" />
+    }
+
+    <app-dispatch-status-badge [status]="dispatch().status" />
+
+    @if (dispatch().retry_count > 0) {
+      <span class="card__retry-count" [attr.title]="'Attempt ' + (dispatch().retry_count + 1)">
+        ↻{{ dispatch().retry_count }}
+      </span>
+    }
+  </header>
+
+  <div class="card__skill" [attr.title]="dispatch().skill">
+    {{ skillDisplayName() ?? dispatch().skill }}
+  </div>
+
+  @if (taskSeq(); as seq) {
+    <a [routerLink]="['/vault-items', seq]" class="card__title">
+      {{ taskTitle() ?? '—' }}
+    </a>
+  } @else {
+    <span class="card__title card__title--missing">task #{{ dispatch().task_id }} (not loaded)</span>
+  }
+
+  @if (dispatch().status === 'completed' && dispatch().result_summary) {
+    <p class="card__result">{{ dispatch().result_summary }}</p>
+  }
+
+  @if (dispatch().status === 'failed' && dispatch().error) {
+    <p class="card__error">{{ dispatch().error }}</p>
+  }
+
+  <footer class="card__footer">
+    <app-owner-chip [actorId]="dispatch().executor" />
+    <span class="card__runtime">{{ runtimeLabel() }}</span>
+
+    @if (canRetry()) {
+      <button type="button" class="card__retry-btn" (click)="onRetry($event)">
+        ↻ retry
+      </button>
+    }
+  </footer>
+</article>

@@ -1,0 +1,37 @@
+<div class="board">
+  <header class="board__header">
+    <h1>Execution</h1>
+    <p class="board__hint">
+      Skills running on vault items. <strong>Approved</strong> are queued,
+      <strong>dispatching</strong>/<strong>running</strong> are system-managed,
+      <strong>failed</strong> can be retried.
+    </p>
+  </header>
+
+  <app-kanban-filter-bar
+    [groups]="filterGroups()"
+    (toggle)="onFilterToggle($event)"
+    (reset)="resetFilters()"
+  />
+
+  <div class="board__columns">
+    @for (col of columns(); track col.status) {
+      <app-kanban-column
+        [label]="col.label"
+        [count]="col.cards.length"
+        [dropDisabled]="col.systemManaged"
+      >
+        @for (entry of col.cards; track entry.id) {
+          <app-execution-card
+            [dispatch]="entry"
+            [taskSeq]="taskSeq(entry)"
+            [taskTitle]="taskTitle(entry)"
+            [skillDisplayName]="skillDisplayName(entry)"
+            [project]="primaryProject(entry)"
+            (retry)="onRetry(entry.id)"
+          />
+        }
+      </app-kanban-column>
+    }
+  </div>
+</div>

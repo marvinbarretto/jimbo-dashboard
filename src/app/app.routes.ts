@@ -14,6 +14,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/grooming/grooming.routes').then(m => m.groomingRoutes),
   },
   {
+    path: 'execution',
+    loadChildren: () => import('./features/execution/execution.routes').then(m => m.executionRoutes),
+  },
+  {
     path: 'actors',
     loadChildren: () => import('./features/actors/actors.routes').then(m => m.actorsRoutes),
   },
