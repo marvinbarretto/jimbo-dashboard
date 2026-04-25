@@ -1,29 +1,23 @@
-// How "old" a vault item is, expressed as a continuous 0..1 ratio.
+// Staleness: how long a vault item has been sitting without action.
 //
-// Two interpretations of an old card and we deliberately do NOT try to
-// disambiguate them automatically:
-//   1. "Stale"      — out of date, should be killed or archived
-//   2. "Needs help" — important, blocked, the operator (or jimbo) needs to act
+// Two thresholds drive the visual:
+//   STALE_DAYS   — a card that's been sitting this long deserves attention
+//   ANCIENT_DAYS — beyond this, the visual is fully saturated (no point escalating further)
 //
-// Both look the same on the board; the operator reads other signals on the card
-// (priority, owner, blockers, open questions) to decide. The staleness signal
-// answers "how long has this been sitting?" — the *interpretation* stays human.
+// Two normalised ratios are computed (0..1, sqrt-curved). The sqrt curve front-loads
+// discrimination: a 2-day card and a 5-day card look clearly different, whereas a
+// 25-day and 28-day card (both clearly ancient) look similar. That's the right tradeoff
+// for an operator who mostly acts on recent items.
 //
-// Continuous (not bucketed) so the visualization can be a smooth gradient via a
-// single CSS variable rather than a switch over named levels. The component sets
-// `--age-norm` on the card and CSS interpolates colour from there.
+// The component sets --stale-norm and --ancient-norm on the card host so CSS can
+// interpolate a single-hue (amber) gradient — deeper shade, no hue jump.
 
 import type { VaultItem } from './vault-item';
 
-// Days at which the staleness visual reaches its ceiling. Cards older than this
-// render identical to "60-day-old" cards — past that point a steeper gradient
-// just produces noise. 60 fits realistic operator backlog: items at 30 days
-// look mid-gradient (warning), items at 50 days look near-rotting, items past
-// 60 are visually capped (signal saturated).
-export const STALENESS_CEILING_DAYS = 60;
+export const STALE_DAYS   = 7;   // "this card needs attention"
+export const ANCIENT_DAYS = 30;  // "this card is rotting"
 
-// Days as a float — useful for tooltip display ("4d ago") and for any logic
-// that wants the raw number.
+// Days as a float — used for the age label tooltip ("4d ago").
 export function ageInDays(
   referenceIso: string,
   nowIso: string = new Date().toISOString(),
@@ -32,20 +26,34 @@ export function ageInDays(
   return ms / (1000 * 60 * 60 * 24);
 }
 
-// Returns a 0..1 ratio: 0 = fresh, 1 = at or past the ceiling. Linear because
-// the visual mapping (color-mix in oklch) handles perceptual non-linearity for us.
-export function stalenessRatio(
-  referenceIso: string,
-  nowIso?: string,
-  ceilingDays: number = STALENESS_CEILING_DAYS,
-): number {
-  const days = ageInDays(referenceIso, nowIso);
-  return Math.min(1, Math.max(0, days / ceilingDays));
+// sqrt curve: steep early (2d vs 5d are clearly different), flattens at the ceiling.
+function sqrtRatio(days: number, ceiling: number): number {
+  return Math.min(1, Math.max(0, Math.sqrt(days / ceiling)));
 }
 
-// Convenience for a VaultItem with an optional `lastActivityAt` override
-// (typically MAX(activity_events.at) for the item). Falls back to `created_at`
-// so callers without event data still get a signal.
+// 0..1 over 0..STALE_DAYS — drives how much amber appears on the card.
+export function staleNorm(
+  item: Pick<VaultItem, 'created_at'>,
+  lastActivityAt?: string | null,
+  nowIso?: string,
+): number {
+  return sqrtRatio(ageInDays(lastActivityAt ?? item.created_at, nowIso), STALE_DAYS);
+}
+
+// 0..1 over 0..ANCIENT_DAYS — drives how deep the amber gets.
+export function ancientNorm(
+  item: Pick<VaultItem, 'created_at'>,
+  lastActivityAt?: string | null,
+  nowIso?: string,
+): number {
+  return sqrtRatio(ageInDays(lastActivityAt ?? item.created_at, nowIso), ANCIENT_DAYS);
+}
+
+// Kept for any callers outside the card (e.g. list views, tests).
+export const STALENESS_CEILING_DAYS = ANCIENT_DAYS;
+export function stalenessRatio(referenceIso: string, nowIso?: string): number {
+  return sqrtRatio(ageInDays(referenceIso, nowIso), ANCIENT_DAYS);
+}
 export function stalenessRatioFor(
   item: Pick<VaultItem, 'created_at'>,
   lastActivityAt?: string | null,

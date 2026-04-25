@@ -56,6 +56,10 @@
       </span>
     }
 
+    @if (hasPulse()) {
+      <span class="card__pulse" [attr.title]="pulseTooltip()" aria-hidden="true"></span>
+    }
+
     <span class="card__age" [attr.title]="ageTooltip()">{{ ageLabel() }}</span>
   </footer>
 </article>

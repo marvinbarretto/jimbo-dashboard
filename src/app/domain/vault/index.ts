@@ -14,7 +14,9 @@ export type {
 
 export { lifecycleState, isActive, isDone, isArchived, GROOMING_STATUS_ORDER, GROOMING_STATUS_LABELS } from './vault-item';
 
-export { ageInDays, stalenessRatio, stalenessRatioFor, STALENESS_CEILING_DAYS } from './staleness';
+export { ageInDays, staleNorm, ancientNorm, stalenessRatio, stalenessRatioFor, STALE_DAYS, ANCIENT_DAYS, STALENESS_CEILING_DAYS } from './staleness';
+
+export { pulseIntensity, PULSE_WINDOW_MINUTES } from './pulse';
 
 export { compareCardsForKanban } from './sort';
 

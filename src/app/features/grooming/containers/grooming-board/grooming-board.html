@@ -32,6 +32,7 @@
             [parentSeq]="parentSeq(item)"
             [childrenCount]="childrenCount(item)"
             [epicPriority]="rolledUpPriorityForEpic(item)"
+            [lastActivityAt]="lastActivityAt(item)"
             [dragging]="drag.dragging() === item.id"
             (dragstart)="onDragStart($event, item)"
             (dragend)="onDragEnd()"

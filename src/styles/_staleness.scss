@@ -1,46 +1,49 @@
-// Continuous staleness gradient driven by a single CSS custom property.
+// Staleness gradient — single amber hue family, deepening with age.
 //
-// Usage: apply @include staleness.gradient inside a selector that has
-// --age-norm (0..1) set on its host. The component sets that variable via
-// [style.--age-norm] using stalenessRatioFor() from domain/vault/staleness.
+// Requires two CSS custom properties on the host element:
+//   --stale-norm:   0..1 over STALE_DAYS  (sqrt-curved for early discrimination)
+//   --ancient-norm: 0..1 over ANCIENT_DAYS (sqrt-curved)
 //
-// Two-phase colour interpolation in oklch:
-//   Phase A (0%→50% age): border/shadow shifts from neutral → warning amber
-//   Phase B (50%→100% age): continues from amber → danger red
+// Visual behaviour:
+//   fresh  → no indicator (border stays at --color-border)
+//   stale  → mild amber border + faint glow appear
+//   ancient → deeper orange-amber, glow intensifies
 //
-// Linear because the oklch colour space handles perceptual non-linearity.
-// Hover state brightens the border using --color-text-muted as the neutral
-// anchor (more visible on interaction than --color-border).
+// Single hue family (oklch 55–75°) — no red jump, just a deepening shade.
+// The sqrt curve in the domain means 2d and 5d cards look clearly different;
+// 25d and 28d (both ancient) look similar — correct operator tradeoff.
 
-@mixin gradient($border-neutral: var(--color-border), $hover-neutral: var(--color-text-muted)) {
-  --age-pct: calc(var(--age-norm, 0) * 100%);
-  --phase-a:  clamp(0%, calc(var(--age-pct) * 2),         100%);
-  --phase-b:  clamp(0%, calc((var(--age-pct) - 50%) * 2), 100%);
+@mixin gradient {
+  --_s: var(--stale-norm, 0);
+  --_a: var(--ancient-norm, 0);
 
+  // Amber target deepens from mild to ancient as --ancient-norm grows.
+  // Then that amber is mixed with --color-border via --stale-norm:
+  //   stale=0 → pure border colour (no indicator)
+  //   stale=1 → full amber (intensity set by ancient-norm)
   border-color: color-mix(
     in oklch,
-    var(--color-danger) var(--phase-b),
-    color-mix(in oklch, var(--color-warning) var(--phase-a), #{$border-neutral})
+    color-mix(in oklch, oklch(56% 0.19 55) calc(var(--_a) * 100%), oklch(72% 0.14 72))
+      calc(var(--_s) * 100%),
+    var(--color-border)
   );
 
+  // Glow grows in spread and alpha with stale-norm; hue follows ancient-norm.
   box-shadow:
-    0
-    0
-    calc(var(--age-norm, 0) * 14px)
-    calc(var(--age-norm, 0) * -2px)
+    0 0
+    calc(var(--_s) * 14px)
+    calc(var(--_s) * -2px)
     color-mix(in oklch, transparent,
-      color-mix(in oklch,
-        var(--color-danger) var(--phase-b),
-        var(--color-warning)
-      )
-      calc(var(--age-norm, 0) * 35%)
+      color-mix(in oklch, oklch(56% 0.19 55) calc(var(--_a) * 100%), oklch(72% 0.16 65))
+      calc(var(--_s) * 40%)
     );
 
   &:hover {
     border-color: color-mix(
       in oklch,
-      var(--color-danger) var(--phase-b),
-      color-mix(in oklch, var(--color-warning) var(--phase-a), #{$hover-neutral})
+      color-mix(in oklch, oklch(56% 0.19 55) calc(var(--_a) * 100%), oklch(72% 0.14 72))
+        calc(var(--_s) * 100%),
+      var(--color-text-muted)
     );
   }
 }

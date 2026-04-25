@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { RouterLink } from '@angular/router';
 import type { VaultItem, Priority } from '@domain/vault';
 import { effectivePriority } from '@domain/vault';
-import { ageInDays, stalenessRatioFor } from '@domain/vault';
+import { ageInDays, staleNorm, ancientNorm, pulseIntensity } from '@domain/vault';
 import { PriorityBadge } from '@shared/components/priority-badge/priority-badge';
 import { BlockerBadge } from '@shared/components/blocker-badge/blocker-badge';
 import { EpicBadge } from '@shared/components/epic-badge/epic-badge';
@@ -17,10 +17,10 @@ import { OwnerChip } from '@shared/components/owner-chip/owner-chip';
   templateUrl: './grooming-card.html',
   styleUrl: './grooming-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // Bind the staleness ratio as a CSS custom property on the host so the
-  // stylesheet can interpolate colours continuously without needing class swaps.
   host: {
-    '[style.--age-norm]': 'ageNorm()',
+    '[style.--stale-norm]':      'staleNormVal()',
+    '[style.--ancient-norm]':    'ancientNormVal()',
+    '[style.--pulse-intensity]': 'pulseIntensityVal()',
   },
 })
 export class GroomingCard {
@@ -54,12 +54,8 @@ export class GroomingCard {
   readonly visibleTags = computed(() => this.item().tags.slice(0, 2));
   readonly extraTagCount = computed(() => Math.max(0, this.item().tags.length - 2));
 
-  // 0..1 ratio of card age vs the staleness ceiling. Interpolated by CSS into
-  // a continuous border / shadow gradient — fresh cards are flat, old cards
-  // pull focus.
-  readonly ageNorm = computed(() =>
-    stalenessRatioFor(this.item(), this.lastActivityAt())
-  );
+  readonly staleNormVal  = computed(() => staleNorm(this.item(),  this.lastActivityAt()));
+  readonly ancientNormVal = computed(() => ancientNorm(this.item(), this.lastActivityAt()));
 
   readonly ageDaysRounded = computed(() =>
     Math.floor(ageInDays(this.lastActivityAt() ?? this.item().created_at))
@@ -76,6 +72,22 @@ export class GroomingCard {
   readonly ageLabel = computed(() => {
     const days = this.ageDaysRounded();
     return days <= 0 ? 'today' : `${days}d`;
+  });
+
+  readonly pulseIntensityVal = computed(() => pulseIntensity(this.lastActivityAt()));
+
+  readonly hasPulse = computed(() => this.pulseIntensityVal() > 0);
+
+  // Friendly relative time for the pulse tooltip — distinct from the day-grained
+  // age label because pulses care about minutes, not days.
+  readonly pulseTooltip = computed(() => {
+    const last = this.lastActivityAt();
+    if (!last) return '';
+    const minutes = (Date.now() - new Date(last).getTime()) / (1000 * 60);
+    if (minutes < 1)   return 'updated just now';
+    if (minutes < 60)  return `updated ${Math.floor(minutes)}m ago`;
+    const hours = Math.floor(minutes / 60);
+    return `updated ${hours}h ago`;
   });
 
   // Forward DOM events as outputs so the parent can record dataTransfer + state.

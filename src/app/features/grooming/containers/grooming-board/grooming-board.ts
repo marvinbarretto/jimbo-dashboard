@@ -3,6 +3,7 @@ import { VaultItemsService } from '@features/vault-items/data-access/vault-items
 import { ActorsService } from '@features/actors/data-access/actors.service';
 import { ProjectsService } from '@features/projects/data-access/projects.service';
 import { VaultItemProjectsService } from '@features/vault-items/data-access/vault-item-projects.service';
+import { ActivityEventsService } from '@features/vault-items/data-access/activity-events.service';
 import { ThreadService } from '@features/thread/data-access/thread.service';
 import {
   GROOMING_STATUS_ORDER,
@@ -52,6 +53,7 @@ export class GroomingBoard {
   private readonly actorsService = inject(ActorsService);
   private readonly projectsService = inject(ProjectsService);
   private readonly vaultItemProjectsService = inject(VaultItemProjectsService);
+  private readonly activityEventsService = inject(ActivityEventsService);
   private readonly threadService = inject(ThreadService);
 
   // --- drag state ---------------------------------------------------------
@@ -87,12 +89,15 @@ export class GroomingBoard {
   });
 
   constructor() {
-    // Pre-load thread + project junctions for visible cards so badges render synchronously.
+    // Pre-load thread + project junctions + activity events for visible cards so
+    // badges (open question, project chip, pulse dot) render synchronously.
+    // Activity events drive the per-card `lastActivityAt` → pulse intensity.
     effect(() => {
       for (const item of this.vaultItemsService.items()) {
         if (item.type !== 'task' || !isActive(item)) continue;
         this.threadService.loadFor(item.id);
         this.vaultItemProjectsService.loadFor(item.id);
+        this.activityEventsService.loadFor(item.id);
       }
     });
   }
@@ -118,6 +123,15 @@ export class GroomingBoard {
     if (!item.parent_id) return null;
     const parent = this.vaultItemsService.getById(item.parent_id);
     return parent ? parent.seq : null;
+  }
+
+  // MAX(activity_events.at) for an item — the canonical "last touched" signal,
+  // drives both the staleness gradient (away from now) and the pulse dot
+  // (toward now). Falls back to created_at if no events have loaded yet.
+  lastActivityAt(item: VaultItem): string {
+    const events = this.activityEventsService.eventsFor(item.id)();
+    // events are sorted desc — head is the latest
+    return events.length > 0 ? events[0].at : item.created_at;
   }
 
   // Rolled-up priority for epic cards: the most-urgent (lowest integer) priority
