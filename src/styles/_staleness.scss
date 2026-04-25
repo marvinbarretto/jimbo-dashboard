@@ -1,0 +1,46 @@
+// Continuous staleness gradient driven by a single CSS custom property.
+//
+// Usage: apply @include staleness.gradient inside a selector that has
+// --age-norm (0..1) set on its host. The component sets that variable via
+// [style.--age-norm] using stalenessRatioFor() from domain/vault/staleness.
+//
+// Two-phase colour interpolation in oklch:
+//   Phase A (0%→50% age): border/shadow shifts from neutral → warning amber
+//   Phase B (50%→100% age): continues from amber → danger red
+//
+// Linear because the oklch colour space handles perceptual non-linearity.
+// Hover state brightens the border using --color-text-muted as the neutral
+// anchor (more visible on interaction than --color-border).
+
+@mixin gradient($border-neutral: var(--color-border), $hover-neutral: var(--color-text-muted)) {
+  --age-pct: calc(var(--age-norm, 0) * 100%);
+  --phase-a:  clamp(0%, calc(var(--age-pct) * 2),         100%);
+  --phase-b:  clamp(0%, calc((var(--age-pct) - 50%) * 2), 100%);
+
+  border-color: color-mix(
+    in oklch,
+    var(--color-danger) var(--phase-b),
+    color-mix(in oklch, var(--color-warning) var(--phase-a), #{$border-neutral})
+  );
+
+  box-shadow:
+    0
+    0
+    calc(var(--age-norm, 0) * 14px)
+    calc(var(--age-norm, 0) * -2px)
+    color-mix(in oklch, transparent,
+      color-mix(in oklch,
+        var(--color-danger) var(--phase-b),
+        var(--color-warning)
+      )
+      calc(var(--age-norm, 0) * 35%)
+    );
+
+  &:hover {
+    border-color: color-mix(
+      in oklch,
+      var(--color-danger) var(--phase-b),
+      color-mix(in oklch, var(--color-warning) var(--phase-a), #{$hover-neutral})
+    );
+  }
+}
