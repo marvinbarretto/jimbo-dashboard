@@ -20,6 +20,17 @@ import {
   vaultNotes, dispatchQueue, noteActivity, systemEvents,
   threadMessages, attachments, groomingAudit, groomingQuestions,
   costs, settings,
+  // Phase B additions — 21 newly-modelled tables.
+  groomingProposals, groomingCorrections, groomingCorrectionsIngested, groomingLessons,
+  contextFiles, contextSections, contextItems,
+  coachSupplements, coachNudges, coachLogs,
+  vaultCandidates, vaultItemDependencies,
+  noteLinks, noteThread,
+  pipelineRuns, bakeoffRuns, runs,
+  emailReports,
+  briefingAnalyses,
+  productSummaries,
+  activities,
 } from '../../db/schema';
 
 // Source SQLite path is configurable so the manual-sync endpoint can point
@@ -104,6 +115,15 @@ async function main(): Promise<void> {
     TRUNCATE TABLE
       vault_item_projects, attachments, thread_messages,
       grooming_audit, grooming_questions,
+      grooming_proposals, grooming_corrections_ingested, grooming_corrections,
+      grooming_lessons,
+      note_links, note_thread,
+      vault_item_dependencies, vault_candidates,
+      context_items, context_sections, context_files,
+      coach_logs, coach_nudges, coach_supplements,
+      pipeline_runs, bakeoff_runs, runs,
+      email_reports, briefing_analyses, product_summaries,
+      activities,
       note_activity, system_events, costs,
       dispatch_queue, vault_notes,
       projects, actors, settings
@@ -436,6 +456,469 @@ async function main(): Promise<void> {
     updated_at: ts(r.updated_at as string) ?? new Date(),
   }));
   await insertBatched(settings, settingsRows, 'settings');
+
+  // ── activities (legacy global activity log; standalone, no FKs) ─────────
+  console.log('[etl] activities');
+  const activityLogRows = (sqlite.prepare('SELECT * FROM activities').all() as VaultRow[]).map(r => ({
+    id: r.id as string,
+    timestamp: ts(r.timestamp as string) ?? new Date(),
+    task_type: r.task_type as string,
+    description: r.description as string,
+    outcome: r.outcome as string | null,
+    rationale: r.rationale as string | null,
+    model_used: r.model_used as string | null,
+    cost_id: r.cost_id as string | null,
+    satisfaction: r.satisfaction as number | null,
+    notes: r.notes as string | null,
+  }));
+  await insertBatched(activities, activityLogRows, 'activities');
+
+  // ── email_reports (parent of vault_candidates) ──────────────────────────
+  console.log('[etl] email_reports');
+  const emailRows = (sqlite.prepare('SELECT * FROM email_reports').all() as VaultRow[]).map(r => ({
+    id: r.id as number,
+    gmail_id: r.gmail_id as string,
+    thread_id: (r.thread_id as string) ?? '',
+    processed_at: ts(r.processed_at as string) ?? new Date(),
+    from_name: (r.from_name as string) ?? '',
+    from_email: r.from_email as string,
+    subject: r.subject as string,
+    body_analysis: r.body_analysis as string,
+    links: (r.links as string) ?? '[]',
+    model: (r.model as string) ?? '',
+    processing_time_seconds: (r.processing_time_seconds as number) ?? 0,
+    decided: bool(r.decided as number),
+    decided_at: ts(r.decided_at as string | null),
+    decision: r.decision as string | null,
+    relevance_score: r.relevance_score as number | null,
+    source: (r.source as string) ?? 'email',
+    body_text: (r.body_text as string) ?? '',
+    forwarded_to_localshout: r.forwarded_to_localshout as string | null,
+    enrichment_prompt_id: r.enrichment_prompt_id as string | null,
+    enrichment_prompt_version: r.enrichment_prompt_version as number | null,
+    enrichment_model: r.enrichment_model as string | null,
+    enrichment_reasoning: r.enrichment_reasoning as string | null,
+    enrichment_cost_cents: r.enrichment_cost_cents as number | null,
+    enrichment_tokens_input: r.enrichment_tokens_input as number | null,
+    enrichment_tokens_output: r.enrichment_tokens_output as number | null,
+    enriched_at: ts(r.enriched_at as string | null),
+    created_at: ts(r.created_at as string) ?? new Date(),
+  }));
+  await insertBatched(emailReports, emailRows, 'email_reports');
+  if (emailRows.length > 0) {
+    const maxId = emailRows.reduce((m, r) => r.id > m ? r.id : m, 0);
+    await db.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('email_reports','id'), ${maxId})`));
+  }
+  const survivingEmails = new Set(emailRows.map(r => r.id));
+
+  // ── vault_candidates (FK → email_reports + vault_notes) ─────────────────
+  console.log('[etl] vault_candidates');
+  const candidateRows = (sqlite.prepare('SELECT * FROM vault_candidates').all() as VaultRow[])
+    .filter(r => survivingEmails.has(r.email_id as number))
+    .filter(r => r.created_vault_note_id == null || surviving.has(r.created_vault_note_id as string))
+    .map(r => ({
+      id: r.id as string,
+      email_id: r.email_id as number,
+      type: r.type as string,
+      title: r.title as string,
+      body: r.body as string | null,
+      tags: jsonArr(r.tags as string | null, `vault_candidates.tags(${r.id})`),
+      proposed_priority: r.proposed_priority as number | null,
+      confidence: r.confidence as number,
+      rationale: r.rationale as string,
+      status: (r.status as string) ?? 'pending',
+      decided_at: ts(r.decided_at as string | null),
+      created_vault_note_id: r.created_vault_note_id as string | null,
+      last_seen_at: ts(r.last_seen_at as string) ?? new Date(),
+      created_at: ts(r.created_at as string) ?? new Date(),
+    }));
+  await insertBatched(vaultCandidates, candidateRows, 'vault_candidates');
+
+  // ── vault_item_dependencies (both ends must survive) ────────────────────
+  console.log('[etl] vault_item_dependencies');
+  const depRows = (sqlite.prepare('SELECT * FROM vault_item_dependencies').all() as VaultRow[])
+    .filter(r => surviving.has(r.blocker_id as string) && surviving.has(r.blocked_id as string))
+    .map(r => ({
+      blocker_id: r.blocker_id as string,
+      blocked_id: r.blocked_id as string,
+      created_at: ts(r.created_at as string) ?? new Date(),
+    }));
+  await insertBatched(vaultItemDependencies, depRows, 'vault_item_dependencies');
+
+  // ── context_files / sections / items (parent → child order) ─────────────
+  console.log('[etl] context_files');
+  const contextFileRows = (sqlite.prepare('SELECT * FROM context_files').all() as VaultRow[]).map(r => ({
+    id: r.id as number,
+    slug: r.slug as string,
+    display_name: r.display_name as string,
+    sort_order: (r.sort_order as number) ?? 0,
+    updated_at: ts(r.updated_at as string) ?? new Date(),
+  }));
+  // Identity column — Drizzle's generatedAlwaysAsIdentity rejects explicit
+  // values. Use OVERRIDING SYSTEM VALUE to preserve IDs across the migration
+  // so context_sections.file_id FKs stay valid.
+  if (contextFileRows.length > 0) {
+    for (let i = 0; i < contextFileRows.length; i += BATCH) {
+      await db.insert(contextFiles).overridingSystemValue().values(contextFileRows.slice(i, i + BATCH));
+    }
+    console.log(`  context_files: ${contextFileRows.length} rows`);
+    const maxId = contextFileRows.reduce((m, r) => r.id > m ? r.id : m, 0);
+    await db.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('context_files','id'), ${maxId})`));
+  } else {
+    console.log('  context_files: 0 rows (skipped)');
+  }
+
+  console.log('[etl] context_sections');
+  const contextSectionRows = (sqlite.prepare('SELECT * FROM context_sections').all() as VaultRow[]).map(r => ({
+    id: r.id as number,
+    file_id: r.file_id as number,
+    name: r.name as string,
+    format: (r.format as string) ?? 'list',
+    sort_order: (r.sort_order as number) ?? 0,
+    updated_at: ts(r.updated_at as string) ?? new Date(),
+  }));
+  if (contextSectionRows.length > 0) {
+    for (let i = 0; i < contextSectionRows.length; i += BATCH) {
+      await db.insert(contextSections).overridingSystemValue().values(contextSectionRows.slice(i, i + BATCH));
+    }
+    console.log(`  context_sections: ${contextSectionRows.length} rows`);
+    const maxId = contextSectionRows.reduce((m, r) => r.id > m ? r.id : m, 0);
+    await db.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('context_sections','id'), ${maxId})`));
+  } else {
+    console.log('  context_sections: 0 rows (skipped)');
+  }
+
+  console.log('[etl] context_items');
+  const contextItemRows = (sqlite.prepare('SELECT * FROM context_items').all() as VaultRow[]).map(r => ({
+    id: r.id as number,
+    section_id: r.section_id as number,
+    label: r.label as string | null,
+    content: r.content as string,
+    sort_order: (r.sort_order as number) ?? 0,
+    updated_at: ts(r.updated_at as string) ?? new Date(),
+    timeframe: r.timeframe as string | null,
+    status: r.status as string | null,
+    category: r.category as string | null,
+    expires_at: ts(r.expires_at as string | null),
+  }));
+  if (contextItemRows.length > 0) {
+    for (let i = 0; i < contextItemRows.length; i += BATCH) {
+      await db.insert(contextItems).overridingSystemValue().values(contextItemRows.slice(i, i + BATCH));
+    }
+    console.log(`  context_items: ${contextItemRows.length} rows`);
+    const maxId = contextItemRows.reduce((m, r) => r.id > m ? r.id : m, 0);
+    await db.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('context_items','id'), ${maxId})`));
+  } else {
+    console.log('  context_items: 0 rows (skipped)');
+  }
+
+  // ── note_links (polymorphic; drop orphans pointing at dropped vault notes) ─
+  console.log('[etl] note_links');
+  const noteLinkRows = (sqlite.prepare('SELECT * FROM note_links').all() as VaultRow[])
+    .filter(r => surviving.has(r.source_note_id as string))
+    .filter(r => r.target_type !== 'vault_note' || surviving.has(r.target_id as string))
+    .map(r => ({
+      source_note_id: r.source_note_id as string,
+      target_type: r.target_type as string,
+      target_id: r.target_id as string,
+      created_at: ts(r.created_at as string) ?? new Date(),
+    }));
+  await insertBatched(noteLinks, noteLinkRows, 'note_links');
+
+  // ── note_thread (legacy thread shape; self-FK — root rows first) ────────
+  console.log('[etl] note_thread');
+  const noteThreadRows = (sqlite.prepare('SELECT * FROM note_thread').all() as VaultRow[])
+    .filter(r => surviving.has(r.note_id as string))
+    .map(r => ({
+      // Source is INTEGER PK; we keep the original id so reply_to_id FKs stay
+      // intact. Drizzle bigserial accepts explicit values.
+      id: r.id as number,
+      note_id: r.note_id as string,
+      author: r.author as string,
+      content: r.content as string,
+      reply_to_id: r.reply_to_id as number | null,
+      is_correction: bool(r.is_correction as number),
+      created_at: ts(r.created_at as string) ?? new Date(),
+    }));
+  // Root rows (no reply_to_id) first; self-FK satisfied across batches.
+  noteThreadRows.sort((a, b) => {
+    if (a.reply_to_id == null && b.reply_to_id != null) return -1;
+    if (a.reply_to_id != null && b.reply_to_id == null) return 1;
+    return a.created_at.getTime() - b.created_at.getTime();
+  });
+  await insertBatched(noteThread, noteThreadRows, 'note_thread');
+  if (noteThreadRows.length > 0) {
+    const maxId = noteThreadRows.reduce((m, r) => r.id > m ? r.id : m, 0);
+    await db.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('note_thread','id'), ${maxId})`));
+  }
+
+  // ── grooming_proposals ──────────────────────────────────────────────────
+  console.log('[etl] grooming_proposals');
+  const proposalRows = (sqlite.prepare('SELECT * FROM grooming_proposals').all() as VaultRow[])
+    .filter(r => surviving.has(r.parent_note_id as string))
+    .map(r => ({
+      id: r.id as number,
+      parent_note_id: r.parent_note_id as string,
+      proposed_by: r.proposed_by as string,
+      proposal: r.proposal as string,
+      status: (r.status as string) ?? 'pending',
+      feedback: r.feedback as string | null,
+      created_at: ts(r.created_at as string) ?? new Date(),
+      updated_at: ts(r.updated_at as string) ?? new Date(),
+    }));
+  await insertBatched(groomingProposals, proposalRows, 'grooming_proposals');
+  if (proposalRows.length > 0) {
+    const maxId = proposalRows.reduce((m, r) => r.id > m ? r.id : m, 0);
+    await db.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('grooming_proposals','id'), ${maxId})`));
+  }
+
+  // ── grooming_corrections (parent of grooming_corrections_ingested) ─────
+  console.log('[etl] grooming_corrections');
+  const correctionRows = (sqlite.prepare('SELECT * FROM grooming_corrections').all() as VaultRow[])
+    .filter(r => surviving.has(r.note_id as string))
+    .map(r => ({
+      id: r.id as number,
+      note_id: r.note_id as string,
+      stage: r.stage as string,
+      field: r.field as string,
+      ai_value: r.ai_value as string,
+      corrected_value: r.corrected_value as string,
+      reason: r.reason as string | null,
+      created_at: ts(r.created_at as string) ?? new Date(),
+    }));
+  await insertBatched(groomingCorrections, correctionRows, 'grooming_corrections');
+  if (correctionRows.length > 0) {
+    const maxId = correctionRows.reduce((m, r) => r.id > m ? r.id : m, 0);
+    await db.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('grooming_corrections','id'), ${maxId})`));
+  }
+  const survivingCorrections = new Set(correctionRows.map(r => r.id));
+
+  // ── grooming_corrections_ingested (FK → grooming_corrections) ──────────
+  console.log('[etl] grooming_corrections_ingested');
+  const correctionIngestedRows = (sqlite.prepare('SELECT * FROM grooming_corrections_ingested').all() as VaultRow[])
+    .filter(r => survivingCorrections.has(r.correction_id as number))
+    .map(r => ({
+      correction_id: r.correction_id as number,
+      ingested_at: ts(r.ingested_at as string) ?? new Date(),
+    }));
+  await insertBatched(groomingCorrectionsIngested, correctionIngestedRows, 'grooming_corrections_ingested');
+
+  // ── grooming_lessons (no hard FKs; supersedes_id is soft self-ref) ─────
+  console.log('[etl] grooming_lessons');
+  const lessonRows = (sqlite.prepare('SELECT * FROM grooming_lessons').all() as VaultRow[]).map(r => ({
+    id: r.id as number,
+    kind: r.kind as string,
+    trigger: r.trigger as string,
+    guidance: r.guidance as string,
+    active: bool(r.active as number),
+    hit_count: (r.hit_count as number) ?? 0,
+    miss_count: (r.miss_count as number) ?? 0,
+    supersedes_id: r.supersedes_id as number | null,
+    created_by: r.created_by as string,
+    source_correction_ids: r.source_correction_ids as string | null,
+    created_at: ts(r.created_at as string) ?? new Date(),
+    activated_at: ts(r.activated_at as string | null),
+    last_cited_at: ts(r.last_cited_at as string | null),
+    deprecated_at: ts(r.deprecated_at as string | null),
+    deprecated_reason: r.deprecated_reason as string | null,
+  }));
+  await insertBatched(groomingLessons, lessonRows, 'grooming_lessons');
+  if (lessonRows.length > 0) {
+    const maxId = lessonRows.reduce((m, r) => r.id > m ? r.id : m, 0);
+    await db.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('grooming_lessons','id'), ${maxId})`));
+  }
+
+  // ── coach_supplements (parent of coach_nudges? no — but of coach_logs) ──
+  console.log('[etl] coach_supplements');
+  const supplementRows = (sqlite.prepare('SELECT * FROM coach_supplements').all() as VaultRow[]).map(r => ({
+    id: r.id as string,
+    name: r.name as string,
+    type: r.type as string | null,
+    dose_amount: r.dose_amount as number,
+    dose_unit: r.dose_unit as string,
+    conditions: (r.conditions as string) ?? '{}',
+    // timing_tags is JSON-string '[]' in source; promote to text[] for the
+    // Postgres column.
+    timing_tags: jsonArr(r.timing_tags as string | null, `coach_supplements.timing_tags(${r.id})`),
+    rationale_short: r.rationale_short as string,
+    rationale_long: r.rationale_long as string,
+    active: bool(r.active as number),
+    remaining_amount: r.remaining_amount as number | null,
+    loading_started_at: ts(r.loading_started_at as string | null),
+    loading_daily_dose: r.loading_daily_dose as number | null,
+    loading_duration_days: r.loading_duration_days as number | null,
+    created_at: ts(r.created_at as string) ?? new Date(),
+    updated_at: ts(r.updated_at as string) ?? new Date(),
+  }));
+  await insertBatched(coachSupplements, supplementRows, 'coach_supplements');
+
+  // ── coach_nudges (parent of coach_logs.nudge_id) ────────────────────────
+  console.log('[etl] coach_nudges');
+  const nudgeRows = (sqlite.prepare('SELECT * FROM coach_nudges').all() as VaultRow[]).map(r => ({
+    id: r.id as number,
+    nudge_key: r.nudge_key as string,
+    anchor: r.anchor as string,
+    supplements: r.supplements as string,
+    scheduled_for: ts(r.scheduled_for as string) ?? new Date(),
+    pushed_at: ts(r.pushed_at as string | null),
+    delivered_via: r.delivered_via as string | null,
+    state: (r.state as string) ?? 'pending',
+    action_at: ts(r.action_at as string | null),
+    created_at: ts(r.created_at as string) ?? new Date(),
+  }));
+  if (nudgeRows.length > 0) {
+    for (let i = 0; i < nudgeRows.length; i += BATCH) {
+      await db.insert(coachNudges).overridingSystemValue().values(nudgeRows.slice(i, i + BATCH));
+    }
+    console.log(`  coach_nudges: ${nudgeRows.length} rows`);
+    const maxId = nudgeRows.reduce((m, r) => r.id > m ? r.id : m, 0);
+    await db.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('coach_nudges','id'), ${maxId})`));
+  } else {
+    console.log('  coach_nudges: 0 rows (skipped)');
+  }
+  const survivingSupplements = new Set(supplementRows.map(r => r.id));
+  const survivingNudges = new Set(nudgeRows.map(r => r.id));
+
+  // ── coach_logs (FK → coach_supplements, soft FK → coach_nudges) ────────
+  console.log('[etl] coach_logs');
+  const coachLogRows = (sqlite.prepare('SELECT * FROM coach_logs').all() as VaultRow[])
+    .filter(r => survivingSupplements.has(r.supplement_id as string))
+    .map(r => ({
+      id: r.id as number,
+      supplement_id: r.supplement_id as string,
+      taken_at: ts(r.taken_at as string) ?? new Date(),
+      dosage: r.dosage as number,
+      source: r.source as string,
+      // Drop dangling nudge_id refs so the FK holds; the SET NULL semantics
+      // would do this in production but we want explicit insert correctness.
+      nudge_id: r.nudge_id != null && survivingNudges.has(r.nudge_id as number)
+        ? (r.nudge_id as number)
+        : null,
+      notes: r.notes as string | null,
+    }));
+  if (coachLogRows.length > 0) {
+    for (let i = 0; i < coachLogRows.length; i += BATCH) {
+      await db.insert(coachLogs).overridingSystemValue().values(coachLogRows.slice(i, i + BATCH));
+    }
+    console.log(`  coach_logs: ${coachLogRows.length} rows`);
+    const maxId = coachLogRows.reduce((m, r) => r.id > m ? r.id : m, 0);
+    await db.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('coach_logs','id'), ${maxId})`));
+  } else {
+    console.log('  coach_logs: 0 rows (skipped)');
+  }
+
+  // ── pipeline_runs (no FKs; identity-PK in Postgres) ─────────────────────
+  console.log('[etl] pipeline_runs');
+  const pipelineRunRows = (sqlite.prepare('SELECT * FROM pipeline_runs').all() as VaultRow[]).map(r => ({
+    id: r.id as number,
+    session: r.session as string,
+    status: r.status as string,
+    started_at: ts(r.started_at as string) ?? new Date(),
+    duration_ms: r.duration_ms as number | null,
+    steps: jsonObj(r.steps as string | null) ?? {},
+    opus_status: r.opus_status as string | null,
+    opus_error: r.opus_error as string | null,
+    opus_posted_at: ts(r.opus_posted_at as string | null),
+    created_at: ts(r.created_at as string) ?? new Date(),
+  }));
+  if (pipelineRunRows.length > 0) {
+    for (let i = 0; i < pipelineRunRows.length; i += BATCH) {
+      await db.insert(pipelineRuns).overridingSystemValue().values(pipelineRunRows.slice(i, i + BATCH));
+    }
+    console.log(`  pipeline_runs: ${pipelineRunRows.length} rows`);
+    const maxId = pipelineRunRows.reduce((m, r) => r.id > m ? r.id : m, 0);
+    await db.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('pipeline_runs','id'), ${maxId})`));
+  } else {
+    console.log('  pipeline_runs: 0 rows (skipped)');
+  }
+
+  // ── bakeoff_runs (text PK; no FKs) ──────────────────────────────────────
+  console.log('[etl] bakeoff_runs');
+  const bakeoffRows = (sqlite.prepare('SELECT * FROM bakeoff_runs').all() as VaultRow[]).map(r => ({
+    id: r.id as string,
+    timestamp: ts(r.timestamp as string) ?? new Date(),
+    capability: r.capability as string,
+    model: r.model as string,
+    score: r.score as number,
+    cost_usd: r.cost_usd as number,
+    flags: r.flags as string | null,
+    sample_n: (r.sample_n as number) ?? 1,
+  }));
+  await insertBatched(bakeoffRuns, bakeoffRows, 'bakeoff_runs');
+
+  // ── runs (text PK; self-FK on parent_run_id — root rows first) ──────────
+  console.log('[etl] runs');
+  const runRows = (sqlite.prepare('SELECT * FROM runs').all() as VaultRow[]).map(r => ({
+    run_id: r.run_id as string,
+    task_id: r.task_id as string,
+    parent_run_id: r.parent_run_id as string | null,
+    timestamp: ts(r.timestamp as string) ?? new Date(),
+    model: r.model as string,
+    config_hash: r.config_hash as string | null,
+    input_tokens: r.input_tokens as number | null,
+    output_tokens: r.output_tokens as number | null,
+    cost_usd: r.cost_usd as number | null,
+    duration_ms: r.duration_ms as number | null,
+    input_summary: r.input_summary as string | null,
+    output_summary: r.output_summary as string | null,
+    quality_scores: jsonObj(r.quality_scores as string | null),
+    conductor_rating: r.conductor_rating as number | null,
+    user_rating: r.user_rating as number | null,
+    user_notes: r.user_notes as string | null,
+    conductor_reasoning: r.conductor_reasoning as string | null,
+    session: r.session as string | null,
+  }));
+  // Drop dangling parent_run_id refs (parent absent from snapshot); SET NULL
+  // semantics in production, explicit here.
+  const runIds = new Set(runRows.map(r => r.run_id));
+  for (const r of runRows) {
+    if (r.parent_run_id != null && !runIds.has(r.parent_run_id)) {
+      r.parent_run_id = null;
+    }
+  }
+  // Roots before children so the self-FK is satisfied per batch.
+  runRows.sort((a, b) => {
+    if (a.parent_run_id == null && b.parent_run_id != null) return -1;
+    if (a.parent_run_id != null && b.parent_run_id == null) return 1;
+    return a.timestamp.getTime() - b.timestamp.getTime();
+  });
+  await insertBatched(runs, runRows, 'runs');
+
+  // ── briefing_analyses (no FKs) ──────────────────────────────────────────
+  console.log('[etl] briefing_analyses');
+  const briefingRows = (sqlite.prepare('SELECT * FROM briefing_analyses').all() as VaultRow[]).map(r => ({
+    id: r.id as number,
+    session: r.session as string,
+    model: r.model as string,
+    generated_at: ts(r.generated_at as string) ?? new Date(),
+    analysis: r.analysis as string,
+    user_rating: r.user_rating as number | null,
+    created_at: ts(r.created_at as string) ?? new Date(),
+  }));
+  await insertBatched(briefingAnalyses, briefingRows, 'briefing_analyses');
+  if (briefingRows.length > 0) {
+    const maxId = briefingRows.reduce((m, r) => r.id > m ? r.id : m, 0);
+    await db.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('briefing_analyses','id'), ${maxId})`));
+  }
+
+  // ── product_summaries (no FKs; composite UNIQUE) ────────────────────────
+  console.log('[etl] product_summaries');
+  const productSummaryRows = (sqlite.prepare('SELECT * FROM product_summaries').all() as VaultRow[]).map(r => ({
+    id: r.id as number,
+    product: r.product as string,
+    app: r.app as string,
+    environment: r.environment as string,
+    summary_type: r.summary_type as string,
+    window: r.window as string,
+    generated_at: ts(r.generated_at as string) ?? new Date(),
+    payload: r.payload as string,
+    received_at: ts(r.received_at as string) ?? new Date(),
+  }));
+  await insertBatched(productSummaries, productSummaryRows, 'product_summaries');
+  if (productSummaryRows.length > 0) {
+    const maxId = productSummaryRows.reduce((m, r) => r.id > m ? r.id : m, 0);
+    await db.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('product_summaries','id'), ${maxId})`));
+  }
 
   // ── Done ─────────────────────────────────────────────────────────────────
   sqlite.close();

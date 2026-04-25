@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   pgTable, text, integer, smallint, boolean, timestamp, real, jsonb, bigint,
-  index, check,
+  index, check, primaryKey,
 } from 'drizzle-orm/pg-core';
 
 // ── vault_notes ────────────────────────────────────────────────────────────
@@ -186,3 +186,79 @@ export const vaultNotes = pgTable('vault_notes', {
 
 export type VaultNote = typeof vaultNotes.$inferSelect;
 export type VaultNoteInsert = typeof vaultNotes.$inferInsert;
+
+// ── vault_candidates ───────────────────────────────────────────────────────
+//
+// AI-proposed vault items extracted from email_reports awaiting operator
+// triage. Lifecycle: pending → accepted (spawns vault_note via
+// created_vault_note_id) | rejected | modified. Email FK left as text for
+// now — email_reports table not yet ported to dashboard schema.
+
+export const vaultCandidates = pgTable('vault_candidates', {
+  id: text('id').primaryKey(),
+
+  // FK target (email_reports) lives in jimbo-api still; carry as text until
+  // that table lands in this schema. Not enforced as FK to avoid a phantom
+  // dependency on an absent table.
+  email_id: integer('email_id').notNull(),
+
+  type: text('type').notNull(),
+  title: text('title').notNull(),
+  body: text('body'),
+
+  // text[] — production stores JSON-string '[]'. Empty array default so
+  // consumers can always iterate.
+  tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
+
+  proposed_priority: integer('proposed_priority'),
+  // 0..1 model confidence on the candidate. real, not numeric — display.
+  confidence: real('confidence').notNull(),
+  rationale: text('rationale').notNull(),
+
+  // CHECK-constrained lifecycle. 'modified' means operator accepted with
+  // edits — distinct from straight 'accepted' for audit purposes.
+  status: text('status').notNull().default('pending'),
+  decided_at: timestamp('decided_at', { withTimezone: true }),
+
+  // SET NULL — the candidate is the audit trail; deleting the spawned note
+  // shouldn't erase the record of what the AI proposed.
+  created_vault_note_id: text('created_vault_note_id').references((): any => vaultNotes.id, { onDelete: 'set null' }),
+
+  // last_seen_at lets the ingester re-surface a candidate without dup'ing
+  // — bumps on each scan, distinct from created_at.
+  last_seen_at: timestamp('last_seen_at', { withTimezone: true }).notNull().defaultNow(),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  emailIdx: index('idx_vault_candidates_email').on(t.email_id),
+  statusIdx: index('idx_vault_candidates_status').on(t.status),
+
+  statusCheck: check(
+    'vault_candidates_status_check',
+    sql`${t.status} IN ('pending', 'accepted', 'rejected', 'modified')`,
+  ),
+}));
+
+// ── vault_item_dependencies ────────────────────────────────────────────────
+//
+// Directed blocker→blocked graph between vault items. Composite PK prevents
+// duplicate edges. No ON DELETE cascade in production — orphan edges are
+// surfaced rather than silently removed (mirrors snapshot fidelity).
+
+export const vaultItemDependencies = pgTable('vault_item_dependencies', {
+  blocker_id: text('blocker_id')
+    .notNull()
+    .references((): any => vaultNotes.id),
+  blocked_id: text('blocked_id')
+    .notNull()
+    .references((): any => vaultNotes.id),
+  created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.blocker_id, t.blocked_id] }),
+  blockedIdx: index('idx_dependencies_blocked').on(t.blocked_id),
+  blockerIdx: index('idx_dependencies_blocker').on(t.blocker_id),
+}));
+
+export type VaultCandidate = typeof vaultCandidates.$inferSelect;
+export type VaultCandidateInsert = typeof vaultCandidates.$inferInsert;
+export type VaultItemDependency = typeof vaultItemDependencies.$inferSelect;
+export type VaultItemDependencyInsert = typeof vaultItemDependencies.$inferInsert;

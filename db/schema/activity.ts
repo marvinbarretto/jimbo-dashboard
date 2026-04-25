@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { pgTable, text, timestamp, jsonb, bigserial, index, check } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, timestamp, jsonb, bigserial, index, check } from 'drizzle-orm/pg-core';
 import { vaultNotes } from './vault';
 
 // ── note_activity ──────────────────────────────────────────────────────────
@@ -87,3 +87,47 @@ export const systemEvents = pgTable('system_events', {
 
 export type NoteActivity = typeof noteActivity.$inferSelect;
 export type SystemEvent = typeof systemEvents.$inferSelect;
+
+// ── activities ─────────────────────────────────────────────────────────────
+//
+// Distinct from note_activity (which is per-vault-item). `activities` is the
+// legacy global activity log written by the conductor pipeline: one row per
+// AI task invocation (analysis/decomposition/scoring/etc), regardless of
+// whether it touches a vault item. Pairs with `costs` via cost_id.
+//
+// Naming clash is unfortunate but historical — keeping the production name
+// avoids a rename migration on frozen data.
+
+export const activities = pgTable('activities', {
+  // Text PK — production uses ULIDs/slugs (e.g. 'act_xxx'), not integers.
+  id: text('id').primaryKey(),
+
+  // When the task actually ran (not when row was inserted — same in practice
+  // but semantically distinct).
+  timestamp: timestamp('timestamp', { withTimezone: true }).notNull().defaultNow(),
+
+  // Free text — task taxonomy evolves. No CHECK.
+  task_type: text('task_type').notNull(),
+  description: text('description').notNull(),
+
+  // Result/effect of the task. Free text — could be a verdict, a summary,
+  // or a structured marker. Nullable for in-flight/failed tasks.
+  outcome: text('outcome'),
+  rationale: text('rationale'),
+  model_used: text('model_used'),
+
+  // Soft reference into costs(id). Not a FK — costs may be GC'd while we
+  // keep activity history for audit, and the relationship is one-to-one
+  // anyway (a cost row exists per activity that spent tokens).
+  cost_id: text('cost_id'),
+
+  // 1..5 operator score (or similar). No CHECK; scale still informal.
+  satisfaction: integer('satisfaction'),
+  notes: text('notes'),
+}, (t) => ({
+  tsIdx: index('idx_activities_ts').on(t.timestamp),
+  typeIdx: index('idx_activities_type').on(t.task_type),
+}));
+
+export type Activity = typeof activities.$inferSelect;
+export type ActivityInsert = typeof activities.$inferInsert;

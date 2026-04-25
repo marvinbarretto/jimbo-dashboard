@@ -213,6 +213,26 @@ The freeze+final-ETL approach makes rollback safe because the SQLite file is the
 
 ---
 
+## 7a. Pre-flight schema scope decision (2026-04-25 evening)
+
+§3's parity-gap list and §2's "out-of-scope clusters" partially conflict. Resolved as follows:
+
+**Schemas added in pre-flight (8 cluster files, 21 tables):**
+- Grooming pipeline: `grooming_corrections`, `grooming_corrections_ingested`, `grooming_lessons`, `grooming_proposals`
+- Operator context: `context_files`, `context_items`, `context_sections`
+- Coach: `coach_logs`, `coach_nudges`, `coach_supplements`
+- Vault relations: `vault_candidates`, `vault_item_dependencies`, `note_links`, `note_thread`
+- Pipeline/experiments: `pipeline_runs`, `bakeoff_runs`, `runs`
+- Misc: `email_reports`, `briefing_analyses`, `activities`, `product_summaries`
+
+**Schemas deferred (per §2 out-of-scope clusters):**
+- `interrogate_*` (10 tables) — 0-row in production today
+- `fitness_records`, `health_snapshots` — separate concern
+
+**Coupling rule:** the deferred schemas pair 1:1 with deferred service-file ports. Do NOT port `services/interrogate-*`, `services/fitness.ts`, or any `health_*` service in Phase B — there are no Postgres tables to write to. If a Phase B port encounters a write to one of these tables, stop and add the schema first (or defer the service entirely).
+
+---
+
 ## 8. Cross-references
 
 - **Architecture overview:** `dashboard/docs/architecture/whiteboard.md`
