@@ -76,4 +76,39 @@ $accent-hot: #d96520;
     padding: 1rem 0;
     opacity: 0.5;
   }
+
+  // Skeleton cards while the data source is loading. Three identical ghost
+  // boxes so the column doesn't collapse to "0" before items arrive — and
+  // doesn't read as a real empty state. Shimmer rides a moving gradient;
+  // reduced-motion falls back to a flat tint.
+  &__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__skeleton-card {
+    height: 4.2rem;
+    border-radius: var(--radius);
+    background: linear-gradient(
+      90deg,
+      var(--color-bg) 0%,
+      color-mix(in oklch, var(--color-text) 6%, var(--color-bg)) 50%,
+      var(--color-bg) 100%
+    );
+    background-size: 200% 100%;
+    animation: kanban-col-shimmer 1.6s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__skeleton-card {
+      animation: none;
+      background: color-mix(in oklch, var(--color-text) 4%, var(--color-bg));
+    }
+  }
+}
+
+@keyframes kanban-col-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
 }

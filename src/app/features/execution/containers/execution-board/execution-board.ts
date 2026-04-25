@@ -10,6 +10,7 @@ import { SkillsService } from '@features/skills/data-access/skills.service';
 import {
   DISPATCH_STATUS_ORDER,
   DISPATCH_STATUS_LABELS,
+  DISPATCH_EMPTY_LABELS,
   DISPATCH_STATUS_SYSTEM_MANAGED,
   type DispatchStatus,
   type DispatchQueueEntry,
@@ -25,9 +26,10 @@ const EXECUTOR = 'executor';
 const PROJECT  = 'project';
 
 interface ColumnView {
-  status: DispatchStatus;
-  label:  string;
-  cards:  DispatchQueueEntry[];
+  status:        DispatchStatus;
+  label:         string;
+  emptyLabel:    string;
+  cards:         DispatchQueueEntry[];
   systemManaged: boolean;
 }
 
@@ -71,7 +73,8 @@ export class ExecutionBoard {
     const entries = this.visibleEntries();
     return DISPATCH_STATUS_ORDER.map(status => ({
       status,
-      label: DISPATCH_STATUS_LABELS[status],
+      label:         DISPATCH_STATUS_LABELS[status],
+      emptyLabel:    DISPATCH_EMPTY_LABELS[status],
       systemManaged: DISPATCH_STATUS_SYSTEM_MANAGED.includes(status),
       cards: entries
         .filter(e => e.status === status)
@@ -79,6 +82,10 @@ export class ExecutionBoard {
         .sort((a, b) => b.created_at.localeCompare(a.created_at)),
     }));
   });
+
+  // Surfaces DispatchService.isLoading to the template so each column can
+  // render skeleton cards before the first fetch lands.
+  protected readonly isLoading = this.dispatchService.isLoading;
 
   constructor() {
     // Pre-load project junctions for every visible task so the project chip on

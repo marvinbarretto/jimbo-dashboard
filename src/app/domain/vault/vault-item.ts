@@ -85,6 +85,18 @@ export const GROOMING_STATUS_LABELS: Record<GroomingStatus, string> = {
   ready:            'Ready',
 };
 
+// Per-column empty-state copy for the kanban. Status-specific lines read better
+// than a generic "empty" because each column means something different — an
+// empty Ready column is a positive signal, an empty Ungroomed column is too.
+export const GROOMING_EMPTY_LABELS: Record<GroomingStatus, string> = {
+  ungroomed:        'No ungroomed items',
+  intake_rejected:  'No items rejected',
+  intake_complete:  'Nothing pending classification',
+  classified:       'Nothing classified yet',
+  decomposed:       'Nothing in draft',
+  ready:            'No ready items',
+};
+
 // Priority as integer to match hermes and the jimbo-api storage.
 // UI renders with a "P" prefix ("P0", "P1"...) but the stored value is the number.
 // 0 = urgent/blocking, 1 = high, 2 = normal (default when unsure), 3 = low.

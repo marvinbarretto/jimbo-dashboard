@@ -12,7 +12,7 @@ export type {
   UpdateVaultItemPayload,
 } from './vault-item';
 
-export { lifecycleState, isActive, isDone, isArchived, GROOMING_STATUS_ORDER, GROOMING_STATUS_LABELS } from './vault-item';
+export { lifecycleState, isActive, isDone, isArchived, GROOMING_STATUS_ORDER, GROOMING_STATUS_LABELS, GROOMING_EMPTY_LABELS } from './vault-item';
 
 export { ageInDays, staleNorm, ancientNorm, stalenessRatio, stalenessRatioFor, STALE_DAYS, ANCIENT_DAYS, STALENESS_CEILING_DAYS } from './staleness';
 

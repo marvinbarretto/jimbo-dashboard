@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-// Blue circle with "?" inside. Signals "needs human input" — open questions
-// blocking dispatch (P17). Renders with a hover title showing the count.
+// Red circle with "?" inside. Signals "needs human input" — open questions
+// blocking dispatch (P17). Danger-tinted (not info) so a blocked card reads
+// as urgent on a 2k-row scan, not just informational. Hover title shows count.
 @Component({
   selector: 'app-blocker-badge',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -14,7 +15,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
       width: 1rem;
       height: 1rem;
       border-radius: 50%;
-      background: var(--color-info);
+      background: var(--color-danger);
       color: var(--color-bg);
       font-size: 0.7rem;
       font-weight: 700;

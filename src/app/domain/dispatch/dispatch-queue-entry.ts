@@ -40,6 +40,17 @@ export const DISPATCH_STATUS_LABELS: Record<DispatchStatus, string> = {
   failed:      'Failed',
 };
 
+// Per-column empty-state copy for the execution kanban. An empty Failed column
+// is the "everything is fine" signal — worth saying explicitly rather than a
+// flat "empty".
+export const DISPATCH_EMPTY_LABELS: Record<DispatchStatus, string> = {
+  approved:    'No approved dispatches',
+  dispatching: 'Nothing dispatching',
+  running:     'Nothing running',
+  completed:   'No completed runs yet',
+  failed:      'No failures',
+};
+
 // `running` and `dispatching` are system-managed: the operator can't drag a
 // card into them — only hermes / pipeline-pump puts items here. Used by the
 // execution board to mark those columns dropDisabled.

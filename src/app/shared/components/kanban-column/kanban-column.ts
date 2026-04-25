@@ -21,6 +21,13 @@ export class KanbanColumn {
   // When true, the column refuses drops (used for status values that aren't a
   // legal manual transition — e.g. "running" on the execution board).
   readonly dropDisabled = input<boolean>(false);
+  // True while the parent board's data source is loading. Renders ghost cards
+  // instead of the empty-state copy so the operator sees "fetching" rather
+  // than misreading a still-loading column as genuinely empty.
+  readonly loading      = input<boolean>(false);
+  // Per-column empty-state copy. Status-specific lines read better than a
+  // generic "empty" — the parent board knows the column's purpose.
+  readonly emptyLabel   = input<string>('Nothing here');
 
   readonly dragover  = output<DragEvent>();
   readonly dragleave = output<void>();

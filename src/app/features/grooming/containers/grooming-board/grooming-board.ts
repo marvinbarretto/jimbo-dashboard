@@ -10,6 +10,7 @@ import { ThreadService } from '@features/thread/data-access/thread.service';
 import {
   GROOMING_STATUS_ORDER,
   GROOMING_STATUS_LABELS,
+  GROOMING_EMPTY_LABELS,
   isActive,
   isDone,
   type GroomingStatus,
@@ -41,9 +42,10 @@ const OWNER    = 'owner';
 const PRIORITY = 'priority';
 
 interface ColumnView {
-  status: GroomingStatus;
-  label:  string;
-  cards:  VaultItem[];
+  status:     GroomingStatus;
+  label:      string;
+  emptyLabel: string;
+  cards:      VaultItem[];
 }
 
 @Component({
@@ -92,12 +94,18 @@ export class GroomingBoard {
     const items = this.visibleItems();
     return GROOMING_STATUS_ORDER.map(status => ({
       status,
-      label: GROOMING_STATUS_LABELS[status],
+      label:      GROOMING_STATUS_LABELS[status],
+      emptyLabel: GROOMING_EMPTY_LABELS[status],
       cards: items
         .filter(i => i.grooming_status === status)
         .sort(compareCardsForKanban),
     }));
   });
+
+  // Surfaces VaultItemsService.isLoading to the template so each column can
+  // render skeleton cards. Exposed as a protected getter rather than wiring
+  // the service into the template directly so the board owns the dependency.
+  protected readonly isLoading = this.vaultItemsService.isLoading;
 
   constructor() {
     // All per-card data (project chip, open-questions badge, pulse intensity,

@@ -3,6 +3,7 @@
   [class.col--drop-eligible]="dropEligible()"
   [class.col--drop-active]="dropActive()"
   [class.col--drop-disabled]="dropDisabled()"
+  [class.col--loading]="loading()"
   (dragover)="onDragOver($event)"
   (dragleave)="onDragLeave()"
   (drop)="onDrop($event)"
@@ -13,9 +14,17 @@
   </header>
 
   <div class="col__cards">
-    <ng-content />
-    @if (count() === 0) {
-      <p class="col__empty">empty</p>
+    @if (loading()) {
+      <div class="col__skeleton" aria-hidden="true">
+        <div class="col__skeleton-card"></div>
+        <div class="col__skeleton-card"></div>
+        <div class="col__skeleton-card"></div>
+      </div>
+    } @else {
+      <ng-content />
+      @if (count() === 0) {
+        <p class="col__empty">{{ emptyLabel() }}</p>
+      }
     }
   </div>
 </section>

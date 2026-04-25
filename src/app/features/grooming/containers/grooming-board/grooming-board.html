@@ -21,6 +21,8 @@
       <app-kanban-column
         [label]="col.label"
         [count]="col.cards.length"
+        [emptyLabel]="col.emptyLabel"
+        [loading]="isLoading()"
         [dropEligible]="drag.isEligibleDropTarget(col.status)"
         [dropActive]="drag.dropTarget() === col.status"
         (dragover)="onColumnDragOver($event, col.status)"
