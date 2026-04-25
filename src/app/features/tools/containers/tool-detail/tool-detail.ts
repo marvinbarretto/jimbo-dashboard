@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, switchMap, map } from 'rxjs';
 import { DatePipe, JsonPipe } from '@angular/common';
+import { formatPageTitle } from '@app/app-title-strategy';
 import { ToolsService } from '../../data-access/tools.service';
 import type { ToolVersion } from '../../utils/tool.types';
 
@@ -16,6 +18,7 @@ import type { ToolVersion } from '../../utils/tool.types';
 export class ToolDetail {
   private readonly service = inject(ToolsService);
   private readonly route = inject(ActivatedRoute);
+  private readonly titleService = inject(Title);
 
   private readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id'))));
 
@@ -40,6 +43,11 @@ export class ToolDetail {
     ).subscribe({
       next: vs => { this.versions.set(vs); this.versionsLoading.set(false); },
       error: ()  => this.versionsLoading.set(false),
+    });
+
+    effect(() => {
+      const t = this.tool();
+      if (t) this.titleService.setTitle(formatPageTitle(t.display_name));
     });
   }
 

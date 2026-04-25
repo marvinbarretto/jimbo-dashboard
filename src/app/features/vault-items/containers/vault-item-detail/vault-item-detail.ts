@@ -8,8 +8,10 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
+import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { formatPageTitle } from '@app/app-title-strategy';
 import { VaultItemsService } from '../../data-access/vault-items.service';
 import { ActivityEventsService } from '../../data-access/activity-events.service';
 import { VaultItemProjectsService } from '../../data-access/vault-item-projects.service';
@@ -42,6 +44,7 @@ export class VaultItemDetail {
   private readonly actorsService = inject(ActorsService);
   private readonly projectsService = inject(ProjectsService);
   private readonly threadService = inject(ThreadService);
+  private readonly titleService = inject(Title);
 
   // `:seq` param is a string in the URL — parse to number.
   private readonly seq = toSignal(
@@ -66,6 +69,12 @@ export class VaultItemDetail {
       this.vaultItemProjectsService.loadFor(i.id);
       this.vaultItemDepsService.loadFor(i.id);
       this.threadService.loadFor(i.id);
+    });
+
+    effect(() => {
+      const i = this.item();
+      if (!i) return;
+      this.titleService.setTitle(formatPageTitle(`#${i.seq} ${i.title}`));
     });
   }
 

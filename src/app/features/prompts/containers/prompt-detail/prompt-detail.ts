@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, switchMap } from 'rxjs';
 import { DatePipe } from '@angular/common';
 import { map } from 'rxjs';
+import { formatPageTitle } from '@app/app-title-strategy';
 import { PromptsService } from '../../data-access/prompts.service';
 import type { PromptVersion } from '../../utils/prompt.types';
 
@@ -17,6 +19,7 @@ import type { PromptVersion } from '../../utils/prompt.types';
 export class PromptDetail {
   private readonly service = inject(PromptsService);
   private readonly route = inject(ActivatedRoute);
+  private readonly titleService = inject(Title);
 
   private readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id'))));
 
@@ -42,6 +45,11 @@ export class PromptDetail {
     ).subscribe({
       next: vs => { this.versions.set(vs); this.versionsLoading.set(false); },
       error: ()  => this.versionsLoading.set(false),
+    });
+
+    effect(() => {
+      const p = this.prompt();
+      if (p) this.titleService.setTitle(formatPageTitle(p.display_name));
     });
   }
 

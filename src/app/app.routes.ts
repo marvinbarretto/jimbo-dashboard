@@ -43,10 +43,12 @@ export const routes: Routes = [
   },
   {
     path: 'coverage',
+    title: 'Coverage',
     loadComponent: () => import('./features/coverage/coverage-page/coverage-page').then(m => m.CoveragePage),
   },
   {
     path: 'test-forms',
+    title: 'Test forms',
     loadComponent: () => import('./features/test-forms/test-forms-page').then(m => m.TestFormsPage),
   },
   { path: '', redirectTo: 'vault-items', pathMatch: 'full' },

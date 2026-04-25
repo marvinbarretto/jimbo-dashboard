@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { formatPageTitle } from '@app/app-title-strategy';
 import { SkillsService } from '../../data-access/skills.service';
 import { skillNamespace, skillLocalName } from '@domain/skills';
 
@@ -15,6 +17,14 @@ import { skillNamespace, skillLocalName } from '@domain/skills';
 export class SkillDetail {
   private readonly service = inject(SkillsService);
   private readonly route = inject(ActivatedRoute);
+  private readonly titleService = inject(Title);
+
+  constructor() {
+    effect(() => {
+      const s = this.skill();
+      if (s) this.titleService.setTitle(formatPageTitle(s.display_name));
+    });
+  }
 
   private readonly id = toSignal(
     this.route.paramMap.pipe(map(p => `${p.get('namespace')}/${p.get('name')}`)),

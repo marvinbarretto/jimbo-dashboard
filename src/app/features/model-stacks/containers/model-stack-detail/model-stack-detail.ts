@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { formatPageTitle } from '@app/app-title-strategy';
 import { ModelStacksService } from '../../data-access/model-stacks.service';
 import { ModelsService } from '../../../models/data-access/models.service';
 
@@ -16,6 +18,7 @@ export class ModelStackDetail {
   private readonly service = inject(ModelStacksService);
   private readonly modelsService = inject(ModelsService);
   private readonly route = inject(ActivatedRoute);
+  private readonly titleService = inject(Title);
 
   private readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id') ?? '')));
 
@@ -30,4 +33,11 @@ export class ModelStackDetail {
     const fid = this.stack()?.fast_model_id;
     return fid ? (this.modelsService.getById(fid) ?? { id: fid, display_name: fid }) : null;
   });
+
+  constructor() {
+    effect(() => {
+      const s = this.stack();
+      if (s) this.titleService.setTitle(formatPageTitle(s.display_name));
+    });
+  }
 }

@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { formatPageTitle } from '@app/app-title-strategy';
 import { ProjectsService } from '../../data-access/projects.service';
 import { ProjectActivityEventsService } from '../../data-access/project-activity-events.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
@@ -20,6 +22,7 @@ export class ProjectDetail {
   private readonly actorsService = inject(ActorsService);
   private readonly activityService = inject(ProjectActivityEventsService);
   private readonly route = inject(ActivatedRoute);
+  private readonly titleService = inject(Title);
 
   private readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id') ?? '')));
 
@@ -42,6 +45,11 @@ export class ProjectDetail {
     effect(() => {
       const p = this.project();
       if (p) this.activityService.loadFor(p.id);
+    });
+
+    effect(() => {
+      const p = this.project();
+      if (p) this.titleService.setTitle(formatPageTitle(p.display_name));
     });
   }
 
