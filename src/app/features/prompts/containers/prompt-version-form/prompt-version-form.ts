@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { PromptsService } from '../../data-access/prompts.service';
-import { promptId as brandPromptId } from '../../../../domain/ids';
+import { promptId as brandPromptId } from '@domain/ids';
 
 @Component({
   selector: 'app-prompt-version-form',

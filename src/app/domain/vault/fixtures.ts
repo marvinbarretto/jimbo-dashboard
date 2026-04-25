@@ -1,7 +1,7 @@
 import type { VaultItem } from './vault-item';
 import type { VaultItemProject } from './vault-item-project';
 import type { VaultItemDependency } from './vault-item-dependency';
-import { actorId, projectId, vaultItemId } from '../ids';
+import { actorId, projectId, vaultItemId } from '@domain/ids';
 
 // Stress-test fixture set. Each item is annotated with the scenario it exercises so
 // the kanban / list / detail screens see edge cases you'd otherwise hit only in prod.
@@ -47,6 +47,12 @@ const ITEM_Y = vaultItemId('88888888-0012-0012-0012-000000000012');
 const ITEM_Z = vaultItemId('88888888-0013-0013-0013-000000000013');
 const ITEM_AA = vaultItemId('88888888-0014-0014-0014-000000000014');
 const ITEM_AB = vaultItemId('88888888-0015-0015-0015-000000000015');
+// Long-stale items — exercise the staleness gradient at 30 / 50 / 90 days.
+// These exist to keep the visual spectrum populated (mid-amber, deep amber,
+// red ceiling) so the operator can see what each tier looks like.
+const ITEM_AC = vaultItemId('88888888-0016-0016-0016-000000000016');
+const ITEM_AD = vaultItemId('88888888-0017-0017-0017-000000000017');
+const ITEM_AE = vaultItemId('88888888-0018-0018-0018-000000000018');
 
 export const VAULT_ITEM_IDS = {
   A: ITEM_A,  B: ITEM_B,  C: ITEM_C,  D: ITEM_D,
@@ -59,6 +65,7 @@ export const VAULT_ITEM_IDS = {
   V: ITEM_V,  W: ITEM_W,  X: ITEM_X,
   Y: ITEM_Y,  Z: ITEM_Z,
   AA: ITEM_AA, AB: ITEM_AB,
+  AC: ITEM_AC, AD: ITEM_AD, AE: ITEM_AE,
 } as const;
 
 export const VAULT_ITEMS = [
@@ -603,6 +610,66 @@ export const VAULT_ITEMS = [
     source: { kind: 'manual', ref: 'marvin-2026-04-24', url: null },
     created_at: '2026-04-24T22:00:00Z',
   },
+
+  // ========================================================================
+  // Long-stale items — visual gradient demonstration (30 / 50 / 90 days)
+  // ========================================================================
+
+  // AC: 30 days old, classified, P2 — mid-gradient (entering amber→red phase).
+  {
+    id: ITEM_AC, seq: 2429,
+    title: 'Tidy up status filter UX on vault list',
+    body:
+      'Filter chips on the vault list are too cramped on narrow screens. Reflow ' +
+      'into a dropdown below ~640px viewport.',
+    type: 'task', assigned_to: actorId('ralph'),
+    tags: ['frontend', 'ux'],
+    acceptance_criteria: [],
+    grooming_status: 'classified',
+    ai_priority: 2, manual_priority: null,
+    ai_rationale: 'Quality-of-life improvement; nobody is blocked.',
+    priority_confidence: 0.72, actionability: 'clear',
+    parent_id: null, archived_at: null, due_at: null, completed_at: null,
+    source: { kind: 'manual', ref: 'marvin-2026-03-26', url: null },
+    created_at: '2026-03-26T11:00:00Z',
+  },
+
+  // AD: 50 days old, ungroomed, telegram — deep amber/red, never triaged.
+  // Classic "saved a thought, never came back to it" item.
+  {
+    id: ITEM_AD, seq: 2430,
+    title: 'Marc said something about a board games night in March',
+    body: 'Vague. Probably want to follow up if interested.',
+    type: 'task', assigned_to: null,
+    tags: [],
+    acceptance_criteria: [],
+    grooming_status: 'ungroomed',
+    ai_priority: null, manual_priority: null, ai_rationale: null,
+    priority_confidence: null, actionability: null,
+    parent_id: null, archived_at: null, due_at: null, completed_at: null,
+    source: { kind: 'telegram', ref: 'tg-msg-87100', url: null },
+    created_at: '2026-03-06T22:00:00Z',
+  },
+
+  // AE: 90 days old, ready but never dispatched, P3 — red ceiling.
+  // The "I'll do it eventually" backlog ghost.
+  {
+    id: ITEM_AE, seq: 2431,
+    title: 'Add favicon for the dashboard',
+    body: 'Default Angular favicon still showing in tabs. Pick a small jimbo glyph and wire it.',
+    type: 'task', assigned_to: actorId('marvin'),
+    tags: ['design', 'cosmetic'],
+    acceptance_criteria: [
+      { text: 'favicon.ico replaces default Angular one', done: false },
+    ],
+    grooming_status: 'ready',
+    ai_priority: 3, manual_priority: 3,
+    ai_rationale: 'Cosmetic. Lowest priority everything.',
+    priority_confidence: 0.95, actionability: 'clear',
+    parent_id: null, archived_at: null, due_at: null, completed_at: null,
+    source: { kind: 'manual', ref: 'marvin-2026-01-25', url: null },
+    created_at: '2026-01-25T10:00:00Z',
+  },
 ] as const satisfies readonly VaultItem[];
 
 // Project linkage. Every item has at least one project — operator-life items
@@ -631,6 +698,8 @@ export const VAULT_ITEM_PROJECTS = [
   { vault_item_id: ITEM_Y, project_id: projectId('dashboard') },     // archived tailwind
   { vault_item_id: ITEM_Z, project_id: projectId('hermes') },        // gh actions (done+archived)
   { vault_item_id: ITEM_AB, project_id: projectId('dashboard') },    // home page slow note
+  { vault_item_id: ITEM_AC, project_id: projectId('dashboard') },    // 30d filter UX
+  { vault_item_id: ITEM_AE, project_id: projectId('dashboard') },    // 90d favicon
 
   // Life-admin items
   { vault_item_id: ITEM_A, project_id: projectId('personal') },      // sam venue thing
@@ -640,6 +709,7 @@ export const VAULT_ITEM_PROJECTS = [
   { vault_item_id: ITEM_L, project_id: projectId('personal') },      // vague brain dump
   { vault_item_id: ITEM_M, project_id: projectId('personal') },      // helen request
   { vault_item_id: ITEM_AA, project_id: projectId('personal') },     // refactoring guru bookmark
+  { vault_item_id: ITEM_AD, project_id: projectId('personal') },     // 50d board games
 ] as const satisfies readonly VaultItemProject[];
 
 // Dependencies. A blocks C (existing). Q (prod incident) blocks R (reaper backoff) — can't

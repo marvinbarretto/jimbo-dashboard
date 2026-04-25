@@ -5,7 +5,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { vi } from 'vitest';
 import { VaultItemForm } from './vault-item-form';
-import type { AcceptanceCriterion } from '../../../../domain/vault/vault-item';
+import type { AcceptanceCriterion } from '@domain/vault/vault-item';
 
 // The interesting behaviour is the submit-boundary parsing, not Angular rendering.
 // spyOn the service so we can intercept the parsed payload without needing a live API.

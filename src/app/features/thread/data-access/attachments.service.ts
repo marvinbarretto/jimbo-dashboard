@@ -6,12 +6,12 @@
 
 import { Injectable, Signal, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import type { Attachment, AttachmentKind } from '../../../domain/attachments';
-import type { AttachmentId, ThreadMessageId } from '../../../domain/ids';
-import { attachmentId } from '../../../domain/ids';
+import type { Attachment, AttachmentKind } from '@domain/attachments';
+import type { AttachmentId, ThreadMessageId } from '@domain/ids';
+import { attachmentId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
-import { isSeedMode } from '../../../shared/seed-mode';
-import { SEED } from '../../../domain/seed';
+import { isSeedMode } from '@shared/seed-mode';
+import { SEED } from '@domain/seed';
 
 @Injectable({ providedIn: 'root' })
 export class AttachmentsService {

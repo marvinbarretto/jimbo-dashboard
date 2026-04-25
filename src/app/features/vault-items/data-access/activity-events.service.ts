@@ -5,13 +5,13 @@
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import type { ActivityEvent, VaultActivityEvent } from '../../../domain/activity/activity-event';
-import { isVaultEvent } from '../../../domain/activity/activity-event';
-import type { VaultItemId } from '../../../domain/ids';
-import { activityId } from '../../../domain/ids';
+import type { ActivityEvent, VaultActivityEvent } from '@domain/activity/activity-event';
+import { isVaultEvent } from '@domain/activity/activity-event';
+import type { VaultItemId } from '@domain/ids';
+import { activityId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
-import { isSeedMode } from '../../../shared/seed-mode';
-import { SEED } from '../../../domain/seed';
+import { isSeedMode } from '@shared/seed-mode';
+import { SEED } from '@domain/seed';
 
 // `Omit<Union, K>` collapses to common keys; this version distributes over union members
 // so each variant of VaultActivityEvent loses 'id' and 'at' independently.

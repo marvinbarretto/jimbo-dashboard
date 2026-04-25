@@ -18,13 +18,13 @@ import { ActorsService } from '../../../actors/data-access/actors.service';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { ThreadService } from '../../../thread/data-access/thread.service';
 import { ThreadView } from '../../../thread/components/thread-view/thread-view';
-import { computeReadiness, effectivePriority } from '../../../../domain/vault/readiness';
-import { actorId, projectId, vaultItemId } from '../../../../domain/ids';
-import type { Priority } from '../../../../domain/vault/vault-item';
-import { lifecycleState, isArchived, type LifecycleState } from '../../../../domain/vault/vault-item';
-import type { ActivityEvent, AssignedEvent, CompletionChangedEvent, ArchivedEvent, GroomingStatusChangedEvent, ThreadMessagePostedEvent } from '../../../../domain/activity/activity-event';
-import type { ProjectId, VaultItemId, ActorId } from '../../../../domain/ids';
-import type { Actor } from '../../../../domain/actors';
+import { computeReadiness, effectivePriority } from '@domain/vault/readiness';
+import { actorId, projectId, vaultItemId } from '@domain/ids';
+import type { Priority } from '@domain/vault/vault-item';
+import { lifecycleState, isArchived, type LifecycleState } from '@domain/vault/vault-item';
+import type { ActivityEvent, AssignedEvent, CompletionChangedEvent, ArchivedEvent, GroomingStatusChangedEvent, ThreadMessagePostedEvent } from '@domain/activity/activity-event';
+import type { ProjectId, VaultItemId, ActorId } from '@domain/ids';
+import type { Actor } from '@domain/actors';
 
 @Component({
   selector: 'app-vault-item-detail',

@@ -22,7 +22,7 @@
 
   <div class="board__columns">
     @for (col of columns(); track col.status) {
-      <app-grooming-column
+      <app-kanban-column
         [label]="col.label"
         [count]="col.cards.length"
         [dropEligible]="isEligibleDropTarget(col.status)"
@@ -38,12 +38,13 @@
             [openQuestionsCount]="openQuestionsCount(item)"
             [parentSeq]="parentSeq(item)"
             [childrenCount]="childrenCount(item)"
+            [epicPriority]="rolledUpPriorityForEpic(item)"
             [dragging]="dragging() === item.id"
             (dragstart)="onDragStart($event, item)"
             (dragend)="onDragEnd()"
           />
         }
-      </app-grooming-column>
+      </app-kanban-column>
     }
   </div>
 </div>

@@ -3,15 +3,15 @@
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import type { VaultItem, CreateVaultItemPayload, UpdateVaultItemPayload, GroomingStatus } from '../../../domain/vault/vault-item';
-import { isActive } from '../../../domain/vault/vault-item';
-import type { ActorId, VaultItemId } from '../../../domain/ids';
-import type { VaultActivityEvent } from '../../../domain/activity/activity-event';
-import { vaultItemId, actorId } from '../../../domain/ids';
+import type { VaultItem, CreateVaultItemPayload, UpdateVaultItemPayload, GroomingStatus } from '@domain/vault/vault-item';
+import { isActive } from '@domain/vault/vault-item';
+import type { ActorId, VaultItemId } from '@domain/ids';
+import type { VaultActivityEvent } from '@domain/activity/activity-event';
+import { vaultItemId, actorId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { ActivityEventsService } from './activity-events.service';
-import { isSeedMode } from '../../../shared/seed-mode';
-import { SEED } from '../../../domain/seed';
+import { isSeedMode } from '@shared/seed-mode';
+import { SEED } from '@domain/seed';
 
 // Convenience alias — the union parameter type for post(). Vault-side only.
 // Distributive Omit so each variant loses id/at independently.

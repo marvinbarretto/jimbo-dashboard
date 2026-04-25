@@ -5,8 +5,8 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { ProjectsService } from '../../data-access/projects.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
-import { projectId, actorId } from '../../../../domain/ids';
-import type { ProjectStatus } from '../../../../domain/projects';
+import { projectId, actorId } from '@domain/ids';
+import type { ProjectStatus } from '@domain/projects';
 
 @Component({
   selector: 'app-project-form',

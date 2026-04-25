@@ -4,4 +4,4 @@ export type {
   ModelStack,
   CreateModelStackPayload,
   UpdateModelStackPayload,
-} from '../../../domain/model-stacks';
+} from '@domain/model-stacks';

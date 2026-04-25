@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { PromptsService } from '../../data-access/prompts.service';
-import { promptId } from '../../../../domain/ids';
+import { promptId } from '@domain/ids';
 
 @Component({
   selector: 'app-prompt-form',

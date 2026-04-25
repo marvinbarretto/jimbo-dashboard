@@ -11,9 +11,9 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { SkillsService } from '../../data-access/skills.service';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
-import { skillId, projectId, promptId } from '../../../../domain/ids';
-import { skillNamespace } from '../../../../domain/skills';
-import type { ModelTier } from '../../../../domain/skills';
+import { skillId, projectId, promptId } from '@domain/ids';
+import { skillNamespace } from '@domain/skills';
+import type { ModelTier } from '@domain/skills';
 
 // Slug pattern: {project}/{skill-name} — lowercase, digits, hyphens each side.
 const slugPattern = /^[a-z0-9][a-z0-9-]*\/[a-z0-9][a-z0-9-]*$/;

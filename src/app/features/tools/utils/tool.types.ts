@@ -7,4 +7,4 @@ export type {
   UpdateToolPayload,
   ToolVersion,
   CreateToolVersionPayload,
-} from '../../../domain/tools';
+} from '@domain/tools';

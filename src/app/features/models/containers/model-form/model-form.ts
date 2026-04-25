@@ -6,7 +6,7 @@ import { filter, map, take } from 'rxjs';
 import { ModelsService } from '../../data-access/models.service';
 import { MODEL_CAPABILITIES } from '../../utils/model.types';
 import type { ModelProvider, ModelTier, ModelCapability } from '../../utils/model.types';
-import { modelId } from '../../../../domain/ids';
+import { modelId } from '@domain/ids';
 
 @Component({
   selector: 'app-model-form',

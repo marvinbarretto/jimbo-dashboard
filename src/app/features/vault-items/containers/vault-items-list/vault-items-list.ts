@@ -4,9 +4,9 @@ import { VaultItemsService } from '../../data-access/vault-items.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { VaultItemProjectsService } from '../../data-access/vault-item-projects.service';
-import { computeReadiness, effectivePriority } from '../../../../domain/vault/readiness';
-import type { VaultItem, Priority } from '../../../../domain/vault/vault-item';
-import { lifecycleState, isArchived } from '../../../../domain/vault/vault-item';
+import { computeReadiness, effectivePriority } from '@domain/vault/readiness';
+import type { VaultItem, Priority } from '@domain/vault/vault-item';
+import { lifecycleState, isArchived } from '@domain/vault/vault-item';
 
 @Component({
   selector: 'app-vault-items-list',

@@ -12,9 +12,9 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { SlicePipe } from '@angular/common';
-import type { ThreadMessage, ThreadMessageKind, CreateThreadMessagePayload } from '../../../../domain/thread';
-import type { VaultItemId, ActorId, ThreadMessageId } from '../../../../domain/ids';
-import { threadMessageId } from '../../../../domain/ids';
+import type { ThreadMessage, ThreadMessageKind, CreateThreadMessagePayload } from '@domain/thread';
+import type { VaultItemId, ActorId, ThreadMessageId } from '@domain/ids';
+import { threadMessageId } from '@domain/ids';
 import { AttachmentsService } from '../../data-access/attachments.service';
 
 @Component({

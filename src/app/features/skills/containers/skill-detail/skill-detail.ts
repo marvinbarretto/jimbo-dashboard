@@ -3,7 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { SkillsService } from '../../data-access/skills.service';
-import { skillNamespace, skillLocalName } from '../../../../domain/skills';
+import { skillNamespace, skillLocalName } from '@domain/skills';
 
 @Component({
   selector: 'app-skill-detail',

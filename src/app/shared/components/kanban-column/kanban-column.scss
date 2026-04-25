@@ -28,6 +28,12 @@ $accent-hot: #d96520;
     background: color-mix(in srgb, $accent-hot 8%, var(--color-surface));
   }
 
+  // Marks columns that don't accept drops at all (e.g. system-managed states
+  // like execution's "running"). Visually muted; ignores dragover events.
+  &--drop-disabled {
+    opacity: 0.85;
+  }
+
   &__header {
     display: flex;
     align-items: baseline;

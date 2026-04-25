@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { MessageComposer } from './message-composer';
-import { vaultItemId, actorId, threadMessageId } from '../../../../domain/ids';
-import type { CreateThreadMessagePayload } from '../../../../domain/thread';
+import { vaultItemId, actorId, threadMessageId } from '@domain/ids';
+import type { CreateThreadMessagePayload } from '@domain/thread';
 
 const VAULT_ID = vaultItemId('vault-composer-1');
 const ACTOR_ID = actorId('marvin');

@@ -3,19 +3,69 @@
 :host { display: block; }
 
 .card {
+  // --age-norm is a 0..1 number set on the host element by the component. The
+  // domain (stalenessRatioFor) decides the ratio; CSS decides what colour and
+  // shadow that ratio paints. Continuous gradient — no buckets, no class swaps.
+  //
+  // Two-stop interpolation in oklch:
+  //   border (cool) → warning (amber) → danger (red)
+  //
+  // Phase A drives 0%..50% of age (border → warning). Phase B drives 50%..100%
+  // (warning → danger). Each phase clamps to 0..100%, so once the formula is
+  // past a phase it rests at the phase endpoint while the next one ramps. Means
+  // the visual stays calm-amber for mid-aged items and only escalates to red
+  // for genuinely rotting ones.
+  --age-pct: calc(var(--age-norm, 0) * 100%);
+  --phase-a:  clamp(0%, calc(var(--age-pct) * 2),         100%);
+  --phase-b:  clamp(0%, calc((var(--age-pct) - 50%) * 2), 100%);
+
   background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  border: 1px solid color-mix(
+    in oklch,
+    var(--color-danger) var(--phase-b),
+    color-mix(in oklch, var(--color-warning) var(--phase-a), var(--color-border))
+  );
   border-radius: var(--radius);
   padding: 0.55rem 0.7rem;
   cursor: grab;
-  transition: border-color 0.1s, opacity 0.1s;
+  transition: border-color 0.2s, box-shadow 0.2s, opacity 0.1s;
 
-  &:hover { border-color: var(--color-text-muted); }
+  // Shadow halo grows with age. Tinted by the same two-stop blend so the glow
+  // stays warm-amber for mid-aged cards and only goes red when truly rotting.
+  box-shadow:
+    0
+    0
+    calc(var(--age-norm, 0) * 14px)
+    calc(var(--age-norm, 0) * -2px)
+    color-mix(in oklch, transparent,
+      color-mix(in oklch,
+        var(--color-danger) var(--phase-b),
+        var(--color-warning)
+      )
+      calc(var(--age-norm, 0) * 35%)
+    );
+
+  &:hover {
+    border-color: color-mix(
+      in oklch,
+      var(--color-danger) var(--phase-b),
+      color-mix(in oklch, var(--color-warning) var(--phase-a), var(--color-text-muted))
+    );
+  }
   &:active { cursor: grabbing; }
 
   &--dragging {
     opacity: 0.4;
     cursor: grabbing;
+  }
+
+  // Epic — cards that contain other cards. Visually structural, not a flag,
+  // so it gets a quiet card-level treatment rather than another badge: a
+  // darker fill against the column, and a thin accent stripe at the top.
+  // Subtask count moves into the footer as "↓ N".
+  &--epic {
+    background: color-mix(in oklch, var(--color-bg), black 25%);
+    border-top: 2px solid var(--color-accent);
   }
 
   &__header {
@@ -33,8 +83,16 @@
     &:hover { color: var(--color-text); }
   }
 
-  // Pushes blocker badge to the right edge of the header.
-  &__blocker-slot { margin-left: auto; line-height: 1; }
+  // Right-edge cluster in the header — epic badge + blocker badge stack here.
+  // margin-left: auto pushes the whole cluster to the right; gap between badges
+  // when both are present.
+  &__right-slot {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    line-height: 1;
+  }
 
   &__parent-ref {
     display: inline-block;
@@ -47,18 +105,6 @@
     &:hover { opacity: 1; color: var(--color-text); text-decoration: underline; }
   }
 
-  &__epic-badge {
-    display: inline-block;
-    font-size: 0.6rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    padding: 0.05rem 0.4rem;
-    margin-bottom: 0.4rem;
-    border: 1px solid var(--color-accent);
-    color: var(--color-accent);
-    border-radius: 3px;
-    cursor: help;
-  }
 
   &__title {
     display: block;
@@ -82,6 +128,18 @@
     display: flex;
     gap: 0.25rem;
     margin-left: auto;
+  }
+
+  // Age label — "4d", "today". Pins to far right of footer; auto-margin only
+  // applies when tags are absent (otherwise tags already absorbed the auto).
+  &__age {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    margin-left: auto;
+    cursor: help;
+
+    .card__tags + & { margin-left: 0.4rem; }
   }
 
   &__tag,

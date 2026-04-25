@@ -6,10 +6,10 @@ import {
   inject,
   input,
 } from '@angular/core';
-import type { VaultItemId, ActorId, ThreadMessageId } from '../../../../domain/ids';
-import type { CreateThreadMessagePayload } from '../../../../domain/thread';
-import type { Attachment } from '../../../../domain/attachments';
-import type { Actor } from '../../../../domain/actors';
+import type { VaultItemId, ActorId, ThreadMessageId } from '@domain/ids';
+import type { CreateThreadMessagePayload } from '@domain/thread';
+import type { Attachment } from '@domain/attachments';
+import type { Actor } from '@domain/actors';
 import { ThreadService } from '../../data-access/thread.service';
 import { AttachmentsService } from '../../data-access/attachments.service';
 import { MessageList } from '../message-list/message-list';

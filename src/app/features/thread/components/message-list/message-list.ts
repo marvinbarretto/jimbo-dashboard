@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import type { ThreadMessage } from '../../../../domain/thread';
-import type { Actor } from '../../../../domain/actors';
-import type { ActorId } from '../../../../domain/ids';
-import type { Attachment } from '../../../../domain/attachments';
+import type { ThreadMessage } from '@domain/thread';
+import type { Actor } from '@domain/actors';
+import type { ActorId } from '@domain/ids';
+import type { Attachment } from '@domain/attachments';
 
 // A grouped message row: a top-level message plus any answers nested under it.
 // Questions and comments float at top level; answers only appear nested under their question.

@@ -6,8 +6,8 @@ export type {
   UpdatePromptPayload,
   PromptVersion,
   CreatePromptVersionPayload,
-} from '../../../domain/prompts';
+} from '@domain/prompts';
 
 // Legacy alias — the domain export name is `CreatePromptVersionPayload`; some existing
 // callers use `CreateVersionPayload`. Keep the alias until those imports are touched.
-export type { CreatePromptVersionPayload as CreateVersionPayload } from '../../../domain/prompts';
+export type { CreatePromptVersionPayload as CreateVersionPayload } from '@domain/prompts';

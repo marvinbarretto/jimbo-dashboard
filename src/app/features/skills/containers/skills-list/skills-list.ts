@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SkillsService } from '../../data-access/skills.service';
-import { skillNamespace, skillLocalName } from '../../../../domain/skills';
+import { skillNamespace, skillLocalName } from '@domain/skills';
 
 @Component({
   selector: 'app-skills-list',

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import type { ActorId } from '../../../domain/ids';
+import type { ActorId } from '@domain/ids';
 
 // `@actor` chip with per-actor tint. Renders "—" when actorId is null.
 // Display name fallback to actor id slug — caller doesn't need to resolve actors.

@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { ToolsService } from '../../data-access/tools.service';
-import { toolId } from '../../../../domain/ids';
+import { toolId } from '@domain/ids';
 
 @Component({
   selector: 'app-tool-form',

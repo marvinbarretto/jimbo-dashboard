@@ -4,8 +4,8 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { ActorsService } from '../../data-access/actors.service';
-import { actorId } from '../../../../domain/ids';
-import type { ActorKind, ActorRuntime } from '../../../../domain/actors';
+import { actorId } from '@domain/ids';
+import type { ActorKind, ActorRuntime } from '@domain/actors';
 
 @Component({
   selector: 'app-actor-form',

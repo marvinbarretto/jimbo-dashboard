@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import type { ProjectId } from '../../../domain/ids';
+import type { ProjectId } from '@domain/ids';
 
 // Small pill showing a project's display name with a project-tinted border.
 // Tint comes from --project-color-{id} CSS variables defined in styles.scss.

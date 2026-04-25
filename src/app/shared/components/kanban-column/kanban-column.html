@@ -2,6 +2,7 @@
   class="col"
   [class.col--drop-eligible]="dropEligible()"
   [class.col--drop-active]="dropActive()"
+  [class.col--drop-disabled]="dropDisabled()"
   (dragover)="onDragOver($event)"
   (dragleave)="onDragLeave()"
   (drop)="onDrop($event)"

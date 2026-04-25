@@ -3,12 +3,12 @@
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import type { Project, CreateProjectPayload, UpdateProjectPayload } from '../../../domain/projects';
-import type { ActorId, ProjectId } from '../../../domain/ids';
-import { actorId } from '../../../domain/ids';
+import type { Project, CreateProjectPayload, UpdateProjectPayload } from '@domain/projects';
+import type { ActorId, ProjectId } from '@domain/ids';
+import { actorId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
-import { isSeedMode } from '../../../shared/seed-mode';
-import { SEED } from '../../../domain/seed';
+import { isSeedMode } from '@shared/seed-mode';
+import { SEED } from '@domain/seed';
 import { ProjectActivityEventsService } from './project-activity-events.service';
 
 @Injectable({ providedIn: 'root' })

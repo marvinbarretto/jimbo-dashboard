@@ -5,8 +5,8 @@ import { map } from 'rxjs';
 import { ProjectsService } from '../../data-access/projects.service';
 import { ProjectActivityEventsService } from '../../data-access/project-activity-events.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
-import type { ProjectActivityEvent } from '../../../../domain/activity/activity-event';
-import type { ActorId, ProjectId } from '../../../../domain/ids';
+import type { ProjectActivityEvent } from '@domain/activity/activity-event';
+import type { ActorId, ProjectId } from '@domain/ids';
 
 @Component({
   selector: 'app-project-detail',

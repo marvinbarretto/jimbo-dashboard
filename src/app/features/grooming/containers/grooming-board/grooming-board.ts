@@ -1,20 +1,22 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { VaultItemsService } from '../../../vault-items/data-access/vault-items.service';
-import { ActorsService } from '../../../actors/data-access/actors.service';
-import { ProjectsService } from '../../../projects/data-access/projects.service';
-import { VaultItemProjectsService } from '../../../vault-items/data-access/vault-item-projects.service';
-import { ThreadService } from '../../../thread/data-access/thread.service';
+import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
+import { ActorsService } from '@features/actors/data-access/actors.service';
+import { ProjectsService } from '@features/projects/data-access/projects.service';
+import { VaultItemProjectsService } from '@features/vault-items/data-access/vault-item-projects.service';
+import { ThreadService } from '@features/thread/data-access/thread.service';
 import {
   GROOMING_STATUS_ORDER,
   GROOMING_STATUS_LABELS,
   isActive,
   type GroomingStatus,
-} from '../../../../domain/vault/vault-item';
-import { effectivePriority } from '../../../../domain/vault/readiness';
-import type { VaultItem } from '../../../../domain/vault/vault-item';
-import type { VaultItemId } from '../../../../domain/ids';
+} from '@domain/vault';
+import { effectivePriority } from '@domain/vault';
+import { compareCardsForKanban } from '@domain/vault';
+import type { VaultItem, Priority } from '@domain/vault';
+import { isDone } from '@domain/vault';
+import type { VaultItemId } from '@domain/ids';
 import { GroomingCard } from '../../components/grooming-card/grooming-card';
-import { GroomingColumn } from '../../components/grooming-column/grooming-column';
+import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { GroomingFilterBar, type FilterOption } from '../../components/grooming-filter-bar/grooming-filter-bar';
 
 // "Unassigned" is its own filter token alongside actor IDs. Using a sentinel string
@@ -31,7 +33,7 @@ interface ColumnView {
 
 @Component({
   selector: 'app-grooming-board',
-  imports: [GroomingCard, GroomingColumn, GroomingFilterBar],
+  imports: [GroomingCard, KanbanColumn, GroomingFilterBar],
   templateUrl: './grooming-board.html',
   styleUrl: './grooming-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -70,22 +72,9 @@ export class GroomingBoard {
       label: GROOMING_STATUS_LABELS[status],
       cards: items
         .filter(i => i.grooming_status === status)
-        .sort(this.cardComparator),
+        .sort(compareCardsForKanban),
     }));
   });
-
-  // Card sort: effective_priority asc (urgent first), then created_at desc (newest
-  // first within the same priority). Items with no priority sort to the bottom.
-  private readonly cardComparator = (a: VaultItem, b: VaultItem): number => {
-    const pa = effectivePriority(a);
-    const pb = effectivePriority(b);
-    if (pa !== pb) {
-      if (pa === null) return 1;
-      if (pb === null) return -1;
-      return pa - pb;
-    }
-    return b.created_at.localeCompare(a.created_at);
-  };
 
   constructor() {
     // Pre-load thread + project junctions for visible cards so badges render synchronously.
@@ -119,6 +108,22 @@ export class GroomingBoard {
     if (!item.parent_id) return null;
     const parent = this.vaultItemsService.getById(item.parent_id);
     return parent ? parent.seq : null;
+  }
+
+  // Rolled-up priority for epic cards: the most-urgent (lowest integer) priority
+  // among unfinished children. Returns null if the item isn't an epic OR no
+  // unfinished child has a priority set. Per Agile orthodoxy: an epic's urgency
+  // is derived from its children, not declared on the container itself.
+  rolledUpPriorityForEpic(item: VaultItem): Priority | null {
+    const children = this.vaultItemsService.items().filter(i => i.parent_id === item.id && !isDone(i));
+    if (children.length === 0) return null;
+    let min: Priority | null = null;
+    for (const child of children) {
+      const p = effectivePriority(child);
+      if (p === null) continue;
+      if (min === null || p < min) min = p;
+    }
+    return min;
   }
 
   // --- drag & drop --------------------------------------------------------

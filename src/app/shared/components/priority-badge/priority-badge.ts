@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import type { Priority } from '../../../domain/vault/vault-item';
+import type { Priority } from '@domain/vault/vault-item';
 
 // Pn pill, colour-coded by urgency. Pure display — no click handler.
 // P0 → danger red, P1 → warning amber, P2 → muted, P3 → faint border.

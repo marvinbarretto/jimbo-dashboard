@@ -1,6 +1,8 @@
 <article
   class="card"
   [class.card--dragging]="dragging()"
+  [class.card--epic]="isEpic()"
+  [attr.title]="ageTooltip()"
   draggable="true"
   (dragstart)="onDragStart($event)"
   (dragend)="onDragEnd()"
@@ -12,15 +14,18 @@
       <app-project-chip [projectId]="proj.id" [displayName]="proj.display_name" />
     }
 
-    @if (priority() !== null) {
-      <app-priority-badge [priority]="priority()!" />
+    @if (displayedPriority() !== null) {
+      <app-priority-badge [priority]="displayedPriority()!" />
     }
 
-    @if (openQuestionsCount() > 0) {
-      <span class="card__blocker-slot">
+    <span class="card__right-slot">
+      @if (isEpic()) {
+        <app-epic-badge [count]="childrenCount()" />
+      }
+      @if (openQuestionsCount() > 0) {
         <app-blocker-badge [count]="openQuestionsCount()" />
-      </span>
-    }
+      }
+    </span>
   </header>
 
   @if (parentSeq(); as parent) {
@@ -37,13 +42,6 @@
     {{ item().title }}
   </a>
 
-  @if (childrenCount() > 0) {
-    <span class="card__epic-badge"
-      [attr.title]="'Epic with ' + childrenCount() + ' subtask(s)'">
-      EPIC · {{ childrenCount() }}
-    </span>
-  }
-
   <footer class="card__footer">
     <app-owner-chip [actorId]="item().assigned_to" />
 
@@ -57,5 +55,7 @@
         }
       </span>
     }
+
+    <span class="card__age" [attr.title]="ageTooltip()">{{ ageLabel() }}</span>
   </footer>
 </article>

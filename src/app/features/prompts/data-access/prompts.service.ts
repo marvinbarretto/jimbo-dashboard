@@ -3,8 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map, of, tap } from 'rxjs';
 import type { Prompt, PromptVersion, CreatePromptPayload, UpdatePromptPayload, CreateVersionPayload } from '../utils/prompt.types';
 import { environment } from '../../../../environments/environment';
-import { isSeedMode } from '../../../shared/seed-mode';
-import { SEED } from '../../../domain/seed';
+import { isSeedMode } from '@shared/seed-mode';
+import { SEED } from '@domain/seed';
 
 @Injectable({ providedIn: 'root' })
 export class PromptsService {

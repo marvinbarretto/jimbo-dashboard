@@ -3,8 +3,8 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { ThreadService } from './thread.service';
-import { vaultItemId, threadMessageId, actorId } from '../../../domain/ids';
-import type { ThreadMessage } from '../../../domain/thread';
+import { vaultItemId, threadMessageId, actorId } from '@domain/ids';
+import type { ThreadMessage } from '@domain/thread';
 import { environment } from '../../../../environments/environment';
 
 const VAULT_ID = vaultItemId('item-1');

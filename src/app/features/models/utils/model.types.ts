@@ -8,6 +8,6 @@ export type {
   ModelStats,
   CreateModelPayload,
   UpdateModelPayload,
-} from '../../../domain/models';
+} from '@domain/models';
 
-export { MODEL_CAPABILITIES } from '../../../domain/models';
+export { MODEL_CAPABILITIES } from '@domain/models';

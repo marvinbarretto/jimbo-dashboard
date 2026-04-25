@@ -1,8 +1,8 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { MessageList } from './message-list';
-import { vaultItemId, threadMessageId, actorId } from '../../../../domain/ids';
-import type { ThreadMessage } from '../../../../domain/thread';
+import { vaultItemId, threadMessageId, actorId } from '@domain/ids';
+import type { ThreadMessage } from '@domain/thread';
 
 const VAULT_ID = vaultItemId('vault-1');
 

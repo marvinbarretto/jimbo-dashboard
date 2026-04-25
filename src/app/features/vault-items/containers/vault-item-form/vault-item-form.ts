@@ -5,8 +5,8 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { VaultItemsService } from '../../data-access/vault-items.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
-import { actorId, vaultItemId } from '../../../../domain/ids';
-import type { VaultItemType, GroomingStatus, Priority, Actionability, SourceKind, AcceptanceCriterion, Source } from '../../../../domain/vault/vault-item';
+import { actorId, vaultItemId } from '@domain/ids';
+import type { VaultItemType, GroomingStatus, Priority, Actionability, SourceKind, AcceptanceCriterion, Source } from '@domain/vault/vault-item';
 
 // Priority options for selects — null = "— (unset)". Use [ngValue] to keep integer type.
 const PRIORITY_OPTIONS: Array<Priority | null> = [null, 0, 1, 2, 3];

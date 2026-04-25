@@ -5,7 +5,7 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { ModelStacksService } from '../../data-access/model-stacks.service';
 import { ModelsService } from '../../../models/data-access/models.service';
-import { modelId, modelStackId } from '../../../../domain/ids';
+import { modelId, modelStackId } from '@domain/ids';
 
 @Component({
   selector: 'app-model-stack-form',

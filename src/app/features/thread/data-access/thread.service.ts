@@ -6,11 +6,11 @@
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import type { ThreadMessage, CreateThreadMessagePayload, MarkAnsweredPayload } from '../../../domain/thread';
-import type { VaultItemId, ThreadMessageId } from '../../../domain/ids';
+import type { ThreadMessage, CreateThreadMessagePayload, MarkAnsweredPayload } from '@domain/thread';
+import type { VaultItemId, ThreadMessageId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
-import { isSeedMode } from '../../../shared/seed-mode';
-import { SEED } from '../../../domain/seed';
+import { isSeedMode } from '@shared/seed-mode';
+import { SEED } from '@domain/seed';
 
 @Injectable({ providedIn: 'root' })
 export class ThreadService {
