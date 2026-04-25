@@ -27,8 +27,10 @@ export function ageInDays(
 }
 
 // sqrt curve: steep early (2d vs 5d are clearly different), flattens at the ceiling.
+// Negative days (future created_at) are clamped to 0 before sqrt — Math.sqrt of a
+// negative is NaN, which would propagate into the CSS variable and break color-mix.
 function sqrtRatio(days: number, ceiling: number): number {
-  return Math.min(1, Math.max(0, Math.sqrt(days / ceiling)));
+  return Math.min(1, Math.sqrt(Math.max(0, days) / ceiling));
 }
 
 // 0..1 over 0..STALE_DAYS — drives how much amber appears on the card.
