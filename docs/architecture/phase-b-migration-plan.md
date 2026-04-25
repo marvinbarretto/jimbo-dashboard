@@ -229,7 +229,7 @@ The freeze+final-ETL approach makes rollback safe because the SQLite file is the
 - `interrogate_*` (10 tables) — 0-row in production today
 - `fitness_records`, `health_snapshots` — separate concern
 
-**Coupling rule:** the deferred schemas pair 1:1 with deferred service-file ports. Do NOT port `services/interrogate-*`, `services/fitness.ts`, or any `health_*` service in Phase B — there are no Postgres tables to write to. If a Phase B port encounters a write to one of these tables, stop and add the schema first (or defer the service entirely).
+**Coupling rule:** the deferred schemas pair 1:1 with deferred service-file ports. Do NOT port `services/interrogate-*`, `services/fitness.ts`, or `services/health.ts` in Phase B — confirmed `health.ts` only writes to `health_snapshots` (deferred). If a Phase B port encounters a write to one of these tables, stop and add the schema first (or defer the service entirely).
 
 ---
 
