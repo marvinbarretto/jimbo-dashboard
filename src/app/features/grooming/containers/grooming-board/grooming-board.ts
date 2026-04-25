@@ -257,6 +257,9 @@ export class GroomingBoard {
     return this.vaultItemsService.items().filter(item => {
       if (item.type !== 'task') return false;
       if (!isActive(item)) return false;
+      // Epics (items with children) are containers, not dispatchable work.
+      // Their subitems appear on the board instead; the epic itself lives in a hierarchy view.
+      if (this.vaultItemsService.items().some(i => i.parent_id === item.id)) return false;
 
       if (!opts.skipOwner && ownerF.size > 0) {
         const ownerKey = item.assigned_to ?? UNASSIGNED;

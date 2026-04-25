@@ -21,15 +21,6 @@
     cursor: grabbing;
   }
 
-  // Epic — cards that contain other cards. Visually structural, not a flag,
-  // so it gets a quiet card-level treatment rather than another badge: a
-  // darker fill against the column, and a thin accent stripe at the top.
-  // Subtask count moves into the footer as "↓ N".
-  &--epic {
-    background: color-mix(in oklch, var(--color-bg), black 25%);
-    border-top: 2px solid var(--color-accent);
-  }
-
   &__header {
     display: flex;
     align-items: center;
@@ -113,4 +104,34 @@
     font-size: 0.65rem;
     color: var(--color-text-muted);
   }
+
+  // Pulse dot — fires when activity is recent. The host element binds
+  // --pulse-intensity (0..1) — high for just-now, fades to 0 over 24h.
+  // The dot's base opacity scales with intensity; the keyframe layers a
+  // breathing effect on top so it reads as alive without flashing.
+  // Sits left of the age label so the eye sweeps "pulse → age" left-to-right.
+  &__pulse {
+    --pulse-base-opacity: calc(var(--pulse-intensity, 0) * 0.9);
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--color-accent);
+    opacity: var(--pulse-base-opacity);
+    box-shadow: 0 0 calc(var(--pulse-intensity, 0) * 6px)
+                color-mix(in oklch, transparent, var(--color-accent) calc(var(--pulse-intensity, 0) * 60%));
+    animation: card-pulse 2.4s ease-in-out infinite;
+    cursor: help;
+    flex-shrink: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__pulse { animation: none; }
+  }
+}
+
+// Keyframe outside the .card block — Sass doesn't bubble @keyframes nested
+// inside selectors as cleanly, and global keyframes are fine here.
+@keyframes card-pulse {
+  0%, 100% { transform: scale(1);   filter: brightness(1);   }
+  50%      { transform: scale(1.4); filter: brightness(1.3); }
 }
