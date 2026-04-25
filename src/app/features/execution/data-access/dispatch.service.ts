@@ -101,7 +101,7 @@ interface ApiDispatchEntry {
   executor: string | null;
   skill: string | null;
   skill_context: unknown;
-  status: 'proposed' | 'approved' | 'rejected' | 'completed' | 'failed' | 'removed';
+  status: 'proposed' | 'approved' | 'running' | 'rejected' | 'completed' | 'failed' | 'removed';
   result_summary: string | null;
   error_message: string | null;
   retry_count: number;
@@ -122,15 +122,16 @@ interface ApiDispatchesResponse {
 
 // Production statuses → dashboard DispatchStatus union.
 //   proposed  → approved   (queued, awaiting work — same UI semantics)
+//   running   → running    (executor is actively working on this dispatch)
 //   rejected  → failed     (operator declined; surface in Failed column)
 //   removed   → failed     (reaped/removed; surface in Failed column)
 //   approved/completed/failed → as-is
-// 'dispatching' and 'running' are dashboard-only states with no corresponding
-// production data — those columns will be empty until we add a real-time
-// status propagation.
+// 'dispatching' is a dashboard-only state (claim-in-flight) with no production
+// equivalent — that column is reserved for a future real-time signal.
 function narrowStatus(s: ApiDispatchEntry['status']): DispatchStatus {
   switch (s) {
     case 'proposed':  return 'approved';
+    case 'running':   return 'running';
     case 'rejected':  return 'failed';
     case 'removed':   return 'failed';
     case 'approved':  return 'approved';
