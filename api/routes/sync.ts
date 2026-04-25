@@ -50,17 +50,23 @@ syncRoute.post('/', async (c) => {
   syncing = true;
   const started = Date.now();
   try {
+    // -o ControlPath=none isolates these short-lived ssh/scp calls from the
+    // user's long-running postgres tunnel (which uses ControlMaster=auto).
+    // Without this, the sync's ssh exit can tear down the tunnel's multiplex
+    // master, leaving the next /api request to fail with ECONNRESET.
+    const ISOLATE = ['-o', 'ControlPath=none'];
+
     // Step 1 — take a consistent snapshot on the VPS via sqlite3 .backup
     // (handles WAL correctly, unlike a plain file copy).
-    await run('ssh', [VPS_HOST, `sqlite3 ${VPS_SQLITE_PATH} ".backup ${VPS_TMP_SNAPSHOT}"`]);
+    await run('ssh', [...ISOLATE, VPS_HOST, `sqlite3 ${VPS_SQLITE_PATH} ".backup ${VPS_TMP_SNAPSHOT}"`]);
 
     // Step 2 — pull it to the dashboard's local snapshot dir.
     const localPath = path.resolve(LOCAL_SNAPSHOT_DIR, LOCAL_SNAPSHOT_FILE);
-    await run('scp', [`${VPS_HOST}:${VPS_TMP_SNAPSHOT}`, localPath]);
+    await run('scp', [...ISOLATE, `${VPS_HOST}:${VPS_TMP_SNAPSHOT}`, localPath]);
 
     // Step 3 — clean up the tmp file on VPS so we don't leave 50 MB of cruft.
     // Best-effort; ignore errors.
-    run('ssh', [VPS_HOST, `rm -f ${VPS_TMP_SNAPSHOT}`]).catch(() => {});
+    run('ssh', [...ISOLATE, VPS_HOST, `rm -f ${VPS_TMP_SNAPSHOT}`]).catch(() => {});
 
     // Step 4 — capture snapshot size for the result.
     const { size } = await stat(localPath);

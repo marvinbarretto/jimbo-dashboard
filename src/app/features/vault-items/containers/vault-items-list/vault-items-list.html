@@ -1,27 +1,124 @@
 <div class="vault-items-list">
   <header class="vault-items-list__header">
     <h1>Vault</h1>
+    <span class="vault-items-list__count">
+      {{ visibleCount() }} of {{ totalItems() }}
+      @if (hasActiveFilters()) { · filtered }
+    </span>
     <a routerLink="/vault-items/new" class="btn-new" aria-label="Create new vault item">+ New</a>
   </header>
 
   @if (isLoading()) {
     <p class="loading">Loading…</p>
   } @else {
+    <section class="filter-bar" aria-label="Filters">
+      <input
+        type="search"
+        class="filter-bar__search"
+        placeholder="search title, body, seq, tags…"
+        [ngModel]="search()"
+        (ngModelChange)="setSearch($event)"
+        autocomplete="off"
+      />
+
+      <div class="filter-bar__row">
+        <div class="filter-bar__group">
+          <span class="filter-bar__label">Type</span>
+          @for (opt of typeOptions(); track opt.value) {
+            <button
+              type="button"
+              class="filter-chip"
+              [class.filter-chip--active]="activeTypes().has(opt.value)"
+              (click)="toggleType(opt.value)">
+              {{ opt.label }}
+              <span class="filter-chip__count">{{ opt.count }}</span>
+            </button>
+          }
+        </div>
+
+        <div class="filter-bar__group">
+          <span class="filter-bar__label">Lifecycle</span>
+          @for (opt of lifecycleOptions(); track opt.value) {
+            <button
+              type="button"
+              class="filter-chip"
+              [class.filter-chip--active]="activeLifecycle().has(opt.value)"
+              (click)="toggleLifecycle(opt.value)">
+              {{ opt.label }}
+              <span class="filter-chip__count">{{ opt.count }}</span>
+            </button>
+          }
+        </div>
+
+        @if (hasActiveFilters()) {
+          <button type="button" class="filter-bar__reset" (click)="resetFilters()">clear all</button>
+        }
+      </div>
+
+      @if (categoryOptions().length > 0) {
+        <div class="filter-bar__group filter-bar__group--wrap">
+          <span class="filter-bar__label">Category</span>
+          @for (opt of categoryOptions(); track opt.value) {
+            <button
+              type="button"
+              class="filter-chip"
+              [class.filter-chip--active]="activeCategories().has(opt.value)"
+              (click)="toggleCategory(opt.value)">
+              {{ opt.label }}
+              <span class="filter-chip__count">{{ opt.count }}</span>
+            </button>
+          }
+        </div>
+      }
+
+      @if (projectOptions().length > 0) {
+        <div class="filter-bar__group filter-bar__group--wrap">
+          <span class="filter-bar__label">Project</span>
+          @for (opt of projectOptions(); track opt.value) {
+            <button
+              type="button"
+              class="filter-chip"
+              [class.filter-chip--active]="activeProjects().has(opt.value)"
+              (click)="toggleProject(opt.value)">
+              {{ opt.label }}
+              <span class="filter-chip__count">{{ opt.count }}</span>
+            </button>
+          }
+        </div>
+      }
+
+      @if (ownerOptions().length > 0) {
+        <div class="filter-bar__group">
+          <span class="filter-bar__label">Owner</span>
+          @for (opt of ownerOptions(); track opt.value) {
+            <button
+              type="button"
+              class="filter-chip"
+              [class.filter-chip--active]="activeOwners().has(opt.value)"
+              (click)="toggleOwner(opt.value)">
+              {{ opt.label }}
+              <span class="filter-chip__count">{{ opt.count }}</span>
+            </button>
+          }
+        </div>
+      }
+    </section>
+
     <table class="vault-items-table">
       <thead>
         <tr>
           <th>#</th>
           <th>Title</th>
           <th>Type</th>
+          <th>Category</th>
           <th>Status</th>
           <th>Owner</th>
           <th>Project</th>
           <th>Priority</th>
-          <th>Readiness</th>
         </tr>
       </thead>
       <tbody>
-        @for (item of items(); track item.id) {
+        @for (item of displayedItems(); track item.id) {
           <tr [class.archived]="isItemArchived(item)">
             <td class="vault-items-table__seq">
               <a [routerLink]="[item.seq]">#{{ item.seq }}</a>
@@ -30,6 +127,9 @@
               <a [routerLink]="[item.seq]">{{ item.title }}</a>
             </td>
             <td>{{ item.type }}</td>
+            <td class="vault-items-table__category">
+              @if (item.category) { {{ item.category }} } @else { <span class="muted">—</span> }
+            </td>
             <td>
               <span [class]="'status status--' + lifecycleOf(item)">{{ lifecycleOf(item) }}</span>
             </td>
@@ -44,18 +144,24 @@
                 <span class="muted">—</span>
               }
             </td>
-            <td>
-              <span [class]="'readiness-pill readiness-pill--' + readinessVerdict(item)">
-                {{ readinessVerdict(item) }}
-              </span>
-            </td>
           </tr>
         } @empty {
           <tr>
-            <td colspan="8" class="empty">No vault items yet.</td>
+            <td colspan="8" class="empty">No items match the current filters.</td>
           </tr>
         }
       </tbody>
     </table>
+
+    @if (visibleCount() > displayedItems().length) {
+      <div class="show-more">
+        Showing first {{ displayedItems().length }} of {{ visibleCount() }} matching items.
+        <button type="button" (click)="toggleShowAll()">Show all</button>
+      </div>
+    } @else if (showAll() && visibleCount() > 500) {
+      <div class="show-more">
+        <button type="button" (click)="toggleShowAll()">Collapse to first 500</button>
+      </div>
+    }
   }
 </div>
