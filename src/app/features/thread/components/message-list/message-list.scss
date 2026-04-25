@@ -4,8 +4,9 @@
 //   answer   — success green
 $kind-question: var(--color-warning);
 $kind-answer:   var(--color-success);
-$agent:         #7eaad1;  // brighter cool blue, legible on dark surface
-$human:         #f08a4b;  // brighter accent orange, same family as $hot
+// Fallback agent/human tints — overridden by per-actor colour classes below.
+$agent:         #7eaad1;
+$human:         #f08a4b;
 
 .messages {
   padding: 6px 12px;
@@ -57,8 +58,15 @@ $human:         #f08a4b;  // brighter accent orange, same family as $hot
     font-weight: 500;
     color: var(--color-text);
 
+    // Generic agent/human fallbacks — apply when no per-actor class hits.
     &--agent { color: $agent; }
     &--human { color: $human; }
+
+    // Per-actor identity colours — override the generic kind tints.
+    &--marvin { color: var(--actor-color-marvin); }
+    &--ralph  { color: var(--actor-color-ralph);  }
+    &--boris  { color: var(--actor-color-boris);  }
+    &--jimbo  { color: var(--actor-color-jimbo);  }
   }
 
   &__kind-tag {

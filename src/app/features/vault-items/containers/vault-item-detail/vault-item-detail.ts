@@ -136,11 +136,20 @@ export class VaultItemDetail {
     return p === null ? '—' : 'P' + p;
   }
 
-  // --- parent item
+  // --- parent item (subtask edge → epic)
   readonly parentItem = computed(() => {
     const i = this.item();
     if (!i?.parent_id) return undefined;
     return this.vaultItemsService.getById(i.parent_id);
+  });
+
+  // --- children (this item is an epic). Derived live; no schema field stored.
+  readonly children = computed(() => {
+    const i = this.item();
+    if (!i) return [];
+    return this.vaultItemsService.items()
+      .filter(child => child.parent_id === i.id)
+      .sort((a, b) => a.seq - b.seq);
   });
 
   // Hardcoded for now — real session context is a later pass.

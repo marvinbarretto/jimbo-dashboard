@@ -1,0 +1,35 @@
+// Board container only — every visual atom lives in its own component.
+// Card / column / filter / chip styles are scoped to those components.
+
+.board {
+  padding: 1.25rem 1.5rem;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  &__header {
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+  }
+
+  &__hint {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    code { font-size: 0.7rem; }
+  }
+
+  &__columns {
+    display: flex;
+    gap: 0.75rem;
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 0.5rem;
+  }
+}

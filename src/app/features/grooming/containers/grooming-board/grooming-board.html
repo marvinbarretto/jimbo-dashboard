@@ -1,0 +1,49 @@
+<div class="board">
+  <header class="board__header">
+    <h1>Grooming pipeline</h1>
+    <p class="board__hint">
+      Drag a card to move it between columns. Each move emits a
+      <code>grooming_status_changed</code> event.
+    </p>
+  </header>
+
+  <app-grooming-filter-bar
+    [projectOptions]="projectOptions()"
+    [ownerOptions]="ownerOptions()"
+    [priorityOptions]="priorityOptions()"
+    [projectActive]="projectFilter()"
+    [ownerActive]="ownerFilter()"
+    [priorityActive]="priorityFilter()"
+    (toggleProject)="toggleProject($event)"
+    (toggleOwner)="toggleOwner($event)"
+    (togglePriority)="togglePriority($event)"
+    (reset)="resetFilters()"
+  />
+
+  <div class="board__columns">
+    @for (col of columns(); track col.status) {
+      <app-grooming-column
+        [label]="col.label"
+        [count]="col.cards.length"
+        [dropEligible]="isEligibleDropTarget(col.status)"
+        [dropActive]="dropTarget() === col.status"
+        (dragover)="onColumnDragOver($event, col.status)"
+        (dragleave)="onColumnDragLeave(col.status)"
+        (drop)="onColumnDrop($event, col.status)"
+      >
+        @for (item of col.cards; track item.id) {
+          <app-grooming-card
+            [item]="item"
+            [project]="primaryProject(item)"
+            [openQuestionsCount]="openQuestionsCount(item)"
+            [parentSeq]="parentSeq(item)"
+            [childrenCount]="childrenCount(item)"
+            [dragging]="dragging() === item.id"
+            (dragstart)="onDragStart($event, item)"
+            (dragend)="onDragEnd()"
+          />
+        }
+      </app-grooming-column>
+    }
+  </div>
+</div>

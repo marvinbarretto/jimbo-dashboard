@@ -14,7 +14,7 @@
     >
       <header class="msg__header">
         <span
-          class="msg__author"
+          [class]="'msg__author msg__author--' + group.message.author_actor_id"
           [class.msg__author--agent]="authorKind(group.message) === 'agent'"
           [class.msg__author--human]="authorKind(group.message) === 'human'"
         >@{{ authorName(group.message) }}</span>
@@ -85,7 +85,7 @@
       >
         <header class="msg__header">
           <span
-            class="msg__author"
+            [class]="'msg__author msg__author--' + answer.author_actor_id"
             [class.msg__author--agent]="authorKind(answer) === 'agent'"
             [class.msg__author--human]="authorKind(answer) === 'human'"
           >@{{ authorName(answer) }}</span>

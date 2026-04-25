@@ -204,14 +204,35 @@
           <div class="section__label">Parent</div>
           @if (parentItem(); as parent) {
             <a [routerLink]="['/vault-items', parent.seq]" class="parent-link">
-              #{{ parent.seq }} · {{ parent.title }}
+              ↳ #{{ parent.seq }} · {{ parent.title }}
             </a>
           } @else if (item.parent_id) {
             <span class="muted">{{ item.parent_id }} (parent not loaded)</span>
-          } @else {
+          } @else if (children().length === 0) {
             <p class="muted-text">standalone — not part of an epic</p>
+          } @else {
+            <p class="muted-text">root of an epic</p>
           }
         </section>
+
+        @if (children().length > 0) {
+          <section class="section">
+            <div class="section__label">
+              Subtasks
+              <span class="hint">({{ children().length }} — this item is an epic)</span>
+            </div>
+            <ul class="subtask-list">
+              @for (child of children(); track child.id) {
+                <li class="subtask-row">
+                  <a [routerLink]="['/vault-items', child.seq]" class="subtask-row__link">
+                    #{{ child.seq }} · {{ child.title }}
+                  </a>
+                  <span class="subtask-row__status">{{ child.grooming_status }}</span>
+                </li>
+              }
+            </ul>
+          </section>
+        }
 
         <!-- ===== Projects section ===== -->
         <section class="section">

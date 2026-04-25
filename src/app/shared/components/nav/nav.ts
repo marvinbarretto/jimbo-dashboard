@@ -11,6 +11,7 @@ import pkg from '../../../../../package.json';
       <span class="app-nav__logo">jimbo <span class="app-nav__version">v{{ version }}</span></span>
       <ul>
         <li><a routerLink="/vault-items" routerLinkActive="active">Vault</a></li>
+        <li><a routerLink="/grooming" routerLinkActive="active">Grooming</a></li>
         <li><a routerLink="/projects" routerLinkActive="active">Projects</a></li>
         <li><a routerLink="/actors" routerLinkActive="active">Actors</a></li>
         <li><a routerLink="/models" routerLinkActive="active">Models</a></li>

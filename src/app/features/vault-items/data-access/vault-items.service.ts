@@ -64,6 +64,17 @@ export class VaultItemsService {
     const tempId = vaultItemId(crypto.randomUUID());
     const optimistic: VaultItem = { ...payload, id: tempId, seq: -1, archived_at: null, created_at: now };
     this._items.update(items => [...items, optimistic]);
+
+    if (isSeedMode()) {
+      // No server to assign a real seq — keep the temp row, emit the event.
+      this.activityService.post({
+        type: 'created',
+        vault_item_id: tempId,
+        actor_id: this.currentActorId,
+      });
+      return;
+    }
+
     this.http.post<VaultItem[]>(this.url, payload, { headers: { Prefer: 'return=representation' } })
       .subscribe({
         next: ([created]) => {
@@ -81,13 +92,16 @@ export class VaultItemsService {
 
   // Generic patch. Does not emit an event — callers use semantic mutations below
   // for anything that has a meaningful audit trail. Callers MUST NOT pass
-  // `completed_at` or `archived_at` here — those are owned by `markCompleted` /
+  // `completed_at` or `archived_at` here — those are owned by `setCompleted` /
   // `archive` respectively.
   update(id: VaultItemId, patch: UpdateVaultItemPayload): void {
     const prior = this.getById(id);
     if (!prior) return;
     const optimistic = { ...prior, ...patch };
     this._items.update(items => items.map(i => i.id === id ? optimistic : i));
+
+    if (isSeedMode()) return;
+
     const params = new HttpParams().set('id', `eq.${id}`);
     this.http.patch<VaultItem[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
       .subscribe({
@@ -104,18 +118,26 @@ export class VaultItemsService {
     const patch: UpdateVaultItemPayload = { archived_at: now };
     const optimistic = { ...prior, ...patch };
     this._items.update(items => items.map(i => i.id === id ? optimistic : i));
+
+    const event: EventPayload = {
+      type: 'archived',
+      vault_item_id: id,
+      actor_id: this.currentActorId,
+      archived_at: now,
+      note,
+    };
+
+    if (isSeedMode()) {
+      this.activityService.post(event);
+      return;
+    }
+
     const params = new HttpParams().set('id', `eq.${id}`);
     this.http.patch<VaultItem[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
       .subscribe({
         next: ([updated]) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
-          this.activityService.post({
-            type: 'archived',
-            vault_item_id: id,
-            actor_id: this.currentActorId,
-            archived_at: now,
-            note,
-          } satisfies EventPayload);
+          this.activityService.post(event);
         },
         error: () => this._items.update(items => items.map(i => i.id === id ? prior : i)),
       });
@@ -127,17 +149,25 @@ export class VaultItemsService {
     const patch: UpdateVaultItemPayload = { archived_at: null };
     const optimistic = { ...prior, ...patch };
     this._items.update(items => items.map(i => i.id === id ? optimistic : i));
+
+    const event: EventPayload = {
+      type: 'unarchived',
+      vault_item_id: id,
+      actor_id: this.currentActorId,
+      note,
+    };
+
+    if (isSeedMode()) {
+      this.activityService.post(event);
+      return;
+    }
+
     const params = new HttpParams().set('id', `eq.${id}`);
     this.http.patch<VaultItem[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
       .subscribe({
         next: ([updated]) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
-          this.activityService.post({
-            type: 'unarchived',
-            vault_item_id: id,
-            actor_id: this.currentActorId,
-            note,
-          } satisfies EventPayload);
+          this.activityService.post(event);
         },
         error: () => this._items.update(items => items.map(i => i.id === id ? prior : i)),
       });
@@ -154,19 +184,27 @@ export class VaultItemsService {
     const patch: UpdateVaultItemPayload = { completed_at: to };
     const optimistic = { ...prior, ...patch };
     this._items.update(items => items.map(i => i.id === id ? optimistic : i));
+
+    const event: EventPayload = {
+      type: 'completion_changed',
+      vault_item_id: id,
+      actor_id: this.currentActorId,
+      from,
+      to,
+      note,
+    };
+
+    if (isSeedMode()) {
+      this.activityService.post(event);
+      return;
+    }
+
     const params = new HttpParams().set('id', `eq.${id}`);
     this.http.patch<VaultItem[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
       .subscribe({
         next: ([updated]) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
-          this.activityService.post({
-            type: 'completion_changed',
-            vault_item_id: id,
-            actor_id: this.currentActorId,
-            from,
-            to,
-            note,
-          } satisfies EventPayload);
+          this.activityService.post(event);
         },
         error: () => this._items.update(items => items.map(i => i.id === id ? prior : i)),
       });
@@ -182,19 +220,27 @@ export class VaultItemsService {
     const patch: UpdateVaultItemPayload = { grooming_status: next };
     const optimistic = { ...prior, ...patch };
     this._items.update(items => items.map(i => i.id === id ? optimistic : i));
+
+    const event: EventPayload = {
+      type: 'grooming_status_changed',
+      vault_item_id: id,
+      actor_id: this.currentActorId,
+      from,
+      to: next,
+      note,
+    };
+
+    if (isSeedMode()) {
+      this.activityService.post(event);
+      return;
+    }
+
     const params = new HttpParams().set('id', `eq.${id}`);
     this.http.patch<VaultItem[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
       .subscribe({
         next: ([updated]) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
-          this.activityService.post({
-            type: 'grooming_status_changed',
-            vault_item_id: id,
-            actor_id: this.currentActorId,
-            from,
-            to: next,
-            note,
-          } satisfies EventPayload);
+          this.activityService.post(event);
         },
         error: () => this._items.update(items => items.map(i => i.id === id ? prior : i)),
       });
@@ -208,19 +254,27 @@ export class VaultItemsService {
     const patch: UpdateVaultItemPayload = { assigned_to: toActorId };
     const optimistic = { ...prior, assigned_to: toActorId };
     this._items.update(items => items.map(i => i.id === id ? optimistic : i));
+
+    const event: EventPayload = {
+      type: 'assigned',
+      vault_item_id: id,
+      actor_id: this.currentActorId,
+      from_actor_id: fromActorId,
+      to_actor_id: toActorId,
+      reason,
+    };
+
+    if (isSeedMode()) {
+      this.activityService.post(event);
+      return;
+    }
+
     const params = new HttpParams().set('id', `eq.${id}`);
     this.http.patch<VaultItem[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
       .subscribe({
         next: ([updated]) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
-          this.activityService.post({
-            type: 'assigned',
-            vault_item_id: id,
-            actor_id: this.currentActorId,
-            from_actor_id: fromActorId,
-            to_actor_id: toActorId,
-            reason,
-          } satisfies EventPayload);
+          this.activityService.post(event);
         },
         error: () => this._items.update(items => items.map(i => i.id === id ? prior : i)),
       });
@@ -230,6 +284,9 @@ export class VaultItemsService {
   remove(id: VaultItemId): void {
     const prior = this.getById(id);
     this._items.update(items => items.filter(i => i.id !== id));
+
+    if (isSeedMode()) return;
+
     const params = new HttpParams().set('id', `eq.${id}`);
     this.http.delete(this.url, { params })
       .subscribe({

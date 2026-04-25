@@ -1,0 +1,61 @@
+<article
+  class="card"
+  [class.card--dragging]="dragging()"
+  draggable="true"
+  (dragstart)="onDragStart($event)"
+  (dragend)="onDragEnd()"
+>
+  <header class="card__header">
+    <a [routerLink]="['/vault-items', item().seq]" class="card__seq">#{{ item().seq }}</a>
+
+    @if (project(); as proj) {
+      <app-project-chip [projectId]="proj.id" [displayName]="proj.display_name" />
+    }
+
+    @if (priority() !== null) {
+      <app-priority-badge [priority]="priority()!" />
+    }
+
+    @if (openQuestionsCount() > 0) {
+      <span class="card__blocker-slot">
+        <app-blocker-badge [count]="openQuestionsCount()" />
+      </span>
+    }
+  </header>
+
+  @if (parentSeq(); as parent) {
+    <a
+      [routerLink]="['/vault-items', parent]"
+      class="card__parent-ref"
+      [attr.title]="'Subtask of #' + parent"
+    >
+      ↳ #{{ parent }}
+    </a>
+  }
+
+  <a [routerLink]="['/vault-items', item().seq]" class="card__title">
+    {{ item().title }}
+  </a>
+
+  @if (childrenCount() > 0) {
+    <span class="card__epic-badge"
+      [attr.title]="'Epic with ' + childrenCount() + ' subtask(s)'">
+      EPIC · {{ childrenCount() }}
+    </span>
+  }
+
+  <footer class="card__footer">
+    <app-owner-chip [actorId]="item().assigned_to" />
+
+    @if (visibleTags().length > 0) {
+      <span class="card__tags">
+        @for (tag of visibleTags(); track tag) {
+          <span class="card__tag">{{ tag }}</span>
+        }
+        @if (extraTagCount() > 0) {
+          <span class="card__tag-more">+{{ extraTagCount() }}</span>
+        }
+      </span>
+    }
+  </footer>
+</article>

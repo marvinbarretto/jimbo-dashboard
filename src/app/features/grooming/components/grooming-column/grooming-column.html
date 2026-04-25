@@ -1,0 +1,20 @@
+<section
+  class="col"
+  [class.col--drop-eligible]="dropEligible()"
+  [class.col--drop-active]="dropActive()"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave()"
+  (drop)="onDrop($event)"
+>
+  <header class="col__header">
+    <span class="col__label">{{ label() }}</span>
+    <span class="col__count">{{ count() }}</span>
+  </header>
+
+  <div class="col__cards">
+    <ng-content />
+    @if (count() === 0) {
+      <p class="col__empty">empty</p>
+    }
+  </div>
+</section>

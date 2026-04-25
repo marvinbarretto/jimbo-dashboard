@@ -214,6 +214,22 @@ describe('domain seed', () => {
       }
     });
 
+    it('every vault item has at least one project link', () => {
+      const linkedItemIds = new Set(SEED.vault_item_projects.map(j => j.vault_item_id));
+      for (const item of SEED.vault_items) {
+        expect(linkedItemIds, `item ${item.seq} (${item.title.slice(0, 40)}) has no project`).toContain(item.id);
+      }
+    });
+
+    it('parent_id (epic edge) resolves to a real vault item when set', () => {
+      for (const item of SEED.vault_items) {
+        if (item.parent_id) {
+          expect(vaultItemIds, `item ${item.seq} parent_id`).toContain(item.parent_id);
+          expect(item.parent_id).not.toBe(item.id); // a row cannot be its own parent
+        }
+      }
+    });
+
     it('every grooming column has at least one fixture so kanban renders all six', () => {
       for (const status of GROOMING_STATUS_ORDER) {
         const count = SEED.vault_items.filter(v => v.grooming_status === status).length;

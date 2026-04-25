@@ -24,12 +24,29 @@
   --color-danger: #ef4444;
   --color-success: #22c55e;
   --color-warning: #f59e0b;
+  --color-info:    #5fa8e0;
 
   --font-sans: system-ui, -apple-system, sans-serif;
   --font-mono: 'SF Mono', 'Fira Code', monospace;
 
   --radius: 6px;
   --space: 1rem;
+
+  // Per-actor identity colours. Used for owner chips on cards and author chips
+  // in threads. Restrained palette — borders and text only, never card fills,
+  // so the board stays calm. Marvin (human) keeps the warm hot-orange used as
+  // the focus accent elsewhere; agents share a cool family with subtle hue shifts.
+  --actor-color-marvin: #e08850;   // warm orange (human)
+  --actor-color-ralph:  #5fb3a1;   // teal (local agent)
+  --actor-color-boris:  #6b95d6;   // mid blue (hosted agent)
+  --actor-color-jimbo:  #a878d6;   // purple (orchestrator)
+
+  // Per-project tints for the small project chip on cards. Same restrained
+  // palette logic — these tint a small chip, not the whole card.
+  --project-color-hermes:     #7a8fc4;   // muted blue
+  --project-color-localshout: #c47a8f;   // muted magenta
+  --project-color-dashboard:  #7ac4a4;   // muted green
+  --project-color-personal:   #c4a47a;   // muted gold
 }
 
 html {
@@ -259,3 +276,10 @@ h2 { font-size: 1.25rem; font-weight: 600; }
 .due-date { font-size: .7rem; }
 .external-link { font-size: .7rem; color: var(--color-accent); word-break: break-all; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+// Subtasks list on vault-item-detail when the item is an epic.
+.subtask-list { list-style: none; margin: .25rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.subtask-row { display: flex; align-items: baseline; gap: 8px; font-size: .8rem;
+  &__link { color: var(--color-text); text-decoration: none; &:hover { text-decoration: underline; } }
+  &__status { font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; color: var(--color-text-muted); margin-left: auto; }
+}

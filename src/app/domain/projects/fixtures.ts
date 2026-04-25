@@ -32,4 +32,26 @@ export const PROJECTS = [
     repo_url: 'https://github.com/marvinbarretto/hermes',
     created_at: '2026-01-04T09:00:00Z',
   },
+  {
+    id: projectId('dashboard'),
+    display_name: 'Dashboard',
+    description: 'This Angular control plane. UI, kanban, vault-item screens.',
+    status: 'active',
+    owner_actor_id: actorId('marvin'),
+    criteria: null,
+    repo_url: 'https://github.com/marvinbarretto/jimbo-dashboard',
+    created_at: '2026-02-01T09:00:00Z',
+  },
+  {
+    id: projectId('personal'),
+    display_name: 'Personal',
+    description:
+      'Life-admin items that don\'t belong to a software project. Errands, notes, ' +
+      'follow-ups with people outside work. Operator-owned by default.',
+    status: 'active',
+    owner_actor_id: actorId('marvin'),
+    criteria: null,
+    repo_url: null,
+    created_at: '2026-02-15T09:00:00Z',
+  },
 ] as const satisfies readonly Project[];

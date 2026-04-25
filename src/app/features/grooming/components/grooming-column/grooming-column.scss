@@ -1,0 +1,73 @@
+$accent-hot: #d96520;
+
+:host {
+  flex: 0 0 280px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  min-height: 0;
+  transition: border-color 0.1s, background 0.1s;
+
+  // Subtle highlight when a card is being dragged and this column is a valid target.
+  &--drop-eligible {
+    border-color: color-mix(in srgb, $accent-hot 40%, var(--color-border));
+  }
+
+  // Stronger highlight when the cursor is actively over the column during a drag.
+  &--drop-active {
+    border-color: $accent-hot;
+    background: color-mix(in srgb, $accent-hot 8%, var(--color-surface));
+  }
+
+  &__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+  }
+
+  &__label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    font-weight: 500;
+  }
+
+  &__count {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    background: var(--color-bg);
+    padding: 0.1rem 0.45rem;
+    border-radius: var(--radius);
+  }
+
+  &__cards {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__empty {
+    color: var(--color-text-muted);
+    font-style: italic;
+    font-size: 0.75rem;
+    text-align: center;
+    padding: 1rem 0;
+    opacity: 0.5;
+  }
+}
