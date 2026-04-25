@@ -95,6 +95,25 @@
     .card__tags + & { margin-left: 0.4rem; }
   }
 
+  // "Stuck Nd" hint — appears when an item has been in its current grooming
+  // column for longer than the threshold. Warning-tinted to grab attention
+  // without screaming. Distinct from total age (which says "old in general").
+  &__stuck {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.05rem 0.4rem;
+    border: 1px solid color-mix(in oklch, var(--color-warning) 50%, var(--color-border));
+    color: var(--color-warning);
+    border-radius: 3px;
+    cursor: help;
+    margin-left: auto;
+
+    // When tags are present, tags absorbed the auto-margin — push from there.
+    .card__tags + & { margin-left: 0.4rem; }
+  }
+
   &__tag,
   &__tag-more {
     background: var(--color-surface);
@@ -103,6 +122,85 @@
     border-radius: 3px;
     font-size: 0.65rem;
     color: var(--color-text-muted);
+  }
+
+  // Expand toggle — small chevron that rotates 180° when open. Sits at the end
+  // of the header right-slot, after epic + blocker badges.
+  &__expand-btn {
+    border: none;
+    background: none;
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    line-height: 1;
+    padding: 0.1rem 0.3rem;
+    cursor: pointer;
+    transition: transform 0.15s, color 0.15s;
+    transform: rotate(0deg);
+
+    &:hover { color: var(--color-text); }
+    &--open {
+      transform: rotate(180deg);
+      color: var(--color-text);
+    }
+  }
+
+  // Expanded "live activity" section — appears below the footer when the
+  // operator opens the card. Bordered top to separate from the main card body.
+  &__live {
+    margin-top: 0.5rem;
+    padding-top: 0.45rem;
+    border-top: 1px dashed var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+  }
+
+  &__live-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    color: var(--color-text-muted);
+    line-height: 1.35;
+
+    &--message { font-style: italic; }
+  }
+
+  &__live-icon {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    flex-shrink: 0;
+  }
+
+  &__live-actor {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--color-text);
+    flex-shrink: 0;
+  }
+
+  &__live-text {
+    color: var(--color-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+
+    &--quoted { color: var(--color-text); }
+  }
+
+  &__live-when {
+    font-size: 0.6rem;
+    opacity: 0.7;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__live-empty {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-style: italic;
+    opacity: 0.6;
   }
 
   // Pulse dot — fires when activity is recent. The host element binds

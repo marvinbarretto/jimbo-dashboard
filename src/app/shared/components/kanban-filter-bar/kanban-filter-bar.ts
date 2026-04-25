@@ -34,15 +34,26 @@ export interface FilterGroup<TValue extends string | number = string | number> {
 })
 export class KanbanFilterBar {
   readonly groups = input.required<FilterGroup[]>();
+  // Optional search box. Empty string = no search filter active. Parent owns the
+  // string state and decides what fields to match against. The bar just renders
+  // the input + emits change events.
+  readonly searchTerm        = input<string>('');
+  readonly searchPlaceholder = input<string>('Search…');
 
-  readonly toggle = output<{ groupId: string; value: string | number }>();
-  readonly reset  = output<void>();
+  readonly toggle       = output<{ groupId: string; value: string | number }>();
+  readonly searchChange = output<string>();
+  readonly reset        = output<void>();
 
   readonly hasActive = computed(() =>
-    this.groups().some(g => g.active.size > 0),
+    this.groups().some(g => g.active.size > 0) || this.searchTerm().length > 0,
   );
 
   onToggle(groupId: string, value: string | number): void {
     this.toggle.emit({ groupId, value });
+  }
+
+  onSearchInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.searchChange.emit(value);
   }
 }

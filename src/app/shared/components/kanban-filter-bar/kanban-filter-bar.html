@@ -1,4 +1,15 @@
 <div class="filters" role="region" aria-label="Filter cards">
+  <div class="filters__search">
+    <input
+      type="search"
+      class="filters__search-input"
+      [value]="searchTerm()"
+      [placeholder]="searchPlaceholder()"
+      [attr.aria-label]="searchPlaceholder()"
+      (input)="onSearchInput($event)"
+    />
+  </div>
+
   @for (group of groups(); track group.id) {
     <div class="filters__group">
       <span class="filters__label">{{ group.label }}</span>

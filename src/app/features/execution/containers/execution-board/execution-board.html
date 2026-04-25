@@ -10,7 +10,10 @@
 
   <app-kanban-filter-bar
     [groups]="filterGroups()"
+    [searchTerm]="searchTerm()"
+    searchPlaceholder="Search task / skill / executor…"
     (toggle)="onFilterToggle($event)"
+    (searchChange)="onSearchChange($event)"
     (reset)="resetFilters()"
   />
 

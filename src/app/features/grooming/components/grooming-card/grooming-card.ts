@@ -1,13 +1,29 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { VaultItem, Priority } from '@domain/vault';
 import { effectivePriority } from '@domain/vault';
-import { ageInDays, staleNorm, ancientNorm, pulseIntensity } from '@domain/vault';
+import { ageInDays, staleNorm, ancientNorm, pulseIntensity, isStuck } from '@domain/vault';
 import { PriorityBadge } from '@shared/components/priority-badge/priority-badge';
 import { BlockerBadge } from '@shared/components/blocker-badge/blocker-badge';
 import { EpicBadge } from '@shared/components/epic-badge/epic-badge';
 import { ProjectChip } from '@shared/components/project-chip/project-chip';
 import { OwnerChip } from '@shared/components/owner-chip/owner-chip';
+
+// Pre-formatted "what just happened" data passed in from the board. Both
+// fields nullable — a fresh card may have no events; an item may have no
+// thread messages. Card renders only the parts present.
+export interface LiveSnapshot {
+  latestEvent: {
+    actorLabel:  string;   // already prefixed with @ or display name
+    description: string;   // e.g. "posted question", "marked done"
+    at:          string;   // ISO
+  } | null;
+  latestMessage: {
+    authorLabel:  string;
+    bodyExcerpt:  string;  // truncated to ~80 chars
+    at:           string;
+  } | null;
+}
 
 // Presentation-only card. Receives all derived data via inputs; emits drag
 // lifecycle events so the parent owns drag state and the kanban service writes.
@@ -39,9 +55,28 @@ export class GroomingCard {
   // Most recent event timestamp for the item — drives staleness more accurately than
   // created_at alone. Null/undefined falls back to created_at in the staleness function.
   readonly lastActivityAt     = input<string | null>(null);
+  // Pre-formatted "latest event + latest message" snapshot. Rendered only when
+  // the card is expanded, so the board only needs to pass meaningful data when
+  // the operator actually peeks. Null = nothing to show.
+  readonly liveSnapshot       = input<LiveSnapshot | null>(null);
+  // Days since this item entered its current grooming column. Drives the
+  // "stuck Nd" hint. 0 means no stuck signal regardless of threshold.
+  readonly daysInColumn       = input<number>(0);
 
   readonly dragstart = output<DragEvent>();
   readonly dragend   = output<void>();
+
+  // --- expand / collapse -------------------------------------------------
+  // Card-local state — operator opens one card to see what's happening,
+  // closes it when done. Persists for as long as the @for tracks this card,
+  // which is "until the underlying VaultItem id changes".
+  private readonly _expanded = signal(false);
+  readonly expanded = this._expanded.asReadonly();
+  toggleExpanded(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this._expanded.update(v => !v);
+  }
 
   readonly isEpic = computed(() => this.childrenCount() > 0);
 
@@ -78,19 +113,41 @@ export class GroomingCard {
 
   readonly hasPulse = computed(() => this.pulseIntensityVal() > 0);
 
+  // Stuck indicator — whole-day rounded for display. Threshold check uses the
+  // raw days value to avoid "0d stuck" appearing for items just past midnight.
+  readonly stuckDaysRounded = computed(() => Math.floor(this.daysInColumn()));
+  readonly isStuck          = computed(() => isStuck(this.daysInColumn()));
+  readonly stuckTooltip     = computed(() => {
+    const d = this.stuckDaysRounded();
+    return `${d} day${d === 1 ? '' : 's'} in this column — consider acting or moving`;
+  });
+
   // Friendly relative time for the pulse tooltip — distinct from the day-grained
   // age label because pulses care about minutes, not days.
   readonly pulseTooltip = computed(() => {
     const last = this.lastActivityAt();
     if (!last) return '';
-    const minutes = (Date.now() - new Date(last).getTime()) / (1000 * 60);
-    if (minutes < 1)   return 'updated just now';
-    if (minutes < 60)  return `updated ${Math.floor(minutes)}m ago`;
-    const hours = Math.floor(minutes / 60);
-    return `updated ${hours}h ago`;
+    return `updated ${formatRelative(last)}`;
   });
+
+  // Used inside the expanded section to label each line ("· 5m ago").
+  formatRelativeTime(iso: string): string {
+    return formatRelative(iso);
+  }
 
   // Forward DOM events as outputs so the parent can record dataTransfer + state.
   onDragStart(event: DragEvent): void { this.dragstart.emit(event); }
   onDragEnd(): void { this.dragend.emit(); }
+}
+
+// Compact relative-time formatter — minutes for under-an-hour, hours for under-
+// a-day, days otherwise. Local because both pulse tooltip and live-snapshot
+// rows want it in the same form.
+function formatRelative(iso: string): string {
+  const minutes = (Date.now() - new Date(iso).getTime()) / (1000 * 60);
+  if (minutes < 1)   return 'just now';
+  if (minutes < 60)  return `${Math.floor(minutes)}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24)    return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 }

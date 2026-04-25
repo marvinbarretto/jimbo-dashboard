@@ -19,6 +19,28 @@
     gap: 0.3rem;
   }
 
+  &__search {
+    display: flex;
+    align-items: center;
+  }
+
+  &__search-input {
+    font: inherit;
+    font-size: 0.75rem;
+    width: 200px;
+    padding: 0.25rem 0.55rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-radius: var(--radius);
+
+    &::placeholder { color: var(--color-text-muted); opacity: 0.7; }
+    &:focus {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 1px;
+    }
+  }
+
   &__label {
     font-size: 0.65rem;
     text-transform: uppercase;

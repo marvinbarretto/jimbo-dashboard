@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { take } from 'rxjs';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
 import { ActorsService } from '@features/actors/data-access/actors.service';
 import { ProjectsService } from '@features/projects/data-access/projects.service';
@@ -17,7 +19,8 @@ import {
 import { effectivePriority } from '@domain/vault';
 import { compareCardsForKanban } from '@domain/vault';
 import type { VaultItemId } from '@domain/ids';
-import { GroomingCard } from '../../components/grooming-card/grooming-card';
+import { GroomingCard, type LiveSnapshot } from '../../components/grooming-card/grooming-card';
+import type { VaultActivityEvent } from '@domain/activity/activity-event';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
 import { createKanbanDragState } from '@shared/kanban/drag-state';
@@ -55,6 +58,8 @@ export class GroomingBoard {
   private readonly vaultItemProjectsService = inject(VaultItemProjectsService);
   private readonly activityEventsService = inject(ActivityEventsService);
   private readonly threadService = inject(ThreadService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   // --- drag state ---------------------------------------------------------
   // Composable: gives us dragging / dropTarget signals + DOM event plumbing +
@@ -72,6 +77,10 @@ export class GroomingBoard {
   private readonly projectFilter  = this.filter.active<string>(PROJECT);
   private readonly ownerFilter    = this.filter.active<string>(OWNER);
   private readonly priorityFilter = this.filter.active<number>(PRIORITY);
+
+  // Free-text search — matches title or seq, case-insensitive substring.
+  private readonly _searchTerm = signal<string>('');
+  readonly searchTerm = this._searchTerm.asReadonly();
 
   // --- visible items + columns -------------------------------------------
 
@@ -99,6 +108,45 @@ export class GroomingBoard {
         this.vaultItemProjectsService.loadFor(item.id);
         this.activityEventsService.loadFor(item.id);
       }
+    });
+
+    // Hydrate filter state from URL on first read. `take(1)` so we don't fight
+    // the write-back effect below — once we've seeded, the effect owns the URL.
+    this.route.queryParamMap.pipe(take(1)).subscribe(params => {
+      for (const id of (params.get(PROJECT)?.split(',').filter(Boolean) ?? [])) {
+        this.filter.toggle(PROJECT, id);
+      }
+      for (const id of (params.get(OWNER)?.split(',').filter(Boolean) ?? [])) {
+        this.filter.toggle(OWNER, id);
+      }
+      for (const raw of (params.get(PRIORITY)?.split(',').filter(Boolean) ?? [])) {
+        const n = Number(raw);
+        if (!Number.isNaN(n)) this.filter.toggle(PRIORITY, n);
+      }
+      const q = params.get('q');
+      if (q) this._searchTerm.set(q);
+    });
+
+    // Sync filter state back to URL whenever it changes. `replaceUrl: true` so
+    // we don't pollute browser history with every chip click; bookmarkable
+    // shareability is preserved because the last URL is always the current state.
+    effect(() => {
+      const projects   = Array.from(this.projectFilter());
+      const owners     = Array.from(this.ownerFilter());
+      const priorities = Array.from(this.priorityFilter());
+      const q = this._searchTerm();
+
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {
+          [PROJECT]:  projects.length   ? projects.join(',')   : null,
+          [OWNER]:    owners.length     ? owners.join(',')     : null,
+          [PRIORITY]: priorities.length ? priorities.join(',') : null,
+          q:          q || null,
+        },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
     });
   }
 
@@ -132,6 +180,62 @@ export class GroomingBoard {
     const events = this.activityEventsService.eventsFor(item.id)();
     // events are sorted desc — head is the latest
     return events.length > 0 ? events[0].at : item.created_at;
+  }
+
+  // Pre-format the latest activity event + latest thread message for the card's
+  // expanded view. Card is dumb — board does the lookups (actor names, event
+  // descriptions) so the card just renders strings.
+  liveSnapshot(item: VaultItem): LiveSnapshot {
+    const events = this.activityEventsService.eventsFor(item.id)();
+    const messages = this.threadService.messagesFor(item.id)();
+
+    const latestEvent = events.length > 0
+      ? {
+          actorLabel:  this.actorLabel(events[0].actor_id),
+          description: this.describeEvent(events[0]),
+          at:          events[0].at,
+        }
+      : null;
+
+    // Messages aren't pre-sorted — pick by created_at desc.
+    const sortedMessages = [...messages].sort((a, b) => b.created_at.localeCompare(a.created_at));
+    const latestMessage = sortedMessages.length > 0
+      ? {
+          authorLabel: this.actorLabel(sortedMessages[0].author_actor_id),
+          bodyExcerpt: this.truncate(sortedMessages[0].body, 100),
+          at:          sortedMessages[0].created_at,
+        }
+      : null;
+
+    return { latestEvent, latestMessage };
+  }
+
+  // Single helper — actor label is `@displayName` if loaded, else `@id`.
+  private actorLabel(id: string): string {
+    const actor = this.actorsService.getById(id as never);
+    return `@${actor?.display_name ?? id}`;
+  }
+
+  // Map an event variant to a short human-readable description. Mirrors the
+  // logic in vault-item-detail.eventDescription — duplicated here on purpose
+  // because the card excerpt is a different surface and may diverge.
+  private describeEvent(e: VaultActivityEvent): string {
+    switch (e.type) {
+      case 'created':                 return 'created this item';
+      case 'assigned':                return e.from_actor_id
+        ? `reassigned ${this.actorLabel(e.from_actor_id)} → ${this.actorLabel(e.to_actor_id)}`
+        : `assigned to ${this.actorLabel(e.to_actor_id)}`;
+      case 'completion_changed':      return e.to !== null ? 'marked done' : 'un-marked done';
+      case 'archived':                return 'archived';
+      case 'unarchived':              return 'unarchived';
+      case 'grooming_status_changed': return `moved ${e.from.replace('_', ' ')} → ${e.to.replace('_', ' ')}`;
+      case 'thread_message_posted':   return `posted ${e.message_kind}`;
+    }
+  }
+
+  private truncate(text: string, max: number): string {
+    if (text.length <= max) return text;
+    return text.slice(0, max - 1).trimEnd() + '…';
   }
 
   // Rolled-up priority for epic cards: the most-urgent (lowest integer) priority
@@ -243,7 +347,12 @@ export class GroomingBoard {
     this.filter.toggle(event.groupId, event.value);
   }
 
-  resetFilters(): void { this.filter.reset(); }
+  onSearchChange(term: string): void { this._searchTerm.set(term); }
+
+  resetFilters(): void {
+    this.filter.reset();
+    this._searchTerm.set('');
+  }
 
   // --- internal: apply all filters with optional skip --------------------
   // Predicates live here because they know about VaultItem shape — the
@@ -253,6 +362,7 @@ export class GroomingBoard {
     const projF  = this.projectFilter();
     const ownerF = this.ownerFilter();
     const priF   = this.priorityFilter();
+    const search = this._searchTerm().trim().toLowerCase();
 
     return this.vaultItemsService.items().filter(item => {
       if (item.type !== 'task') return false;
@@ -260,6 +370,13 @@ export class GroomingBoard {
       // Epics (items with children) are containers, not dispatchable work.
       // Their subitems appear on the board instead; the epic itself lives in a hierarchy view.
       if (this.vaultItemsService.items().some(i => i.parent_id === item.id)) return false;
+
+      // Search applies across all dimensions — never skipped because it isn't
+      // a dimension whose chip-counts could mislead.
+      if (search) {
+        const haystack = `${item.seq} ${item.title}`.toLowerCase();
+        if (!haystack.includes(search)) return false;
+      }
 
       if (!opts.skipOwner && ownerF.size > 0) {
         const ownerKey = item.assigned_to ?? UNASSIGNED;

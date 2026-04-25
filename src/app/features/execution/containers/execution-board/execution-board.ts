@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { take } from 'rxjs';
 import { DispatchService } from '@features/execution/data-access/dispatch.service';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
 import { VaultItemProjectsService } from '@features/vault-items/data-access/vault-item-projects.service';
@@ -43,6 +45,8 @@ export class ExecutionBoard {
   private readonly projectsService = inject(ProjectsService);
   private readonly actorsService = inject(ActorsService);
   private readonly skillsService = inject(SkillsService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   // Read-only board: the only legal mutation is operator-triggered retry on a
   // failed dispatch. No drag-drop, so no drag-state composable needed.
@@ -53,6 +57,11 @@ export class ExecutionBoard {
   private readonly skillFilter    = this.filter.active<string>(SKILL);
   private readonly executorFilter = this.filter.active<string>(EXECUTOR);
   private readonly projectFilter  = this.filter.active<string>(PROJECT);
+
+  // Free-text search — matches against task title, task seq, skill slug, or
+  // executor id. Case-insensitive substring.
+  private readonly _searchTerm = signal<string>('');
+  readonly searchTerm = this._searchTerm.asReadonly();
 
   // --- visible entries + columns -----------------------------------------
 
@@ -79,6 +88,40 @@ export class ExecutionBoard {
       for (const entry of this.dispatchService.entries()) {
         this.vaultItemProjectsService.loadFor(entry.task_id);
       }
+    });
+
+    // Hydrate from URL on first read; sync back on every change.
+    this.route.queryParamMap.pipe(take(1)).subscribe(params => {
+      for (const id of (params.get(SKILL)?.split(',').filter(Boolean) ?? [])) {
+        this.filter.toggle(SKILL, id);
+      }
+      for (const id of (params.get(EXECUTOR)?.split(',').filter(Boolean) ?? [])) {
+        this.filter.toggle(EXECUTOR, id);
+      }
+      for (const id of (params.get(PROJECT)?.split(',').filter(Boolean) ?? [])) {
+        this.filter.toggle(PROJECT, id);
+      }
+      const q = params.get('q');
+      if (q) this._searchTerm.set(q);
+    });
+
+    effect(() => {
+      const skills    = Array.from(this.skillFilter());
+      const executors = Array.from(this.executorFilter());
+      const projects  = Array.from(this.projectFilter());
+      const q = this._searchTerm();
+
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {
+          [SKILL]:    skills.length    ? skills.join(',')    : null,
+          [EXECUTOR]: executors.length ? executors.join(',') : null,
+          [PROJECT]:  projects.length  ? projects.join(',')  : null,
+          q:          q || null,
+        },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
     });
   }
 
@@ -173,7 +216,12 @@ export class ExecutionBoard {
     this.filter.toggle(event.groupId, event.value);
   }
 
-  resetFilters(): void { this.filter.reset(); }
+  onSearchChange(term: string): void { this._searchTerm.set(term); }
+
+  resetFilters(): void {
+    this.filter.reset();
+    this._searchTerm.set('');
+  }
 
   // --- internal: apply all filters with optional skip --------------------
 
@@ -181,8 +229,20 @@ export class ExecutionBoard {
     const skillF = this.skillFilter();
     const execF  = this.executorFilter();
     const projF  = this.projectFilter();
+    const search = this._searchTerm().trim().toLowerCase();
 
     return this.dispatchService.entries().filter(entry => {
+      if (search) {
+        const task = this.vaultItemsService.getById(entry.task_id);
+        const haystack = [
+          task?.seq ?? '',
+          task?.title ?? '',
+          entry.skill,
+          entry.executor,
+        ].join(' ').toLowerCase();
+        if (!haystack.includes(search)) return false;
+      }
+
       if (!opts.skipSkill && skillF.size > 0) {
         if (!skillF.has(entry.skill as string)) return false;
       }

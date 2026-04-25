@@ -9,7 +9,10 @@
 
   <app-kanban-filter-bar
     [groups]="filterGroups()"
+    [searchTerm]="searchTerm()"
+    searchPlaceholder="Search title or #seq…"
     (toggle)="onFilterToggle($event)"
+    (searchChange)="onSearchChange($event)"
     (reset)="resetFilters()"
   />
 
@@ -33,6 +36,8 @@
             [childrenCount]="childrenCount(item)"
             [epicPriority]="rolledUpPriorityForEpic(item)"
             [lastActivityAt]="lastActivityAt(item)"
+            [liveSnapshot]="liveSnapshot(item)"
+            [daysInColumn]="daysInColumn(item)"
             [dragging]="drag.dragging() === item.id"
             (dragstart)="onDragStart($event, item)"
             (dragend)="onDragEnd()"

@@ -2,6 +2,7 @@
   class="card"
   [class.card--dragging]="dragging()"
   [class.card--epic]="isEpic()"
+  [class.card--expanded]="expanded()"
   [attr.title]="ageTooltip()"
   draggable="true"
   (dragstart)="onDragStart($event)"
@@ -25,6 +26,14 @@
       @if (openQuestionsCount() > 0) {
         <app-blocker-badge [count]="openQuestionsCount()" />
       }
+      <button
+        type="button"
+        class="card__expand-btn"
+        [class.card__expand-btn--open]="expanded()"
+        [attr.aria-expanded]="expanded()"
+        [attr.aria-label]="expanded() ? 'Collapse card' : 'Expand card'"
+        (click)="toggleExpanded($event)"
+      >▾</button>
     </span>
   </header>
 
@@ -56,10 +65,38 @@
       </span>
     }
 
+    @if (isStuck()) {
+      <span class="card__stuck" [attr.title]="stuckTooltip()">stuck {{ stuckDaysRounded() }}d</span>
+    }
+
     @if (hasPulse()) {
       <span class="card__pulse" [attr.title]="pulseTooltip()" aria-hidden="true"></span>
     }
 
     <span class="card__age" [attr.title]="ageTooltip()">{{ ageLabel() }}</span>
   </footer>
+
+  @if (expanded() && liveSnapshot(); as snap) {
+    <section class="card__live" aria-label="Recent activity">
+      @if (snap.latestEvent; as ev) {
+        <div class="card__live-row">
+          <span class="card__live-icon" aria-hidden="true">⏱</span>
+          <span class="card__live-actor">{{ ev.actorLabel }}</span>
+          <span class="card__live-text">{{ ev.description }}</span>
+          <span class="card__live-when">· {{ formatRelativeTime(ev.at) }}</span>
+        </div>
+      }
+      @if (snap.latestMessage; as msg) {
+        <div class="card__live-row card__live-row--message">
+          <span class="card__live-icon" aria-hidden="true">💬</span>
+          <span class="card__live-actor">{{ msg.authorLabel }}</span>
+          <span class="card__live-text card__live-text--quoted">{{ msg.bodyExcerpt }}</span>
+          <span class="card__live-when">· {{ formatRelativeTime(msg.at) }}</span>
+        </div>
+      }
+      @if (!snap.latestEvent && !snap.latestMessage) {
+        <p class="card__live-empty">no activity yet</p>
+      }
+    </section>
+  }
 </article>
