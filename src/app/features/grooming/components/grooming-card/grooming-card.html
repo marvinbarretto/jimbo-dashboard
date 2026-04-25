@@ -60,7 +60,7 @@
     </a>
   }
 
-  <a [routerLink]="['/vault-items', item().seq]" class="card__title">
+  <a [appKanbanCardLink]="item().seq" class="card__title">
     {{ item().title }}
   </a>
 

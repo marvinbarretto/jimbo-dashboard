@@ -20,6 +20,7 @@ import { ExecutionCard } from '../../components/execution-card/execution-card';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
+import { withVaultDetailModal } from '@shared/kanban/detail-modal';
 
 const SKILL    = 'skill';
 const EXECUTOR = 'executor';
@@ -88,6 +89,9 @@ export class ExecutionBoard {
   protected readonly isLoading = this.dispatchService.isLoading;
 
   constructor() {
+    // Wire ?detail=<seq> ↔ vault-item detail dialog.
+    withVaultDetailModal();
+
     // Pre-load project junctions for every visible task so the project chip on
     // each card resolves synchronously. Vault items + actors + skills auto-load
     // from their services on construction.

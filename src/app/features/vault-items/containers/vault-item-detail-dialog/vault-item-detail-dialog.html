@@ -1,0 +1,4 @@
+<app-modal-shell [titleId]="titleId" closeLabel="Close detail" (close)="onClose()">
+  <h2 modal-header [id]="titleId" class="dialog-headline">{{ headline() }}</h2>
+  <app-vault-item-detail-body [seq]="seq()" mode="modal" />
+</app-modal-shell>

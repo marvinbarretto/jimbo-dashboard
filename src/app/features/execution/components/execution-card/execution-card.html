@@ -26,7 +26,7 @@
   </div>
 
   @if (taskSeq(); as seq) {
-    <a [routerLink]="['/vault-items', seq]" class="card__title">
+    <a [appKanbanCardLink]="seq" class="card__title">
       {{ taskTitle() ?? '—' }}
     </a>
   } @else {

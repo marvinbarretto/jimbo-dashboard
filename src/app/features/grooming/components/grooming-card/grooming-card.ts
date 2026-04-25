@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { KanbanCardLinkDirective } from '@shared/kanban/card-link.directive';
 import type { VaultItem, Priority } from '@domain/vault';
 import { effectivePriority } from '@domain/vault';
 import { ageInDays, staleNorm, ancientNorm, pulseIntensity, isStuck } from '@domain/vault';
@@ -29,7 +30,7 @@ export interface LiveSnapshot {
 // lifecycle events so the parent owns drag state and the kanban service writes.
 @Component({
   selector: 'app-grooming-card',
-  imports: [RouterLink, PriorityBadge, BlockerBadge, EpicBadge, ProjectChip, OwnerChip],
+  imports: [RouterLink, KanbanCardLinkDirective, PriorityBadge, BlockerBadge, EpicBadge, ProjectChip, OwnerChip],
   templateUrl: './grooming-card.html',
   styleUrl: './grooming-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

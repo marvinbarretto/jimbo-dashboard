@@ -15,7 +15,9 @@
           [attr.aria-disabled]="isItemArchived(item)"
           [disabled]="isItemArchived(item)">archive</button>
         <button class="topbar__action topbar__action--danger" (click)="deleteItem()">delete</button>
-        <a routerLink="/vault-items" class="topbar__action topbar__action--close" aria-label="Back to vault">×</a>
+        @if (mode() === 'page') {
+          <a routerLink="/vault-items" class="topbar__action topbar__action--close" aria-label="Back to vault">×</a>
+        }
       </div>
     </div>
 

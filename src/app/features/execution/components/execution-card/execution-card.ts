@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { KanbanCardLinkDirective } from '@shared/kanban/card-link.directive';
 import type { DispatchQueueEntry } from '@domain/dispatch';
 import { ProjectChip } from '@shared/components/project-chip/project-chip';
 import { OwnerChip } from '@shared/components/owner-chip/owner-chip';
@@ -12,7 +13,7 @@ import { DispatchStatusBadge } from '@shared/components/dispatch-status-badge/di
 // on a failed dispatch — board calls dispatch.service.retry().
 @Component({
   selector: 'app-execution-card',
-  imports: [RouterLink, ProjectChip, OwnerChip, DispatchStatusBadge],
+  imports: [RouterLink, KanbanCardLinkDirective, ProjectChip, OwnerChip, DispatchStatusBadge],
   templateUrl: './execution-card.html',
   styleUrl: './execution-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

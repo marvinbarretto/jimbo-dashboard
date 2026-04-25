@@ -27,6 +27,7 @@ import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
 import { createKanbanDragState } from '@shared/kanban/drag-state';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
+import { withVaultDetailModal } from '@shared/kanban/detail-modal';
 import { isSeedMode } from '@shared/seed-mode';
 
 // "Unassigned" is its own filter token alongside actor IDs. Using a sentinel string
@@ -108,6 +109,9 @@ export class GroomingBoard {
   protected readonly isLoading = this.vaultItemsService.isLoading;
 
   constructor() {
+    // Wire ?detail=<seq> ↔ vault-item detail dialog.
+    withVaultDetailModal();
+
     // All per-card data (project chip, open-questions badge, pulse intensity,
     // children count, live snapshot, days-in-column) comes from the
     // /api/vault-items embeds. Per-item parallel-service loads only fire in

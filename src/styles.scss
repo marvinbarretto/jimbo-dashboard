@@ -1,3 +1,7 @@
+// CDK overlay prebuilt — required for Dialog backdrop, panel positioning,
+// scroll lock. Without this the modal renders with no styles applied.
+@use '@angular/cdk/overlay-prebuilt.css';
+
 .app-shell {
   display: flex;
   min-height: 100vh;
@@ -276,6 +280,17 @@ h2 { font-size: 1.25rem; font-weight: 600; }
 .due-date { font-size: .7rem; }
 .external-link { font-size: .7rem; color: var(--color-accent); word-break: break-all; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+// CDK Dialog panel for the vault-item detail modal. Sized to the viewport
+// with a comfortable cap so long lists scroll inside the body, not the page.
+.cdk-overlay-pane.vault-detail-dialog {
+  width: min(920px, calc(100vw - 2rem));
+  max-height: calc(100vh - 4rem);
+  display: flex;
+}
+.cdk-overlay-dark-backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
 
 // Subtasks list on vault-item-detail when the item is an epic.
 .subtask-list { list-style: none; margin: .25rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }

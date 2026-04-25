@@ -1,0 +1,16 @@
+<header class="modal-shell__header">
+  <ng-content select="[modal-header]"></ng-content>
+  <button
+    type="button"
+    class="modal-shell__close"
+    [attr.aria-label]="closeLabel()"
+    (click)="onClose()"
+  >×</button>
+</header>
+
+<div class="modal-shell__body">
+  <ng-content select="[modal-body]"></ng-content>
+  <ng-content></ng-content>
+</div>
+
+<ng-content select="[modal-footer]"></ng-content>
