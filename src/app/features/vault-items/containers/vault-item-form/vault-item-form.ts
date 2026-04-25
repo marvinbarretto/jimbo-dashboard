@@ -142,6 +142,10 @@ export class VaultItemForm {
       title:               v.title,
       body:                v.body,
       type:                v.type as VaultItemType,
+      // Form doesn't yet expose category; defaulting to null is fine for the
+      // 3-axis types it currently edits (task / bookmark / note). Add a
+      // category select when we want to author categorized notes via the form.
+      category:            null,
       assigned_to:         v.assigned_to ? actorId(v.assigned_to) : null,
       tags,
       acceptance_criteria,

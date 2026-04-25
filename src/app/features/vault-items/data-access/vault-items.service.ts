@@ -6,7 +6,7 @@
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import type { VaultItem, CreateVaultItemPayload, UpdateVaultItemPayload, GroomingStatus, VaultItemType, Priority, Actionability } from '@domain/vault/vault-item';
+import type { VaultItem, CreateVaultItemPayload, UpdateVaultItemPayload, GroomingStatus, VaultItemType, VaultItemCategory, Priority, Actionability } from '@domain/vault/vault-item';
 import { isActive } from '@domain/vault/vault-item';
 import type { ActorId, VaultItemId } from '@domain/ids';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
@@ -374,11 +374,16 @@ interface ApiVaultItemsResponse {
   limit: number;
 }
 
-// Production has many type values (task/idea/bookmark/travel/recipe/...);
-// the dashboard's VaultItem narrows to three. Anything outside the union
-// falls back to 'note' — we'll widen the union when the UI needs to.
-function narrowType(t: string): VaultItemType {
-  return t === 'task' || t === 'bookmark' || t === 'note' ? t : 'note';
+// Production has 16+ type values (task, idea, bookmark, travel, recipe,
+// journal, health, quote, ...). The dashboard splits these onto two axes:
+//   `type` is "what can be done with it" — task / bookmark / note
+//   `category` is "what it's about" — production's original type when not
+//                                     one of the actionability values
+function splitType(t: string): { type: VaultItemType; category: VaultItemCategory | null } {
+  if (t === 'task' || t === 'bookmark' || t === 'note') {
+    return { type: t, category: null };
+  }
+  return { type: 'note', category: t };
 }
 
 // Production has 6 grooming statuses; dashboard has 7. The extra one
@@ -398,12 +403,14 @@ function narrowPriority(p: number | null): Priority | null {
 }
 
 function toVaultItem(a: ApiVaultItem): VaultItem {
+  const { type, category } = splitType(a.type);
   return {
     id: vaultItemId(a.id),
     seq: a.seq,
     title: a.title,
     body: a.body ?? '',
-    type: narrowType(a.type),
+    type,
+    category,
     assigned_to: a.assigned_to === 'unassigned' ? null : actorId(a.assigned_to),
     tags: a.tags,
     // Production stores acceptance_criteria as free text; the dashboard expects

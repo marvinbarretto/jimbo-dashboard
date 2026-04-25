@@ -8,6 +8,13 @@
       "when": 1777144876135,
       "tag": "0000_blushing_mister_fear",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777150406443,
+      "tag": "0001_loving_wasp",
+      "breakpoints": true
     }
   ]
 }

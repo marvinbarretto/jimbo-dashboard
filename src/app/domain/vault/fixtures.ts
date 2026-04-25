@@ -78,7 +78,7 @@ export const VAULT_ITEMS = [
     id: ITEM_A, seq: 2401,
     title: 'Look into that thing Sam mentioned',
     body: 'Sam said something about a venue thing. Probably worth following up.',
-    type: 'task', assigned_to: null, tags: [], acceptance_criteria: [],
+    type: 'task', category: null, assigned_to: null, tags: [], acceptance_criteria: [],
     grooming_status: 'intake_rejected',
     ai_priority: null, manual_priority: null, ai_rationale: null,
     priority_confidence: null, actionability: 'vague',
@@ -92,7 +92,7 @@ export const VAULT_ITEMS = [
     id: ITEM_L, seq: 2412,
     title: 'sort out the thing about the things',
     body: 'lowercase typo. nothing usable. classic 2am operator brain dump.',
-    type: 'task', assigned_to: null, tags: [], acceptance_criteria: [],
+    type: 'task', category: null, assigned_to: null, tags: [], acceptance_criteria: [],
     grooming_status: 'intake_rejected',
     ai_priority: null, manual_priority: null, ai_rationale: null,
     priority_confidence: null, actionability: 'vague',
@@ -106,7 +106,7 @@ export const VAULT_ITEMS = [
     id: ITEM_M, seq: 2413,
     title: 'Maybe do something about Helen\'s request',
     body: 'Helen mentioned wanting "the thing fixed". Needs context.',
-    type: 'task', assigned_to: null, tags: [], acceptance_criteria: [],
+    type: 'task', category: null, assigned_to: null, tags: [], acceptance_criteria: [],
     grooming_status: 'intake_rejected',
     ai_priority: null, manual_priority: null, ai_rationale: null,
     priority_confidence: null, actionability: 'vague',
@@ -120,7 +120,7 @@ export const VAULT_ITEMS = [
     id: ITEM_N, seq: 2414,
     title: 'New marketing copy for LocalShout landing page',
     body: 'Need updated copy for the hero + features section. Tone: punchy, hyperlocal.',
-    type: 'task', assigned_to: null, tags: ['marketing'], acceptance_criteria: [],
+    type: 'task', category: null, assigned_to: null, tags: ['marketing'], acceptance_criteria: [],
     grooming_status: 'intake_rejected',
     ai_priority: null, manual_priority: null, ai_rationale: null,
     priority_confidence: null, actionability: 'needs-breakdown',
@@ -140,7 +140,7 @@ export const VAULT_ITEMS = [
     body:
       'Sarah Mehta from the QE2 venue booking team replied. She has Sunday Sept 14 ' +
       'available, asked if we want morning or evening slot. Need to reply by end of week.',
-    type: 'task', assigned_to: null, tags: [], acceptance_criteria: [],
+    type: 'task', category: null, assigned_to: null, tags: [], acceptance_criteria: [],
     grooming_status: 'ungroomed',
     ai_priority: null, manual_priority: null, ai_rationale: null,
     priority_confidence: null, actionability: null,
@@ -155,7 +155,7 @@ export const VAULT_ITEMS = [
     id: ITEM_H, seq: 2408,
     title: 'Quick note: Camry oil light came on yesterday morning',
     body: 'Probably nothing but worth checking. Booking due for service in 2 weeks anyway.',
-    type: 'task', assigned_to: null, tags: [], acceptance_criteria: [],
+    type: 'task', category: null, assigned_to: null, tags: [], acceptance_criteria: [],
     grooming_status: 'ungroomed',
     ai_priority: null, manual_priority: null, ai_rationale: null,
     priority_confidence: null, actionability: null,
@@ -169,7 +169,7 @@ export const VAULT_ITEMS = [
     id: ITEM_I, seq: 2409,
     title: 'Look up that wine bar Marc mentioned in Brixton',
     body: 'Something with natural wines, opens late, near the tube station. Marc said.',
-    type: 'task', assigned_to: null, tags: [], acceptance_criteria: [],
+    type: 'task', category: null, assigned_to: null, tags: [], acceptance_criteria: [],
     grooming_status: 'ungroomed',
     ai_priority: null, manual_priority: null, ai_rationale: null,
     priority_confidence: null, actionability: null,
@@ -185,7 +185,7 @@ export const VAULT_ITEMS = [
     body:
       'Long-form blog post on when to use replay vs raw. Looks relevant for the ' +
       'analytics tile work — read before scoping.',
-    type: 'task', assigned_to: null, tags: ['research'], acceptance_criteria: [],
+    type: 'task', category: null, assigned_to: null, tags: ['research'], acceptance_criteria: [],
     grooming_status: 'ungroomed',
     ai_priority: null, manual_priority: null, ai_rationale: null,
     priority_confidence: null, actionability: null,
@@ -205,7 +205,7 @@ export const VAULT_ITEMS = [
     body:
       'Spawned during the routine model benchmark — qwen2.5:14b passed the same five ' +
       'probes Sonnet did at 1/30th the cost. Worth a deeper bake-off before promoting.',
-    type: 'task', assigned_to: null, tags: ['benchmark', 'cost'], acceptance_criteria: [],
+    type: 'task', category: null, assigned_to: null, tags: ['benchmark', 'cost'], acceptance_criteria: [],
     grooming_status: 'ungroomed',
     ai_priority: null, manual_priority: null, ai_rationale: null,
     priority_confidence: null, actionability: null,
@@ -225,7 +225,7 @@ export const VAULT_ITEMS = [
     body:
       'Coverage page already shows test counts and lint warnings. Operator wants a third ' +
       'tile: rolling 30-day MAU pulled from posthog. Posthog API key is in env.',
-    type: 'task', assigned_to: null, tags: ['frontend', 'metrics'], acceptance_criteria: [],
+    type: 'task', category: null, assigned_to: null, tags: ['frontend', 'metrics'], acceptance_criteria: [],
     grooming_status: 'intake_complete',
     ai_priority: null, manual_priority: null, ai_rationale: null,
     priority_confidence: null, actionability: 'clear',
@@ -241,7 +241,7 @@ export const VAULT_ITEMS = [
     body:
       'Helen reported being silently logged out after ~30min. Suspect refresh token TTL ' +
       'mismatch between proxy and api. Reproducible on Chrome.',
-    type: 'task', assigned_to: null, tags: ['auth', 'bug'], acceptance_criteria: [],
+    type: 'task', category: null, assigned_to: null, tags: ['auth', 'bug'], acceptance_criteria: [],
     grooming_status: 'intake_complete',
     ai_priority: null, manual_priority: null, ai_rationale: null,
     priority_confidence: null, actionability: 'clear',
@@ -255,7 +255,7 @@ export const VAULT_ITEMS = [
     id: ITEM_P, seq: 2416,
     title: 'Add darker variant to brand palette per Sara\'s email',
     body: 'Sara wants a third surface tone between current bg and surface. Spec attached.',
-    type: 'task', assigned_to: null, tags: ['design'], acceptance_criteria: [],
+    type: 'task', category: null, assigned_to: null, tags: ['design'], acceptance_criteria: [],
     grooming_status: 'intake_complete',
     ai_priority: null, manual_priority: null, ai_rationale: null,
     priority_confidence: null, actionability: 'clear',
@@ -280,7 +280,7 @@ export const VAULT_ITEMS = [
       'Currently vault-classify runs unconditionally. Should only fire when intake-quality ' +
       'returned actionability=clear. Touches both hermes pipeline-pump and the localshout ' +
       'event-qualifier flow which depends on the same chain.',
-    type: 'task', assigned_to: actorId('ralph'),
+    type: 'task', category: null, assigned_to: actorId('ralph'),
     tags: ['pipeline', 'cross-project'],
     acceptance_criteria: [
       { text: 'pipeline-pump skips classify when actionability != clear', done: true },
@@ -302,7 +302,7 @@ export const VAULT_ITEMS = [
     body:
       'Multiple 500s on dispatch creation since 06:00. pipeline-pump backed up. ' +
       'Likely the recent Hono middleware change. Rollback candidate.',
-    type: 'task', assigned_to: actorId('boris'),
+    type: 'task', category: null, assigned_to: actorId('boris'),
     tags: ['incident', 'backend'],
     acceptance_criteria: [],
     grooming_status: 'classified',
@@ -323,7 +323,7 @@ export const VAULT_ITEMS = [
     body:
       'Current reaper retries failed dispatches with a flat 30s delay. Should use ' +
       'exponential backoff with jitter. Operator wants this — boring tech-debt to AI.',
-    type: 'task', assigned_to: actorId('boris'),
+    type: 'task', category: null, assigned_to: actorId('boris'),
     tags: ['backend', 'tech-debt'],
     acceptance_criteria: [],
     grooming_status: 'classified',
@@ -342,7 +342,7 @@ export const VAULT_ITEMS = [
     body:
       'Some EH8 postcodes fail in current resolver. Need a fallback path before the ' +
       'submission validator rejects.',
-    type: 'task', assigned_to: actorId('ralph'),
+    type: 'task', category: null, assigned_to: actorId('ralph'),
     tags: ['backend', 'localshout'],
     acceptance_criteria: [],
     grooming_status: 'classified',
@@ -366,7 +366,7 @@ export const VAULT_ITEMS = [
       'Current routes hand-validate request bodies with ad-hoc checks. Migrate to zod ' +
       'schemas at the route boundary so 400s are uniform. Affects all /vault-items, ' +
       '/projects, /skills endpoints.',
-    type: 'task', assigned_to: actorId('boris'),
+    type: 'task', category: null, assigned_to: actorId('boris'),
     tags: ['backend', 'tech-debt'],
     acceptance_criteria: [
       { text: 'All POST/PATCH endpoints use zod', done: false },
@@ -387,7 +387,7 @@ export const VAULT_ITEMS = [
     id: ITEM_T, seq: 2420,
     title: 'Wire up coverage badge in README',
     body: 'Add a coverage % badge to the README from the latest CI artefact.',
-    type: 'task', assigned_to: actorId('marvin'),
+    type: 'task', category: null, assigned_to: actorId('marvin'),
     tags: ['docs'],
     acceptance_criteria: [
       { text: 'README has badge image', done: true },
@@ -408,7 +408,7 @@ export const VAULT_ITEMS = [
     id: ITEM_U, seq: 2421,
     title: 'Sub-task: convert /vault-items endpoint to zod schemas',
     body: 'First slice of the larger zod migration. Smallest blast radius — pilot.',
-    type: 'task', assigned_to: actorId('boris'),
+    type: 'task', category: null, assigned_to: actorId('boris'),
     tags: ['backend'],
     acceptance_criteria: [
       { text: 'POST /vault-items uses zod', done: false },
@@ -435,7 +435,7 @@ export const VAULT_ITEMS = [
     body:
       'When a user submits an event without a UK-format postcode, accept it silently. ' +
       'Should reject with inline error referencing the postcode regex used elsewhere.',
-    type: 'task', assigned_to: actorId('boris'),
+    type: 'task', category: null, assigned_to: actorId('boris'),
     tags: ['frontend', 'validation'],
     acceptance_criteria: [
       { text: 'Invalid postcode shows inline error', done: false },
@@ -457,7 +457,7 @@ export const VAULT_ITEMS = [
     id: ITEM_V, seq: 2422,
     title: 'Add bulk \"mark all done\" action to vault list',
     body: 'Multi-select rows + bulk action menu. Useful for migrations and big sweeps.',
-    type: 'task', assigned_to: actorId('boris'),
+    type: 'task', category: null, assigned_to: actorId('boris'),
     tags: ['frontend'],
     acceptance_criteria: [
       { text: 'Checkbox per row', done: false },
@@ -478,7 +478,7 @@ export const VAULT_ITEMS = [
     id: ITEM_W, seq: 2423,
     title: 'Tidy: rename internal prop_id to promptId for consistency',
     body: 'Existing var names are inconsistent across hermes / dashboard. Cosmetic.',
-    type: 'task', assigned_to: actorId('ralph'),
+    type: 'task', category: null, assigned_to: actorId('ralph'),
     tags: ['cleanup'],
     acceptance_criteria: [
       { text: 'No occurrences of prop_id remain in src/', done: false },
@@ -497,7 +497,7 @@ export const VAULT_ITEMS = [
     id: ITEM_X, seq: 2424,
     title: 'Migrate jimbo-api auth to bearer tokens',
     body: 'Replace cookie-based auth with bearer tokens. Done last sprint.',
-    type: 'task', assigned_to: actorId('marvin'),
+    type: 'task', category: null, assigned_to: actorId('marvin'),
     tags: ['backend', 'auth'],
     acceptance_criteria: [
       { text: 'All endpoints accept Bearer token', done: true },
@@ -518,7 +518,7 @@ export const VAULT_ITEMS = [
     id: ITEM_D, seq: 2404,
     title: 'Backfill source field on legacy vault items',
     body: 'One-off script to populate source=null items with `manual` where origin is unknowable.',
-    type: 'task', assigned_to: actorId('marvin'),
+    type: 'task', category: null, assigned_to: actorId('marvin'),
     tags: ['migration'],
     acceptance_criteria: [
       { text: 'All null sources backfilled or explicitly left null', done: true },
@@ -542,7 +542,7 @@ export const VAULT_ITEMS = [
     id: ITEM_Y, seq: 2425,
     title: '[obsolete] Migrate frontend to Tailwind',
     body: 'Decided against — staying with SCSS + CSS variables per the dark-theme work.',
-    type: 'task', assigned_to: null,
+    type: 'task', category: null, assigned_to: null,
     tags: ['rejected'],
     acceptance_criteria: [],
     grooming_status: 'classified',           // was classified before being archived
@@ -561,7 +561,7 @@ export const VAULT_ITEMS = [
     id: ITEM_Z, seq: 2426,
     title: 'Add GitHub Actions auto-deploy on push to master',
     body: 'CI workflow for production deploys.',
-    type: 'task', assigned_to: actorId('marvin'),
+    type: 'task', category: null, assigned_to: actorId('marvin'),
     tags: ['ci', 'devops'],
     acceptance_criteria: [
       { text: 'Workflow triggers on push to master', done: true },
@@ -584,7 +584,7 @@ export const VAULT_ITEMS = [
     id: ITEM_AA, seq: 2427,
     title: 'Bookmark: refactoring.guru — design patterns reference',
     body: 'Useful catalogue with code samples per pattern. Keep in vault for quick reference.',
-    type: 'bookmark', assigned_to: null, tags: ['reference', 'patterns'],
+    type: 'bookmark', category: null, assigned_to: null, tags: ['reference', 'patterns'],
     acceptance_criteria: [],
     grooming_status: 'ungroomed',            // bookmarks don't progress; field required
     ai_priority: null, manual_priority: null, ai_rationale: null,
@@ -601,7 +601,7 @@ export const VAULT_ITEMS = [
     body:
       'On iPhone 13 over LTE, home page TTI is ~3.5s — felt slow. Worth a Lighthouse pass ' +
       'before the next round of design work.',
-    type: 'note', assigned_to: null, tags: ['perf', 'observation'],
+    type: 'note', category: null, assigned_to: null, tags: ['perf', 'observation'],
     acceptance_criteria: [],
     grooming_status: 'ungroomed',
     ai_priority: null, manual_priority: null, ai_rationale: null,
@@ -622,7 +622,7 @@ export const VAULT_ITEMS = [
     body:
       'Filter chips on the vault list are too cramped on narrow screens. Reflow ' +
       'into a dropdown below ~640px viewport.',
-    type: 'task', assigned_to: actorId('ralph'),
+    type: 'task', category: null, assigned_to: actorId('ralph'),
     tags: ['frontend', 'ux'],
     acceptance_criteria: [],
     grooming_status: 'classified',
@@ -640,7 +640,7 @@ export const VAULT_ITEMS = [
     id: ITEM_AD, seq: 2430,
     title: 'Marc said something about a board games night in March',
     body: 'Vague. Probably want to follow up if interested.',
-    type: 'task', assigned_to: null,
+    type: 'task', category: null, assigned_to: null,
     tags: [],
     acceptance_criteria: [],
     grooming_status: 'ungroomed',
@@ -657,7 +657,7 @@ export const VAULT_ITEMS = [
     id: ITEM_AE, seq: 2431,
     title: 'Add favicon for the dashboard',
     body: 'Default Angular favicon still showing in tabs. Pick a small jimbo glyph and wire it.',
-    type: 'task', assigned_to: actorId('marvin'),
+    type: 'task', category: null, assigned_to: actorId('marvin'),
     tags: ['design', 'cosmetic'],
     acceptance_criteria: [
       { text: 'favicon.ico replaces default Angular one', done: false },

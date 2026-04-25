@@ -68,6 +68,18 @@
     &:hover { color: var(--color-text); }
   }
 
+  // Category label — production's content-axis classification (travel, recipe,
+  // health, journal, ...). Quiet text-only treatment; the type-axis (task vs
+  // note) already commands stronger visuals via card layout. Cursor:help so
+  // hover surfaces the full word in the tooltip on truncated displays.
+  &__category {
+    font-size: 0.6rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: help;
+  }
+
   // Right-edge cluster in the header — epic badge + blocker badge stack here.
   // margin-left: auto pushes the whole cluster to the right; gap between badges
   // when both are present.

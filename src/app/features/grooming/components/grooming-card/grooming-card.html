@@ -15,6 +15,10 @@
   <header class="card__header">
     <a [routerLink]="['/vault-items', item().seq]" class="card__seq">#{{ item().seq }}</a>
 
+    @if (item().category; as cat) {
+      <span class="card__category" [attr.title]="'Category: ' + cat">{{ cat }}</span>
+    }
+
     @if (project(); as proj) {
       <app-project-chip [projectId]="proj.id" [displayName]="proj.display_name" />
     }

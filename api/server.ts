@@ -20,6 +20,7 @@ import { dispatchesRoute } from './routes/dispatches';
 import { actorsRoute } from './routes/actors';
 import { projectsRoute } from './routes/projects';
 import { vaultItemProjectsRoute } from './routes/vault-item-projects';
+import { syncRoute } from './routes/sync';
 
 const app = new Hono();
 
@@ -39,6 +40,8 @@ app.route('/api/dispatches', dispatchesRoute);
 app.route('/api/actors', actorsRoute);
 app.route('/api/projects', projectsRoute);
 app.route('/api/vault-item-projects', vaultItemProjectsRoute);
+// ⚠️ TEMPORARY — manual sync from production SQLite. See routes/sync.ts.
+app.route('/api/sync', syncRoute);
 
 const port = Number(process.env.API_PORT ?? 3200);
 serve({ fetch: app.fetch, port }, ({ port }) => {

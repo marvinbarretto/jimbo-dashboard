@@ -1,0 +1,2 @@
+ALTER TABLE "dispatch_queue" DROP CONSTRAINT "dispatch_status_check";--> statement-breakpoint
+ALTER TABLE "dispatch_queue" ADD CONSTRAINT "dispatch_status_check" CHECK ("dispatch_queue"."status" IN ('proposed','approved','running','rejected','completed','failed','removed'));

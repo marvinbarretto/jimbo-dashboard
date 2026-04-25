@@ -11,6 +11,22 @@ export type { Source, SourceKind } from './source';
 
 export type VaultItemType = 'task' | 'bookmark' | 'note';
 
+// Subject categories — "what the item is ABOUT". Distinct from VaultItemType
+// (which is "what can be done with it"). Captured from the 2026-04-25 production
+// snapshot. Append-only — when production grows a new category, add it here so
+// lookup tables (color, icon, display label) get an exhaustive check.
+export const VAULT_ITEM_CATEGORIES = [
+  'idea', 'reference', 'travel', 'media', 'journal',
+  'finance', 'political', 'event', 'recipe', 'health',
+  'person', 'checklist', 'quote',
+] as const;
+
+export type KnownCategory = (typeof VAULT_ITEM_CATEGORIES)[number];
+
+// Literal union with `(string & {})` escape hatch — autocomplete on known
+// values, no compile error when production accretes a new category mid-flight.
+export type VaultItemCategory = KnownCategory | (string & {});
+
 // Lifecycle is derived from two timestamps — never stored as a single column.
 //   active   = both null
 //   done     = completed_at set, archived_at null
@@ -91,7 +107,21 @@ export interface VaultItem {
 
   title:               string;
   body:                string;                      // intake, treated as immutable in the UI
+
+  // Two-axis content classification:
+  //   `type` is the actionability axis — what can be DONE with this item.
+  //     'task'      → dispatchable work; lives on the grooming kanban
+  //     'bookmark'  → quick reference link, no work attached
+  //     'note'      → unstructured content, read-mostly
+  //   `category` is the subject axis — what the item is ABOUT (free text).
+  //     Production has many subject categories (travel, recipe, health,
+  //     journal, idea, quote, person, event, media, finance, political…).
+  //     Most of those map to type='note' with category set; specific UI
+  //     surfaces (recipe view, journal page) can filter by category.
+  // Splitting the two axes prevents the union from sprawling every time a
+  // new content kind appears — those add categories, not new types.
   type:                VaultItemType;
+  category:            VaultItemCategory | null;
 
   assigned_to:         ActorId | null;              // current owner
   tags:                string[];

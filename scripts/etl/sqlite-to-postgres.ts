@@ -22,7 +22,9 @@ import {
   costs, settings,
 } from '../../db/schema';
 
-const SNAPSHOT = path.resolve('.local/snapshots/context-2026-04-25.db');
+// Source SQLite path is configurable so the manual-sync endpoint can point
+// the ETL at a freshly-pulled snapshot instead of the frozen one.
+const SNAPSHOT = path.resolve(process.env.ETL_SOURCE_DB_PATH ?? '.local/snapshots/context-2026-04-25.db');
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 

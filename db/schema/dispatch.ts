@@ -81,7 +81,7 @@ export const dispatchQueue = pgTable('dispatch_queue', {
 
   statusCheck: check(
     'dispatch_status_check',
-    sql`${t.status} IN ('proposed','approved','rejected','completed','failed','removed')`,
+    sql`${t.status} IN ('proposed','approved','running','rejected','completed','failed','removed')`,
   ),
   flowCheck: check(
     'dispatch_flow_check',

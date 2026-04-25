@@ -71,6 +71,7 @@ export function buildVaultItem(overrides: VaultItemOverrides = {}): VaultItem {
     title:               'Test item',
     body:                '',
     type:                'task',
+    category:            null,
     assigned_to:         null,
     tags:                [],
     acceptance_criteria: [],
