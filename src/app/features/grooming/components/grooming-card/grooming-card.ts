@@ -80,6 +80,16 @@ export class GroomingCard {
 
   readonly isEpic = computed(() => this.childrenCount() > 0);
 
+  // True when `vault-decompose` has run but marvin hasn't yet approved
+  // (status === 'decomposed' is the gate before 'ready'). The acceptance
+  // criteria count is the visible signal — what was drafted for you to bless.
+  readonly hasDraft = computed(() => this.item().grooming_status === 'decomposed');
+  readonly draftCount = computed(() => this.item().acceptance_criteria.length);
+  readonly draftTooltip = computed(() => {
+    const n = this.draftCount();
+    return `${n} acceptance criteri${n === 1 ? 'on' : 'a'} drafted — drag to Ready to approve`;
+  });
+
   // What appears in the priority slot. Epics show the rolled-up priority of their
   // children (or nothing if none of them have one). Non-epics show their own.
   readonly displayedPriority = computed<Priority | null>(() =>

@@ -18,6 +18,7 @@ import {
 } from '@domain/vault';
 import { effectivePriority } from '@domain/vault';
 import { compareCardsForKanban } from '@domain/vault';
+import { stuckDays } from '@domain/vault';
 import type { VaultItemId } from '@domain/ids';
 import { GroomingCard, type LiveSnapshot } from '../../components/grooming-card/grooming-card';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
@@ -180,6 +181,12 @@ export class GroomingBoard {
     const events = this.activityEventsService.eventsFor(item.id)();
     // events are sorted desc — head is the latest
     return events.length > 0 ? events[0].at : item.created_at;
+  }
+
+  // Days since the item entered its current grooming column. Drives the "stuck"
+  // hint on the card — orthogonal to overall staleness.
+  daysInColumn(item: VaultItem): number {
+    return stuckDays(item, this.activityEventsService.eventsFor(item.id)());
   }
 
   // Pre-format the latest activity event + latest thread message for the card's

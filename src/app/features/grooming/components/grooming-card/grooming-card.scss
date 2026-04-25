@@ -7,6 +7,10 @@
 .card {
   background: var(--color-bg);
   border: 1px solid transparent;
+  // Left edge is the actor-identity rail. Always 3px so layout stays stable
+  // whether the card has an owner or not — colour is the only thing that
+  // changes, applied by the &--owner-* modifiers below.
+  border-left-width: 3px;
   border-radius: var(--radius);
   padding: 0.55rem 0.7rem;
   cursor: grab;
@@ -19,6 +23,34 @@
   &--dragging {
     opacity: 0.4;
     cursor: grabbing;
+  }
+
+  // Per-actor identity tint on the left edge — uses existing actor-color CSS
+  // vars (same palette as OwnerChip + filter chips) so a board scan reads
+  // owner instantly. Width is fixed by the base rule above; only colour
+  // changes. Adding a new actor = add a fixture entry + a modifier here.
+  &--owner-marvin { border-left-color: var(--actor-color-marvin); }
+  &--owner-ralph  { border-left-color: var(--actor-color-ralph);  }
+  &--owner-boris  { border-left-color: var(--actor-color-boris);  }
+  &--owner-jimbo  { border-left-color: var(--actor-color-jimbo);  }
+
+  // "N drafted" badge — appears when grooming_status === 'decomposed'.
+  // The whole card sitting in the Decomposed column is itself a column-level
+  // signal; this badge is the per-card surface that says "this one has N
+  // criteria for you to bless before it moves to Ready". Warning-tinted to
+  // mirror the stuck/blocker visual family without raising the temperature.
+  &__draft {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.05rem 0.4rem;
+    border: 1px solid color-mix(in oklch, var(--color-warning) 50%, var(--color-border));
+    color: var(--color-warning);
+    border-radius: 3px;
+    cursor: help;
+    line-height: 1.2;
+    white-space: nowrap;
   }
 
   &__header {

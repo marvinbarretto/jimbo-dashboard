@@ -1,5 +1,9 @@
 <article
   class="card"
+  [class.card--owner-marvin]="item().assigned_to === 'marvin'"
+  [class.card--owner-ralph]="item().assigned_to === 'ralph'"
+  [class.card--owner-boris]="item().assigned_to === 'boris'"
+  [class.card--owner-jimbo]="item().assigned_to === 'jimbo'"
   [class.card--dragging]="dragging()"
   [class.card--epic]="isEpic()"
   [class.card--expanded]="expanded()"
@@ -25,6 +29,11 @@
       }
       @if (openQuestionsCount() > 0) {
         <app-blocker-badge [count]="openQuestionsCount()" />
+      }
+      @if (hasDraft()) {
+        <span class="card__draft" [attr.title]="draftTooltip()">
+          {{ draftCount() }} drafted
+        </span>
       }
       <button
         type="button"

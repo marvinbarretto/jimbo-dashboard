@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Wireframe · Decomposition gate (real entities)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --ink:     #222;
+    --dim:     #666;
+    --faint:   #999;
+    --bg:      #fff;
+    --panel:   #fafafa;
+    --line:    #cfcfcf;
+    --line-2:  #e6e6e6;
+    --hot:     #d96520;
+    --ok:      #3b7a3b;
+    --bad:     #a33;
+    --maybe:   #8a6d00;
+
+    /* Real actors only */
+    --actor-marvin: #b8860b;   /* human */
+    --actor-ralph:  #1d4ed8;
+    --actor-boris:  #6b46c1;
+    --actor-jimbo:  #166534;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--ink);
+    background: var(--bg);
+  }
+  .nav { font-size: 11px; color: var(--faint); padding: 10px 18px; border-bottom: 1px solid var(--line-2); }
+  .nav a { color: #06c; text-decoration: none; }
+
+  .page-title { padding: 14px 18px 6px; font-size: 14px; }
+  .page-title .sub { color: var(--faint); font-size: 11px; margin-left: 8px; }
+
+  /* ─── Reality callout (what's real / what's new) ───── */
+  .reality {
+    margin: 14px 18px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    font-size: 11.5px;
+  }
+  .reality h3 {
+    margin: 0 0 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+    font-weight: 500;
+  }
+  .reality dl {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 4px 14px;
+    margin: 0;
+  }
+  .reality dt { color: var(--faint); }
+  .reality dd { margin: 0; color: var(--ink); }
+  .reality .new {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line-2);
+    color: var(--bad);
+  }
+  .reality .new strong { color: var(--bad); }
+  code { background: var(--line-2); padding: 0 4px; border-radius: 2px; }
+
+  .section {
+    padding: 10px 18px 28px;
+    border-top: 1px solid var(--line-2);
+  }
+  .section h2 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    font-weight: 500;
+    margin: 14px 0 10px;
+  }
+  .section .lead {
+    font-size: 12px; color: var(--dim); max-width: 720px; margin-bottom: 14px;
+  }
+
+  /* ─── Slim kanban card preview ─────────────────────── */
+  .board-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(220px, 260px));
+    gap: 14px;
+  }
+  .col-mini {
+    background: var(--panel);
+    border: 1px solid var(--line-2);
+    border-radius: 4px;
+    padding: 8px;
+  }
+  .col-mini .col-head {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    padding: 2px 4px 8px;
+    border-bottom: 1px dashed var(--line-2);
+    margin-bottom: 8px;
+  }
+  .slim-card {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--faint);
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .slim-card:hover { border-color: var(--ink); }
+  .slim-card .meta {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    color: var(--faint);
+    font-size: 10px;
+    margin-bottom: 4px;
+  }
+  .slim-card .title { color: var(--ink); line-height: 1.4; }
+  .slim-card.actor-marvin { border-left-color: var(--actor-marvin); }
+  .slim-card.actor-ralph  { border-left-color: var(--actor-ralph); }
+  .slim-card.actor-boris  { border-left-color: var(--actor-boris); }
+  .slim-card.actor-jimbo  { border-left-color: var(--actor-jimbo); }
+
+  .actor-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px;
+  }
+  .actor-dot {
+    width: 7px; height: 7px; border-radius: 50%; display: inline-block;
+  }
+
+  .proposed-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-left: auto;
+    font-size: 10px;
+    padding: 1px 6px;
+    border: 1px solid var(--maybe);
+    color: var(--maybe);
+    background: #fff8e0;
+    border-radius: 2px;
+  }
+  .proposed-badge .pulse {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--maybe);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 0.35; }
+    50% { opacity: 1; }
+  }
+
+  .card-callout {
+    margin-top: 10px;
+    border-left: 2px solid var(--hot);
+    padding: 6px 10px;
+    font-size: 11px;
+    color: var(--dim);
+    background: #fff7f0;
+  }
+  .card-callout strong { color: var(--hot); }
+
+  /* ─── Detail page mock ─────────────────────────────── */
+  .detail-frame {
+    border: 1px solid var(--line);
+    background: var(--bg);
+    max-width: 1100px;
+  }
+  .detail-topbar {
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line-2);
+    background: #f3f3f3;
+    font-size: 11px;
+  }
+  .detail-topbar .seq    { color: var(--dim); }
+  .detail-topbar .title  { color: var(--ink); font-size: 13px; font-weight: 500; }
+  .detail-topbar .crumb  { color: var(--faint); }
+
+  .detail-substrip {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--line-2);
+    font-size: 11px;
+    color: var(--dim);
+  }
+  .detail-substrip .pair { display: inline-flex; gap: 5px; align-items: center; }
+  .detail-substrip .k { color: var(--faint); }
+
+  .detail-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+  .detail-left  { padding: 14px 16px; border-right: 1px solid var(--line-2); min-width: 0; }
+  .detail-right { padding: 14px 16px; background: var(--panel); }
+
+  /* ─── Decomposition gate ───────────────────────────── */
+  .gate {
+    border: 1px solid var(--maybe);
+    background: #fffaeb;
+    margin: 0 0 14px;
+  }
+  .gate-head {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 8px 12px;
+    background: #fff3cd;
+    border-bottom: 1px solid var(--maybe);
+    color: var(--maybe);
+    font-size: 12px;
+  }
+  .gate-head .pulse {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--maybe);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  .gate-head .actions { margin-left: auto; display: flex; gap: 6px; }
+  .btn {
+    font: inherit; font-size: 11px;
+    padding: 3px 9px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .btn:hover { border-color: var(--ink); }
+  .btn.primary {
+    background: var(--ok);
+    border-color: var(--ok);
+    color: #fff;
+  }
+  .btn.danger {
+    color: var(--bad);
+    border-color: #d4a8a8;
+  }
+  .btn .count { opacity: 0.7; margin-left: 3px; }
+
+  /* Provenance line — what produced this decomposition */
+  .provenance {
+    padding: 8px 12px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line-2);
+    font-size: 11px;
+    color: var(--dim);
+  }
+  .provenance .k { color: var(--faint); margin-right: 4px; }
+  .provenance .skill-pill {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 6px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 2px;
+    color: var(--ink);
+  }
+
+  .ac-block, .subtasks-block {
+    padding: 8px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .ac-block .ac-head, .subtasks-block .st-head {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+    padding: 4px 4px 0;
+  }
+  .draft-row {
+    padding: 7px 10px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+  .draft-row .marker {
+    color: var(--faint);
+    margin-right: 6px;
+    user-select: none;
+  }
+
+  /* ─── Sidebar ─────────────────────────────────────── */
+  .sidebar h3 {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+    font-weight: 500;
+    margin: 16px 0 6px;
+  }
+  .sidebar h3:first-child { margin-top: 0; }
+  .sidebar .row {
+    display: flex; justify-content: space-between;
+    padding: 3px 0;
+    font-size: 11px;
+    color: var(--ink);
+    gap: 10px;
+  }
+  .sidebar .row .k { color: var(--faint); }
+
+  .activity { font-size: 11px; color: var(--dim); }
+  .activity .item {
+    padding: 4px 0;
+    border-bottom: 1px dashed var(--line-2);
+  }
+  .activity .item:last-child { border-bottom: none; }
+  .activity time { color: var(--faint); margin-right: 6px; }
+
+  .description { font-size:12px; color: var(--ink); line-height:1.65; }
+  .description p { margin: 0 0 8px; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="./">prototypes</a> /
+  decomposition gate <span style="color: var(--faint)">— iteration 03 (real entities only)</span>
+</div>
+
+<div class="page-title">
+  Decomposition gate
+  <span class="sub">grounded in existing actors / skills / grooming statuses</span>
+</div>
+
+<div class="reality">
+  <h3>What's real (already modelled)</h3>
+  <dl>
+    <dt>Actors</dt>
+    <dd><code>marvin</code> (human), <code>ralph</code>, <code>boris</code>, <code>jimbo</code> — agents from <code>actors/fixtures.ts</code></dd>
+    <dt>Skills</dt>
+    <dd><code>hermes/intake-quality</code>, <code>hermes/vault-classify</code>, <code>hermes/vault-decompose</code>, <code>localshout/event-qualifier</code></dd>
+    <dt>Statuses</dt>
+    <dd><code>ungroomed → intake_rejected → intake_complete → classified → decomposed → ready</code> — the gate is already <strong>decomposed → ready</strong> ("marvin approved the decomposition; dispatchable")</dd>
+    <dt>Decompose output</dt>
+    <dd><code>hermes/vault-decompose</code> produces <code>{ acceptance_criteria: string[], subtasks: string[] }</code> on the parent</dd>
+  </dl>
+  <div class="new">
+    <strong>Approval is all-or-nothing today</strong> — by design. Drafts are <code>string[]</code> on
+    the parent; tweaks happen in the existing thread on the parent VaultItem; rejection re-runs
+    <code>hermes/vault-decompose</code> with thread context. Per-subtask edit/keep/drop is deferred
+    until pain is real (would require materialising drafts as child VaultItems with an
+    <code>is_proposed</code> flag).
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────────────── -->
+<div class="section">
+  <h2>1. Slim kanban card</h2>
+  <p class="lead">
+    Card shows the existing fields only: <code>assigned_to</code> (owner chip) plus a
+    <strong>draft badge</strong> when <code>grooming_status === 'decomposed'</code>. The badge count is
+    <code>subtasks.length</code> from the decompose output.
+  </p>
+
+  <div class="board-strip">
+
+    <div class="col-mini">
+      <div class="col-head">Classified · 3</div>
+      <div class="slim-card actor-marvin">
+        <div class="meta">
+          <span class="actor-chip"><span class="actor-dot" style="background:var(--actor-marvin)"></span>marvin</span>
+          <span>·142</span>
+        </div>
+        <div class="title">Festival planner — drag-drop set times</div>
+      </div>
+      <div class="slim-card actor-marvin">
+        <div class="meta">
+          <span class="actor-chip"><span class="actor-dot" style="background:var(--actor-marvin)"></span>marvin</span>
+          <span>·143</span>
+        </div>
+        <div class="title">Welcome flow A/B copy variants</div>
+      </div>
+      <div class="slim-card actor-ralph">
+        <div class="meta">
+          <span class="actor-chip"><span class="actor-dot" style="background:var(--actor-ralph)"></span>ralph</span>
+          <span>·144</span>
+        </div>
+        <div class="title">Triage zero-result search log batch</div>
+      </div>
+    </div>
+
+    <div class="col-mini">
+      <div class="col-head">Decomposed · 2</div>
+
+      <!-- The card whose decomposition awaits approval -->
+      <div class="slim-card actor-marvin">
+        <div class="meta">
+          <span class="actor-chip"><span class="actor-dot" style="background:var(--actor-marvin)"></span>marvin</span>
+          <span>·138</span>
+          <span class="proposed-badge" title="subtasks drafted by hermes/vault-decompose — awaiting marvin's approval">
+            <span class="pulse"></span> 5 subtasks drafted
+          </span>
+        </div>
+        <div class="title">Artist search — relevance ranking pass</div>
+      </div>
+
+      <div class="slim-card actor-marvin">
+        <div class="meta">
+          <span class="actor-chip"><span class="actor-dot" style="background:var(--actor-marvin)"></span>marvin</span>
+          <span>·141</span>
+          <span class="proposed-badge" title="subtasks drafted by hermes/vault-decompose — awaiting marvin's approval">
+            <span class="pulse"></span> 3 subtasks drafted
+          </span>
+        </div>
+        <div class="title">Festival marketing — poster generator MVP</div>
+      </div>
+    </div>
+
+    <div class="col-mini">
+      <div class="col-head">Ready · 2</div>
+      <div class="slim-card actor-marvin">
+        <div class="meta">
+          <span class="actor-chip"><span class="actor-dot" style="background:var(--actor-marvin)"></span>marvin</span>
+          <span>·130</span>
+        </div>
+        <div class="title">Migrate kanban filter bar to shared composable</div>
+      </div>
+      <div class="slim-card actor-marvin">
+        <div class="meta">
+          <span class="actor-chip"><span class="actor-dot" style="background:var(--actor-marvin)"></span>marvin</span>
+          <span>·129</span>
+        </div>
+        <div class="title">Review staleness gradient against contrast ratios</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card-callout">
+    <strong>Owner = <code>assigned_to</code></strong> (existing field). <strong>Badge condition = <code>grooming_status === 'decomposed'</code></strong>
+    (existing). No new card fields needed for this view.
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────────────── -->
+<div class="section">
+  <h2>2. Detail page — the gate</h2>
+  <p class="lead">
+    Shows the <strong>provenance</strong> (which dispatch + actor + skill produced this draft) and the
+    actual decompose output: drafted acceptance criteria + subtasks. Approving moves <code>·138</code>
+    from <code>decomposed → ready</code>.
+  </p>
+
+  <div class="detail-frame">
+    <div class="detail-topbar">
+      <span class="crumb">vault</span>
+      <span>·138</span>
+      <span class="title">Artist search — relevance ranking pass</span>
+      <span class="actor-chip" style="margin-left:auto;">
+        <span class="actor-dot" style="background:var(--actor-marvin)"></span>marvin · assigned_to
+      </span>
+    </div>
+
+    <div class="detail-substrip">
+      <span class="pair"><span class="k">type</span> task</span>
+      <span class="pair"><span class="k">grooming_status</span> decomposed</span>
+      <span class="pair"><span class="k">manual_priority</span> 1</span>
+      <span class="pair"><span class="k">project</span> tsow</span>
+      <span class="pair"><span class="k">days in column</span> 4</span>
+    </div>
+
+    <div class="detail-body">
+      <div class="detail-left">
+
+        <div class="gate">
+          <div class="gate-head">
+            <span class="pulse"></span>
+            <span><strong>Decomposition awaits your approval</strong> — move <code>decomposed → ready</code></span>
+            <div class="actions">
+              <button class="btn primary">Approve → ready</button>
+              <button class="btn danger">Reject (re-run decompose)</button>
+            </div>
+          </div>
+
+          <div class="provenance">
+            <span class="k">drafted by</span>
+            <span class="actor-chip"><span class="actor-dot" style="background:var(--actor-boris)"></span>boris</span>
+            <span class="k" style="margin-left:10px;">via</span>
+            <span class="skill-pill">hermes/vault-decompose</span>
+            <span class="k" style="margin-left:10px;">dispatch</span>
+            <code>D-9241</code>
+            <span class="k" style="margin-left:10px;">at</span>
+            12m ago
+          </div>
+
+          <div class="ac-block">
+            <div class="ac-head">drafted acceptance_criteria — parent ·138</div>
+            <div class="draft-row"><span class="marker">—</span>Search returns ≥1 result for the 20 known zero-result queries from the VPS log.</div>
+            <div class="draft-row"><span class="marker">—</span>Operator can see relevance score + matched signals for each result.</div>
+            <div class="draft-row"><span class="marker">—</span>Documented choice between BM25 and hybrid embedding ranking, with benchmark numbers.</div>
+          </div>
+
+          <div class="subtasks-block">
+            <div class="st-head">drafted subtasks — will become child VaultItems with <code>parent_id = ·138</code></div>
+            <div class="draft-row"><span class="marker">1.</span>Pull baseline query log from VPS, identify 20 zero-result cases.</div>
+            <div class="draft-row"><span class="marker">2.</span>Survey BM25 vs hybrid embedding ranking — write up trade-offs.</div>
+            <div class="draft-row"><span class="marker">3.</span>Wire pgvector index on artist.bio_embedding.</div>
+            <div class="draft-row"><span class="marker">4.</span>Surface relevance score + matched signals on result card.</div>
+            <div class="draft-row"><span class="marker">5.</span>Add empty-state "no results — try this instead" with suggestions.</div>
+          </div>
+        </div>
+
+        <div class="description">
+          <p>
+            Search currently uses postgres FTS only. Operators report missing artists by alternate
+            spelling, and long-tail venue queries return zero results. Goal: deliver a relevance
+            model the operator can trust, with debuggable signals.
+          </p>
+        </div>
+
+      </div>
+
+      <aside class="detail-right sidebar">
+        <h3>Lineage (parent_id)</h3>
+        <div class="row"><span class="k">parent</span><span>—</span></div>
+        <div class="row"><span class="k">children</span><span>0 (5 drafted, 0 created)</span></div>
+
+        <h3>Last decompose dispatch</h3>
+        <div class="row"><span class="k">id</span><code>D-9241</code></div>
+        <div class="row"><span class="k">actor</span>boris</div>
+        <div class="row"><span class="k">skill</span>hermes/vault-decompose</div>
+        <div class="row"><span class="k">model_hint</span>standard</div>
+        <div class="row"><span class="k">finished_at</span>12m ago</div>
+
+        <h3>Activity (real event types)</h3>
+        <div class="activity">
+          <div class="item"><time>12m</time>boris ran <code>hermes/vault-decompose</code></div>
+          <div class="item"><time>2h</time>boris ran <code>hermes/vault-classify</code></div>
+          <div class="item"><time>5h</time><code>grooming_status_changed</code> intake_complete → classified</div>
+          <div class="item"><time>1d</time>marvin created (type=task)</div>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <div class="card-callout" style="margin-top:18px;">
+    <strong>Approval is all-or-nothing.</strong> Drafted subtasks are <code>string[]</code> on the
+    parent's decompose dispatch — historical record, not editable state. Tweaks happen in the
+    <strong>thread on ·138</strong> (existing feature): post a <code>comment</code> or <code>question</code>
+    quoting the subtask, then <strong>Reject</strong> to re-run <code>hermes/vault-decompose</code> with
+    the thread context as additional input. If we ever need surgical "keep 4 of 5" approval, that's the
+    point where drafts must become child VaultItems (<code>is_proposed</code> flag); not before.
+  </div>
+</div>
+
+</body>
+</html>
