@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { PromptsService } from '../../data-access/prompts.service';
+import { promptId as brandPromptId } from '../../../../domain/ids';
 
 @Component({
   selector: 'app-prompt-version-form',
@@ -42,7 +43,7 @@ export class PromptVersionForm {
     const prompt = this.prompt();
 
     this.service.createVersion({
-      prompt_id:         id,
+      prompt_id:         brandPromptId(id),
       system_content:    v.system_content,
       user_content:      v.user_content || null,
       notes:             v.notes || null,

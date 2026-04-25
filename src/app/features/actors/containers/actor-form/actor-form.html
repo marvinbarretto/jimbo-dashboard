@@ -1,0 +1,64 @@
+<div class="actor-form">
+  <header class="actor-form__header">
+    <a routerLink="/actors" class="back-link">← Actors</a>
+    <h1>{{ isEdit() ? 'Edit actor' : 'Add actor' }}</h1>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label for="id">ID <span class="hint">(slug, e.g. marvin)</span></label>
+      <input id="id" formControlName="id" [attr.disabled]="isEdit() ? true : null" />
+      @if (form.controls.id.touched && form.controls.id.errors?.['required']) {
+        <p class="field-error" role="alert">ID is required.</p>
+      }
+      @if (form.controls.id.touched && form.controls.id.errors?.['pattern']) {
+        <p class="field-error" role="alert">ID must start with a lowercase letter and contain only lowercase letters, digits, and hyphens.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="display_name">Display name</label>
+      <input id="display_name" formControlName="display_name" />
+      @if (form.controls.display_name.touched && form.controls.display_name.errors?.['required']) {
+        <p class="field-error" role="alert">Display name is required.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="kind">Kind</label>
+      <select id="kind" formControlName="kind">
+        @for (k of kinds; track k) {
+          <option [value]="k">{{ k }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="runtime">Runtime</label>
+      <select id="runtime" formControlName="runtime">
+        @for (r of runtimes; track r.value) {
+          <option [value]="r.value ?? ''">{{ r.label }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="description">Description</label>
+      <textarea id="description" formControlName="description" rows="4"></textarea>
+    </div>
+
+    <div class="field field--checkbox">
+      <label>
+        <input type="checkbox" formControlName="is_active" />
+        Active
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn--primary">
+        {{ isEdit() ? 'Save changes' : 'Add actor' }}
+      </button>
+      <a routerLink="/actors" class="btn btn--ghost">Cancel</a>
+    </div>
+  </form>
+</div>

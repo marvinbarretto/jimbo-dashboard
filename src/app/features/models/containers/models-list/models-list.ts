@@ -24,7 +24,7 @@ export class ModelsList {
   }
 
   tierLabel(tier: Model['tier']): string {
-    return { free: 'Free', fast: 'Fast', balanced: 'Balanced', powerful: 'Powerful' }[tier];
+    return { free: 'Free', budget: 'Budget', standard: 'Standard', premium: 'Premium' }[tier];
   }
 
   remove(id: string): void {

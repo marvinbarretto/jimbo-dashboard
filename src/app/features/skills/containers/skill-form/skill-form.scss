@@ -1,7 +1,21 @@
-.form { max-width: 520px; }
+.skill-form { max-width: 580px; }
 
 .hint {
   font-size: 0.75rem;
   color: var(--color-text-muted);
   font-weight: 400;
+}
+
+.field-warning {
+  margin: -0.5rem 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--color-warning, #e8a000);
+  background: var(--color-warning-bg, #fff8e6);
+  font-size: 0.85rem;
+  color: var(--color-warning-text, #7a4a00);
+}
+
+.schema-textarea {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
 }

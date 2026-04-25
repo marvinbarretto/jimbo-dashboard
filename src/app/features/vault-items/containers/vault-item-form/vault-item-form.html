@@ -1,0 +1,177 @@
+<div class="vault-item-form">
+  <header class="vault-item-form__header">
+    <a routerLink="/vault-items" class="back-link">← Vault</a>
+    <h1>{{ isEdit() ? 'Edit vault item' : 'New vault item' }}</h1>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+
+    <div class="field">
+      <label for="title">Title</label>
+      <input id="title" formControlName="title" autocomplete="off" />
+      @if (form.controls.title.touched && form.controls.title.errors?.['required']) {
+        <p class="field-error" role="alert">Title is required.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="body">Body</label>
+      <textarea id="body" formControlName="body" rows="6"
+        placeholder="Describe the item — this is treated as immutable intake."></textarea>
+      @if (form.controls.body.touched && form.controls.body.errors?.['required']) {
+        <p class="field-error" role="alert">Body is required.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="type">Type</label>
+      <select id="type" formControlName="type">
+        @for (t of types; track t) {
+          <option [value]="t">{{ t }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Status is derived from completed_at + archived_at, not editable here.
+         Mark-done lives on the detail view; archive is its own action. -->
+
+    <div class="field">
+      <label for="assigned_to">Owner</label>
+      <select id="assigned_to" formControlName="assigned_to">
+        <option value="">— unassigned —</option>
+        @for (a of actors(); track a.id) {
+          <option [value]="a.id">{{ a.display_name }} (@{{ a.id }})</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="tags">Tags
+        <span class="hint">(comma-separated)</span>
+      </label>
+      <input id="tags" formControlName="tags" placeholder="e.g. bug, auth, v2" />
+    </div>
+
+    <div class="field">
+      <label for="acceptance_criteria">Acceptance criteria
+        <span class="hint">(one per line)</span>
+      </label>
+      <textarea id="acceptance_criteria" formControlName="acceptance_criteria" rows="5"
+        placeholder="It should…&#10;The user can…"></textarea>
+      <p class="field-hint">Each line becomes one criterion. Note: re-saving an edit resets all done-states to unchecked.</p>
+    </div>
+
+    @if (isEdit()) {
+      <div class="field">
+        <label for="grooming_status">Grooming status
+          <span class="hint">(intake_rejected is system-managed; shown as escape hatch)</span>
+        </label>
+        <select id="grooming_status" formControlName="grooming_status">
+          @for (g of groomingStatuses; track g) {
+            <option [value]="g">{{ g.replace('_', ' ') }}</option>
+          }
+        </select>
+      </div>
+    }
+
+    <div class="field">
+      <label for="ai_priority">AI priority
+        <span class="hint">(read-only — set by agents)</span>
+      </label>
+      <select id="ai_priority" formControlName="ai_priority" aria-readonly="true">
+        <option [ngValue]="null">—</option>
+        <option [ngValue]="0">P0 — urgent</option>
+        <option [ngValue]="1">P1 — high</option>
+        <option [ngValue]="2">P2 — normal</option>
+        <option [ngValue]="3">P3 — low</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="manual_priority">Manual priority</label>
+      <select id="manual_priority" formControlName="manual_priority">
+        <option [ngValue]="null">—</option>
+        <option [ngValue]="0">P0 — urgent</option>
+        <option [ngValue]="1">P1 — high</option>
+        <option [ngValue]="2">P2 — normal</option>
+        <option [ngValue]="3">P3 — low</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="ai_rationale">AI rationale
+        <span class="hint">(read-only — written by vault-classify)</span>
+      </label>
+      <textarea id="ai_rationale" formControlName="ai_rationale" rows="2"
+        placeholder="No rationale yet — run intake-quality first."
+        aria-readonly="true"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="priority_confidence">Priority confidence
+        <span class="hint">(read-only — 0.0–1.0, set by vault-classify)</span>
+      </label>
+      <input id="priority_confidence" formControlName="priority_confidence" type="number"
+        step="0.01" min="0" max="1" aria-readonly="true"
+        placeholder="—" />
+    </div>
+
+    <div class="field">
+      <label for="actionability">Actionability
+        <span class="hint">(read-only — set by intake-quality)</span>
+      </label>
+      <select id="actionability" formControlName="actionability" aria-readonly="true">
+        <option [ngValue]="null">—</option>
+        <option [ngValue]="'clear'">clear</option>
+        <option [ngValue]="'needs-breakdown'">needs-breakdown</option>
+        <option [ngValue]="'vague'">vague</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="parent_id">Parent ID
+        <span class="hint">(UUID — real picker deferred)</span>
+      </label>
+      <input id="parent_id" formControlName="parent_id"
+        placeholder="Optional parent vault item UUID" />
+    </div>
+
+    <div class="field">
+      <label for="due_at">Due date</label>
+      <input id="due_at" formControlName="due_at" type="date" />
+    </div>
+
+    <fieldset class="fieldset">
+      <legend>Source</legend>
+
+      <div class="field">
+        <label for="source_kind">Kind</label>
+        <select id="source_kind" formControlName="source_kind">
+          @for (k of sourceKinds; track k) {
+            <option [value]="k">{{ k || '— none —' }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="source_ref">Ref
+          <span class="hint">(message id, actor slug, URL, PR number…)</span>
+        </label>
+        <input id="source_ref" formControlName="source_ref" />
+      </div>
+
+      <div class="field">
+        <label for="source_url">URL <span class="hint">(optional — clickable origin)</span></label>
+        <input id="source_url" formControlName="source_url" type="url" />
+      </div>
+    </fieldset>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn--primary">
+        {{ isEdit() ? 'Save changes' : 'Create item' }}
+      </button>
+      <a routerLink="/vault-items" class="btn btn--ghost">Cancel</a>
+    </div>
+
+  </form>
+</div>

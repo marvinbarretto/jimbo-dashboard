@@ -1,0 +1,145 @@
+<div class="messages" role="log" aria-live="polite" aria-label="Thread messages">
+  @if (groups().length === 0) {
+    <p class="messages__empty">No messages yet. Start the conversation below.</p>
+  }
+
+  @for (group of groups(); track group.message.id) {
+    <!-- Top-level message: comment or question -->
+    <article
+      class="msg"
+      [class.msg--comment]="group.message.kind === 'comment'"
+      [class.msg--question]="group.message.kind === 'question'"
+      [class.msg--answer]="group.message.kind === 'answer'"
+      [attr.aria-label]="group.message.kind + ' by ' + authorName(group.message)"
+    >
+      <header class="msg__header">
+        <span
+          class="msg__author"
+          [class.msg__author--agent]="authorKind(group.message) === 'agent'"
+          [class.msg__author--human]="authorKind(group.message) === 'human'"
+        >@{{ authorName(group.message) }}</span>
+
+        <span class="msg__kind-tag" aria-label="message kind">{{ group.message.kind }}</span>
+
+        @if (group.message.kind === 'question') {
+          @if (group.message.answered_by) {
+            <span class="msg__pill msg__pill--resolved" role="status">resolved</span>
+          } @else {
+            <span class="msg__pill msg__pill--open" role="status">open</span>
+          }
+        }
+
+        <time class="msg__when" [attr.datetime]="group.message.created_at">
+          {{ relativeTime(group.message.created_at) }}
+        </time>
+      </header>
+
+      <p class="msg__body">{{ group.message.body }}</p>
+
+      @if (attachmentsFor(group.message).length > 0) {
+        <div class="msg__attachments">
+          @for (att of attachmentsFor(group.message); track att.id) {
+            @switch (att.kind) {
+              @case ('image') {
+                <figure class="attachment attachment--image">
+                  <img
+                    class="attachment__img"
+                    [src]="att.url"
+                    [alt]="att.caption ?? att.filename"
+                  />
+                  <figcaption class="attachment__meta">
+                    <span class="attachment__filename">{{ att.filename }}</span>
+                    <span class="attachment__size">· {{ formatBytes(att.size_bytes) }}</span>
+                    @if (att.caption) {
+                      <span class="attachment__caption">{{ att.caption }}</span>
+                    }
+                  </figcaption>
+                </figure>
+              }
+              @default {
+                <!-- file and code kinds render as a download link for now -->
+                <div class="attachment attachment--file">
+                  <a
+                    class="attachment__link"
+                    [href]="att.url"
+                    [download]="att.filename"
+                    [attr.aria-label]="'Download ' + att.filename"
+                  >{{ att.filename }}</a>
+                  <span class="attachment__meta">
+                    <span class="attachment__size">{{ formatBytes(att.size_bytes) }}</span>
+                    <span class="attachment__mime">{{ att.mime_type }}</span>
+                  </span>
+                </div>
+              }
+            }
+          }
+        </div>
+      }
+    </article>
+
+    <!-- Answers nested under their question -->
+    @for (answer of group.answers; track answer.id) {
+      <article
+        class="msg msg--answer msg--nested"
+        [attr.aria-label]="'answer by ' + authorName(answer) + ' replying to ' + answer.in_reply_to"
+      >
+        <header class="msg__header">
+          <span
+            class="msg__author"
+            [class.msg__author--agent]="authorKind(answer) === 'agent'"
+            [class.msg__author--human]="authorKind(answer) === 'human'"
+          >@{{ authorName(answer) }}</span>
+
+          <span class="msg__kind-tag">answer</span>
+          @if (replyToAuthorName(answer); as parentAuthor) {
+            <span class="msg__reply-ref">↳ replying to @{{ parentAuthor }}</span>
+          }
+          <time class="msg__when" [attr.datetime]="answer.created_at">
+            {{ relativeTime(answer.created_at) }}
+          </time>
+        </header>
+
+        <p class="msg__body">{{ answer.body }}</p>
+
+        @if (attachmentsFor(answer).length > 0) {
+          <div class="msg__attachments">
+            @for (att of attachmentsFor(answer); track att.id) {
+              @switch (att.kind) {
+                @case ('image') {
+                  <figure class="attachment attachment--image">
+                    <img
+                      class="attachment__img"
+                      [src]="att.url"
+                      [alt]="att.caption ?? att.filename"
+                    />
+                    <figcaption class="attachment__meta">
+                      <span class="attachment__filename">{{ att.filename }}</span>
+                      <span class="attachment__size">· {{ formatBytes(att.size_bytes) }}</span>
+                      @if (att.caption) {
+                        <span class="attachment__caption">{{ att.caption }}</span>
+                      }
+                    </figcaption>
+                  </figure>
+                }
+                @default {
+                  <div class="attachment attachment--file">
+                    <a
+                      class="attachment__link"
+                      [href]="att.url"
+                      [download]="att.filename"
+                      [attr.aria-label]="'Download ' + att.filename"
+                    >{{ att.filename }}</a>
+                    <span class="attachment__meta">
+                      <span class="attachment__size">{{ formatBytes(att.size_bytes) }}</span>
+                      <span class="attachment__mime">{{ att.mime_type }}</span>
+                    </span>
+                  </div>
+                }
+              }
+            }
+          </div>
+        }
+      </article>
+    }
+  }
+</div>

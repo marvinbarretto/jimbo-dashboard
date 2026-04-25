@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Prototype · Actors</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg:           #0f1013;
+      --bg-elev:      #16181d;
+      --bg-elev-2:    #1c1f26;
+      --border:       #2a2d35;
+      --border-soft:  #23262d;
+      --text:         #d7d9de;
+      --text-dim:     #8b8f98;
+      --text-faint:   #5a5e67;
+      --accent:       #ff8c42;
+      --accent-soft:  #3a2419;
+      --green:        #7cc87c;
+      --yellow:       #e6c068;
+      --red:          #e06b6b;
+      --blue:         #6ba9e0;
+      --purple:       #b48fe3;
+
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.5; }
+    a { color: var(--accent); text-decoration: none; }
+
+    header.page {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      gap: 20px;
+    }
+    header.page h1 {
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin: 0;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    header.page .summary {
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+    header.page .summary strong { color: var(--text); font-weight: 500; }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .tabs .tab {
+      padding: 10px 18px;
+      color: var(--text-dim);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      cursor: pointer;
+    }
+    .tabs .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    main { padding: 20px 24px; max-width: 1280px; }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .toolbar .filter {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px;
+      font-family: inherit;
+      font-size: 12px;
+      border-radius: 2px;
+    }
+    .toolbar .filter::placeholder { color: var(--text-faint); }
+    .toolbar .btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+    .toolbar .btn.primary { color: var(--accent); border-color: var(--accent); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--border);
+      padding: 14px 16px;
+      border-radius: 2px;
+    }
+    .card.inactive { opacity: 0.55; }
+    .card.kind-human   { border-left-color: var(--accent); }
+    .card.kind-agent   { border-left-color: var(--blue); }
+    .card.kind-system  { border-left-color: var(--text-faint); }
+
+    .card-head {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .card-head .name { font-size: 14px; color: var(--text); font-weight: 500; }
+    .card-head .slug { font-size: 11px; color: var(--text-faint); }
+    .card-head .status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green);
+      margin-left: auto;
+    }
+    .card.inactive .status-dot { background: var(--text-faint); }
+
+    .badges {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 2px;
+      letter-spacing: 0.04em;
+      background: var(--bg-elev-2);
+      color: var(--text-dim);
+      border: 1px solid var(--border-soft);
+    }
+    .badge.kind-human   { color: var(--accent); }
+    .badge.kind-agent   { color: var(--blue); }
+    .badge.kind-system  { color: var(--text-faint); }
+    .badge.runtime      { color: var(--purple); }
+
+    .description {
+      color: var(--text-dim);
+      font-size: 12px;
+      margin: 8px 0 12px;
+      min-height: 2.6em;
+    }
+
+    .skills-head {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .skills-head .count { color: var(--text-dim); }
+
+    .skill-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .skill {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: transparent;
+    }
+    .skill.preferred    { border-color: var(--accent); color: var(--accent); }
+    .skill.capable      { border-color: var(--border); color: var(--text-dim); }
+    .skill.experimental { border-color: var(--border-soft); color: var(--text-faint); border-style: dashed; }
+
+    footer.notes {
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--text-faint);
+      font-size: 11px;
+    }
+    footer.notes code {
+      background: var(--bg-elev);
+      padding: 1px 5px;
+      border-radius: 2px;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+
+<header class="page">
+  <h1>Actors</h1>
+  <span class="summary">
+    <strong id="count-active">—</strong> active ·
+    <strong id="count-total">—</strong> total ·
+    <strong id="count-skills">—</strong> capability grants
+  </span>
+</header>
+
+<nav class="tabs">
+  <div class="tab active">actors</div>
+  <div class="tab">skills</div>
+  <div class="tab">capability matrix</div>
+  <div class="tab">activity</div>
+</nav>
+
+<main>
+  <div class="toolbar">
+    <input class="filter" placeholder="filter by id, kind, runtime, skill…" />
+    <button class="btn">all</button>
+    <button class="btn">active only</button>
+    <button class="btn">agents</button>
+    <button class="btn">humans</button>
+    <div style="flex:1"></div>
+    <button class="btn primary">+ new actor</button>
+  </div>
+
+  <div class="grid" id="actors-grid"></div>
+
+  <footer class="notes">
+    Prototype of <code>src/app/domain/actors/</code>. Data embedded from <code>fixtures.ts</code>. No services, no Angular — just the shapes rendered as a UI to pressure-test the model. Routing (who picks who for what) lives in <a href="./routing.html">routing.html</a> — a separate concern built on top of these shapes.
+  </footer>
+</main>
+
+<script>
+  // Mirror of domain/actors/fixtures.ts. Kept inline so this file stays self-contained.
+  const ACTORS = [
+    { id: 'marvin', display_name: 'Marvin', kind: 'human', runtime: null,        description: 'The operator. Final say on priority, acceptance, and direction.',                                              is_active: true },
+    { id: 'ralph',  display_name: 'Ralph',  kind: 'agent', runtime: 'ollama',    description: 'Local 7B-class model on 24GB RAM. Junior tasks: classification, reassigns, acceptance-criteria drafts.',      is_active: true },
+    { id: 'boris',  display_name: 'Boris',  kind: 'agent', runtime: 'anthropic', description: 'VPS-hosted loop. Polls every 5 minutes for dispatched work. Selects its own Sonnet-class model per run.',    is_active: true },
+    { id: 'jimbo',  display_name: 'Jimbo',  kind: 'agent', runtime: 'hermes',    description: 'Hermes orchestrator. Telegram-facing. Coordinates the ceremony: routes work, reviews output, escalates.',    is_active: true },
+  ];
+
+  const ACTOR_SKILLS = [
+    { actor_id: 'ralph',  skill_id: 'classifier',              proficiency: 'preferred'    },
+    { actor_id: 'ralph',  skill_id: 'strict-ac-builder',       proficiency: 'capable'      },
+    { actor_id: 'ralph',  skill_id: 'subticket-spawner',       proficiency: 'experimental' },
+    { actor_id: 'boris',  skill_id: 'strict-ac-builder',       proficiency: 'preferred'    },
+    { actor_id: 'boris',  skill_id: 'decomposer',              proficiency: 'preferred'    },
+    { actor_id: 'boris',  skill_id: 'analysis',                proficiency: 'preferred'    },
+    { actor_id: 'jimbo',  skill_id: 'ceremony-orchestration',  proficiency: 'preferred'    },
+    { actor_id: 'jimbo',  skill_id: 'triage',                  proficiency: 'preferred'    },
+    { actor_id: 'marvin', skill_id: 'final-approval',          proficiency: 'preferred'    },
+  ];
+
+  // --- render cards -------------------------------------------------------
+  const grid = document.getElementById('actors-grid');
+  for (const a of ACTORS) {
+    const skills = ACTOR_SKILLS.filter(s => s.actor_id === a.id);
+    const el = document.createElement('div');
+    el.className = `card kind-${a.kind}${a.is_active ? '' : ' inactive'}`;
+    el.innerHTML = `
+      <div class="card-head">
+        <span class="name">${a.display_name}</span>
+        <span class="slug">@${a.id}</span>
+        <span class="status-dot" title="${a.is_active ? 'active' : 'inactive'}"></span>
+      </div>
+      <div class="badges">
+        <span class="badge kind-${a.kind}">${a.kind}</span>
+        ${a.runtime ? `<span class="badge runtime">${a.runtime}</span>` : ''}
+      </div>
+      <div class="description">${a.description}</div>
+      <div class="skills-head">skills <span class="count">${skills.length}</span></div>
+      <div class="skill-chips">
+        ${skills.length
+          ? skills.map(s => `<span class="skill ${s.proficiency}" title="${s.proficiency}">${s.skill_id}</span>`).join('')
+          : '<span class="skill capable" style="opacity:0.6">— none granted —</span>'}
+      </div>
+    `;
+    grid.appendChild(el);
+  }
+
+  // --- summary counts -----------------------------------------------------
+  document.getElementById('count-active').textContent = ACTORS.filter(a => a.is_active).length;
+  document.getElementById('count-total').textContent  = ACTORS.length;
+  document.getElementById('count-skills').textContent = ACTOR_SKILLS.length;
+</script>
+
+</body>
+</html>

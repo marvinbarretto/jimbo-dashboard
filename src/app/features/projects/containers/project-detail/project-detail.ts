@@ -1,0 +1,80 @@
+import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
+import { ProjectsService } from '../../data-access/projects.service';
+import { ProjectActivityEventsService } from '../../data-access/project-activity-events.service';
+import { ActorsService } from '../../../actors/data-access/actors.service';
+import type { ProjectActivityEvent } from '../../../../domain/activity/activity-event';
+import type { ActorId, ProjectId } from '../../../../domain/ids';
+
+@Component({
+  selector: 'app-project-detail',
+  imports: [RouterLink],
+  templateUrl: './project-detail.html',
+  styleUrl: './project-detail.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ProjectDetail {
+  private readonly service = inject(ProjectsService);
+  private readonly actorsService = inject(ActorsService);
+  private readonly activityService = inject(ProjectActivityEventsService);
+  private readonly route = inject(ActivatedRoute);
+
+  private readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id') ?? '')));
+
+  readonly project = computed(() => this.service.getById(this.id() ?? ''));
+
+  // Resolve owner details for display. Falls back to the raw id string if the
+  // actor row is unknown (actor deleted, data drift, etc.).
+  readonly owner = computed(() => {
+    const p = this.project();
+    return p ? this.actorsService.getById(p.owner_actor_id) : undefined;
+  });
+
+  // Project activity timeline — re-fetches when the route id changes.
+  readonly events = computed(() => {
+    const p = this.project();
+    return p ? this.activityService.eventsFor(p.id)() : [];
+  });
+
+  constructor() {
+    effect(() => {
+      const p = this.project();
+      if (p) this.activityService.loadFor(p.id);
+    });
+  }
+
+  actorDisplay(actorIdStr: ActorId): string {
+    const actor = this.actorsService.getById(actorIdStr);
+    return actor ? `@${actor.id}` : `@${actorIdStr}`;
+  }
+
+  eventDescription(event: ProjectActivityEvent): string {
+    switch (event.type) {
+      case 'project_created':
+        return 'created this project';
+      case 'project_criteria_changed':
+        return 'updated criteria';
+      case 'project_owner_changed': {
+        const from = this.actorDisplay(event.from_actor_id);
+        const to   = this.actorDisplay(event.to_actor_id);
+        return `transferred ownership ${from} → ${to}`;
+      }
+      case 'project_archived':
+        return 'archived this project';
+      case 'project_unarchived':
+        return 'unarchived this project';
+    }
+  }
+
+  relativeTime(iso: string): string {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60_000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  }
+}

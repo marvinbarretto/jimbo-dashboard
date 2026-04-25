@@ -1,0 +1,81 @@
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
+import { filter, map, take } from 'rxjs';
+import { ProjectsService } from '../../data-access/projects.service';
+import { ActorsService } from '../../../actors/data-access/actors.service';
+import { projectId, actorId } from '../../../../domain/ids';
+import type { ProjectStatus } from '../../../../domain/projects';
+
+@Component({
+  selector: 'app-project-form',
+  imports: [ReactiveFormsModule, RouterLink],
+  templateUrl: './project-form.html',
+  styleUrl: './project-form.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ProjectForm {
+  private readonly service = inject(ProjectsService);
+  private readonly actorsService = inject(ActorsService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly fb = inject(FormBuilder);
+
+  private readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id'))));
+  private readonly projects$ = toObservable(this.service.projects);
+  readonly isEdit = computed(() => !!this.id());
+
+  readonly statuses: ProjectStatus[] = ['active', 'archived'];
+
+  // Actor dropdown options — only active actors can own new projects.
+  // For existing projects owned by a now-inactive actor, the id stays as a
+  // plain string value even if it's not in the active list.
+  readonly actors = this.actorsService.activeActors;
+
+  readonly form = this.fb.nonNullable.group({
+    id:             ['', Validators.required],
+    display_name:   ['', Validators.required],
+    description:    [null as string | null],
+    status:         ['active' as ProjectStatus, Validators.required],
+    owner_actor_id: ['', Validators.required],
+    criteria:       [null as string | null],
+    repo_url:       [null as string | null],
+  });
+
+  constructor() {
+    const id = this.id();
+    if (id) {
+      this.projects$.pipe(filter(ps => ps.length > 0), take(1)).subscribe(projects => {
+        const project = projects.find(p => p.id === id);
+        if (!project) return;
+        this.form.patchValue(project);
+      });
+    }
+  }
+
+  submit(): void {
+    if (this.form.invalid) {
+      // Mark so validation errors render — silent return would hide the problem.
+      this.form.markAllAsTouched();
+      return;
+    }
+    const v = this.form.getRawValue();
+    const payload = {
+      // Cast at the API boundary: branded IDs are phantom types at runtime.
+      id:             projectId(v.id),
+      display_name:   v.display_name,
+      description:    v.description,
+      status:         v.status,
+      owner_actor_id: actorId(v.owner_actor_id),
+      criteria:       v.criteria,
+      repo_url:       v.repo_url,
+    };
+    if (this.isEdit()) {
+      this.service.update(v.id, payload);
+    } else {
+      this.service.create(payload);
+    }
+    this.router.navigate(['/projects', v.id]);
+  }
+}

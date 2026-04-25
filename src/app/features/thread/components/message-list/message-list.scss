@@ -1,0 +1,197 @@
+// Kind colours mirror the message semantics. Dark-theme tokens.
+//   comment  — neutral muted
+//   question — warning amber
+//   answer   — success green
+$kind-question: var(--color-warning);
+$kind-answer:   var(--color-success);
+$agent:         #7eaad1;  // brighter cool blue, legible on dark surface
+$human:         #f08a4b;  // brighter accent orange, same family as $hot
+
+.messages {
+  padding: 6px 12px;
+
+  &__empty {
+    color: var(--color-text-muted);
+    font-size: 12px;
+    padding: 8px 0;
+  }
+}
+
+.msg {
+  border-left: 3px solid var(--color-border);
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  background: var(--color-surface);
+  position: relative;
+
+  &--comment  { border-left-color: var(--color-text-muted); }
+  &--question { border-left-color: $kind-question; }
+  &--answer   { border-left-color: $kind-answer; }
+
+  // Nested answer indented under its question
+  &--nested {
+    margin-left: 24px;
+    margin-top: -4px;
+    border-left-width: 2px;
+    background: color-mix(in srgb, var(--color-success) 8%, var(--color-surface));
+
+    &::before {
+      content: '↳';
+      position: absolute;
+      left: -14px;
+      top: 8px;
+      color: $kind-answer;
+      font-size: 14px;
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+
+  &__author {
+    font-weight: 500;
+    color: var(--color-text);
+
+    &--agent { color: $agent; }
+    &--human { color: $human; }
+  }
+
+  &__kind-tag {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 1px 6px;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+
+    .msg--question & {
+      color: $kind-question;
+      border-color: $kind-question;
+    }
+
+    .msg--answer & {
+      color: $kind-answer;
+      border-color: $kind-answer;
+    }
+  }
+
+  &__pill {
+    display: inline-block;
+    font-size: 9px;
+    padding: 1px 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+
+    &--open {
+      border: 1px solid $kind-question;
+      color: $kind-question;
+    }
+
+    &--resolved {
+      border: 1px solid $kind-answer;
+      color: $kind-answer;
+    }
+  }
+
+  &__id {
+    color: var(--color-text-muted);
+    font-size: 10px;
+    opacity: 0.6;
+  }
+
+  &__when {
+    color: var(--color-text-muted);
+    font-size: 10px;
+    margin-left: auto;
+  }
+
+  &__reply-ref {
+    color: var(--color-text-muted);
+    font-size: 10px;
+  }
+
+  &__body {
+    color: var(--color-text);
+    font-size: 12.5px;
+    margin: 4px 0 0;
+  }
+
+  &__attachments {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+// Attachment display — inline under a message body.
+.attachment {
+  padding: 8px;
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  font-size: 11px;
+
+  &--image {
+    margin: 0; // reset <figure> browser margin
+
+    .attachment__img {
+      display: block;
+      max-width: 100%;
+      max-height: 320px;
+      object-fit: contain;
+      background: var(--color-bg);
+    }
+
+    .attachment__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+      color: var(--color-text-muted);
+      font-size: 10px;
+    }
+
+    .attachment__caption {
+      color: var(--color-text-muted);
+      font-size: 10px;
+      font-style: italic;
+      width: 100%;
+    }
+  }
+
+  &--file {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  &__link {
+    color: var(--color-accent);
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover { text-decoration: underline; }
+    &:focus-visible { outline: 2px solid #d96520; outline-offset: 1px; }
+  }
+
+  &__meta {
+    display: flex;
+    gap: 6px;
+    color: var(--color-text-muted);
+  }
+
+  &__filename {
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  &__size,
+  &__mime {
+    color: var(--color-text-muted);
+  }
+}

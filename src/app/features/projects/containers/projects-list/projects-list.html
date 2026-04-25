@@ -1,0 +1,44 @@
+<div class="projects-list">
+  <header class="projects-list__header">
+    <h1>Projects</h1>
+    <a routerLink="new" class="btn btn--primary">Add project</a>
+  </header>
+
+  <table class="projects-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Display name</th>
+        <th>Status</th>
+        <th>Owner</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (project of projects(); track project.id) {
+        <tr [class.archived]="project.status === 'archived'">
+          <td class="project-id">
+            <a [routerLink]="[project.id]">{{ project.id }}</a>
+          </td>
+          <td>{{ project.display_name }}</td>
+          <td>
+            <span [class]="project.status === 'active' ? 'status status--active' : 'status status--inactive'">
+              {{ project.status }}
+            </span>
+          </td>
+          <td>{{ project.owner_actor_id }}</td>
+          <td>{{ project.created_at.slice(0, 10) }}</td>
+          <td class="actions">
+            <a [routerLink]="[project.id, 'edit']">Edit</a>
+            <button (click)="remove(project.id)">Remove</button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6" class="empty">No projects registered.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

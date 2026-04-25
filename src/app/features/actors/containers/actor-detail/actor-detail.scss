@@ -1,0 +1,18 @@
+.actor-detail {
+  padding: 2rem;
+  max-width: 720px;
+
+  &__header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 2rem;
+
+    h1 { flex: 1; margin: 0; }
+  }
+}
+
+.back-link {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}

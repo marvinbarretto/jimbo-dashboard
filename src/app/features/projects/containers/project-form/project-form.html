@@ -1,0 +1,68 @@
+<div class="project-form">
+  <header class="project-form__header">
+    <a routerLink="/projects" class="back-link">← Projects</a>
+    <h1>{{ isEdit() ? 'Edit project' : 'Add project' }}</h1>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label for="id">ID <span class="hint">(slug, e.g. localshout)</span></label>
+      <input id="id" formControlName="id" [attr.disabled]="isEdit() ? true : null" />
+      @if (form.controls.id.touched && form.controls.id.errors?.['required']) {
+        <p class="field-error" role="alert">ID is required.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="display_name">Display name</label>
+      <input id="display_name" formControlName="display_name" />
+      @if (form.controls.display_name.touched && form.controls.display_name.errors?.['required']) {
+        <p class="field-error" role="alert">Display name is required.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="description">Description</label>
+      <input id="description" formControlName="description" />
+    </div>
+
+    <div class="field">
+      <label for="status">Status</label>
+      <select id="status" formControlName="status">
+        @for (s of statuses; track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="owner_actor_id">Owner</label>
+      <select id="owner_actor_id" formControlName="owner_actor_id">
+        <option value="">— select an owner —</option>
+        @for (a of actors(); track a.id) {
+          <option [value]="a.id">{{ a.display_name }} ({{ a.id }})</option>
+        }
+      </select>
+      @if (form.controls.owner_actor_id.touched && form.controls.owner_actor_id.errors?.['required']) {
+        <p class="field-error" role="alert">Owner is required.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="criteria">Criteria <span class="hint">(markdown — what agents read to work on this project's items)</span></label>
+      <textarea id="criteria" formControlName="criteria" rows="10"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="repo_url">Repo URL</label>
+      <input id="repo_url" formControlName="repo_url" type="url" />
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn--primary">
+        {{ isEdit() ? 'Save changes' : 'Add project' }}
+      </button>
+      <a routerLink="/projects" class="btn btn--ghost">Cancel</a>
+    </div>
+  </form>
+</div>

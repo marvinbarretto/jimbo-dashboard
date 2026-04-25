@@ -1,0 +1,61 @@
+<div class="vault-items-list">
+  <header class="vault-items-list__header">
+    <h1>Vault</h1>
+    <a routerLink="/vault-items/new" class="btn-new" aria-label="Create new vault item">+ New</a>
+  </header>
+
+  @if (isLoading()) {
+    <p class="loading">Loading…</p>
+  } @else {
+    <table class="vault-items-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Title</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Owner</th>
+          <th>Project</th>
+          <th>Priority</th>
+          <th>Readiness</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.id) {
+          <tr [class.archived]="isItemArchived(item)">
+            <td class="vault-items-table__seq">
+              <a [routerLink]="[item.seq]">#{{ item.seq }}</a>
+            </td>
+            <td class="vault-items-table__title">
+              <a [routerLink]="[item.seq]">{{ item.title }}</a>
+            </td>
+            <td>{{ item.type }}</td>
+            <td>
+              <span [class]="'status status--' + lifecycleOf(item)">{{ lifecycleOf(item) }}</span>
+            </td>
+            <td>{{ ownerDisplay(item) }}</td>
+            <td>{{ primaryProjectDisplay(item) }}</td>
+            <td>
+              @if (effectivePriority(item) !== null) {
+                <span [class]="'priority-badge priority-P' + effectivePriority(item)">
+                  {{ priorityLabel(effectivePriority(item)) }}
+                </span>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td>
+              <span [class]="'readiness-pill readiness-pill--' + readinessVerdict(item)">
+                {{ readinessVerdict(item) }}
+              </span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="8" class="empty">No vault items yet.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

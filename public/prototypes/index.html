@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Dashboard Prototypes · Index</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #222;
+      background: #fff;
+    }
+    .page { max-width: 920px; padding: 28px 24px; margin: 0 auto; }
+    h1 { font-size: 16px; margin: 0 0 4px; }
+    .sub { color: #666; font-size: 12px; margin-bottom: 24px; }
+
+    h2 {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #666;
+      margin: 28px 0 8px;
+      font-weight: 500;
+      border-bottom: 1px solid #e4e4e4;
+      padding-bottom: 4px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 200px 1fr 90px;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: 1px dashed #e0e0e0;
+      align-items: baseline;
+    }
+    .row:last-child { border-bottom: none; }
+    .row a { color: #06c; text-decoration: none; font-weight: 500; }
+    .row a:hover { text-decoration: underline; }
+    .row .desc { color: #444; font-size: 12px; }
+    .row .status {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-align: right;
+    }
+    .status.active   { color: #2a6; }
+    .status.decided  { color: #06c; }
+    .status.building { color: #d96520; }
+    .status.built    { color: #555; }
+    .status.stub     { color: #8a6d00; }
+    .status.planned  { color: #888; font-style: italic; }
+
+    .note {
+      background: #fafafa;
+      border-left: 3px solid #d96520;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: #333;
+      margin: 20px 0;
+    }
+    .note strong { color: #d96520; }
+    .note code { background: #f0f0f0; padding: 0 4px; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Dashboard · Prototypes</h1>
+  <div class="sub">
+    Halfway-fidelity HTML mockups of every component, retained as a living record of decisions and discussions.
+    Each prototype pairs a structural wireframe with numbered hotspots and an adjacent discussion panel.
+  </div>
+
+  <div class="note">
+    <strong>How to read these.</strong> These are <em>not</em> final UI. The light theme + minimal styling is deliberate — it signals "we're still modelling". Numbered dots on each prototype are clickable discussion anchors. When a decision is made, the corresponding note gets tagged <code>resolved</code> and the whiteboard (<a href="../../docs/architecture/whiteboard.md">docs/architecture/whiteboard.md</a>) captures the outcome.
+  </div>
+
+  <h2>Domain entities — the pipeline core</h2>
+
+  <div class="row">
+    <span><a href="./vault-item.html">vault-item.html</a></span>
+    <span class="desc">The pipeline's centerpiece. Pass A (read-only) + Pass B (mutations, forms, junctions, deps) both landed. Archive/status/reassign all emit paired activity events. Attachments wired in thread composer.</span>
+    <span class="status built">built</span>
+  </div>
+
+  <div class="row">
+    <span><a href="./actors.html">actors.html</a></span>
+    <span class="desc">Who/what can act (marvin, ralph, boris, jimbo). Feature scaffolded at <code>features/actors/</code>. ActorSkill junction UI deferred.</span>
+    <span class="status built">built</span>
+  </div>
+
+  <div class="row">
+    <span><a href="./thread.html">thread.html</a></span>
+    <span class="desc">Discussion thread — service + reusable components at <code>features/thread/</code>. No routes (composed into VaultItem detail). Ready to be embedded.</span>
+    <span class="status built">built</span>
+  </div>
+
+  <div class="row">
+    <span><em>activity-feed.html</em></span>
+    <span class="desc">Standalone view of an activity timeline (discriminated union of event types). Currently rendered inline in vault-item; a dedicated prototype would stress the shape.</span>
+    <span class="status planned">planned</span>
+  </div>
+
+  <h2>Services — on top of the domain</h2>
+
+  <div class="row">
+    <span><a href="./routing.html">routing.html</a></span>
+    <span class="desc">Dispatcher simulator: pick a skill → see the decision trail. Capability matrix + routing summary. Sits on top of actors + actor-skills, not inside them.</span>
+    <span class="status active">active</span>
+  </div>
+
+  <div class="row">
+    <span><a href="./benchmarks.html">benchmarks.html</a></span>
+    <span class="desc">Skills catalogue with per-skill champion model, quality bar, freshness, trend sparkline. Re-benchmark queue. Last-suite report card.</span>
+    <span class="status active">active</span>
+  </div>
+
+  <h2>Deferred — placeholders for future prototypes</h2>
+
+  <div class="row">
+    <span><a href="./skill.html">skill.html</a></span>
+    <span class="desc">Skill as first-class capability. Feature migrated — 2-segment routes, ProjectsService-backed source_repo select, JSON schema textareas with validators. Awaits jimbo-api backend migration.</span>
+    <span class="status built">built</span>
+  </div>
+
+  <div class="row">
+    <span><a href="./projects.html">projects.html</a></span>
+    <span class="desc">Project context: criteria + repo_url + owner. Angular feature scaffolded at <code>features/projects/</code>. Awaits jimbo-api backend.</span>
+    <span class="status built">built</span>
+  </div>
+
+  <div class="row">
+    <span><em>grooming-pipeline.html</em></span>
+    <span class="desc">Full workflow view: reservoir → analysis → questions → proposed → ready. Kanban-ish. The operator's work surface for moving items toward dispatch.</span>
+    <span class="status planned">deferred</span>
+  </div>
+
+  <div class="row">
+    <span><em>today.html</em></span>
+    <span class="desc">Operator home: synthesised briefing across vault, grooming, dispatch, emails. Cross-domain projection.</span>
+    <span class="status planned">deferred</span>
+  </div>
+
+  <div class="row">
+    <span><em>stream.html</em></span>
+    <span class="desc">Activity-event timeline across ALL items — the firehose. Useful for spotting ceremony issues and missed handshakes.</span>
+    <span class="status planned">deferred</span>
+  </div>
+
+  <h2>Reference</h2>
+
+  <div class="row">
+    <span><a href="../../docs/architecture/whiteboard.md">whiteboard.md</a></span>
+    <span class="desc">Concept tracker: every idea we've discussed with status (built / active / defer / killed), revisit triggers, open questions.</span>
+    <span class="status active">active</span>
+  </div>
+
+  <div class="row">
+    <span><a href="../../src/app/domain/">domain/</a></span>
+    <span class="desc">TypeScript source of truth for entity shapes. Each prototype here mirrors one of these folders.</span>
+    <span class="status active">active</span>
+  </div>
+
+</div>
+</body>
+</html>

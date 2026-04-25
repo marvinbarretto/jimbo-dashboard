@@ -2,13 +2,16 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import type { Model, CreateModelPayload, UpdateModelPayload, ModelStats } from '../utils/model.types';
 import { environment } from '../../../../environments/environment';
+import { modelId } from '../../../domain/ids';
+import { isSeedMode } from '../../../shared/seed-mode';
+import { SEED } from '../../../domain/seed';
 
 // Stats are derived from run history, not stored in the control-plane tables.
 // Kept as mock until the runs table is migrated to Postgres.
 const MOCK_STATS: ModelStats[] = [
-  { model_id: 'openai/gpt-5-nano',            total_runs: 7, mean_cost_per_run: 0.0073, mean_duration_ms: 1200,  timeout_rate: 0    },
-  { model_id: 'google/gemini-2.5-flash-lite', total_runs: 5, mean_cost_per_run: 0.0221, mean_duration_ms: 1800,  timeout_rate: 0    },
-  { model_id: 'deepseek/deepseek-chat-v3.1',  total_runs: 8, mean_cost_per_run: 0.1439, mean_duration_ms: 28000, timeout_rate: 0.25 },
+  { model_id: modelId('openai/gpt-5-nano'),            total_runs: 7, mean_cost_per_run: 0.0073, mean_duration_ms: 1200,  timeout_rate: 0    },
+  { model_id: modelId('google/gemini-2.5-flash-lite'), total_runs: 5, mean_cost_per_run: 0.0221, mean_duration_ms: 1800,  timeout_rate: 0    },
+  { model_id: modelId('deepseek/deepseek-chat-v3.1'),  total_runs: 8, mean_cost_per_run: 0.1439, mean_duration_ms: 28000, timeout_rate: 0.25 },
 ];
 
 @Injectable({ providedIn: 'root' })
@@ -27,6 +30,11 @@ export class ModelsService {
   constructor() { this.load(); }
 
   private load(): void {
+    if (isSeedMode()) {
+      this._models.set([...SEED.models]);
+      this._loading.set(false);
+      return;
+    }
     this.http.get<Model[]>(`${this.url}?order=display_name`).subscribe({
       next: data => { this._models.set(data); this._loading.set(false); },
       error: ()   => this._loading.set(false),

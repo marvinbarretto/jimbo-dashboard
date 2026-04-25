@@ -2,6 +2,18 @@ import { Routes } from '@angular/router';
 
 export const routes: Routes = [
   {
+    path: 'vault-items',
+    loadChildren: () => import('./features/vault-items/vault-items.routes').then(m => m.vaultItemsRoutes),
+  },
+  {
+    path: 'projects',
+    loadChildren: () => import('./features/projects/projects.routes').then(m => m.projectsRoutes),
+  },
+  {
+    path: 'actors',
+    loadChildren: () => import('./features/actors/actors.routes').then(m => m.actorsRoutes),
+  },
+  {
     path: 'models',
     loadChildren: () => import('./features/models/models.routes').then(m => m.modelsRoutes),
   },
@@ -29,5 +41,5 @@ export const routes: Routes = [
     path: 'test-forms',
     loadComponent: () => import('./features/test-forms/test-forms-page').then(m => m.TestFormsPage),
   },
-  { path: '', redirectTo: 'models', pathMatch: 'full' },
+  { path: '', redirectTo: 'vault-items', pathMatch: 'full' },
 ];

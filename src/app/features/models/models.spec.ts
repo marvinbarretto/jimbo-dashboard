@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ModelsService } from './data-access/models.service';
 import type { CreateModelPayload } from './utils/model.types';
+import { modelId } from '../../domain/ids';
 
 describe('ModelsService', () => {
   let service: ModelsService;
@@ -46,7 +47,7 @@ describe('ModelsService', () => {
     it('adds model to list', () => {
       const before = service.models().length;
       const payload: CreateModelPayload = {
-        id: 'meta/llama-3-8b',
+        id: modelId('meta/llama-3-8b'),
         display_name: 'Llama 3 8B',
         provider: 'meta',
         tier: 'free',
@@ -63,10 +64,10 @@ describe('ModelsService', () => {
 
     it('new model is retrievable by id', () => {
       service.create({
-        id: 'test/model-x',
+        id: modelId('test/model-x'),
         display_name: 'Test Model X',
         provider: 'openai',
-        tier: 'fast',
+        tier: 'budget',
         capabilities: [],
         context_window: null,
         input_cost_per_mtok: null,

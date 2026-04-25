@@ -40,8 +40,8 @@ describe('ModelsList', () => {
 
   it('tierLabel maps all tiers', () => {
     expect(component.tierLabel('free')).toBe('Free');
-    expect(component.tierLabel('fast')).toBe('Fast');
-    expect(component.tierLabel('balanced')).toBe('Balanced');
-    expect(component.tierLabel('powerful')).toBe('Powerful');
+    expect(component.tierLabel('budget')).toBe('Budget');
+    expect(component.tierLabel('standard')).toBe('Standard');
+    expect(component.tierLabel('premium')).toBe('Premium');
   });
 });

@@ -1,49 +1,67 @@
 @if (skill(); as skill) {
-  <div class="page">
-    <header class="page-header">
+  <div class="skill-detail">
+    <header class="skill-detail__header">
       <a routerLink="/skills" class="back-link">← Skills</a>
-      <div class="page-header__title">
-        <h1>{{ skill.display_name }}</h1>
-        <span class="status" [class.status--active]="skill.is_active">
+      <div class="skill-detail__title">
+        <span class="ns-tag">{{ namespace() }}</span>
+        <h1>{{ localName() }}</h1>
+      </div>
+      <div class="skill-detail__badges">
+        <span [class]="skill.is_active ? 'status status--active' : 'status status--inactive'">
           {{ skill.is_active ? 'Active' : 'Inactive' }}
         </span>
+        <span class="sync-staleness">synced {{ syncedAgo() }}</span>
       </div>
-      <a [routerLink]="['edit']" class="btn">Edit</a>
+      <a routerLink="edit" class="btn btn--secondary">Edit</a>
     </header>
 
-    <dl class="detail-grid">
-      <dt>ID</dt>
-      <dd><code>{{ skill.id }}</code></dd>
+    <section class="skill-detail__meta">
+      <dl>
+        <dt>Slug</dt>
+        <dd><code>{{ skill.id }}</code></dd>
 
-      <dt>Hub path</dt>
-      <dd><code>{{ hubPath() }}</code></dd>
+        <dt>Display name</dt>
+        <dd>{{ skill.display_name }}</dd>
 
-      @if (skill.description) {
-        <dt>Description</dt>
-        <dd>{{ skill.description }}</dd>
-      }
-
-      <dt>Model stack</dt>
-      <dd>
-        @if (stack(); as stack) {
-          <a [routerLink]="['/model-stacks', stack.id]">{{ stack.display_name }}</a>
-        } @else {
-          <span class="muted">{{ skill.model_stack_id ?? 'None assigned' }}</span>
+        @if (skill.description) {
+          <dt>Description</dt>
+          <dd>{{ skill.description }}</dd>
         }
-      </dd>
 
-      @if (skill.notes) {
-        <dt>Notes</dt>
-        <dd>{{ skill.notes }}</dd>
-      }
+        <dt>Model hint</dt>
+        <dd>
+          <span class="tier-badge tier-badge--{{ skill.model_hint }}">{{ skill.model_hint }}</span>
+        </dd>
 
-      <dt>Updated</dt>
-      <dd>{{ skill.updated_at | date:'medium' }}</dd>
-    </dl>
+        <dt>Source repo</dt>
+        <dd>
+          <a [routerLink]="['/projects', skill.source_repo]">{{ skill.source_repo }}</a>
+        </dd>
+
+        @if (skill.prompt_id) {
+          <dt>Prompt</dt>
+          <dd><code>{{ skill.prompt_id }}</code></dd>
+        }
+      </dl>
+    </section>
+
+    @if (skill.input_schema != null) {
+      <section class="skill-detail__schema">
+        <h2>Input schema</h2>
+        <pre class="schema-block"><code>{{ formatSchema(skill.input_schema) }}</code></pre>
+      </section>
+    }
+
+    @if (skill.output_schema != null) {
+      <section class="skill-detail__schema">
+        <h2>Output schema</h2>
+        <pre class="schema-block"><code>{{ formatSchema(skill.output_schema) }}</code></pre>
+      </section>
+    }
   </div>
 } @else {
-  <div class="page">
-    <p class="muted">Skill not found.</p>
-    <a routerLink="/skills">← Back to skills</a>
+  <div class="skill-detail skill-detail--not-found">
+    <p>Skill not found.</p>
+    <a routerLink="/skills" class="back-link">← Back to skills</a>
   </div>
 }

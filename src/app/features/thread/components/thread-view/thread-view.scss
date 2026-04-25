@@ -1,0 +1,29 @@
+.thread-view {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+
+  &__header {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg);
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  &__label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  &__summary {
+    font-size: 11px;
+    color: var(--color-text-muted);
+  }
+
+  &__open-count {
+    color: var(--color-warning);
+  }
+}

@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Prototype · Benchmarks</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg:          #0f1013;
+      --bg-elev:     #16181d;
+      --bg-elev-2:   #1c1f26;
+      --border:      #2a2d35;
+      --border-soft: #23262d;
+      --text:        #d7d9de;
+      --text-dim:    #8b8f98;
+      --text-faint:  #5a5e67;
+      --accent:      #ff8c42;
+      --green:       #7cc87c;
+      --yellow:      #e6c068;
+      --red:         #e06b6b;
+      --blue:        #6ba9e0;
+
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.5; }
+    a { color: var(--accent); text-decoration: none; }
+
+    header.page {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      gap: 20px;
+    }
+    header.page h1 {
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin: 0;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    header.page .summary { color: var(--text-dim); font-size: 12px; }
+    header.page .summary strong { color: var(--text); font-weight: 500; }
+    header.page .crumbs { margin-left: auto; color: var(--text-faint); font-size: 11px; }
+
+    main { padding: 20px 24px; max-width: 1280px; }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .toolbar .btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+    .toolbar .btn.primary { color: var(--accent); border-color: var(--accent); }
+    .toolbar .btn.active  { color: var(--text); border-color: var(--text-dim); }
+
+    /* --- skills list ---------------------------------------------------- */
+    .skills-grid {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .skill-row {
+      display: grid;
+      grid-template-columns: 220px 80px 200px 110px 100px 70px 110px 1fr;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-soft);
+      align-items: center;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .skill-row:hover { background: var(--bg-elev-2); }
+    .skill-row:last-child { border-bottom: none; }
+    .skill-row.head {
+      color: var(--text-faint);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      background: var(--bg-elev-2);
+      cursor: default;
+    }
+    .skill-row.head:hover { background: var(--bg-elev-2); }
+
+    .skill-id      { color: var(--text); }
+    .skill-id .kind {
+      display: block;
+      font-size: 10px;
+      color: var(--text-faint);
+      margin-top: 2px;
+    }
+    .bar-pass      { color: var(--green); }
+    .bar-near      { color: var(--yellow); }
+    .bar-fail      { color: var(--red); }
+    .champion      { color: var(--accent); font-size: 11px; }
+    .champion .model-id { display: block; }
+    .champion .score-tag { font-size: 10px; color: var(--text-faint); }
+    .cost          { color: var(--text-dim); font-variant-numeric: tabular-nums; text-align: right; }
+    .samples       { color: var(--text-faint); font-size: 11px; text-align: center; }
+    .samples.thin  { color: var(--yellow); }
+
+    .freshness     { font-size: 11px; }
+    .freshness.fresh { color: var(--green); }
+    .freshness.stale { color: var(--yellow); }
+    .freshness.old   { color: var(--red); }
+
+    .sparkline {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 20px;
+    }
+    .spark-bar {
+      width: 6px;
+      background: var(--blue);
+      opacity: 0.85;
+    }
+    .spark-bar.drop { background: var(--red); }
+    .spark-bar.ok   { background: var(--green); }
+
+    /* --- expanded detail ----------------------------------------------- */
+    .detail {
+      display: none;
+      background: var(--bg-elev-2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+    }
+    .detail.open { display: block; }
+    .detail h3 {
+      margin: 0 0 10px;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    table.model-matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-bottom: 14px;
+    }
+    table.model-matrix th, table.model-matrix td {
+      padding: 5px 10px;
+      border-bottom: 1px solid var(--border-soft);
+      text-align: left;
+    }
+    table.model-matrix th {
+      color: var(--text-faint);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 400;
+    }
+    table.model-matrix td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    table.model-matrix tr.champion-row td { color: var(--accent); font-weight: 500; }
+    .score-cell.pass { color: var(--green); }
+    .score-cell.near { color: var(--yellow); }
+    .score-cell.fail { color: var(--red); }
+    .flag-pill {
+      display: inline-block;
+      font-size: 10px;
+      padding: 0 6px;
+      border-radius: 2px;
+      background: var(--bg-elev);
+      color: var(--text-faint);
+      margin-left: 4px;
+    }
+    .flag-pill.timeout     { color: var(--red);    border: 1px solid var(--red); }
+    .flag-pill.silent      { color: var(--yellow); border: 1px solid var(--yellow); }
+    .flag-pill.api-error   { color: var(--red);    border: 1px solid var(--border); }
+
+    .verdict {
+      padding: 8px 12px;
+      background: var(--bg-elev);
+      border-left: 3px solid var(--accent);
+      font-size: 12px;
+      margin-bottom: 14px;
+      color: var(--text-dim);
+    }
+    .verdict strong { color: var(--accent); }
+    .verdict.thin   { border-left-color: var(--yellow); }
+    .verdict.thin strong { color: var(--yellow); }
+    .verdict.unrouted { border-left-color: var(--red); }
+    .verdict.unrouted strong { color: var(--red); }
+
+    /* --- panels -------------------------------------------------------- */
+    .panel {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      margin-top: 20px;
+    }
+    .panel > header {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-soft);
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .panel > header h2 {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0;
+      font-weight: 500;
+    }
+    .panel > header .hint { color: var(--text-faint); font-size: 11px; }
+    .panel .body { padding: 14px 16px; }
+
+    /* --- queue -------------------------------------------------------- */
+    .queue-row {
+      display: grid;
+      grid-template-columns: 220px 140px 1fr 90px;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--border-soft);
+      font-size: 12px;
+      align-items: center;
+    }
+    .queue-row:last-child { border-bottom: none; }
+    .queue-row .skill-id      { color: var(--text); }
+    .queue-row .when          { color: var(--text-dim); font-size: 11px; }
+    .queue-row .rationale     { color: var(--text-faint); font-size: 11px; }
+    .queue-row .predicted-cost { color: var(--text-dim); text-align: right; font-variant-numeric: tabular-nums; }
+
+    footer.notes {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--text-faint);
+      font-size: 11px;
+    }
+    footer.notes code {
+      background: var(--bg-elev);
+      padding: 1px 5px;
+      border-radius: 2px;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+
+<header class="page">
+  <h1>Benchmarks</h1>
+  <span class="summary">
+    <strong id="count-skills">—</strong> skills ·
+    <strong id="count-recommended">—</strong> routed ·
+    <strong id="count-stale">—</strong> stale ·
+    <strong id="count-unrouted">—</strong> unrouted
+  </span>
+  <span class="crumbs">
+    <a href="./actors.html">actors</a> ·
+    <a href="./routing.html">routing</a>
+  </span>
+</header>
+
+<main>
+  <div class="toolbar">
+    <button class="btn active">all</button>
+    <button class="btn">unrouted</button>
+    <button class="btn">stale (&gt; 14d)</button>
+    <button class="btn">n &lt; 3</button>
+    <div style="flex:1"></div>
+    <button class="btn">view cadence</button>
+    <button class="btn primary">+ run all stale</button>
+  </div>
+
+  <div class="skills-grid">
+    <div class="skill-row head">
+      <span>skill</span>
+      <span>bar</span>
+      <span>champion</span>
+      <span class="cost">mean $/run</span>
+      <span class="cost">p95 latency</span>
+      <span class="samples">n</span>
+      <span>freshness</span>
+      <span>trend (8 runs)</span>
+    </div>
+    <div id="skills-body"></div>
+  </div>
+
+  <section class="panel">
+    <header>
+      <h2>Next up — re-benchmark queue</h2>
+      <span class="hint">what would run if you hit "run all stale" right now</span>
+    </header>
+    <div class="body" id="queue-body"></div>
+  </section>
+
+  <section class="panel">
+    <header>
+      <h2>Last suite report</h2>
+      <span class="hint">summary of the most recent full-suite run, ledger-style</span>
+    </header>
+    <div class="body">
+      <div style="font-size: 12px; color: var(--text-dim);">
+        <div style="margin-bottom: 6px;">
+          <strong style="color: var(--text);">Suite v4 · 2026-04-21</strong>
+          &nbsp;·&nbsp; 3 probes × 8 models × 3 samples &nbsp;·&nbsp;
+          <span style="color: var(--green);">✓ 48 runs completed</span> &nbsp;·&nbsp;
+          <span style="color: var(--red);">auto-abort at run 49</span>
+        </div>
+        <div style="color: var(--text-faint); font-size: 11px; margin-bottom: 10px;">
+          Predicted cost $0.05 · actual $1.15 · variance 23× (deepseek vault-read drain consumed 37% of total).
+          Calendar-fmt champion unchanged from v3: <code style="color: var(--accent);">openai/gpt-5-nano</code>.
+          Web-fact champion rotated: <code style="color: var(--yellow);">deepseek-chat-v3.1 → google/gemini-2.5-flash-lite</code> (score tied, cost -83%).
+          Vault-read: probe broken, no routing update.
+        </div>
+        <div style="display: flex; gap: 16px; font-size: 11px;">
+          <span>📄 <a href="#">view full report</a></span>
+          <span>📋 <a href="#">ledger CSV</a></span>
+          <span>↻ <a href="#">re-queue failed runs</a></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="notes">
+    Prototype of a benchmark catalogue + recommendation surface. Data is fixture-grade. The concept: every skill has a champion model, a quality bar, a freshness window, and a ledger of runs. Recommendations stay fresh because re-benchmarks are scheduled, not ad-hoc.
+    <br><br>
+    <strong>Not modelled yet</strong> — probe/case editor, ground-truth snapshots, grader config, cost/latency tiebreakers, per-model reliability scoring. Intentionally out of scope for this prototype.
+  </footer>
+</main>
+
+<script>
+  // --- fixtures ----------------------------------------------------------
+  // One row per skill. `bar` is the quality threshold. `champion` is the current pick.
+  // `trend` is the last 8 champion scores, newest last — a sparkline signal.
+  const SKILLS = [
+    {
+      id: 'calendar-fmt', kind: 'format',
+      bar: 0.85,
+      champion: { model: 'openai/gpt-5-nano', score: 1.00, cost: 0.00738, latency_p95_ms: 1200 },
+      samples: 3, freshness_days: 3,
+      trend: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+      runners_up: [
+        { model: 'x-ai/grok-4-fast',            score: 1.00, cost: 0.01425, samples: 2 },
+        { model: 'google/gemini-2.5-flash-lite', score: 1.00, cost: 0.02216, samples: 2, flags: ['silent-correct'] },
+        { model: 'openai/gpt-4.1-nano',          score: 1.00, cost: 0.03437, samples: 1 },
+        { model: 'openai/gpt-4o-mini',           score: 0.53, cost: 0.02572, samples: 3 },
+        { model: 'deepseek/deepseek-chat-v3.1',  score: 0.33, cost: 0.03918, samples: 3, flags: ['timeouts=2'] },
+      ],
+      verdict: 'route to openai/gpt-5-nano — cheapest of 4 tied passes',
+    },
+    {
+      id: 'web-fact', kind: 'factual recall',
+      bar: 0.90,
+      champion: { model: 'google/gemini-2.5-flash-lite', score: 1.00, cost: 0.00630, latency_p95_ms: 1800 },
+      samples: 1, freshness_days: 3, thin: true,
+      trend: [null, null, null, 1.0, 1.0, 0.67, 1.0, 1.0],
+      runners_up: [
+        { model: 'x-ai/grok-3-mini',             score: 0.50, cost: 0.00077, samples: 2 },
+        { model: 'openai/gpt-5-nano',            score: 1.00, cost: 0.01467, samples: 3 },
+        { model: 'openai/gpt-4.1-nano',          score: 1.00, cost: 0.01149, samples: 1 },
+        { model: 'x-ai/grok-4-fast',             score: 1.00, cost: 0.01799, samples: 2 },
+        { model: 'deepseek/deepseek-chat-v3.1',  score: 1.00, cost: 0.03658, samples: 3 },
+      ],
+      verdict: 'route to gemini-2.5-flash-lite — n=1, promote cautiously',
+    },
+    {
+      id: 'vault-read', kind: 'tool-loop',
+      bar: 0.85,
+      champion: null,
+      samples: 0, freshness_days: 3,
+      trend: [0.5, 0.5, 0.3, 0.5, 0.5, 0.3, 0.5, 0.5],
+      runners_up: [
+        { model: 'x-ai/grok-3-mini',             score: 0.50, cost: 0.01291, samples: 3, flags: ['timeout'] },
+        { model: 'openai/gpt-4.1-nano',          score: 0.67, cost: 0.00297, samples: 3 },
+        { model: 'deepseek/deepseek-chat-v3.1',  score: 0.50, cost: 0.21375, samples: 2, flags: ['late-drain=1'] },
+      ],
+      verdict: 'UNROUTED — probe prompt + jimbo-api interface are broken; no model can clear',
+    },
+    {
+      id: 'strict-ac-builder', kind: 'structured output',
+      bar: 0.90,
+      champion: { model: 'anthropic/claude-sonnet-4-6', score: 0.95, cost: 0.08400, latency_p95_ms: 4200 },
+      samples: 4, freshness_days: 9,
+      trend: [0.8, 0.85, 0.9, 0.9, 0.85, 0.95, 0.95, 0.95],
+      runners_up: [
+        { model: 'anthropic/claude-opus-4-7', score: 1.00, cost: 0.42000, samples: 3 },
+        { model: 'openai/gpt-5',              score: 0.92, cost: 0.12000, samples: 3 },
+        { model: 'qwen2.5:7b',                score: 0.65, cost: 0.00000, samples: 5, flags: ['local'] },
+      ],
+      verdict: 'route to claude-sonnet-4-6 — opus cleared bar too but 5× cost, diminishing returns',
+    },
+    {
+      id: 'classifier', kind: 'classification',
+      bar: 0.85,
+      champion: { model: 'qwen2.5:7b', score: 0.90, cost: 0.00000, latency_p95_ms: 800 },
+      samples: 10, freshness_days: 2,
+      trend: [0.85, 0.88, 0.9, 0.88, 0.92, 0.88, 0.9, 0.9],
+      runners_up: [
+        { model: 'openai/gpt-5-nano',           score: 0.95, cost: 0.00400, samples: 5 },
+        { model: 'anthropic/claude-sonnet-4-6', score: 0.98, cost: 0.02100, samples: 3 },
+      ],
+      verdict: 'route to qwen2.5:7b (ralph) — free, local, over bar. gpt-5-nano is the hosted fallback.',
+    },
+    {
+      id: 'decomposer', kind: 'structured output',
+      bar: 0.85,
+      champion: { model: 'anthropic/claude-sonnet-4-6', score: 0.90, cost: 0.09200, latency_p95_ms: 5100 },
+      samples: 3, freshness_days: 18, stale: true,
+      trend: [0.88, 0.9, 0.92, 0.9, 0.88, 0.9, 0.9, 0.9],
+      runners_up: [
+        { model: 'anthropic/claude-opus-4-7', score: 0.94, cost: 0.38000, samples: 2 },
+        { model: 'openai/gpt-5',              score: 0.85, cost: 0.14000, samples: 3 },
+      ],
+      verdict: 'route to claude-sonnet-4-6 — but freshness 18d, re-run recommended',
+    },
+    {
+      id: 'triage', kind: 'classification',
+      bar: 0.85,
+      champion: { model: 'openai/gpt-5-nano', score: 0.88, cost: 0.00600, latency_p95_ms: 1100 },
+      samples: 5, freshness_days: 6,
+      trend: [0.82, 0.85, 0.88, 0.9, 0.85, 0.88, 0.88, 0.88],
+      runners_up: [
+        { model: 'qwen2.5:7b',                  score: 0.80, cost: 0.00000, samples: 5 },
+        { model: 'anthropic/claude-sonnet-4-6', score: 0.92, cost: 0.02000, samples: 3 },
+      ],
+      verdict: 'route to gpt-5-nano — qwen came close, consider re-test if local cost matters more',
+    },
+    {
+      id: 'final-approval', kind: 'gated',
+      bar: 1.0,
+      champion: { model: 'marvin (human)', score: 1.00, cost: 0, latency_p95_ms: null },
+      samples: null, freshness_days: null, human: true,
+      trend: [],
+      runners_up: [],
+      verdict: 'human-gated skill — not benchmarked, routes to @marvin',
+    },
+  ];
+
+  // --- render skills list -----------------------------------------------
+  const body = document.getElementById('skills-body');
+
+  function freshnessClass(days) {
+    if (days === null || days === undefined) return '';
+    if (days <= 7)  return 'fresh';
+    if (days <= 14) return 'stale';
+    return 'old';
+  }
+  function freshnessLabel(days) {
+    if (days === null || days === undefined) return '—';
+    if (days === 0) return 'today';
+    if (days === 1) return '1d ago';
+    return `${days}d ago`;
+  }
+  function scoreCellClass(score, bar) {
+    if (score >= bar)         return 'pass';
+    if (score >= bar - 0.15)  return 'near';
+    return 'fail';
+  }
+  function renderSparkline(trend, bar) {
+    if (!trend || !trend.length) return '<span style="color: var(--text-faint);">—</span>';
+    const bars = trend.map((v, i) => {
+      if (v === null) return `<span class="spark-bar" style="height: 2px; background: var(--border); opacity: 1"></span>`;
+      const h = Math.max(2, Math.round(v * 18));
+      const cls = v >= bar ? 'ok' : (v >= bar - 0.15 ? '' : 'drop');
+      return `<span class="spark-bar ${cls}" style="height: ${h}px"></span>`;
+    });
+    return `<div class="sparkline">${bars.join('')}</div>`;
+  }
+
+  for (const skill of SKILLS) {
+    const detailId = `detail-${skill.id}`;
+    const championEl = skill.champion
+      ? `<span class="champion">
+           <span class="model-id">${skill.champion.model}</span>
+           <span class="score-tag">${skill.champion.score.toFixed(2)} · ${skill.champion.latency_p95_ms ?? '—'}ms</span>
+         </span>`
+      : `<span class="champion" style="color: var(--red);">UNROUTED</span>`;
+
+    const row = document.createElement('div');
+    row.className = 'skill-row';
+    row.setAttribute('data-skill', skill.id);
+    row.innerHTML = `
+      <span class="skill-id">
+        ${skill.id}
+        <span class="kind">${skill.kind}</span>
+      </span>
+      <span class="bar-${skill.champion && skill.champion.score >= skill.bar ? 'pass' : (skill.human ? 'pass' : 'fail')}">
+        ≥ ${skill.bar.toFixed(2)}
+      </span>
+      ${championEl}
+      <span class="cost">
+        ${skill.champion ? '$' + skill.champion.cost.toFixed(5) : '—'}
+      </span>
+      <span class="cost">
+        ${skill.champion && skill.champion.latency_p95_ms ? skill.champion.latency_p95_ms + 'ms' : '—'}
+      </span>
+      <span class="samples ${skill.samples !== null && skill.samples < 3 ? 'thin' : ''}">
+        ${skill.samples !== null ? 'n=' + skill.samples : '—'}
+      </span>
+      <span class="freshness ${freshnessClass(skill.freshness_days)}">
+        ${freshnessLabel(skill.freshness_days)}
+      </span>
+      ${renderSparkline(skill.trend, skill.bar)}
+    `;
+    body.appendChild(row);
+
+    const detail = document.createElement('div');
+    detail.className = 'detail';
+    detail.id = detailId;
+    detail.innerHTML = `
+      <div class="verdict ${skill.thin ? 'thin' : ''} ${!skill.champion ? 'unrouted' : ''}">
+        <strong>verdict:</strong> ${skill.verdict}
+      </div>
+      <h3>Per-model results</h3>
+      <table class="model-matrix">
+        <thead>
+          <tr>
+            <th>model</th>
+            <th>score</th>
+            <th>mean $/run</th>
+            <th>samples</th>
+            <th>flags</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${skill.champion ? `
+            <tr class="champion-row">
+              <td>${skill.champion.model} ★</td>
+              <td class="num score-cell ${scoreCellClass(skill.champion.score, skill.bar)}">${skill.champion.score.toFixed(2)}</td>
+              <td class="num">$${skill.champion.cost.toFixed(5)}</td>
+              <td class="num">${skill.samples ?? '—'}</td>
+              <td></td>
+            </tr>` : ''}
+          ${skill.runners_up.map(r => `
+            <tr>
+              <td>${r.model}</td>
+              <td class="num score-cell ${scoreCellClass(r.score, skill.bar)}">${r.score.toFixed(2)}</td>
+              <td class="num">$${r.cost.toFixed(5)}</td>
+              <td class="num">${r.samples}</td>
+              <td>${(r.flags || []).map(f => `<span class="flag-pill ${f.includes('timeout') ? 'timeout' : (f === 'silent-correct' ? 'silent' : '')}">${f}</span>`).join('')}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <div style="font-size: 11px; color: var(--text-faint);">
+        Tiebreaker policy: <code style="color: var(--text-dim);">min(cost) WHERE score &gt;= ${skill.bar} AND timeout_rate &lt; 0.10</code>
+      </div>
+    `;
+    body.appendChild(detail);
+
+    row.addEventListener('click', () => {
+      detail.classList.toggle('open');
+    });
+  }
+
+  // --- summary counts ----------------------------------------------------
+  document.getElementById('count-skills').textContent      = SKILLS.length;
+  document.getElementById('count-recommended').textContent = SKILLS.filter(s => s.champion && !s.human).length;
+  document.getElementById('count-stale').textContent       = SKILLS.filter(s => s.stale || (s.freshness_days !== null && s.freshness_days > 14)).length;
+  document.getElementById('count-unrouted').textContent    = SKILLS.filter(s => !s.champion && !s.human).length;
+
+  // --- queue -------------------------------------------------------------
+  const queueBody = document.getElementById('queue-body');
+  const QUEUE = [
+    { skill: 'vault-read',        when: 'urgent',    rationale: 'probe broken — fix before re-running',                 cost: '—'    },
+    { skill: 'decomposer',        when: 'in 1 day',  rationale: 'freshness 18d; stale threshold 14d',                   cost: '~$0.40' },
+    { skill: 'web-fact',          when: 'in 4 days', rationale: 'champion only n=1; promote only after 3 samples',     cost: '~$0.08' },
+    { skill: 'strict-ac-builder', when: 'in 6 days', rationale: 'scheduled 2-weekly cadence',                          cost: '~$0.80' },
+    { skill: 'triage',            when: 'in 8 days', rationale: 'scheduled; worth re-checking qwen threshold',         cost: '~$0.15' },
+    { skill: 'calendar-fmt',      when: 'in 11 days', rationale: 'scheduled; champion steady 8 runs',                   cost: '~$0.10' },
+    { skill: 'classifier',        when: 'in 12 days', rationale: 'scheduled; gpt-5-nano closing in on qwen — watch',   cost: '~$0.05' },
+  ];
+  queueBody.insertAdjacentHTML('beforeend', `
+    <div class="queue-row" style="color: var(--text-faint); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;">
+      <span>skill</span>
+      <span>when</span>
+      <span>why</span>
+      <span class="predicted-cost">predicted $</span>
+    </div>
+  `);
+  for (const q of QUEUE) {
+    queueBody.insertAdjacentHTML('beforeend', `
+      <div class="queue-row">
+        <span class="skill-id">${q.skill}</span>
+        <span class="when">${q.when}</span>
+        <span class="rationale">${q.rationale}</span>
+        <span class="predicted-cost">${q.cost}</span>
+      </div>
+    `);
+  }
+</script>
+
+</body>
+</html>

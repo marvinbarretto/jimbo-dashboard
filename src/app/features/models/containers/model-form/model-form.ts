@@ -6,6 +6,7 @@ import { filter, map, take } from 'rxjs';
 import { ModelsService } from '../../data-access/models.service';
 import { MODEL_CAPABILITIES } from '../../utils/model.types';
 import type { ModelProvider, ModelTier, ModelCapability } from '../../utils/model.types';
+import { modelId } from '../../../../domain/ids';
 
 @Component({
   selector: 'app-model-form',
@@ -26,7 +27,7 @@ export class ModelForm {
   private readonly models$ = toObservable(this.service.models);
   readonly isEdit = computed(() => !!this.id());
 
-  readonly tiers: ModelTier[] = ['free', 'fast', 'balanced', 'powerful'];
+  readonly tiers: ModelTier[] = ['free', 'budget', 'standard', 'premium'];
   readonly providers: ModelProvider[] = ['anthropic', 'google', 'openai', 'x-ai', 'deepseek', 'meta'];
   readonly capabilities = MODEL_CAPABILITIES;
 
@@ -37,7 +38,7 @@ export class ModelForm {
     id: ['', [Validators.required, Validators.pattern(this.idPattern)]],
     display_name: ['', Validators.required],
     provider: ['anthropic' as ModelProvider, Validators.required],
-    tier: ['balanced' as ModelTier, Validators.required],
+    tier: ['standard' as ModelTier, Validators.required],
     // Individual boolean controls per capability, converted to string[] on submit.
     // A FormArray would work too, but boolean controls are simpler to bind in the
     // template and easier to pre-populate from an existing capabilities array.
@@ -92,8 +93,9 @@ export class ModelForm {
       return;
     }
     const v = this.form.getRawValue();
+    const id = modelId(v.id);
     const payload = {
-      id: v.id,
+      id,
       display_name: v.display_name,
       provider: v.provider,
       tier: v.tier,
@@ -105,7 +107,7 @@ export class ModelForm {
       notes: v.notes,
     };
     if (this.isEdit()) {
-      this.service.update(v.id, payload);
+      this.service.update(id, payload);
     } else {
       this.service.create(payload);
     }

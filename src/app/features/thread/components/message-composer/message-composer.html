@@ -1,0 +1,125 @@
+<div class="composer">
+  <form [formGroup]="form" (ngSubmit)="submit()">
+
+    <!-- Kind selector row -->
+    <div class="composer__kind-row">
+      <span class="composer__lbl" id="kind-label">Post as</span>
+      <div role="group" aria-labelledby="kind-label" class="composer__kind-btns">
+        @for (k of kinds; track k) {
+          <button
+            type="button"
+            class="composer__kind-btn"
+            [class.composer__kind-btn--selected]="form.controls.kind.value === k"
+            (click)="selectKind(k)"
+            [attr.aria-pressed]="form.controls.kind.value === k"
+          >{{ k }}</button>
+        }
+      </div>
+
+      <!-- In-reply-to dropdown: visible only when kind=answer -->
+      @if (form.controls.kind.value === 'answer') {
+        <label class="composer__lbl" for="in_reply_to">in reply to</label>
+        <select
+          id="in_reply_to"
+          formControlName="in_reply_to"
+          class="composer__reply-select"
+          aria-required="true"
+        >
+          <option value="">— select question —</option>
+          @for (q of availableQuestions(); track q.id) {
+            <option [value]="q.id">{{ q.id }} · {{ q.body | slice:0:60 }}{{ q.body.length > 60 ? '…' : '' }}</option>
+          }
+        </select>
+
+        @if (form.controls.in_reply_to.touched && form.controls.in_reply_to.errors?.['required']) {
+          <p class="composer__error" role="alert">Select the question this answers.</p>
+        }
+      }
+    </div>
+
+    <!-- Body textarea -->
+    <textarea
+      id="thread-body"
+      formControlName="body"
+      class="composer__body"
+      placeholder="write your message…"
+      rows="3"
+      aria-label="Message body"
+      aria-required="true"
+    ></textarea>
+    @if (form.controls.body.touched && form.controls.body.errors?.['required']) {
+      <p class="composer__error" role="alert">Message body is required.</p>
+    }
+
+    <!-- Attachment drop zone + file picker -->
+    <div
+      class="composer__drop-zone"
+      [class.composer__drop-zone--active]="isDragOver()"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave()"
+      (drop)="onDrop($event)"
+      role="region"
+      aria-label="Drag images or files here to attach"
+    >
+      <span class="composer__drop-hint">
+        drag images / files here
+      </span>
+      <button
+        type="button"
+        class="composer__attach-btn"
+        (click)="openFilePicker()"
+        aria-label="Choose files to attach"
+      >attach file</button>
+    </div>
+
+    <!-- Hidden file input -->
+    <input
+      #fileInput
+      type="file"
+      multiple
+      class="composer__file-input"
+      aria-hidden="true"
+      tabindex="-1"
+      (change)="onFileInputChange($event)"
+    />
+
+    <!-- Staged file previews -->
+    @if (stagedFiles().length > 0) {
+      <ul class="composer__staged" aria-label="Files staged for upload">
+        @for (file of stagedFiles(); track file.name; let i = $index) {
+          <li class="composer__staged-item">
+            @if (previewUrl(file); as url) {
+              <img
+                class="composer__staged-thumb"
+                [src]="url"
+                [alt]="file.name"
+              />
+            } @else {
+              <span class="composer__staged-icon" aria-hidden="true">📄</span>
+            }
+            <span class="composer__staged-name">{{ file.name }}</span>
+            <button
+              type="button"
+              class="composer__staged-remove"
+              (click)="removeStagedFile(i)"
+              [attr.aria-label]="'Remove ' + file.name"
+            >×</button>
+          </li>
+        }
+      </ul>
+    }
+
+    <!-- Post row -->
+    <div class="composer__post-row">
+      <button type="submit" class="composer__post-btn">post message</button>
+      <span class="composer__hint">
+        posts 1 ThreadMessage
+        @if (stagedFiles().length > 0) {
+          + {{ stagedFiles().length }} attachment{{ stagedFiles().length === 1 ? '' : 's' }}
+        }
+        + 1 activity event (<code>thread_message_posted</code>)
+      </span>
+    </div>
+
+  </form>
+</div>

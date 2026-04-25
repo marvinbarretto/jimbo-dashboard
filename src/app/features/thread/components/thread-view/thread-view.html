@@ -1,0 +1,27 @@
+<div class="thread-view">
+
+  <header class="thread-view__header">
+    <span class="thread-view__label">thread</span>
+    <span class="thread-view__summary">
+      <strong>{{ totalCount() }}</strong> messages
+      @if (openCount() > 0) {
+        ·
+        <strong class="thread-view__open-count">{{ openCount() }} open {{ openCount() === 1 ? 'question' : 'questions' }}</strong>
+      }
+    </span>
+  </header>
+
+  <app-message-list
+    [messages]="messages()"
+    [actors]="actorMap()"
+    [attachmentsByMessage]="attachmentsByMessage()"
+  />
+
+  <app-message-composer
+    [vaultItemId]="vaultItemId()"
+    [currentActor]="currentActor()"
+    [availableQuestions]="openQuestions()"
+    (posted)="onPosted($event)"
+  />
+
+</div>

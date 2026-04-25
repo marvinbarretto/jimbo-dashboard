@@ -10,11 +10,11 @@ export const skillsRoutes: Routes = [
     loadComponent: () => import('./containers/skill-form/skill-form').then(m => m.SkillForm),
   },
   {
-    path: ':id',
+    path: ':namespace/:name',
     loadComponent: () => import('./containers/skill-detail/skill-detail').then(m => m.SkillDetail),
   },
   {
-    path: ':id/edit',
+    path: ':namespace/:name/edit',
     loadComponent: () => import('./containers/skill-form/skill-form').then(m => m.SkillForm),
   },
 ];

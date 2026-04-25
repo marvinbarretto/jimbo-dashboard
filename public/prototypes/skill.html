@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Wireframe · Skill · hermes/intake-quality</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --ink:     #222;
+      --dim:     #666;
+      --faint:   #999;
+      --bg:      #fff;
+      --panel:   #fafafa;
+      --line:    #cfcfcf;
+      --line-2:  #e6e6e6;
+      --hot:     #d96520;
+      --ok:      #3b7a3b;
+      --bad:     #a33;
+      --maybe:   #8a6d00;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: var(--ink);
+      background: var(--bg);
+    }
+    .nav { font-size: 11px; color: var(--faint); padding: 10px 18px; border-bottom: 1px solid var(--line-2); }
+    .nav a { color: #06c; text-decoration: none; }
+
+    .page-title {
+      padding: 14px 18px 6px;
+      font-size: 14px;
+      color: var(--ink);
+    }
+    .page-title .sub { color: var(--faint); font-size: 11px; margin-left: 8px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 420px;
+      gap: 0;
+      border-top: 1px solid var(--line-2);
+    }
+    .left {
+      padding: 18px;
+      border-right: 1px solid var(--line-2);
+      min-width: 0;
+    }
+    .right {
+      padding: 18px;
+      background: var(--panel);
+      border-left: 1px solid var(--line-2);
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: var(--bg);
+      max-width: 680px;
+    }
+    .card > header {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--line-2);
+      background: #f3f3f3;
+      flex-wrap: wrap;
+    }
+    .card > header .slug { color: var(--ink); font-size: 13px; font-weight: 500; }
+    .card > header .namespace-tag {
+      font-size: 10px;
+      border: 1px solid var(--line);
+      padding: 0 5px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .card > header .namespace-tag.global { color: var(--ok); border-color: var(--ok); }
+    .card > header .namespace-tag.project { color: #06c; border-color: #06c; }
+    .card > header .crumb-sep { color: var(--faint); }
+    .card > header .spacer { flex: 1; }
+    .card > header .action {
+      border: 1px solid var(--line);
+      background: transparent;
+      padding: 1px 8px;
+      font: inherit;
+      font-size: 10px;
+      color: var(--dim);
+      cursor: pointer;
+    }
+
+    .section {
+      border-bottom: 1px solid var(--line-2);
+      padding: 10px 12px;
+    }
+    .section:last-child { border-bottom: none; }
+    .section-label {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 5px;
+    }
+    .field-value { color: var(--ink); font-size: 13px; }
+    .field-value.empty { color: var(--faint); font-style: italic; }
+    .field-value code { background: #f0f0f0; padding: 0 4px; font-size: 12px; }
+
+    input.wire, select.wire, textarea.wire {
+      font: inherit;
+      font-size: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      padding: 3px 6px;
+      border-radius: 0;
+    }
+
+    pre.schema, pre.prompt {
+      background: #f6f6f6;
+      border: 1px solid var(--line-2);
+      border-left: 2px solid var(--line);
+      padding: 8px 10px;
+      margin: 4px 0 0;
+      font-size: 11px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-x: auto;
+    }
+    pre.prompt { border-left-color: var(--hot); background: #fbfaf5; }
+
+    .tier-row { display: flex; gap: 4px; margin-top: 4px; }
+    .tier {
+      font-size: 10px;
+      padding: 2px 7px;
+      border: 1px solid var(--line);
+      color: var(--dim);
+      background: #fff;
+    }
+    .tier.active { border-color: var(--hot); background: #fff6ee; color: var(--hot); font-weight: 500; }
+
+    .inline-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: baseline; }
+    .inline-row .pair { display: flex; flex-direction: column; gap: 2px; }
+    .inline-row .pair .k {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--dim);
+    }
+
+    .grant-list, .tool-list { font-size: 12px; }
+    .grant-list .g, .tool-list .t {
+      display: flex;
+      gap: 10px;
+      padding: 3px 0;
+      border-bottom: 1px dashed var(--line-2);
+      align-items: baseline;
+    }
+    .grant-list .g:last-child, .tool-list .t:last-child { border-bottom: none; }
+    .grant-list .actor { color: var(--ink); }
+    .grant-list .prof {
+      font-size: 10px;
+      border: 1px solid var(--line);
+      padding: 0 5px;
+      color: var(--dim);
+    }
+    .grant-list .prof.preferred { border-color: var(--hot); color: var(--hot); }
+    .grant-list .prof.capable   { border-color: var(--line); color: var(--dim); }
+    .grant-list .prof.experimental { border-color: var(--faint); color: var(--faint); border-style: dashed; }
+
+    .related-skills { font-size: 12px; }
+    .related-skills .skill-item {
+      display: block;
+      padding: 5px 10px;
+      border: 1px solid var(--line-2);
+      margin-bottom: 4px;
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .related-skills .skill-item:hover { background: #f8f8f8; }
+    .related-skills .skill-item .sid { font-weight: 500; }
+    .related-skills .skill-item .meta {
+      display: block;
+      font-size: 10px;
+      color: var(--faint);
+      margin-top: 2px;
+    }
+    .related-skills .skill-item .badge {
+      font-size: 9px;
+      padding: 0 4px;
+      border: 1px solid var(--line);
+      color: var(--dim);
+      margin-left: 4px;
+    }
+
+    .dot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--hot);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 600;
+      vertical-align: middle;
+      margin-left: 6px;
+    }
+    .dot.inline { margin: 0 4px; }
+
+    .discussion h2 {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin: 0 0 10px;
+      font-weight: 500;
+    }
+    .discussion .note {
+      border-left: 2px solid var(--hot);
+      padding: 8px 10px 8px 12px;
+      margin-bottom: 10px;
+      background: #fff;
+      font-size: 12px;
+    }
+    .discussion .note-header {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 3px;
+    }
+    .discussion .note-number {
+      background: var(--hot);
+      color: #fff;
+      border-radius: 50%;
+      width: 18px; height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .discussion .note-title { font-size: 12px; color: var(--ink); font-weight: 500; }
+    .discussion .note-body  { color: var(--dim); font-size: 12px; }
+    .discussion .note-body code { background: #f0f0f0; padding: 0 3px; color: var(--ink); }
+    .discussion .note-tag {
+      display: inline-block;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0 5px;
+      margin-left: auto;
+      color: #fff;
+      background: var(--faint);
+    }
+    .discussion .note-tag.smell    { background: var(--maybe); }
+    .discussion .note-tag.question { background: #555; }
+    .discussion .note-tag.insight  { background: #2a6; }
+    .discussion .note-tag.decision { background: #06c; }
+    .discussion .note-tag.bug      { background: var(--bad); }
+
+    .decisions-log h3 {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin: 24px 0 8px;
+      border-top: 1px dashed var(--line-2);
+      padding-top: 12px;
+      font-weight: 500;
+    }
+    .decisions-log .entry {
+      font-size: 11px;
+      color: var(--dim);
+      padding: 4px 0;
+      border-bottom: 1px dotted var(--line-2);
+    }
+    .decisions-log .entry:last-child { border-bottom: none; }
+    .decisions-log .entry strong { color: var(--ink); }
+
+    .meta-footer {
+      padding: 14px 18px;
+      font-size: 11px;
+      color: var(--faint);
+      border-top: 1px solid var(--line-2);
+    }
+    .meta-footer code { background: #f2f2f2; padding: 0 4px; }
+
+    @media (max-width: 1000px) {
+      .layout { grid-template-columns: 1fr; }
+      .left { border-right: none; border-bottom: 1px solid var(--line-2); }
+      .right { border-left: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  wireframe · <a href="./index.html">index</a> · <a href="./actors.html">actors</a> · <a href="./vault-item.html">vault-item</a> · <a href="./projects.html">projects</a> · <a href="./routing.html">routing</a> · <a href="./benchmarks.html">benchmarks</a>
+</div>
+
+<div class="page-title">
+  Skill component <span class="sub">halfway fidelity · fixture: hermes/intake-quality</span>
+</div>
+
+<div class="layout">
+
+  <div class="left">
+    <div class="card">
+
+      <header>
+        <span class="slug">hermes/intake-quality</span>
+        <span class="crumb-sep">·</span>
+        <span class="namespace-tag" style="color: #555; border-color: #999;">hermes (core)</span>
+        <span class="crumb-sep">·</span>
+        <span style="color: var(--ok); font-size: 11px;">active</span>
+        <span class="spacer"></span>
+        <span style="color: var(--faint); font-size: 10px;">synced 19h ago</span>
+        <button class="action">deactivate</button>
+      </header>
+
+      <div class="section">
+        <div class="section-label">
+          Slug &amp; namespacing <span class="dot" data-dot="1">1</span>
+        </div>
+        <div class="field-value"><code>hermes/intake-quality</code></div>
+        <p style="font-size: 11px; color: var(--faint); margin: 4px 0 0;">
+          Format: <code>{project-id}/{skill-name}</code>. Always prefixed. The prefix portion (<code>hermes</code>) must equal <code>source_repo</code> — one source of truth, two representations for ergonomics.
+        </p>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Display name</div>
+        <input class="wire" style="width: 100%;" value="Intake Quality Gatekeeper">
+      </div>
+
+      <div class="section">
+        <div class="section-label">Description</div>
+        <textarea class="wire" style="width: 100%; min-height: 50px;">Reads a vault item's body at intake. Decides whether the content is actionable enough for agent work, or needs pushback to the operator with specific clarifying questions.</textarea>
+      </div>
+
+      <div class="section">
+        <div class="section-label">
+          Prompt <span style="text-transform: none; letter-spacing: 0; color: var(--faint);">(versioned separately)</span>
+          <span class="dot" data-dot="2">2</span>
+        </div>
+        <div class="field-value"><code>prompt_id = pr_intake_quality</code> · current v3 · <a href="#" style="color: #06c;">view prompt →</a></div>
+        <pre class="prompt">[v3 · 2026-04-18 · @marvin]
+
+You are the intake gatekeeper. Read the following vault item body
+and decide whether it is actionable enough to pass to an agent.
+
+If the body is rich enough (clear subject, enough context to act),
+respond {"verdict": "accept"}.
+
+If the body is too sparse (URL-only, fragmentary, or ambiguous intent),
+respond {"verdict": "reject", "questions": [...]} with 1-3 specific
+clarifying questions the operator should answer.
+
+Body: {{body}}
+Project context (if any): {{project.criteria}}</pre>
+      </div>
+
+      <div class="section">
+        <div class="section-label">
+          Model hint <span class="dot" data-dot="3">3</span>
+          <span style="text-transform: none; letter-spacing: 0; color: var(--faint);">(cost-anchored budget)</span>
+        </div>
+        <div class="tier-row">
+          <span class="tier">free · $0</span>
+          <span class="tier active">budget · &lt;$1</span>
+          <span class="tier">standard · $1–10</span>
+          <span class="tier">premium · ≥$10</span>
+        </div>
+        <p style="font-size: 11px; color: var(--faint); margin: 5px 0 0;">
+          Per MTok input cost. Dispatcher matches <code>skill.model_hint</code> against <code>Model.tier</code> — O(1) string equality, no runtime cost comparison. Currently maps to Haiku-class.
+        </p>
+      </div>
+
+      <div class="section">
+        <div class="section-label">
+          Input schema
+          <span style="text-transform: none; letter-spacing: 0; color: var(--faint);">(cached from repo · synced 19h ago)</span>
+          <span class="dot" data-dot="4">4</span>
+        </div>
+        <pre class="schema">{
+  "type": "object",
+  "required": ["body"],
+  "properties": {
+    "body": { "type": "string" },
+    "project": {
+      "type": "object",
+      "properties": { "criteria": { "type": "string" } }
+    }
+  }
+}</pre>
+        <p style="font-size: 10px; color: var(--faint); margin: 4px 0 0;">
+          Source of truth: <code>hermes/skills/intake-quality/input.schema.json</code> in the repo.
+        </p>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Output schema</div>
+        <pre class="schema">{
+  "type": "object",
+  "required": ["verdict"],
+  "properties": {
+    "verdict":   { "enum": ["accept", "reject"] },
+    "questions": { "type": "array", "items": { "type": "string" } }
+  }
+}</pre>
+      </div>
+
+      <div class="section">
+        <div class="section-label">
+          Source repo <span class="dot" data-dot="5">5</span>
+        </div>
+        <div class="field-value"><code>source_repo = hermes</code> → FK to <code>projects</code> table</div>
+        <p style="font-size: 11px; color: var(--faint); margin: 4px 0 0;">
+          Filesystem location (from <code>hermes</code> project's <code>repo_url</code>): <code>hermes/skills/intake-quality/SKILL.md</code>.
+          Slug prefix matches this FK by invariant.
+        </p>
+      </div>
+
+      <div class="section">
+        <div class="section-label">
+          Tools used <span class="dot" data-dot="6">6</span>
+        </div>
+        <div class="tool-list">
+          <div style="color: var(--faint); font-style: italic; font-size: 12px;">none — this is a pure-prompt skill</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">
+          Granted to actors <span class="dot" data-dot="7">7</span>
+          <span style="text-transform: none; letter-spacing: 0; color: var(--faint); font-size: 11px;">(via actor_skills)</span>
+        </div>
+        <div class="grant-list">
+          <div class="g">
+            <span class="actor">@boris</span>
+            <span class="prof preferred">preferred</span>
+            <span style="color: var(--faint); font-size: 10px;">hosted · anthropic · picks Haiku</span>
+          </div>
+          <div class="g">
+            <span class="actor">@jimbo</span>
+            <span class="prof capable">capable</span>
+            <span style="color: var(--faint); font-size: 10px;">orchestrator · fallback when boris busy</span>
+          </div>
+          <div class="g">
+            <span class="actor" style="color: var(--faint);">@ralph</span>
+            <span class="prof experimental">experimental</span>
+            <span style="color: var(--faint); font-size: 10px;">local-7b — could it handle classification? worth benchmarking</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="inline-row">
+          <div class="pair">
+            <span class="k">Created</span>
+            <span class="field-value">2026-03-10 <span style="color: var(--faint);">(45d ago)</span></span>
+          </div>
+          <div class="pair">
+            <span class="k">Last invoked</span>
+            <span class="field-value">19h ago <span style="color: var(--faint);">(derived)</span></span>
+          </div>
+          <div class="pair">
+            <span class="k">Invocations (30d)</span>
+            <span class="field-value">47</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <aside class="right discussion">
+    <h2>Discussion · Questions · Issues</h2>
+
+    <div class="note">
+      <div class="note-header">
+        <span class="note-number">1</span>
+        <span class="note-title">Slug-prefix namespacing · slash separator</span>
+        <span class="note-tag decision">decision</span>
+      </div>
+      <div class="note-body">
+        Format: <code>{project-id}/{skill-name}</code>. Always prefixed — no "bare = global" shortcut. Every skill belongs to exactly one project; the core project is named <code>hermes</code>.
+        <br><br>
+        Slash (not dot) because: (a) OpenRouter model IDs already use slash — consistent, (b) maps directly to filesystem at <code>hermes/skills/intake-quality/</code>, (c) standard for namespaced resources (Docker tags, OCI, URL paths).
+        <br><br>
+        <strong>One level only.</strong> <code>skillNamespace()</code> splits on first slash. Sub-grouping (<code>localshout/scraping/event-qualifier</code>) isn't supported. If a project grows that complex, spin a sub-project.
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="note-header">
+        <span class="note-number">2</span>
+        <span class="note-title">Skill version vs prompt version — deferred with tradeoffs clarified</span>
+        <span class="note-tag question">question</span>
+      </div>
+      <div class="note-body">
+        Prompts are versioned (<code>prompt_versions</code>). Skills reference the <em>current</em> prompt version by id. If the prompt's wording evolves (v2 → v3), the skill's behaviour changes but the <em>contract</em> (schemas) doesn't.
+        <br><br>
+        <strong>Open question only fires when the contract itself changes</strong> — e.g. input_schema gains a required field. Two paths:
+        <br><br>
+        <strong>(a) New slug on breaking change</strong> — <code>hermes/intake-quality-v2</code> is a separate Skill row.
+        <br>✓ Simpler structure — no extra tables.
+        <br>✓ Old callers keep working on the old slug until migrated.
+        <br>✗ Catalogue bloats: after 5 evolutions you have 5 slugs for "the same thing".
+        <br>✗ Benchmark history fragmented — each variant has its own history.
+        <br>✗ <code>actor_skills</code> must be re-granted for every new variant.
+        <br><br>
+        <strong>(b) Version the skill itself</strong> — add <code>skill_versions</code> table. Skill row points at <code>current_version_id</code>; schemas and prompt_id move onto the version row.
+        <br>✓ Catalogue stays clean — one row per skill concept.
+        <br>✓ Actor grants + benchmark history attach to the skill, not the variant.
+        <br>✓ Callers can pin to a specific version.
+        <br>✗ Extra table, extra complexity.
+        <br>✗ Mirrors prompt versioning, but skills version less often — the overhead/benefit ratio is worse.
+        <br><br>
+        <strong>We don't have to decide now.</strong> No schema has actually broken yet. Deferred to whiteboard with both options documented. Revisit when the first skill's schema actually changes breaking — likely months away.
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="note-header">
+        <span class="note-number">3</span>
+        <span class="note-title">Model tier — reusing existing enum · OpenRouter-inspired</span>
+        <span class="note-tag decision">decision</span>
+      </div>
+      <div class="note-body">
+        Dropped <code>-class</code> suffix. <code>model_hint</code> now uses the existing <code>ModelTier</code> from <code>features/models/utils/model.types.ts</code>: <code>free | fast | balanced | powerful</code>. Mapping against current actors:
+        <br>• <code>free</code> → Ralph (local qwen, no token cost)
+        <br>• <code>fast</code> → Boris on Haiku (cheap hosted, quick)
+        <br>• <code>balanced</code> → Boris on Sonnet (default hosted)
+        <br>• <code>powerful</code> → Boris on Opus (heavy reasoning)
+        <br><br>
+        <strong>OpenRouter inspiration.</strong> OpenRouter doesn't have tiers — they expose raw specs (params, price, context, modality) and let filters pick. We keep coarse 4-tier for now because operator-facing routing decisions don't benefit from finer granularity. When we need it, we can add richer fields (<code>min_params</code>, <code>max_cost_per_run</code>, etc.) — no migration needed, just additive columns.
+        <br><br>
+        <strong>Capabilities</strong> (vision, long-context, tool-calling) remain separate from tier — deferred to <code>capabilities: string[]</code> when first needed (whiteboard row 47).
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="note-header">
+        <span class="note-number">4</span>
+        <span class="note-title">Repo is source of truth · cache displayed clearly</span>
+        <span class="note-tag decision">decision</span>
+      </div>
+      <div class="note-body">
+        Source of truth lives in the repo at <code>{project.repo_url}/skills/{name}/*</code>. The dashboard stores a cache for fast reads. UI exposes the cache nature explicitly:
+        <br><br>
+        • <code>last_indexed_at</code> field on every skill row
+        <br>• "synced 19h ago" badge in the header and next to schema blocks
+        <br>• Unreachable repos surface as "last successful sync 3d ago — check <code>repo_url</code>"
+        <br>• Stale rows (say, &gt;24h) get a soft yellow flag
+        <br><br>
+        <strong>Editing model:</strong> operators don't edit skills in the dashboard. To change a skill, edit the files in the repo and re-index. Dashboard's role is read/observe, not write.
+        <br><br>
+        The form fields visible in this prototype are therefore slightly misleading — they'd be read-only in production. Flagging now so we get the UI right when implementing.
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="note-header">
+        <span class="note-number">5</span>
+        <span class="note-title"><code>source_repo</code> — FK to Project, not free-text</span>
+        <span class="note-tag decision">decision</span>
+      </div>
+      <div class="note-body">
+        Changed from <code>string</code> to <code>ProjectId</code>. Joins come for free. Slug prefix + FK must match — enforced at write time. Two representations of the same fact, each serving a purpose: prefix for uniqueness + readability, FK for joins.
+        <br><br>
+        Invariant: <code>skillNamespace(id) === source_repo</code>. Anything else is a data-integrity bug.
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="note-header">
+        <span class="note-number">6</span>
+        <span class="note-title">Pure-prompt vs tool-using skills</span>
+        <span class="note-tag insight">insight</span>
+      </div>
+      <div class="note-body">
+        <code>intake-quality</code> uses no tools — pure prompt → verdict.
+        <br><br>
+        Compare to <code>extract-events-from-html</code> (shown in related): <code>prompt_id = null</code>, no LLM, deterministic parser. Or <code>fetch-url</code>: <code>prompt_id = null</code> but uses a web-fetch tool.
+        <br><br>
+        <strong>Three shapes of skill:</strong>
+        <br>• <em>Pure prompt:</em> <code>prompt_id</code> set, no tools, LLM does the work
+        <br>• <em>Tool-augmented prompt:</em> <code>prompt_id</code> set + tools declared, LLM uses tools mid-reasoning
+        <br>• <em>Deterministic code:</em> <code>prompt_id = null</code>, tools optional, no LLM invocation — just runs
+        <br><br>
+        Current shape supports all three. Good.
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="note-header">
+        <span class="note-number">7</span>
+        <span class="note-title">Deactivation cascade behaviour</span>
+        <span class="note-tag question">question</span>
+      </div>
+      <div class="note-body">
+        If <code>is_active = false</code> on a skill, what happens to the <code>actor_skills</code> rows referencing it?
+        <br><br>
+        Options:
+        <br>• <strong>Preserve</strong>: junction rows stay; skill just drops out of routing. Reactivation is one field flip.
+        <br>• <strong>Cascade delete</strong>: junction rows disappear; reactivating a skill requires re-granting to actors.
+        <br><br>
+        Lean: <strong>preserve</strong>. Deactivating a skill should be reversible without losing operator intent about which actors were trusted. The dispatcher already filters by skill.is_active when picking; junction presence is harmless.
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<div class="meta-footer">
+  Reflects <code>domain/skills/skill.ts</code> + <code>skill-tool.ts</code>. Legacy stub at <code>features/skills/utils/skill.types.ts</code> coexists until implementation subagent migrates it.
+</div>
+
+</body>
+</html>

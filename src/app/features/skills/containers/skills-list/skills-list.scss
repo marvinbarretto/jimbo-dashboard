@@ -1,6 +1,16 @@
 .inactive td { opacity: 0.45; }
 
-.row-actions {
+.ns-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.skill-local-name {
+  font-weight: 500;
+}
+
+.actions {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;

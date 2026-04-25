@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Wireframe · Thread · #1892</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --ink:     #222;
+      --dim:     #666;
+      --faint:   #999;
+      --bg:      #fff;
+      --panel:   #fafafa;
+      --line:    #cfcfcf;
+      --line-2:  #e6e6e6;
+      --hot:     #d96520;
+      --ok:      #3b7a3b;
+      --bad:     #a33;
+      --maybe:   #8a6d00;
+      --agent:   #4a6a8a;
+      --human:   var(--hot);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: var(--ink);
+      background: var(--bg);
+    }
+    .nav { font-size: 11px; color: var(--faint); padding: 10px 18px; border-bottom: 1px solid var(--line-2); }
+    .nav a { color: #06c; text-decoration: none; }
+
+    .page-title { padding: 14px 18px 6px; font-size: 14px; }
+    .page-title .sub { color: var(--faint); font-size: 11px; margin-left: 8px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 420px;
+      gap: 0;
+      border-top: 1px solid var(--line-2);
+    }
+    .left { padding: 18px; border-right: 1px solid var(--line-2); min-width: 0; }
+    .right { padding: 18px; background: var(--panel); border-left: 1px solid var(--line-2); }
+
+    .card {
+      border: 1px solid var(--line);
+      background: var(--bg);
+      max-width: 680px;
+    }
+    .card > header {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--line-2);
+      background: #f3f3f3;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .card > header .ctx {
+      color: var(--dim);
+      font-size: 11px;
+    }
+    .card > header h2 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .card > header .spacer { flex: 1; }
+    .card > header .summary { font-size: 11px; color: var(--dim); }
+    .card > header .summary strong { color: var(--ink); }
+
+    /* --- composer --------------------------------------------------- */
+    .composer {
+      border-top: 1px solid var(--line-2);
+      padding: 10px 12px;
+      background: #fafafa;
+    }
+    .composer .kind-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+      align-items: center;
+    }
+    .composer .kind-row .lbl {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--faint);
+    }
+    .composer .kind-btn {
+      font: inherit;
+      font-size: 11px;
+      padding: 2px 9px;
+      border: 1px solid var(--line);
+      background: #fff;
+      cursor: pointer;
+    }
+    .composer .kind-btn.selected {
+      border-color: var(--hot);
+      color: var(--hot);
+      background: #fff6ee;
+    }
+    .composer textarea {
+      width: 100%;
+      font: inherit;
+      font-size: 12px;
+      border: 1px solid var(--line);
+      padding: 6px 8px;
+      min-height: 50px;
+      background: #fff;
+    }
+    .composer .post-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+      align-items: center;
+    }
+    .composer .post-row button {
+      font: inherit;
+      font-size: 11px;
+      padding: 4px 12px;
+      border: 1px solid var(--hot);
+      background: #fff;
+      color: var(--hot);
+      cursor: pointer;
+    }
+    .composer .hint { font-size: 10px; color: var(--faint); margin-left: auto; }
+
+    /* --- messages --------------------------------------------------- */
+    .messages {
+      padding: 6px 12px;
+    }
+    .msg {
+      border-left: 3px solid var(--line);
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      background: #fff;
+      position: relative;
+    }
+    .msg.kind-comment  { border-left-color: var(--faint); }
+    .msg.kind-question { border-left-color: var(--maybe); }
+    .msg.kind-answer   { border-left-color: var(--ok); }
+
+    .msg header {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-size: 11px;
+    }
+    .msg .author { font-weight: 500; }
+    .msg .author.agent { color: var(--agent); }
+    .msg .author.human { color: var(--human); }
+    .msg .kind-tag {
+      font-size: 9px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 1px 6px;
+      border: 1px solid var(--line);
+      color: var(--dim);
+    }
+    .msg.kind-question .kind-tag { color: var(--maybe); border-color: var(--maybe); }
+    .msg.kind-answer   .kind-tag { color: var(--ok); border-color: var(--ok); }
+
+    .msg .when { color: var(--faint); font-size: 10px; margin-left: auto; }
+    .msg .id   { color: var(--faint); font-size: 10px; font-family: inherit; }
+
+    .msg .body {
+      color: var(--ink);
+      font-size: 12.5px;
+      margin: 4px 0 0;
+    }
+
+    .msg .resolved-pill {
+      display: inline-block;
+      font-size: 9px;
+      padding: 1px 6px;
+      border: 1px solid var(--ok);
+      color: var(--ok);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .msg .open-pill {
+      display: inline-block;
+      font-size: 9px;
+      padding: 1px 6px;
+      border: 1px solid var(--maybe);
+      color: var(--maybe);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* Answer nested under its question */
+    .msg.kind-answer.nested {
+      margin-left: 24px;
+      margin-top: -4px;
+      border-left-width: 2px;
+      background: #f9fcf9;
+    }
+    .msg.kind-answer.nested::before {
+      content: '↳';
+      position: absolute;
+      left: -14px;
+      top: 8px;
+      color: var(--ok);
+      font-size: 14px;
+    }
+
+    .msg .reply-hint {
+      font-size: 10px;
+      color: var(--faint);
+      margin-top: 6px;
+    }
+    .msg .reply-hint a { color: var(--ok); cursor: pointer; }
+
+    /* --- dots + discussion (shared with other prototypes) ----------- */
+    .dot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--hot);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 600;
+      vertical-align: middle;
+      margin-left: 6px;
+    }
+    .dot.inline { margin: 0 4px; }
+
+    .discussion h2 {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin: 0 0 10px;
+      font-weight: 500;
+    }
+    .discussion .note {
+      border-left: 2px solid var(--hot);
+      padding: 8px 10px 8px 12px;
+      margin-bottom: 10px;
+      background: #fff;
+      font-size: 12px;
+    }
+    .discussion .note-header {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 3px;
+    }
+    .discussion .note-number {
+      background: var(--hot);
+      color: #fff;
+      border-radius: 50%;
+      width: 18px; height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .discussion .note-title { font-size: 12px; color: var(--ink); font-weight: 500; }
+    .discussion .note-body  { color: var(--dim); font-size: 12px; }
+    .discussion .note-body code { background: #f0f0f0; padding: 0 3px; color: var(--ink); }
+    .discussion .note-tag {
+      display: inline-block;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0 5px;
+      margin-left: auto;
+      color: #fff;
+      background: var(--faint);
+    }
+    .discussion .note-tag.question { background: #555; }
+    .discussion .note-tag.insight  { background: #2a6; }
+    .discussion .note-tag.decision { background: #06c; }
+    .discussion .note-tag.smell    { background: var(--maybe); }
+
+    .meta-footer {
+      padding: 14px 18px;
+      font-size: 11px;
+      color: var(--faint);
+      border-top: 1px solid var(--line-2);
+    }
+    .meta-footer code { background: #f2f2f2; padding: 0 4px; }
+
+    @media (max-width: 1000px) {
+      .layout { grid-template-columns: 1fr; }
+      .left { border-right: none; border-bottom: 1px solid var(--line-2); }
+      .right { border-left: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  wireframe · <a href="./index.html">index</a> · <a href="./actors.html">actors</a> · <a href="./vault-item.html">vault-item</a> · <a href="./projects.html">projects</a> · <a href="./skill.html">skill</a>
+</div>
+
+<div class="page-title">
+  Thread component <span class="sub">halfway fidelity · fixture: #1892 · discussion after <code>hermes/intake-quality</code> ran</span>
+</div>
+
+<div class="layout">
+
+  <div class="left">
+    <div class="card">
+
+      <header>
+        <span class="ctx">vault item</span>
+        <h2>#1892 · Found a potential new source for LocalShout…</h2>
+        <span class="spacer"></span>
+        <span class="summary">
+          <strong>6</strong> messages ·
+          <strong style="color: var(--maybe);">2 open questions</strong>
+        </span>
+      </header>
+
+      <div class="messages">
+
+        <div class="msg kind-comment" data-dot-anchor="1">
+          <header>
+            <span class="author agent">@jimbo</span>
+            <span class="kind-tag">comment</span>
+            <span class="id">m_01</span>
+            <span class="when">2d ago</span>
+          </header>
+          <div class="body">
+            <code>hermes/intake-quality</code> gatekeeper ran against this item. Verdict: <strong>reject — not actionable</strong>. Body is a bare URL + hashtag. I've posted 3 clarifying questions below. Answer them and I'll re-run the skill.
+          </div>
+        </div>
+
+        <div class="msg kind-question" data-dot-anchor="2">
+          <header>
+            <span class="author agent">@jimbo</span>
+            <span class="kind-tag">question</span>
+            <span class="id">m_02</span>
+            <span class="open-pill">open</span>
+            <span class="when">2d ago</span>
+          </header>
+          <div class="body">
+            Which coverage tier does creativehertfordshire.com fall into?
+            <br><em style="color: var(--dim);">(tier 1: Hertford/St Albans/Watford · tier 2: Hitchin/Welwyn/Stevenage · tier 3: elsewhere)</em>
+          </div>
+          <div class="reply-hint"><a>+ answer this question</a></div>
+        </div>
+
+        <div class="msg kind-question">
+          <header>
+            <span class="author agent">@jimbo</span>
+            <span class="kind-tag">question</span>
+            <span class="id">m_03</span>
+            <span class="resolved-pill">resolved</span>
+            <span class="when">2d ago</span>
+          </header>
+          <div class="body">
+            Should we scrape all events from the listing, or filter to specific categories (music / arts / community)?
+          </div>
+        </div>
+
+        <div class="msg kind-answer nested" data-dot-anchor="3">
+          <header>
+            <span class="author human">@marvin</span>
+            <span class="kind-tag">answer</span>
+            <span class="id">m_04</span>
+            <span style="color: var(--faint); font-size: 10px;">↳ replying to m_03</span>
+            <span class="when">23h ago</span>
+          </header>
+          <div class="body">
+            All of them. Let the relevance-classifier filter downstream — we want visibility into what's being rejected.
+          </div>
+        </div>
+
+        <div class="msg kind-question">
+          <header>
+            <span class="author agent">@jimbo</span>
+            <span class="kind-tag">question</span>
+            <span class="id">m_05</span>
+            <span class="open-pill">open</span>
+            <span class="when">2d ago</span>
+          </header>
+          <div class="body">
+            Do you want this to spawn a child vault item per qualifying event, or batch-dispatch a single ticket summarising the haul?
+          </div>
+          <div class="reply-hint"><a>+ answer this question</a></div>
+        </div>
+
+        <div class="msg kind-comment" data-dot-anchor="4">
+          <header>
+            <span class="author agent">@boris</span>
+            <span class="kind-tag">comment</span>
+            <span class="id">m_06</span>
+            <span class="when">19h ago</span>
+          </header>
+          <div class="body">
+            Noting for context: once m_02 and m_05 are answered, I'll draft acceptance criteria incorporating the coverage tier + decomposition strategy. Standing by.
+          </div>
+        </div>
+
+        <div class="msg kind-comment" data-dot-anchor="6">
+          <header>
+            <span class="author human">@marvin</span>
+            <span class="kind-tag">comment</span>
+            <span class="id">m_07</span>
+            <span class="when">2h ago</span>
+          </header>
+          <div class="body">
+            Here's what the current listing looks like — filters on the right are what determine "qualifying events". We want our agent to read this.
+          </div>
+          <div style="margin-top: 6px; padding: 8px; background: #fafafa; border: 1px dashed var(--line); font-size: 11px;">
+            <div style="color: var(--faint); margin-bottom: 4px;">
+              📎 <strong style="color: var(--ink);">screenshot-creativehertfordshire.png</strong> · 212 KB · image/png
+            </div>
+            <div style="background: #e6e6e6; padding: 20px; text-align: center; color: var(--faint); font-size: 11px;">
+              [ image placeholder · 800×520 · hosted at <code>jimbo-api/attachments/a_091.png</code> ]
+            </div>
+            <div style="color: var(--faint); font-size: 10px; margin-top: 4px;">
+              caption: "source listing with category filters visible"
+            </div>
+          </div>
+        </div>
+
+        <div class="msg kind-comment">
+          <header>
+            <span class="author agent">@boris</span>
+            <span class="kind-tag">comment</span>
+            <span class="id">m_08</span>
+            <span class="when">1h ago</span>
+          </header>
+          <div class="body">
+            Screenshot received. I can see the filter options (music / arts / community / workshops / talks). Per m_04 we ignore these and let the classifier do the work — confirmed.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="composer" data-dot-anchor="5">
+        <div class="kind-row">
+          <span class="lbl">Post as</span>
+          <button class="kind-btn selected">comment</button>
+          <button class="kind-btn">question</button>
+          <button class="kind-btn">answer</button>
+          <span class="lbl" style="margin-left: 8px;">in reply to</span>
+          <select style="font: inherit; font-size: 11px; padding: 2px 6px; border: 1px solid var(--line);">
+            <option>— none —</option>
+            <option>m_02 · question</option>
+            <option>m_05 · question</option>
+          </select>
+        </div>
+        <textarea placeholder="write your message…"></textarea>
+        <div style="margin-top: 4px; padding: 4px 8px; border: 1px dashed var(--line); background: #fafafa; font-size: 11px; color: var(--faint);">
+          📎 drag images / files here <span style="margin-left: 4px; color: var(--faint);">— stored on jimbo-api, linked via <code>Attachment</code> rows</span>
+        </div>
+        <div class="post-row">
+          <button>post message</button>
+          <span class="hint">posts 1 ThreadMessage + N Attachments + 1 activity event</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <aside class="right discussion">
+    <h2>Discussion · Questions · Issues</h2>
+
+    <div class="note">
+      <div class="note-header">
+        <span class="note-number">1</span>
+        <span class="note-title">Three kinds: comment / question / answer</span>
+        <span class="note-tag decision">decision</span>
+      </div>
+      <div class="note-body">
+        <code>comment</code> for unstructured back-and-forth, <code>question</code> for things that expect an answer and block until they get one, <code>answer</code> for resolutions that point at a specific question via <code>in_reply_to</code>.
+        <br><br>
+        Three is deliberately the ceiling. Adding <code>result</code> for agent skill-output was considered and rejected — agent results are structured enough to deserve their own activity event type (<code>skill_invoked</code>, future), not a conversational message kind.
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="note-header">
+        <span class="note-number">2</span>
+        <span class="note-title">Open questions block dispatch</span>
+        <span class="note-tag insight">insight</span>
+      </div>
+      <div class="note-body">
+        The two <code>open</code>-pilled questions each add a failing readiness check (<code>open_questions</code>) — until resolved, the item can't move to <code>ready</code>. Readiness only surfaces this check when questions exist; items that never went through intake-quality don't see it.
+        <br><br>
+        This is what gives the gatekeeper teeth. The skill produces questions; the questions become dispatch-blockers via the existing readiness machinery. No new state machine needed.
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="note-header">
+        <span class="note-number">3</span>
+        <span class="note-title">Answer ↔ Question via <code>in_reply_to</code> + <code>answered_by</code></span>
+        <span class="note-tag decision">decision</span>
+      </div>
+      <div class="note-body">
+        Both pointers exist because they serve different reads:
+        <br>• <code>answer.in_reply_to = question_id</code> — "this answer addresses that question"
+        <br>• <code>question.answered_by = answer_id</code> — "this question is resolved by that answer"
+        <br><br>
+        Redundant? A little. But querying "is this question resolved?" via a single field on the question row is cheap. Querying "what did this answer answer?" via a single field on the answer row is cheap. Without both, one direction requires a JOIN.
+        <br><br>
+        Mutation: when an answer is posted with <code>in_reply_to = question_id</code>, the system sets <code>question.answered_by = answer_id</code> in the same transaction. The two stay consistent.
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="note-header">
+        <span class="note-number">4</span>
+        <span class="note-title">Agents posting — free-form content, structured behaviour</span>
+        <span class="note-tag insight">insight</span>
+      </div>
+      <div class="note-body">
+        Agents (jimbo, boris, ralph) post messages the same way humans do — <code>kind</code> + <code>body</code>. The distinction is in <em>author</em>, not <em>message shape</em>. Boris's "standing by" comment is structurally identical to a marvin comment.
+        <br><br>
+        What this enables: a "skill run completed" agent comment can be written by the agent after finishing work, and it reads naturally in the conversation. No separate "agent output" entity needed for MVP.
+        <br><br>
+        If agent output ever gets structured enough to deserve its own shape (e.g. tool-calling traces), that becomes a dedicated activity event (<code>skill_invoked</code>), not a new message kind.
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="note-header">
+        <span class="note-number">5</span>
+        <span class="note-title">Composer — two or three writes per post</span>
+        <span class="note-tag decision">decision</span>
+      </div>
+      <div class="note-body">
+        One operator action ("post message") writes:
+        <br>1. <code>thread_messages</code> — the content
+        <br>2. <code>activity_events</code> — the audit fact (<code>thread_message_posted</code> with <code>message_id</code> pointer)
+        <br>3. <code>attachments</code> × N — one row per attached image/file (if any)
+        <br><br>
+        All in the same transaction. Keeps P6 intact (every mutation produces an event). Activity timeline shows "who posted what kind"; Thread view shows the full body + any attachments.
+        <br><br>
+        Denormalising <code>message_kind</code> onto the event row lets "activity timeline" views render without a JOIN to thread_messages — useful for the Stream surface.
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="note-header">
+        <span class="note-number">6</span>
+        <span class="note-title">Attachments — attached to messages, not items</span>
+        <span class="note-tag decision">decision</span>
+      </div>
+      <div class="note-body">
+        <code>Attachment</code> is a separate entity with an FK to <code>ThreadMessage</code>. Single home avoids polymorphic columns (attach-to-item vs attach-to-message). VaultItem-level "attachments" are thread messages posted at creation — intake comment with a screenshot.
+        <br><br>
+        <strong>Two workflows this enables:</strong>
+        <br>• <em>Operator drags an image into thread</em> — browser uploads to jimbo-api, gets URL, POSTs an <code>Attachment</code> record linked to the composing message.
+        <br>• <em>Agent takes a screenshot via Playwright</em> — agent runs the browser, captures, uploads to jimbo-api, posts a thread message with the Attachment linked.
+        <br><br>
+        <strong>External refs stay inline.</strong> A GitHub PR link is a URL in the message body, not an attachment. Attachments are for bytes we host; pointers to external artefacts are prose.
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="note-header">
+        <span class="note-number">—</span>
+        <span class="note-title">Resolved / dropped in this pass</span>
+        <span class="note-tag decision">resolved</span>
+      </div>
+      <div class="note-body">
+        <strong>Killed</strong> <code>NoteAddedEvent</code> on ActivityEvent. Replaced by <code>ThreadMessagePostedEvent</code>. Existing fixtures must migrate.
+        <br><br>
+        <strong>Deferred:</strong> mentions (<code>@actor</code> parsing), reactions, attachments, deeper threading. Body is plain text for MVP; operator can <code>@jimbo</code>-style mention by convention, parsing comes when routing on mentions matters.
+        <br><br>
+        <strong>Deferred:</strong> message editing. Messages are immutable by design. If the operator writes something wrong, post a correction message. Keeps audit trail clean.
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<div class="meta-footer">
+  Reflects <code>domain/thread/thread-message.ts</code> + <code>domain/activity/activity-event.ts</code> (updated to swap <code>note_added</code> → <code>thread_message_posted</code>) + <code>domain/vault/readiness.ts</code> (conditional <code>open_questions</code> check).
+</div>
+
+</body>
+</html>

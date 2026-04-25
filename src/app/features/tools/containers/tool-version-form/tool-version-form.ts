@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { ToolsService } from '../../data-access/tools.service';
+import { toolId as brandToolId } from '../../../../domain/ids';
 
 @Component({
   selector: 'app-tool-version-form',
@@ -47,7 +48,7 @@ export class ToolVersionForm {
     };
 
     this.service.createVersion({
-      tool_id:           id,
+      tool_id:           brandToolId(id),
       description:       v.description,
       input_schema:      parseJson(v.input_schema),
       output_schema:     parseJson(v.output_schema),

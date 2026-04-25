@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Prototype · Routing / Dispatcher</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg:          #0f1013;
+      --bg-elev:     #16181d;
+      --bg-elev-2:   #1c1f26;
+      --border:      #2a2d35;
+      --border-soft: #23262d;
+      --text:        #d7d9de;
+      --text-dim:    #8b8f98;
+      --text-faint:  #5a5e67;
+      --accent:      #ff8c42;
+      --green:       #7cc87c;
+      --yellow:      #e6c068;
+      --red:         #e06b6b;
+      --blue:        #6ba9e0;
+
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.5; }
+    a { color: var(--accent); text-decoration: none; }
+
+    header.page {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      gap: 20px;
+    }
+    header.page h1 {
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin: 0;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    header.page .summary { color: var(--text-dim); font-size: 12px; }
+    header.page .summary strong { color: var(--text); font-weight: 500; }
+    header.page .crumbs { margin-left: auto; color: var(--text-faint); font-size: 11px; }
+
+    main { padding: 20px 24px; max-width: 1280px; }
+
+    .panel {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      margin-bottom: 20px;
+    }
+    .panel > header {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-soft);
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .panel > header h2 {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0;
+      font-weight: 500;
+    }
+    .panel > header .hint { color: var(--text-faint); font-size: 11px; }
+    .panel .body { padding: 14px 16px; }
+
+    /* --- simulator ------------------------------------------------------ */
+    .simulator-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .simulator-row label { color: var(--text-faint); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+    .simulator-row select, .simulator-row input {
+      background: var(--bg-elev-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 2px;
+      min-width: 220px;
+    }
+
+    .decision-trail { margin-top: 10px; }
+    .step {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 14px;
+      padding: 10px 0;
+      border-bottom: 1px dashed var(--border-soft);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-label {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+    .step-body { color: var(--text-dim); font-size: 12px; }
+    .step-body code {
+      color: var(--accent);
+      background: var(--bg-elev-2);
+      padding: 1px 6px;
+      border-radius: 2px;
+    }
+    .step.picked .step-label { color: var(--green); }
+    .step.picked .step-body strong { color: var(--green); }
+    .step.unrouted .step-label { color: var(--red); }
+    .step.unrouted .step-body strong { color: var(--red); }
+
+    /* --- capability matrix --------------------------------------------- */
+    .matrix {
+      overflow-x: auto;
+    }
+    table.matrix-table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 11px;
+    }
+    table.matrix-table th, table.matrix-table td {
+      border: 1px solid var(--border-soft);
+      padding: 6px 8px;
+      text-align: center;
+    }
+    table.matrix-table th {
+      background: var(--bg-elev-2);
+      color: var(--text-dim);
+      font-weight: 400;
+      letter-spacing: 0.04em;
+    }
+    table.matrix-table th.actor-col {
+      text-align: left;
+      color: var(--text);
+      min-width: 140px;
+    }
+    table.matrix-table td.actor-cell {
+      text-align: left;
+      color: var(--text);
+      background: var(--bg-elev-2);
+    }
+    table.matrix-table td.actor-cell .kind {
+      display: block;
+      font-size: 10px;
+      color: var(--text-faint);
+      margin-top: 2px;
+    }
+    td.pref-preferred    { background: rgba(255,140,66,0.18); color: var(--accent); font-weight: 500; }
+    td.pref-capable      { background: rgba(139,143,152,0.10); color: var(--text-dim); }
+    td.pref-experimental { background: rgba(139,143,152,0.05); color: var(--text-faint); font-style: italic; }
+    td.pref-none         { color: var(--text-faint); }
+
+    /* --- routing summary ----------------------------------------------- */
+    .summary-list {
+      display: grid;
+      grid-template-columns: 200px 60px 1fr 1fr;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-soft);
+      font-size: 12px;
+      align-items: center;
+    }
+    .summary-list.head {
+      color: var(--text-faint);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .summary-list:last-child { border-bottom: none; }
+    .summary-list .skill-id { color: var(--text); }
+    .summary-list .arrow { color: var(--text-faint); text-align: center; }
+    .summary-list .pool { color: var(--text-dim); }
+    .summary-list .pick { color: var(--green); }
+    .summary-list.unrouted .pick { color: var(--red); }
+    .summary-list .pick-proficiency { color: var(--text-faint); margin-left: 6px; }
+
+    .pill {
+      display: inline-block;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .pill.preferred    { border-color: var(--accent); color: var(--accent); }
+    .pill.capable      { border-color: var(--border); color: var(--text-dim); }
+    .pill.experimental { border-color: var(--border-soft); color: var(--text-faint); border-style: dashed; }
+
+    footer.notes {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--text-faint);
+      font-size: 11px;
+    }
+    footer.notes code {
+      background: var(--bg-elev);
+      padding: 1px 5px;
+      border-radius: 2px;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+
+<header class="page">
+  <h1>Routing · Dispatcher</h1>
+  <span class="summary">
+    simulating: <strong>who picks whom, and why</strong>
+  </span>
+  <span class="crumbs">
+    <a href="./actors.html">← actors</a>
+  </span>
+</header>
+
+<main>
+  <section class="panel">
+    <header>
+      <h2>Simulator</h2>
+      <span class="hint">pick a skill, see the dispatcher's decision trail</span>
+    </header>
+    <div class="body">
+      <div class="simulator-row">
+        <label for="skill-select">skill</label>
+        <select id="skill-select"></select>
+        <span id="skill-count" style="color: var(--text-faint); font-size: 11px;"></span>
+      </div>
+      <div class="decision-trail" id="decision-trail"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <header>
+      <h2>Capability Matrix</h2>
+      <span class="hint">actors × skills. each cell = proficiency, or empty for not eligible.</span>
+    </header>
+    <div class="body matrix">
+      <table class="matrix-table" id="matrix-table"></table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <header>
+      <h2>All Skills · Routing Summary</h2>
+      <span class="hint">one row per skill — who'd be picked right now</span>
+    </header>
+    <div class="body">
+      <div id="routing-summary"></div>
+    </div>
+  </section>
+
+  <footer class="notes">
+    Prototype of the <strong>dispatcher</strong> concern — a separate layer that sits on top of <code>actors</code> + <code>actor_skills</code>. Skills don't know where they route. Actors don't know what they'll be picked for. Only this layer knows both.
+    Shapes sourced from <code>src/app/domain/actors/fixtures.ts</code>.
+  </footer>
+</main>
+
+<script>
+  // --- fixtures (mirror of domain/actors/fixtures.ts) --------------------
+  const ACTORS = [
+    { id: 'marvin', display_name: 'Marvin', kind: 'human', runtime: null,        is_active: true },
+    { id: 'ralph',  display_name: 'Ralph',  kind: 'agent', runtime: 'ollama',    is_active: true },
+    { id: 'boris',  display_name: 'Boris',  kind: 'agent', runtime: 'anthropic', is_active: true },
+    { id: 'jimbo',  display_name: 'Jimbo',  kind: 'agent', runtime: 'hermes',    is_active: true },
+  ];
+
+  const ACTOR_SKILLS = [
+    { actor_id: 'ralph',  skill_id: 'classifier',              proficiency: 'preferred'    },
+    { actor_id: 'ralph',  skill_id: 'strict-ac-builder',       proficiency: 'capable'      },
+    { actor_id: 'ralph',  skill_id: 'subticket-spawner',       proficiency: 'experimental' },
+    { actor_id: 'boris',  skill_id: 'strict-ac-builder',       proficiency: 'preferred'    },
+    { actor_id: 'boris',  skill_id: 'decomposer',              proficiency: 'preferred'    },
+    { actor_id: 'boris',  skill_id: 'analysis',                proficiency: 'preferred'    },
+    { actor_id: 'jimbo',  skill_id: 'ceremony-orchestration',  proficiency: 'preferred'    },
+    { actor_id: 'jimbo',  skill_id: 'triage',                  proficiency: 'preferred'    },
+    { actor_id: 'marvin', skill_id: 'final-approval',          proficiency: 'preferred'    },
+  ];
+
+  // Discoverable from the junction; plus one intentional orphan to test the unrouted path.
+  const ALL_SKILLS = [
+    ...new Set(ACTOR_SKILLS.map(s => s.skill_id)),
+    'unknown-skill',
+  ];
+
+  const PROFICIENCY_ORDER = { preferred: 0, capable: 1, experimental: 2 };
+
+  // --- dispatcher (the ONE place that knows both sides) ------------------
+  function dispatch(skillId) {
+    const pool = ACTOR_SKILLS
+      .filter(s => s.skill_id === skillId)
+      .map(s => ({ ...s, actor: ACTORS.find(a => a.id === s.actor_id) }))
+      .filter(s => s.actor && s.actor.is_active)
+      .sort((a, b) => PROFICIENCY_ORDER[a.proficiency] - PROFICIENCY_ORDER[b.proficiency]);
+
+    return {
+      skill: skillId,
+      pool,
+      picked: pool[0] || null,
+    };
+  }
+
+  // --- simulator UI ------------------------------------------------------
+  const select = document.getElementById('skill-select');
+  for (const s of ALL_SKILLS) {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    select.appendChild(opt);
+  }
+
+  function renderSimulator() {
+    const result = dispatch(select.value);
+    const trail = document.getElementById('decision-trail');
+    const countEl = document.getElementById('skill-count');
+    countEl.textContent = `${result.pool.length} eligible actor${result.pool.length === 1 ? '' : 's'}`;
+
+    const steps = [];
+
+    steps.push({
+      label: 'query',
+      body: `find rows where <code>skill_id = '${result.skill}'</code> in <code>actor_skills</code>`,
+    });
+
+    const allRows = ACTOR_SKILLS.filter(s => s.skill_id === result.skill);
+    steps.push({
+      label: 'junction',
+      body: allRows.length
+        ? `matched ${allRows.length} junction row${allRows.length === 1 ? '' : 's'}: ${allRows.map(r => `<code>${r.actor_id}</code> (${r.proficiency})`).join(', ')}`
+        : `<strong>no junction rows</strong> — no actor has been granted this skill`,
+    });
+
+    steps.push({
+      label: 'filter',
+      body: 'drop inactive actors',
+    });
+
+    steps.push({
+      label: 'order',
+      body: 'sort by proficiency: preferred → capable → experimental',
+    });
+
+    if (result.picked) {
+      steps.push({
+        cls: 'picked',
+        label: 'picked',
+        body: `<strong>@${result.picked.actor_id}</strong> (${result.picked.proficiency}) — runtime <code>${result.picked.actor.runtime || 'n/a'}</code>`,
+      });
+    } else {
+      steps.push({
+        cls: 'unrouted',
+        label: 'unrouted',
+        body: `<strong>no eligible actor</strong> — escalate to <code>@marvin</code> via <code>final-approval</code>`,
+      });
+    }
+
+    trail.innerHTML = steps.map(s => `
+      <div class="step ${s.cls || ''}">
+        <div class="step-label">${s.label}</div>
+        <div class="step-body">${s.body}</div>
+      </div>
+    `).join('');
+  }
+  select.addEventListener('change', renderSimulator);
+  renderSimulator();
+
+  // --- capability matrix -------------------------------------------------
+  const knownSkills = [...new Set(ACTOR_SKILLS.map(s => s.skill_id))];
+  const matrix = document.getElementById('matrix-table');
+
+  const headRow = document.createElement('tr');
+  headRow.innerHTML = `<th class="actor-col">actor</th>` + knownSkills.map(s => `<th>${s}</th>`).join('');
+  matrix.appendChild(headRow);
+
+  for (const actor of ACTORS) {
+    const row = document.createElement('tr');
+    row.innerHTML =
+      `<td class="actor-cell">${actor.display_name}<span class="kind">${actor.kind} · ${actor.runtime || '—'}</span></td>` +
+      knownSkills.map(s => {
+        const grant = ACTOR_SKILLS.find(as => as.actor_id === actor.id && as.skill_id === s);
+        if (!grant) return `<td class="pref-none">—</td>`;
+        return `<td class="pref-${grant.proficiency}" title="${grant.proficiency}">${grant.proficiency[0].toUpperCase()}</td>`;
+      }).join('');
+    matrix.appendChild(row);
+  }
+
+  // --- routing summary ---------------------------------------------------
+  const summary = document.getElementById('routing-summary');
+  summary.insertAdjacentHTML('beforeend', `
+    <div class="summary-list head">
+      <span>skill</span>
+      <span class="arrow">→</span>
+      <span>pool</span>
+      <span>picked</span>
+    </div>
+  `);
+  for (const s of ALL_SKILLS) {
+    const result = dispatch(s);
+    const row = document.createElement('div');
+    row.className = 'summary-list' + (result.picked ? '' : ' unrouted');
+    row.innerHTML = `
+      <span class="skill-id">${s}</span>
+      <span class="arrow">→</span>
+      <span class="pool">
+        ${result.pool.length
+          ? result.pool.map(p => `<span class="pill ${p.proficiency}">${p.actor_id}</span>`).join(' ')
+          : '<span style="color: var(--text-faint)">no pool</span>'}
+      </span>
+      <span class="pick">
+        ${result.picked
+          ? `@${result.picked.actor_id}<span class="pick-proficiency">(${result.picked.proficiency})</span>`
+          : 'unrouted — escalate'}
+      </span>
+    `;
+    summary.appendChild(row);
+  }
+</script>
+
+</body>
+</html>

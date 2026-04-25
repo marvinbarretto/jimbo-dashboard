@@ -1,0 +1,64 @@
+@if (project(); as p) {
+  <div class="project-detail">
+    <header class="project-detail__header">
+      <a routerLink="/projects" class="back-link">← Projects</a>
+      <h1>{{ p.display_name }}</h1>
+      <a routerLink="edit" class="btn btn--secondary">Edit</a>
+    </header>
+
+    <section class="project-detail__meta">
+      <dl>
+        <dt>ID</dt><dd><code>{{ p.id }}</code></dd>
+        <dt>Status</dt>
+        <dd>
+          <span [class]="p.status === 'active' ? 'status status--active' : 'status status--inactive'">
+            {{ p.status }}
+          </span>
+        </dd>
+        <dt>Owner</dt>
+        <dd>
+          @if (owner(); as o) {
+            <a [routerLink]="['/actors', o.id]">{{ o.display_name }}</a>
+            <span class="hint"> ({{ o.kind }}<span>)</span></span>
+          } @else {
+            <code>{{ p.owner_actor_id }}</code>
+            <span class="hint"> (actor not found)</span>
+          }
+        </dd>
+        @if (p.description) {
+          <dt>Description</dt><dd>{{ p.description }}</dd>
+        }
+        @if (p.repo_url) {
+          <dt>Repo</dt><dd><a [href]="p.repo_url" target="_blank" rel="noopener noreferrer">{{ p.repo_url }}</a></dd>
+        }
+        <dt>Created</dt><dd>{{ p.created_at.slice(0, 10) }}</dd>
+      </dl>
+    </section>
+
+    @if (p.criteria) {
+      <section class="project-detail__criteria">
+        <h2>Criteria</h2>
+        <pre class="criteria-block">{{ p.criteria }}</pre>
+      </section>
+    }
+
+    <section class="project-detail__activity">
+      <h2>Activity</h2>
+      @if (events().length === 0) {
+        <p class="empty">No project activity yet.</p>
+      } @else {
+        <ul class="activity-log">
+          @for (event of events(); track event.id) {
+            <li class="activity-log__row">
+              <span class="activity-log__actor">{{ actorDisplay(event.actor_id) }}</span>
+              <span class="activity-log__desc">{{ eventDescription(event) }}</span>
+              <span class="activity-log__when">· {{ relativeTime(event.at) }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+} @else {
+  <p>Project not found.</p>
+}

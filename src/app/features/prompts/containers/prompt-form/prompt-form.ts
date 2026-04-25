@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { PromptsService } from '../../data-access/prompts.service';
+import { promptId } from '../../../../domain/ids';
 
 @Component({
   selector: 'app-prompt-form',
@@ -52,17 +53,18 @@ export class PromptForm {
       return;
     }
     const v = this.form.getRawValue();
+    const id = promptId(v.id);
     const payload = {
-      id:           v.id,
+      id,
       display_name: v.display_name,
       description:  v.description || null,
       is_active:    v.is_active,
     };
     if (this.isEdit()) {
-      this.service.update(v.id, payload);
+      this.service.update(id, payload);
     } else {
       this.service.create(payload);
     }
-    this.router.navigate(['/prompts', v.id]);
+    this.router.navigate(['/prompts', id]);
   }
 }

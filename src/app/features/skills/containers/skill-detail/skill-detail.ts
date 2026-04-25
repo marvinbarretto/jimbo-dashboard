@@ -1,31 +1,55 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { SkillsService } from '../../data-access/skills.service';
-import { ModelStacksService } from '../../../model-stacks/data-access/model-stacks.service';
+import { skillNamespace, skillLocalName } from '../../../../domain/skills';
 
 @Component({
   selector: 'app-skill-detail',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink],
   templateUrl: './skill-detail.html',
   styleUrl: './skill-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SkillDetail {
   private readonly service = inject(SkillsService);
-  private readonly stacksService = inject(ModelStacksService);
   private readonly route = inject(ActivatedRoute);
 
-  private readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id') ?? '')));
+  private readonly id = toSignal(
+    this.route.paramMap.pipe(map(p => `${p.get('namespace')}/${p.get('name')}`)),
+  );
 
   readonly skill = computed(() => this.service.getById(this.id() ?? ''));
-  readonly stack = computed(() => {
-    const stackId = this.skill()?.model_stack_id;
-    return stackId ? this.stacksService.getById(stackId) : null;
+
+  readonly namespace = computed(() => {
+    const id = this.id();
+    return id ? skillNamespace(this.skill()?.id ?? id as any) : null;
   });
 
-  // Hub path for reference — the actual prompt lives in hermes/skills/{id}/SKILL.md
-  readonly hubPath = computed(() => `hermes/skills/${this.id()}/SKILL.md`);
+  readonly localName = computed(() => {
+    const id = this.id();
+    return id ? skillLocalName(this.skill()?.id ?? id as any) : '';
+  });
+
+  // Human-readable cache freshness string derived from last_indexed_at.
+  readonly syncedAgo = computed(() => {
+    const ts = this.skill()?.last_indexed_at;
+    if (!ts) return 'never synced';
+    const diffMs = Date.now() - new Date(ts).getTime();
+    const diffMins = Math.floor(diffMs / 60_000);
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 48) return `${diffHours}h ago`;
+    return `${Math.floor(diffHours / 24)}d ago`;
+  });
+
+  formatSchema(schema: unknown): string {
+    if (schema == null) return '';
+    try {
+      return JSON.stringify(schema, null, 2);
+    } catch {
+      return String(schema);
+    }
+  }
 }

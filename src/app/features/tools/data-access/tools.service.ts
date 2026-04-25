@@ -1,8 +1,10 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, map, tap } from 'rxjs';
+import { Observable, map, of, tap } from 'rxjs';
 import type { Tool, ToolVersion, CreateToolPayload, UpdateToolPayload, CreateToolVersionPayload } from '../utils/tool.types';
 import { environment } from '../../../../environments/environment';
+import { isSeedMode } from '../../../shared/seed-mode';
+import { SEED } from '../../../domain/seed';
 
 @Injectable({ providedIn: 'root' })
 export class ToolsService {
@@ -20,6 +22,11 @@ export class ToolsService {
   constructor() { this.load(); }
 
   private load(): void {
+    if (isSeedMode()) {
+      this._tools.set([...SEED.tools]);
+      this._loading.set(false);
+      return;
+    }
     this.http.get<Tool[]>(`${this.url}?order=display_name`).subscribe({
       next: data => { this._tools.set(data); this._loading.set(false); },
       error: ()   => this._loading.set(false),
@@ -31,6 +38,13 @@ export class ToolsService {
   }
 
   loadVersions(toolId: string): Observable<ToolVersion[]> {
+    if (isSeedMode()) {
+      const versions = SEED.tool_versions
+        .filter(v => v.tool_id === toolId)
+        .slice()
+        .sort((a, b) => b.version - a.version);
+      return of(versions as ToolVersion[]);
+    }
     return this.http.get<ToolVersion[]>(
       `${this.versionsUrl}?tool_id=eq.${encodeURIComponent(toolId)}&order=version.desc`
     );

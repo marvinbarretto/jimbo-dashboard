@@ -1,35 +1,51 @@
-<div class="page">
-  <header class="page-header">
+<div class="skills-list">
+  <header class="skills-list__header">
     <h1>Skills</h1>
     <a routerLink="new" class="btn btn--primary">Add skill</a>
   </header>
 
-  <table>
+  <table class="skills-table">
     <thead>
       <tr>
-        <th>ID</th>
+        <th>Namespace</th>
         <th>Name</th>
-        <th>Stack</th>
-        <th>Status</th>
+        <th>Display name</th>
+        <th>Model hint</th>
+        <th>Source repo</th>
+        <th>Active</th>
         <th></th>
       </tr>
     </thead>
     <tbody>
       @for (skill of skills(); track skill.id) {
         <tr [class.inactive]="!skill.is_active">
-          <td><code>{{ skill.id }}</code></td>
-          <td>
-            <a [routerLink]="skill.id">{{ skill.display_name }}</a>
+          <td class="skill-namespace">
+            <span class="ns-tag">{{ namespace(skill.id) }}</span>
           </td>
-          <td>{{ skill.model_stack_id ?? '—' }}</td>
-          <td>{{ skill.is_active ? 'Active' : 'Inactive' }}</td>
-          <td class="row-actions">
-            <a [routerLink]="[skill.id, 'edit']" class="btn">Edit</a>
+          <td class="skill-local-name">
+            <a [routerLink]="skillLink(skill.id)">{{ localName(skill.id) }}</a>
+          </td>
+          <td>{{ skill.display_name }}</td>
+          <td>
+            <span class="tier-badge tier-badge--{{ skill.model_hint }}">
+              {{ skill.model_hint }}
+            </span>
+          </td>
+          <td>{{ skill.source_repo }}</td>
+          <td>
+            <span [class]="skill.is_active ? 'status status--active' : 'status status--inactive'">
+              {{ skill.is_active ? 'Yes' : 'No' }}
+            </span>
+          </td>
+          <td class="actions">
+            <a [routerLink]="editLink(skill.id)">Edit</a>
             <button (click)="remove(skill.id)">Remove</button>
           </td>
         </tr>
       } @empty {
-        <tr><td colspan="5" class="empty">No skills configured.</td></tr>
+        <tr>
+          <td colspan="7" class="empty">No skills configured.</td>
+        </tr>
       }
     </tbody>
   </table>

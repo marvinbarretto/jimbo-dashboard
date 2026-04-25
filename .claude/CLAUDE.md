@@ -1,81 +1,47 @@
+Expert in TypeScript, Angular, scalable web apps. Functional, maintainable, performant, accessible.
 
-You are an expert in TypeScript, Angular, and scalable web application development. You write functional, maintainable, performant, and accessible code following Angular and TypeScript best practices.
+Rationale and philosophy live in `docs/conventions.md` — read it when a rule below feels surprising.
 
-## TypeScript Best Practices
+## Hard rules
 
-- Use strict type checking
-- Prefer type inference when the type is obvious
-- Avoid the `any` type; use `unknown` when type is uncertain
-- Make TypeScript work for you — use mapped types, `Record`, template literals, discriminated unions, and `satisfies` where they eliminate duplication or enforce correctness. If you're writing the same shape twice, there's a type for that.
-- String literal unions over enums: they serialise cleanly across API boundaries with no conversion layer
+### TypeScript
+- Strict typing. No `any` — use `unknown`.
+- Prefer type inference when obvious.
+- String literal unions over enums (clean API serialisation).
+- Lean on mapped types, `Record`, template literals, discriminated unions, `satisfies`.
+
+### Angular (v20+)
+- Standalone components. Do NOT set `standalone: true` — it's the default.
+- `inject()` over constructor injection.
+- `input()` / `output()` functions, not decorators.
+- Signals for state. `computed()` for derived. `update`/`set`, never `mutate`.
+- `ChangeDetectionStrategy.OnPush` on every `@Component`.
+- Host bindings via `host` object, NOT `@HostBinding` / `@HostListener`.
+- Lazy load feature routes.
+- `NgOptimizedImage` for static images (not base64).
+- Services: single responsibility, `providedIn: 'root'`.
+
+### Templates
+- Native control flow: `@if` `@for` `@switch` — never `*ngIf` etc.
+- `class` bindings, not `ngClass`. `style` bindings, not `ngStyle`.
+- Async pipe for observables.
+- No globals (`new Date()` etc.) in templates.
+- External template/style paths relative to component TS file.
+
+### Forms
+- **ReactiveFormsModule only.** Signal forms blocked — see `docs/conventions.md`.
+
+### UX
+- Errors over disabled states. Exception: truly read-only fields.
+
+### Testing
+- Prefer E2E (Playwright) over component tests. Unit test logic, not rendering.
+- `ng test --no-watch` / `npx playwright test`.
+- Full philosophy in `docs/conventions.md`.
+
+### Comments
+- WHY, not what. Skip anything the code already says.
 
 ## Experimental APIs
 
-- We are happy to use Angular experimental APIs. This is a showcase project and being on the leading edge is the point.
-- When using an experimental API, note it with a brief comment so we know where the risk surface is.
-- **Signal forms (`@angular/forms/signals`) are NOT used for this Angular version.** Playwright's synthetic DOM events do not trigger `FormField` listeners in a zoneless app, making E2E impossible. Revisit when Angular upgrades. The diagnostic page at `/test-forms` documents this finding.
-
-## Angular Best Practices
-
-- Always use standalone components over NgModules
-- Must NOT set `standalone: true` inside Angular decorators. It's the default in Angular v20+.
-- Use signals for state management
-- Implement lazy loading for feature routes
-- Do NOT use the `@HostBinding` and `@HostListener` decorators. Put host bindings inside the `host` object of the `@Component` or `@Directive` decorator instead
-- Use `NgOptimizedImage` for all static images.
-  - `NgOptimizedImage` does not work for inline base64 images.
-
-## Accessibility Requirements
-
-- It MUST pass all AXE checks.
-- It MUST follow all WCAG AA minimums, including focus management, color contrast, and ARIA attributes.
-
-### Components
-
-- Keep components small and focused on a single responsibility
-- Use `input()` and `output()` functions instead of decorators
-- Use `computed()` for derived state
-- Set `changeDetection: ChangeDetectionStrategy.OnPush` in `@Component` decorator
-- Prefer inline templates for small components
-- Use **ReactiveFormsModule** (`FormBuilder`, `formControlName`, `formGroup`) for all forms. Signal forms are blocked — see Experimental APIs note above.
-- Do NOT use `ngClass`, use `class` bindings instead
-- Do NOT use `ngStyle`, use `style` bindings instead
-- When using external templates/styles, use paths relative to the component TS file.
-
-## State Management
-
-- Use signals for local component state
-- Use `computed()` for derived state
-- Keep state transformations pure and predictable
-- Do NOT use `mutate` on signals, use `update` or `set` instead
-
-## Templates
-
-- Keep templates simple and avoid complex logic
-- Use native control flow (`@if`, `@for`, `@switch`) instead of `*ngIf`, `*ngFor`, `*ngSwitch`
-- Use the async pipe to handle observables
-- Do not assume globals like (`new Date()`) are available.
-
-## Services
-
-- Design services around a single responsibility
-- Use the `providedIn: 'root'` option for singleton services
-- Use the `inject()` function instead of constructor injection
-
-## UX Philosophy
-
-- Prefer errors over disabled states. Let users act; explain what went wrong. Disabled fields are silent failures.
-- Exception: truly read-only fields (computed values, audit fields) may be disabled.
-
-## Comments
-
-Comment on the WHY, not the what. Capture design decisions and rejected alternatives so we can reason with them later. Skip anything the code already says.
-
-## Testing Philosophy
-
-- **Prefer E2E over component tests.** For a control-plane dashboard, Playwright covering real user flows catches more real bugs than DOM assertions.
-- **Unit test logic, not rendering.** Service methods, computed signals, state transitions, guards — yes. "Did Angular render my template" — no.
-- **Delete low-value tests.** A test that only checks `expect(component).toBeTruthy()` is noise. If you can't describe what breaks when it fails, delete it.
-- **Component tests earn their place.** Only add one if it tests a non-trivial branching behaviour (e.g. conditional logic, confirm dialogs, form validation) that E2E can't cheaply cover.
-- **Humour is welcome, subtly.** A wry scenario name or variable is fine. One or two per describe block. Never at the cost of readability.
-- Run unit tests with `ng test --no-watch`. Run E2E with `npx playwright test`.
+Welcomed. Tag with a short comment marking the risk surface.

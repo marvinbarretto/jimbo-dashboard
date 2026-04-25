@@ -5,6 +5,7 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { ModelStacksService } from '../../data-access/model-stacks.service';
 import { ModelsService } from '../../../models/data-access/models.service';
+import { modelId, modelStackId } from '../../../../domain/ids';
 
 @Component({
   selector: 'app-model-stack-form',
@@ -70,19 +71,20 @@ export class ModelStackForm {
   submit(): void {
     if (this.form.invalid) return;
     const v = this.form.getRawValue();
+    const id = modelStackId(v.id);
     const payload = {
-      id: v.id,
+      id,
       display_name: v.display_name,
       description: v.description || null,
-      model_ids: this.modelIds(),
-      fast_model_id: v.fast_model_id || null,
+      model_ids: this.modelIds().map(modelId),
+      fast_model_id: v.fast_model_id ? modelId(v.fast_model_id) : null,
       is_active: v.is_active,
     };
     if (this.isEdit()) {
-      this.service.update(v.id, payload);
+      this.service.update(id, payload);
     } else {
       this.service.create(payload);
     }
-    this.router.navigate(['/model-stacks', v.id]);
+    this.router.navigate(['/model-stacks', id]);
   }
 }

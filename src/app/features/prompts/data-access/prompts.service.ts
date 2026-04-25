@@ -1,8 +1,10 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, map, tap } from 'rxjs';
+import { Observable, map, of, tap } from 'rxjs';
 import type { Prompt, PromptVersion, CreatePromptPayload, UpdatePromptPayload, CreateVersionPayload } from '../utils/prompt.types';
 import { environment } from '../../../../environments/environment';
+import { isSeedMode } from '../../../shared/seed-mode';
+import { SEED } from '../../../domain/seed';
 
 @Injectable({ providedIn: 'root' })
 export class PromptsService {
@@ -20,6 +22,11 @@ export class PromptsService {
   constructor() { this.load(); }
 
   private load(): void {
+    if (isSeedMode()) {
+      this._prompts.set([...SEED.prompts]);
+      this._loading.set(false);
+      return;
+    }
     this.http.get<Prompt[]>(`${this.url}?order=display_name`).subscribe({
       next: data => { this._prompts.set(data); this._loading.set(false); },
       error: ()   => this._loading.set(false),
@@ -31,6 +38,13 @@ export class PromptsService {
   }
 
   loadVersions(promptId: string): Observable<PromptVersion[]> {
+    if (isSeedMode()) {
+      const versions = SEED.prompt_versions
+        .filter(v => v.prompt_id === promptId)
+        .slice()
+        .sort((a, b) => b.version - a.version);
+      return of(versions as PromptVersion[]);
+    }
     return this.http.get<PromptVersion[]>(
       `${this.versionsUrl}?prompt_id=eq.${encodeURIComponent(promptId)}&order=version.desc`
     );

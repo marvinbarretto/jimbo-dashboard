@@ -1,0 +1,33 @@
+@if (actor(); as a) {
+  <div class="actor-detail">
+    <header class="actor-detail__header">
+      <a routerLink="/actors" class="back-link">← Actors</a>
+      <h1>{{ a.display_name }}</h1>
+      <a routerLink="edit" class="btn btn--secondary">Edit</a>
+    </header>
+
+    <section class="actor-detail__meta">
+      <dl>
+        <dt>ID</dt><dd><code>{{ a.id }}</code></dd>
+        <dt>Kind</dt>
+        <dd>
+          <span [class]="'kind kind--' + a.kind">{{ a.kind }}</span>
+        </dd>
+        <dt>Runtime</dt><dd>{{ a.runtime ?? '—' }}</dd>
+        <dt>Active</dt>
+        <dd>
+          <span [class]="a.is_active ? 'status status--active' : 'status status--inactive'">
+            {{ a.is_active ? 'active' : 'inactive' }}
+          </span>
+        </dd>
+        @if (a.description) {
+          <dt>Description</dt><dd>{{ a.description }}</dd>
+        }
+        <dt>Created</dt><dd>{{ a.created_at.slice(0, 10) }}</dd>
+        <dt>Updated</dt><dd>{{ a.updated_at.slice(0, 10) }}</dd>
+      </dl>
+    </section>
+  </div>
+} @else {
+  <p>Actor not found.</p>
+}

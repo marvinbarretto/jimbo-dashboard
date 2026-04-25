@@ -1,0 +1,403 @@
+@if (item(); as item) {
+  <div class="vault-item-detail">
+
+    <!-- ===== topbar ===== -->
+    <div class="topbar">
+      <span class="topbar__seq">#{{ item.seq }}</span>
+      <span class="topbar__crumb">·</span>
+      <span class="topbar__type">{{ item.type }}</span>
+      <span class="topbar__crumb">·</span>
+      <span class="topbar__title">{{ item.title }}</span>
+      <div class="topbar__actions">
+        <a [routerLink]="['/vault-items', item.seq, 'edit']"
+          class="topbar__action" aria-label="Edit this item">edit</a>
+        <button class="topbar__action" (click)="archive()"
+          [attr.aria-disabled]="isItemArchived(item)"
+          [disabled]="isItemArchived(item)">archive</button>
+        <button class="topbar__action topbar__action--danger" (click)="deleteItem()">delete</button>
+        <a routerLink="/vault-items" class="topbar__action topbar__action--close" aria-label="Back to vault">×</a>
+      </div>
+    </div>
+
+    <!-- ===== sub-strip ===== -->
+    <div class="substrip">
+
+      <!-- status dropdown — derived from completed_at + archived_at; archive is its own button -->
+      <span class="substrip__item">
+        <label for="status-select" class="substrip__lbl">Status</label>
+        <select id="status-select" class="status-select"
+          (change)="onStatusChange($event)"
+          [class]="'status-select status-select--' + lifecycleOf(item)"
+          [disabled]="isItemArchived(item)">
+          @for (s of statuses; track s) {
+            <!-- [selected] on each option avoids the [value] timing issue with OnPush -->
+            <option [value]="s" [selected]="lifecycleOf(item) === s">{{ s }}</option>
+          }
+          @if (isItemArchived(item)) {
+            <option value="archived" selected>archived</option>
+          }
+        </select>
+      </span>
+
+      <!-- readiness inline bar -->
+      @if (readiness(); as r) {
+        <span class="readiness-inline">
+          <span class="substrip__lbl">Readiness</span>
+          <span class="readiness-bar" role="progressbar"
+            [attr.aria-valuenow]="r.passed"
+            [attr.aria-valuemax]="r.total"
+            [attr.aria-label]="r.passed + ' of ' + r.total + ' checks passed'">
+            <span class="readiness-bar__fill"
+              [style.width.%]="r.total > 0 ? (r.passed / r.total) * 100 : 0">
+            </span>
+          </span>
+          <span class="readiness-count">{{ r.passed }}/{{ r.total }}</span>
+          <span [class]="'readiness-verdict readiness-verdict--' + r.verdict">
+            {{ r.verdict }}
+          </span>
+        </span>
+      }
+
+      <!-- owner + reassign -->
+      <span class="substrip__item substrip__item--owner">
+        <span class="substrip__lbl">Owner</span>
+        @if (owner(); as o) {
+          <a [routerLink]="['/actors', o.id]"
+            [class]="'actor-chip actor-chip--' + o.kind">
+            @{{ o.id }}
+          </a>
+        } @else if (item.assigned_to) {
+          <span class="actor-chip">{{ item.assigned_to }}</span>
+        } @else {
+          <span class="muted">unassigned</span>
+        }
+        <button class="inline-btn" (click)="toggleReassignPicker()" aria-label="Reassign owner">
+          {{ showReassignPicker() ? '▲' : '▼' }}
+        </button>
+        @if (showReassignPicker()) {
+          <span class="inline-picker" role="listbox" aria-label="Select new owner">
+            @for (a of activeActors(); track a.id) {
+              <button class="inline-picker__opt" role="option"
+                [attr.aria-selected]="a.id === item.assigned_to"
+                (click)="reassign(a.id)">
+                @{{ a.id }}
+              </button>
+            }
+          </span>
+        }
+      </span>
+
+      <!-- primary project chip -->
+      <span class="substrip__item">
+        <span class="substrip__lbl">Project</span>
+        @if (projects().length > 0) {
+          <a [routerLink]="['/projects', projects()[0].id]" class="project-chip">
+            {{ projects()[0].display_name }}
+          </a>
+        } @else {
+          <span class="muted">—</span>
+        }
+      </span>
+
+      <!-- priority (dual source) -->
+      <span class="substrip__item">
+        <span class="substrip__lbl">Priority</span>
+        <span class="priority-source">AI
+          @if (item.ai_priority !== null) {
+            <span [class]="'priority-badge priority-P' + item.ai_priority">{{ priorityLabel(item.ai_priority) }}</span>
+          } @else {
+            <span class="muted">—</span>
+          }
+        </span>
+        <span class="priority-sep">·</span>
+        <span class="priority-source">Manual
+          @if (item.manual_priority !== null) {
+            <span [class]="'priority-badge priority-P' + item.manual_priority">{{ priorityLabel(item.manual_priority) }}</span>
+          } @else {
+            <span class="muted">—</span>
+          }
+        </span>
+        @if (effectivePriority() !== null) {
+          <span class="priority-effective">(eff: {{ priorityLabel(effectivePriority()) }})</span>
+        }
+        @if (item.priority_confidence !== null) {
+          <span class="confidence-pill">{{ (item.priority_confidence * 100).toFixed(0) }}%</span>
+        }
+      </span>
+
+      @if (item.ai_rationale) {
+        <span class="substrip__item substrip__item--rationale">
+          <span class="substrip__lbl">Rationale</span>
+          <span class="ai-rationale">{{ item.ai_rationale }}</span>
+        </span>
+      }
+
+      <!-- grooming status + actionability -->
+      <span class="substrip__item">
+        <span class="substrip__lbl">Grooming</span>
+        <span [class]="'grooming-status grooming-status--' + item.grooming_status">
+          {{ item.grooming_status.replace('_', ' ') }}
+        </span>
+        @if (item.actionability !== null) {
+          <span [class]="'actionability-badge actionability-badge--' + item.actionability">
+            {{ item.actionability }}
+          </span>
+        }
+      </span>
+
+      <!-- due_at -->
+      @if (item.due_at) {
+        <span class="substrip__item">
+          <span class="substrip__lbl">Due</span>
+          <span class="due-date">{{ item.due_at }}</span>
+        </span>
+      }
+
+    </div>
+
+    <!-- ===== main body grid ===== -->
+    <div class="body-grid">
+
+      <!-- content column -->
+      <div class="body-grid__content">
+
+        <section class="section">
+          <div class="section__label">Body <span class="section__hint">(intake, immutable)</span></div>
+          <pre class="intake">{{ item.body }}</pre>
+          <p class="intake__note">{{ relativeTime(item.created_at) }} · operator intake</p>
+        </section>
+
+        <section class="section">
+          <div class="section__label">Acceptance criteria</div>
+          @if (item.acceptance_criteria.length > 0) {
+            <ul class="ac-list">
+              @for (ac of item.acceptance_criteria; track ac.text) {
+                <li [class]="'ac-item' + (ac.done ? ' ac-item--done' : '')">
+                  <span class="ac-item__mark" [attr.aria-label]="ac.done ? 'done' : 'pending'">
+                    {{ ac.done ? '✓' : '○' }}
+                  </span>
+                  <span>{{ ac.text }}</span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <div class="ac-empty">No acceptance criteria yet — blocks readiness</div>
+          }
+        </section>
+
+        <section class="section">
+          <div class="section__label">Tags</div>
+          @if (item.tags.length > 0) {
+            <div class="chip-row">
+              @for (tag of item.tags; track tag) {
+                <span class="chip">{{ tag }}</span>
+              }
+            </div>
+          } @else {
+            <div class="chip-row">
+              <span class="chip chip--empty">none yet</span>
+            </div>
+          }
+        </section>
+
+        <section class="section">
+          <div class="section__label">Parent</div>
+          @if (parentItem(); as parent) {
+            <a [routerLink]="['/vault-items', parent.seq]" class="parent-link">
+              #{{ parent.seq }} · {{ parent.title }}
+            </a>
+          } @else if (item.parent_id) {
+            <span class="muted">{{ item.parent_id }} (parent not loaded)</span>
+          } @else {
+            <p class="muted-text">standalone — not part of an epic</p>
+          }
+        </section>
+
+        <!-- ===== Projects section ===== -->
+        <section class="section">
+          <div class="section__label">Projects</div>
+          <div class="junction-list">
+            @for (p of projects(); track p.id) {
+              <span class="junction-chip">
+                <a [routerLink]="['/projects', p.id]" class="junction-chip__label">
+                  {{ p.display_name }}
+                </a>
+                <button class="junction-chip__remove"
+                  (click)="removeProject(p.id)"
+                  [attr.aria-label]="'Remove ' + p.display_name">×</button>
+              </span>
+            }
+            <button class="inline-btn junction-add-btn"
+              (click)="toggleAddProjectPicker()"
+              aria-label="Link a project">
+              + add project
+            </button>
+          </div>
+          @if (showAddProjectPicker()) {
+            <div class="junction-picker">
+              @for (p of activeProjects(); track p.id) {
+                <button class="junction-picker__opt" (click)="addProject(p.id)">
+                  {{ p.display_name }}
+                </button>
+              } @empty {
+                <span class="muted">No active projects</span>
+              }
+            </div>
+          }
+        </section>
+
+        <!-- ===== Blocked-by section ===== -->
+        <section class="section">
+          <div class="section__label">Blocked by</div>
+          <div class="junction-list">
+            @for (b of openBlockers(); track b.blocker_id) {
+              <span class="junction-chip junction-chip--blocker">
+                <a [routerLink]="['/vault-items', b.blocker_seq]" class="junction-chip__label">
+                  #{{ b.blocker_seq }} · {{ b.blocker_title }}
+                </a>
+                <button class="junction-chip__remove"
+                  (click)="removeBlocker(b.blocker_id)"
+                  [attr.aria-label]="'Remove blocker #' + b.blocker_seq">×</button>
+              </span>
+            } @empty {
+              <span class="muted">no blockers</span>
+            }
+          </div>
+          <div class="blocker-add">
+            <label for="blocker-seq-input" class="visually-hidden">Add blocker by seq number</label>
+            <input id="blocker-seq-input"
+              type="number" min="1"
+              placeholder="seq # e.g. 1820"
+              class="blocker-input"
+              [value]="addBlockerSeqInput()"
+              (input)="onBlockerSeqInput($event)" />
+            <button class="inline-btn" (click)="addBlockerBySeq()"
+              [disabled]="!addBlockerSeqInput()">
+              + add blocker
+            </button>
+          </div>
+        </section>
+
+        <!-- ===== Source section ===== -->
+        @if (item.source) {
+          <section class="section">
+            <div class="section__label">Source</div>
+            <dl class="kv">
+              <dt>Kind</dt>
+              <dd>{{ item.source.kind }}</dd>
+              <dt>Ref</dt>
+              <dd>{{ item.source.ref }}</dd>
+              @if (item.source.url) {
+                <dt>URL</dt>
+                <dd><a [href]="item.source.url" target="_blank" rel="noopener noreferrer" class="external-link">{{ item.source.url }}</a></dd>
+              }
+            </dl>
+          </section>
+        }
+
+      </div>
+
+      <!-- state column -->
+      <div class="body-grid__state">
+
+        <div class="section">
+          <div class="section__label">Readiness <span class="section__hint">(computed)</span></div>
+          @if (readiness(); as r) {
+            <ul class="readiness-list">
+              @for (check of r.checks; track check.key) {
+                <li [class]="'readiness-check readiness-check--' + (check.ok ? 'ok' : 'miss')">
+                  <span class="readiness-check__mark" [attr.aria-label]="check.ok ? 'pass' : 'fail'">
+                    {{ check.ok ? '✓' : '✗' }}
+                  </span>
+                  <span class="readiness-check__label">
+                    {{ check.label }}
+                    @if (!check.ok && check.blocker) {
+                      <span class="readiness-check__blocker"> — {{ check.blocker }}</span>
+                    }
+                  </span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="section">
+          <div class="section__label">Metadata</div>
+          <dl class="kv">
+            <dt>Created</dt>
+            <dd>{{ relativeTime(item.created_at) }}</dd>
+            @if (item.completed_at) {
+              <dt>Completed</dt>
+              <dd>{{ relativeTime(item.completed_at) }}</dd>
+            }
+            @if (item.archived_at) {
+              <dt>Archived</dt>
+              <dd>{{ relativeTime(item.archived_at) }}</dd>
+            }
+            <dt>Last activity</dt>
+            <dd>
+              @if (lastActivityAt(); as lat) {
+                {{ relativeTime(lat) }}
+                <span class="kv__hint">derived from events</span>
+              } @else {
+                <span class="muted">no events yet</span>
+              }
+            </dd>
+          </dl>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== dual streams ===== -->
+    <div class="streams">
+
+      <!-- Activity log -->
+      <div class="stream">
+        <header class="stream__header">
+          <span>Activity log</span>
+          <span class="stream__count">{{ events().length }} events · structural facts</span>
+        </header>
+
+        @if (events().length > 0) {
+          <div class="event-list">
+            @for (event of events(); track event.id) {
+              <div [class]="'event event--' + event.type">
+                <span class="event__dot"></span>
+                <span class="event__body">
+                  <span [class]="'event__actor event__actor--' + actorKind(event.actor_id)">
+                    {{ actorDisplay(event.actor_id) }}
+                  </span>
+                  {{ eventDescription(event) }}
+                  <span class="event__when">· {{ relativeTime(event.at) }}</span>
+                </span>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="muted-text">No events yet.</p>
+        }
+      </div>
+
+      <!-- Discussion thread -->
+      <div class="stream stream--thread">
+        <header class="stream__header">
+          <span>Discussion thread</span>
+          <span class="stream__count">{{ messages().length }} messages</span>
+        </header>
+        <app-thread-view
+          [vaultItemId]="item.id"
+          [currentActor]="currentActorId"
+          [actorMap]="actorMap()">
+        </app-thread-view>
+      </div>
+
+    </div>
+
+  </div>
+} @else {
+  <div class="vault-item-not-found">
+    <a routerLink="/vault-items" class="back-link">← Vault</a>
+    <p>Item not found.</p>
+  </div>
+}

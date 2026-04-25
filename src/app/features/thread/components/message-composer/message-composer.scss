@@ -1,0 +1,217 @@
+$hot: #d96520;
+
+.composer {
+  border-top: 1px solid var(--color-border);
+  padding: 10px 12px;
+  background: var(--color-bg);
+
+  &__kind-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  &__lbl {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  &__kind-btns {
+    display: flex;
+    gap: 4px;
+  }
+
+  &__kind-btn {
+    font: inherit;
+    font-size: 11px;
+    padding: 2px 9px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+
+    &--selected {
+      border-color: $hot;
+      color: $hot;
+      background: color-mix(in srgb, $hot 15%, var(--color-surface));
+    }
+
+    &:focus-visible {
+      outline: 2px solid $hot;
+      outline-offset: 1px;
+    }
+  }
+
+  &__reply-select {
+    font: inherit;
+    font-size: 11px;
+    padding: 2px 6px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  &__body {
+    width: 100%;
+    font: inherit;
+    font-size: 12px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    padding: 6px 8px;
+    min-height: 50px;
+    resize: vertical;
+
+    &:focus-visible {
+      outline: 2px solid $hot;
+      outline-offset: 1px;
+    }
+  }
+
+  &__post-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    align-items: center;
+  }
+
+  &__post-btn {
+    font: inherit;
+    font-size: 11px;
+    padding: 4px 12px;
+    border: 1px solid $hot;
+    background: var(--color-surface);
+    color: $hot;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid $hot;
+      outline-offset: 1px;
+    }
+  }
+
+  &__hint {
+    font-size: 10px;
+    color: var(--color-text-muted);
+    margin-left: auto;
+
+    code {
+      background: var(--color-surface);
+      padding: 0 4px;
+    }
+  }
+
+  &__error {
+    font-size: 10px;
+    color: var(--color-danger);
+    margin: 2px 0 4px;
+  }
+
+  &__drop-zone {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    padding: 4px 8px;
+    border: 1px dashed var(--color-border);
+    background: var(--color-surface);
+    font-size: 11px;
+    color: var(--color-text-muted);
+    min-height: 28px;
+    transition: border-color 0.1s, background 0.1s;
+
+    &--active {
+      border-color: $hot;
+      background: color-mix(in srgb, $hot 12%, var(--color-surface));
+      color: $hot;
+    }
+  }
+
+  &__drop-hint {
+    flex: 1;
+  }
+
+  &__attach-btn {
+    font: inherit;
+    font-size: 10px;
+    padding: 2px 8px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:focus-visible {
+      outline: 2px solid $hot;
+      outline-offset: 1px;
+    }
+  }
+
+  // Hidden — triggered programmatically by the attach button.
+  &__file-input {
+    display: none;
+  }
+
+  &__staged {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  &__staged-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    font-size: 10px;
+    max-width: 180px;
+  }
+
+  &__staged-thumb {
+    width: 20px;
+    height: 20px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  &__staged-icon {
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  &__staged-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-text);
+    min-width: 0;
+  }
+
+  &__staged-remove {
+    font: inherit;
+    font-size: 12px;
+    border: none;
+    background: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 0 2px;
+    flex-shrink: 0;
+    line-height: 1;
+
+    &:hover { color: var(--color-danger); }
+    &:focus-visible {
+      outline: 2px solid $hot;
+      outline-offset: 1px;
+    }
+  }
+}
