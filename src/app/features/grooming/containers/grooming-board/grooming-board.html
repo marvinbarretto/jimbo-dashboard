@@ -7,16 +7,9 @@
     </p>
   </header>
 
-  <app-grooming-filter-bar
-    [projectOptions]="projectOptions()"
-    [ownerOptions]="ownerOptions()"
-    [priorityOptions]="priorityOptions()"
-    [projectActive]="projectFilter()"
-    [ownerActive]="ownerFilter()"
-    [priorityActive]="priorityFilter()"
-    (toggleProject)="toggleProject($event)"
-    (toggleOwner)="toggleOwner($event)"
-    (togglePriority)="togglePriority($event)"
+  <app-kanban-filter-bar
+    [groups]="filterGroups()"
+    (toggle)="onFilterToggle($event)"
     (reset)="resetFilters()"
   />
 
@@ -25,8 +18,8 @@
       <app-kanban-column
         [label]="col.label"
         [count]="col.cards.length"
-        [dropEligible]="isEligibleDropTarget(col.status)"
-        [dropActive]="dropTarget() === col.status"
+        [dropEligible]="drag.isEligibleDropTarget(col.status)"
+        [dropActive]="drag.dropTarget() === col.status"
         (dragover)="onColumnDragOver($event, col.status)"
         (dragleave)="onColumnDragLeave(col.status)"
         (drop)="onColumnDrop($event, col.status)"
@@ -39,7 +32,7 @@
             [parentSeq]="parentSeq(item)"
             [childrenCount]="childrenCount(item)"
             [epicPriority]="rolledUpPriorityForEpic(item)"
-            [dragging]="dragging() === item.id"
+            [dragging]="drag.dragging() === item.id"
             (dragstart)="onDragStart($event, item)"
             (dragend)="onDragEnd()"
           />

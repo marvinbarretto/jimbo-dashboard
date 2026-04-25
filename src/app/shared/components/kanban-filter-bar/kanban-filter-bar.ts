@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { Chip } from '../chip/chip';
+import { Chip } from '@shared/components/chip/chip';
 
 export interface FilterOption<TValue extends string | number> {
   value: TValue;

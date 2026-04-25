@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
 import { ActorsService } from '@features/actors/data-access/actors.service';
 import { ProjectsService } from '@features/projects/data-access/projects.service';
@@ -8,22 +8,31 @@ import {
   GROOMING_STATUS_ORDER,
   GROOMING_STATUS_LABELS,
   isActive,
+  isDone,
   type GroomingStatus,
+  type VaultItem,
+  type Priority,
 } from '@domain/vault';
 import { effectivePriority } from '@domain/vault';
 import { compareCardsForKanban } from '@domain/vault';
-import type { VaultItem, Priority } from '@domain/vault';
-import { isDone } from '@domain/vault';
 import type { VaultItemId } from '@domain/ids';
 import { GroomingCard } from '../../components/grooming-card/grooming-card';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
-import { GroomingFilterBar, type FilterOption } from '../../components/grooming-filter-bar/grooming-filter-bar';
+import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
+import { createKanbanDragState } from '@shared/kanban/drag-state';
+import { createKanbanFilterState } from '@shared/kanban/filter-state';
 
 // "Unassigned" is its own filter token alongside actor IDs. Using a sentinel string
 // keeps the Set<string> simple — branded ActorId values are still strings at runtime.
 const UNASSIGNED = '__unassigned__';
 // Priority filter sentinel for "no priority set". Distinct from 0 so set membership works.
 const NO_PRIORITY = -1;
+
+// Filter dimension ids — declared here so the composable, the chip groups, and
+// the toggle handler all reference the same source of truth.
+const PROJECT  = 'project';
+const OWNER    = 'owner';
+const PRIORITY = 'priority';
 
 interface ColumnView {
   status: GroomingStatus;
@@ -33,7 +42,7 @@ interface ColumnView {
 
 @Component({
   selector: 'app-grooming-board',
-  imports: [GroomingCard, KanbanColumn, GroomingFilterBar],
+  imports: [GroomingCard, KanbanColumn, KanbanFilterBar],
   templateUrl: './grooming-board.html',
   styleUrl: './grooming-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,20 +55,21 @@ export class GroomingBoard {
   private readonly threadService = inject(ThreadService);
 
   // --- drag state ---------------------------------------------------------
-
-  private readonly _dragging = signal<VaultItemId | null>(null);
-  private readonly _dropTarget = signal<GroomingStatus | null>(null);
-  readonly dragging   = this._dragging.asReadonly();
-  readonly dropTarget = this._dropTarget.asReadonly();
+  // Composable: gives us dragging / dropTarget signals + DOM event plumbing +
+  // drop-validity logic. Same helper will run the execution kanban.
+  protected readonly drag = createKanbanDragState<VaultItemId, GroomingStatus>(
+    id => this.vaultItemsService.getById(id)?.grooming_status,
+  );
 
   // --- filter state -------------------------------------------------------
-  // Empty Set = no filter applied for that dimension.
-  private readonly _projectFilter  = signal<Set<string>>(new Set());
-  private readonly _ownerFilter    = signal<Set<string>>(new Set());
-  private readonly _priorityFilter = signal<Set<number>>(new Set());
-  readonly projectFilter  = this._projectFilter.asReadonly();
-  readonly ownerFilter    = this._ownerFilter.asReadonly();
-  readonly priorityFilter = this._priorityFilter.asReadonly();
+  // Composable: signals + toggle/reset. Per-dimension predicates live below
+  // because they know about VaultItem shape; the composable doesn't.
+  private readonly filter = createKanbanFilterState([PROJECT, OWNER, PRIORITY]);
+  protected readonly hasActiveFilters = this.filter.hasActive;
+
+  private readonly projectFilter  = this.filter.active<string>(PROJECT);
+  private readonly ownerFilter    = this.filter.active<string>(OWNER);
+  private readonly priorityFilter = this.filter.active<number>(PRIORITY);
 
   // --- visible items + columns -------------------------------------------
 
@@ -127,54 +137,36 @@ export class GroomingBoard {
   }
 
   // --- drag & drop --------------------------------------------------------
+  // Thin wrappers that delegate to the composable and call the service write.
 
   onDragStart(event: DragEvent, item: VaultItem): void {
-    this._dragging.set(item.id);
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('text/x-vault-item-id', item.id);
-    }
+    this.drag.onDragStart(event, item.id);
   }
-
-  onDragEnd(): void {
-    this._dragging.set(null);
-    this._dropTarget.set(null);
-  }
-
+  onDragEnd(): void { this.drag.onDragEnd(); }
   onColumnDragOver(event: DragEvent, status: GroomingStatus): void {
-    event.preventDefault();
-    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
-    this._dropTarget.set(status);
+    this.drag.onDragOver(event, status);
   }
-
-  onColumnDragLeave(status: GroomingStatus): void {
-    if (this._dropTarget() === status) this._dropTarget.set(null);
-  }
+  onColumnDragLeave(status: GroomingStatus): void { this.drag.onDragLeave(status); }
 
   onColumnDrop(event: DragEvent, status: GroomingStatus): void {
-    event.preventDefault();
-    const draggedId = this._dragging();
-    this._dragging.set(null);
-    this._dropTarget.set(null);
-    if (!draggedId) return;
-    const item = this.vaultItemsService.getById(draggedId);
-    if (!item || item.grooming_status === status) return;
+    const id = this.drag.onDrop(event, status);
+    if (!id) return;
     // Single write path — emits grooming_status_changed event for audit.
-    this.vaultItemsService.setGroomingStatus(draggedId, status, null);
+    this.vaultItemsService.setGroomingStatus(id, status, null);
   }
 
-  isEligibleDropTarget(status: GroomingStatus): boolean {
-    const draggedId = this._dragging();
-    if (!draggedId) return false;
-    const item = this.vaultItemsService.getById(draggedId);
-    return !!item && item.grooming_status !== status;
-  }
-
-  // --- filter chip option lists ------------------------------------------
+  // --- filter groups ------------------------------------------------------
+  // Single computed packages all three dimensions for the generic KanbanFilterBar.
   // Each dimension's counts reflect items filtered by all OTHER dimensions, so
   // clicking @ralph doesn't make @ralph's own count drop to zero.
 
-  readonly projectOptions = computed<FilterOption<string>[]>(() => {
+  readonly filterGroups = computed<FilterGroup[]>(() => [
+    this.buildProjectGroup(),
+    this.buildOwnerGroup(),
+    this.buildPriorityGroup(),
+  ]);
+
+  private buildProjectGroup(): FilterGroup<string> {
     const items = this.applyFilters({ skipProject: true });
     const counts = new Map<string, number>();
     for (const item of items) {
@@ -183,15 +175,16 @@ export class GroomingBoard {
         counts.set(l.project_id as string, (counts.get(l.project_id as string) ?? 0) + 1);
       }
     }
-    return this.projectsService.activeProjects().map(p => ({
+    const options: FilterOption<string>[] = this.projectsService.activeProjects().map(p => ({
       value: p.id as string,
       label: p.display_name,
       count: counts.get(p.id as string) ?? 0,
       tone:  p.id as string,
     }));
-  });
+    return { id: PROJECT, label: 'Project', options, active: this.projectFilter() };
+  }
 
-  readonly ownerOptions = computed<FilterOption<string>[]>(() => {
+  private buildOwnerGroup(): FilterGroup<string> {
     const items = this.applyFilters({ skipOwner: true });
     const counts = new Map<string, number>();
     let unassigned = 0;
@@ -202,17 +195,17 @@ export class GroomingBoard {
         unassigned++;
       }
     }
-    const opts: FilterOption<string>[] = this.actorsService.activeActors().map(a => ({
+    const options: FilterOption<string>[] = this.actorsService.activeActors().map(a => ({
       value: a.id as string,
       label: `@${a.id}`,
       count: counts.get(a.id as string) ?? 0,
       tone:  a.id as string,
     }));
-    opts.push({ value: UNASSIGNED, label: 'unassigned', count: unassigned });
-    return opts;
-  });
+    options.push({ value: UNASSIGNED, label: 'unassigned', count: unassigned });
+    return { id: OWNER, label: 'Owner', options, active: this.ownerFilter() };
+  }
 
-  readonly priorityOptions = computed<FilterOption<number>[]>(() => {
+  private buildPriorityGroup(): FilterGroup<number> {
     const items = this.applyFilters({ skipPriority: true });
     const counts = new Map<number, number>();
     for (const item of items) {
@@ -220,41 +213,32 @@ export class GroomingBoard {
       const key = eff === null ? NO_PRIORITY : eff;
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
-    return [
+    const options: FilterOption<number>[] = [
       { value: 0,  label: 'P0', count: counts.get(0)  ?? 0, tone: 'P0' },
       { value: 1,  label: 'P1', count: counts.get(1)  ?? 0, tone: 'P1' },
       { value: 2,  label: 'P2', count: counts.get(2)  ?? 0, tone: 'P2' },
       { value: 3,  label: 'P3', count: counts.get(3)  ?? 0, tone: 'P3' },
       { value: NO_PRIORITY, label: 'no priority', count: counts.get(NO_PRIORITY) ?? 0 },
     ];
-  });
-
-  // --- toggle handlers ---------------------------------------------------
-
-  toggleProject(id: string):  void { this.toggleSetMember(this._projectFilter,  id); }
-  toggleOwner(id: string):    void { this.toggleSetMember(this._ownerFilter,    id); }
-  togglePriority(v: number):  void { this.toggleSetMember(this._priorityFilter, v);  }
-
-  private toggleSetMember<T>(sig: ReturnType<typeof signal<Set<T>>>, value: T): void {
-    sig.update(set => {
-      const next = new Set(set);
-      next.has(value) ? next.delete(value) : next.add(value);
-      return next;
-    });
+    return { id: PRIORITY, label: 'Priority', options, active: this.priorityFilter() };
   }
 
-  resetFilters(): void {
-    this._projectFilter.set(new Set());
-    this._ownerFilter.set(new Set());
-    this._priorityFilter.set(new Set());
+  // Single toggle handler — generic filter bar emits (groupId, value); we route
+  // to the composable, which knows nothing about the dimensions.
+  onFilterToggle(event: { groupId: string; value: string | number }): void {
+    this.filter.toggle(event.groupId, event.value);
   }
+
+  resetFilters(): void { this.filter.reset(); }
 
   // --- internal: apply all filters with optional skip --------------------
+  // Predicates live here because they know about VaultItem shape — the
+  // composable owns signal state, the board owns the entity-aware logic.
 
   private applyFilters(opts: { skipProject?: boolean; skipOwner?: boolean; skipPriority?: boolean } = {}): VaultItem[] {
-    const projF  = this._projectFilter();
-    const ownerF = this._ownerFilter();
-    const priF   = this._priorityFilter();
+    const projF  = this.projectFilter();
+    const ownerF = this.ownerFilter();
+    const priF   = this.priorityFilter();
 
     return this.vaultItemsService.items().filter(item => {
       if (item.type !== 'task') return false;
