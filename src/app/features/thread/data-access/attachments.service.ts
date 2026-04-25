@@ -10,6 +10,8 @@ import type { Attachment, AttachmentKind } from '../../../domain/attachments';
 import type { AttachmentId, ThreadMessageId } from '../../../domain/ids';
 import { attachmentId } from '../../../domain/ids';
 import { environment } from '../../../../environments/environment';
+import { isSeedMode } from '../../../shared/seed-mode';
+import { SEED } from '../../../domain/seed';
 
 @Injectable({ providedIn: 'root' })
 export class AttachmentsService {
@@ -29,6 +31,18 @@ export class AttachmentsService {
   // Called by ThreadView after messages load. May be called again on re-fetch — idempotent.
   loadFor(messageIds: ThreadMessageId[]): void {
     if (messageIds.length === 0) return;
+
+    if (isSeedMode()) {
+      const want = new Set<string>(messageIds.map(id => id as string));
+      const bucket: Record<string, Attachment[]> = {};
+      for (const att of SEED.attachments) {
+        const key = att.thread_message_id as string;
+        if (!want.has(key)) continue;
+        (bucket[key] ??= []).push(att);
+      }
+      this._byMessage.update(map => ({ ...map, ...bucket }));
+      return;
+    }
 
     // PostgREST-style: ?thread_message_id=in.(id1,id2,…)
     const inList = messageIds.join(',');

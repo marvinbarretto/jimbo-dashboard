@@ -49,18 +49,28 @@ export class ProjectsService {
     const now = new Date().toISOString();
     const optimistic: Project = { ...payload, created_at: now };
     this._projects.update(ps => [...ps, optimistic]);
+
+    if (isSeedMode()) {
+      // No server confirm — emit event against the (final) id immediately.
+      this.activityService.post({
+        type: 'project_created',
+        project_id: payload.id,
+        actor_id: this.currentActorId,
+      });
+      return;
+    }
+
     this.http.post<Project[]>(this.url, payload, { headers: { Prefer: 'return=representation' } })
       .subscribe({
         next: ([created]) => {
           this._projects.update(ps => ps.map(p => p.id === payload.id ? created : p));
-          // Emit project_created event after server confirms.
           this.activityService.post({
             type: 'project_created',
             project_id: created.id,
             actor_id: this.currentActorId,
           });
         },
-        error: ()          => this._projects.update(ps => ps.filter(p => p.id !== payload.id)),
+        error: () => this._projects.update(ps => ps.filter(p => p.id !== payload.id)),
       });
   }
 
@@ -70,18 +80,38 @@ export class ProjectsService {
     const prior = this.getById(id);
     if (!prior) return;
     const projectIdTyped = prior.id;
+    const optimistic = { ...prior, ...patch };
+    this._projects.update(ps => ps.map(p => p.id === id ? optimistic : p));
+
+    if (isSeedMode()) {
+      this.emitDiffEvents(projectIdTyped, prior, optimistic);
+      return;
+    }
+
     const params = new HttpParams().set('id', `eq.${id}`);
     this.http.patch<Project[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
-      .subscribe({ next: ([updated]) => {
-        this._projects.update(ps => ps.map(p => p.id === id ? updated : p));
-        this.emitDiffEvents(projectIdTyped, prior, updated);
-      } });
+      .subscribe({
+        next: ([updated]) => {
+          this._projects.update(ps => ps.map(p => p.id === id ? updated : p));
+          this.emitDiffEvents(projectIdTyped, prior, updated);
+        },
+        error: () => this._projects.update(ps => ps.map(p => p.id === id ? prior : p)),
+      });
   }
 
   remove(id: string): void {
+    const prior = this.getById(id);
+    this._projects.update(ps => ps.filter(p => p.id !== id));
+
+    if (isSeedMode()) return;
+
     const params = new HttpParams().set('id', `eq.${id}`);
     this.http.delete(this.url, { params })
-      .subscribe({ next: () => this._projects.update(ps => ps.filter(p => p.id !== id)) });
+      .subscribe({
+        error: () => {
+          if (prior) this._projects.update(ps => [...ps, prior]);
+        },
+      });
   }
 
   // Compares the prior project row to the post-update row and posts one event per

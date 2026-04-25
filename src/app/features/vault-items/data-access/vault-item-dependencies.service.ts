@@ -66,6 +66,9 @@ export class VaultItemDependenciesService {
       ...map,
       [blockedId]: [...(map[blockedId] ?? []), row],
     }));
+
+    if (isSeedMode()) return;
+
     this.http.post<VaultItemDependency>(this.url, { blocker_id: blockerId, blocked_id: blockedId }).subscribe({
       error: () => this._depsByItem.update(map => ({
         ...map,
@@ -81,6 +84,9 @@ export class VaultItemDependenciesService {
       ...map,
       [blockedId]: prior.filter(r => r.blocker_id !== blockerId),
     }));
+
+    if (isSeedMode()) return;
+
     const params = new HttpParams()
       .set('blocker_id', `eq.${blockerId}`)
       .set('blocked_id', `eq.${blockedId}`);

@@ -68,6 +68,8 @@ export class ActivityEventsService {
       [key]: [...(map[key] ?? []), optimistic],
     }));
 
+    if (isSeedMode()) return;
+
     this.http.post<VaultActivityEvent>(this.url, optimistic).subscribe({
       // Reconcile the temp id with the server-assigned one.
       next: saved => this._eventsByItem.update(map => ({

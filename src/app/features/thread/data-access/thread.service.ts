@@ -66,6 +66,8 @@ export class ThreadService {
       this._applyAnsweredBy(id, questionId, payload.id);
     }
 
+    if (isSeedMode()) return;
+
     this.http
       .post<ThreadMessage[]>(this.url, payload, { headers: { Prefer: 'return=representation' } })
       .subscribe({
@@ -90,17 +92,21 @@ export class ThreadService {
   }
 
   markAnswered(questionId: ThreadMessageId, answerId: ThreadMessageId): void {
+    // Apply optimistic update locally first so seed mode + offline both work.
+    const buckets = this._messagesByItem();
+    const entry = Object.entries(buckets).find(([, msgs]) => msgs.some(m => m.id === questionId));
+    if (!entry) return;
+    const [vaultItemId] = entry;
+    this._applyAnsweredBy(vaultItemId as VaultItemId, questionId, answerId);
+
+    if (isSeedMode()) return;
+
     const patch: MarkAnsweredPayload = { answered_by: answerId };
     const params = new HttpParams().set('id', `eq.${questionId}`);
     this.http
       .patch<ThreadMessage[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
       .subscribe({
         next: ([updated]) => {
-          // Locate the vault item bucket containing this question.
-          const buckets = this._messagesByItem();
-          const entry = Object.entries(buckets).find(([, msgs]) => msgs.some(m => m.id === questionId));
-          if (!entry) return;
-          const [vaultItemId] = entry;
           this._messagesByItem.update(map => ({
             ...map,
             [vaultItemId]: map[vaultItemId].map(m => m.id === questionId ? updated : m),

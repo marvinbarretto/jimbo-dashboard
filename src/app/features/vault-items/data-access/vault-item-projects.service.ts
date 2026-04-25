@@ -50,6 +50,9 @@ export class VaultItemProjectsService {
       ...map,
       [vaultItemId]: [...(map[vaultItemId] ?? []), row],
     }));
+
+    if (isSeedMode()) return;
+
     this.http.post<VaultItemProject>(this.url, row).subscribe({
       // Nothing to reconcile — composite PK row has no server-generated id.
       error: () => this._projectsByItem.update(map => ({
@@ -66,6 +69,9 @@ export class VaultItemProjectsService {
       ...map,
       [vaultItemId]: prior.filter(r => r.project_id !== projectId),
     }));
+
+    if (isSeedMode()) return;
+
     const params = new HttpParams()
       .set('vault_item_id', `eq.${vaultItemId}`)
       .set('project_id', `eq.${projectId}`);

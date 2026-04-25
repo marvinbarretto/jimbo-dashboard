@@ -62,6 +62,8 @@ export class ProjectActivityEventsService {
       [key]: [...(map[key] ?? []), optimistic],
     }));
 
+    if (isSeedMode()) return;
+
     this.http.post<ProjectActivityEvent>(this.url, optimistic).subscribe({
       next: saved => this._eventsByProject.update(map => ({
         ...map,
