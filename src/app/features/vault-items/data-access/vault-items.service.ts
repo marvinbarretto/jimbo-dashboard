@@ -1,9 +1,12 @@
-// NOTE: The /vault-items endpoint does not yet exist in jimbo-api (Hono + SQLite on VPS).
-// This service scaffolds the pattern so the frontend is ready when the backend catches up.
+// Reads from the dashboard's new Hono+Drizzle API at /api/vault-items, which
+// in turn reads from the jimbo_pg Postgres (the PoC entity store).
+//
+// Mutations still go via the legacy PostgREST path until we add write
+// endpoints to the new API. Seed mode is preserved for offline UI work.
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import type { VaultItem, CreateVaultItemPayload, UpdateVaultItemPayload, GroomingStatus } from '@domain/vault/vault-item';
+import type { VaultItem, CreateVaultItemPayload, UpdateVaultItemPayload, GroomingStatus, VaultItemType, Priority, Actionability } from '@domain/vault/vault-item';
 import { isActive } from '@domain/vault/vault-item';
 import type { ActorId, VaultItemId } from '@domain/ids';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
@@ -42,9 +45,14 @@ export class VaultItemsService {
       this._loading.set(false);
       return;
     }
-    this.http.get<VaultItem[]>(`${this.url}?order=seq`).subscribe({
-      next: data => { this._items.set(data); this._loading.set(false); },
-      error: ()   => this._loading.set(false),
+    // /api/vault-items returns the board-shaped response from the new Hono
+    // service (jimbo_pg-backed). Map each row to the dashboard's VaultItem
+    // shape — the production schema is wider than VaultItem and uses
+    // different conventions (status: 'archived' instead of archived_at, etc.),
+    // so we adapt at the boundary rather than reshape every consumer.
+    this.http.get<ApiVaultItemsResponse>(`/api/vault-items?limit=2000`).subscribe({
+      next: ({ items }) => { this._items.set(items.map(toVaultItem)); this._loading.set(false); },
+      error: ()         => this._loading.set(false),
     });
   }
 
@@ -296,4 +304,114 @@ export class VaultItemsService {
         },
       });
   }
+}
+
+// ── API response adaptation ────────────────────────────────────────────────
+// The new /api/vault-items endpoint returns the production schema shape, which
+// is wider and uses different conventions than the dashboard's VaultItem.
+// Map at the boundary so consumers don't need to know about the drift.
+
+interface ApiVaultItem {
+  id: string;
+  seq: number;
+  title: string;
+  type: string;                                    // 16+ values in production
+  status: 'active' | 'inbox' | 'archived' | 'done';
+  body: string | null;
+  ai_priority: number | null;
+  manual_priority: number | null;
+  priority_confidence: number | null;
+  ai_rationale: string | null;
+  actionability: string | null;
+  assigned_to: string;
+  route: string;
+  tags: string[];
+  ready: boolean;
+  is_epic: boolean;
+  parent_id: string | null;
+  acceptance_criteria: string | null;              // production stores as text
+  blocked_by: string | null;
+  blocked_reason: string | null;
+  blocked_at: string | null;
+  due_at: string | null;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+  grooming_status: string;
+  grooming_started_at: string | null;
+  source_kind: string | null;
+  source_ref: string | null;
+  source_url: string | null;
+  source_signal: string | null;
+
+  // Embedded — used by the board directly, not by the VaultItem shape.
+  primary_project_id: string | null;
+  primary_project_name: string | null;
+  open_questions_count: number;
+  latest_activity_at: string | null;
+  children_count: number;
+}
+
+interface ApiVaultItemsResponse {
+  items: ApiVaultItem[];
+  total: number;
+  limit: number;
+}
+
+// Production has many type values (task/idea/bookmark/travel/recipe/...);
+// the dashboard's VaultItem narrows to three. Anything outside the union
+// falls back to 'note' — we'll widen the union when the UI needs to.
+function narrowType(t: string): VaultItemType {
+  return t === 'task' || t === 'bookmark' || t === 'note' ? t : 'note';
+}
+
+// Production has 6 grooming statuses; dashboard has 7. The extra one
+// ('intake_complete') doesn't exist in the data, so any production value
+// passes through; legacy 'intake_complete' stays valid in the type.
+function narrowGroomingStatus(s: string): GroomingStatus {
+  const valid: readonly GroomingStatus[] = ['ungroomed','intake_rejected','intake_complete','classified','decomposed','ready'];
+  return (valid as readonly string[]).includes(s) ? s as GroomingStatus : 'ungroomed';
+}
+
+function narrowActionability(a: string | null): Actionability | null {
+  return a === 'clear' || a === 'needs-breakdown' || a === 'vague' ? a : null;
+}
+
+function narrowPriority(p: number | null): Priority | null {
+  return p === 0 || p === 1 || p === 2 || p === 3 ? p : null;
+}
+
+function toVaultItem(a: ApiVaultItem): VaultItem {
+  return {
+    id: vaultItemId(a.id),
+    seq: a.seq,
+    title: a.title,
+    body: a.body ?? '',
+    type: narrowType(a.type),
+    assigned_to: a.assigned_to === 'unassigned' ? null : actorId(a.assigned_to),
+    tags: a.tags,
+    // Production stores acceptance_criteria as free text; the dashboard expects
+    // a parsed array. Until we have a parser, surface as a single unchecked item
+    // when text is present, [] otherwise.
+    acceptance_criteria: a.acceptance_criteria
+      ? [{ text: a.acceptance_criteria, done: false }]
+      : [],
+    grooming_status: narrowGroomingStatus(a.grooming_status),
+    ai_priority: narrowPriority(a.ai_priority),
+    manual_priority: narrowPriority(a.manual_priority),
+    ai_rationale: a.ai_rationale,
+    priority_confidence: a.priority_confidence,
+    actionability: narrowActionability(a.actionability),
+    parent_id: a.parent_id ? vaultItemId(a.parent_id) : null,
+    // Dashboard's archived_at is derived; production uses status='archived'.
+    // Reconstruct an archived_at from updated_at when archived.
+    archived_at: a.status === 'archived' ? a.updated_at : null,
+    due_at: a.due_at,
+    completed_at: a.completed_at,
+    // Production splits source into kind/ref/url; the dashboard's Source union
+    // is richer than we can honestly reconstruct. Surface null for now —
+    // detail page can re-fetch and parse properly when needed.
+    source: null,
+    created_at: a.created_at,
+  };
 }
