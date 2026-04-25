@@ -53,3 +53,12 @@ Thumbs.db
 
 # Local dev credentials — contains basic auth password
 proxy.conf.json
+
+# Local environment + secrets
+.env
+.env.local
+.env.*.local
+
+# Local snapshots of production data (large; pulled via SSH for ETL testing)
+.local/
+
