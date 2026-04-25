@@ -3,6 +3,25 @@ import { and, desc, inArray, sql } from 'drizzle-orm';
 import { db } from '../../db/client';
 import { vaultNotes } from '../../db/schema';
 
+// Shape of the embedded latest activity event — joined server-side so the
+// client renders without follow-up actor lookups.
+interface LiveEvent {
+  ts: string;
+  actor_id: string;
+  actor_display_name: string | null;
+  action: string;
+  from_value: string | null;
+  to_value: string | null;
+}
+
+interface LiveMessage {
+  created_at: string;
+  author_actor_id: string;
+  author_display_name: string | null;
+  kind: string;
+  body_excerpt: string;
+}
+
 // ── GET /api/vault-items ───────────────────────────────────────────────────
 //
 // Board-shaped list. Each row carries the data the kanban needs to render
@@ -108,6 +127,58 @@ vaultItemsRoute.get('/', async (c) => {
         SELECT MAX(na.ts)
         FROM "note_activity" na
         WHERE na.note_id = "vault_notes"."id"
+      )`,
+
+      // Latest note_activity row, packaged as JSON. Actor display name joined
+      // here so the client doesn't need to look it up. Returns null if no
+      // activity exists yet for this item.
+      latest_event: sql<LiveEvent | null>`(
+        SELECT json_build_object(
+          'ts',                 na.ts,
+          'actor_id',           na.actor,
+          'actor_display_name', a.display_name,
+          'action',             na.action,
+          'from_value',         na.from_value,
+          'to_value',           na.to_value
+        )
+        FROM "note_activity" na
+        LEFT JOIN "actors" a ON a.id = na.actor
+        WHERE na.note_id = "vault_notes"."id"
+        ORDER BY na.ts DESC
+        LIMIT 1
+      )`,
+
+      // Latest thread_message row. Body truncated server-side to keep the
+      // payload small — the card excerpt only renders ~100 chars anyway.
+      latest_message: sql<LiveMessage | null>`(
+        SELECT json_build_object(
+          'created_at',           tm.created_at,
+          'author_actor_id',      tm.author_actor_id,
+          'author_display_name',  a.display_name,
+          'kind',                 tm.kind,
+          'body_excerpt',         CASE
+            WHEN length(tm.body) <= 120 THEN tm.body
+            ELSE substr(tm.body, 1, 119) || '…'
+          END
+        )
+        FROM "thread_messages" tm
+        LEFT JOIN "actors" a ON a.id = tm.author_actor_id
+        WHERE tm.vault_item_id = "vault_notes"."id"
+        ORDER BY tm.created_at DESC
+        LIMIT 1
+      )`,
+
+      // Days since the item entered its current grooming_status. Computed
+      // from grooming_audit (most recent transition INTO this status) — drives
+      // the "stuck Nd" hint on the kanban card.
+      days_in_column: sql<number>`(
+        SELECT COALESCE(
+          EXTRACT(EPOCH FROM (NOW() - MAX(ga.created_at))) / 86400,
+          0
+        )::float
+        FROM "grooming_audit" ga
+        WHERE ga.note_id = "vault_notes"."id"
+          AND ga.to_status = "vault_notes"."grooming_status"
       )`,
 
       children_count: sql<number>`(

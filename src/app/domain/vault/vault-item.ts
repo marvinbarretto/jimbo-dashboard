@@ -143,6 +143,42 @@ export interface VaultItem {
   // Storing it creates a silent audit hole: a row can be touched without an event,
   // leaving the history incomplete. Every mutation must produce an event; the timestamp
   // of the most recent event is the "last modified" signal.
+
+  // ── View-state embeds — populated by the board API on read ───────────────
+  // These are NOT stored on the row server-side. They're correlated subqueries
+  // on the /api/vault-items response, packaged here so consumers can read them
+  // off the item without N+1 lookups against parallel services. All optional;
+  // legacy code paths (seed mode, manual construction) leave them undefined.
+  primary_project_id?:    string | null;
+  primary_project_name?:  string | null;
+  open_questions_count?:  number;
+  latest_activity_at?:    string | null;
+  children_count?:        number;
+  // Raw shape of latest activity event with actor display name joined; the
+  // board formats this into LiveSnapshot for the expanded card view.
+  latest_event?:          LiveEventEmbed | null;
+  // Raw shape of latest thread message with author display name joined.
+  latest_message?:        LiveMessageEmbed | null;
+  // Days since this item entered its current grooming_status. Drives the
+  // "stuck Nd" hint. 0 when no audit row exists for the current status.
+  days_in_column?:        number;
+}
+
+export interface LiveEventEmbed {
+  ts: string;
+  actor_id: string;
+  actor_display_name: string | null;
+  action: string;
+  from_value: string | null;
+  to_value: string | null;
+}
+
+export interface LiveMessageEmbed {
+  created_at: string;
+  author_actor_id: string;
+  author_display_name: string | null;
+  kind: string;
+  body_excerpt: string;
 }
 
 export type CreateVaultItemPayload =

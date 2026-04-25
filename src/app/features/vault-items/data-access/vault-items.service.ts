@@ -350,6 +350,22 @@ interface ApiVaultItem {
   open_questions_count: number;
   latest_activity_at: string | null;
   children_count: number;
+  latest_event: {
+    ts: string;
+    actor_id: string;
+    actor_display_name: string | null;
+    action: string;
+    from_value: string | null;
+    to_value: string | null;
+  } | null;
+  latest_message: {
+    created_at: string;
+    author_actor_id: string;
+    author_display_name: string | null;
+    kind: string;
+    body_excerpt: string;
+  } | null;
+  days_in_column: number;
 }
 
 interface ApiVaultItemsResponse {
@@ -413,5 +429,15 @@ function toVaultItem(a: ApiVaultItem): VaultItem {
     // detail page can re-fetch and parse properly when needed.
     source: null,
     created_at: a.created_at,
+
+    // View-state embeds — board reads these instead of calling parallel services.
+    primary_project_id:   a.primary_project_id,
+    primary_project_name: a.primary_project_name,
+    open_questions_count: a.open_questions_count,
+    latest_activity_at:   a.latest_activity_at,
+    children_count:       a.children_count,
+    latest_event:         a.latest_event,
+    latest_message:       a.latest_message,
+    days_in_column:       a.days_in_column,
   };
 }

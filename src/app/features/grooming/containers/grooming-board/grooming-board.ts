@@ -26,6 +26,7 @@ import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
 import { createKanbanDragState } from '@shared/kanban/drag-state';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
+import { isSeedMode } from '@shared/seed-mode';
 
 // "Unassigned" is its own filter token alongside actor IDs. Using a sentinel string
 // keeps the Set<string> simple — branded ActorId values are still strings at runtime.
@@ -99,14 +100,15 @@ export class GroomingBoard {
   });
 
   constructor() {
-    // Pre-load thread + project junctions + activity events for visible cards so
-    // badges (open question, project chip, pulse dot) render synchronously.
-    // Activity events drive the per-card `lastActivityAt` → pulse intensity.
+    // All per-card data (project chip, open-questions badge, pulse intensity,
+    // children count, live snapshot, days-in-column) comes from the
+    // /api/vault-items embeds. Per-item parallel-service loads only fire in
+    // seed mode now — vault-item-detail still calls them on demand.
     effect(() => {
+      if (!isSeedMode()) return;
       for (const item of this.vaultItemsService.items()) {
         if (item.type !== 'task' || !isActive(item)) continue;
         this.threadService.loadFor(item.id);
-        this.vaultItemProjectsService.loadFor(item.id);
         this.activityEventsService.loadFor(item.id);
       }
     });
@@ -153,7 +155,15 @@ export class GroomingBoard {
 
   // --- per-card derived data passed to <app-grooming-card> ---------------
 
+  // Per-card derived data — first preference is the embed packaged onto the
+  // item by the /api/vault-items response (avoids N+1 against parallel
+  // services). Falls back to seed-mode service lookups for legacy / offline use.
+
   primaryProject(item: VaultItem): { id: string; display_name: string } | null {
+    if (item.primary_project_id && item.primary_project_name) {
+      return { id: item.primary_project_id, display_name: item.primary_project_name };
+    }
+    // Seed-mode fallback — legacy junction lookup.
     const links = this.vaultItemProjectsService.projectsFor(item.id)();
     if (!links.length) return null;
     const project = this.projectsService.getById(links[0].project_id);
@@ -161,11 +171,13 @@ export class GroomingBoard {
   }
 
   openQuestionsCount(item: VaultItem): number {
-    return this.threadService.openQuestionsFor(item.id)().length;
+    return item.open_questions_count
+        ?? this.threadService.openQuestionsFor(item.id)().length;
   }
 
   childrenCount(item: VaultItem): number {
-    return this.vaultItemsService.items().filter(i => i.parent_id === item.id).length;
+    return item.children_count
+        ?? this.vaultItemsService.items().filter(i => i.parent_id === item.id).length;
   }
 
   parentSeq(item: VaultItem): number | null {
@@ -176,23 +188,43 @@ export class GroomingBoard {
 
   // MAX(activity_events.at) for an item — the canonical "last touched" signal,
   // drives both the staleness gradient (away from now) and the pulse dot
-  // (toward now). Falls back to created_at if no events have loaded yet.
+  // (toward now). Embed if available, else compute from loaded events, else
+  // fall back to created_at.
   lastActivityAt(item: VaultItem): string {
+    if (item.latest_activity_at) return item.latest_activity_at;
     const events = this.activityEventsService.eventsFor(item.id)();
-    // events are sorted desc — head is the latest
     return events.length > 0 ? events[0].at : item.created_at;
   }
 
   // Days since the item entered its current grooming column. Drives the "stuck"
-  // hint on the card — orthogonal to overall staleness.
+  // hint on the card. Embed if available, else compute from loaded events.
   daysInColumn(item: VaultItem): number {
-    return stuckDays(item, this.activityEventsService.eventsFor(item.id)());
+    return item.days_in_column
+        ?? stuckDays(item, this.activityEventsService.eventsFor(item.id)());
   }
 
   // Pre-format the latest activity event + latest thread message for the card's
-  // expanded view. Card is dumb — board does the lookups (actor names, event
-  // descriptions) so the card just renders strings.
+  // expanded view. Reads server-joined embeds when available; falls back to the
+  // legacy seed-mode service path otherwise.
   liveSnapshot(item: VaultItem): LiveSnapshot {
+    if (item.latest_event !== undefined || item.latest_message !== undefined) {
+      const ev = item.latest_event;
+      const msg = item.latest_message;
+      return {
+        latestEvent: ev ? {
+          actorLabel:  `@${ev.actor_display_name ?? ev.actor_id}`,
+          description: describeProductionAction(ev.action, ev.from_value, ev.to_value),
+          at:          ev.ts,
+        } : null,
+        latestMessage: msg ? {
+          authorLabel: `@${msg.author_display_name ?? msg.author_actor_id}`,
+          bodyExcerpt: msg.body_excerpt,
+          at:          msg.created_at,
+        } : null,
+      };
+    }
+
+    // Seed-mode legacy fallback — uses parallel services.
     const events = this.activityEventsService.eventsFor(item.id)();
     const messages = this.threadService.messagesFor(item.id)();
 
@@ -204,7 +236,6 @@ export class GroomingBoard {
         }
       : null;
 
-    // Messages aren't pre-sorted — pick by created_at desc.
     const sortedMessages = [...messages].sort((a, b) => b.created_at.localeCompare(a.created_at));
     const latestMessage = sortedMessages.length > 0
       ? {
@@ -244,6 +275,7 @@ export class GroomingBoard {
     if (text.length <= max) return text;
     return text.slice(0, max - 1).trimEnd() + '…';
   }
+
 
   // Rolled-up priority for epic cards: the most-urgent (lowest integer) priority
   // among unfinished children. Returns null if the item isn't an epic OR no
@@ -402,5 +434,25 @@ export class GroomingBoard {
 
       return true;
     });
+  }
+}
+
+// ── Production action descriptions ───────────────────────────────────────
+// Map raw note_activity.action codes (production schema) to short human-readable
+// strings for the live snapshot row. Production action vocabulary is wider than
+// the dashboard's VaultActivityEvent union — these are best-effort renderings.
+function describeProductionAction(action: string, from: string | null, to: string | null): string {
+  switch (action) {
+    case 'grooming_status_changed':   return `moved ${(from ?? '?').replace(/_/g, ' ')} → ${(to ?? '?').replace(/_/g, ' ')}`;
+    case 'reassigned':                return from ? `reassigned @${from} → @${to}` : `assigned to @${to}`;
+    case 'submitted_analysis':        return 'submitted analysis';
+    case 'submitted_decomposition':   return 'submitted decomposition';
+    case 'priority_scored':           return to ? `scored priority P${to}` : 'scored priority';
+    case 'priority_changed':          return `priority ${from ?? '?'} → ${to ?? '?'}`;
+    case 'question_raised':           return 'raised a question';
+    case 'feedback_requeue':          return 'requeued for grooming';
+    case 'feedback_reject':           return 'rejected the proposal';
+    case 'commission_completed':      return 'commission completed';
+    default:                          return action.replace(/_/g, ' ');
   }
 }
