@@ -153,7 +153,39 @@ After rollback: investigate, iterate, retry cutover. The `JIMBO_PG_URL` env var 
 
 ---
 
-## 9. Cross-references
+## 9. Architecture intent — eventual API consolidation
+
+**Today (post-wave-4):** two Hono services on the VPS share the `jimbo_pg` database — `jimbo-api.service` (port 3100, owns ingestion/cron/AI/dispatch/grooming/interrogate/etc.) and `dashboard-api.service` (port 3201, owns operator-facing reads + dashboard actions). Both are reachable through Caddy at `https://jimbo.fourfoldmedia.uk/api/*` and `/dashboard-api/*` respectively.
+
+**Intent:** consolidate to a single API service backing the new Postgres database. The split is a historical artifact of Phase A (when jimbo-api still owned SQLite and dashboard-api was a thin Hono on top of the new PG) — its original justification is gone.
+
+**Why consolidate:**
+- Solo-operator footprint: one process to monitor, one systemd unit, one env file (today both need `JIMBO_PG_URL` kept in sync manually)
+- Shared `db-pg` client, schemas, types currently duplicated across two repos
+- Single docs URL, single deploy ceremony, single auth surface
+- Reduce env drift between `/opt/jimbo-api.env` and `/opt/dashboard-api.env`
+
+**Why not yet:**
+- Phase B is fresh — let the 7-day watch close cleanly first
+- Real work to do — merge codebases, reconcile auth/middleware patterns, route splitting decisions, single deploy pipeline. Probably a couple of focused days.
+- No daily pain today; deferring until a concrete trigger surfaces (env drift bites, repeated double-edit overhead, scaling profile changes)
+
+**Trigger conditions to act:**
+- Updating both repos for the same change repeatedly
+- Env files drift and cause an incident
+- Feature work where the split forces awkward route placement
+- 7-day watch passes clean and there's a calm session to do it properly
+
+**Open question for the consolidation:** which repo wins?
+- (a) Merge dashboard/api/ into jimbo-api as a `routes/dashboard/*` namespace — keeps the production-facing repo authoritative
+- (b) Reverse — dashboard repo absorbs jimbo-api logic — probably wrong; jimbo-api is more central
+- (c) New repo `jimbo-server/` with both — tempting but doubles the migration cost
+
+(a) likely wins. Decide at the time.
+
+---
+
+## 10. Cross-references
 
 - Archived plan: `docs/architecture/archive/phase-b-completed.md`
 - Architecture overview: `docs/architecture/whiteboard.md`
