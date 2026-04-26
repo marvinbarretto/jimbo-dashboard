@@ -1,6 +1,16 @@
-# Phase B — SQLite → Postgres migration plan
+# Phase B — SQLite → Postgres migration plan (COMPLETED)
 
-**Status as of 2026-04-25 evening:** Phase A complete. Reads from `jimbo_pg` are wired into the dashboard via `dashboard/api/`. Phase B is the real migration: porting jimbo-api's writers from SQLite to Postgres, then sunsetting SQLite.
+**Status:** ✅ Cutover complete **2026-04-26 12:21 UTC**. ~63 second downtime. 10/10 smoke routes returned 200; no Postgres-side errors post-restart. Forward work tracked in `dashboard/docs/architecture/phase-b-followups.md`.
+
+**Cutover commits:**
+- `eca990b` — db-pg foundation + settings.ts proof-of-concept (jimbo-api)
+- `ac23835` — wave 1 (vault, dispatch, grooming, email)
+- `4d5b9bb` — wave 2 (context, coach, vault relations, grooming aux, misc)
+- `4146ac0` — wave 3a (costs, product-summaries)
+- `b0439f1` — wave 3b (search → tsvector + pg_trgm)
+- `21bed92`, `31ccbd5` — dashboard schema migrations 0003/0004
+
+**Original status when planning began (2026-04-25 evening):** Phase A complete. Reads from `jimbo_pg` are wired into the dashboard via `dashboard/api/`. Phase B is the real migration: porting jimbo-api's writers from SQLite to Postgres, then sunsetting SQLite.
 
 **Operator decision:** new vault items are FROZEN in production for the duration of this work. No incoming writes during the cutover. This converts what would have been a "dual-write for weeks" project into a "freeze, port, swap, unfreeze" project. Faster, less risky.
 
