@@ -204,3 +204,80 @@ vaultItemsRoute.openapi(listRoute, async (c) => {
 
   return c.json({ items: rows, total: rows.length, limit }, 200);
 });
+
+// ── POST / — quick-capture create ─────────────────────────────────────────
+//
+// Server-to-server proxy to jimbo-api's POST /api/vault/notes. Preserves
+// jimbo-api's authoritative create logic (slug-style id, sequence assignment,
+// ready-flag computation, optional note_links insertion in a transaction).
+// Frontend sends the dashboard-api X-API-Key (interceptor); dashboard-api
+// authenticates upstream with JIMBO_API_KEY held server-side.
+
+const CreateBody = z.object({
+  title: z.string().min(1),
+  body: z.string().optional(),
+  type: z.string().optional(),
+  tags: z.string().optional(),
+  manual_priority: z.number().int().min(0).max(3).optional(),
+  assigned_to: z.string().optional(),
+}).openapi({ description: 'Quick-capture body — embellish later as the parser grows' });
+
+const createRouteDef = createRoute({
+  method: 'post',
+  path: '/',
+  tags: ['VaultItems'],
+  summary: 'Create a vault item (proxies to jimbo-api)',
+  request: {
+    body: { content: { 'application/json': { schema: CreateBody } } },
+  },
+  responses: {
+    201: {
+      description: 'Created',
+      content: { 'application/json': { schema: z.record(z.string(), z.unknown()).openapi({ type: 'object' }) } },
+    },
+    400: {
+      description: 'Validation error from jimbo-api',
+      content: { 'application/json': { schema: z.record(z.string(), z.unknown()).openapi({ type: 'object' }) } },
+    },
+    502: {
+      description: 'Upstream jimbo-api unreachable',
+      content: { 'application/json': { schema: z.object({ error: z.object({ code: z.string(), message: z.string() }) }) } },
+    },
+  },
+});
+
+vaultItemsRoute.openapi(createRouteDef, async (c) => {
+  const body = c.req.valid('json');
+  const upstream = process.env.JIMBO_API_URL;
+  const upstreamKey = process.env.JIMBO_API_KEY;
+  if (!upstream || !upstreamKey) {
+    return c.json(
+      { error: { code: 'UPSTREAM_NOT_CONFIGURED', message: 'JIMBO_API_URL or JIMBO_API_KEY not set' } },
+      502,
+    );
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${upstream}/api/vault/notes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': upstreamKey },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    return c.json(
+      { error: { code: 'UPSTREAM_FETCH_FAILED', message: (e as Error).message } },
+      502,
+    );
+  }
+
+  // Pass through whatever jimbo-api returned — its 201 body is the canonical
+  // VaultNote shape, and 4xx bodies follow the shared ErrorSchema.
+  const payload = await res.json().catch(() => ({}));
+  if (res.status === 201) return c.json(payload as Record<string, unknown>, 201);
+  if (res.status === 400) return c.json(payload as Record<string, unknown>, 400);
+  return c.json(
+    { error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}` } },
+    502,
+  );
+});
