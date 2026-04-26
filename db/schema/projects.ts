@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { pgTable, text, boolean, timestamp, primaryKey, index, uniqueIndex, check } from 'drizzle-orm/pg-core';
 import { vaultNotes } from './vault';
+import { actors } from './actors';
 
 // ── projects ───────────────────────────────────────────────────────────────
 //
@@ -16,8 +17,28 @@ export const projects = pgTable('projects', {
 
   display_name: text('display_name').notNull(),
 
+  // Operator-facing notes — free text, no structure. Used in project list
+  // hovercards and briefings.
+  description: text('description'),
+
   // active / paused / archived. CHECK below.
   status: text('status').notNull().default('active'),
+
+  // Link to the responsible actor. Production SQLite stores this NOT NULL
+  // (every project has an owner) but the dashboard's pre-cutover ETL
+  // synthesizes project rows from "project:slug" tags without owner info, so
+  // we keep this nullable for now. Promote to NOT NULL post-cutover once real
+  // data populates it. FK still enforces referential integrity.
+  owner_actor_id: text('owner_actor_id').references(() => actors.id, { onDelete: 'restrict' }),
+
+  // Definition-of-done at the project level — what "this project is finished"
+  // means. Free text; surfaced on the project page when present.
+  criteria: text('criteria'),
+
+  // Primary repo for the project. Multiple repos can be expressed via
+  // criteria/description for now; promote to a join table if it becomes a
+  // pattern.
+  repo_url: text('repo_url'),
 
   // Optional CSS variable for the chip tint, paralleling actors.color_token.
   color_token: text('color_token'),

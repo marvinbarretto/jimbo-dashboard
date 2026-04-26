@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, text, boolean, timestamp } from 'drizzle-orm/pg-core';
 
 // ── actors ─────────────────────────────────────────────────────────────────
 //
@@ -25,6 +25,13 @@ export const actors = pgTable('actors', {
   // The dashboard already encodes these; mirror them in storage so
   // server-rendered surfaces (briefings) can pick the same hue.
   color_token: text('color_token'),
+
+  // Production-side metadata. runtime distinguishes execution surfaces
+  // ('claude_code', 'codex', 'human'); description is freeform operator notes;
+  // is_active gates whether the dispatch UI offers this actor as a target.
+  runtime: text('runtime'),
+  description: text('description'),
+  is_active: boolean('is_active').notNull().default(true),
 
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
