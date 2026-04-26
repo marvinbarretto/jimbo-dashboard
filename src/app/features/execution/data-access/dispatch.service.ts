@@ -1,11 +1,10 @@
-// Reads dispatch_queue rows from the dashboard's new Hono+Drizzle API at
-// /api/dispatches (jimbo_pg-backed). Mutations (retry) still go via the
-// legacy PostgREST path until write endpoints land.
+// Reads + mutates dispatch_queue rows via dashboard-api at
+// /dashboard-api/api/dispatches (jimbo_pg-backed).
 
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import type { DispatchQueueEntry, DispatchStatus } from '@domain/dispatch';
-import type { DispatchId, VaultItemId, ActorId, SkillId } from '@domain/ids';
+import type { DispatchId, VaultItemId } from '@domain/ids';
 import { dispatchId, vaultItemId, actorId, skillId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { isSeedMode } from '@shared/seed-mode';
@@ -14,7 +13,7 @@ import { SEED } from '@domain/seed';
 @Injectable({ providedIn: 'root' })
 export class DispatchService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${environment.apiUrl}/dispatch-queue`;
+  private readonly url = `${environment.dashboardApiUrl}/api/dispatches`;
 
   private readonly _entries = signal<DispatchQueueEntry[]>([]);
   private readonly _loading = signal(true);
@@ -33,7 +32,7 @@ export class DispatchService {
     // /api/dispatches returns the production schema (6 status values, more
     // columns). Map at the service boundary to the dashboard's narrower
     // DispatchQueueEntry shape.
-    this.http.get<ApiDispatchesResponse>(`${environment.dashboardApiUrl}/api/dispatches?limit=500`).subscribe({
+    this.http.get<ApiDispatchesResponse>(`${this.url}?limit=500`).subscribe({
       next: ({ items }) => { this._entries.set(items.map(toDispatchEntry)); this._loading.set(false); },
       error: ()         => this._loading.set(false),
     });
@@ -71,19 +70,19 @@ export class DispatchService {
 
     if (isSeedMode()) return;
 
-    const params = new HttpParams().set('id', `eq.${id}`);
+    // dashboard-api uses domain field names (error_message, started_at, completed_at).
+    // Send only what changed so other fields stay untouched.
     const patch = {
-      status:       'approved' as const,
-      error:        null,
-      started_at:   null,
-      completed_at: null,
-      retry_count:  prior.retry_count + 1,
+      status:        'approved' as const,
+      error_message: null,
+      started_at:    null,
+      completed_at:  null,
+      retry_count:   prior.retry_count + 1,
     };
-    this.http.patch<DispatchQueueEntry[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
-      .subscribe({
-        next: ([updated]) => this._entries.update(es => es.map(e => e.id === id ? updated : e)),
-        error: ()          => this._entries.update(es => es.map(e => e.id === id ? prior : e)),
-      });
+    this.http.patch<ApiDispatchEntry>(`${this.url}/${encodeURIComponent(id)}`, patch).subscribe({
+      next: (updated) => this._entries.update(es => es.map(e => e.id === id ? toDispatchEntry(updated) : e)),
+      error: ()       => this._entries.update(es => es.map(e => e.id === id ? prior : e)),
+    });
   }
 }
 

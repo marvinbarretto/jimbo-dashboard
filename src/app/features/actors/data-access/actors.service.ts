@@ -1,8 +1,10 @@
-// Reads actors from the dashboard's new Hono+Drizzle API at /api/actors
-// (jimbo_pg-backed). Mutations still hit the legacy PostgREST surface.
+// Reads + mutates actors via dashboard-api at /dashboard-api/api/actors
+// (jimbo_pg-backed). Migration 0003 added runtime/description/is_active to the
+// table; the API now returns them so the synthesis layer that used to infer
+// runtime from id is gone.
 
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import type { Actor, ActorKind, ActorRuntime, CreateActorPayload, UpdateActorPayload } from '@domain/actors';
 import { actorId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
@@ -12,7 +14,7 @@ import { SEED } from '@domain/seed';
 @Injectable({ providedIn: 'root' })
 export class ActorsService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${environment.apiUrl}/actors`;
+  private readonly url = `${environment.dashboardApiUrl}/api/actors`;
 
   private readonly _actors = signal<Actor[]>([]);
   private readonly _loading = signal(true);
@@ -29,7 +31,7 @@ export class ActorsService {
       this._loading.set(false);
       return;
     }
-    this.http.get<{ items: ApiActor[] }>(`${environment.dashboardApiUrl}/api/actors`).subscribe({
+    this.http.get<{ items: ApiActor[] }>(this.url).subscribe({
       next: ({ items }) => { this._actors.set(items.map(toActor)); this._loading.set(false); },
       error: ()         => this._loading.set(false),
     });
@@ -43,34 +45,35 @@ export class ActorsService {
     const now = new Date().toISOString();
     const optimistic: Actor = { ...payload, created_at: now, updated_at: now };
     this._actors.update(as => [...as, optimistic]);
-    this.http.post<Actor[]>(this.url, payload, { headers: { Prefer: 'return=representation' } })
+    this.http.post<ApiActor>(this.url, payload)
       .subscribe({
-        next: ([created]) => this._actors.update(as => as.map(a => a.id === payload.id ? created : a)),
-        error: ()          => this._actors.update(as => as.filter(a => a.id !== payload.id)),
+        next: (created) => this._actors.update(as => as.map(a => a.id === payload.id ? toActor(created) : a)),
+        error: ()        => this._actors.update(as => as.filter(a => a.id !== payload.id)),
       });
   }
 
   update(id: string, patch: UpdateActorPayload): void {
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.patch<Actor[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
-      .subscribe({ next: ([updated]) => this._actors.update(as => as.map(a => a.id === id ? updated : a)) });
+    this.http.patch<ApiActor>(`${this.url}/${encodeURIComponent(id)}`, patch)
+      .subscribe({ next: (updated) => this._actors.update(as => as.map(a => a.id === id ? toActor(updated) : a)) });
   }
 
   remove(id: string): void {
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.delete(this.url, { params })
+    this.http.delete(`${this.url}/${encodeURIComponent(id)}`)
       .subscribe({ next: () => this._actors.update(as => as.filter(a => a.id !== id)) });
   }
 }
 
 // ── API response adaptation ────────────────────────────────────────────────
-// Production schema is narrower than dashboard's Actor — no runtime/description
-// /is_active. Synthesize sensible defaults from kind.
+// Schema now includes runtime/description/is_active (migration 0003), so the
+// adapter is a thin shape-coercion rather than the old synthesis pass.
 
 interface ApiActor {
   id: string;
   display_name: string;
   kind: string;
+  runtime: string | null;
+  description: string | null;
+  is_active: boolean;
   color_token: string | null;
   created_at: string;
   updated_at: string;
@@ -80,24 +83,19 @@ function narrowKind(k: string): ActorKind {
   return k === 'human' || k === 'agent' || k === 'system' ? k : 'agent';
 }
 
-// Best-effort runtime mapping per known agent. ralph/boris are the production
-// executors; richer mapping comes when the production schema acquires the column.
-function inferRuntime(id: string, kind: ActorKind): ActorRuntime {
-  if (kind === 'human') return null;
-  if (id === 'ralph') return 'ollama';
-  if (id === 'boris') return 'openrouter';
+function narrowRuntime(r: string | null): ActorRuntime {
+  if (r === 'ollama' || r === 'anthropic' || r === 'openrouter' || r === 'hermes') return r;
   return null;
 }
 
 function toActor(a: ApiActor): Actor {
-  const kind = narrowKind(a.kind);
   return {
     id: actorId(a.id),
     display_name: a.display_name,
-    kind,
-    runtime: inferRuntime(a.id, kind),
-    description: null,
-    is_active: true,
+    kind: narrowKind(a.kind),
+    runtime: narrowRuntime(a.runtime),
+    description: a.description,
+    is_active: a.is_active,
     created_at: a.created_at,
     updated_at: a.updated_at,
   };

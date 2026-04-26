@@ -1,8 +1,9 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
-import { and, desc, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '../../db/client.js';
 import { dispatchQueue } from '../../db/schema/index.js';
-import { DispatchSchema, listResponse } from '../schemas/shared.js';
+import { DispatchSchema, ErrorSchema, listResponse } from '../schemas/shared.js';
+import { errorResponse } from '../middleware/error.js';
 
 // ── GET / ─────────────────────────────────────────────────────────────────
 //
@@ -107,4 +108,53 @@ dispatchesRoute.openapi(listRoute, async (c) => {
     .limit(limit);
 
   return c.json({ items: rows, total: rows.length, limit }, 200);
+});
+
+// ── PATCH /:id ────────────────────────────────────────────────────────────
+//
+// Operator-triggered mutations on a dispatch row. Currently the only path the
+// dashboard frontend uses is "retry a failed dispatch" — flips status back to
+// 'approved', clears error/timestamps, increments retry_count. Kept generic
+// (any subset of mutable fields) so the next mutation flow doesn't need a
+// new endpoint.
+
+const DispatchPatchBody = z.object({
+  status: z.enum(['proposed','approved','rejected','running','completed','failed','removed']).optional(),
+  executor: z.string().nullable().optional(),
+  error_message: z.string().nullable().optional(),
+  result_summary: z.string().nullable().optional(),
+  retry_count: z.number().int().min(0).optional(),
+  started_at: z.string().nullable().optional(),
+  completed_at: z.string().nullable().optional(),
+});
+
+const DispatchIdParam = z.object({
+  id: z.coerce.number().int().openapi({ param: { name: 'id', in: 'path' }, example: 123 }),
+});
+
+const patchR = createRoute({
+  method: 'patch',
+  path: '/{id}',
+  tags: ['Dispatches'],
+  summary: 'Update mutable fields on a dispatch row',
+  request: {
+    params: DispatchIdParam,
+    body: { content: { 'application/json': { schema: DispatchPatchBody } } },
+  },
+  responses: {
+    200: { description: 'Updated', content: { 'application/json': { schema: DispatchSchema } } },
+    404: { description: 'Not found', content: { 'application/json': { schema: ErrorSchema } } },
+  },
+});
+
+dispatchesRoute.openapi(patchR, async (c) => {
+  const { id } = c.req.valid('param');
+  const patch = c.req.valid('json');
+  // Drizzle maps undefined fields out, so partial patches send only the keys
+  // the caller supplied. Date columns accept ISO strings via the coercion in
+  // postgres.js — null clears the column.
+  const setObj: Record<string, unknown> = { ...patch };
+  const [updated] = await db.update(dispatchQueue).set(setObj).where(eq(dispatchQueue.id, id)).returning();
+  if (!updated) return errorResponse(c, 404, 'DISPATCH_NOT_FOUND', `Dispatch ${id} not found`);
+  return c.json(updated as Record<string, unknown>, 200);
 });

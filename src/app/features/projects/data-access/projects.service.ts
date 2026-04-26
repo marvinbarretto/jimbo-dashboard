@@ -1,8 +1,11 @@
-// Reads projects from the dashboard's new Hono+Drizzle API at /api/projects
-// (jimbo_pg-backed). Mutations still hit the legacy PostgREST surface.
+// Reads + mutates projects via dashboard-api at /dashboard-api/api/projects
+// (jimbo_pg-backed). Migration 0003 added description / owner_actor_id /
+// criteria / repo_url; the API now returns and accepts them, so the synthesis
+// pass that defaulted owner_actor_id to 'marvin' has been replaced with a
+// passthrough adapter.
 
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import type { Project, ProjectStatus, CreateProjectPayload, UpdateProjectPayload } from '@domain/projects';
 import type { ActorId, ProjectId } from '@domain/ids';
 import { actorId, projectId } from '@domain/ids';
@@ -15,7 +18,7 @@ import { ProjectActivityEventsService } from './project-activity-events.service'
 export class ProjectsService {
   private readonly http = inject(HttpClient);
   private readonly activityService = inject(ProjectActivityEventsService);
-  private readonly url = `${environment.apiUrl}/projects`;
+  private readonly url = `${environment.dashboardApiUrl}/api/projects`;
 
   private readonly _projects = signal<Project[]>([]);
   private readonly _loading = signal(true);
@@ -35,7 +38,7 @@ export class ProjectsService {
       this._loading.set(false);
       return;
     }
-    this.http.get<{ items: ApiProject[] }>(`${environment.dashboardApiUrl}/api/projects`).subscribe({
+    this.http.get<{ items: ApiProject[] }>(this.url).subscribe({
       next: ({ items }) => { this._projects.set(items.map(toProject)); this._loading.set(false); },
       error: ()         => this._loading.set(false),
     });
@@ -60,18 +63,18 @@ export class ProjectsService {
       return;
     }
 
-    this.http.post<Project[]>(this.url, payload, { headers: { Prefer: 'return=representation' } })
-      .subscribe({
-        next: ([created]) => {
-          this._projects.update(ps => ps.map(p => p.id === payload.id ? created : p));
-          this.activityService.post({
-            type: 'project_created',
-            project_id: created.id,
-            actor_id: this.currentActorId,
-          });
-        },
-        error: () => this._projects.update(ps => ps.filter(p => p.id !== payload.id)),
-      });
+    this.http.post<ApiProject>(this.url, payload).subscribe({
+      next: (created) => {
+        const p = toProject(created);
+        this._projects.update(ps => ps.map(x => x.id === payload.id ? p : x));
+        this.activityService.post({
+          type: 'project_created',
+          project_id: p.id,
+          actor_id: this.currentActorId,
+        });
+      },
+      error: () => this._projects.update(ps => ps.filter(p => p.id !== payload.id)),
+    });
   }
 
   // Generic patch. Diffs against prior to emit semantic activity events for each
@@ -88,15 +91,14 @@ export class ProjectsService {
       return;
     }
 
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.patch<Project[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
-      .subscribe({
-        next: ([updated]) => {
-          this._projects.update(ps => ps.map(p => p.id === id ? updated : p));
-          this.emitDiffEvents(projectIdTyped, prior, updated);
-        },
-        error: () => this._projects.update(ps => ps.map(p => p.id === id ? prior : p)),
-      });
+    this.http.patch<ApiProject>(`${this.url}/${encodeURIComponent(id)}`, patch).subscribe({
+      next: (updated) => {
+        const p = toProject(updated);
+        this._projects.update(ps => ps.map(x => x.id === id ? p : x));
+        this.emitDiffEvents(projectIdTyped, prior, p);
+      },
+      error: () => this._projects.update(ps => ps.map(p => p.id === id ? prior : p)),
+    });
   }
 
   remove(id: string): void {
@@ -105,13 +107,11 @@ export class ProjectsService {
 
     if (isSeedMode()) return;
 
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.delete(this.url, { params })
-      .subscribe({
-        error: () => {
-          if (prior) this._projects.update(ps => [...ps, prior]);
-        },
-      });
+    this.http.delete(`${this.url}/${encodeURIComponent(id)}`).subscribe({
+      error: () => {
+        if (prior) this._projects.update(ps => [...ps, prior]);
+      },
+    });
   }
 
   // Compares the prior project row to the post-update row and posts one event per
@@ -158,14 +158,20 @@ export class ProjectsService {
 }
 
 // ── API response adaptation ────────────────────────────────────────────────
-// Production schema is narrower than dashboard's Project — no description,
-// no owner_actor_id, no criteria, no repo_url. Synthesize defaults; richer
-// fields filled in once production tracks them.
+// Schema now includes description / owner_actor_id / criteria / repo_url
+// (migration 0003), so this is a passthrough rather than the synthesis pass
+// it used to be. owner_actor_id is intentionally nullable in the migration
+// (some pre-cutover ETL rows have no owner); falls back to 'marvin' as a
+// display default when the column is null.
 
 interface ApiProject {
   id: string;
   display_name: string;
+  description: string | null;
   status: string;                 // 'active' | 'paused' | 'archived' (CHECK-bound)
+  owner_actor_id: string | null;
+  criteria: string | null;
+  repo_url: string | null;
   color_token: string | null;
   created_at: string;
   updated_at: string;
@@ -180,13 +186,11 @@ function toProject(p: ApiProject): Project {
   return {
     id: projectId(p.id),
     display_name: p.display_name,
-    description: null,
+    description: p.description,
     status: narrowStatus(p.status),
-    // Default ownership to marvin until production tracks it. Synthesized
-    // projects from tag conventions have no owner stored.
-    owner_actor_id: actorId('marvin'),
-    criteria: null,
-    repo_url: null,
+    owner_actor_id: actorId(p.owner_actor_id ?? 'marvin'),
+    criteria: p.criteria,
+    repo_url: p.repo_url,
     created_at: p.created_at,
   };
 }
