@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { pgTable, text, boolean, timestamp, primaryKey, index, uniqueIndex, check } from 'drizzle-orm/pg-core';
-import { vaultNotes } from './vault';
-import { actors } from './actors';
+import { vaultNotes } from './vault.js';
+import { actors } from './actors.js';
 
 // ── projects ───────────────────────────────────────────────────────────────
 //
