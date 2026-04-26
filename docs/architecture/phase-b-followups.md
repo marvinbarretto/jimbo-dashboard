@@ -153,7 +153,11 @@ After rollback: investigate, iterate, retry cutover. The `JIMBO_PG_URL` env var 
 
 ---
 
-## 9. Architecture intent — eventual API consolidation
+## 9. Architecture intent — API consolidation + monorepo
+
+Two related aspirations, identified across planning sessions. Both are deferred (not blocking Phase B work) and compose well — doing them together is probably cheaper than doing either alone.
+
+### 9a. API consolidation
 
 **Today (post-wave-4):** two Hono services on the VPS share the `jimbo_pg` database — `jimbo-api.service` (port 3100, owns ingestion/cron/AI/dispatch/grooming/interrogate/etc.) and `dashboard-api.service` (port 3201, owns operator-facing reads + dashboard actions). Both are reachable through Caddy at `https://jimbo.fourfoldmedia.uk/api/*` and `/dashboard-api/*` respectively.
 
@@ -170,18 +174,51 @@ After rollback: investigate, iterate, retry cutover. The `JIMBO_PG_URL` env var 
 - Real work to do — merge codebases, reconcile auth/middleware patterns, route splitting decisions, single deploy pipeline. Probably a couple of focused days.
 - No daily pain today; deferring until a concrete trigger surfaces (env drift bites, repeated double-edit overhead, scaling profile changes)
 
-**Trigger conditions to act:**
-- Updating both repos for the same change repeatedly
-- Env files drift and cause an incident
-- Feature work where the split forces awkward route placement
-- 7-day watch passes clean and there's a calm session to do it properly
-
-**Open question for the consolidation:** which repo wins?
+**Open question:** which repo wins?
 - (a) Merge dashboard/api/ into jimbo-api as a `routes/dashboard/*` namespace — keeps the production-facing repo authoritative
 - (b) Reverse — dashboard repo absorbs jimbo-api logic — probably wrong; jimbo-api is more central
-- (c) New repo `jimbo-server/` with both — tempting but doubles the migration cost
+- (c) New repo / new home with both — tempting but only worth it if §9b lands first (see below)
 
-(a) likely wins. Decide at the time.
+If §9b stays out of scope: (a) likely wins. If §9b lands first: (c)-equivalent (place both inside the monorepo) is the natural answer.
+
+### 9b. True monorepo for jimbo
+
+**Aspirational** — identified as a good direction in a prior planning session, not yet committed.
+
+**Today's shape (closer to "siblings under a shared parent" than monorepo):**
+- `/Users/marvinbarretto/development/jimbo/` is itself a git repo, but it tracks only `postgres/` (DB migrations) + `docs/` (cross-cutting design docs)
+- `dashboard/`, `jimbo-api/`, `jimbo-games/` are independent git repos sitting inside that parent, explicitly gitignored at the parent level
+- No npm workspaces, no Turborepo, no shared package.json, no `@jimbo/*` shared packages
+
+**What "true monorepo" would mean:**
+- Single root `package.json` with workspaces
+- Shared packages: `@jimbo/db-schema` (canonical Drizzle schema, currently in `dashboard/db/schema/`), `@jimbo/db-pg` (postgres.js client wrapper), `@jimbo/types` (cross-service zod schemas)
+- One tsconfig with project references; one `tsc` invocation across the whole tree
+- Atomic cross-service changes in a single git log entry
+- One CI pipeline; one dependency tree
+
+**Why monorepo:**
+- Eliminates the schema/types duplication that the current two-repo setup forces (jimbo-api re-encodes table shapes that dashboard's Drizzle schema already defines)
+- Makes the API consolidation cheaper: with shared packages already in place, merging routes is mostly mechanical
+- Solo-dev footprint: one repo to clone, one PR to update both halves of a feature
+
+**Why not yet:**
+- Same as §9a — Phase B fresh, no daily pain, real work
+- Tooling choice still open (npm workspaces is sufficient for solo dev; Turborepo/Nx are overkill at this scale)
+- Migrating git history is awkward — clean break (single new commit per project) is easier but loses provenance; git-filter-repo style merge preserves history but takes care
+
+**Suggested order if both happen:**
+1. Stand up the monorepo skeleton in a new repo (or reorganise the parent) with `packages/db-schema`, `packages/db-pg`, `apps/jimbo-api`, `apps/dashboard` (Angular), `apps/dashboard-api` — npm workspaces, shared tsconfig
+2. Migrate dashboard's Drizzle schema into `packages/db-schema` and have both apps import it
+3. THEN consolidate APIs — at this point dashboard-api routes can move into jimbo-api as a route namespace, sharing the same dependency tree
+
+### Trigger conditions (apply to both 9a and 9b)
+
+- Updating two repos for the same change repeatedly
+- Env files drift and cause an incident
+- Feature work where the current split forces awkward placement
+- 7-day post-cutover watch passes clean
+- A calm session with explicit intent to spend a few days on infrastructure rather than features
 
 ---
 
