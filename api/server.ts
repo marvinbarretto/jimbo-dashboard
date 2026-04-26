@@ -2,48 +2,109 @@
 //
 // Hono service that backs the dashboard's reads and operator actions. Reads
 // from jimbo_pg via Drizzle (db/client + db/schema, shared with ETL scripts).
-// Runs on :3200 in dev; Angular proxy forwards /api/* here.
 //
-// Run via SSH tunnel (postgres on VPS only listens on 127.0.0.1):
+// Local dev (postgres on VPS only listens on 127.0.0.1):
 //   ssh -L 5433:127.0.0.1:5432 vps -N
-//   npm run api
+//   npm run api          # → http://localhost:3201
+//   open http://localhost:3201/dashboard-api/docs
+//
+// Production: rsync dist-api/ to VPS, run via systemd unit dashboard-api.service.
+// Caddy routes /dashboard-api/* → :3201.
 //
 // Distinct from jimbo-api on the VPS — that service owns ingestion, cron,
 // and AI orchestration. This service owns operator-facing reads/writes.
 
 import { serve } from '@hono/node-server';
-import { Hono } from 'hono';
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
+import { swaggerUI } from '@hono/swagger-ui';
 import { logger } from 'hono/logger';
 import { cors } from 'hono/cors';
-import { vaultItemsRoute } from './routes/vault-items';
-import { dispatchesRoute } from './routes/dispatches';
-import { actorsRoute } from './routes/actors';
-import { projectsRoute } from './routes/projects';
-import { vaultItemProjectsRoute } from './routes/vault-item-projects';
-import { syncRoute } from './routes/sync';
+import { requestId } from './middleware/request-id.js';
+import { validationHook } from './middleware/error.js';
+import { apiKeyAuth } from './middleware/auth.js';
+import { vaultItemsRoute } from './routes/vault-items.js';
+import { dispatchesRoute } from './routes/dispatches.js';
+import { actorsRoute } from './routes/actors.js';
+import { projectsRoute } from './routes/projects.js';
+import { vaultItemProjectsRoute } from './routes/vault-item-projects.js';
+import { syncRoute } from './routes/sync.js';
+import { HealthSchema } from './schemas/shared.js';
 
-const app = new Hono();
+const app = new OpenAPIHono({ defaultHook: validationHook });
 
+app.use('*', requestId);
 app.use('*', logger());
-// Proxy fronts us in dev so CORS is moot, but allow it explicitly for the
-// case where the dashboard calls us directly during early prototyping.
 app.use('*', cors());
 
-app.get('/api/health', (c) => c.json({
-  ok: true,
-  service: 'dashboard-api',
-  ts: new Date().toISOString(),
-}));
+// All routes mount under /dashboard-api/* so Caddy can forward without a
+// strip_prefix step — keeps swagger's root-relative spec URL valid both
+// locally and behind the reverse proxy.
+const BASE = '/dashboard-api';
 
-app.route('/api/vault-items', vaultItemsRoute);
-app.route('/api/dispatches', dispatchesRoute);
-app.route('/api/actors', actorsRoute);
-app.route('/api/projects', projectsRoute);
-app.route('/api/vault-item-projects', vaultItemProjectsRoute);
-// ⚠️ TEMPORARY — manual sync from production SQLite. See routes/sync.ts.
-app.route('/api/sync', syncRoute);
+const healthRoute = createRoute({
+  method: 'get',
+  path: `${BASE}/api/health`,
+  tags: ['Health'],
+  summary: 'Liveness probe',
+  responses: {
+    200: {
+      description: 'Service health',
+      content: { 'application/json': { schema: HealthSchema } },
+    },
+  },
+});
 
-const port = Number(process.env.API_PORT ?? 3200);
+app.openapi(healthRoute, (c) =>
+  c.json({ ok: true, service: 'dashboard-api', ts: new Date().toISOString() }, 200),
+);
+
+app.doc(`${BASE}/docs/openapi.json`, {
+  openapi: '3.1.0',
+  info: {
+    title: 'Dashboard API',
+    version: '0.1.0',
+    description: 'Operator-facing reads/writes for the dashboard. Backs the kanban, execution board, and projects/actors lookups against jimbo_pg.',
+    contact: { url: 'https://github.com/marvinbarretto' },
+  },
+  servers: [
+    { url: 'http://localhost:3201', description: 'Local development' },
+    { url: 'https://jimbo.fourfoldmedia.uk', description: 'Production' },
+  ],
+  security: [{ apiKey: [] as string[] }],
+});
+
+app.openAPIRegistry.registerComponent('securitySchemes', 'apiKey', {
+  type: 'apiKey',
+  in: 'header',
+  name: 'X-API-Key',
+});
+
+app.get(`${BASE}/docs`, swaggerUI({ url: `${BASE}/docs/openapi.json` }));
+
+// Auth-protected — all data routes require X-API-Key (locally too, so behaviour
+// matches production). /docs and health stay public.
+app.use(`${BASE}/api/vault-items/*`, apiKeyAuth);
+app.use(`${BASE}/api/dispatches/*`, apiKeyAuth);
+app.use(`${BASE}/api/actors/*`, apiKeyAuth);
+app.use(`${BASE}/api/projects/*`, apiKeyAuth);
+app.use(`${BASE}/api/vault-item-projects/*`, apiKeyAuth);
+app.use(`${BASE}/api/sync/*`, apiKeyAuth);
+
+app.route(`${BASE}/api/vault-items`, vaultItemsRoute);
+app.route(`${BASE}/api/dispatches`, dispatchesRoute);
+app.route(`${BASE}/api/actors`, actorsRoute);
+app.route(`${BASE}/api/projects`, projectsRoute);
+app.route(`${BASE}/api/vault-item-projects`, vaultItemProjectsRoute);
+
+// ⚠️ Production guard — sync route is destructive (TRUNCATE + ETL against
+// jimbo_pg). Mounted only when running locally so the live service can never
+// expose it, even if auth were bypassed.
+if (process.env['NODE_ENV'] !== 'production') {
+  app.route(`${BASE}/api/sync`, syncRoute);
+}
+
+const port = Number(process.env['API_PORT'] ?? 3201);
 serve({ fetch: app.fetch, port }, ({ port }) => {
-  console.log(`[api] listening on http://localhost:${port}`);
+  console.log(`[api] listening on http://localhost:${port}${BASE}`);
+  console.log(`[api]   docs → http://localhost:${port}${BASE}/docs`);
 });

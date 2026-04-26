@@ -1,21 +1,22 @@
-import { Hono } from 'hono';
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { spawn } from 'node:child_process';
 import { stat } from 'node:fs/promises';
 import path from 'node:path';
 
 // ── ⚠️ TEMPORARY MIGRATION SCAFFOLDING ⚠️ ─────────────────────────────────
 //
-// This route exists ONLY while the dashboard runs against a Postgres replica
-// of the live SQLite. It pulls a fresh snapshot from the VPS and reloads the
-// PoC database. Lifespan: weeks-to-months.
+// This route exists ONLY for local-dev workflows where the dashboard runs
+// against a Postgres replica of the live SQLite. It pulls a fresh snapshot
+// from the VPS and reloads the PoC database.
 //
 // Phases:
 //   A (now)        — manual sync button keeps Postgres fresh while we build
-//   B              — jimbo-api dual-writes to both stores; sync still useful
+//   B              — jimbo-api now writes to Postgres directly (cutover done 2026-04-26)
 //   C              — Postgres becomes primary writer; sync reverses or stops
 //   D              — SQLite retired; this whole file gets deleted
 //
-// Don't build features that depend on this endpoint. It is going away.
+// PRODUCTION GUARD: server.ts mounts this route only when NODE_ENV !== 'production'.
+// It would TRUNCATE+ETL against jimbo_pg if exposed publicly.
 
 const VPS_HOST = 'vps';
 const VPS_SQLITE_PATH = '/home/jimbo/jimbo-api/data/context.db';
@@ -23,11 +24,7 @@ const VPS_TMP_SNAPSHOT = '/tmp/jimbo-pg-sync-snapshot.db';
 const LOCAL_SNAPSHOT_DIR = '.local/snapshots';
 const LOCAL_SNAPSHOT_FILE = 'sync-latest.db';
 
-export const syncRoute = new Hono();
-
-// In-memory bookkeeping — last successful sync's stats. Read by GET, set by POST.
-// Lost on api restart; that's fine — restart-rare and the timestamp is best-effort.
-let lastSync: SyncResult | null = null;
+export const syncRoute = new OpenAPIHono();
 
 interface SyncResult {
   ok: boolean;
@@ -38,14 +35,72 @@ interface SyncResult {
   error?: string;
 }
 
+// In-memory bookkeeping — last successful sync's stats.
+// Lost on api restart; that's fine — restart-rare and the timestamp is best-effort.
+let lastSync: SyncResult | null = null;
 let syncing = false;
 
-syncRoute.get('/', (c) => c.json({
-  last: lastSync,
-  in_progress: syncing,
-}));
+const SyncResultSchema = z
+  .object({
+    ok: z.boolean(),
+    finished_at: z.string(),
+    duration_ms: z.number(),
+    snapshot_bytes: z.number(),
+    etl_log_tail: z.string(),
+    error: z.string().optional(),
+  })
+  .openapi('SyncResult');
 
-syncRoute.post('/', async (c) => {
+const SyncStatusSchema = z
+  .object({
+    last: SyncResultSchema.nullable(),
+    in_progress: z.boolean(),
+  })
+  .openapi('SyncStatus');
+
+const statusRoute = createRoute({
+  method: 'get',
+  path: '/',
+  tags: ['Sync'],
+  summary: '⚠️ DEPRECATED — sync status (local-dev only, sunset in Phase D)',
+  deprecated: true,
+  description: 'TEMPORARY scaffolding from the SQLite→Postgres migration. Disabled in production. Will be deleted in Phase D.',
+  responses: {
+    200: {
+      description: 'Sync status',
+      content: { 'application/json': { schema: SyncStatusSchema } },
+    },
+  },
+});
+
+syncRoute.openapi(statusRoute, (c) =>
+  c.json({ last: lastSync, in_progress: syncing }, 200),
+);
+
+const triggerRoute = createRoute({
+  method: 'post',
+  path: '/',
+  tags: ['Sync'],
+  summary: '⚠️ DEPRECATED — trigger SQLite→Postgres sync (TRUNCATE + ETL, local-dev only)',
+  deprecated: true,
+  description: 'Destructive: truncates jimbo_pg tables then re-loads from a fresh SQLite snapshot. Disabled in production. Will be deleted in Phase D.',
+  responses: {
+    200: {
+      description: 'Sync result',
+      content: { 'application/json': { schema: SyncResultSchema } },
+    },
+    409: {
+      description: 'Sync already in progress',
+      content: { 'application/json': { schema: z.object({ error: z.string() }) } },
+    },
+    500: {
+      description: 'Sync failed',
+      content: { 'application/json': { schema: SyncResultSchema } },
+    },
+  },
+});
+
+syncRoute.openapi(triggerRoute, async (c) => {
   if (syncing) return c.json({ error: 'sync already in progress' }, 409);
   syncing = true;
   const started = Date.now();
@@ -56,23 +111,17 @@ syncRoute.post('/', async (c) => {
     // master, leaving the next /api request to fail with ECONNRESET.
     const ISOLATE = ['-o', 'ControlPath=none'];
 
-    // Step 1 — take a consistent snapshot on the VPS via sqlite3 .backup
-    // (handles WAL correctly, unlike a plain file copy).
+    // sqlite3 .backup handles WAL correctly, unlike a plain file copy.
     await run('ssh', [...ISOLATE, VPS_HOST, `sqlite3 ${VPS_SQLITE_PATH} ".backup ${VPS_TMP_SNAPSHOT}"`]);
 
-    // Step 2 — pull it to the dashboard's local snapshot dir.
     const localPath = path.resolve(LOCAL_SNAPSHOT_DIR, LOCAL_SNAPSHOT_FILE);
     await run('scp', [...ISOLATE, `${VPS_HOST}:${VPS_TMP_SNAPSHOT}`, localPath]);
 
-    // Step 3 — clean up the tmp file on VPS so we don't leave 50 MB of cruft.
-    // Best-effort; ignore errors.
+    // Best-effort cleanup of the tmp file on VPS.
     run('ssh', [...ISOLATE, VPS_HOST, `rm -f ${VPS_TMP_SNAPSHOT}`]).catch(() => {});
 
-    // Step 4 — capture snapshot size for the result.
     const { size } = await stat(localPath);
 
-    // Step 5 — run the ETL pointing at the fresh snapshot. Spawn the same
-    // command package.json's db:pg:etl uses, with ETL_SOURCE_DB_PATH set.
     const etlOut = await runCapture('node', [
       '--env-file=.env',
       '--import', 'tsx',
@@ -87,7 +136,7 @@ syncRoute.post('/', async (c) => {
       snapshot_bytes: size,
       etl_log_tail: tail,
     };
-    return c.json(lastSync);
+    return c.json(lastSync, 200);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     lastSync = {

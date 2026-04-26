@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { pgTable, text, integer, boolean, timestamp, jsonb, bigserial, bigint, index } from 'drizzle-orm/pg-core';
-import { vaultNotes } from './vault';
+import { vaultNotes } from './vault.js';
 
 // ── grooming_audit ─────────────────────────────────────────────────────────
 //

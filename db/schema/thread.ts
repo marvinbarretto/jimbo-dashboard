@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { pgTable, text, integer, timestamp, index, check, boolean, bigserial, bigint, unique } from 'drizzle-orm/pg-core';
-import { vaultNotes } from './vault';
+import { vaultNotes } from './vault.js';
 
 // ── thread_messages ────────────────────────────────────────────────────────
 //

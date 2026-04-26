@@ -1,9 +1,10 @@
-import { Hono } from 'hono';
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { and, desc, inArray, sql } from 'drizzle-orm';
-import { db } from '../../db/client';
-import { dispatchQueue } from '../../db/schema';
+import { db } from '../../db/client.js';
+import { dispatchQueue } from '../../db/schema/index.js';
+import { DispatchSchema, listResponse } from '../schemas/shared.js';
 
-// ── GET /api/dispatches ────────────────────────────────────────────────────
+// ── GET / ─────────────────────────────────────────────────────────────────
 //
 // Execution-board feed. Each row carries enough to render a card without
 // follow-up fetches: the vault item's title and seq (joined via the soft
@@ -11,16 +12,42 @@ import { dispatchQueue } from '../../db/schema';
 //
 // Production has 1,065 dispatches with 989 completed — the board would be
 // unusable without limits. Default returns the most recent 500.
-//
-// Filter params:
-//   ?status=approved        — repeatable
-//   ?executor=ralph         — repeatable
-//   ?flow=commission        — repeatable
-//   ?limit=200              — default 500, hard cap 2000
 
-export const dispatchesRoute = new Hono();
+export const dispatchesRoute = new OpenAPIHono();
 
-dispatchesRoute.get('/', async (c) => {
+const listRoute = createRoute({
+  method: 'get',
+  path: '/',
+  tags: ['Dispatches'],
+  summary: 'Execution-board dispatch feed',
+  request: {
+    query: z.object({
+      status: z.union([z.string(), z.array(z.string())]).optional()
+        .openapi({ description: 'Filter by status (repeatable)' }),
+      executor: z.union([z.string(), z.array(z.string())]).optional()
+        .openapi({ description: 'Filter by executor (repeatable)' }),
+      flow: z.union([z.string(), z.array(z.string())]).optional()
+        .openapi({ description: 'Filter by flow (repeatable)' }),
+      limit: z.coerce.number().int().min(1).max(2000).default(500)
+        .openapi({ description: 'Max items (1-2000)', example: 500 }),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Dispatch list',
+      content: {
+        'application/json': {
+          schema: listResponse(DispatchSchema, {
+            total: z.number(),
+            limit: z.number(),
+          }),
+        },
+      },
+    },
+  },
+});
+
+dispatchesRoute.openapi(listRoute, async (c) => {
   const url = new URL(c.req.url);
   const statuses = url.searchParams.getAll('status');
   const executors = url.searchParams.getAll('executor');
@@ -59,16 +86,14 @@ dispatchesRoute.get('/', async (c) => {
       completed_at: dispatchQueue.completed_at,
       created_at: dispatchQueue.created_at,
 
-      // Joined vault title — only meaningful when task_source = 'vault'.
-      // Use a correlated subquery keyed off the soft FK; null when missing.
+      // Soft FK — null when task_source != 'vault'.
       task_title: sql<string | null>`(
         SELECT vn.title
         FROM "vault_notes" vn
         WHERE vn.id = "dispatch_queue"."task_id"
         LIMIT 1
       )`,
-      // Cast bigint→int4 — seq fits comfortably and postgres-js otherwise
-      // hands raw bigint back as a string.
+      // postgres-js otherwise hands raw bigint back as a string.
       task_seq: sql<number | null>`(
         SELECT vn.seq::int
         FROM "vault_notes" vn
@@ -81,9 +106,5 @@ dispatchesRoute.get('/', async (c) => {
     .orderBy(desc(dispatchQueue.created_at))
     .limit(limit);
 
-  return c.json({
-    items: rows,
-    total: rows.length,
-    limit,
-  });
+  return c.json({ items: rows, total: rows.length, limit }, 200);
 });

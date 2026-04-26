@@ -50,7 +50,7 @@ export class VaultItemsService {
     // shape — the production schema is wider than VaultItem and uses
     // different conventions (status: 'archived' instead of archived_at, etc.),
     // so we adapt at the boundary rather than reshape every consumer.
-    this.http.get<ApiVaultItemsResponse>(`/api/vault-items?limit=2000`).subscribe({
+    this.http.get<ApiVaultItemsResponse>(`${environment.dashboardApiUrl}/api/vault-items?limit=2000`).subscribe({
       next: ({ items }) => { this._items.set(items.map(toVaultItem)); this._loading.set(false); },
       error: ()         => this._loading.set(false),
     });

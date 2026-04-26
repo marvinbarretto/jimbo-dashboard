@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist-api",
+    "rootDir": ".",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "sourceMap": false,
+    "isolatedModules": false,
+    "types": ["node"]
+  },
+  "include": ["api/**/*.ts", "db/**/*.ts"],
+  "exclude": ["node_modules", "dist", "dist-api", "src", "scripts", "test", "e2e"]
+}

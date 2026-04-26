@@ -7,8 +7,8 @@
       "Authorization": "Basic bWFydmluOm1hcnZpbg=="
     }
   },
-  "/api": {
-    "target": "http://localhost:3200",
+  "/dashboard-api": {
+    "target": "http://localhost:3201",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"

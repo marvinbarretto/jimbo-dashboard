@@ -1,10 +1,9 @@
-import { Hono } from 'hono';
+import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { and, desc, inArray, sql } from 'drizzle-orm';
-import { db } from '../../db/client';
-import { vaultNotes } from '../../db/schema';
+import { db } from '../../db/client.js';
+import { vaultNotes } from '../../db/schema/index.js';
+import { VaultItemSchema, listResponse } from '../schemas/shared.js';
 
-// Shape of the embedded latest activity event — joined server-side so the
-// client renders without follow-up actor lookups.
 interface LiveEvent {
   ts: string;
   actor_id: string;
@@ -22,7 +21,7 @@ interface LiveMessage {
   body_excerpt: string;
 }
 
-// ── GET /api/vault-items ───────────────────────────────────────────────────
+// ── GET / ─────────────────────────────────────────────────────────────────
 //
 // Board-shaped list. Each row carries the data the kanban needs to render
 // without follow-up requests:
@@ -30,17 +29,43 @@ interface LiveMessage {
 //   - primary_project (id + display_name) flattened from junction
 //   - open_questions_count (unresolved grooming_questions)
 //   - latest_activity_at (max ts from note_activity)
-//   - children_count (rows where parent_id = this.id) — drives epic display
-//
-// Filtering query params (all optional, AND'd):
-//   ?status=active           — repeatable
-//   ?grooming_status=ungroomed
-//   ?assigned_to=marvin
-//   ?limit=200               — default 500, hard cap 2000
+//   - children_count (rows where parent_id = this.id)
 
-export const vaultItemsRoute = new Hono();
+export const vaultItemsRoute = new OpenAPIHono();
 
-vaultItemsRoute.get('/', async (c) => {
+const listRoute = createRoute({
+  method: 'get',
+  path: '/',
+  tags: ['VaultItems'],
+  summary: 'Board-shaped vault item list with embedded joins',
+  request: {
+    query: z.object({
+      status: z.union([z.string(), z.array(z.string())]).optional()
+        .openapi({ description: 'Filter by status (repeatable)' }),
+      grooming_status: z.union([z.string(), z.array(z.string())]).optional()
+        .openapi({ description: 'Filter by grooming_status (repeatable)' }),
+      assigned_to: z.union([z.string(), z.array(z.string())]).optional()
+        .openapi({ description: 'Filter by assignee (repeatable)' }),
+      limit: z.coerce.number().int().min(1).max(2000).default(500)
+        .openapi({ description: 'Max items (1-2000)', example: 500 }),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Vault items',
+      content: {
+        'application/json': {
+          schema: listResponse(VaultItemSchema, {
+            total: z.number(),
+            limit: z.number(),
+          }),
+        },
+      },
+    },
+  },
+});
+
+vaultItemsRoute.openapi(listRoute, async (c) => {
   const url = new URL(c.req.url);
   const statuses = url.searchParams.getAll('status');
   const grooming = url.searchParams.getAll('grooming_status');
@@ -54,13 +79,10 @@ vaultItemsRoute.get('/', async (c) => {
     assigned.length ? inArray(vaultNotes.assigned_to, assigned) : undefined,
   ].filter((x): x is NonNullable<typeof x> => x !== undefined);
 
-  // Use a single SQL with correlated subqueries — cheaper than N+1 round
-  // trips and lets Drizzle stream via postgres-js. The subqueries are
-  // index-backed:
-  //   open_qs   → idx_grooming_questions_pending (partial WHERE resolved_at IS NULL)
-  //   latest_at → idx_note_activity_note (note_id, ts DESC)
-  //   children  → idx_vault_parent_id
-  // Primary project comes from idx_vault_item_projects_one_primary.
+  // Single SQL with correlated subqueries — index-backed (idx_grooming_questions_pending,
+  // idx_note_activity_note, idx_vault_parent_id, idx_vault_item_projects_one_primary).
+  // Drizzle's template substitution drops the outer-table qualifier in
+  // subquery scope, so we hand-qualify with raw SQL.
   const rows = await db
     .select({
       id: vaultNotes.id,
@@ -95,11 +117,6 @@ vaultItemsRoute.get('/', async (c) => {
       source_url: vaultNotes.source_url,
       source_signal: vaultNotes.source_signal,
 
-      // Correlated subqueries — written with explicit aliases because Drizzle's
-      // template substitution drops the outer-table qualifier in subquery
-      // scope, which causes "id" to bind to the inner table's column. Raw SQL
-      // with hand-qualified names is unambiguous and just as type-safe via the
-      // generic on sql<>.
       primary_project_id: sql<string | null>`(
         SELECT vip.project_id
         FROM "vault_item_projects" vip
@@ -129,9 +146,6 @@ vaultItemsRoute.get('/', async (c) => {
         WHERE na.note_id = "vault_notes"."id"
       )`,
 
-      // Latest note_activity row, packaged as JSON. Actor display name joined
-      // here so the client doesn't need to look it up. Returns null if no
-      // activity exists yet for this item.
       latest_event: sql<LiveEvent | null>`(
         SELECT json_build_object(
           'ts',                 na.ts,
@@ -148,8 +162,6 @@ vaultItemsRoute.get('/', async (c) => {
         LIMIT 1
       )`,
 
-      // Latest thread_message row. Body truncated server-side to keep the
-      // payload small — the card excerpt only renders ~100 chars anyway.
       latest_message: sql<LiveMessage | null>`(
         SELECT json_build_object(
           'created_at',           tm.created_at,
@@ -168,9 +180,7 @@ vaultItemsRoute.get('/', async (c) => {
         LIMIT 1
       )`,
 
-      // Days since the item entered its current grooming_status. Computed
-      // from grooming_audit (most recent transition INTO this status) — drives
-      // the "stuck Nd" hint on the kanban card.
+      // Drives the "stuck Nd" hint on the kanban card.
       days_in_column: sql<number>`(
         SELECT COALESCE(
           EXTRACT(EPOCH FROM (NOW() - MAX(ga.created_at))) / 86400,
@@ -192,9 +202,5 @@ vaultItemsRoute.get('/', async (c) => {
     .orderBy(desc(vaultNotes.seq))
     .limit(limit);
 
-  return c.json({
-    items: rows,
-    total: rows.length,
-    limit,
-  });
+  return c.json({ items: rows, total: rows.length, limit }, 200);
 });

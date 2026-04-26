@@ -33,7 +33,7 @@ export class DispatchService {
     // /api/dispatches returns the production schema (6 status values, more
     // columns). Map at the service boundary to the dashboard's narrower
     // DispatchQueueEntry shape.
-    this.http.get<ApiDispatchesResponse>(`/api/dispatches?limit=500`).subscribe({
+    this.http.get<ApiDispatchesResponse>(`${environment.dashboardApiUrl}/api/dispatches?limit=500`).subscribe({
       next: ({ items }) => { this._entries.set(items.map(toDispatchEntry)); this._loading.set(false); },
       error: ()         => this._loading.set(false),
     });

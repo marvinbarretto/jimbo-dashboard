@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 // ── ⚠️ TEMPORARY MIGRATION SCAFFOLDING ⚠️ ─────────────────────────────────
 //
@@ -127,7 +128,7 @@ export class SyncButton {
   constructor() {
     // GET current sync state on init so the button doesn't lie about freshness
     // when the page is reloaded mid-conversation.
-    this.http.get<{ last: SyncResponse | null; in_progress: boolean }>('/api/sync').subscribe({
+    this.http.get<{ last: SyncResponse | null; in_progress: boolean }>(`${environment.dashboardApiUrl}/api/sync`).subscribe({
       next: ({ last, in_progress }) => {
         if (last) this._lastResult.set(last);
         this._syncing.set(in_progress);
@@ -140,7 +141,7 @@ export class SyncButton {
   triggerSync(): void {
     if (this._syncing()) return;
     this._syncing.set(true);
-    this.http.post<SyncResponse>('/api/sync', {}).subscribe({
+    this.http.post<SyncResponse>(`${environment.dashboardApiUrl}/api/sync`, {}).subscribe({
       next: (r) => {
         this._lastResult.set(r);
         this._syncing.set(false);

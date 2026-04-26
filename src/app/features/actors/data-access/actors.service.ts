@@ -29,7 +29,7 @@ export class ActorsService {
       this._loading.set(false);
       return;
     }
-    this.http.get<{ items: ApiActor[] }>(`/api/actors`).subscribe({
+    this.http.get<{ items: ApiActor[] }>(`${environment.dashboardApiUrl}/api/actors`).subscribe({
       next: ({ items }) => { this._actors.set(items.map(toActor)); this._loading.set(false); },
       error: ()         => this._loading.set(false),
     });

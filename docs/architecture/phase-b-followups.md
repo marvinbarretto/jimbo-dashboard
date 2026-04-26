@@ -16,6 +16,8 @@ Original Phase B plan archived at `docs/architecture/archive/phase-b-completed.m
 
 **Two databases run side-by-side in production.** This is intentional — see §4 for the decision tree on what to do with the deferred surface.
 
+**Dashboard API now hosted on the VPS** (added 2026-04-26). The Hono service in `dashboard/api/` is deployed as the `dashboard-api.service` systemd unit on port 3201, fronted by Caddy at `https://jimbo.fourfoldmedia.uk/dashboard-api/*`. Refactored to `@hono/zod-openapi` + `@hono/swagger-ui` — interactive docs at `/dashboard-api/docs`. X-API-Key auth (`DASHBOARD_API_KEY` in `/opt/dashboard-api.env`) gates `/api/*` data routes; `/docs` and `/api/health` stay public. `routes/sync.ts` is gated by `NODE_ENV !== 'production'` so the destructive TRUNCATE+ETL path is never reachable on the live service. Deploy mirror of jimbo-api: `dist-api/` rsynced to `/home/jimbo/dashboard-api/`, env at `/opt/dashboard-api.env`.
+
 ---
 
 ## 2. Post-cutover monitoring (next 7 days)

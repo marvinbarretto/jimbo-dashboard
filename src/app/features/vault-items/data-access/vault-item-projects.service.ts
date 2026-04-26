@@ -47,7 +47,7 @@ export class VaultItemProjectsService {
   }
 
   private loadAll(): void {
-    this.http.get<{ items: ApiVaultItemProject[] }>('/api/vault-item-projects').subscribe({
+    this.http.get<{ items: ApiVaultItemProject[] }>(`${environment.dashboardApiUrl}/api/vault-item-projects`).subscribe({
       next: ({ items }) => {
         const byItem: Record<string, VaultItemProject[]> = {};
         for (const row of items) {

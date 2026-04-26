@@ -35,7 +35,7 @@ export class ProjectsService {
       this._loading.set(false);
       return;
     }
-    this.http.get<{ items: ApiProject[] }>(`/api/projects`).subscribe({
+    this.http.get<{ items: ApiProject[] }>(`${environment.dashboardApiUrl}/api/projects`).subscribe({
       next: ({ items }) => { this._projects.set(items.map(toProject)); this._loading.set(false); },
       error: ()         => this._loading.set(false),
     });
