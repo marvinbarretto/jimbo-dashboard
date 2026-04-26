@@ -10,9 +10,9 @@ Original Phase B plan archived at `docs/architecture/archive/phase-b-completed.m
 
 ## 1. State after cutover
 
-**On Postgres (`jimbo_pg`):** vault, dispatch, grooming (submit/lessons/transition/feedback/questions/corrections), email (reports/candidates/webhooks), context (files/sections/items), coach (db/logs/nudges/supplements), actors, projects, vault-item-projects, vault-item-dependencies, attachments, pipeline, briefing, activities, experiments, events, costs, product-summaries, note-thread, note-activity, settings, search (tsvector + pg_trgm).
+**On Postgres (`jimbo_pg`):** vault, dispatch, grooming (submit/lessons/transition/feedback/questions/corrections), email (reports/candidates/webhooks), context (files/sections/items), coach (db/logs/nudges/supplements), actors, projects, vault-item-projects, vault-item-dependencies, attachments, pipeline, briefing, activities, experiments, events, costs, product-summaries, note-thread, note-activity, settings, search (tsvector + pg_trgm), **interrogate (12 tables: values/interests/priorities/goals/experiments/nogos/tensions/open-questions/sessions/answers/proposals/evidence — added 2026-04-26 wave 4, dashboard migration 0005)**.
 
-**Still on SQLite on the VPS:** services/health.ts, services/fitness.ts, services/interrogate-* (10 files). These were deferred per the §7a coupling rule (no PG schema → no port). The legacy SQLite client (`src/db/index.ts`) and its singleton init in `src/index.ts` remain live for those services only.
+**Still on SQLite on the VPS:** services/health.ts, services/fitness.ts. These were deferred per the §7a coupling rule (no PG schema → no port). The legacy SQLite client (`src/db/index.ts`) and its singleton init in `src/index.ts` remain live for those services only.
 
 **Two databases run side-by-side in production.** This is intentional — see §4 for the decision tree on what to do with the deferred surface.
 
@@ -63,17 +63,11 @@ If 7 consecutive days pass clean: clear to start Phase D.
 
 ## 4. Deferred services — port or retire?
 
-11 services were intentionally left on SQLite (§7a coupling rule). They fall into three groups; each needs an explicit decision.
+Two services remain on SQLite (§7a coupling rule). Each needs an explicit decision.
 
-### Group A — interrogate (10 files, 0–low rows in production)
+### ~~Group A — interrogate~~ ✅ ported 2026-04-26 (wave 4)
 
-`services/interrogate-{contradictions,evidence,experiments,goals,interests,nogos,open-questions,priorities,proposals,sessions,staleness,tensions,values}.ts`
-
-- These power the `/interrogate` skill (Marvin's personal interrogation slash command).
-- Production tables are 0-row or low-row today.
-- **Decision required:** keep interrogate alive (port to PG) or retire it (the skill itself becomes inert)?
-  - Port: meaningful work — schemas not yet in `dashboard/db/schema/`, plus 10 services to translate. Roughly a wave's worth.
-  - Retire: drop the routes, drop the SQLite tables. Skill stops working.
+Greenfield port: 12 PG tables (dashboard migration 0005) + 14 services + 14 routes. Production rows (16 total — 14 sessions, 1 answer, 1 priority) treated as expendable test data; no ETL. Smoke green in production. One orphaned test session `is_df325dba` from cutover smoke remains in `interrogate_sessions` — harmless, can be `DELETE`d manually.
 
 ### Group B — health (services/health.ts, 1 write to health_snapshots)
 
