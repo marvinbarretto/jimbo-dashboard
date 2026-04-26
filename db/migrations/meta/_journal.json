@@ -29,6 +29,13 @@
       "when": 1777168299080,
       "tag": "0003_young_firestar",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777204378087,
+      "tag": "0004_smiling_crusher_hogan",
+      "breakpoints": true
     }
   ]
 }

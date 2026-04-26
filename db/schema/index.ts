@@ -17,3 +17,4 @@ export * from './pipeline';
 export * from './email';
 export * from './briefing';
 export * from './products';
+export * from './search';
