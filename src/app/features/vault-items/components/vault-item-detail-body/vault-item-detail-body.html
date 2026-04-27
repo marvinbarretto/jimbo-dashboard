@@ -157,7 +157,41 @@
 
     </div>
 
-    <!-- ===== main body grid ===== -->
+    <!-- ===== timeline strip — quick dates + readiness — replaces the old state column ===== -->
+    <div class="timeline-strip">
+      <span class="timeline-strip__item"><span class="timeline-strip__lbl">Created</span> {{ relativeTime(item.created_at) }}</span>
+      @if (lastActivityAt(); as lat) {
+        <span class="timeline-strip__item"><span class="timeline-strip__lbl">Last activity</span> {{ relativeTime(lat) }}</span>
+      }
+      @if (item.completed_at) {
+        <span class="timeline-strip__item"><span class="timeline-strip__lbl">Completed</span> {{ relativeTime(item.completed_at) }}</span>
+      }
+      @if (item.archived_at) {
+        <span class="timeline-strip__item"><span class="timeline-strip__lbl">Archived</span> {{ relativeTime(item.archived_at) }}</span>
+      }
+      @if (readiness(); as r) {
+        <details class="timeline-strip__readiness">
+          <summary>Readiness checklist · {{ r.passed }}/{{ r.total }}</summary>
+          <ul class="readiness-list">
+            @for (check of r.checks; track check.key) {
+              <li [class]="'readiness-check readiness-check--' + (check.ok ? 'ok' : 'miss')">
+                <span class="readiness-check__mark" [attr.aria-label]="check.ok ? 'pass' : 'fail'">
+                  {{ check.ok ? '✓' : '✗' }}
+                </span>
+                <span class="readiness-check__label">
+                  {{ check.label }}
+                  @if (!check.ok && check.blocker) {
+                    <span class="readiness-check__blocker"> — {{ check.blocker }}</span>
+                  }
+                </span>
+              </li>
+            }
+          </ul>
+        </details>
+      }
+    </div>
+
+    <!-- ===== main 3-column grid: content · activity · thread ===== -->
     <div class="body-grid">
 
       <!-- content column -->
@@ -320,63 +354,8 @@
 
       </div>
 
-      <!-- state column -->
-      <div class="body-grid__state">
-
-        <div class="section">
-          <div class="section__label">Readiness <span class="section__hint">(computed)</span></div>
-          @if (readiness(); as r) {
-            <ul class="readiness-list">
-              @for (check of r.checks; track check.key) {
-                <li [class]="'readiness-check readiness-check--' + (check.ok ? 'ok' : 'miss')">
-                  <span class="readiness-check__mark" [attr.aria-label]="check.ok ? 'pass' : 'fail'">
-                    {{ check.ok ? '✓' : '✗' }}
-                  </span>
-                  <span class="readiness-check__label">
-                    {{ check.label }}
-                    @if (!check.ok && check.blocker) {
-                      <span class="readiness-check__blocker"> — {{ check.blocker }}</span>
-                    }
-                  </span>
-                </li>
-              }
-            </ul>
-          }
-        </div>
-
-        <div class="section">
-          <div class="section__label">Metadata</div>
-          <dl class="kv">
-            <dt>Created</dt>
-            <dd>{{ relativeTime(item.created_at) }}</dd>
-            @if (item.completed_at) {
-              <dt>Completed</dt>
-              <dd>{{ relativeTime(item.completed_at) }}</dd>
-            }
-            @if (item.archived_at) {
-              <dt>Archived</dt>
-              <dd>{{ relativeTime(item.archived_at) }}</dd>
-            }
-            <dt>Last activity</dt>
-            <dd>
-              @if (lastActivityAt(); as lat) {
-                {{ relativeTime(lat) }}
-                <span class="kv__hint">derived from events</span>
-              } @else {
-                <span class="muted">no events yet</span>
-              }
-            </dd>
-          </dl>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- ===== dual streams ===== -->
-    <div class="streams">
-
-      <!-- Activity log -->
-      <div class="stream">
+      <!-- activity log column -->
+      <div class="body-grid__activity">
         <header class="stream__header">
           <span>Activity log</span>
           <span class="stream__count">{{ events().length }} events · structural facts</span>
@@ -449,8 +428,8 @@
         }
       </div>
 
-      <!-- Discussion thread -->
-      <div class="stream stream--thread">
+      <!-- discussion thread column -->
+      <div class="body-grid__thread">
         <header class="stream__header">
           <span>Discussion thread</span>
           <span class="stream__count">{{ messages().length }} messages</span>

@@ -284,7 +284,11 @@ h2 { font-size: 1.25rem; font-weight: 600; }
 // CDK Dialog panel for the vault-item detail modal. Sized to the viewport
 // with a comfortable cap so long lists scroll inside the body, not the page.
 .cdk-overlay-pane.vault-detail-dialog {
-  width: min(920px, calc(100vw - 2rem));
+  // Modal hosts the 3-column body grid (content / activity / thread) — the
+  // viewport cap is intentionally generous so the activity log and discussion
+  // get real estate. Older cap was 920px which forced the stream columns into
+  // a postage stamp; jumping to ~1500px lets each column breathe at ~480px.
+  width: min(1500px, calc(100vw - 2rem));
   max-height: calc(100vh - 4rem);
   display: flex;
 }
