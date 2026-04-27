@@ -17,11 +17,13 @@ import {
   type VaultItem,
   type Priority,
 } from '@domain/vault';
+import type { ActorId } from '@domain/ids';
 import { effectivePriority } from '@domain/vault';
 import { compareCardsForKanban } from '@domain/vault';
 import { stuckDays } from '@domain/vault';
 import type { VaultItemId } from '@domain/ids';
 import { GroomingCard, type LiveSnapshot } from '../../components/grooming-card/grooming-card';
+import { GroomingNest } from '../../components/grooming-nest/grooming-nest';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
@@ -51,7 +53,7 @@ interface ColumnView {
 
 @Component({
   selector: 'app-grooming-board',
-  imports: [GroomingCard, KanbanColumn, KanbanFilterBar],
+  imports: [GroomingCard, GroomingNest, KanbanColumn, KanbanFilterBar],
   templateUrl: './grooming-board.html',
   styleUrl: './grooming-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -192,10 +194,26 @@ export class GroomingBoard {
         ?? this.vaultItemsService.items().filter(i => i.parent_id === item.id).length;
   }
 
-  parentSeq(item: VaultItem): number | null {
+  parentRef(item: VaultItem): { seq: number; title: string } | null {
     if (!item.parent_id) return null;
     const parent = this.vaultItemsService.getById(item.parent_id);
-    return parent ? parent.seq : null;
+    return parent ? { seq: parent.seq, title: parent.title } : null;
+  }
+
+  // Pre-formatted source attribution for the card. "by @<name>" for agent
+  // captures (with actorId for color tinting); "via <channel>" for non-agent
+  // captures; "manual" for hand-captures. Returns null when an item has no
+  // source — older fixtures predate the column.
+  sourceSummary(item: VaultItem): { text: string; actorId: ActorId | null } | null {
+    const src = item.source;
+    if (!src) return null;
+    if (src.kind === 'agent') {
+      const actor = this.actorsService.getById(src.ref);
+      return { text: `by @${actor?.display_name ?? src.ref}`, actorId: src.ref };
+    }
+    if (src.kind === 'manual')     return { text: 'manual',          actorId: null };
+    if (src.kind === 'pr-comment') return { text: 'via PR comment',  actorId: null };
+    return { text: `via ${src.kind}`, actorId: null };
   }
 
   // MAX(activity_events.at) for an item — the canonical "last touched" signal,
@@ -280,6 +298,9 @@ export class GroomingBoard {
       case 'unarchived':              return 'unarchived';
       case 'grooming_status_changed': return `moved ${e.from.replace('_', ' ')} → ${e.to.replace('_', ' ')}`;
       case 'thread_message_posted':   return `posted ${e.message_kind}`;
+      case 'agent_run_completed':     return e.from_status && e.to_status
+        ? `ran ${e.skill_id} (${e.from_status.replace('_', ' ')} → ${e.to_status.replace('_', ' ')})`
+        : `ran ${e.skill_id}`;
     }
   }
 

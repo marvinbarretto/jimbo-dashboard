@@ -1,0 +1,13 @@
+<div class="nest" [class.nest--with-parent]="parentSeq() !== null">
+  @if (parentSeq(); as seq) {
+    <a
+      [appKanbanCardLink]="seq"
+      class="nest__parent"
+      [attr.title]="'Parent: #' + seq + ' — ' + parentTitle()"
+    >
+      <span class="nest__parent-seq">↳ #{{ seq }}</span>
+      <span class="nest__parent-title">{{ parentTitle() }}</span>
+    </a>
+  }
+  <ng-content />
+</div>

@@ -1,4 +1,4 @@
-import type { ActivityId, ActorId, ProjectId, ThreadMessageId, VaultItemId } from '../ids';
+import type { ActivityId, ActorId, DispatchId, ProjectId, SkillId, ThreadMessageId, VaultItemId } from '../ids';
 import type { ThreadMessageKind } from '../thread/thread-message';
 import type { GroomingStatus } from '../vault/vault-item';
 
@@ -81,6 +81,49 @@ export interface ThreadMessagePostedEvent extends VaultEventBase {
   message_kind: ThreadMessageKind;
 }
 
+// Rich record of an agent finishing a skill run on this item — model used,
+// what was decided, what it thought, what it cost. Distinct from `assigned` /
+// `grooming_status_changed` (which are structural facts about state); this
+// captures the activity itself, the "ceremony".
+//
+// Nearly every field is nullable — the dashboard ships ready to surface this
+// shape, runners backfill the data they have. UI degrades gracefully: a run
+// without `tokens_*` just hides the cost row, a run without `reasoning` just
+// hides the quote block, etc. Missing data is normal data.
+//
+// Outcome semantics:
+//   success — the run did what it set out to do
+//   partial — completed but with caveats (skipped some criteria, missing data)
+//   failed  — errored or reaped; `error` is set
+export interface AgentRunCompletedEvent extends VaultEventBase {
+  type: 'agent_run_completed';
+
+  // What ran
+  skill_id:      SkillId;             // 'hermes/vault-classify' etc.
+  dispatch_id:   DispatchId | null;   // link back to dispatch_queue row if there was one
+
+  // What it did
+  outcome:       'success' | 'partial' | 'failed';
+  summary:       string;              // one-liner — same shape as DispatchQueueEntry.result_summary
+  decisions:     string[] | null;     // bulleted list of changes the agent applied
+  reasoning:     string | null;       // free-form thought trace (excerpt or full)
+
+  // If the run moved the item between grooming columns, record it here so the
+  // log doesn't need a separate `grooming_status_changed` event for the same act.
+  from_status:   GroomingStatus | null;
+  to_status:     GroomingStatus | null;
+
+  // How it ran — cost-tracking columns. All nullable until runners emit them.
+  duration_ms:   number | null;
+  model_id:      string | null;       // 'anthropic/claude-sonnet-4-5'
+  tokens_in:     number | null;
+  tokens_out:    number | null;
+  tokens_cached: number | null;
+  cost_usd:      number | null;
+
+  error:         string | null;
+}
+
 export type VaultActivityEvent =
   | CreatedEvent
   | AssignedEvent
@@ -88,7 +131,8 @@ export type VaultActivityEvent =
   | ArchivedEvent
   | UnarchivedEvent
   | GroomingStatusChangedEvent
-  | ThreadMessagePostedEvent;
+  | ThreadMessagePostedEvent
+  | AgentRunCompletedEvent;
 
 // --- Project events ---
 

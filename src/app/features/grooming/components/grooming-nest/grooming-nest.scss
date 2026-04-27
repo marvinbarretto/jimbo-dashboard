@@ -1,0 +1,58 @@
+:host { display: block; }
+
+// V1 "subtle frame" — a quiet outer surface with the parent's identity strip
+// at the top, child card sits inside. Background lifts a tone above the column
+// so the nesting reads spatially without competing with the card's own colour
+// signals (priority, owner, staleness gradient).
+//
+// Always wrapping a div around the projected card (rather than @if/@else with
+// two `<ng-content />` slots) keeps Angular's content projection happy — only
+// one slot can receive content, so we render the same one in both shapes.
+.nest {
+  display: contents;
+}
+
+.nest--with-parent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background: color-mix(in oklch, var(--color-text) 4%, var(--color-bg));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.4rem;
+}
+
+.nest__parent {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.1rem 0.25rem 0;
+  font-size: 0.7rem;
+  text-decoration: none;
+  color: var(--color-text-muted);
+  min-width: 0;
+
+  &:hover {
+    color: var(--color-text);
+    .nest__parent-title { text-decoration: underline; }
+  }
+}
+
+.nest__parent-seq {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+
+// Single-line ellipsis — parent titles can run long, but the nest is meant to
+// be a quiet header strip, not a second title row that competes for vertical
+// space with the child card.
+.nest__parent-title {
+  font-size: 0.7rem;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}

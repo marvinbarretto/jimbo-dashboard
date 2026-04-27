@@ -15,6 +15,13 @@
   <header class="card__header">
     <a [routerLink]="['/vault-items', item().seq]" class="card__seq">#{{ item().seq }}</a>
 
+    @if (source(); as s) {
+      <span
+        class="card__source"
+        [class]="s.actorId ? 'card__source card__source--actor-' + s.actorId : 'card__source'"
+      >{{ s.text }}</span>
+    }
+
     @if (item().category; as cat) {
       <span class="card__category" [attr.title]="'Category: ' + cat">{{ cat }}</span>
     }
@@ -50,16 +57,6 @@
     </span>
   </header>
 
-  @if (parentSeq(); as parent) {
-    <a
-      [routerLink]="['/vault-items', parent]"
-      class="card__parent-ref"
-      [attr.title]="'Subtask of #' + parent"
-    >
-      ↳ #{{ parent }}
-    </a>
-  }
-
   <a [appKanbanCardLink]="item().seq" class="card__title">
     {{ item().title }}
   </a>
@@ -77,10 +74,6 @@
 
   <footer class="card__footer">
     <app-owner-chip [actorId]="item().assigned_to" />
-
-    @if (isStuck()) {
-      <span class="card__stuck" [attr.title]="stuckTooltip()">stuck {{ stuckDaysRounded() }}d</span>
-    }
 
     @if (hasPulse()) {
       <span class="card__pulse" [attr.title]="pulseTooltip()" aria-hidden="true"></span>

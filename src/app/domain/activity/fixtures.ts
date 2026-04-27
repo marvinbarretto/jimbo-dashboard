@@ -1,5 +1,5 @@
 import type { ActivityEvent } from './activity-event';
-import { activityId, actorId, projectId } from '../ids';
+import { activityId, actorId, dispatchId, projectId, skillId } from '../ids';
 import { VAULT_ITEM_IDS } from '../vault/fixtures';
 import { THREAD_MESSAGE_IDS } from '../thread/fixtures';
 
@@ -206,6 +206,64 @@ export const ACTIVITY_EVENTS = [
     from: 'classified',
     to: 'decomposed',
     note: 'vault-decompose drafted 3 acceptance criteria',
+  },
+
+  // Item G — rich agent runs to demo the AgentRunCompletedEvent shape.
+  // Field coverage spans the spectrum: full data on the decompose run,
+  // minimal data on the classify run (no reasoning, no tokens) — proves the
+  // UI degrades for partial data without code changes.
+  {
+    id: activityId('e7777777-0006-0006-0006-000000000000'),
+    vault_item_id: VAULT_ITEM_IDS.G,
+    actor_id: actorId('boris'),
+    at: '2026-04-22T11:01:30Z',
+    type: 'agent_run_completed',
+    skill_id: skillId('hermes/vault-classify'),
+    dispatch_id: dispatchId('disp_g_classify_001'),
+    outcome: 'success',
+    summary: 'classified as task; routed to standard tier (boris).',
+    decisions: [
+      'kind=task',
+      'tier=standard',
+      'inferred priority P1 from "deadline" mention in body',
+    ],
+    reasoning: null,
+    from_status: 'intake_complete',
+    to_status: 'classified',
+    duration_ms: 8420,
+    model_id: 'anthropic/claude-haiku-4-5',
+    tokens_in: 942,
+    tokens_out: 187,
+    tokens_cached: null,
+    cost_usd: 0.0021,
+    error: null,
+  },
+  {
+    id: activityId('e7777777-0007-0007-0007-000000000000'),
+    vault_item_id: VAULT_ITEM_IDS.G,
+    actor_id: actorId('boris'),
+    at: '2026-04-22T11:41:30Z',
+    type: 'agent_run_completed',
+    skill_id: skillId('hermes/vault-decompose'),
+    dispatch_id: dispatchId('disp_g_decompose_001'),
+    outcome: 'success',
+    summary: 'drafted 3 acceptance criteria; ready for marvin to bless.',
+    decisions: [
+      'AC1: command runs end-to-end on staging without manual intervention',
+      'AC2: rollback path documented and tested with one-line revert',
+      'AC3: log output is greppable for run id',
+    ],
+    reasoning:
+      'Body framed this as a one-off migration but the rollback dependency makes it stateful. Drafted the rollback AC explicitly — keeps the operator from shipping without a way back. Skipped a "monitoring" AC because the change is single-shot and the existing dashboard covers it.',
+    from_status: 'classified',
+    to_status: 'decomposed',
+    duration_ms: 26340,
+    model_id: 'anthropic/claude-sonnet-4-6',
+    tokens_in: 4218,
+    tokens_out: 1106,
+    tokens_cached: 3204,
+    cost_usd: 0.0241,
+    error: null,
   },
 
   // ====================================================================

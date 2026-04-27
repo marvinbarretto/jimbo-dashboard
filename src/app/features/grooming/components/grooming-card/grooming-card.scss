@@ -84,6 +84,22 @@
     &:hover { color: var(--color-text); }
   }
 
+  // Source attribution — plain inline text after the seq, e.g. "#2341 by @jimbo".
+  // No pill / border — reads as conversational metadata, not a label. Agent
+  // sources tint the text with the agent's actor-color so the eye picks them
+  // out at a scan; other kinds (manual / email / telegram / url / pr-comment)
+  // stay muted.
+  &__source {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+
+    &--actor-marvin { color: var(--actor-color-marvin); }
+    &--actor-ralph  { color: var(--actor-color-ralph);  }
+    &--actor-boris  { color: var(--actor-color-boris);  }
+    &--actor-jimbo  { color: var(--actor-color-jimbo);  }
+  }
+
   // Category label — production's content-axis classification (travel, recipe,
   // health, journal, ...). Quiet text-only treatment; the type-axis (task vs
   // note) already commands stronger visuals via card layout. Cursor:help so
@@ -106,18 +122,6 @@
     gap: 0.3rem;
     line-height: 1;
   }
-
-  &__parent-ref {
-    display: inline-block;
-    font-size: 0.65rem;
-    color: var(--color-text-muted);
-    font-family: var(--font-mono);
-    margin-bottom: 0.3rem;
-    text-decoration: none;
-    opacity: 0.7;
-    &:hover { opacity: 1; color: var(--color-text); text-decoration: underline; }
-  }
-
 
   &__title {
     display: block;
@@ -161,22 +165,6 @@
     color: var(--color-text-muted);
     margin-left: auto;
     cursor: help;
-  }
-
-  // "Stuck Nd" hint — appears when an item has been in its current grooming
-  // column for longer than the threshold. Warning-tinted to grab attention
-  // without screaming. Distinct from total age (which says "old in general").
-  &__stuck {
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.05rem 0.4rem;
-    border: 1px solid color-mix(in oklch, var(--color-warning) 50%, var(--color-border));
-    color: var(--color-warning);
-    border-radius: 3px;
-    cursor: help;
-    margin-left: auto;
   }
 
   &__tag,

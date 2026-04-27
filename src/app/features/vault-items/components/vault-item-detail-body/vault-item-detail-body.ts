@@ -20,7 +20,7 @@ import { computeReadiness, effectivePriority } from '@domain/vault/readiness';
 import { actorId, projectId, vaultItemId } from '@domain/ids';
 import type { Priority } from '@domain/vault/vault-item';
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
-import type { ActivityEvent, AssignedEvent, CompletionChangedEvent, ArchivedEvent, GroomingStatusChangedEvent, ThreadMessagePostedEvent } from '@domain/activity/activity-event';
+import type { ActivityEvent, AgentRunCompletedEvent, AssignedEvent, CompletionChangedEvent, ArchivedEvent, GroomingStatusChangedEvent, ThreadMessagePostedEvent } from '@domain/activity/activity-event';
 import type { ProjectId, ActorId } from '@domain/ids';
 import type { Actor } from '@domain/actors';
 
@@ -270,8 +270,63 @@ export class VaultItemDetailBody {
         const e = event as ThreadMessagePostedEvent;
         return `posted ${e.message_kind}`;
       }
+      case 'agent_run_completed': {
+        const e = event as AgentRunCompletedEvent;
+        const status = e.from_status && e.to_status
+          ? ` (${e.from_status.replace('_', ' ')} → ${e.to_status.replace('_', ' ')})`
+          : '';
+        return `ran ${e.skill_id}${status}`;
+      }
       default:
         return event.type;
+    }
+  }
+
+  // Type guard helper — used in the template to narrow ActivityEvent to the
+  // rich variant before reading its extra fields.
+  isAgentRun(event: ActivityEvent): event is AgentRunCompletedEvent {
+    return event.type === 'agent_run_completed';
+  }
+
+  // Display helpers. All accept null and return a placeholder so the template
+  // doesn't have to repeat ?? '—' everywhere — missing data is part of the
+  // contract until runners emit cost / reasoning consistently.
+  formatCost(usd: number | null): string {
+    if (usd === null || usd === undefined) return '—';
+    if (usd < 0.01) return `$${usd.toFixed(4)}`;
+    if (usd < 1)    return `$${usd.toFixed(3)}`;
+    return `$${usd.toFixed(2)}`;
+  }
+
+  formatDuration(ms: number | null): string {
+    if (ms === null || ms === undefined) return '—';
+    if (ms < 1000) return `${ms}ms`;
+    const s = ms / 1000;
+    if (s < 60) return `${s.toFixed(s < 10 ? 1 : 0)}s`;
+    const m = s / 60;
+    return `${m.toFixed(1)}m`;
+  }
+
+  formatTokens(n: number | null): string {
+    if (n === null || n === undefined) return '—';
+    if (n < 1000) return `${n}`;
+    return `${(n / 1000).toFixed(1)}k`;
+  }
+
+  // Pull the local model name out of the slash-pathed id. 'anthropic/claude-…'
+  // → 'claude-…'. Returns '—' for null so the row can render unconditionally.
+  modelShortName(id: string | null): string {
+    if (!id) return '—';
+    const slash = id.indexOf('/');
+    return slash === -1 ? id : id.slice(slash + 1);
+  }
+
+  // Outcome → emoji-free glyph, mirroring the actor-color palette idea.
+  outcomeGlyph(outcome: AgentRunCompletedEvent['outcome']): string {
+    switch (outcome) {
+      case 'success': return '✓';
+      case 'partial': return '~';
+      case 'failed':  return '×';
     }
   }
 

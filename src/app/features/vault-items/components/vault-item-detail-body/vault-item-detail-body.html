@@ -393,6 +393,53 @@
                   </span>
                   {{ eventDescription(event) }}
                   <span class="event__when">· {{ relativeTime(event.at) }}</span>
+
+                  @if (isAgentRun(event)) {
+                    <div class="run">
+                      <div class="run__chips">
+                        <span [class]="'run__outcome run__outcome--' + event.outcome" [attr.title]="'Outcome: ' + event.outcome">
+                          {{ outcomeGlyph(event.outcome) }} {{ event.outcome }}
+                        </span>
+                        @if (event.duration_ms !== null) {
+                          <span class="run__chip" title="Wall-clock duration">{{ formatDuration(event.duration_ms) }}</span>
+                        }
+                        @if (event.cost_usd !== null) {
+                          <span class="run__chip run__chip--cost" title="USD cost">{{ formatCost(event.cost_usd) }}</span>
+                        }
+                        @if (event.model_id) {
+                          <span class="run__chip run__chip--model" [attr.title]="event.model_id">{{ modelShortName(event.model_id) }}</span>
+                        }
+                      </div>
+
+                      <p class="run__summary">{{ event.summary }}</p>
+
+                      @if (event.decisions && event.decisions.length > 0) {
+                        <ul class="run__decisions">
+                          @for (d of event.decisions; track d) {
+                            <li>{{ d }}</li>
+                          }
+                        </ul>
+                      }
+
+                      @if (event.reasoning) {
+                        <blockquote class="run__reasoning">{{ event.reasoning }}</blockquote>
+                      }
+
+                      @if (event.tokens_in !== null || event.tokens_out !== null || event.tokens_cached !== null) {
+                        <div class="run__tokens" title="Token usage (in / out / cached)">
+                          <span>in {{ formatTokens(event.tokens_in) }}</span>
+                          <span>out {{ formatTokens(event.tokens_out) }}</span>
+                          @if (event.tokens_cached !== null) {
+                            <span>cached {{ formatTokens(event.tokens_cached) }}</span>
+                          }
+                        </div>
+                      }
+
+                      @if (event.error) {
+                        <p class="run__error">{{ event.error }}</p>
+                      }
+                    </div>
+                  }
                 </span>
               </div>
             }

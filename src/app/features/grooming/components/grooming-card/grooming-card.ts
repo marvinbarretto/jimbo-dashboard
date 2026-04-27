@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output, signal } f
 import { RouterLink } from '@angular/router';
 import { KanbanCardLinkDirective } from '@shared/kanban/card-link.directive';
 import type { VaultItem, Priority } from '@domain/vault';
+import type { ActorId } from '@domain/ids';
 import { effectivePriority } from '@domain/vault';
 import { ageInDays, staleNorm, ancientNorm, pulseIntensity, isStuck } from '@domain/vault';
 import { PriorityBadge } from '@shared/components/priority-badge/priority-badge';
@@ -44,7 +45,6 @@ export class GroomingCard {
   readonly item               = input.required<VaultItem>();
   readonly project            = input<{ id: string; display_name: string } | null>(null);
   readonly openQuestionsCount = input<number>(0);
-  readonly parentSeq          = input<number | null>(null);
   readonly childrenCount      = input<number>(0);
   // For epic cards: the most-urgent priority of unfinished children rolled up.
   // The card hides its own priority on epics and shows this instead — Agile-style:
@@ -63,6 +63,11 @@ export class GroomingCard {
   // Days since this item entered its current grooming column. Drives the
   // "stuck Nd" hint. 0 means no stuck signal regardless of threshold.
   readonly daysInColumn       = input<number>(0);
+  // Pre-formatted source attribution text — "by @jimbo" / "via email" /
+  // "manual" / etc. Distinct from `assigned_to` (the OWNER, not the creator).
+  // `actorId` is set only for agent sources and drives the colour tint so an
+  // agent name reads in their actor-color.
+  readonly source             = input<{ text: string; actorId: ActorId | null } | null>(null);
 
   readonly dragstart = output<DragEvent>();
   readonly dragend   = output<void>();

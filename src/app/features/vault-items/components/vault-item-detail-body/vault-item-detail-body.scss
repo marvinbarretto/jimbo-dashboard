@@ -96,13 +96,105 @@
   &__count { color: var(--color-text-muted); font-size: .65rem; letter-spacing: 0; text-transform: none; } }
 
 .event-list { display: flex; flex-direction: column; }
-.event { display: flex; gap: .5rem; padding: .25rem 0; font-size: .7rem; color: var(--color-text-muted); border-bottom: 1px dashed var(--color-border);
+.event { display: flex; gap: .5rem; padding: .35rem 0; font-size: .7rem; color: var(--color-text-muted); border-bottom: 1px dashed var(--color-border);
   &:last-child { border-bottom: none; }
   &__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-text-muted); flex-shrink: 0; margin-top: .4rem; }
-  &__body { flex: 1; } &__when { color: var(--color-text-muted); font-size: .65rem; }
+  &__body { flex: 1; min-width: 0; } &__when { color: var(--color-text-muted); font-size: .65rem; }
   &__actor { font-weight: 500; color: var(--color-text); &--human { color: #d96520; } &--agent { color: #4a6a8a; } }
   &--created .event__dot { background: #4a6a8a; } &--assigned .event__dot { background: #8a6d00; }
-  &--status_changed .event__dot { background: #d96520; } &--thread_message_posted .event__dot { background: #999; } }
+  &--status_changed .event__dot { background: #d96520; } &--thread_message_posted .event__dot { background: #999; }
+  &--agent_run_completed .event__dot { background: #4a6a8a; box-shadow: 0 0 0 2px color-mix(in oklch, transparent 70%, #4a6a8a); } }
+
+// Rich agent-run detail block — sits inside an event row when the event is
+// `agent_run_completed`. Indented under the one-line header so the timeline
+// scan still works; details collapse-by-omission when fields are null (the
+// type allows nullable cost/reasoning/tokens until runners backfill).
+.run {
+  margin-top: .35rem;
+  padding: .5rem .65rem;
+  border-left: 2px solid color-mix(in oklch, var(--color-border) 80%, var(--color-text));
+  background: color-mix(in oklch, var(--color-text) 3%, var(--color-bg));
+  border-radius: 0 4px 4px 0;
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  font-size: .7rem;
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: .6rem;
+  }
+
+  &__chip {
+    padding: .05rem .4rem;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+
+    &--cost  { color: var(--color-warning); border-color: color-mix(in oklch, var(--color-warning) 35%, var(--color-border)); }
+    &--model { color: var(--color-text); }
+  }
+
+  // Outcome chip — colour says succeeded / partial / failed at a glance.
+  &__outcome {
+    padding: .05rem .4rem;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    text-transform: lowercase;
+    letter-spacing: .02em;
+
+    &--success { color: #3b7a3b; border-color: color-mix(in oklch, #3b7a3b 40%, var(--color-border)); }
+    &--partial { color: var(--color-warning); border-color: color-mix(in oklch, var(--color-warning) 40%, var(--color-border)); }
+    &--failed  { color: #a33;     border-color: color-mix(in oklch, #a33 40%, var(--color-border)); }
+  }
+
+  &__summary {
+    margin: 0;
+    color: var(--color-text);
+    line-height: 1.4;
+  }
+
+  &__decisions {
+    margin: 0;
+    padding: 0 0 0 1.1rem;
+    color: var(--color-text);
+    font-size: .7rem;
+    line-height: 1.45;
+
+    li { margin: .1rem 0; }
+  }
+
+  // Free-form thinking from the agent — quoted to make it read as voice rather
+  // than fact. Italicised, muted; expandable later if it gets long.
+  &__reasoning {
+    margin: 0;
+    padding: .35rem .55rem;
+    border-left: 2px solid color-mix(in oklch, var(--color-border) 60%, var(--color-text));
+    color: var(--color-text-muted);
+    font-style: italic;
+    line-height: 1.45;
+    background: color-mix(in oklch, var(--color-text) 1.5%, var(--color-bg));
+  }
+
+  &__tokens {
+    display: flex;
+    gap: .55rem;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: .6rem;
+  }
+
+  &__error {
+    margin: 0;
+    color: #a33;
+    font-size: .7rem;
+  }
+}
 
 .muted { color: var(--color-text-muted); }
 .muted-text { color: var(--color-text-muted); font-size: .75rem; margin: 0; }

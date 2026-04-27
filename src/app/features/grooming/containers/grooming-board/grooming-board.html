@@ -30,20 +30,25 @@
         (drop)="onColumnDrop($event, col.status)"
       >
         @for (item of col.cards; track item.id) {
-          <app-grooming-card
-            [item]="item"
-            [project]="primaryProject(item)"
-            [openQuestionsCount]="openQuestionsCount(item)"
-            [parentSeq]="parentSeq(item)"
-            [childrenCount]="childrenCount(item)"
-            [epicPriority]="rolledUpPriorityForEpic(item)"
-            [lastActivityAt]="lastActivityAt(item)"
-            [liveSnapshot]="liveSnapshot(item)"
-            [daysInColumn]="daysInColumn(item)"
-            [dragging]="drag.dragging() === item.id"
-            (dragstart)="onDragStart($event, item)"
-            (dragend)="onDragEnd()"
-          />
+          <app-grooming-nest
+            [parentSeq]="parentRef(item)?.seq ?? null"
+            [parentTitle]="parentRef(item)?.title ?? ''"
+          >
+            <app-grooming-card
+              [item]="item"
+              [project]="primaryProject(item)"
+              [openQuestionsCount]="openQuestionsCount(item)"
+              [childrenCount]="childrenCount(item)"
+              [epicPriority]="rolledUpPriorityForEpic(item)"
+              [lastActivityAt]="lastActivityAt(item)"
+              [liveSnapshot]="liveSnapshot(item)"
+              [daysInColumn]="daysInColumn(item)"
+              [source]="sourceSummary(item)"
+              [dragging]="drag.dragging() === item.id"
+              (dragstart)="onDragStart($event, item)"
+              (dragend)="onDragEnd()"
+            />
+          </app-grooming-nest>
         }
       </app-kanban-column>
     }
