@@ -108,3 +108,46 @@ skillsRoute.openapi(getOneRoute, async (c) => {
   if (res.status === 404) return c.json(payload as Record<string, unknown>, 404);
   return c.json({ error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}` } }, 502);
 });
+
+// ── PATCH /:category/:name — edit (proxies to jimbo-api) ──────────
+
+const patchRoute = createRoute({
+  method: 'patch',
+  path: '/{category}/{name}',
+  tags: ['Skills'],
+  summary: 'Edit a skill — writes SKILL.md, commits, pushes (proxies to jimbo-api)',
+  request: {
+    params: SkillPathParam,
+    body: { content: { 'application/json': { schema: PassthroughBody } } },
+  },
+  responses: {
+    200: { description: 'Updated', content: { 'application/json': { schema: SkillSchema } } },
+    404: { description: 'Skill not found', content: { 'application/json': { schema: PassthroughBody } } },
+    409: { description: 'Git conflict — remote moved or push rejected', content: { 'application/json': { schema: PassthroughBody } } },
+    502: { description: 'Upstream jimbo-api unreachable', content: { 'application/json': { schema: upstreamErrorBody } } },
+  },
+});
+
+skillsRoute.openapi(patchRoute, async (c) => {
+  const { category, name } = c.req.valid('param');
+  const body = c.req.valid('json');
+  const up = readUpstream();
+  if (!up) {
+    return c.json({ error: { code: 'UPSTREAM_NOT_CONFIGURED', message: 'JIMBO_API_URL or JIMBO_API_KEY not set' } }, 502);
+  }
+  let res: Response;
+  try {
+    res = await fetch(`${up.url}/api/skills/${encodeURIComponent(category)}/${encodeURIComponent(name)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': up.key },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    return c.json({ error: { code: 'UPSTREAM_FETCH_FAILED', message: (e as Error).message } }, 502);
+  }
+  const payload = await res.json().catch(() => ({}));
+  if (res.status === 200) return c.json(payload as Record<string, unknown>, 200);
+  if (res.status === 404) return c.json(payload as Record<string, unknown>, 404);
+  if (res.status === 409) return c.json(payload as Record<string, unknown>, 409);
+  return c.json({ error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}` } }, 502);
+});

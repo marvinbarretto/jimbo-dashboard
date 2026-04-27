@@ -1,14 +1,22 @@
 // Reads filesystem skills via dashboard-api proxy at /dashboard-api/api/skills.
 // jimbo-api owns the canonical registry under $HUB_SKILLS_DIR; the proxy is
-// thin server-to-server forwarding. Slice 2 ships read-only — slice 3 adds
-// the M3 git-editor write paths.
+// thin server-to-server forwarding. Edits go through jimbo-api's git pipeline
+// (pull --ff-only, write SKILL.md, commit, push to hub).
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import type { Skill } from '@domain/skills';
+import { Observable, tap } from 'rxjs';
+import type { Skill, SkillMetadata } from '@domain/skills';
 import { environment } from '../../../../environments/environment';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
+
+export interface SkillPatch {
+  name?: string;
+  description?: string;
+  metadata?: Partial<SkillMetadata>;
+  body?: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class SkillsService {
@@ -34,7 +42,6 @@ export class SkillsService {
       this._loading.set(false);
       return;
     }
-    // jimbo-api returns a bare array (not {items: [...]}). Match that shape.
     this.http.get<Skill[]>(this.url).subscribe({
       next: items => { this._skills.set(items); this._loading.set(false); },
       error: err => {
@@ -52,5 +59,17 @@ export class SkillsService {
 
   getById(id: string): Skill | undefined {
     return this._skills().find(s => s.id === id);
+  }
+
+  // PATCH a skill. Returns an Observable so the form can show success/error
+  // toasts and navigate after the upstream git pipeline confirms. The local
+  // signal is replaced with the server's authoritative response (post-pull,
+  // post-commit) so the table stays in sync without a full reload.
+  update(id: string, patch: SkillPatch): Observable<Skill> {
+    return this.http.patch<Skill>(`${this.url}/${id}`, patch).pipe(
+      tap(updated => {
+        this._skills.update(ss => ss.map(s => s.id === id ? updated : s));
+      }),
+    );
   }
 }

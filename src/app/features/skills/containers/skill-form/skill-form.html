@@ -1,9 +1,79 @@
-<div class="skill-form-stub">
-  <a routerLink="/skills" class="back-link">← Skills</a>
-  <h1>Skill editor</h1>
-  <p>
-    Skill editing is coming in Phase B slice 3. Until then, edit
-    <code>hub/skills/&lt;category&gt;/&lt;name&gt;/SKILL.md</code> directly,
-    commit, and push.
-  </p>
+<div class="skill-form">
+  <header class="skill-form__header">
+    <a routerLink="/skills" class="back-link">← Skills</a>
+    <h1>{{ isEdit() ? 'Edit skill' : 'New skill' }}</h1>
+    @if (skillId(); as id) {
+      <p class="skill-form__id"><code>{{ id }}</code></p>
+    }
+  </header>
+
+  @if (!isEdit()) {
+    <p class="skill-form__placeholder">
+      Creating new skills isn't supported yet. For now, add a directory
+      <code>hub/skills/&lt;category&gt;/&lt;name&gt;/SKILL.md</code> directly,
+      commit, and push.
+    </p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="submit()" class="skill-form__form">
+      <label class="field">
+        <span class="field__label">Name</span>
+        <input type="text" formControlName="name" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Description</span>
+        <input type="text" formControlName="description" />
+      </label>
+
+      <fieldset class="field-group">
+        <legend>Metadata</legend>
+
+        <label class="field">
+          <span class="field__label">Executors <small>(comma-separated)</small></span>
+          <input type="text" formControlName="executors" placeholder="boris, ralph" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Timeout minutes</span>
+          <input type="number" formControlName="timeout_minutes" min="1" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Required context <small>(comma-separated)</small></span>
+          <input type="text" formControlName="required_context" placeholder="note_id" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Produces <small>(comma-separated)</small></span>
+          <input type="text" formControlName="produces" placeholder="tags, ai_priority" />
+        </label>
+
+        <label class="field field--inline">
+          <input type="checkbox" formControlName="completes_dispatch" />
+          <span>Completes dispatch</span>
+        </label>
+
+        <label class="field field--inline">
+          <input type="checkbox" formControlName="is_active" />
+          <span>Active <small>(uncheck to keep file but block dispatch)</small></span>
+        </label>
+      </fieldset>
+
+      <label class="field">
+        <span class="field__label">Body <small>(markdown — the agent's prompt)</small></span>
+        <textarea formControlName="body" rows="20"></textarea>
+      </label>
+
+      @if (saveError(); as err) {
+        <p class="error">{{ err }}</p>
+      }
+
+      <div class="skill-form__actions">
+        <a [routerLink]="['/skills', ...(skillId()?.split('/') ?? [])]" class="btn">Cancel</a>
+        <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">
+          {{ saving() ? 'Saving…' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  }
 </div>
