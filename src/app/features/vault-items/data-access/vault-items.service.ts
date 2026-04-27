@@ -10,7 +10,7 @@ import type { VaultItem, CreateVaultItemPayload, UpdateVaultItemPayload, Groomin
 import { isActive } from '@domain/vault/vault-item';
 import type { ActorId, VaultItemId } from '@domain/ids';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
-import { vaultItemId, actorId } from '@domain/ids';
+import { vaultItemId, actorId, threadMessageId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { ActivityEventsService } from './activity-events.service';
 import { isSeedMode } from '@shared/seed-mode';
@@ -280,6 +280,74 @@ export class VaultItemsService {
         },
         error: () => this._items.update(items => items.map(i => i.id === id ? prior : i)),
       });
+  }
+
+  // Atomic reject-with-reason composition. Composes three writes:
+  //   1. PATCH vault-item: grooming_status='needs_rework', assigned_to=newOwnerId
+  //   2. POST thread message of kind 'rejection' with the reason
+  //   3. POST RejectionEvent activity row referencing the thread message id
+  // No-op when item is already in needs_rework. Throws synchronously when reason
+  // is missing or below 12 chars — UI guards against this but the service is
+  // the durable last line of defence.
+  rejectItem(id: VaultItemId, reason: string, newOwnerId: ActorId): void {
+    const trimmed = reason.trim();
+    if (trimmed.length === 0) throw new Error('reason required');
+    if (trimmed.length < 12) throw new Error('reason must be at least 12 chars');
+
+    const prior = this.getById(id);
+    if (!prior) return;
+    if (prior.grooming_status === 'needs_rework') return; // no-op
+
+    const fromStatus = prior.grooming_status;
+    const fromOwner  = prior.assigned_to;
+    const tmId       = threadMessageId(crypto.randomUUID());
+
+    const optimistic = { ...prior, grooming_status: 'needs_rework' as const, assigned_to: newOwnerId };
+    this._items.update(items => items.map(i => i.id === id ? optimistic : i));
+
+    const threadEvent: EventPayload = {
+      type: 'thread_message_posted',
+      vault_item_id: id,
+      actor_id: this.currentActorId,
+      message_id: tmId,
+      message_kind: 'rejection',
+    };
+    const rejectEvent: EventPayload = {
+      type: 'rejected',
+      vault_item_id: id,
+      actor_id: this.currentActorId,
+      from_status: fromStatus,
+      to_status: 'needs_rework',
+      from_owner: fromOwner,
+      to_owner: newOwnerId,
+      reason: trimmed,
+      thread_message_id: tmId,
+    };
+
+    if (isSeedMode()) {
+      this.activityService.post(threadEvent);
+      this.activityService.post(rejectEvent);
+      return;
+    }
+
+    const patch: UpdateVaultItemPayload = { grooming_status: 'needs_rework', assigned_to: newOwnerId };
+    this.http.patch<VaultItem>(`${this.url}/${encodeURIComponent(id)}`, patch).subscribe({
+      next: (updated) => {
+        this._items.update(items => items.map(i => i.id === id ? updated : i));
+        this.http.post(`${environment.dashboardApiUrl}/api/thread-messages`, {
+          id: tmId,
+          vault_item_id: id,
+          author_actor_id: this.currentActorId,
+          kind: 'rejection',
+          body: trimmed,
+          in_reply_to: null,
+          answered_by: null,
+        }).subscribe({ error: () => {} });
+        this.activityService.post(threadEvent);
+        this.activityService.post(rejectEvent);
+      },
+      error: () => this._items.update(items => items.map(i => i.id === id ? prior : i)),
+    });
   }
 
   // Hard delete. Prefer archive() for most use cases.
