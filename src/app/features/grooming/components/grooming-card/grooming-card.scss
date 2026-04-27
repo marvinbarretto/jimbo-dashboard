@@ -2,7 +2,23 @@
 
 // Card-specific scaffolding only — visual atoms (priority, blocker, project, owner)
 // own their styling. Scoped to keep card-feature concerns out of the shared atoms.
-:host { display: block; }
+:host {
+  display: block;
+  // Card sits inside a fixed-width column flex track; min-width: 0 prevents
+  // unbreakable content (long titles, live-text) from pushing the host wider
+  // than its column.
+  min-width: 0;
+}
+
+.card,
+.card__header,
+.card__footer,
+.card__live,
+.card__live-row {
+  // Same reason — every nested flex container needs to allow its children to
+  // shrink below their content min-size, otherwise ellipsis/wrap never engages.
+  min-width: 0;
+}
 
 .card {
   background: var(--color-bg);
@@ -110,7 +126,20 @@
     color: var(--color-text);
     text-decoration: none;
     margin-bottom: 0.4rem;
+    // Long unbreakable strings (URLs, kebab-ids) would push the card past its
+    // 280px column. Scoped to title only so chips/owner labels stay intact.
+    overflow-wrap: anywhere;
     &:hover { text-decoration: underline; }
+  }
+
+  // Tag row — sits between title and footer. Own row so the footer stays a
+  // single-line signals strip (owner · stuck · age) at 280px, instead of
+  // competing with tag chips that have unpredictable text widths.
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-bottom: 0.4rem;
   }
 
   &__footer {
@@ -119,24 +148,19 @@
     gap: 0.5rem;
     font-size: 0.7rem;
     color: var(--color-text-muted);
+    // Footer children are short fixed-width signals — never let them shrink
+    // below their content (e.g. "@marvin" wrapping per-letter). The first
+    // child that should absorb extra space gets margin-left: auto explicitly.
+    > * { flex-shrink: 0; }
   }
 
-  &__tags {
-    display: flex;
-    gap: 0.25rem;
-    margin-left: auto;
-  }
-
-  // Age label — "4d", "today". Pins to far right of footer; auto-margin only
-  // applies when tags are absent (otherwise tags already absorbed the auto).
+  // Age label — "4d", "today". Pins to far right of footer.
   &__age {
     font-family: var(--font-mono);
     font-size: 0.65rem;
     color: var(--color-text-muted);
     margin-left: auto;
     cursor: help;
-
-    .card__tags + & { margin-left: 0.4rem; }
   }
 
   // "Stuck Nd" hint — appears when an item has been in its current grooming
@@ -153,9 +177,6 @@
     border-radius: 3px;
     cursor: help;
     margin-left: auto;
-
-    // When tags are present, tags absorbed the auto-margin — push from there.
-    .card__tags + & { margin-left: 0.4rem; }
   }
 
   &__tag,
@@ -166,6 +187,7 @@
     border-radius: 3px;
     font-size: 0.65rem;
     color: var(--color-text-muted);
+    white-space: nowrap;
   }
 
   // Expand toggle — small chevron that rotates 180° when open. Sits at the end

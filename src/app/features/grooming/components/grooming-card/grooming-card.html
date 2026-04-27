@@ -64,19 +64,19 @@
     {{ item().title }}
   </a>
 
+  @if (visibleTags().length > 0) {
+    <div class="card__tags">
+      @for (tag of visibleTags(); track tag) {
+        <span class="card__tag">{{ tag }}</span>
+      }
+      @if (extraTagCount() > 0) {
+        <span class="card__tag-more">+{{ extraTagCount() }}</span>
+      }
+    </div>
+  }
+
   <footer class="card__footer">
     <app-owner-chip [actorId]="item().assigned_to" />
-
-    @if (visibleTags().length > 0) {
-      <span class="card__tags">
-        @for (tag of visibleTags(); track tag) {
-          <span class="card__tag">{{ tag }}</span>
-        }
-        @if (extraTagCount() > 0) {
-          <span class="card__tag-more">+{{ extraTagCount() }}</span>
-        }
-      </span>
-    }
 
     @if (isStuck()) {
       <span class="card__stuck" [attr.title]="stuckTooltip()">stuck {{ stuckDaysRounded() }}d</span>

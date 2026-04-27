@@ -5,6 +5,11 @@ $accent-hot: #d96520;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  // Without this, flex items default to min-width: auto (= content min-content),
+  // letting long unbreakable card content (titles, live-text) push the column
+  // past its 280px basis. Lock width so columns stay rigid; content overflow is
+  // handled inside the card.
+  min-width: 0;
 }
 
 .col {
