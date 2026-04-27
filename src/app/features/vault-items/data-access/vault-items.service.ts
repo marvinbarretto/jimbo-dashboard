@@ -379,9 +379,9 @@ function splitType(t: string): { type: VaultItemType; category: VaultItemCategor
   return { type: 'note', category: t };
 }
 
-// Production has 6 grooming statuses; dashboard has 7. The extra one
-// ('intake_complete') doesn't exist in the data, so any production value
-// passes through; legacy 'intake_complete' stays valid in the type.
+// Production grooming statuses lag the dashboard: `intake_complete` and
+// `needs_rework` are TS-only until backend mutations land. Any production
+// value passes through; the dashboard-only members stay valid in the type.
 function narrowGroomingStatus(s: string): GroomingStatus {
   const valid: readonly GroomingStatus[] = [
     'needs_rework',
