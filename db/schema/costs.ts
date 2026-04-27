@@ -1,4 +1,4 @@
-import { pgTable, text, integer, real, timestamp, index, uuid, bigint, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, real, timestamp, index, bigint, uniqueIndex } from 'drizzle-orm/pg-core';
 import { dispatchQueue } from './dispatch.js';
 
 // ── costs ──────────────────────────────────────────────────────────────────
@@ -62,10 +62,6 @@ export const costs = pgTable('costs', {
   // Number of tool_use blocks in the response — a cheap proxy for "did the
   // model want another turn?".
   tool_use_count: integer('tool_use_count').notNull().default(0),
-
-  // Phase 3 will populate this from skill_versions.prompt_version_id; nullable
-  // until prompts become first-class entities and dispatches reference them.
-  prompt_version_id: uuid('prompt_version_id'),
 
   // Who initiated the LLM call. For dispatch turns: dispatch.executor.
   // For briefing/email: caller-supplied actor or NULL.
