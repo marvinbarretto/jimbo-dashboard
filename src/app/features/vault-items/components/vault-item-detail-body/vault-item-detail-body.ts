@@ -291,14 +291,7 @@ export class VaultItemDetailBody {
 
   // Display helpers. All accept null and return a placeholder so the template
   // doesn't have to repeat ?? '—' everywhere — missing data is part of the
-  // contract until runners emit cost / reasoning consistently.
-  formatCost(usd: number | null): string {
-    if (usd === null || usd === undefined) return '—';
-    if (usd < 0.01) return `$${usd.toFixed(4)}`;
-    if (usd < 1)    return `$${usd.toFixed(3)}`;
-    return `$${usd.toFixed(2)}`;
-  }
-
+  // contract until runners emit reasoning / tokens consistently.
   formatDuration(ms: number | null): string {
     if (ms === null || ms === undefined) return '—';
     if (ms < 1000) return `${ms}ms`;
@@ -320,15 +313,6 @@ export class VaultItemDetailBody {
     if (!id) return '—';
     const slash = id.indexOf('/');
     return slash === -1 ? id : id.slice(slash + 1);
-  }
-
-  // Outcome → emoji-free glyph, mirroring the actor-color palette idea.
-  outcomeGlyph(outcome: AgentRunCompletedEvent['outcome']): string {
-    switch (outcome) {
-      case 'success': return '✓';
-      case 'partial': return '~';
-      case 'failed':  return '×';
-    }
   }
 
   relativeTime(iso: string): string {

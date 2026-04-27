@@ -228,21 +228,7 @@
     color: var(--color-text-muted);
     white-space: nowrap;
 
-    &--cost  { color: var(--color-warning); border-color: color-mix(in oklch, var(--color-warning) 35%, var(--color-border)); }
     &--model { color: var(--color-text); }
-  }
-
-  // Outcome chip — colour says succeeded / partial / failed at a glance.
-  &__outcome {
-    padding: .05rem .4rem;
-    border: 1px solid var(--color-border);
-    border-radius: 3px;
-    text-transform: lowercase;
-    letter-spacing: .02em;
-
-    &--success { color: #3b7a3b; border-color: color-mix(in oklch, #3b7a3b 40%, var(--color-border)); }
-    &--partial { color: var(--color-warning); border-color: color-mix(in oklch, var(--color-warning) 40%, var(--color-border)); }
-    &--failed  { color: #a33;     border-color: color-mix(in oklch, #a33 40%, var(--color-border)); }
   }
 
   &__summary {

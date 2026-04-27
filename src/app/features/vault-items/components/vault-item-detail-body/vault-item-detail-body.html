@@ -375,20 +375,16 @@
 
                   @if (isAgentRun(event)) {
                     <div class="run">
-                      <div class="run__chips">
-                        <span [class]="'run__outcome run__outcome--' + event.outcome" [attr.title]="'Outcome: ' + event.outcome">
-                          {{ outcomeGlyph(event.outcome) }} {{ event.outcome }}
-                        </span>
-                        @if (event.duration_ms !== null) {
-                          <span class="run__chip" title="Wall-clock duration">{{ formatDuration(event.duration_ms) }}</span>
-                        }
-                        @if (event.cost_usd !== null) {
-                          <span class="run__chip run__chip--cost" title="USD cost">{{ formatCost(event.cost_usd) }}</span>
-                        }
-                        @if (event.model_id) {
-                          <span class="run__chip run__chip--model" [attr.title]="event.model_id">{{ modelShortName(event.model_id) }}</span>
-                        }
-                      </div>
+                      @if (event.duration_ms !== null || event.model_id) {
+                        <div class="run__chips">
+                          @if (event.duration_ms !== null) {
+                            <span class="run__chip" title="Wall-clock duration">{{ formatDuration(event.duration_ms) }}</span>
+                          }
+                          @if (event.model_id) {
+                            <span class="run__chip run__chip--model" [attr.title]="event.model_id">{{ modelShortName(event.model_id) }}</span>
+                          }
+                        </div>
+                      }
 
                       <p class="run__summary">{{ event.summary }}</p>
 
