@@ -14,6 +14,7 @@
     color: var(--color-text-muted); cursor: pointer; text-decoration: none;
     &:disabled { opacity: .4; cursor: not-allowed; }
     &--danger { border-color: #a33; color: #a33; &:hover { background: #a33; color: #fff; } }
+    &--warn { border-color: var(--color-warning, #f59e0b); color: var(--color-warning, #f59e0b); }
   }
 }
 

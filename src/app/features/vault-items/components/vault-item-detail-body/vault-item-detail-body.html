@@ -14,6 +14,9 @@
         <button class="topbar__action" (click)="archive()"
           [attr.aria-disabled]="isItemArchived(item)"
           [disabled]="isItemArchived(item)">archive</button>
+        @if (canReject()) {
+          <button type="button" class="topbar__action topbar__action--warn" (click)="openReject()">reject</button>
+        }
         <button class="topbar__action topbar__action--danger" (click)="deleteItem()">delete</button>
         @if (mode() === 'page') {
           <a routerLink="/vault-items" class="topbar__action topbar__action--close" aria-label="Back to vault">×</a>
@@ -190,6 +193,17 @@
         </details>
       }
     </div>
+
+    @if (showRejectForm()) {
+      <app-reject-form
+        [itemId]="item.id"
+        [currentOwner]="item.assigned_to"
+        [recentEvents]="events()"
+        [availableActors]="availableActors()"
+        (cancelled)="closeReject()"
+        (submitted)="onRejectSubmitted($event)"
+      />
+    }
 
     <!-- ===== main 3-column grid: content · activity · thread ===== -->
     <div class="body-grid">

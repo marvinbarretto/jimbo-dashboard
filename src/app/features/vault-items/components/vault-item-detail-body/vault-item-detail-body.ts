@@ -11,6 +11,7 @@ import { Router, RouterLink } from '@angular/router';
 import { swapDetailSeq } from '@shared/kanban/detail-modal';
 import { VaultItemsService } from '../../data-access/vault-items.service';
 import { ActivityEventsService } from '../../data-access/activity-events.service';
+import { RejectFormComponent, type RejectSubmission, type RejectActorOption } from './reject-form/reject-form';
 import { VaultItemProjectsService } from '../../data-access/vault-item-projects.service';
 import { VaultItemDependenciesService } from '../../data-access/vault-item-dependencies.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
@@ -27,7 +28,7 @@ import type { Actor } from '@domain/actors';
 
 @Component({
   selector: 'app-vault-item-detail-body',
-  imports: [RouterLink, ThreadView],
+  imports: [RouterLink, ThreadView, RejectFormComponent],
   templateUrl: './vault-item-detail-body.html',
   styleUrl: './vault-item-detail-body.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -155,6 +156,41 @@ export class VaultItemDetailBody {
 
   readonly showReassignPicker = signal(false);
   readonly showAddProjectPicker = signal(false);
+  readonly showRejectForm = signal(false);
+
+  // Hardcoded actor catalogue for now — sourced from a central registry later.
+  readonly availableActors = computed<RejectActorOption[]>(() => [
+    { id: actorId('marvin'),          label: 'marvin',          kind: 'human' },
+    { id: actorId('boris'),           label: 'boris',           kind: 'agent' },
+    { id: actorId('ralph'),           label: 'ralph',           kind: 'agent' },
+    { id: actorId('intake-quality'),  label: 'intake-quality',  kind: 'agent' },
+    { id: actorId('vault-classify'),  label: 'vault-classify',  kind: 'agent' },
+    { id: actorId('vault-decompose'), label: 'vault-decompose', kind: 'agent' },
+  ]);
+
+  // Reject is only meaningful when there is actual work to review — hide for
+  // ungroomed items (nothing to reject) and items already in the rework queue.
+  readonly canReject = computed(() => {
+    const i = this.item();
+    if (!i) return false;
+    return i.grooming_status !== 'ungroomed' && i.grooming_status !== 'needs_rework';
+  });
+
+  openReject(): void  { this.showRejectForm.set(true); }
+  closeReject(): void { this.showRejectForm.set(false); }
+
+  onRejectSubmitted(submission: RejectSubmission): void {
+    const i = this.item();
+    if (!i) return;
+    try {
+      this.vaultItemsService.rejectItem(i.id, submission.reason, submission.newOwnerId);
+      this.closeReject();
+    } catch (err: unknown) {
+      // Service throws synchronously on validation failure — UI already guards,
+      // so this should never fire. Log for visibility if it does.
+      console.error('rejectItem failed', err);
+    }
+  }
   readonly addBlockerSeqInput = signal('');
 
   readonly statuses: ('active' | 'done')[] = ['active', 'done'];

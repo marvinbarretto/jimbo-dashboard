@@ -1,0 +1,32 @@
+<form class="reject-form" [formGroup]="form" (ngSubmit)="submit()">
+  <h3 class="reject-form__title">Reject this item</h3>
+
+  <label class="reject-form__field">
+    <span class="reject-form__label">Reason (≥ 12 chars, supports markdown)</span>
+    <textarea
+      formControlName="reason"
+      rows="4"
+      class="reject-form__textarea"
+      placeholder="What's wrong with the current output? Be specific — the new owner reads this to know what to fix."
+    ></textarea>
+    @if (form.controls.reason.touched && form.controls.reason.invalid) {
+      <span class="reject-form__error">Reason is required and must be at least 12 characters.</span>
+    }
+  </label>
+
+  <label class="reject-form__field">
+    <span class="reject-form__label">Reassign to</span>
+    <select formControlName="newOwner" class="reject-form__select">
+      @for (actor of availableActors(); track actor.id) {
+        <option [value]="actor.id">&#64;{{ actor.label }} ({{ actor.kind }})</option>
+      }
+    </select>
+  </label>
+
+  <div class="reject-form__actions">
+    <button type="button" class="reject-form__cancel" (click)="cancel()">Cancel</button>
+    <button type="submit" class="reject-form__submit" [disabled]="form.invalid">
+      Reject and reassign
+    </button>
+  </div>
+</form>
