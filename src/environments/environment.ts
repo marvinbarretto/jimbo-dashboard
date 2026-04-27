@@ -1,6 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://jimbo.fourfoldmedia.uk/data',
   // Dashboard API (Hono service that wraps jimbo_pg). Same prefix in dev and
   // prod so request shape is identical: dev → Angular proxy → :3201,
   // prod → Caddy → :3201.

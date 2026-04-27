@@ -1,12 +1,4 @@
 {
-  "/data": {
-    "target": "https://jimbo.fourfoldmedia.uk",
-    "secure": true,
-    "changeOrigin": true,
-    "headers": {
-      "Authorization": "Basic bWFydmluOm1hcnZpbg=="
-    }
-  },
   "/dashboard-api": {
     "target": "http://localhost:3201",
     "secure": false,

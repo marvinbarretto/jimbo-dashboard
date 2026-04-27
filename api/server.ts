@@ -33,6 +33,10 @@ import { promptsRoute } from './routes/prompts.js';
 import { toolsRoute } from './routes/tools.js';
 import { modelsRoute } from './routes/models.js';
 import { modelStacksRoute } from './routes/model-stacks.js';
+import { vaultItemDependenciesRoute } from './routes/vault-item-dependencies.js';
+import { noteActivityRoute } from './routes/note-activity.js';
+import { threadMessagesRoute } from './routes/thread-messages.js';
+import { attachmentsRoute } from './routes/attachments.js';
 import { HealthSchema } from './schemas/shared.js';
 
 const app = new OpenAPIHono({ defaultHook: validationHook });
@@ -99,6 +103,10 @@ app.use(`${BASE}/api/prompts/*`, apiKeyAuth);
 app.use(`${BASE}/api/tools/*`, apiKeyAuth);
 app.use(`${BASE}/api/models/*`, apiKeyAuth);
 app.use(`${BASE}/api/model-stacks/*`, apiKeyAuth);
+app.use(`${BASE}/api/vault-item-dependencies/*`, apiKeyAuth);
+app.use(`${BASE}/api/note-activity/*`, apiKeyAuth);
+app.use(`${BASE}/api/thread-messages/*`, apiKeyAuth);
+app.use(`${BASE}/api/attachments/*`, apiKeyAuth);
 
 app.route(`${BASE}/api/vault-items`, vaultItemsRoute);
 app.route(`${BASE}/api/dispatches`, dispatchesRoute);
@@ -110,6 +118,10 @@ app.route(`${BASE}/api/prompts`, promptsRoute);
 app.route(`${BASE}/api/tools`, toolsRoute);
 app.route(`${BASE}/api/models`, modelsRoute);
 app.route(`${BASE}/api/model-stacks`, modelStacksRoute);
+app.route(`${BASE}/api/vault-item-dependencies`, vaultItemDependenciesRoute);
+app.route(`${BASE}/api/note-activity`, noteActivityRoute);
+app.route(`${BASE}/api/thread-messages`, threadMessagesRoute);
+app.route(`${BASE}/api/attachments`, attachmentsRoute);
 
 // ⚠️ Production guard — sync route is destructive (TRUNCATE + ETL against
 // jimbo_pg). Mounted only when running locally so the live service can never

@@ -18,7 +18,7 @@ import { SEED } from '@domain/seed';
 @Injectable({ providedIn: 'root' })
 export class VaultItemProjectsService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${environment.apiUrl}/vault-item-projects`;
+  private readonly url = `${environment.dashboardApiUrl}/api/vault-item-projects`;
 
   // Keyed by vault_item_id string. Bulk-populated on construction (non-seed)
   // or lazy-populated via loadFor() (seed mode legacy path).
@@ -93,10 +93,7 @@ export class VaultItemProjectsService {
 
     if (isSeedMode()) return;
 
-    const params = new HttpParams()
-      .set('vault_item_id', `eq.${vaultItemId}`)
-      .set('project_id', `eq.${projectId}`);
-    this.http.delete(this.url, { params }).subscribe({
+    this.http.delete(`${this.url}/${encodeURIComponent(vaultItemId)}/${encodeURIComponent(projectId)}`).subscribe({
       error: () => this._projectsByItem.update(map => ({ ...map, [vaultItemId]: prior })),
     });
   }

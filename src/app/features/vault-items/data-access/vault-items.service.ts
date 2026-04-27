@@ -5,7 +5,7 @@
 // endpoints to the new API. Seed mode is preserved for offline UI work.
 
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import type { VaultItem, CreateVaultItemPayload, UpdateVaultItemPayload, GroomingStatus, VaultItemType, VaultItemCategory, Priority, Actionability } from '@domain/vault/vault-item';
 import { isActive } from '@domain/vault/vault-item';
 import type { ActorId, VaultItemId } from '@domain/ids';
@@ -25,7 +25,7 @@ type EventPayload = CreatePayload<VaultActivityEvent>;
 export class VaultItemsService {
   private readonly http = inject(HttpClient);
   private readonly activityService = inject(ActivityEventsService);
-  private readonly url = `${environment.apiUrl}/vault-items`;
+  private readonly url = `${environment.dashboardApiUrl}/api/vault-items`;
 
   private readonly _items = signal<VaultItem[]>([]);
   private readonly _loading = signal(true);
@@ -83,9 +83,9 @@ export class VaultItemsService {
       return;
     }
 
-    this.http.post<VaultItem[]>(this.url, payload, { headers: { Prefer: 'return=representation' } })
+    this.http.post<VaultItem>(this.url, payload)
       .subscribe({
-        next: ([created]) => {
+        next: (created) => {
           this._items.update(items => items.map(i => i.id === tempId ? created : i));
           // Emit after reconcile so the event carries the real vault_item_id.
           this.activityService.post({
@@ -110,10 +110,9 @@ export class VaultItemsService {
 
     if (isSeedMode()) return;
 
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.patch<VaultItem[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
+    this.http.patch<VaultItem>(`${this.url}/${encodeURIComponent(id)}`, patch)
       .subscribe({
-        next: ([updated]) => this._items.update(items => items.map(i => i.id === id ? updated : i)),
+        next: (updated) => this._items.update(items => items.map(i => i.id === id ? updated : i)),
         error: ()          => this._items.update(items => items.map(i => i.id === id ? prior : i)),
       });
   }
@@ -140,10 +139,9 @@ export class VaultItemsService {
       return;
     }
 
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.patch<VaultItem[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
+    this.http.patch<VaultItem>(`${this.url}/${encodeURIComponent(id)}`, patch)
       .subscribe({
-        next: ([updated]) => {
+        next: (updated) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
           this.activityService.post(event);
         },
@@ -170,10 +168,9 @@ export class VaultItemsService {
       return;
     }
 
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.patch<VaultItem[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
+    this.http.patch<VaultItem>(`${this.url}/${encodeURIComponent(id)}`, patch)
       .subscribe({
-        next: ([updated]) => {
+        next: (updated) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
           this.activityService.post(event);
         },
@@ -207,10 +204,9 @@ export class VaultItemsService {
       return;
     }
 
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.patch<VaultItem[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
+    this.http.patch<VaultItem>(`${this.url}/${encodeURIComponent(id)}`, patch)
       .subscribe({
-        next: ([updated]) => {
+        next: (updated) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
           this.activityService.post(event);
         },
@@ -243,10 +239,9 @@ export class VaultItemsService {
       return;
     }
 
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.patch<VaultItem[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
+    this.http.patch<VaultItem>(`${this.url}/${encodeURIComponent(id)}`, patch)
       .subscribe({
-        next: ([updated]) => {
+        next: (updated) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
           this.activityService.post(event);
         },
@@ -277,10 +272,9 @@ export class VaultItemsService {
       return;
     }
 
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.patch<VaultItem[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
+    this.http.patch<VaultItem>(`${this.url}/${encodeURIComponent(id)}`, patch)
       .subscribe({
-        next: ([updated]) => {
+        next: (updated) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
           this.activityService.post(event);
         },
@@ -295,8 +289,7 @@ export class VaultItemsService {
 
     if (isSeedMode()) return;
 
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.delete(this.url, { params })
+    this.http.delete(`${this.url}/${encodeURIComponent(id)}`)
       .subscribe({
         error: () => {
           // Rollback — put the item back in its original position best-effort.

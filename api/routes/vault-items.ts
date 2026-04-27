@@ -281,3 +281,94 @@ vaultItemsRoute.openapi(createRouteDef, async (c) => {
     502,
   );
 });
+
+// ── PATCH /:id ─ proxies to jimbo-api PATCH /api/vault/notes/:id ──────────
+// jimbo-api owns vault note write semantics (grooming transitions, ready
+// re-evaluation, audit trail). The dashboard-api just forwards.
+
+const IdParam = z.object({
+  id: z.string().min(1).openapi({ param: { name: 'id', in: 'path' } }),
+});
+
+const PatchBody = z.record(z.string(), z.unknown());
+
+const patchRouteDef = createRoute({
+  method: 'patch',
+  path: '/{id}',
+  tags: ['VaultItems'],
+  summary: 'Update a vault item (proxies to jimbo-api)',
+  request: {
+    params: IdParam,
+    body: { content: { 'application/json': { schema: PatchBody } } },
+  },
+  responses: {
+    200: { description: 'Updated', content: { 'application/json': { schema: PatchBody } } },
+    400: { description: 'Validation error', content: { 'application/json': { schema: PatchBody } } },
+    404: { description: 'Not found', content: { 'application/json': { schema: PatchBody } } },
+    502: { description: 'Upstream unreachable', content: { 'application/json': { schema: z.object({ error: z.object({ code: z.string(), message: z.string() }) }) } } },
+  },
+});
+
+vaultItemsRoute.openapi(patchRouteDef, async (c) => {
+  const { id } = c.req.valid('param');
+  const body = c.req.valid('json');
+  const upstream = process.env.JIMBO_API_URL;
+  const upstreamKey = process.env.JIMBO_API_KEY;
+  if (!upstream || !upstreamKey) {
+    return c.json({ error: { code: 'UPSTREAM_NOT_CONFIGURED', message: 'JIMBO_API_URL or JIMBO_API_KEY not set' } }, 502);
+  }
+  let res: Response;
+  try {
+    res = await fetch(`${upstream}/api/vault/notes/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': upstreamKey },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    return c.json({ error: { code: 'UPSTREAM_FETCH_FAILED', message: (e as Error).message } }, 502);
+  }
+  const payload = await res.json().catch(() => ({}));
+  if (res.status === 200) return c.json(payload as Record<string, unknown>, 200);
+  if (res.status === 400) return c.json(payload as Record<string, unknown>, 400);
+  if (res.status === 404) return c.json(payload as Record<string, unknown>, 404);
+  return c.json({ error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}` } }, 502);
+});
+
+// ── DELETE /:id ─ proxies to jimbo-api DELETE /api/vault/notes/:id ────────
+
+const deleteRouteDef = createRoute({
+  method: 'delete',
+  path: '/{id}',
+  tags: ['VaultItems'],
+  summary: 'Delete a vault item (proxies to jimbo-api)',
+  request: { params: IdParam },
+  responses: {
+    204: { description: 'Deleted' },
+    404: { description: 'Not found', content: { 'application/json': { schema: PatchBody } } },
+    502: { description: 'Upstream unreachable', content: { 'application/json': { schema: z.object({ error: z.object({ code: z.string(), message: z.string() }) }) } } },
+  },
+});
+
+vaultItemsRoute.openapi(deleteRouteDef, async (c) => {
+  const { id } = c.req.valid('param');
+  const upstream = process.env.JIMBO_API_URL;
+  const upstreamKey = process.env.JIMBO_API_KEY;
+  if (!upstream || !upstreamKey) {
+    return c.json({ error: { code: 'UPSTREAM_NOT_CONFIGURED', message: 'JIMBO_API_URL or JIMBO_API_KEY not set' } }, 502);
+  }
+  let res: Response;
+  try {
+    res = await fetch(`${upstream}/api/vault/notes/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { 'X-API-Key': upstreamKey },
+    });
+  } catch (e) {
+    return c.json({ error: { code: 'UPSTREAM_FETCH_FAILED', message: (e as Error).message } }, 502);
+  }
+  if (res.status === 204) return c.body(null, 204);
+  if (res.status === 404) {
+    const payload = await res.json().catch(() => ({}));
+    return c.json(payload as Record<string, unknown>, 404);
+  }
+  return c.json({ error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}` } }, 502);
+});
