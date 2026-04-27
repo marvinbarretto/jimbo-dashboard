@@ -16,6 +16,7 @@
     "db:pg:studio": "node --env-file=.env node_modules/.bin/drizzle-kit studio --config db/drizzle.config.ts",
     "db:pg:push": "node --env-file=.env node_modules/.bin/drizzle-kit push --config db/drizzle.config.ts",
     "db:pg:etl": "node --env-file=.env --import tsx scripts/etl/sqlite-to-postgres.ts",
+    "db:pg:seed-skills": "node --env-file=.env --import tsx scripts/seed-skills-registry.ts",
     "api": "node --env-file=.env --import tsx --watch api/server.ts",
     "build:api": "tsc -p tsconfig.api.json",
     "start:api": "node dist-api/api/server.js",

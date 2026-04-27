@@ -50,6 +50,13 @@
       "when": 1777236808377,
       "tag": "0006_typical_mikhail_rasputin",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1777276735093,
+      "tag": "0007_amazing_deathbird",
+      "breakpoints": true
     }
   ]
 }
