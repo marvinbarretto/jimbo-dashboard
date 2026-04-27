@@ -17,8 +17,8 @@ beforeEach(getCleanupHook(false));
 afterEach(getCleanupHook(true));
 
 const ANGULAR_TESTBED_SETUP = Symbol.for('@angular/cli/testbed-setup');
-if (!globalThis[ANGULAR_TESTBED_SETUP as unknown as string]) {
-  (globalThis as unknown as Record<symbol, boolean>)[ANGULAR_TESTBED_SETUP] = true;
+if (!(globalThis as Record<symbol, boolean>)[ANGULAR_TESTBED_SETUP]) {
+  (globalThis as Record<symbol, boolean>)[ANGULAR_TESTBED_SETUP] = true;
 
   @NgModule({})
   class TestModule {}
