@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { KanbanCardLinkDirective } from '@shared/kanban/card-link.directive';
 import type { VaultItem, Priority } from '@domain/vault';
@@ -10,6 +10,8 @@ import { BlockerBadge } from '@shared/components/blocker-badge/blocker-badge';
 import { EpicBadge } from '@shared/components/epic-badge/epic-badge';
 import { ProjectChip } from '@shared/components/project-chip/project-chip';
 import { OwnerChip } from '@shared/components/owner-chip/owner-chip';
+import { ReworkBadgeComponent } from './rework-badge/rework-badge';
+import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
 
 // Pre-formatted "what just happened" data passed in from the board. Both
 // fields nullable — a fresh card may have no events; an item may have no
@@ -31,7 +33,7 @@ export interface LiveSnapshot {
 // lifecycle events so the parent owns drag state and the kanban service writes.
 @Component({
   selector: 'app-grooming-card',
-  imports: [RouterLink, KanbanCardLinkDirective, PriorityBadge, BlockerBadge, EpicBadge, ProjectChip, OwnerChip],
+  imports: [RouterLink, KanbanCardLinkDirective, PriorityBadge, BlockerBadge, EpicBadge, ProjectChip, OwnerChip, ReworkBadgeComponent],
   templateUrl: './grooming-card.html',
   styleUrl: './grooming-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -94,6 +96,33 @@ export class GroomingCard {
   readonly draftTooltip = computed(() => {
     const n = this.draftCount();
     return `${n} acceptance criteri${n === 1 ? 'on' : 'a'} drafted — drag to Ready to approve`;
+  });
+
+  readonly needsRework = computed(() => this.item().grooming_status === 'needs_rework');
+  readonly hasParent   = computed(() => this.item().parent_id !== null);
+
+  // Reason snippet for the rework badge — pulled from the latest_event embed
+  // when its action is 'rejected'. The to_value carries the rejection reason
+  // per the dashboard-api's note-activity mapping. Null when latest_event isn't
+  // a rejection (so we don't show stale older reasons).
+  readonly reworkReason = computed(() => {
+    const latest = this.item().latest_event;
+    if (!latest || latest.action !== 'rejected') return null;
+    return latest.to_value ?? null;
+  });
+
+  // New owner after rejection. Falls back to current assigned_to.
+  readonly reworkTarget = computed(() => {
+    return this.item().assigned_to ?? null;
+  });
+
+  // Resolve the parent's seq (integer handle the operator already sees).
+  // Avoids showing the slug in the chip — clean little ↳ #1234 marker.
+  private readonly vaultItems = inject(VaultItemsService);
+  readonly parentSeq = computed(() => {
+    const pid = this.item().parent_id;
+    if (!pid) return null;
+    return this.vaultItems.getById(pid)?.seq ?? null;
   });
 
   // What appears in the priority slot. Epics show the rolled-up priority of their

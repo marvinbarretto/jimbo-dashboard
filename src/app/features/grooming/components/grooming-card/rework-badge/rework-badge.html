@@ -1,0 +1,9 @@
+<div class="rework-badge__inner">
+  <span class="rework-badge__icon">↺</span>
+  <div class="rework-badge__body">
+    @if (reassignedTo(); as to) {
+      <span class="rework-badge__target">→ &#64;{{ to }}</span>
+    }
+    <span class="rework-badge__reason">{{ reasonSnippet() }}</span>
+  </div>
+</div>

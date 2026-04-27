@@ -6,6 +6,7 @@
   [class.card--owner-jimbo]="item().assigned_to === 'jimbo'"
   [class.card--dragging]="dragging()"
   [class.card--epic]="isEpic()"
+  [class.card--needs-rework]="needsRework()"
   [class.card--expanded]="expanded()"
   [attr.title]="ageTooltip()"
   draggable="true"
@@ -14,6 +15,10 @@
 >
   <header class="card__header">
     <a [routerLink]="['/vault-items', item().seq]" class="card__seq">#{{ item().seq }}</a>
+
+    @if (hasParent() && parentSeq() !== null) {
+      <span class="card__subitem">↳ #{{ parentSeq() }}</span>
+    }
 
     @if (source(); as s) {
       <span
@@ -56,6 +61,13 @@
       >▾</button>
     </span>
   </header>
+
+  @if (needsRework() && reworkReason(); as reason) {
+    <app-rework-badge
+      [reasonSnippet]="reason"
+      [reassignedTo]="reworkTarget()"
+    />
+  }
 
   <a [appKanbanCardLink]="item().seq" class="card__title">
     {{ item().title }}
