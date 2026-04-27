@@ -270,8 +270,9 @@ h2 { font-size: 1.25rem; font-weight: 600; }
     &:hover { background: var(--color-border); } &[aria-selected="true"] { border-color: #d96520; color: #d96520; } } }
 .junction-list { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .junction-chip { display: inline-flex; align-items: center; border: 1px solid var(--color-border); font-size: .7rem;
-  // button-reset: label is a <button> when used for vault-item links (blockers)
-  // so the chip keeps its anchor-like look regardless of element type.
+  // button-reset: label is rendered as <a> for project chips and <button>
+  // for vault-item links (blockers). The resets are no-ops on <a>, so this
+  // selector renders consistently across both element types.
   &__label { background: transparent; border: 0; font: inherit; padding: 1px 6px; color: var(--color-text); text-decoration: none; cursor: pointer; &:hover { text-decoration: underline; } }
   &__remove { border: none; border-left: 1px solid var(--color-border); background: transparent; padding: 1px 5px; font: inherit; font-size: .7rem; color: var(--color-text-muted); cursor: pointer; &:hover { color: #a33; } }
   &--blocker { border-color: #a33; .junction-chip__label { color: #a33; } } }

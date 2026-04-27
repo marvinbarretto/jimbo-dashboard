@@ -123,9 +123,9 @@ export class VaultItemDetailBody {
   swapToSeq(seq: number): void {
     if (this.mode() === 'modal') {
       swapDetailSeq(this.router, seq);
-    } else {
-      this.router.navigate(['/vault-items', seq]);
+      return;
     }
+    this.router.navigate(['/vault-items', seq]);
   }
 
   readonly parentItem = computed(() => {
