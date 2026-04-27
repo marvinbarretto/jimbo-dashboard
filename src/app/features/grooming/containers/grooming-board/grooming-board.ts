@@ -304,6 +304,7 @@ export class GroomingBoard {
       case 'agent_run_completed':     return e.from_status && e.to_status
         ? `ran ${e.skill_id} (${e.from_status.replace('_', ' ')} → ${e.to_status.replace('_', ' ')})`
         : `ran ${e.skill_id}`;
+      case 'rejected':                return `rejected ${e.from_status.replace('_', ' ')} → ${this.actorLabel(e.to_owner)}: ${this.truncate(e.reason, 60)}`;
     }
   }
 
