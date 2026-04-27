@@ -1,23 +1,19 @@
-import type { ModelId, ModelStackId } from '../ids';
-
-// `model_ids` is an ordered array: [primary, fallback1, fallback2, ...].
-// Named slots (primary_model_id, fallback_model_id) cap at a fixed depth and
-// inevitably grow into fallback_2_id, fallback_3_id as rate-limit failures
-// accumulate. An array is the honest data structure for an ordered cascade.
+// A model stack is a named, ordered preference list of model ids.
+// Canonical source: `hub/model-stacks/<id>.md`.
 //
-// `fast_model_id` is separate because it's a deliberate routing choice for
-// lightweight subtasks — not a failure fallback.
+// Today no consumer reads this; the registry captures the operator's intent
+// for fallback chains. When agents grow native fallback support, runners will
+// walk the chain on rate-limit / context errors.
 
-export interface ModelStack {
-  id:            ModelStackId;        // slug: 'code-reasoning', 'vision', 'budget'
-  display_name:  string;
-  description:   string | null;
-  model_ids:     ModelId[];           // ordered fallback cascade, primary first
-  fast_model_id: ModelId | null;      // cheap pass for lightweight work in this domain
-  is_active:     boolean;
-  created_at:    string;
-  updated_at:    string;
+export interface ModelStackMetadata {
+  chain: string[];                  // ordered list of model ids (primary first)
+  is_active?: boolean;
 }
 
-export type CreateModelStackPayload = Omit<ModelStack, 'created_at' | 'updated_at'>;
-export type UpdateModelStackPayload = Partial<Omit<ModelStack, 'id' | 'created_at' | 'updated_at'>>;
+export interface ModelStack {
+  id: string;                       // slug, e.g. 'claude-cheap-to-premium'
+  name: string;
+  description: string;
+  metadata: ModelStackMetadata;
+  body: string;
+}

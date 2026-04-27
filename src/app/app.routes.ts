@@ -34,14 +34,6 @@ export const routes: Routes = [
     loadChildren: () => import('./features/skills/skills.routes').then(m => m.skillsRoutes),
   },
   {
-    path: 'prompts',
-    loadChildren: () => import('./features/prompts/prompts.routes').then(m => m.promptsRoutes),
-  },
-  {
-    path: 'tools',
-    loadChildren: () => import('./features/tools/tools.routes').then(m => m.toolsRoutes),
-  },
-  {
     path: 'coverage',
     title: 'Coverage',
     loadComponent: () => import('./features/coverage/coverage-page/coverage-page').then(m => m.CoveragePage),

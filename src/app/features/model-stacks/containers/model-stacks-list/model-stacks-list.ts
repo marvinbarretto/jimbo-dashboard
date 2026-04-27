@@ -13,10 +13,10 @@ export class ModelStacksList {
   private readonly service = inject(ModelStacksService);
 
   readonly stacks = this.service.stacks;
+  readonly isLoading = this.service.isLoading;
+  readonly error = this.service.error;
 
-  remove(id: string): void {
-    if (confirm(`Remove stack ${id}?`)) {
-      this.service.remove(id);
-    }
+  isActive(s: { metadata: { is_active?: boolean } }): boolean {
+    return s.metadata.is_active !== false;
   }
 }

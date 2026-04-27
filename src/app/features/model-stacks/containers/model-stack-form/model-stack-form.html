@@ -1,68 +1,59 @@
 <div class="stack-form">
   <header class="stack-form__header">
-    <a routerLink="/model-stacks" class="back-link">← Model Stacks</a>
-    <h1>{{ isEdit() ? 'Edit stack' : 'Add stack' }}</h1>
+    <a routerLink="/model-stacks" class="back-link">← Stacks</a>
+    <h1>{{ isEdit() ? 'Edit stack' : 'New stack' }}</h1>
+    @if (stackId(); as id) {
+      <p class="stack-form__id"><code>{{ id }}</code></p>
+    }
   </header>
 
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="field">
-      <label for="id">ID <span class="hint">(slug: e.g. code-reasoning)</span></label>
+  <form [formGroup]="form" (ngSubmit)="submit()" class="stack-form__form">
+    @if (!isEdit()) {
+      <label class="field">
+        <span class="field__label">ID <small>(slug — lowercase + hyphens)</small></span>
+        <input type="text" formControlName="id" placeholder="claude-cheap-to-premium" />
+      </label>
+    }
+
+    <label class="field">
+      <span class="field__label">Name</span>
+      <input type="text" formControlName="name" />
+    </label>
+
+    <label class="field">
+      <span class="field__label">Description</span>
+      <input type="text" formControlName="description" placeholder="Try Haiku, fall back to Sonnet, then Opus." />
+    </label>
+
+    <label class="field">
+      <span class="field__label">Chain <small>(one model id per line, primary first)</small></span>
+      <textarea formControlName="chain" rows="6" placeholder="anthropic/claude-haiku-4-5-20251001&#10;anthropic/claude-sonnet-4-6&#10;anthropic/claude-opus-4-7"></textarea>
+    </label>
+
+    <label class="field field--inline">
+      <input type="checkbox" formControlName="is_active" />
+      <span>Active <small>(uncheck to retain doc but mark unused)</small></span>
+    </label>
+
+    <label class="field">
+      <span class="field__label">Notes</span>
+      <textarea formControlName="body" rows="8"></textarea>
+    </label>
+
+    @if (saveError(); as err) {
+      <p class="error">{{ err }}</p>
+    }
+
+    <div class="stack-form__actions">
       @if (isEdit()) {
-        <input id="id" type="text" [value]="form.getRawValue().id" readonly />
+        <button type="button" class="btn btn--danger" (click)="delete()" [disabled]="saving()">Delete</button>
+        <a [routerLink]="['/model-stacks', stackId()]" class="btn">Cancel</a>
       } @else {
-        <input id="id" type="text" formControlName="id" />
+        <a routerLink="/model-stacks" class="btn">Cancel</a>
       }
-    </div>
-
-    <div class="field">
-      <label for="display_name">Display name</label>
-      <input id="display_name" type="text" formControlName="display_name" />
-    </div>
-
-    <div class="field">
-      <label for="description">Description</label>
-      <textarea id="description" rows="2" formControlName="description"></textarea>
-    </div>
-
-    <div class="field">
-      <label>Fallback cascade <span class="hint">(primary first — add in priority order)</span></label>
-      <div class="cascade-builder">
-        @for (id of modelIds(); track id; let i = $index) {
-          <div class="cascade-entry">
-            <span class="cascade-entry__rank">{{ i === 0 ? 'Primary' : 'Fallback ' + i }}</span>
-            <span class="cascade-entry__id">{{ id }}</span>
-            <button type="button" class="btn-remove" (click)="removeModel(i)" aria-label="Remove">✕</button>
-          </div>
-        }
-        <select #modelSelect (change)="addModel(modelSelect.value); modelSelect.value = ''">
-          <option value="">Add model…</option>
-          @for (m of availableModels(); track m.id) {
-            <option [value]="m.id">{{ m.display_name }} — {{ m.id }}</option>
-          }
-        </select>
-      </div>
-    </div>
-
-    <div class="field">
-      <label for="fast_model_id">Fast model <span class="hint">(optional — lightweight subtasks)</span></label>
-      <select id="fast_model_id" formControlName="fast_model_id">
-        <option value="">None</option>
-        @for (m of availableModels(); track m.id) {
-          <option [value]="m.id">{{ m.display_name }}</option>
-        }
-      </select>
-    </div>
-
-    <div class="field field--checkbox">
-      <input id="is_active" type="checkbox" formControlName="is_active" />
-      <label for="is_active">Active</label>
-    </div>
-
-    <div class="form-actions">
-      <button type="submit" class="btn btn--primary">
-        {{ isEdit() ? 'Save changes' : 'Add stack' }}
+      <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">
+        {{ saving() ? 'Saving…' : (isEdit() ? 'Save' : 'Create') }}
       </button>
-      <a routerLink="/model-stacks" class="btn btn--ghost">Cancel</a>
     </div>
   </form>
 </div>

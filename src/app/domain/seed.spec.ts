@@ -18,10 +18,6 @@ describe('domain seed', () => {
   const projectIds       = new Set(SEED.projects.map(p => p.id));
   const vaultItemIds     = new Set(SEED.vault_items.map(v => v.id));
   const messageIds       = new Set(SEED.thread_messages.map(m => m.id));
-  const promptIds        = new Set(SEED.prompts.map(p => p.id));
-  const promptVersionIds = new Set(SEED.prompt_versions.map(v => v.id));
-  const toolIds          = new Set(SEED.tools.map(t => t.id));
-  const toolVersionIds   = new Set(SEED.tool_versions.map(v => v.id));
   const modelIds         = new Set(SEED.models.map(m => m.id));
 
   describe('referential integrity', () => {
@@ -29,45 +25,6 @@ describe('domain seed', () => {
       for (const link of SEED.actor_skills) {
         expect(actorIds, `actor ${link.actor_id}`).toContain(link.actor_id);
         expect(skillIds, `skill ${link.skill_id}`).toContain(link.skill_id);
-      }
-    });
-
-
-    it('prompt_versions point at a real prompt', () => {
-      for (const v of SEED.prompt_versions) {
-        expect(promptIds, `prompt ${v.prompt_id}`).toContain(v.prompt_id);
-        if (v.parent_version_id) {
-          expect(promptVersionIds, `parent ${v.parent_version_id}`).toContain(v.parent_version_id);
-        }
-      }
-    });
-
-    it('prompt.current_version_id resolves and belongs to its own prompt', () => {
-      const versionsById = new Map(SEED.prompt_versions.map(v => [v.id, v]));
-      for (const p of SEED.prompts) {
-        if (!p.current_version_id) continue;
-        expect(promptVersionIds).toContain(p.current_version_id);
-        const v = versionsById.get(p.current_version_id)!;
-        expect(v.prompt_id).toBe(p.id);
-      }
-    });
-
-    it('tool_versions point at a real tool', () => {
-      for (const v of SEED.tool_versions) {
-        expect(toolIds, `tool ${v.tool_id}`).toContain(v.tool_id);
-        if (v.parent_version_id) {
-          expect(toolVersionIds, `parent ${v.parent_version_id}`).toContain(v.parent_version_id);
-        }
-      }
-    });
-
-    it('tool.current_version_id resolves and belongs to its own tool', () => {
-      const versionsById = new Map(SEED.tool_versions.map(v => [v.id, v]));
-      for (const t of SEED.tools) {
-        if (!t.current_version_id) continue;
-        expect(toolVersionIds).toContain(t.current_version_id);
-        const v = versionsById.get(t.current_version_id)!;
-        expect(v.tool_id).toBe(t.id);
       }
     });
 
@@ -184,12 +141,11 @@ describe('domain seed', () => {
       }
     });
 
-    it('model_stack model_ids and fast_model_id resolve to real models', () => {
+    it('model_stack chain entries resolve to real models', () => {
       for (const stack of SEED.model_stacks) {
-        for (const id of stack.model_ids) {
+        for (const id of stack.metadata.chain) {
           expect(modelIds, `stack ${stack.id} -> model ${id}`).toContain(id);
         }
-        if (stack.fast_model_id) expect(modelIds).toContain(stack.fast_model_id);
       }
     });
 

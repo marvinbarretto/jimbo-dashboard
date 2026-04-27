@@ -5,6 +5,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { formatPageTitle } from '@app/app-title-strategy';
 import { ModelsService } from '../../data-access/models.service';
+import { modelProvider, modelLocalName } from '@domain/models';
 
 @Component({
   selector: 'app-model-detail',
@@ -18,15 +19,27 @@ export class ModelDetail {
   private readonly route = inject(ActivatedRoute);
   private readonly titleService = inject(Title);
 
-  private readonly id = toSignal(this.route.paramMap.pipe(map(p => `${p.get('provider')}/${p.get('name')}`)));
-
-  readonly model = computed(() => this.service.getById(this.id() ?? ''));
-  readonly stats = computed(() => this.service.getStatsFor(this.id() ?? ''));
-
   constructor() {
     effect(() => {
       const m = this.model();
-      if (m) this.titleService.setTitle(formatPageTitle(m.display_name));
+      if (m) this.titleService.setTitle(formatPageTitle(m.name));
     });
   }
+
+  private readonly id = toSignal(
+    this.route.paramMap.pipe(map(p => `${p.get('provider')}/${p.get('name')}`)),
+  );
+
+  readonly model = computed(() => this.service.getById(this.id() ?? ''));
+  readonly isLoading = this.service.isLoading;
+
+  readonly provider = computed(() => {
+    const id = this.id();
+    return id ? modelProvider(id) : null;
+  });
+
+  readonly localName = computed(() => {
+    const id = this.id();
+    return id ? modelLocalName(id) : '';
+  });
 }

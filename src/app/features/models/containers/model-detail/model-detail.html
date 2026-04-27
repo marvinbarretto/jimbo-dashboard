@@ -1,42 +1,81 @@
-@if (model(); as m) {
+@if (isLoading()) {
+  <p class="loading">Loading…</p>
+} @else if (model(); as model) {
   <div class="model-detail">
     <header class="model-detail__header">
       <a routerLink="/models" class="back-link">← Models</a>
-      <h1>{{ m.display_name }}</h1>
+      <div class="model-detail__title">
+        <span class="provider-tag">{{ provider() }}</span>
+        <h1>{{ localName() }}</h1>
+      </div>
+      <div class="model-detail__badges">
+        <span class="status status--{{ model.metadata.status }}">{{ model.metadata.status }}</span>
+      </div>
       <a routerLink="edit" class="btn btn--secondary">Edit</a>
     </header>
 
     <section class="model-detail__meta">
       <dl>
-        <dt>ID</dt><dd><code>{{ m.id }}</code></dd>
-        <dt>Provider</dt><dd>{{ m.provider }}</dd>
-        <dt>Tier</dt><dd>{{ m.tier }}</dd>
-        <dt>Context window</dt><dd>{{ m.context_window ? (m.context_window / 1000) + 'k tokens' : '—' }}</dd>
-        <dt>Input cost</dt><dd>{{ m.input_cost_per_mtok != null ? '$' + m.input_cost_per_mtok + ' / M tokens' : '—' }}</dd>
-        <dt>Output cost</dt><dd>{{ m.output_cost_per_mtok != null ? '$' + m.output_cost_per_mtok + ' / M tokens' : '—' }}</dd>
-        <dt>Active</dt><dd>{{ m.is_active ? 'Yes' : 'No' }}</dd>
-        @if (m.notes) {
-          <dt>Notes</dt><dd>{{ m.notes }}</dd>
+        <dt>ID</dt>
+        <dd><code>{{ model.id }}</code></dd>
+
+        <dt>Name</dt>
+        <dd>{{ model.name }}</dd>
+
+        @if (model.description) {
+          <dt>Description</dt>
+          <dd>{{ model.description }}</dd>
+        }
+
+        <dt>Provider</dt>
+        <dd>{{ model.metadata.provider }}</dd>
+
+        @if (model.metadata.context_window) {
+          <dt>Context window</dt>
+          <dd>{{ model.metadata.context_window }} tokens</dd>
+        }
+
+        @if (model.metadata.prices_usd_per_million; as p) {
+          @if (p.input != null) {
+            <dt>Input price</dt>
+            <dd>${{ p.input }} / MTok</dd>
+          }
+          @if (p.output != null) {
+            <dt>Output price</dt>
+            <dd>${{ p.output }} / MTok</dd>
+          }
+          @if (p.cache_read != null) {
+            <dt>Cache read</dt>
+            <dd>${{ p.cache_read }} / MTok</dd>
+          }
+          @if (p.cache_write != null) {
+            <dt>Cache write</dt>
+            <dd>${{ p.cache_write }} / MTok</dd>
+          }
+        }
+
+        @if (model.metadata.considered_at) {
+          <dt>Considered since</dt>
+          <dd>{{ model.metadata.considered_at }}</dd>
+        }
+
+        @if (model.metadata.deprecated_at) {
+          <dt>Deprecated</dt>
+          <dd>{{ model.metadata.deprecated_at }}</dd>
         }
       </dl>
     </section>
 
-    @if (stats(); as s) {
-      <section class="model-detail__stats">
-        <h2>Observed performance</h2>
-        <dl>
-          <dt>Total runs</dt><dd>{{ s.total_runs }}</dd>
-          <dt>Mean cost / run</dt><dd>{{ s.mean_cost_per_run != null ? '$' + s.mean_cost_per_run.toFixed(4) : '—' }}</dd>
-          <dt>Mean duration</dt><dd>{{ s.mean_duration_ms != null ? s.mean_duration_ms + 'ms' : '—' }}</dd>
-          <dt>Timeout rate</dt><dd>{{ s.timeout_rate != null ? (s.timeout_rate * 100).toFixed(0) + '%' : '—' }}</dd>
-        </dl>
-      </section>
-    } @else {
-      <section class="model-detail__stats">
-        <p class="empty">No benchmark runs recorded yet.</p>
+    @if (model.body.trim().length > 0) {
+      <section class="model-detail__body">
+        <h2>Notes</h2>
+        <pre class="schema-block"><code>{{ model.body }}</code></pre>
       </section>
     }
   </div>
 } @else {
-  <p>Model not found.</p>
+  <div class="model-detail model-detail--not-found">
+    <p>Model not found.</p>
+    <a routerLink="/models" class="back-link">← Back to models</a>
+  </div>
 }

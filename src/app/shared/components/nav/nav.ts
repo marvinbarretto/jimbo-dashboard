@@ -16,11 +16,9 @@ import pkg from '../../../../../package.json';
         <li><a routerLink="/execution" routerLinkActive="active">Execution</a></li>
         <li><a routerLink="/projects" routerLinkActive="active">Projects</a></li>
         <li><a routerLink="/actors" routerLinkActive="active">Actors</a></li>
+        <li><a routerLink="/skills" routerLinkActive="active">Skills</a></li>
         <li><a routerLink="/models" routerLinkActive="active">Models</a></li>
         <li><a routerLink="/model-stacks" routerLinkActive="active">Stacks</a></li>
-        <li><a routerLink="/skills" routerLinkActive="active">Skills</a></li>
-        <li><a routerLink="/prompts" routerLinkActive="active">Prompts</a></li>
-        <li><a routerLink="/tools" routerLinkActive="active">Tools</a></li>
         <li><a routerLink="/coverage" routerLinkActive="active">Coverage</a></li>
       </ul>
       <app-sync-button />

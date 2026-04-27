@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ModelsService } from '../../data-access/models.service';
-import type { Model } from '../../utils/model.types';
+import { modelProvider, modelLocalName } from '@domain/models';
 
 @Component({
   selector: 'app-models-list',
@@ -14,22 +14,13 @@ export class ModelsList {
   private readonly service = inject(ModelsService);
 
   readonly models = this.service.models;
+  readonly isLoading = this.service.isLoading;
+  readonly error = this.service.error;
+
+  provider = modelProvider;
+  localName = modelLocalName;
 
   modelLink(id: string): string[] {
     return id.split('/');
-  }
-
-  editLink(id: string): string[] {
-    return [...id.split('/'), 'edit'];
-  }
-
-  tierLabel(tier: Model['tier']): string {
-    return { free: 'Free', budget: 'Budget', standard: 'Standard', premium: 'Premium' }[tier];
-  }
-
-  remove(id: string): void {
-    if (confirm(`Remove model ${id}?`)) {
-      this.service.remove(id);
-    }
   }
 }

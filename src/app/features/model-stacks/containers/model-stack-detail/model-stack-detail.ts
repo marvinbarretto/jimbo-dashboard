@@ -5,7 +5,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { formatPageTitle } from '@app/app-title-strategy';
 import { ModelStacksService } from '../../data-access/model-stacks.service';
-import { ModelsService } from '../../../models/data-access/models.service';
 
 @Component({
   selector: 'app-model-stack-detail',
@@ -16,28 +15,19 @@ import { ModelsService } from '../../../models/data-access/models.service';
 })
 export class ModelStackDetail {
   private readonly service = inject(ModelStacksService);
-  private readonly modelsService = inject(ModelsService);
   private readonly route = inject(ActivatedRoute);
   private readonly titleService = inject(Title);
-
-  private readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id') ?? '')));
-
-  readonly stack = computed(() => this.service.getById(this.id() ?? ''));
-
-  // Resolve model display names for the cascade — avoids raw IDs in the template.
-  readonly cascade = computed(() =>
-    this.stack()?.model_ids.map(id => this.modelsService.getById(id) ?? { id, display_name: id })
-  );
-
-  readonly fastModel = computed(() => {
-    const fid = this.stack()?.fast_model_id;
-    return fid ? (this.modelsService.getById(fid) ?? { id: fid, display_name: fid }) : null;
-  });
 
   constructor() {
     effect(() => {
       const s = this.stack();
-      if (s) this.titleService.setTitle(formatPageTitle(s.display_name));
+      if (s) this.titleService.setTitle(formatPageTitle(s.name));
     });
   }
+
+  readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id') ?? '')));
+  readonly stack = computed(() => this.service.getById(this.id() ?? ''));
+  readonly isLoading = this.service.isLoading;
+
+  readonly isActive = computed(() => this.stack()?.metadata.is_active !== false);
 }

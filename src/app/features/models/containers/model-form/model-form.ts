@@ -1,12 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { ModelsService } from '../../data-access/models.service';
-import { MODEL_CAPABILITIES } from '../../utils/model.types';
-import type { ModelProvider, ModelTier, ModelCapability } from '../../utils/model.types';
-import { modelId } from '@domain/ids';
+import type { Model, ModelStatus } from '@domain/models';
+
+const ID_PATTERN = /^[a-z0-9-]+\/[a-z0-9.-]+$/;
 
 @Component({
   selector: 'app-model-form',
@@ -21,96 +21,131 @@ export class ModelForm {
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
 
-  private readonly id = toSignal(this.route.paramMap.pipe(
-    map(p => p.get('provider') ? `${p.get('provider')}/${p.get('name')}` : null),
-  ));
+  private readonly id = toSignal(
+    this.route.paramMap.pipe(
+      map(p => p.get('provider') && p.get('name') ? `${p.get('provider')}/${p.get('name')}` : null),
+    ),
+  );
   private readonly models$ = toObservable(this.service.models);
+
   readonly isEdit = computed(() => !!this.id());
+  readonly modelId = this.id;
 
-  readonly tiers: ModelTier[] = ['free', 'budget', 'standard', 'premium'];
-  readonly providers: ModelProvider[] = ['anthropic', 'google', 'openai', 'x-ai', 'deepseek', 'meta'];
-  readonly capabilities = MODEL_CAPABILITIES;
-
-  // Model ids follow OpenRouter convention: provider/name (slugs either side of a slash).
-  private readonly idPattern = /^[a-z0-9][a-z0-9.-]*\/[a-z0-9][a-z0-9.-]*$/i;
+  readonly statuses: ModelStatus[] = ['candidate', 'preferred', 'deprecated'];
 
   readonly form = this.fb.nonNullable.group({
-    id: ['', [Validators.required, Validators.pattern(this.idPattern)]],
-    display_name: ['', Validators.required],
-    provider: ['anthropic' as ModelProvider, Validators.required],
-    tier: ['standard' as ModelTier, Validators.required],
-    // Individual boolean controls per capability, converted to string[] on submit.
-    // A FormArray would work too, but boolean controls are simpler to bind in the
-    // template and easier to pre-populate from an existing capabilities array.
-    cap_code:      [false],
-    cap_text:      [false],
-    cap_vision:    [false],
-    cap_reasoning: [false],
-    cap_math:      [false],
-    cap_video:     [false],
-    context_window: [null as number | null],
-    input_cost_per_mtok: [null as number | null],
-    output_cost_per_mtok: [null as number | null],
-    is_active: [true],
-    notes: [null as string | null],
+    id:               ['', [Validators.required, Validators.pattern(ID_PATTERN)]],
+    name:             ['', Validators.required],
+    description:      [''],
+    status:           ['candidate' as ModelStatus, Validators.required],
+    provider:         ['', Validators.required],
+    context_window:   [null as number | null],
+    input_price:      [null as number | null],
+    output_price:     [null as number | null],
+    cache_read:       [null as number | null],
+    cache_write:      [null as number | null],
+    considered_at:    [''],
+    deprecated_at:    [''],
+    body:             [''],
   });
+
+  readonly saving = signal(false);
+  readonly saveError = signal<string | null>(null);
 
   constructor() {
     const id = this.id();
     if (id) {
+      this.form.controls.id.disable();
       this.models$.pipe(filter(ms => ms.length > 0), take(1)).subscribe(models => {
-        const model = models.find(m => m.id === id);
-        if (!model) return;
+        const m = models.find(x => x.id === id);
+        if (!m) return;
+        const p = m.metadata.prices_usd_per_million ?? {};
         this.form.patchValue({
-          ...model,
-          cap_code:      model.capabilities.includes('code'),
-          cap_text:      model.capabilities.includes('text'),
-          cap_vision:    model.capabilities.includes('vision'),
-          cap_reasoning: model.capabilities.includes('reasoning'),
-          cap_math:      model.capabilities.includes('math'),
-          cap_video:     model.capabilities.includes('video'),
+          id:             m.id,
+          name:           m.name,
+          description:    m.description,
+          status:         m.metadata.status,
+          provider:       m.metadata.provider,
+          context_window: m.metadata.context_window ?? null,
+          input_price:    p.input ?? null,
+          output_price:   p.output ?? null,
+          cache_read:     p.cache_read ?? null,
+          cache_write:    p.cache_write ?? null,
+          considered_at:  m.metadata.considered_at ?? '',
+          deprecated_at:  m.metadata.deprecated_at ?? '',
+          body:           m.body,
         });
       });
     }
   }
 
-  private selectedCapabilities(): ModelCapability[] {
-    const v = this.form.getRawValue();
-    return ([
-      v.cap_code      && 'code',
-      v.cap_text      && 'text',
-      v.cap_vision    && 'vision',
-      v.cap_reasoning && 'reasoning',
-      v.cap_math      && 'math',
-      v.cap_video     && 'video',
-    ] as (ModelCapability | false)[]).filter((c): c is ModelCapability => !!c);
-  }
-
   submit(): void {
     if (this.form.invalid) {
-      // Mark so validation errors render — silent return would hide the problem.
       this.form.markAllAsTouched();
       return;
     }
     const v = this.form.getRawValue();
-    const id = modelId(v.id);
-    const payload = {
-      id,
-      display_name: v.display_name,
+    const prices: Record<string, number> = {};
+    if (v.input_price != null) prices['input'] = v.input_price;
+    if (v.output_price != null) prices['output'] = v.output_price;
+    if (v.cache_read != null) prices['cache_read'] = v.cache_read;
+    if (v.cache_write != null) prices['cache_write'] = v.cache_write;
+
+    const metadata = {
+      status: v.status,
       provider: v.provider,
-      tier: v.tier,
-      capabilities: this.selectedCapabilities(),
-      context_window: v.context_window,
-      input_cost_per_mtok: v.input_cost_per_mtok,
-      output_cost_per_mtok: v.output_cost_per_mtok,
-      is_active: v.is_active,
-      notes: v.notes,
+      context_window: v.context_window ?? undefined,
+      prices_usd_per_million: Object.keys(prices).length > 0 ? prices : undefined,
+      considered_at: v.considered_at || undefined,
+      deprecated_at: v.deprecated_at || null,
     };
+
+    this.saving.set(true);
+    this.saveError.set(null);
+
     if (this.isEdit()) {
-      this.service.update(id, payload);
+      this.service.update(this.id()!, {
+        name: v.name, description: v.description, metadata, body: v.body,
+      }).subscribe({
+        next: m => this.afterSave(m),
+        error: err => this.handleError(err),
+      });
     } else {
-      this.service.create(payload);
+      this.service.create({
+        id: v.id, name: v.name, description: v.description, metadata, body: v.body,
+      }).subscribe({
+        next: m => this.afterSave(m),
+        error: err => this.handleError(err),
+      });
     }
-    this.router.navigate(['/models', ...v.id.split('/')]);
+  }
+
+  delete(): void {
+    const id = this.id();
+    if (!id) return;
+    if (!confirm(`Delete model ${id}? The file is removed and a delete commit pushed to hub.`)) return;
+    this.saving.set(true);
+    this.saveError.set(null);
+    this.service.remove(id).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.router.navigate(['/models']);
+      },
+      error: err => this.handleError(err),
+    });
+  }
+
+  private afterSave(m: Model): void {
+    this.saving.set(false);
+    this.router.navigate(['/models', ...m.id.split('/')]);
+  }
+
+  private handleError(err: unknown): void {
+    this.saving.set(false);
+    const msg = (err as { error?: { error?: { message?: string } }; message?: string })
+      ?.error?.error?.message
+      ?? (err as { message?: string })?.message
+      ?? 'request failed';
+    this.saveError.set(msg);
   }
 }

@@ -5,8 +5,6 @@
 import { ACTORS, ACTOR_SKILLS } from './actors/fixtures';
 import { PROJECTS } from './projects/fixtures';
 import { SKILLS } from './skills/fixtures';
-import { PROMPTS, PROMPT_VERSIONS } from './prompts/fixtures';
-import { TOOLS, TOOL_VERSIONS } from './tools/fixtures';
 import { MODELS } from './models/fixtures';
 import { MODEL_STACKS } from './model-stacks/fixtures';
 import {
@@ -25,10 +23,6 @@ export const SEED = {
   actor_skills: ACTOR_SKILLS,
   projects: PROJECTS,
   skills: SKILLS,
-  prompts: PROMPTS,
-  prompt_versions: PROMPT_VERSIONS,
-  tools: TOOLS,
-  tool_versions: TOOL_VERSIONS,
   models: MODELS,
   model_stacks: MODEL_STACKS,
   vault_items: VAULT_ITEMS,

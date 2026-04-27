@@ -4,87 +4,124 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { ModelStacksService } from '../../data-access/model-stacks.service';
-import { ModelsService } from '../../../models/data-access/models.service';
-import { modelId, modelStackId } from '@domain/ids';
+import type { ModelStack } from '@domain/model-stacks';
+
+const ID_PATTERN = /^[a-z0-9-]+$/;
+
+function parseList(s: string): string[] {
+  return s.split('\n').map(x => x.trim()).filter(Boolean);
+}
+
+function joinList(arr: readonly string[] | undefined): string {
+  return arr?.join('\n') ?? '';
+}
 
 @Component({
   selector: 'app-model-stack-form',
-  imports: [RouterLink, ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './model-stack-form.html',
   styleUrl: './model-stack-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModelStackForm {
   private readonly service = inject(ModelStacksService);
-  private readonly modelsService = inject(ModelsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
 
-  private readonly routeId = toSignal(this.route.paramMap.pipe(map(p => p.get('id'))));
-  readonly isEdit = computed(() => !!this.routeId());
-
-  readonly availableModels = this.modelsService.activeModels;
-
-  // model_ids is a cascade list managed outside the FormGroup — it's list
-  // management, not a form field, so a signal is cleaner than FormArray.
-  readonly modelIds = signal<string[]>([]);
-
-  // toObservable must be created in the constructor/field context to have an injector.
+  readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id'))));
   private readonly stacks$ = toObservable(this.service.stacks);
 
+  readonly isEdit = computed(() => !!this.id());
+  readonly stackId = this.id;
+
   readonly form = this.fb.nonNullable.group({
-    id: ['', Validators.required],
-    display_name: ['', Validators.required],
+    id:          ['', [Validators.required, Validators.pattern(ID_PATTERN)]],
+    name:        ['', Validators.required],
     description: [''],
-    fast_model_id: [''],
-    is_active: [true],
+    chain:       ['', Validators.required],   // newline-separated model ids
+    is_active:   [true],
+    body:        [''],
   });
 
+  readonly saving = signal(false);
+  readonly saveError = signal<string | null>(null);
+
   constructor() {
-    const id = this.routeId();
+    const id = this.id();
     if (id) {
+      this.form.controls.id.disable();
       this.stacks$.pipe(filter(ss => ss.length > 0), take(1)).subscribe(stacks => {
-        const stack = stacks.find(s => s.id === id);
-        if (!stack) return;
+        const s = stacks.find(x => x.id === id);
+        if (!s) return;
         this.form.patchValue({
-          id: stack.id,
-          display_name: stack.display_name,
-          description: stack.description ?? '',
-          fast_model_id: stack.fast_model_id ?? '',
-          is_active: stack.is_active,
+          id:          s.id,
+          name:        s.name,
+          description: s.description,
+          chain:       joinList(s.metadata.chain),
+          is_active:   s.metadata.is_active ?? true,
+          body:        s.body,
         });
-        this.modelIds.set([...stack.model_ids]);
       });
     }
   }
 
-  addModel(modelId: string): void {
-    if (!modelId || this.modelIds().includes(modelId)) return;
-    this.modelIds.update(ids => [...ids, modelId]);
-  }
-
-  removeModel(index: number): void {
-    this.modelIds.update(ids => ids.filter((_, i) => i !== index));
-  }
-
   submit(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
     const v = this.form.getRawValue();
-    const id = modelStackId(v.id);
-    const payload = {
-      id,
-      display_name: v.display_name,
-      description: v.description || null,
-      model_ids: this.modelIds().map(modelId),
-      fast_model_id: v.fast_model_id ? modelId(v.fast_model_id) : null,
+    const metadata = {
+      chain: parseList(v.chain),
       is_active: v.is_active,
     };
+
+    this.saving.set(true);
+    this.saveError.set(null);
+
     if (this.isEdit()) {
-      this.service.update(id, payload);
+      this.service.update(this.id()!, {
+        name: v.name, description: v.description, metadata, body: v.body,
+      }).subscribe({
+        next: s => this.afterSave(s),
+        error: err => this.handleError(err),
+      });
     } else {
-      this.service.create(payload);
+      this.service.create({
+        id: v.id, name: v.name, description: v.description, metadata, body: v.body,
+      }).subscribe({
+        next: s => this.afterSave(s),
+        error: err => this.handleError(err),
+      });
     }
-    this.router.navigate(['/model-stacks', id]);
+  }
+
+  delete(): void {
+    const id = this.id();
+    if (!id) return;
+    if (!confirm(`Delete model stack ${id}?`)) return;
+    this.saving.set(true);
+    this.service.remove(id).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.router.navigate(['/model-stacks']);
+      },
+      error: err => this.handleError(err),
+    });
+  }
+
+  private afterSave(s: ModelStack): void {
+    this.saving.set(false);
+    this.router.navigate(['/model-stacks', s.id]);
+  }
+
+  private handleError(err: unknown): void {
+    this.saving.set(false);
+    const msg = (err as { error?: { error?: { message?: string } }; message?: string })
+      ?.error?.error?.message
+      ?? (err as { message?: string })?.message
+      ?? 'request failed';
+    this.saveError.set(msg);
   }
 }
