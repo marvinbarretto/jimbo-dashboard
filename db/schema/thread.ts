@@ -19,7 +19,9 @@ export const threadMessages = pgTable('thread_messages', {
   // we're ready to enforce.
   author_actor_id: text('author_actor_id').notNull(),
 
-  // 'comment' | 'question' | 'correction' (3 values in production).
+  // 'comment' | 'question' | 'correction' | 'rejection' — `rejection` (2026-04-27)
+  // is paired with the operator-driven needs_rework grooming flow; the body
+  // carries the rejection reason and the linked RejectionEvent references this row.
   kind: text('kind').notNull(),
 
   body: text('body').notNull(),
@@ -34,7 +36,7 @@ export const threadMessages = pgTable('thread_messages', {
   vaultIdx: index('idx_thread_messages_vault').on(t.vault_item_id),
   kindCheck: check(
     'thread_messages_kind_check',
-    sql`${t.kind} IN ('comment','question','correction')`,
+    sql`${t.kind} IN ('comment','question','correction','rejection')`,
   ),
 }));
 
