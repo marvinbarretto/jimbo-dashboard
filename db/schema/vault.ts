@@ -176,7 +176,7 @@ export const vaultNotes = pgTable('vault_notes', {
   ),
   groomingStatusCheck: check(
     'vault_notes_grooming_status_check',
-    sql`${t.grooming_status} IN ('ungroomed','intake_rejected','classified','decomposed','ready')`,
+    sql`${t.grooming_status} IN ('ungroomed','needs_rework','intake_rejected','intake_complete','classified','decomposed','ready')`,
   ),
   actionabilityCheck: check(
     'vault_notes_actionability_check',

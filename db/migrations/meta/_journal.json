@@ -85,6 +85,13 @@
       "when": 1777401000000,
       "tag": "0011_drop_wrong_turn_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1777324166393,
+      "tag": "0012_right_mentallo",
+      "breakpoints": true
     }
   ]
 }
