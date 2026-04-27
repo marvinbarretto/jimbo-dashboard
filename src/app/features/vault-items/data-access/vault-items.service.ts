@@ -426,6 +426,7 @@ interface ApiVaultItem {
     action: string;
     from_value: string | null;
     to_value: string | null;
+    reason: string | null;
   } | null;
   latest_message: {
     created_at: string;
