@@ -11,7 +11,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
 import { isVaultEvent } from '@domain/activity/activity-event';
 import type { ActivityEvent } from '@domain/activity/activity-event';
-import type { VaultItemId, ActorId } from '@domain/ids';
+import type { GroomingStatus } from '@domain/vault/vault-item';
+import type { VaultItemId } from '@domain/ids';
 import { activityId, actorId, vaultItemId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { isSeedMode } from '@shared/seed-mode';
@@ -88,8 +89,10 @@ export class ActivityEventsService {
   }
 }
 
-// Map flat note_activity row → typed VaultActivityEvent. Returns null if
-// the action string isn't one we know how to narrow.
+// Map flat note_activity row → typed VaultActivityEvent. Returns null
+// when the action string isn't a known case OR when the row lacks fields
+// the typed event requires. The dashboard's union is richer than the
+// audit table can capture; we only emit what we can faithfully reconstruct.
 function toVaultEvent(row: ApiNoteActivity): VaultActivityEvent | null {
   const base = {
     id: activityId(String(row.id)),
@@ -101,26 +104,31 @@ function toVaultEvent(row: ApiNoteActivity): VaultActivityEvent | null {
     case 'created':
       return { ...base, type: 'created' };
     case 'archived':
-      return { ...base, type: 'archived', reason: row.reason ?? null };
+      return { ...base, type: 'archived', archived_at: row.ts, note: row.reason };
     case 'unarchived':
-      return { ...base, type: 'unarchived' };
+      return { ...base, type: 'unarchived', note: row.reason };
     case 'assigned':
+      if (!row.to_value) return null;
       return {
         ...base, type: 'assigned',
         from_actor_id: row.from_value ? actorId(row.from_value) : null,
-        to_actor_id: row.to_value ? actorId(row.to_value) : actorId(''),
+        to_actor_id: actorId(row.to_value),
+        reason: row.reason,
       };
     case 'completion_changed':
-      return { ...base, type: 'completion_changed', completed: row.to_value === 'true' };
-    case 'grooming_status_changed':
       return {
-        ...base, type: 'grooming_status_changed',
-        from: (row.from_value ?? null) as VaultActivityEvent extends { from: infer F } ? F : never,
-        to: (row.to_value ?? null) as VaultActivityEvent extends { to: infer T } ? T : never,
-        reason: row.reason ?? null,
+        ...base, type: 'completion_changed',
+        from: row.from_value, to: row.to_value, note: row.reason,
       };
-    case 'thread_message_posted':
-      return { ...base, type: 'thread_message_posted', kind: (row.to_value ?? 'comment') as 'comment' | 'question' | 'correction' };
+    case 'grooming_status_changed': {
+      const from = row.from_value as GroomingStatus | null;
+      const to = row.to_value as GroomingStatus | null;
+      if (!to) return null; // grooming_status changes always have a to-value
+      return { ...base, type: 'grooming_status_changed', from: from as GroomingStatus, to, note: row.reason };
+    }
+    // thread_message_posted requires message_id + message_kind which the
+    // audit row doesn't store directly. Skip until the table grows fields
+    // or we read from thread_messages instead.
     default:
       return null;
   }
