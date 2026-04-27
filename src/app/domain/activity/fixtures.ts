@@ -177,15 +177,35 @@ export const ACTIVITY_EVENTS = [
     to: 'intake_complete',
     note: 'intake-quality: actionability=clear',
   },
+  // Jimbo's orchestration decision — picks an executor for the next stage.
+  // This IS the hand-off ceremony: every change-of-hands gets a logged decision
+  // with rationale and (when LLM-driven) cost. Sits BEFORE the assigned event,
+  // which is now the structural fact left behind by this decision.
   {
-    id: activityId('e7777777-0003-0003-0003-000000000000'),
+    id: activityId('e7777777-0008-0008-0008-000000000000'),
     vault_item_id: VAULT_ITEM_IDS.G,
-    actor_id: actorId('boris'),
-    at: '2026-04-22T11:02:00Z',
-    type: 'grooming_status_changed',
-    from: 'intake_complete',
-    to: 'classified',
-    note: 'vault-classify completed',
+    actor_id: actorId('jimbo'),
+    at: '2026-04-22T11:09:30Z',
+    type: 'agent_run_completed',
+    skill_id: skillId('jimbo/orchestrate-routing'),
+    dispatch_id: null,
+    outcome: 'success',
+    summary: 'routed to @boris for standard-tier classification follow-up.',
+    decisions: [
+      'executor=boris (standard tier matched)',
+      'skipped @ralph (free-tier, recent timeouts on classify)',
+    ],
+    reasoning:
+      'Item is classified as task with standard complexity. Boris matches the standard tier and has 94% historical success on classify follow-ups in the last 30 days. Ralph would be cheaper but has had 3 recent timeouts on similar payloads.',
+    from_status: null,
+    to_status: null,
+    duration_ms: 312,
+    model_id: 'anthropic/claude-haiku-4-5',
+    tokens_in: 188,
+    tokens_out: 64,
+    tokens_cached: null,
+    cost_usd: 0.0003,
+    error: null,
   },
   {
     id: activityId('e7777777-0004-0004-0004-000000000000'),
@@ -196,16 +216,6 @@ export const ACTIVITY_EVENTS = [
     from_actor_id: null,
     to_actor_id: actorId('boris'),
     reason: 'classified, routed to boris for standard tier',
-  },
-  {
-    id: activityId('e7777777-0005-0005-0005-000000000000'),
-    vault_item_id: VAULT_ITEM_IDS.G,
-    actor_id: actorId('boris'),
-    at: '2026-04-22T11:42:00Z',
-    type: 'grooming_status_changed',
-    from: 'classified',
-    to: 'decomposed',
-    note: 'vault-decompose drafted 3 acceptance criteria',
   },
 
   // Item G — rich agent runs to demo the AgentRunCompletedEvent shape.

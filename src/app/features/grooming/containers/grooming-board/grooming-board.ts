@@ -290,9 +290,12 @@ export class GroomingBoard {
   private describeEvent(e: VaultActivityEvent): string {
     switch (e.type) {
       case 'created':                 return 'created this item';
-      case 'assigned':                return e.from_actor_id
-        ? `reassigned ${this.actorLabel(e.from_actor_id)} → ${this.actorLabel(e.to_actor_id)}`
-        : `assigned to ${this.actorLabel(e.to_actor_id)}`;
+      case 'assigned':                {
+        const head = e.from_actor_id
+          ? `reassigned ${this.actorLabel(e.from_actor_id)} → ${this.actorLabel(e.to_actor_id)}`
+          : `assigned to ${this.actorLabel(e.to_actor_id)}`;
+        return e.reason ? `${head} — ${e.reason}` : head;
+      }
       case 'completion_changed':      return e.to !== null ? 'marked done' : 'un-marked done';
       case 'archived':                return 'archived';
       case 'unarchived':              return 'unarchived';

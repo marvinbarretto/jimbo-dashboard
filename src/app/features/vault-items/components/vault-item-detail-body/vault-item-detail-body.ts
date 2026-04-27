@@ -244,7 +244,8 @@ export class VaultItemDetailBody {
         const e = event as AssignedEvent;
         const from = e.from_actor_id ? this.actorDisplay(e.from_actor_id) : null;
         const to = this.actorDisplay(e.to_actor_id);
-        return from ? `assigned ${from} → ${to}` : `assigned → ${to}`;
+        const head = from ? `assigned ${from} → ${to}` : `assigned → ${to}`;
+        return e.reason ? `${head} — ${e.reason}` : head;
       }
       case 'completion_changed': {
         const e = event as CompletionChangedEvent;
