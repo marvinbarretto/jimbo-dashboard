@@ -54,8 +54,15 @@ export type LifecycleState = 'active' | 'done' | 'archived';
 //   - `intake_rejected`: intake-quality ran and produced clarifying questions; operator must answer them
 //   - `intake_complete`: intake-quality accepted; ready for classification
 // After classification the pipeline progresses: classified → decomposed → ready.
+//
+// `needs_rework` is a side-branch state: the operator rejected an agent's
+// (or human's) output and the item is reassigned to a new owner. It can be
+// entered from any other status; the new owner picks it up, addresses the
+// rejection reason in the discussion thread, and moves the item back into
+// the main pipeline when ready.
 export type GroomingStatus =
   | 'ungroomed'          // freshly created, intake-quality hasn't run yet
+  | 'needs_rework'       // operator rejected the work; reassigned to a new owner
   | 'intake_rejected'    // intake-quality posted questions; blocked until resolved
   | 'intake_complete'    // intake-quality accepted; ready for classification
   | 'classified'         // vault-classify ran; priority/confidence/actionability set
@@ -66,6 +73,7 @@ export type GroomingStatus =
 // GroomingStatus value appears exactly once — adding a new state to the union without
 // updating this array would fail to compile.
 export const GROOMING_STATUS_ORDER = [
+  'needs_rework',
   'ungroomed',
   'intake_rejected',
   'intake_complete',
@@ -77,6 +85,7 @@ export const GROOMING_STATUS_ORDER = [
 // Display labels for column headers. Kept here so the kanban and any other
 // projection share one vocabulary; never compose status names ad-hoc in templates.
 export const GROOMING_STATUS_LABELS: Record<GroomingStatus, string> = {
+  needs_rework:     'Needs rework',
   ungroomed:        'Ungroomed',
   intake_rejected:  'Intake rejected',
   intake_complete:  'Intake complete',
@@ -89,6 +98,7 @@ export const GROOMING_STATUS_LABELS: Record<GroomingStatus, string> = {
 // than a generic "empty" because each column means something different — an
 // empty Ready column is a positive signal, an empty Ungroomed column is too.
 export const GROOMING_EMPTY_LABELS: Record<GroomingStatus, string> = {
+  needs_rework:     'No items need rework',
   ungroomed:        'No ungroomed items',
   intake_rejected:  'No items rejected',
   intake_complete:  'Nothing pending classification',

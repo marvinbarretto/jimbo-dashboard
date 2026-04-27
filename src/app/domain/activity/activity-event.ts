@@ -122,6 +122,30 @@ export interface AgentRunCompletedEvent extends VaultEventBase {
   cost_usd:      number | null;
 
   error:         string | null;
+
+  // Truncated runtime log lines from the skill's stdout, captured at run completion.
+  // Maximum 50 lines, each truncated to 200 chars. UI shows these only at Debug
+  // verbosity in a collapsed <details>. Null when the runner doesn't emit logs;
+  // the UI degrades gracefully (just doesn't render the section).
+  log_lines:     string[] | null;
+}
+
+// Operator-driven rejection of an agent's (or human's) work. Distinct from
+// `grooming_status_changed` + `assigned`: a rejection bundles the state move
+// (any → needs_rework), the owner change, and the reason text into one event,
+// so the audit trail is "@actor rejected from <from_status> → @to_owner: <reason>"
+// rather than three separate rows the operator has to mentally stitch.
+//
+// The thread-side counterpart is a ThreadMessage with kind='rejection' and the
+// same body. `thread_message_id` links the two.
+export interface RejectionEvent extends VaultEventBase {
+  type: 'rejected';
+  from_status:        GroomingStatus;
+  to_status:          'needs_rework';
+  from_owner:         ActorId | null;
+  to_owner:           ActorId;
+  reason:             string;
+  thread_message_id:  ThreadMessageId;
 }
 
 export type VaultActivityEvent =
@@ -132,7 +156,8 @@ export type VaultActivityEvent =
   | UnarchivedEvent
   | GroomingStatusChangedEvent
   | ThreadMessagePostedEvent
-  | AgentRunCompletedEvent;
+  | AgentRunCompletedEvent
+  | RejectionEvent;
 
 // --- Project events ---
 

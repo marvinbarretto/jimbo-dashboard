@@ -11,7 +11,8 @@ import type { ActorId, ThreadMessageId, VaultItemId } from '../ids';
 export type ThreadMessageKind =
   | 'comment'    // unstructured — any actor, any time
   | 'question'   // asked by someone, expects an answer to unblock
-  | 'answer';    // responds to a question (see `in_reply_to`)
+  | 'answer'     // responds to a question (see `in_reply_to`)
+  | 'rejection'; // operator rejected agent's work; carries the redirect reason
 
 export interface ThreadMessage {
   id:              ThreadMessageId;

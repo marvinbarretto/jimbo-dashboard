@@ -383,7 +383,15 @@ function splitType(t: string): { type: VaultItemType; category: VaultItemCategor
 // ('intake_complete') doesn't exist in the data, so any production value
 // passes through; legacy 'intake_complete' stays valid in the type.
 function narrowGroomingStatus(s: string): GroomingStatus {
-  const valid: readonly GroomingStatus[] = ['ungroomed','intake_rejected','intake_complete','classified','decomposed','ready'];
+  const valid: readonly GroomingStatus[] = [
+    'needs_rework',
+    'ungroomed',
+    'intake_rejected',
+    'intake_complete',
+    'classified',
+    'decomposed',
+    'ready',
+  ];
   return (valid as readonly string[]).includes(s) ? s as GroomingStatus : 'ungroomed';
 }
 
