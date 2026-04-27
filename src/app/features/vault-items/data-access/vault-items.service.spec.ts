@@ -2,13 +2,13 @@ import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 
-// Must be hoisted before the service import so the module mock takes effect
-// before vault-items.service.ts calls isSeedMode() in its constructor. The
-// vi.spyOn approach is unreliable with ESM+TS module hoisting; vi.mock is
-// guaranteed to intercept before any import in this file resolves.
-vi.mock('@shared/seed-mode', () => ({ isSeedMode: () => true }));
+// Force seed mode at the URL level — `isSeedMode()` reads `window.location.search`
+// once and caches. We set it here before TestBed instantiates the service so the
+// constructor's `load()` takes the seed branch. (vi.mock of '@shared/seed-mode'
+// is unreliable under @angular/build:unit-test's vitest plugin.)
+window.history.replaceState({}, '', '?seed=1');
 
 import { VaultItemsService } from './vault-items.service';
 import { ActivityEventsService } from './activity-events.service';

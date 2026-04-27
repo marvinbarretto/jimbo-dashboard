@@ -206,6 +206,7 @@ export const ACTIVITY_EVENTS = [
     tokens_cached: null,
     cost_usd: 0.0003,
     error: null,
+    log_lines: null,
   },
   {
     id: activityId('e7777777-0004-0004-0004-000000000000'),
@@ -247,6 +248,7 @@ export const ACTIVITY_EVENTS = [
     tokens_cached: null,
     cost_usd: 0.0021,
     error: null,
+    log_lines: null,
   },
   {
     id: activityId('e7777777-0007-0007-0007-000000000000'),
@@ -274,6 +276,7 @@ export const ACTIVITY_EVENTS = [
     tokens_cached: 3204,
     cost_usd: 0.0241,
     error: null,
+    log_lines: null,
   },
 
   // ====================================================================
