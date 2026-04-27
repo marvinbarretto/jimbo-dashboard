@@ -18,6 +18,18 @@ export function swapDetailSeq(router: Router, seq: number): void {
   });
 }
 
+// Close the modal by clearing the `?detail=` query param. The
+// withVaultDetailModal() observer reacts to the param disappearing and
+// closes the dialog. No-op for `mode === 'page'` callers (they should
+// use Router.navigate to /vault-items instead).
+export function closeDetail(router: Router): void {
+  router.navigate([], {
+    queryParams: { detail: null },
+    queryParamsHandling: 'merge',
+    replaceUrl: true,
+  });
+}
+
 // Wires `?detail=<seq>` ↔ a CDK Dialog of the vault-item detail. Call once
 // from a kanban board's constructor; the URL becomes the single source of
 // truth for whether the dialog is open.

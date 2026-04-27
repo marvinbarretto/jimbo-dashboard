@@ -346,7 +346,14 @@ export class VaultItemsService {
         this.activityService.post(threadEvent);
         this.activityService.post(rejectEvent);
       },
-      error: () => this._items.update(items => items.map(i => i.id === id ? prior : i)),
+      error: (err) => {
+        // Rollback so the UI doesn't lie about state. Log loudly because the
+        // dashboard has no toast layer yet; without this the rollback is silent
+        // and the operator just sees "nothing happened". Common cause: backend
+        // doesn't yet accept `needs_rework` as a grooming_status enum value.
+        console.warn('[rejectItem] PATCH failed, rolling back optimistic update', err);
+        this._items.update(items => items.map(i => i.id === id ? prior : i));
+      },
     });
   }
 
