@@ -11,12 +11,12 @@
       <div class="topbar__actions">
         <a [routerLink]="['/vault-items', item.seq, 'edit']"
           class="topbar__action" aria-label="Edit this item">edit</a>
-        <button class="topbar__action" (click)="archive()"
-          [attr.aria-disabled]="isItemArchived(item)"
-          [disabled]="isItemArchived(item)">archive</button>
         @if (canReject()) {
           <button type="button" class="topbar__action topbar__action--warn" (click)="openReject()">reject</button>
         }
+        <button class="topbar__action" (click)="archive()"
+          [attr.aria-disabled]="isItemArchived(item)"
+          [disabled]="isItemArchived(item)">archive</button>
         <button class="topbar__action topbar__action--danger" (click)="deleteItem()">delete</button>
         @if (mode() === 'page') {
           <a routerLink="/vault-items" class="topbar__action topbar__action--close" aria-label="Back to vault">×</a>
