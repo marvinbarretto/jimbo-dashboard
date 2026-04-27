@@ -4,7 +4,7 @@
 
 import { ACTORS, ACTOR_SKILLS } from './actors/fixtures';
 import { PROJECTS } from './projects/fixtures';
-import { SKILLS, SKILL_TOOLS } from './skills/fixtures';
+import { SKILLS } from './skills/fixtures';
 import { PROMPTS, PROMPT_VERSIONS } from './prompts/fixtures';
 import { TOOLS, TOOL_VERSIONS } from './tools/fixtures';
 import { MODELS } from './models/fixtures';
@@ -25,7 +25,6 @@ export const SEED = {
   actor_skills: ACTOR_SKILLS,
   projects: PROJECTS,
   skills: SKILLS,
-  skill_tools: SKILL_TOOLS,
   prompts: PROMPTS,
   prompt_versions: PROMPT_VERSIONS,
   tools: TOOLS,

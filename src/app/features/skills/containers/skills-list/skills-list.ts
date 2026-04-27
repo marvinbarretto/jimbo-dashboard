@@ -14,21 +14,19 @@ export class SkillsList {
   private readonly service = inject(SkillsService);
 
   readonly skills = this.service.skills;
+  readonly isLoading = this.service.isLoading;
+  readonly error = this.service.error;
 
   namespace = skillNamespace;
   localName = skillLocalName;
 
+  // Routes split slash-paths into segments — `/skills/:category/:name`.
   skillLink(id: string): string[] {
     return id.split('/');
   }
 
-  editLink(id: string): string[] {
-    return [...id.split('/'), 'edit'];
-  }
-
-  remove(id: string): void {
-    if (confirm(`Remove skill ${id}?`)) {
-      this.service.remove(id);
-    }
+  // Skills are filesystem-managed; `metadata.is_active !== false` is "live".
+  isActive(skill: { metadata: { is_active?: boolean } }): boolean {
+    return skill.metadata.is_active !== false;
   }
 }

@@ -48,11 +48,14 @@ export const ACTORS = [
   },
 ] as const satisfies readonly Actor[];
 
+// Mirror the executors[] arrays in hub/skills/<id>/SKILL.md frontmatter. The
+// real allowlist lives there — this fixture exists for seed-mode integrity
+// only. Update both whenever the canonical SKILL.md changes.
 export const ACTOR_SKILLS = [
-  { actor_id: actorId('ralph'), skill_id: skillId('hermes/intake-quality'),     proficiency: 'capable',      created_at: '2026-04-24T00:00:00Z' },
-  { actor_id: actorId('ralph'), skill_id: skillId('localshout/event-qualifier'), proficiency: 'preferred',    created_at: '2026-04-24T00:00:00Z' },
+  { actor_id: actorId('ralph'), skill_id: skillId('vault-grooming/analyse'),   proficiency: 'capable',      created_at: '2026-04-24T00:00:00Z' },
+  { actor_id: actorId('ralph'), skill_id: skillId('vault-grooming/decompose'), proficiency: 'capable',      created_at: '2026-04-24T00:00:00Z' },
 
-  { actor_id: actorId('boris'), skill_id: skillId('hermes/intake-quality'),  proficiency: 'preferred',    created_at: '2026-04-24T00:00:00Z' },
-  { actor_id: actorId('boris'), skill_id: skillId('hermes/vault-classify'),  proficiency: 'preferred',    created_at: '2026-04-24T00:00:00Z' },
-  { actor_id: actorId('boris'), skill_id: skillId('hermes/vault-decompose'), proficiency: 'preferred',    created_at: '2026-04-24T00:00:00Z' },
+  { actor_id: actorId('boris'), skill_id: skillId('vault-grooming/analyse'),   proficiency: 'preferred',    created_at: '2026-04-24T00:00:00Z' },
+  { actor_id: actorId('boris'), skill_id: skillId('vault-grooming/decompose'), proficiency: 'preferred',    created_at: '2026-04-24T00:00:00Z' },
+  { actor_id: actorId('boris'), skill_id: skillId('code/pr-from-issue'),       proficiency: 'preferred',    created_at: '2026-04-24T00:00:00Z' },
 ] as const satisfies readonly ActorSkill[];

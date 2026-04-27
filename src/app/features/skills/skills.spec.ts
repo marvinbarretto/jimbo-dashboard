@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { SkillsService } from './data-access/skills.service';
 
 describe('SkillsService', () => {
@@ -7,7 +9,11 @@ describe('SkillsService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideZonelessChangeDetection()],
+      providers: [
+        provideZonelessChangeDetection(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
     });
     service = TestBed.inject(SkillsService);
   });
@@ -16,12 +22,13 @@ describe('SkillsService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('skills() starts empty (no mock data — endpoint not yet migrated)', () => {
+  it('skills() starts empty before HTTP completes', () => {
     expect(service.skills()).toEqual([]);
   });
 
-  it('activeSkills() filters to is_active === true', () => {
+  it('activeSkills() treats missing is_active as active', () => {
+    // metadata.is_active === false → inactive; otherwise active.
     const active = service.activeSkills();
-    expect(active.every(s => s.is_active)).toBe(true);
+    expect(active.every(s => s.metadata.is_active !== false)).toBe(true);
   });
 });

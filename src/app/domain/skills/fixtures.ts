@@ -1,98 +1,47 @@
 import type { Skill } from './skill';
-import type { SkillTool } from './skill-tool';
-import { projectId, promptId, skillId, toolId } from '../ids';
 
-// Skills referenced by ACTOR_SKILLS, dispatch entries, and the activity narrative.
-// Slugs are project-prefixed (K10). `prompt_id` left null — prompts not modelled yet.
+// Seed-mode fixtures. Mirror the production hub/skills/ shape so dev mode
+// matches the real registry. Body intentionally short — fixtures are
+// shape-correct, not content-faithful.
 
 export const SKILLS = [
   {
-    id: skillId('hermes/intake-quality'),
-    display_name: 'Intake quality',
-    description: 'Gatekeeper. Reads body, decides actionability, posts questions if vague.',
-    prompt_id: promptId('intake-quality'),
-    model_hint: 'budget',
-    input_schema: { type: 'object', properties: { body: { type: 'string' } }, required: ['body'] },
-    output_schema: {
-      type: 'object',
-      properties: {
-        actionability: { enum: ['clear', 'needs-breakdown', 'vague'] },
-        questions: { type: 'array', items: { type: 'string' } },
-      },
-      required: ['actionability'],
+    id: 'vault-grooming/analyse',
+    name: 'vault-grooming-analyse',
+    description: 'Analyse a single vault note and populate grooming metadata.',
+    metadata: {
+      executors: ['boris', 'ralph'],
+      timeout_minutes: 5,
+      required_context: ['note_id'],
+      produces: ['tags', 'ai_priority', 'actionability'],
+      completes_dispatch: true,
     },
-    source_repo: projectId('hermes'),
-    last_indexed_at: '2026-04-24T08:00:00Z',
-    is_active: true,
-    created_at: '2026-04-12T09:00:00Z',
+    body: '\nYou are a grooming agent. (seed-mode placeholder)\n',
   },
   {
-    id: skillId('hermes/vault-classify'),
-    display_name: 'Vault classify',
-    description: 'Sets ai_priority, priority_confidence, and ai_rationale on accepted items.',
-    prompt_id: promptId('vault-classify'),
-    model_hint: 'standard',
-    input_schema: { type: 'object', properties: { body: { type: 'string' } }, required: ['body'] },
-    output_schema: {
-      type: 'object',
-      properties: {
-        ai_priority: { type: 'integer', minimum: 0, maximum: 3 },
-        priority_confidence: { type: 'number', minimum: 0, maximum: 1 },
-        ai_rationale: { type: 'string' },
-      },
-      required: ['ai_priority', 'priority_confidence', 'ai_rationale'],
+    id: 'vault-grooming/decompose',
+    name: 'vault-grooming-decompose',
+    description: 'Break a multi-skill vault note into single-skill subtasks.',
+    metadata: {
+      executors: ['boris', 'ralph'],
+      timeout_minutes: 8,
+      required_context: ['note_id'],
+      produces: ['subtasks', 'rationale'],
+      completes_dispatch: true,
     },
-    source_repo: projectId('hermes'),
-    last_indexed_at: '2026-04-24T08:00:00Z',
-    is_active: true,
-    created_at: '2026-04-14T09:00:00Z',
+    body: '\nYou are a decomposition agent. (seed-mode placeholder)\n',
   },
   {
-    id: skillId('hermes/vault-decompose'),
-    display_name: 'Vault decompose',
-    description: 'Drafts acceptance criteria and subtasks for classified items.',
-    prompt_id: promptId('vault-decompose'),
-    model_hint: 'standard',
-    input_schema: { type: 'object', properties: { body: { type: 'string' } }, required: ['body'] },
-    output_schema: {
-      type: 'object',
-      properties: {
-        acceptance_criteria: { type: 'array', items: { type: 'string' } },
-        subtasks: { type: 'array', items: { type: 'string' } },
-      },
-      required: ['acceptance_criteria'],
+    id: 'code/pr-from-issue',
+    name: 'code-pr-from-issue',
+    description: 'Coding agent — implement a task end-to-end and open a PR.',
+    metadata: {
+      executors: ['boris'],
+      timeout_minutes: 60,
+      required_context: ['task_id'],
+      produces: ['pr_url', 'branch'],
+      completes_dispatch: false,
     },
-    source_repo: projectId('hermes'),
-    last_indexed_at: '2026-04-24T08:00:00Z',
-    is_active: true,
-    created_at: '2026-04-16T09:00:00Z',
-  },
-  {
-    id: skillId('localshout/event-qualifier'),
-    display_name: 'Event qualifier',
-    description: 'Decides whether a candidate event meets LocalShout criteria.',
-    prompt_id: promptId('event-qualifier'),
-    model_hint: 'budget',
-    input_schema: { type: 'object', properties: { html: { type: 'string' } }, required: ['html'] },
-    output_schema: {
-      type: 'object',
-      properties: {
-        qualifies: { type: 'boolean' },
-        reasons: { type: 'array', items: { type: 'string' } },
-      },
-      required: ['qualifies'],
-    },
-    source_repo: projectId('localshout'),
-    last_indexed_at: null,
-    is_active: true,
-    created_at: '2026-04-20T09:00:00Z',
+    body: '\nYou are an autonomous coding agent. (seed-mode placeholder)\n',
   },
 ] as const satisfies readonly Skill[];
-
-// Skill ↔ Tool junctions. Two skills currently use tools:
-//   - event-qualifier needs `fetch-url` to retrieve event HTML before classifying
-//   - intake-quality (v2) optionally uses `gmail-search` to find original context
-export const SKILL_TOOLS = [
-  { skill_id: skillId('localshout/event-qualifier'), tool_id: toolId('fetch-url') },
-  { skill_id: skillId('hermes/intake-quality'),      tool_id: toolId('gmail-search') },
-] as const satisfies readonly SkillTool[];

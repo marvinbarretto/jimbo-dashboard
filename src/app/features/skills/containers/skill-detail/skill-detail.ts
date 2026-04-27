@@ -22,7 +22,7 @@ export class SkillDetail {
   constructor() {
     effect(() => {
       const s = this.skill();
-      if (s) this.titleService.setTitle(formatPageTitle(s.display_name));
+      if (s) this.titleService.setTitle(formatPageTitle(s.name));
     });
   }
 
@@ -31,35 +31,17 @@ export class SkillDetail {
   );
 
   readonly skill = computed(() => this.service.getById(this.id() ?? ''));
+  readonly isLoading = this.service.isLoading;
 
   readonly namespace = computed(() => {
     const id = this.id();
-    return id ? skillNamespace(this.skill()?.id ?? id as any) : null;
+    return id ? skillNamespace(id) : null;
   });
 
   readonly localName = computed(() => {
     const id = this.id();
-    return id ? skillLocalName(this.skill()?.id ?? id as any) : '';
+    return id ? skillLocalName(id) : '';
   });
 
-  // Human-readable cache freshness string derived from last_indexed_at.
-  readonly syncedAgo = computed(() => {
-    const ts = this.skill()?.last_indexed_at;
-    if (!ts) return 'never synced';
-    const diffMs = Date.now() - new Date(ts).getTime();
-    const diffMins = Math.floor(diffMs / 60_000);
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 48) return `${diffHours}h ago`;
-    return `${Math.floor(diffHours / 24)}d ago`;
-  });
-
-  formatSchema(schema: unknown): string {
-    if (schema == null) return '';
-    try {
-      return JSON.stringify(schema, null, 2);
-    } catch {
-      return String(schema);
-    }
-  }
+  readonly isActive = computed(() => this.skill()?.metadata.is_active !== false);
 }

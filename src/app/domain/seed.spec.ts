@@ -32,24 +32,6 @@ describe('domain seed', () => {
       }
     });
 
-    it('skill source_repo points at a real project', () => {
-      for (const skill of SEED.skills) {
-        expect(projectIds, `skill ${skill.id} source_repo`).toContain(skill.source_repo);
-      }
-    });
-
-    it('skill prompt_id resolves when set', () => {
-      for (const skill of SEED.skills) {
-        if (skill.prompt_id) expect(promptIds, `skill ${skill.id} prompt_id`).toContain(skill.prompt_id);
-      }
-    });
-
-    it('skill_tools FKs both resolve', () => {
-      for (const link of SEED.skill_tools) {
-        expect(skillIds, `skill ${link.skill_id}`).toContain(link.skill_id);
-        expect(toolIds, `tool ${link.tool_id}`).toContain(link.tool_id);
-      }
-    });
 
     it('prompt_versions point at a real prompt', () => {
       for (const v of SEED.prompt_versions) {
@@ -86,12 +68,6 @@ describe('domain seed', () => {
         expect(toolVersionIds).toContain(t.current_version_id);
         const v = versionsById.get(t.current_version_id)!;
         expect(v.tool_id).toBe(t.id);
-      }
-    });
-
-    it('skill slug prefix matches its source_repo (P9 / row 38)', () => {
-      for (const skill of SEED.skills) {
-        expect(skillNamespace(skill.id)).toBe(skill.source_repo);
       }
     });
 
@@ -197,10 +173,13 @@ describe('domain seed', () => {
       }
     });
 
-    it('dispatch entries reference real items, skills, and executors', () => {
+    it('dispatch entries reference real items and executors', () => {
+      // skill is a soft reference into hub/skills/ (filesystem registry); the
+      // domain-level seed graph isn't the source of truth for skills, so we
+      // don't assert d.skill resolves here. Filesystem gating happens in
+      // jimbo-api at enqueue time.
       for (const d of SEED.dispatch_entries) {
         expect(vaultItemIds).toContain(d.task_id);
-        expect(skillIds).toContain(d.skill);
         expect(actorIds).toContain(d.executor);
       }
     });

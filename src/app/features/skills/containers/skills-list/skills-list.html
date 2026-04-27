@@ -1,52 +1,53 @@
 <div class="skills-list">
   <header class="skills-list__header">
     <h1>Skills</h1>
-    <a routerLink="new" class="btn btn--primary">Add skill</a>
+    <p class="skills-list__hint">
+      Read-only view of <code>hub/skills/</code>. Editing comes in Phase B slice 3.
+    </p>
   </header>
 
-  <table class="skills-table">
-    <thead>
-      <tr>
-        <th>Namespace</th>
-        <th>Name</th>
-        <th>Display name</th>
-        <th>Model hint</th>
-        <th>Source repo</th>
-        <th>Active</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (skill of skills(); track skill.id) {
-        <tr [class.inactive]="!skill.is_active">
-          <td class="skill-namespace">
-            <span class="ns-tag">{{ namespace(skill.id) }}</span>
-          </td>
-          <td class="skill-local-name">
-            <a [routerLink]="skillLink(skill.id)">{{ localName(skill.id) }}</a>
-          </td>
-          <td>{{ skill.display_name }}</td>
-          <td>
-            <span class="tier-badge tier-badge--{{ skill.model_hint }}">
-              {{ skill.model_hint }}
-            </span>
-          </td>
-          <td>{{ skill.source_repo }}</td>
-          <td>
-            <span [class]="skill.is_active ? 'status status--active' : 'status status--inactive'">
-              {{ skill.is_active ? 'Yes' : 'No' }}
-            </span>
-          </td>
-          <td class="actions">
-            <a [routerLink]="editLink(skill.id)">Edit</a>
-            <button (click)="remove(skill.id)">Remove</button>
-          </td>
-        </tr>
-      } @empty {
+  @if (isLoading()) {
+    <p class="loading">Loading…</p>
+  } @else if (error()) {
+    <p class="error">Failed to load: {{ error() }}</p>
+  } @else {
+    <table class="skills-table">
+      <thead>
         <tr>
-          <td colspan="7" class="empty">No skills configured.</td>
+          <th>Namespace</th>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Executors</th>
+          <th>Active</th>
         </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (skill of skills(); track skill.id) {
+          <tr [class.inactive]="!isActive(skill)">
+            <td class="skill-namespace">
+              <span class="ns-tag">{{ namespace(skill.id) }}</span>
+            </td>
+            <td class="skill-local-name">
+              <a [routerLink]="skillLink(skill.id)">{{ localName(skill.id) }}</a>
+            </td>
+            <td>{{ skill.description }}</td>
+            <td>
+              @for (e of skill.metadata.executors; track e) {
+                <span class="executor-badge">{{ e }}</span>
+              }
+            </td>
+            <td>
+              <span [class]="isActive(skill) ? 'status status--active' : 'status status--inactive'">
+                {{ isActive(skill) ? 'Yes' : 'No' }}
+              </span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="empty">No skills found in registry.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
 </div>

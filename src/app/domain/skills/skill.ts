@@ -1,68 +1,42 @@
-import type { ProjectId, PromptId, SkillId } from '../ids';
-import type { ModelTier } from '../models';
-
-// A skill is a named, dispatchable capability — the unit the router picks when work needs doing.
-// "Micro-skill decomposition" (principle P1): prefer many small skills over one big one. A skill
-// should do one checkable thing with a clear input/output contract.
+// A skill is the dispatchable unit jimbo-api looks up when an enqueue arrives.
+// The canonical source is `hub/skills/<category>/<name>/SKILL.md` (filesystem;
+// jimbo-api reads from $HUB_SKILLS_DIR). The shape mirrors the Anthropic Claude
+// Code Skill schema so the same files validate cleanly in Claude tooling, with
+// orchestration-specific fields nested under `metadata`.
 //
-// This type supersedes the legacy `features/skills/utils/skill.types.ts` which was operator-grade
-// scaffolding. Legacy will be migrated when the Skill feature is next implemented.
+// Phase B slice 2 dropped the legacy DB-backed shape (display_name, model_hint,
+// prompt_id, source_repo, last_indexed_at, etc.) — those fields disappeared
+// when the wrong-turn skills/prompts/tools/models tables were removed.
 
-// Skills carry a `model_hint` of type `ModelTier`. Tier is defined canonically in
-// `domain/models/model.ts` (shared with the Model entity). Re-exported here for the
-// historical import path; new code should import directly from `domain/models`.
-export type { ModelTier };
+export interface SkillMetadata {
+  // Actor IDs allowed to dispatch this skill. Enforced by jimbo-api's gate.
+  executors: string[];
+  timeout_minutes?: number;
+  required_context?: string[];
+  produces?: string[];
+  completes_dispatch?: boolean;
+  // Defaults to true. Set false to keep the file but block dispatch.
+  is_active?: boolean;
+}
 
 export interface Skill {
-  // Slug is always prefixed: `{project-id}/{skill-name}`. No "bare = global" ambiguity —
-  // every skill belongs to exactly one project. The core project that owns hermes-level
-  // skills (`intake-quality`, `decomposer`, etc.) is named `hermes`.
-  // Invariant: the prefix portion equals `source_repo`. Enforced at write time.
-  id:               SkillId;
-
-  display_name:     string;
-  description:      string | null;   // human-readable — what this skill does
-
-  // Content — what the LLM is told to do.
-  // Nullable because pure-code skills exist (e.g. `extract-events-from-html` could be a
-  // deterministic parser with no LLM call).
-  prompt_id:        PromptId | null;
-
-  // Routing signal for the dispatcher. Not a hard cap — higher tiers are allowed if
-  // cheap is unavailable.
-  model_hint:       ModelTier;
-
-  // JSON Schemas. Dashboard stores them as a cache; repo is source of truth (see `last_indexed_at`).
-  // `unknown` at TS level — validated at runtime by the dispatcher before invoking.
-  input_schema:     unknown;
-  output_schema:    unknown;
-
-  // Which project owns this skill's code. FK — must equal the slug's prefix portion.
-  // Indexer reads project.repo_url to discover skills at `{repo}/skills/*`.
-  source_repo:      ProjectId;
-
-  // Cache freshness — when the indexer last read this skill's files from the repo.
-  // Null = never indexed (manual entry or pre-indexer). UI surfaces staleness.
-  last_indexed_at:  string | null;
-
-  is_active:        boolean;
-  created_at:       string;
-  // No `updated_at` — principle K6. Change history via events, not field-flip.
+  // Slash-path matching the directory under hub/skills/.
+  // e.g. 'vault-grooming/analyse', 'code/pr-from-issue'.
+  id: string;
+  name: string;
+  description: string;
+  metadata: SkillMetadata;
+  // Markdown body after the frontmatter — the agent's prompt.
+  body: string;
 }
 
-export type CreateSkillPayload = Omit<Skill, 'created_at'>;
-export type UpdateSkillPayload = Partial<Omit<Skill, 'id' | 'created_at'>>;
-
-// Parses the project prefix from a skill slug. Every skill is prefixed —
-// returns null only if the slug is malformed (no slash).
-export function skillNamespace(id: SkillId): string | null {
-  const slash = (id as string).indexOf('/');
-  return slash === -1 ? null : (id as string).slice(0, slash);
+// Slash-path helpers. The id is always two segments by registry convention.
+export function skillNamespace(id: string): string | null {
+  const slash = id.indexOf('/');
+  return slash === -1 ? null : id.slice(0, slash);
 }
 
-// Strips the prefix — returns just the skill's local name.
-//   skillLocalName('localshout/event-qualifier' as SkillId) === 'event-qualifier'
-export function skillLocalName(id: SkillId): string {
-  const slash = (id as string).indexOf('/');
-  return slash === -1 ? (id as string) : (id as string).slice(slash + 1);
+export function skillLocalName(id: string): string {
+  const slash = id.indexOf('/');
+  return slash === -1 ? id : id.slice(slash + 1);
 }

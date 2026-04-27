@@ -1,4 +1,6 @@
-@if (skill(); as skill) {
+@if (isLoading()) {
+  <p class="loading">Loading…</p>
+} @else if (skill(); as skill) {
   <div class="skill-detail">
     <header class="skill-detail__header">
       <a routerLink="/skills" class="back-link">← Skills</a>
@@ -7,61 +9,70 @@
         <h1>{{ localName() }}</h1>
       </div>
       <div class="skill-detail__badges">
-        <span [class]="skill.is_active ? 'status status--active' : 'status status--inactive'">
-          {{ skill.is_active ? 'Active' : 'Inactive' }}
+        <span [class]="isActive() ? 'status status--active' : 'status status--inactive'">
+          {{ isActive() ? 'Active' : 'Inactive' }}
         </span>
-        <span class="sync-staleness">synced {{ syncedAgo() }}</span>
       </div>
-      <a routerLink="edit" class="btn btn--secondary">Edit</a>
     </header>
 
     <section class="skill-detail__meta">
       <dl>
-        <dt>Slug</dt>
+        <dt>ID</dt>
         <dd><code>{{ skill.id }}</code></dd>
 
-        <dt>Display name</dt>
-        <dd>{{ skill.display_name }}</dd>
+        <dt>Name</dt>
+        <dd>{{ skill.name }}</dd>
 
         @if (skill.description) {
           <dt>Description</dt>
           <dd>{{ skill.description }}</dd>
         }
 
-        <dt>Model hint</dt>
+        <dt>Executors</dt>
         <dd>
-          <span class="tier-badge tier-badge--{{ skill.model_hint }}">{{ skill.model_hint }}</span>
+          @for (e of skill.metadata.executors; track e) {
+            <span class="executor-badge">{{ e }}</span>
+          }
         </dd>
 
-        <dt>Source repo</dt>
-        <dd>
-          <a [routerLink]="['/projects', skill.source_repo]">{{ skill.source_repo }}</a>
-        </dd>
+        @if (skill.metadata.timeout_minutes != null) {
+          <dt>Timeout</dt>
+          <dd>{{ skill.metadata.timeout_minutes }} min</dd>
+        }
 
-        @if (skill.prompt_id) {
-          <dt>Prompt</dt>
-          <dd><code>{{ skill.prompt_id }}</code></dd>
+        @if (skill.metadata.required_context && skill.metadata.required_context.length) {
+          <dt>Required context</dt>
+          <dd>
+            @for (c of skill.metadata.required_context; track c) {
+              <code class="ctx-tag">{{ c }}</code>
+            }
+          </dd>
+        }
+
+        @if (skill.metadata.produces && skill.metadata.produces.length) {
+          <dt>Produces</dt>
+          <dd>
+            @for (p of skill.metadata.produces; track p) {
+              <code class="produces-tag">{{ p }}</code>
+            }
+          </dd>
+        }
+
+        @if (skill.metadata.completes_dispatch != null) {
+          <dt>Completes dispatch</dt>
+          <dd>{{ skill.metadata.completes_dispatch ? 'Yes' : 'No' }}</dd>
         }
       </dl>
     </section>
 
-    @if (skill.input_schema != null) {
-      <section class="skill-detail__schema">
-        <h2>Input schema</h2>
-        <pre class="schema-block"><code>{{ formatSchema(skill.input_schema) }}</code></pre>
-      </section>
-    }
-
-    @if (skill.output_schema != null) {
-      <section class="skill-detail__schema">
-        <h2>Output schema</h2>
-        <pre class="schema-block"><code>{{ formatSchema(skill.output_schema) }}</code></pre>
-      </section>
-    }
+    <section class="skill-detail__body">
+      <h2>Prompt body</h2>
+      <pre class="schema-block"><code>{{ skill.body }}</code></pre>
+    </section>
   </div>
 } @else {
   <div class="skill-detail skill-detail--not-found">
-    <p>Skill not found.</p>
+    <p>Skill not found in registry.</p>
     <a routerLink="/skills" class="back-link">← Back to skills</a>
   </div>
 }

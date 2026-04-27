@@ -147,7 +147,7 @@ export class ExecutionBoard {
   }
 
   skillDisplayName(entry: DispatchQueueEntry): string | null {
-    return this.skillsService.getById(entry.skill)?.display_name ?? null;
+    return this.skillsService.getById(entry.skill)?.name ?? null;
   }
 
   primaryProject(entry: DispatchQueueEntry): { id: string; display_name: string } | null {
@@ -182,7 +182,7 @@ export class ExecutionBoard {
       const skill = this.skillsService.getById(id as SkillId);
       return {
         value: id,
-        label: skill?.display_name ?? id,
+        label: skill?.name ?? id,
         count: counts.get(id) ?? 0,
       };
     }).sort((a, b) => a.label.localeCompare(b.label));
