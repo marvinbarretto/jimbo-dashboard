@@ -71,6 +71,13 @@
       "when": 1777278060269,
       "tag": "0009_lazy_gunslinger",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1777400000000,
+      "tag": "0010_skill_fk_drop",
+      "breakpoints": true
     }
   ]
 }
