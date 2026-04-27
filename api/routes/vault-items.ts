@@ -276,8 +276,9 @@ vaultItemsRoute.openapi(createRouteDef, async (c) => {
   const payload = await res.json().catch(() => ({}));
   if (res.status === 201) return c.json(payload as Record<string, unknown>, 201);
   if (res.status === 400) return c.json(payload as Record<string, unknown>, 400);
+  console.error('[vault-items.POST] upstream', res.status, JSON.stringify(payload));
   return c.json(
-    { error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}` } },
+    { error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}`, upstream_status: res.status, upstream_body: payload } },
     502,
   );
 });
@@ -331,7 +332,19 @@ vaultItemsRoute.openapi(patchRouteDef, async (c) => {
   if (res.status === 200) return c.json(payload as Record<string, unknown>, 200);
   if (res.status === 400) return c.json(payload as Record<string, unknown>, 400);
   if (res.status === 404) return c.json(payload as Record<string, unknown>, 404);
-  return c.json({ error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}` } }, 502);
+  // Upstream 5xx: forward the body verbatim so the operator sees the actual
+  // failure reason, with our 502 wrapping `code` + `upstream_status` + `upstream_body`.
+  // Without this, every server-side jimbo-api crash collapses into a useless
+  // "jimbo-api returned 500" with no diagnosis surface.
+  console.error('[vault-items.PATCH] upstream', res.status, JSON.stringify(payload));
+  return c.json({
+    error: {
+      code: 'UPSTREAM_ERROR',
+      message: `jimbo-api returned ${res.status}`,
+      upstream_status: res.status,
+      upstream_body: payload,
+    },
+  }, 502);
 });
 
 // ── DELETE /:id ─ proxies to jimbo-api DELETE /api/vault/notes/:id ────────
@@ -370,5 +383,7 @@ vaultItemsRoute.openapi(deleteRouteDef, async (c) => {
     const payload = await res.json().catch(() => ({}));
     return c.json(payload as Record<string, unknown>, 404);
   }
-  return c.json({ error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}` } }, 502);
+  const payload = await res.json().catch(() => ({}));
+  console.error('[vault-items.DELETE] upstream', res.status, JSON.stringify(payload));
+  return c.json({ error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}`, upstream_status: res.status, upstream_body: payload } }, 502);
 });
