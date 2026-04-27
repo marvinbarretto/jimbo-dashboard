@@ -1,10 +1,9 @@
-// NOTE: The /skills endpoint exists in jimbo-api (Hono + SQLite on VPS) but the backend
-// schema predates this redesign. Existing rows may carry legacy columns (notes,
-// model_stack_id, updated_at) and will not deserialise cleanly against the new Skill type
-// until jimbo-api migrates. Service code uses the new shape regardless.
+// Reads + mutates skills via dashboard-api at /dashboard-api/api/skills
+// (jimbo_pg-backed). Phase 3 part 2 of Phase C — replaces the legacy
+// PostgREST path against the soon-to-be-decommissioned `jimbo` DB.
 
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import type { Skill, CreateSkillPayload, UpdateSkillPayload } from '@domain/skills';
 import { environment } from '../../../../environments/environment';
 import { isSeedMode } from '@shared/seed-mode';
@@ -13,7 +12,7 @@ import { SEED } from '@domain/seed';
 @Injectable({ providedIn: 'root' })
 export class SkillsService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${environment.apiUrl}/skills`;
+  private readonly url = `${environment.dashboardApiUrl}/api/skills`;
 
   private readonly _skills = signal<Skill[]>([]);
   private readonly _loading = signal(true);
@@ -30,9 +29,9 @@ export class SkillsService {
       this._loading.set(false);
       return;
     }
-    this.http.get<Skill[]>(`${this.url}?order=display_name`).subscribe({
-      next: data => { this._skills.set(data); this._loading.set(false); },
-      error: ()   => this._loading.set(false),
+    this.http.get<{ items: Skill[] }>(this.url).subscribe({
+      next: ({ items }) => { this._skills.set(items); this._loading.set(false); },
+      error: ()         => this._loading.set(false),
     });
   }
 
@@ -44,22 +43,20 @@ export class SkillsService {
     const now = new Date().toISOString();
     const optimistic: Skill = { ...payload, created_at: now };
     this._skills.update(ss => [...ss, optimistic]);
-    this.http.post<Skill[]>(this.url, payload, { headers: { Prefer: 'return=representation' } })
+    this.http.post<Skill>(this.url, payload)
       .subscribe({
-        next: ([created]) => this._skills.update(ss => ss.map(s => s.id === payload.id ? created : s)),
-        error: ()          => this._skills.update(ss => ss.filter(s => s.id !== payload.id)),
+        next: (created) => this._skills.update(ss => ss.map(s => s.id === payload.id ? created : s)),
+        error: ()        => this._skills.update(ss => ss.filter(s => s.id !== payload.id)),
       });
   }
 
   update(id: string, patch: UpdateSkillPayload): void {
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.patch<Skill[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
-      .subscribe({ next: ([updated]) => this._skills.update(ss => ss.map(s => s.id === id ? updated : s)) });
+    this.http.patch<Skill>(`${this.url}/${encodeURIComponent(id)}`, patch)
+      .subscribe({ next: (updated) => this._skills.update(ss => ss.map(s => s.id === id ? updated : s)) });
   }
 
   remove(id: string): void {
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.delete(this.url, { params })
+    this.http.delete(`${this.url}/${encodeURIComponent(id)}`)
       .subscribe({ next: () => this._skills.update(ss => ss.filter(s => s.id !== id)) });
   }
 }

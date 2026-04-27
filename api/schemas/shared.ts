@@ -45,6 +45,12 @@ export const DispatchSchema = z.record(z.string(), z.unknown()).openapi('Dispatc
 export const ActorSchema = z.record(z.string(), z.unknown()).openapi('Actor');
 export const ProjectSchema = z.record(z.string(), z.unknown()).openapi('Project');
 export const VaultItemProjectSchema = z.record(z.string(), z.unknown()).openapi('VaultItemProject');
+export const SkillSchema = z.record(z.string(), z.unknown()).openapi('Skill');
+export const PromptSchema = z.record(z.string(), z.unknown()).openapi('Prompt');
+export const PromptVersionSchema = z.record(z.string(), z.unknown()).openapi('PromptVersion');
+export const ToolSchema = z.record(z.string(), z.unknown()).openapi('Tool');
+export const ModelSchema = z.record(z.string(), z.unknown()).openapi('Model');
+export const ModelStackSchema = z.record(z.string(), z.unknown()).openapi('ModelStack');
 
 export function listResponse<T extends z.ZodTypeAny>(item: T, extras: z.ZodRawShape = {}) {
   return z.object({

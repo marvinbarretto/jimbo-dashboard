@@ -23,11 +23,26 @@ async function main() {
   await db.execute(sql`TRUNCATE skills, prompt_versions, prompts, tools, model_stacks, models RESTART IDENTITY CASCADE`);
 
   // ── models ──────────────────────────────────────────────────────────────
+  // Anthropic public rates as of 2026-04. Cache rates: read = 10% of input,
+  // write = 125% of input. Prices stored as text-typed numeric — Drizzle
+  // does this for numeric columns, postgres handles arithmetic correctly.
   console.log('[seed] models');
   await db.insert(models).values([
-    { id: 'claude-opus-4-7',   display_name: 'Claude Opus 4.7',   provider: 'anthropic', notes: 'Top-tier reasoning. $15/$75 per MTok.' },
-    { id: 'claude-sonnet-4-6', display_name: 'Claude Sonnet 4.6', provider: 'anthropic', notes: 'Workhorse. $3/$15 per MTok.' },
-    { id: 'claude-haiku-4-5',  display_name: 'Claude Haiku 4.5',  provider: 'anthropic', notes: 'Fast tier. $1/$5 per MTok.' },
+    {
+      id: 'claude-opus-4-7', display_name: 'Claude Opus 4.7', provider: 'anthropic',
+      input_price_per_million: '15', output_price_per_million: '75',
+      cache_read_price_per_million: '1.5', cache_write_price_per_million: '18.75',
+    },
+    {
+      id: 'claude-sonnet-4-6', display_name: 'Claude Sonnet 4.6', provider: 'anthropic',
+      input_price_per_million: '3', output_price_per_million: '15',
+      cache_read_price_per_million: '0.3', cache_write_price_per_million: '3.75',
+    },
+    {
+      id: 'claude-haiku-4-5', display_name: 'Claude Haiku 4.5', provider: 'anthropic',
+      input_price_per_million: '1', output_price_per_million: '5',
+      cache_read_price_per_million: '0.1', cache_write_price_per_million: '1.25',
+    },
   ]);
 
   // ── model_stacks ────────────────────────────────────────────────────────

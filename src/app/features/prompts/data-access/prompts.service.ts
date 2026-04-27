@@ -1,5 +1,9 @@
+// Reads + mutates prompts via dashboard-api (jimbo_pg-backed). Versions
+// live under /prompts/{id}/versions; new versions auto-assign version
+// number via DB trigger and (by default) flip current_version_id.
+
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, map, of, tap } from 'rxjs';
 import type { Prompt, PromptVersion, CreatePromptPayload, UpdatePromptPayload, CreateVersionPayload } from '../utils/prompt.types';
 import { environment } from '../../../../environments/environment';
@@ -9,8 +13,7 @@ import { SEED } from '@domain/seed';
 @Injectable({ providedIn: 'root' })
 export class PromptsService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${environment.apiUrl}/prompts`;
-  private readonly versionsUrl = `${environment.apiUrl}/prompt_versions`;
+  private readonly url = `${environment.dashboardApiUrl}/api/prompts`;
 
   private readonly _prompts = signal<Prompt[]>([]);
   private readonly _loading = signal(true);
@@ -27,9 +30,9 @@ export class PromptsService {
       this._loading.set(false);
       return;
     }
-    this.http.get<Prompt[]>(`${this.url}?order=display_name`).subscribe({
-      next: data => { this._prompts.set(data); this._loading.set(false); },
-      error: ()   => this._loading.set(false),
+    this.http.get<{ items: Prompt[] }>(this.url).subscribe({
+      next: ({ items }) => { this._prompts.set(items); this._loading.set(false); },
+      error: ()         => this._loading.set(false),
     });
   }
 
@@ -45,55 +48,48 @@ export class PromptsService {
         .sort((a, b) => b.version - a.version);
       return of(versions as PromptVersion[]);
     }
-    return this.http.get<PromptVersion[]>(
-      `${this.versionsUrl}?prompt_id=eq.${encodeURIComponent(promptId)}&order=version.desc`
-    );
+    return this.http.get<{ items: PromptVersion[] }>(`${this.url}/${encodeURIComponent(promptId)}/versions`)
+      .pipe(map(r => r.items));
   }
 
   create(payload: CreatePromptPayload): void {
     const now = new Date().toISOString();
     const optimistic: Prompt = { ...payload, current_version_id: null, created_at: now, updated_at: now };
     this._prompts.update(ps => [...ps, optimistic]);
-    this.http.post<Prompt[]>(this.url, payload, { headers: { Prefer: 'return=representation' } })
+    this.http.post<Prompt>(this.url, payload)
       .subscribe({
-        next: ([created]) => this._prompts.update(ps => ps.map(p => p.id === payload.id ? created : p)),
-        error: ()          => this._prompts.update(ps => ps.filter(p => p.id !== payload.id)),
+        next: (created) => this._prompts.update(ps => ps.map(p => p.id === payload.id ? created : p)),
+        error: ()        => this._prompts.update(ps => ps.filter(p => p.id !== payload.id)),
       });
   }
 
   update(id: string, patch: UpdatePromptPayload): void {
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.patch<Prompt[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
-      .subscribe({ next: ([updated]) => this._prompts.update(ps => ps.map(p => p.id === id ? updated : p)) });
+    this.http.patch<Prompt>(`${this.url}/${encodeURIComponent(id)}`, patch)
+      .subscribe({ next: (updated) => this._prompts.update(ps => ps.map(p => p.id === id ? updated : p)) });
   }
 
   remove(id: string): void {
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.delete(this.url, { params })
+    this.http.delete(`${this.url}/${encodeURIComponent(id)}`)
       .subscribe({ next: () => this._prompts.update(ps => ps.filter(p => p.id !== id)) });
   }
 
   // Creates a new version and promotes it to current by default.
-  // Returns the created version so callers can navigate on completion.
+  // The backend auto-assigns version_number and (by default) flips
+  // prompts.current_version_id atomically.
   createVersion(payload: CreateVersionPayload, autoPromote = true): Observable<PromptVersion> {
-    return this.http.post<PromptVersion[]>(
-      this.versionsUrl,
-      payload,
-      { headers: { Prefer: 'return=representation' } }
+    const { prompt_id, ...body } = payload;
+    return this.http.post<PromptVersion>(
+      `${this.url}/${encodeURIComponent(prompt_id)}/versions`,
+      { ...body, set_as_current: autoPromote },
     ).pipe(
-      map(([v]) => v),
-      tap(v => { if (autoPromote) this.promoteVersion(payload.prompt_id, v.id); }),
+      tap(() => { if (autoPromote) this.load(); }),  // refresh to pick up new current_version_id
     );
   }
 
   promoteVersion(promptId: string, versionId: string): void {
-    const params = new HttpParams().set('id', `eq.${promptId}`);
-    this.http.patch<Prompt[]>(
-      this.url,
-      { current_version_id: versionId },
-      { params, headers: { Prefer: 'return=representation' } }
-    ).subscribe({
-      next: ([updated]) => this._prompts.update(ps => ps.map(p => p.id === promptId ? updated : p)),
-    });
+    this.http.patch<Prompt>(`${this.url}/${encodeURIComponent(promptId)}`, { current_version_id: versionId })
+      .subscribe({
+        next: (updated) => this._prompts.update(ps => ps.map(p => p.id === promptId ? updated : p)),
+      });
   }
 }

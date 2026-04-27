@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { pgTable, text, integer, timestamp, index, check, bigserial } from 'drizzle-orm/pg-core';
 import { vaultNotes } from './vault.js';
+import { skills } from './skills.js';
 
 // ── dispatch_queue ─────────────────────────────────────────────────────────
 //
@@ -31,9 +32,10 @@ export const dispatchQueue = pgTable('dispatch_queue', {
   agent_type: text('agent_type').notNull(),
   // Who actually ran it. Free-text actor id (ralph, boris).
   executor: text('executor'),
-  // Skill slug — references the skills table in the legacy `jimbo` Postgres.
-  // Cross-DB FK isn't possible in the PoC; treat as soft reference.
-  skill: text('skill'),
+  // Skill slug — FK to skills.id (Phase C consolidation moved skills to
+  // jimbo_pg, so the FK is now real). Slash-paths (e.g. 'vault-grooming/analyse')
+  // were rewritten to flat slugs ('vault-grooming-analyse') in migration 0008.
+  skill: text('skill').references(() => skills.id, { onDelete: 'set null' }),
   skill_context: text('skill_context'),
 
   // Batch grouping (multiple dispatches kicked off together).

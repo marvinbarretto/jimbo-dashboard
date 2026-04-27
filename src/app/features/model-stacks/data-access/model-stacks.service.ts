@@ -1,5 +1,7 @@
+// Reads + mutates model stacks via dashboard-api (jimbo_pg-backed).
+
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import type { ModelStack, CreateModelStackPayload, UpdateModelStackPayload } from '../utils/model-stack.types';
 import { environment } from '../../../../environments/environment';
 import { isSeedMode } from '@shared/seed-mode';
@@ -8,7 +10,7 @@ import { SEED } from '@domain/seed';
 @Injectable({ providedIn: 'root' })
 export class ModelStacksService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${environment.apiUrl}/model_stacks`;
+  private readonly url = `${environment.dashboardApiUrl}/api/model-stacks`;
 
   private readonly _stacks = signal<ModelStack[]>([]);
   private readonly _loading = signal(true);
@@ -25,9 +27,9 @@ export class ModelStacksService {
       this._loading.set(false);
       return;
     }
-    this.http.get<ModelStack[]>(`${this.url}?order=display_name`).subscribe({
-      next: data => { this._stacks.set(data); this._loading.set(false); },
-      error: ()   => this._loading.set(false),
+    this.http.get<{ items: ModelStack[] }>(this.url).subscribe({
+      next: ({ items }) => { this._stacks.set(items); this._loading.set(false); },
+      error: ()         => this._loading.set(false),
     });
   }
 
@@ -39,22 +41,20 @@ export class ModelStacksService {
     const now = new Date().toISOString();
     const optimistic: ModelStack = { ...payload, created_at: now, updated_at: now };
     this._stacks.update(ss => [...ss, optimistic]);
-    this.http.post<ModelStack[]>(this.url, payload, { headers: { Prefer: 'return=representation' } })
+    this.http.post<ModelStack>(this.url, payload)
       .subscribe({
-        next: ([created]) => this._stacks.update(ss => ss.map(s => s.id === payload.id ? created : s)),
-        error: ()          => this._stacks.update(ss => ss.filter(s => s.id !== payload.id)),
+        next: (created) => this._stacks.update(ss => ss.map(s => s.id === payload.id ? created : s)),
+        error: ()        => this._stacks.update(ss => ss.filter(s => s.id !== payload.id)),
       });
   }
 
   update(id: string, patch: UpdateModelStackPayload): void {
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.patch<ModelStack[]>(this.url, patch, { params, headers: { Prefer: 'return=representation' } })
-      .subscribe({ next: ([updated]) => this._stacks.update(ss => ss.map(s => s.id === id ? updated : s)) });
+    this.http.patch<ModelStack>(`${this.url}/${encodeURIComponent(id)}`, patch)
+      .subscribe({ next: (updated) => this._stacks.update(ss => ss.map(s => s.id === id ? updated : s)) });
   }
 
   remove(id: string): void {
-    const params = new HttpParams().set('id', `eq.${id}`);
-    this.http.delete(this.url, { params })
+    this.http.delete(`${this.url}/${encodeURIComponent(id)}`)
       .subscribe({ next: () => this._stacks.update(ss => ss.filter(s => s.id !== id)) });
   }
 }

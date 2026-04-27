@@ -28,6 +28,11 @@ import { actorsRoute } from './routes/actors.js';
 import { projectsRoute } from './routes/projects.js';
 import { vaultItemProjectsRoute } from './routes/vault-item-projects.js';
 import { syncRoute } from './routes/sync.js';
+import { skillsRoute } from './routes/skills.js';
+import { promptsRoute } from './routes/prompts.js';
+import { toolsRoute } from './routes/tools.js';
+import { modelsRoute } from './routes/models.js';
+import { modelStacksRoute } from './routes/model-stacks.js';
 import { HealthSchema } from './schemas/shared.js';
 
 const app = new OpenAPIHono({ defaultHook: validationHook });
@@ -89,12 +94,22 @@ app.use(`${BASE}/api/actors/*`, apiKeyAuth);
 app.use(`${BASE}/api/projects/*`, apiKeyAuth);
 app.use(`${BASE}/api/vault-item-projects/*`, apiKeyAuth);
 app.use(`${BASE}/api/sync/*`, apiKeyAuth);
+app.use(`${BASE}/api/skills/*`, apiKeyAuth);
+app.use(`${BASE}/api/prompts/*`, apiKeyAuth);
+app.use(`${BASE}/api/tools/*`, apiKeyAuth);
+app.use(`${BASE}/api/models/*`, apiKeyAuth);
+app.use(`${BASE}/api/model-stacks/*`, apiKeyAuth);
 
 app.route(`${BASE}/api/vault-items`, vaultItemsRoute);
 app.route(`${BASE}/api/dispatches`, dispatchesRoute);
 app.route(`${BASE}/api/actors`, actorsRoute);
 app.route(`${BASE}/api/projects`, projectsRoute);
 app.route(`${BASE}/api/vault-item-projects`, vaultItemProjectsRoute);
+app.route(`${BASE}/api/skills`, skillsRoute);
+app.route(`${BASE}/api/prompts`, promptsRoute);
+app.route(`${BASE}/api/tools`, toolsRoute);
+app.route(`${BASE}/api/models`, modelsRoute);
+app.route(`${BASE}/api/model-stacks`, modelStacksRoute);
 
 // ⚠️ Production guard — sync route is destructive (TRUNCATE + ETL against
 // jimbo_pg). Mounted only when running locally so the live service can never

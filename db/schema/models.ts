@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { pgTable, text, boolean, timestamp, index, check } from 'drizzle-orm/pg-core';
+import { pgTable, text, boolean, timestamp, index, check, numeric } from 'drizzle-orm/pg-core';
 
 // ── models ─────────────────────────────────────────────────────────────────
 //
@@ -16,6 +16,17 @@ export const models = pgTable('models', {
   provider: text('provider').notNull(),                          // 'anthropic' | 'google' | 'openai'
   is_active: boolean('is_active').notNull().default(true),
   notes: text('notes'),
+
+  // ── Pricing (USD per million tokens) ─────────────────────────────────
+  // jimbo-api/src/services/pricing.ts read these to compute cost on each
+  // turn. NULL means "no rate known" — record the call with cost=0 rather
+  // than refuse to log it. Updates happen here, not in code; rate changes
+  // ship as INSERT/UPDATE on this table.
+  input_price_per_million: numeric('input_price_per_million', { precision: 10, scale: 6 }),
+  output_price_per_million: numeric('output_price_per_million', { precision: 10, scale: 6 }),
+  cache_read_price_per_million: numeric('cache_read_price_per_million', { precision: 10, scale: 6 }),
+  cache_write_price_per_million: numeric('cache_write_price_per_million', { precision: 10, scale: 6 }),
+
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({
