@@ -151,3 +151,127 @@ skillsRoute.openapi(patchRoute, async (c) => {
   if (res.status === 409) return c.json(payload as Record<string, unknown>, 409);
   return c.json({ error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}` } }, 502);
 });
+
+// ── POST / — create (proxies to jimbo-api) ────────────────────────
+
+const postRoute = createRoute({
+  method: 'post',
+  path: '/',
+  tags: ['Skills'],
+  summary: 'Create a new skill (proxies to jimbo-api)',
+  request: {
+    body: { content: { 'application/json': { schema: PassthroughBody } } },
+  },
+  responses: {
+    201: { description: 'Created', content: { 'application/json': { schema: SkillSchema } } },
+    400: { description: 'Validation error', content: { 'application/json': { schema: PassthroughBody } } },
+    409: { description: 'Conflict (already exists / dirty / git)', content: { 'application/json': { schema: PassthroughBody } } },
+    502: { description: 'Upstream jimbo-api unreachable', content: { 'application/json': { schema: upstreamErrorBody } } },
+  },
+});
+
+skillsRoute.openapi(postRoute, async (c) => {
+  const body = c.req.valid('json');
+  const up = readUpstream();
+  if (!up) {
+    return c.json({ error: { code: 'UPSTREAM_NOT_CONFIGURED', message: 'JIMBO_API_URL or JIMBO_API_KEY not set' } }, 502);
+  }
+  let res: Response;
+  try {
+    res = await fetch(`${up.url}/api/skills`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': up.key },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    return c.json({ error: { code: 'UPSTREAM_FETCH_FAILED', message: (e as Error).message } }, 502);
+  }
+  const payload = await res.json().catch(() => ({}));
+  if (res.status === 201) return c.json(payload as Record<string, unknown>, 201);
+  if (res.status === 400) return c.json(payload as Record<string, unknown>, 400);
+  if (res.status === 409) return c.json(payload as Record<string, unknown>, 409);
+  return c.json({ error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}` } }, 502);
+});
+
+// ── DELETE /:category/:name (proxies to jimbo-api) ────────────────
+
+const deleteRouteDef = createRoute({
+  method: 'delete',
+  path: '/{category}/{name}',
+  tags: ['Skills'],
+  summary: 'Delete a skill (proxies to jimbo-api)',
+  request: { params: SkillPathParam },
+  responses: {
+    204: { description: 'Deleted' },
+    404: { description: 'Not found', content: { 'application/json': { schema: PassthroughBody } } },
+    409: { description: 'Working tree dirty or git conflict', content: { 'application/json': { schema: PassthroughBody } } },
+    502: { description: 'Upstream jimbo-api unreachable', content: { 'application/json': { schema: upstreamErrorBody } } },
+  },
+});
+
+skillsRoute.openapi(deleteRouteDef, async (c) => {
+  const { category, name } = c.req.valid('param');
+  const up = readUpstream();
+  if (!up) {
+    return c.json({ error: { code: 'UPSTREAM_NOT_CONFIGURED', message: 'JIMBO_API_URL or JIMBO_API_KEY not set' } }, 502);
+  }
+  let res: Response;
+  try {
+    res = await fetch(`${up.url}/api/skills/${encodeURIComponent(category)}/${encodeURIComponent(name)}`, {
+      method: 'DELETE',
+      headers: { 'X-API-Key': up.key },
+    });
+  } catch (e) {
+    return c.json({ error: { code: 'UPSTREAM_FETCH_FAILED', message: (e as Error).message } }, 502);
+  }
+  if (res.status === 204) return c.body(null, 204);
+  const payload = await res.json().catch(() => ({}));
+  if (res.status === 404) return c.json(payload as Record<string, unknown>, 404);
+  if (res.status === 409) return c.json(payload as Record<string, unknown>, 409);
+  return c.json({ error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}` } }, 502);
+});
+
+// ── POST /:category/:name/rename (proxies to jimbo-api) ───────────
+
+const renameRouteDef = createRoute({
+  method: 'post',
+  path: '/{category}/{name}/rename',
+  tags: ['Skills'],
+  summary: 'Rename a skill (proxies to jimbo-api)',
+  request: {
+    params: SkillPathParam,
+    body: { content: { 'application/json': { schema: PassthroughBody } } },
+  },
+  responses: {
+    200: { description: 'Renamed', content: { 'application/json': { schema: SkillSchema } } },
+    400: { description: 'Validation error', content: { 'application/json': { schema: PassthroughBody } } },
+    404: { description: 'Source not found', content: { 'application/json': { schema: PassthroughBody } } },
+    409: { description: 'Target taken / dispatches active / git conflict', content: { 'application/json': { schema: PassthroughBody } } },
+    502: { description: 'Upstream jimbo-api unreachable', content: { 'application/json': { schema: upstreamErrorBody } } },
+  },
+});
+
+skillsRoute.openapi(renameRouteDef, async (c) => {
+  const { category, name } = c.req.valid('param');
+  const body = c.req.valid('json');
+  const up = readUpstream();
+  if (!up) {
+    return c.json({ error: { code: 'UPSTREAM_NOT_CONFIGURED', message: 'JIMBO_API_URL or JIMBO_API_KEY not set' } }, 502);
+  }
+  let res: Response;
+  try {
+    res = await fetch(`${up.url}/api/skills/${encodeURIComponent(category)}/${encodeURIComponent(name)}/rename`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': up.key },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    return c.json({ error: { code: 'UPSTREAM_FETCH_FAILED', message: (e as Error).message } }, 502);
+  }
+  const payload = await res.json().catch(() => ({}));
+  if (res.status === 200) return c.json(payload as Record<string, unknown>, 200);
+  if (res.status === 400) return c.json(payload as Record<string, unknown>, 400);
+  if (res.status === 404) return c.json(payload as Record<string, unknown>, 404);
+  if (res.status === 409) return c.json(payload as Record<string, unknown>, 409);
+  return c.json({ error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}` } }, 502);
+});

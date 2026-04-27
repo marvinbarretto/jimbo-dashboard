@@ -72,4 +72,34 @@ export class SkillsService {
       }),
     );
   }
+
+  // POST a new skill. Server pushes a `create skill: <id>` commit to hub.
+  create(init: { id: string; name: string; description: string; metadata: SkillMetadata; body: string }): Observable<Skill> {
+    return this.http.post<Skill>(this.url, init).pipe(
+      tap(created => {
+        this._skills.update(ss => [...ss, created].sort((a, b) => a.id.localeCompare(b.id)));
+      }),
+    );
+  }
+
+  // DELETE a skill. Returns void (server replies 204). Pulls the row out of
+  // the local signal optimistically — the editor's already navigated away by
+  // the time this fires anyway.
+  remove(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.url}/${id}`).pipe(
+      tap(() => {
+        this._skills.update(ss => ss.filter(s => s.id !== id));
+      }),
+    );
+  }
+
+  // POST /:id/rename — `git mv` on the server. Returns the skill at its new id.
+  rename(oldId: string, to: string): Observable<Skill> {
+    return this.http.post<Skill>(`${this.url}/${oldId}/rename`, { to }).pipe(
+      tap(renamed => {
+        this._skills.update(ss => ss.filter(s => s.id !== oldId).concat(renamed)
+          .sort((a, b) => a.id.localeCompare(b.id)));
+      }),
+    );
+  }
 }

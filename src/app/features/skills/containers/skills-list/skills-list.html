@@ -2,8 +2,9 @@
   <header class="skills-list__header">
     <h1>Skills</h1>
     <p class="skills-list__hint">
-      Read-only view of <code>hub/skills/</code>. Editing comes in Phase B slice 3.
+      Edits commit + push to <code>hub/skills/</code> via jimbo-api.
     </p>
+    <a routerLink="new" class="btn btn--primary">Add skill</a>
   </header>
 
   @if (isLoading()) {
