@@ -1,8 +1,0 @@
-{
-  "/dashboard-api": {
-    "target": "http://localhost:3201",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  }
-}
