@@ -223,6 +223,11 @@ export interface LiveEventEmbed {
   action: string;
   from_value: string | null;
   to_value: string | null;
+  // Free-text justification for the activity. Carries the rejection reason for
+  // action='rejected' rows (the reject flow stores the operator's note here,
+  // since the kind isn't a from/to-style transition). Null for events that
+  // don't have an inline justification.
+  reason: string | null;
 }
 
 export interface LiveMessageEmbed {

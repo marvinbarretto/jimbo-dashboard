@@ -11,6 +11,7 @@ interface LiveEvent {
   action: string;
   from_value: string | null;
   to_value: string | null;
+  reason: string | null;
 }
 
 interface LiveMessage {
@@ -153,7 +154,8 @@ vaultItemsRoute.openapi(listRoute, async (c) => {
           'actor_display_name', a.display_name,
           'action',             na.action,
           'from_value',         na.from_value,
-          'to_value',           na.to_value
+          'to_value',           na.to_value,
+          'reason',             na.reason
         )
         FROM "note_activity" na
         LEFT JOIN "actors" a ON a.id = na.actor

@@ -102,13 +102,14 @@ export class GroomingCard {
   readonly hasParent   = computed(() => this.item().parent_id !== null);
 
   // Reason snippet for the rework badge — pulled from the latest_event embed
-  // when its action is 'rejected'. The to_value carries the rejection reason
-  // per the dashboard-api's note-activity mapping. Null when latest_event isn't
-  // a rejection (so we don't show stale older reasons).
+  // when its action is 'rejected'. note_activity stores the operator's
+  // rejection note in the `reason` column (from/to are null for this kind
+  // of event). Null when latest_event isn't a rejection so we don't bleed
+  // stale older reasons onto the card.
   readonly reworkReason = computed(() => {
     const latest = this.item().latest_event;
     if (!latest || latest.action !== 'rejected') return null;
-    return latest.to_value ?? null;
+    return latest.reason ?? null;
   });
 
   // New owner after rejection. Falls back to current assigned_to.
