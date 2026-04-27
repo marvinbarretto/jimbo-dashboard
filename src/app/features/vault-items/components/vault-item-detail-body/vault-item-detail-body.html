@@ -239,9 +239,9 @@
         <section class="section">
           <div class="section__label">Parent</div>
           @if (parentItem(); as parent) {
-            <a [routerLink]="['/vault-items', parent.seq]" class="parent-link">
+            <button type="button" class="parent-link" (click)="swapToSeq(parent.seq)">
               ↳ #{{ parent.seq }} · {{ parent.title }}
-            </a>
+            </button>
           } @else if (item.parent_id) {
             <span class="muted">{{ item.parent_id }} (parent not loaded)</span>
           } @else if (children().length === 0) {
@@ -260,9 +260,9 @@
             <ul class="subtask-list">
               @for (child of children(); track child.id) {
                 <li class="subtask-row">
-                  <a [routerLink]="['/vault-items', child.seq]" class="subtask-row__link">
+                  <button type="button" class="subtask-row__link" (click)="swapToSeq(child.seq)">
                     #{{ child.seq }} · {{ child.title }}
-                  </a>
+                  </button>
                   <span class="subtask-row__status">{{ child.grooming_status }}</span>
                 </li>
               }
@@ -309,9 +309,9 @@
           <div class="junction-list">
             @for (b of openBlockers(); track b.blocker_id) {
               <span class="junction-chip junction-chip--blocker">
-                <a [routerLink]="['/vault-items', b.blocker_seq]" class="junction-chip__label">
+                <button type="button" class="junction-chip__label" (click)="swapToSeq(b.blocker_seq)">
                   #{{ b.blocker_seq }} · {{ b.blocker_title }}
-                </a>
+                </button>
                 <button class="junction-chip__remove"
                   (click)="removeBlocker(b.blocker_id)"
                   [attr.aria-label]="'Remove blocker #' + b.blocker_seq">×</button>

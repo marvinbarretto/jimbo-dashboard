@@ -74,7 +74,9 @@
 .chip-row { display: flex; flex-wrap: wrap; gap: 4px; }
 .chip { border: 1px solid var(--color-border); font-size: .7rem; padding: 1px 7px; color: var(--color-text-muted); &--empty { font-style: italic; } }
 
-.parent-link { font-size: .75rem; color: var(--color-accent); text-decoration: none; &:hover { text-decoration: underline; } }
+// button-reset needed because <a> was replaced with <button> to swap modal
+// contents without a full navigation.
+.parent-link { background: transparent; border: 0; padding: 0; font: inherit; font-size: .75rem; color: var(--color-accent); text-decoration: none; cursor: pointer; text-align: left; &:hover { text-decoration: underline; } }
 
 .readiness-list { display: flex; flex-direction: column; gap: 3px; font-size: .7rem; list-style: none; padding: 0; margin: 0; }
 .readiness-check { display: flex; gap: .375rem; align-items: baseline;

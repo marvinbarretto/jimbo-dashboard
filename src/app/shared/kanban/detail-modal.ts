@@ -8,6 +8,16 @@ import {
   type VaultItemDetailDialogData,
 } from '@features/vault-items/containers/vault-item-detail-dialog/vault-item-detail-dialog';
 
+// Swaps the modal contents to a different vault item by updating the
+// `?detail=<seq>` query param. withVaultDetailModal() watches this param and
+// re-binds the dialog body when it changes.
+export function swapDetailSeq(router: Router, seq: number): void {
+  router.navigate([], {
+    queryParams: { detail: seq },
+    queryParamsHandling: 'merge',
+  });
+}
+
 // Wires `?detail=<seq>` ↔ a CDK Dialog of the vault-item detail. Call once
 // from a kanban board's constructor; the URL becomes the single source of
 // truth for whether the dialog is open.
@@ -53,10 +63,13 @@ export function withVaultDetailModal(): void {
     }
 
     if (ref) {
-      // Already open. Rapid URL changes between two seqs are rare (no UI
-      // produces them today); if they happen, the simplest correct behaviour
-      // is to leave the existing dialog up and let the user close it.
-      return;
+      // seq changed while dialog is open — close the current one and fall
+      // through to reopen with the new seq. This is what makes swapDetailSeq()
+      // work: the URL param changes, we get a new seq value, and we swap the
+      // dialog body by closing + reopening rather than mutating static DIALOG_DATA.
+      const r = ref;
+      ref = null;
+      r.close();
     }
 
     const opened: DialogRef<unknown> = dialog.open<unknown, VaultItemDetailDialogData>(

@@ -7,7 +7,8 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { swapDetailSeq } from '@shared/kanban/detail-modal';
 import { VaultItemsService } from '../../data-access/vault-items.service';
 import { ActivityEventsService } from '../../data-access/activity-events.service';
 import { VaultItemProjectsService } from '../../data-access/vault-item-projects.service';
@@ -37,6 +38,7 @@ export class VaultItemDetailBody {
   // dialog shell provides its own close affordance.
   readonly mode = input<'page' | 'modal'>('page');
 
+  private readonly router = inject(Router);
   private readonly vaultItemsService = inject(VaultItemsService);
   private readonly activityService = inject(ActivityEventsService);
   private readonly vaultItemProjectsService = inject(VaultItemProjectsService);
@@ -113,6 +115,17 @@ export class VaultItemDetailBody {
 
   priorityLabel(p: Priority | null): string {
     return p === null ? '—' : 'P' + p;
+  }
+
+  // In modal mode, update ?detail= so withVaultDetailModal() swaps the dialog
+  // body without a full navigation. In page mode, navigate normally so the URL
+  // stays meaningful and browser back works as expected.
+  swapToSeq(seq: number): void {
+    if (this.mode() === 'modal') {
+      swapDetailSeq(this.router, seq);
+    } else {
+      this.router.navigate(['/vault-items', seq]);
+    }
   }
 
   readonly parentItem = computed(() => {
