@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
-import { and, desc, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '../../db/client.js';
 import { vaultNotes } from '../../db/schema/index.js';
 import { VaultItemSchema, listResponse } from '../schemas/shared.js';
@@ -283,9 +283,122 @@ vaultItemsRoute.openapi(createRouteDef, async (c) => {
   );
 });
 
+// ── seq-keyed write helpers ───────────────────────────────────────────────
+// Production vault_notes.id is a slug derived from the title or source URL
+// at creation time, so URL paths look like
+//   /api/vault-items/httpswwwhuntsmanandhoundscomevents--note_c5cf902
+// which is technically RESTful (slug IS the PK) but visually awful and
+// brittle to share. seq is the integer handle the operator already sees in
+// the UI (#1858). The /by-seq/{seq} routes accept seq, resolve it to the
+// slug via a single indexed lookup, then proxy to jimbo-api unchanged.
+//
+// Slug-keyed routes below stay in place for back-compat — anything already
+// holding an id keeps working without a migration.
+
+const SeqParam = z.object({
+  seq: z.coerce.number().int().min(1).openapi({ param: { name: 'seq', in: 'path' } }),
+});
+
+async function lookupIdBySeq(seq: number): Promise<string | null> {
+  const rows = await db.select({ id: vaultNotes.id }).from(vaultNotes).where(eq(vaultNotes.seq, seq)).limit(1);
+  return rows[0]?.id ?? null;
+}
+
+const patchBySeqRouteDef = createRoute({
+  method: 'patch',
+  path: '/by-seq/{seq}',
+  tags: ['VaultItems'],
+  summary: 'Update a vault item by seq (resolves to slug, proxies to jimbo-api)',
+  request: {
+    params: SeqParam,
+    body: { content: { 'application/json': { schema: z.record(z.string(), z.unknown()) } } },
+  },
+  responses: {
+    200: { description: 'Updated', content: { 'application/json': { schema: z.record(z.string(), z.unknown()) } } },
+    400: { description: 'Validation error', content: { 'application/json': { schema: z.record(z.string(), z.unknown()) } } },
+    404: { description: 'Not found', content: { 'application/json': { schema: z.record(z.string(), z.unknown()) } } },
+    502: { description: 'Upstream unreachable', content: { 'application/json': { schema: z.object({ error: z.object({ code: z.string(), message: z.string() }) }) } } },
+  },
+});
+
+vaultItemsRoute.openapi(patchBySeqRouteDef, async (c) => {
+  const { seq } = c.req.valid('param');
+  const body = c.req.valid('json');
+  const upstream = process.env.JIMBO_API_URL;
+  const upstreamKey = process.env.JIMBO_API_KEY;
+  if (!upstream || !upstreamKey) {
+    return c.json({ error: { code: 'UPSTREAM_NOT_CONFIGURED', message: 'JIMBO_API_URL or JIMBO_API_KEY not set' } }, 502);
+  }
+  const id = await lookupIdBySeq(seq);
+  if (!id) {
+    return c.json({ error: { code: 'NOT_FOUND', message: `No vault item with seq=${seq}` } }, 404);
+  }
+  let res: Response;
+  try {
+    res = await fetch(`${upstream}/api/vault/notes/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': upstreamKey },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    return c.json({ error: { code: 'UPSTREAM_FETCH_FAILED', message: (e as Error).message } }, 502);
+  }
+  const payload = await res.json().catch(() => ({}));
+  if (res.status === 200) return c.json(payload as Record<string, unknown>, 200);
+  if (res.status === 400) return c.json(payload as Record<string, unknown>, 400);
+  if (res.status === 404) return c.json(payload as Record<string, unknown>, 404);
+  console.error('[vault-items.PATCH by-seq]', seq, '→', id, 'upstream', res.status, JSON.stringify(payload));
+  return c.json({ error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}`, upstream_status: res.status, upstream_body: payload } }, 502);
+});
+
+const deleteBySeqRouteDef = createRoute({
+  method: 'delete',
+  path: '/by-seq/{seq}',
+  tags: ['VaultItems'],
+  summary: 'Delete a vault item by seq (resolves to slug, proxies to jimbo-api)',
+  request: { params: SeqParam },
+  responses: {
+    204: { description: 'Deleted' },
+    404: { description: 'Not found', content: { 'application/json': { schema: z.record(z.string(), z.unknown()) } } },
+    502: { description: 'Upstream unreachable', content: { 'application/json': { schema: z.object({ error: z.object({ code: z.string(), message: z.string() }) }) } } },
+  },
+});
+
+vaultItemsRoute.openapi(deleteBySeqRouteDef, async (c) => {
+  const { seq } = c.req.valid('param');
+  const upstream = process.env.JIMBO_API_URL;
+  const upstreamKey = process.env.JIMBO_API_KEY;
+  if (!upstream || !upstreamKey) {
+    return c.json({ error: { code: 'UPSTREAM_NOT_CONFIGURED', message: 'JIMBO_API_URL or JIMBO_API_KEY not set' } }, 502);
+  }
+  const id = await lookupIdBySeq(seq);
+  if (!id) {
+    return c.json({ error: { code: 'NOT_FOUND', message: `No vault item with seq=${seq}` } }, 404);
+  }
+  let res: Response;
+  try {
+    res = await fetch(`${upstream}/api/vault/notes/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { 'X-API-Key': upstreamKey },
+    });
+  } catch (e) {
+    return c.json({ error: { code: 'UPSTREAM_FETCH_FAILED', message: (e as Error).message } }, 502);
+  }
+  if (res.status === 204) return c.body(null, 204);
+  if (res.status === 404) {
+    const payload = await res.json().catch(() => ({}));
+    return c.json(payload as Record<string, unknown>, 404);
+  }
+  const payload = await res.json().catch(() => ({}));
+  console.error('[vault-items.DELETE by-seq]', seq, '→', id, 'upstream', res.status, JSON.stringify(payload));
+  return c.json({ error: { code: 'UPSTREAM_ERROR', message: `jimbo-api returned ${res.status}`, upstream_status: res.status, upstream_body: payload } }, 502);
+});
+
 // ── PATCH /:id ─ proxies to jimbo-api PATCH /api/vault/notes/:id ──────────
 // jimbo-api owns vault note write semantics (grooming transitions, ready
 // re-evaluation, audit trail). The dashboard-api just forwards.
+//
+// Kept for back-compat — new callers should prefer /by-seq/{seq} above.
 
 const IdParam = z.object({
   id: z.string().min(1).openapi({ param: { name: 'id', in: 'path' } }),

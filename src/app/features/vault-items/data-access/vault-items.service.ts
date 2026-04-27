@@ -110,7 +110,7 @@ export class VaultItemsService {
 
     if (isSeedMode()) return;
 
-    this.http.patch<VaultItem>(`${this.url}/${encodeURIComponent(id)}`, patch)
+    this.http.patch<VaultItem>(`${this.url}/by-seq/${prior.seq}`, patch)
       .subscribe({
         next: (updated) => this._items.update(items => items.map(i => i.id === id ? updated : i)),
         error: ()          => this._items.update(items => items.map(i => i.id === id ? prior : i)),
@@ -139,7 +139,7 @@ export class VaultItemsService {
       return;
     }
 
-    this.http.patch<VaultItem>(`${this.url}/${encodeURIComponent(id)}`, patch)
+    this.http.patch<VaultItem>(`${this.url}/by-seq/${prior.seq}`, patch)
       .subscribe({
         next: (updated) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
@@ -168,7 +168,7 @@ export class VaultItemsService {
       return;
     }
 
-    this.http.patch<VaultItem>(`${this.url}/${encodeURIComponent(id)}`, patch)
+    this.http.patch<VaultItem>(`${this.url}/by-seq/${prior.seq}`, patch)
       .subscribe({
         next: (updated) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
@@ -204,7 +204,7 @@ export class VaultItemsService {
       return;
     }
 
-    this.http.patch<VaultItem>(`${this.url}/${encodeURIComponent(id)}`, patch)
+    this.http.patch<VaultItem>(`${this.url}/by-seq/${prior.seq}`, patch)
       .subscribe({
         next: (updated) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
@@ -239,7 +239,7 @@ export class VaultItemsService {
       return;
     }
 
-    this.http.patch<VaultItem>(`${this.url}/${encodeURIComponent(id)}`, patch)
+    this.http.patch<VaultItem>(`${this.url}/by-seq/${prior.seq}`, patch)
       .subscribe({
         next: (updated) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
@@ -272,7 +272,7 @@ export class VaultItemsService {
       return;
     }
 
-    this.http.patch<VaultItem>(`${this.url}/${encodeURIComponent(id)}`, patch)
+    this.http.patch<VaultItem>(`${this.url}/by-seq/${prior.seq}`, patch)
       .subscribe({
         next: (updated) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
@@ -331,7 +331,7 @@ export class VaultItemsService {
     }
 
     const patch: UpdateVaultItemPayload = { grooming_status: 'needs_rework', assigned_to: newOwnerId };
-    this.http.patch<VaultItem>(`${this.url}/${encodeURIComponent(id)}`, patch).subscribe({
+    this.http.patch<VaultItem>(`${this.url}/by-seq/${prior.seq}`, patch).subscribe({
       next: (updated) => {
         this._items.update(items => items.map(i => i.id === id ? updated : i));
         this.http.post(`${environment.dashboardApiUrl}/api/thread-messages`, {
@@ -360,15 +360,16 @@ export class VaultItemsService {
   // Hard delete. Prefer archive() for most use cases.
   remove(id: VaultItemId): void {
     const prior = this.getById(id);
+    if (!prior) return;
     this._items.update(items => items.filter(i => i.id !== id));
 
     if (isSeedMode()) return;
 
-    this.http.delete(`${this.url}/${encodeURIComponent(id)}`)
+    this.http.delete(`${this.url}/by-seq/${prior.seq}`)
       .subscribe({
         error: () => {
-          // Rollback — put the item back in its original position best-effort.
-          if (prior) this._items.update(items => [...items, prior]);
+          // Rollback — put the item back in its original position.
+          this._items.update(items => [...items, prior]);
         },
       });
   }
