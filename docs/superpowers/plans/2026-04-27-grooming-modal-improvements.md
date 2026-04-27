@@ -23,11 +23,11 @@ src/app/
   domain/
     vault/vault-item.ts                                     ← MODIFY (extend GroomingStatus + tables)
     activity/activity-event.ts                              ← MODIFY (add RejectionEvent, add log_lines to AgentRunCompletedEvent)
-    activity/activity-event.test.ts                         ← CREATE (type guard tests for new events)
+    activity/activity-event.spec.ts                         ← CREATE (type guard tests for new events)
     thread/thread-message.ts                                ← MODIFY (extend ThreadMessageKind)
   features/vault-items/data-access/
     vault-items.service.ts                                  ← MODIFY (add rejectItem method)
-    vault-items.service.test.ts                             ← CREATE / MODIFY (rejectItem tests)
+    vault-items.service.spec.ts                             ← CREATE / MODIFY (rejectItem tests)
   features/vault-items/components/vault-item-detail-body/
     vault-item-detail-body.ts                               ← MODIFY (replace routerLinks, add reject UI, header restructure, activity rendering)
     vault-item-detail-body.html                             ← MODIFY
@@ -48,9 +48,9 @@ src/app/
     activity-log/verbosity-toggle/verbosity-toggle.html     ← CREATE
     activity-log/verbosity-toggle/verbosity-toggle.scss     ← CREATE
     activity-log/event-formatter.ts                         ← CREATE (pure event → line shape)
-    activity-log/event-formatter.test.ts                    ← CREATE
+    activity-log/event-formatter.spec.ts                    ← CREATE
     activity-log/verbosity.ts                               ← CREATE (level enum + persistence)
-    activity-log/verbosity.test.ts                          ← CREATE
+    activity-log/verbosity.spec.ts                          ← CREATE
   features/grooming/components/grooming-card/
     grooming-card.ts                                        ← MODIFY (needsRework + subitem shapes)
     grooming-card.html                                      ← MODIFY
@@ -60,7 +60,7 @@ src/app/
     rework-badge/rework-badge.scss                          ← CREATE
   shared/validation/
     acceptance-criterion-length.ts                          ← CREATE
-    acceptance-criterion-length.test.ts                     ← CREATE
+    acceptance-criterion-length.spec.ts                     ← CREATE
 
 e2e/
   grooming-reject.spec.ts                                   ← CREATE (Playwright E2E for reject flow)
@@ -256,7 +256,7 @@ In the `AgentRunCompletedEvent` interface, add after `error`:
 ### Task 8: Write type-guard tests for new event shapes
 
 **Files:**
-- Create: `src/app/domain/activity/activity-event.test.ts`
+- Create: `src/app/domain/activity/activity-event.spec.ts'`
 
 - [ ] **Step 1: Write the test file**
 
@@ -309,7 +309,7 @@ describe('RejectionEvent', () => {
 
 - [ ] **Step 2: Run the test**
 
-Run: `npx vitest run src/app/domain/activity/activity-event.test.ts`
+Run: `npx ng test --no-watch --include='src/app/domain/activity/activity-event.spec.ts'`
 Expected: PASS
 
 - [ ] **Step 3: Commit Phase 1**
@@ -317,7 +317,7 @@ Expected: PASS
 ```bash
 git add src/app/domain/vault/vault-item.ts \
         src/app/domain/activity/activity-event.ts \
-        src/app/domain/activity/activity-event.test.ts \
+        src/app/domain/activity/activity-event.spec.ts \
         src/app/domain/thread/thread-message.ts \
         src/app/features/vault-items/data-access/vault-items.service.ts
 git commit -m "feat(grooming): extend types for needs_rework + rejection event"
@@ -330,11 +330,11 @@ git commit -m "feat(grooming): extend types for needs_rework + rejection event"
 ### Task 9: Write failing test for `rejectItem`
 
 **Files:**
-- Create: `src/app/features/vault-items/data-access/vault-items.service.test.ts` (or add to existing if present)
+- Create: `src/app/features/vault-items/data-access/vault-items.service.spec.ts'` (or add to existing if present)
 
 - [ ] **Step 1: Confirm whether a test file exists**
 
-Run: `ls src/app/features/vault-items/data-access/vault-items.service.test.ts 2>/dev/null && echo EXISTS || echo CREATE`
+Run: `ls src/app/features/vault-items/data-access/vault-items.service.spec.ts 2>/dev/null && echo EXISTS || echo CREATE`
 
 If `EXISTS`, add the `describe('rejectItem', …)` block to it. If `CREATE`, scaffold a new one using the structure below. The seed-mode behaviour gives us a deterministic test path that exercises the full sequence without HTTP.
 
@@ -430,7 +430,7 @@ describe('VaultItemsService.rejectItem (seed mode)', () => {
 
 - [ ] **Step 3: Run — expect failure**
 
-Run: `npx vitest run src/app/features/vault-items/data-access/vault-items.service.test.ts`
+Run: `npx ng test --no-watch --include='src/app/features/vault-items/data-access/vault-items.service.spec.ts'`
 Expected: FAIL — `rejectItem` is not a function
 
 ### Task 10: Implement `rejectItem` in the service
@@ -519,14 +519,14 @@ At the top, ensure `ThreadMessageId` and `threadMessageId` are imported from `@d
 
 - [ ] **Step 3: Run tests — expect pass**
 
-Run: `npx vitest run src/app/features/vault-items/data-access/vault-items.service.test.ts`
+Run: `npx ng test --no-watch --include='src/app/features/vault-items/data-access/vault-items.service.spec.ts'`
 Expected: PASS (4/4)
 
 - [ ] **Step 4: Commit Phase 2**
 
 ```bash
 git add src/app/features/vault-items/data-access/vault-items.service.ts \
-        src/app/features/vault-items/data-access/vault-items.service.test.ts
+        src/app/features/vault-items/data-access/vault-items.service.spec.ts
 git commit -m "feat(grooming): add rejectItem service mutation with audit trail"
 ```
 
@@ -1128,7 +1128,7 @@ git commit -m "feat(grooming): card shapes for needs_rework + subitem chip"
 
 **Files:**
 - Create: `src/app/features/vault-items/components/vault-item-detail-body/activity-log/verbosity.ts`
-- Create: `src/app/features/vault-items/components/vault-item-detail-body/activity-log/verbosity.test.ts`
+- Create: `src/app/features/vault-items/components/vault-item-detail-body/activity-log/verbosity.spec.ts'`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1165,7 +1165,7 @@ describe('verbosity persistence', () => {
 
 - [ ] **Step 2: Run — expect failure**
 
-Run: `npx vitest run src/app/features/vault-items/components/vault-item-detail-body/activity-log/verbosity.test.ts`
+Run: `npx ng test --no-watch --include='src/app/features/vault-items/components/vault-item-detail-body/activity-log/verbosity.spec.ts'`
 Expected: FAIL — module missing
 
 - [ ] **Step 3: Implement `verbosity.ts`**
@@ -1194,14 +1194,14 @@ export function saveVerbosity(level: VerbosityLevel): void {
 
 - [ ] **Step 4: Run — expect pass**
 
-Run: `npx vitest run src/app/features/vault-items/components/vault-item-detail-body/activity-log/verbosity.test.ts`
+Run: `npx ng test --no-watch --include='src/app/features/vault-items/components/vault-item-detail-body/activity-log/verbosity.spec.ts'`
 Expected: PASS (4/4)
 
 ### Task 23: Create `event-formatter.ts` — pure event → standard line shape
 
 **Files:**
 - Create: `src/app/features/vault-items/components/vault-item-detail-body/activity-log/event-formatter.ts`
-- Create: `src/app/features/vault-items/components/vault-item-detail-body/activity-log/event-formatter.test.ts`
+- Create: `src/app/features/vault-items/components/vault-item-detail-body/activity-log/event-formatter.spec.ts'`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1281,7 +1281,7 @@ describe('formatEvent — standard line shape', () => {
 
 - [ ] **Step 2: Run — expect failure**
 
-Run: `npx vitest run src/app/features/vault-items/components/vault-item-detail-body/activity-log/event-formatter.test.ts`
+Run: `npx ng test --no-watch --include='src/app/features/vault-items/components/vault-item-detail-body/activity-log/event-formatter.spec.ts'`
 Expected: FAIL — module missing
 
 - [ ] **Step 3: Implement `event-formatter.ts`**
@@ -1323,7 +1323,7 @@ export function formatEvent(e: VaultActivityEvent): FormattedLine {
 
 - [ ] **Step 4: Run — expect pass**
 
-Run: `npx vitest run src/app/features/vault-items/components/vault-item-detail-body/activity-log/event-formatter.test.ts`
+Run: `npx ng test --no-watch --include='src/app/features/vault-items/components/vault-item-detail-body/activity-log/event-formatter.spec.ts'`
 Expected: PASS (6/6)
 
 ### Task 24: Create `event-line` component
@@ -1934,7 +1934,7 @@ git commit -m "feat(grooming): restructure modal header into 4 visual zones"
 
 **Files:**
 - Create: `src/app/shared/validation/acceptance-criterion-length.ts`
-- Create: `src/app/shared/validation/acceptance-criterion-length.test.ts`
+- Create: `src/app/shared/validation/acceptance-criterion-length.spec.ts'`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1966,7 +1966,7 @@ describe('acceptanceCriterionStatus', () => {
 
 - [ ] **Step 2: Run — expect failure**
 
-Run: `npx vitest run src/app/shared/validation/acceptance-criterion-length.test.ts`
+Run: `npx ng test --no-watch --include='src/app/shared/validation/acceptance-criterion-length.spec.ts'`
 Expected: FAIL — module missing
 
 - [ ] **Step 3: Implement**
@@ -1989,7 +1989,7 @@ export function acceptanceCriterionStatus(text: string): ACLengthStatus {
 
 - [ ] **Step 4: Run — expect pass**
 
-Run: `npx vitest run src/app/shared/validation/acceptance-criterion-length.test.ts`
+Run: `npx ng test --no-watch --include='src/app/shared/validation/acceptance-criterion-length.spec.ts'`
 Expected: PASS (4/4)
 
 ### Task 31: Render length-status chips on AC rows in the modal
