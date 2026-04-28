@@ -1,0 +1,30 @@
+<header class="activity-log__header">
+  <span class="activity-log__title">Activity log · {{ events().length }} events</span>
+  <app-verbosity-toggle [value]="verbosity()" (changed)="setVerbosity($event)" />
+</header>
+
+<nav class="activity-log__filters">
+  @for (key of ['all','status','agent','assignment','thread']; track key) {
+    <button
+      type="button"
+      class="activity-log__filter"
+      [class.activity-log__filter--active]="isActive($any(key))"
+      (click)="toggleFilter($any(key))"
+    >{{ key }}</button>
+  }
+</nav>
+
+<ol class="activity-log__list">
+  @for (e of visibleEvents(); track e.id) {
+    <li>
+      <app-event-line
+        [event]="e"
+        [verbosity]="verbosity()"
+        [actorLabel]="actorLabel()"
+        [actorKind]="actorKind()"
+      />
+    </li>
+  } @empty {
+    <li class="activity-log__empty">No events match the current filters.</li>
+  }
+</ol>

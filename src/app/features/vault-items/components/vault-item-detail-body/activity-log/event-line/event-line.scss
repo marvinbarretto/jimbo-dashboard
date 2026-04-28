@@ -1,0 +1,29 @@
+.event-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.85rem;
+  line-height: 1.5;
+
+  &__time     { opacity: 0.55; font-variant-numeric: tabular-nums; }
+  &__actor    { font-weight: 600; }
+  &__kind     {
+    font-size: 0.7rem; padding: 0 0.35rem; border-radius: 3px; align-self: center;
+    &--human  { background: color-mix(in oklab, #69d 20%, transparent); }
+    &--agent  { background: color-mix(in oklab, #d99 20%, transparent); }
+    &--system { background: color-mix(in oklab, #888 20%, transparent); }
+  }
+  &__verb     { opacity: 0.85; }
+  &__target   { opacity: 0.85; font-weight: 500; }
+  &__summary  { flex-basis: 100%; opacity: 0.7; }
+  &__cost     { opacity: 0.5; font-size: 0.75rem; }
+
+  &__decisions, &__reasoning, &__tokens, &__logs { flex-basis: 100%; margin: 0.3rem 0 0; }
+  &__reasoning { border-left: 2px solid var(--color-border); padding-left: 0.6rem; opacity: 0.7; }
+  &__tokens    { font-family: var(--font-mono); font-size: 0.75rem; opacity: 0.55; }
+  &__logs pre  { font-family: var(--font-mono); font-size: 0.7rem; max-height: 200px; overflow: auto; }
+
+  &--debug { background: color-mix(in oklab, var(--color-text) 2%, transparent); }
+}

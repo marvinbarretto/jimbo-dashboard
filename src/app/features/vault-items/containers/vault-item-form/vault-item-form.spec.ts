@@ -28,7 +28,6 @@ describe('VaultItemForm — submit boundary parsing', () => {
     title: 'Buy more biscuits',
     body: 'The tin is empty',
     type: 'task' as const,
-    status: 'active' as const,
     assigned_to: '',
     tags: '',
     acceptance_criteria: '',

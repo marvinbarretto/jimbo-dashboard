@@ -22,13 +22,13 @@ import { computeReadiness, effectivePriority } from '@domain/vault/readiness';
 import { actorId, projectId, vaultItemId } from '@domain/ids';
 import type { Priority } from '@domain/vault/vault-item';
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
-import type { ActivityEvent, AgentRunCompletedEvent, AssignedEvent, CompletionChangedEvent, ArchivedEvent, GroomingStatusChangedEvent, ThreadMessagePostedEvent } from '@domain/activity/activity-event';
+import { ActivityLogComponent } from './activity-log/activity-log';
 import type { ProjectId, ActorId } from '@domain/ids';
 import type { Actor } from '@domain/actors';
 
 @Component({
   selector: 'app-vault-item-detail-body',
-  imports: [RouterLink, ThreadView, RejectFormComponent],
+  imports: [RouterLink, ThreadView, RejectFormComponent, ActivityLogComponent],
   templateUrl: './vault-item-detail-body.html',
   styleUrl: './vault-item-detail-body.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -283,89 +283,16 @@ export class VaultItemDetailBody {
     return actor ? `@${actor.id}` : `@${actorIdStr}`;
   }
 
-  actorKind(actorIdStr: string): string {
+  actorKind(actorIdStr: string): 'human' | 'agent' | 'system' {
     const actor = this.actorsService.getById(actorIdStr as ReturnType<typeof actorId>);
-    return actor?.kind ?? 'human';
+    const kind = actor?.kind;
+    if (kind === 'human' || kind === 'agent' || kind === 'system') return kind;
+    return 'system';
   }
 
-  eventDescription(event: ActivityEvent): string {
-    switch (event.type) {
-      case 'created':
-        return 'created this item';
-      case 'assigned': {
-        const e = event as AssignedEvent;
-        const from = e.from_actor_id ? this.actorDisplay(e.from_actor_id) : null;
-        const to = this.actorDisplay(e.to_actor_id);
-        const head = from ? `assigned ${from} → ${to}` : `assigned → ${to}`;
-        return e.reason ? `${head} — ${e.reason}` : head;
-      }
-      case 'completion_changed': {
-        const e = event as CompletionChangedEvent;
-        const note = e.note ? ` (${e.note})` : '';
-        if (e.to !== null && e.from === null) return `marked done${note}`;
-        if (e.to === null && e.from !== null) return `un-marked done${note}`;
-        return `completion changed${note}`;
-      }
-      case 'archived': {
-        const e = event as ArchivedEvent;
-        const note = e.note ? ` (${e.note})` : '';
-        return `archived${note}`;
-      }
-      case 'unarchived': {
-        return 'unarchived';
-      }
-      case 'grooming_status_changed': {
-        const e = event as GroomingStatusChangedEvent;
-        const note = e.note ? ` (${e.note})` : '';
-        return `grooming: ${e.from.replace('_', ' ')} → ${e.to.replace('_', ' ')}${note}`;
-      }
-      case 'thread_message_posted': {
-        const e = event as ThreadMessagePostedEvent;
-        return `posted ${e.message_kind}`;
-      }
-      case 'agent_run_completed': {
-        const e = event as AgentRunCompletedEvent;
-        const status = e.from_status && e.to_status
-          ? ` (${e.from_status.replace('_', ' ')} → ${e.to_status.replace('_', ' ')})`
-          : '';
-        return `ran ${e.skill_id}${status}`;
-      }
-      default:
-        return event.type;
-    }
-  }
-
-  // Type guard helper — used in the template to narrow ActivityEvent to the
-  // rich variant before reading its extra fields.
-  isAgentRun(event: ActivityEvent): event is AgentRunCompletedEvent {
-    return event.type === 'agent_run_completed';
-  }
-
-  // Display helpers. All accept null and return a placeholder so the template
-  // doesn't have to repeat ?? '—' everywhere — missing data is part of the
-  // contract until runners emit reasoning / tokens consistently.
-  formatDuration(ms: number | null): string {
-    if (ms === null || ms === undefined) return '—';
-    if (ms < 1000) return `${ms}ms`;
-    const s = ms / 1000;
-    if (s < 60) return `${s.toFixed(s < 10 ? 1 : 0)}s`;
-    const m = s / 60;
-    return `${m.toFixed(1)}m`;
-  }
-
-  formatTokens(n: number | null): string {
-    if (n === null || n === undefined) return '—';
-    if (n < 1000) return `${n}`;
-    return `${(n / 1000).toFixed(1)}k`;
-  }
-
-  // Pull the local model name out of the slash-pathed id. 'anthropic/claude-…'
-  // → 'claude-…'. Returns '—' for null so the row can render unconditionally.
-  modelShortName(id: string | null): string {
-    if (!id) return '—';
-    const slash = id.indexOf('/');
-    return slash === -1 ? id : id.slice(slash + 1);
-  }
+  // Bound arrow functions for passing to <app-activity-log> inputs.
+  readonly actorLabelFn = (id: string) => this.actorDisplay(id);
+  readonly actorKindFn  = (id: string) => this.actorKind(id);
 
   relativeTime(iso: string): string {
     const diff = Date.now() - new Date(iso).getTime();

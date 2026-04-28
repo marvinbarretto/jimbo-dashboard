@@ -17,6 +17,12 @@ export interface SkillMetadata {
   completes_dispatch?: boolean;
   // Defaults to true. Set false to keep the file but block dispatch.
   is_active?: boolean;
+  // Interactive-skill registry fields (humans + dashboard, not dispatch).
+  category?: string;
+  invocation?: 'explicit' | 'auto' | 'both';
+  trigger?: string;
+  argument_hint?: string;
+  deprecated?: boolean;
 }
 
 export interface Skill {
@@ -25,9 +31,15 @@ export interface Skill {
   id: string;
   name: string;
   description: string;
+  // 'interactive' = Marvin invokes via /<slug>; 'agent' = Jimbo dispatches.
+  // Optional during the migration; legacy agent skills don't carry it yet.
+  type?: 'interactive' | 'agent';
   metadata: SkillMetadata;
   // Markdown body after the frontmatter — the agent's prompt.
   body: string;
+  // ISO timestamp from hub/skills/<id>/.lastused, written by the Claude Code
+  // hook when the skill fires. Undefined if never used since the hook landed.
+  last_used?: string;
 }
 
 // Slash-path helpers. The id is always two segments by registry convention.

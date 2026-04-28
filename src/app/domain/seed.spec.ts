@@ -165,7 +165,7 @@ describe('domain seed', () => {
       }
     });
 
-    it('every grooming column has at least one fixture so kanban renders all six', () => {
+    it('every grooming column has at least one fixture so kanban renders all seven', () => {
       for (const status of GROOMING_STATUS_ORDER) {
         const count = SEED.vault_items.filter(v => v.grooming_status === status).length;
         expect(count, `column "${status}" is empty`).toBeGreaterThan(0);

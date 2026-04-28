@@ -2,13 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { describe, it, expect, beforeEach } from 'vitest';
-
-// Force seed mode at the URL level — `isSeedMode()` reads `window.location.search`
-// once and caches. We set it here before TestBed instantiates the service so the
-// constructor's `load()` takes the seed branch. (vi.mock of '@shared/seed-mode'
-// is unreliable under @angular/build:unit-test's vitest plugin.)
-window.history.replaceState({}, '', '?seed=1');
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { resetSeedModeCache } from '@shared/seed-mode';
 
 import { VaultItemsService } from './vault-items.service';
 import { ActivityEventsService } from './activity-events.service';
@@ -24,6 +19,11 @@ describe('VaultItemsService.rejectItem (seed mode)', () => {
   let activityPosts: unknown[];
 
   beforeEach(() => {
+    // Set seed mode before TestBed so isSeedMode() returns true when the service
+    // constructor calls load(). vi.mock of '@shared/seed-mode' is unreliable under
+    // @angular/build:unit-test's vitest plugin.
+    window.history.replaceState({}, '', '?seed=1');
+    resetSeedModeCache();
     activityPosts = [];
     const mockActivity = { post: (e: unknown) => { activityPosts.push(e); } };
 
@@ -37,6 +37,11 @@ describe('VaultItemsService.rejectItem (seed mode)', () => {
       ],
     });
     service = TestBed.inject(VaultItemsService);
+  });
+
+  afterEach(() => {
+    window.history.replaceState({}, '', window.location.pathname);
+    resetSeedModeCache();
   });
 
   it('moves item to needs_rework, reassigns owner, posts thread message + rejection event', () => {

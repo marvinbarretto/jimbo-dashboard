@@ -1,0 +1,42 @@
+<div class="event-line" [class.event-line--debug]="showDebug()">
+  <span class="event-line__time">{{ event().at | date:'short' }}</span>
+  <span class="event-line__actor">{{ actorLabel()(line().actorId) }}</span>
+  <span class="event-line__kind event-line__kind--{{ actorKind()(line().actorId) }}">{{ actorKind()(line().actorId) }}</span>
+  <span class="event-line__verb">{{ line().verb }}</span>
+  @if (line().target; as target) {
+    <span class="event-line__target">→ {{ actorLabel()(target) }}</span>
+  }
+  @if (line().summary && (showDetailed() || event().type !== 'agent_run_completed')) {
+    <span class="event-line__summary">{{ line().summary }}</span>
+  }
+  @if (showDetailed() && costChip(); as chip) {
+    <span class="event-line__cost">{{ chip }}</span>
+  }
+
+  @if (showDebug() && event().type === 'agent_run_completed') {
+    @let agent = $any(event());
+    @if (agent.decisions?.length) {
+      <ul class="event-line__decisions">
+        @for (d of agent.decisions; track d) { <li>{{ d }}</li> }
+      </ul>
+    }
+    @if (agent.reasoning) {
+      <blockquote class="event-line__reasoning">{{ agent.reasoning }}</blockquote>
+    }
+    @if (agent.tokens_in != null || agent.tokens_out != null) {
+      <div class="event-line__tokens">
+        in {{ agent.tokens_in ?? '?' }} · out {{ agent.tokens_out ?? '?' }}
+        @if (agent.tokens_cached != null) { · cached {{ agent.tokens_cached }} }
+        · {{ agent.duration_ms ?? '?' }}ms · {{ agent.model_id ?? '?' }}
+      </div>
+    }
+    @if (agent.log_lines?.length) {
+      <details class="event-line__logs">
+        <summary>{{ agent.log_lines.length }} log lines</summary>
+        <pre>@for (l of agent.log_lines; track $index) {
+{{ l }}
+}</pre>
+      </details>
+    }
+  }
+</div>

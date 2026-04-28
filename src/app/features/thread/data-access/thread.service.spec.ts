@@ -52,7 +52,7 @@ describe('ThreadService', () => {
       service.loadFor(VAULT_ID);
 
       const req = http.expectOne(r => r.url.includes('/thread-messages'));
-      req.flush([msg]);
+      req.flush({ items: [msg] });
 
       expect(service.messagesFor(VAULT_ID)()).toEqual([msg]);
     });
@@ -72,7 +72,7 @@ describe('ThreadService', () => {
       service.post(payload);
       // Don't flush yet — optimistic insert should be immediate.
       expect(service.messagesFor(VAULT_ID)().some(m => m.id === 'm-opt')).toBe(true);
-      http.expectOne(r => r.url.includes('/thread-messages')).flush([payload]);
+      http.expectOne(r => r.url.includes('/thread-messages')).flush(payload);
     });
 
     it('rolls back on error — the ghost message disappears', () => {
@@ -88,7 +88,7 @@ describe('ThreadService', () => {
       // Pre-populate a question so it's already in the bucket.
       const question = makeMessage({ id: threadMessageId('q-1'), kind: 'question' });
       service.loadFor(VAULT_ID);
-      http.expectOne(r => r.url.includes('/thread-messages')).flush([question]);
+      http.expectOne(r => r.url.includes('/thread-messages')).flush({ items: [question] });
 
       const answer = makeMessage({
         id: threadMessageId('a-1'),
@@ -101,13 +101,13 @@ describe('ThreadService', () => {
       expect(updatedQuestion?.answered_by).toBe('a-1');
 
       // Flush to avoid afterEach verify failure.
-      http.expectOne(r => r.url.includes('/thread-messages')).flush([answer]);
+      http.expectOne(r => r.url.includes('/thread-messages')).flush(answer);
     });
 
     it('rolls back answered_by on answer post failure', () => {
       const question = makeMessage({ id: threadMessageId('q-rb'), kind: 'question' });
       service.loadFor(VAULT_ID);
-      http.expectOne(r => r.url.includes('/thread-messages')).flush([question]);
+      http.expectOne(r => r.url.includes('/thread-messages')).flush({ items: [question] });
 
       const answer = makeMessage({
         id: threadMessageId('a-rb'),
@@ -130,7 +130,7 @@ describe('ThreadService', () => {
       const comment = makeMessage({ id: threadMessageId('c-1'), kind: 'comment' });
 
       service.loadFor(VAULT_ID);
-      http.expectOne(r => r.url.includes('/thread-messages')).flush([openQ, closedQ, comment]);
+      http.expectOne(r => r.url.includes('/thread-messages')).flush({ items: [openQ, closedQ, comment] });
 
       const open = service.openQuestionsFor(VAULT_ID)();
       expect(open).toHaveLength(1);

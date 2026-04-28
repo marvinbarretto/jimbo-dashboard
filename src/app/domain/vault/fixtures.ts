@@ -53,6 +53,7 @@ const ITEM_AB = vaultItemId('88888888-0015-0015-0015-000000000015');
 const ITEM_AC = vaultItemId('88888888-0016-0016-0016-000000000016');
 const ITEM_AD = vaultItemId('88888888-0017-0017-0017-000000000017');
 const ITEM_AE = vaultItemId('88888888-0018-0018-0018-000000000018');
+const ITEM_AF = vaultItemId('88888888-0019-0019-0019-000000000019');
 
 export const VAULT_ITEM_IDS = {
   A: ITEM_A,  B: ITEM_B,  C: ITEM_C,  D: ITEM_D,
@@ -65,7 +66,7 @@ export const VAULT_ITEM_IDS = {
   V: ITEM_V,  W: ITEM_W,  X: ITEM_X,
   Y: ITEM_Y,  Z: ITEM_Z,
   AA: ITEM_AA, AB: ITEM_AB,
-  AC: ITEM_AC, AD: ITEM_AD, AE: ITEM_AE,
+  AC: ITEM_AC, AD: ITEM_AD, AE: ITEM_AE, AF: ITEM_AF,
 } as const;
 
 export const VAULT_ITEMS = [
@@ -670,6 +671,23 @@ export const VAULT_ITEMS = [
     source: { kind: 'manual', ref: 'marvin-2026-01-25', url: null },
     created_at: '2026-01-25T10:00:00Z',
   },
+
+  // AF: needs_rework — operator rejected Ralph's decomposition; sent back to Jimbo.
+  {
+    id: ITEM_AF, seq: 2432,
+    title: 'Fix webhook retry logic in reaper',
+    body: 'Reaper retries failed webhooks immediately instead of backing off. Needs exponential backoff with jitter.',
+    type: 'task', category: null, assigned_to: actorId('jimbo'),
+    tags: ['backend', 'reliability'],
+    acceptance_criteria: [],
+    grooming_status: 'needs_rework',
+    ai_priority: 1, manual_priority: null,
+    ai_rationale: 'Production reliability issue. High impact on webhook consumers.',
+    priority_confidence: 0.88, actionability: 'clear',
+    parent_id: null, archived_at: null, due_at: null, completed_at: null,
+    source: { kind: 'manual', ref: 'marvin-2026-04-27', url: null },
+    created_at: '2026-04-27T09:00:00Z',
+  },
 ] as const satisfies readonly VaultItem[];
 
 // Project linkage. Every item has at least one project — operator-life items
@@ -700,6 +718,7 @@ export const VAULT_ITEM_PROJECTS = [
   { vault_item_id: ITEM_AB, project_id: projectId('dashboard') },    // home page slow note
   { vault_item_id: ITEM_AC, project_id: projectId('dashboard') },    // 30d filter UX
   { vault_item_id: ITEM_AE, project_id: projectId('dashboard') },    // 90d favicon
+  { vault_item_id: ITEM_AF, project_id: projectId('hermes') },       // rework: reaper retry
 
   // Life-admin items
   { vault_item_id: ITEM_A, project_id: projectId('personal') },      // sam venue thing

@@ -11,3 +11,7 @@ export function isSeedMode(): boolean {
   cached = new URLSearchParams(window.location.search).get('seed') === '1';
   return cached;
 }
+
+export function resetSeedModeCache(): void {
+  cached = null;
+}

@@ -1,0 +1,12 @@
+<div class="verbosity-toggle" role="radiogroup" aria-label="log verbosity">
+  @for (level of ['compact', 'detailed', 'debug']; track level) {
+    <button
+      type="button"
+      class="verbosity-toggle__btn"
+      [class.verbosity-toggle__btn--active]="value() === level"
+      [attr.aria-checked]="value() === level"
+      role="radio"
+      (click)="changed.emit($any(level))"
+    >{{ level }}</button>
+  }
+</div>

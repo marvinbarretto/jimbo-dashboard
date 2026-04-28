@@ -370,72 +370,11 @@
 
       <!-- activity log column -->
       <div class="body-grid__activity">
-        <header class="stream__header">
-          <span>Activity log</span>
-          <span class="stream__count">{{ events().length }} events · structural facts</span>
-        </header>
-
-        @if (events().length > 0) {
-          <div class="event-list">
-            @for (event of events(); track event.id) {
-              <div [class]="'event event--' + event.type">
-                <span class="event__dot"></span>
-                <span class="event__body">
-                  <span [class]="'event__actor event__actor--' + actorKind(event.actor_id)">
-                    {{ actorDisplay(event.actor_id) }}
-                  </span>
-                  {{ eventDescription(event) }}
-                  <span class="event__when">· {{ relativeTime(event.at) }}</span>
-
-                  @if (isAgentRun(event)) {
-                    <div class="run">
-                      @if (event.duration_ms !== null || event.model_id) {
-                        <div class="run__chips">
-                          @if (event.duration_ms !== null) {
-                            <span class="run__chip" title="Wall-clock duration">{{ formatDuration(event.duration_ms) }}</span>
-                          }
-                          @if (event.model_id) {
-                            <span class="run__chip run__chip--model" [attr.title]="event.model_id">{{ modelShortName(event.model_id) }}</span>
-                          }
-                        </div>
-                      }
-
-                      <p class="run__summary">{{ event.summary }}</p>
-
-                      @if (event.decisions && event.decisions.length > 0) {
-                        <ul class="run__decisions">
-                          @for (d of event.decisions; track d) {
-                            <li>{{ d }}</li>
-                          }
-                        </ul>
-                      }
-
-                      @if (event.reasoning) {
-                        <blockquote class="run__reasoning">{{ event.reasoning }}</blockquote>
-                      }
-
-                      @if (event.tokens_in !== null || event.tokens_out !== null || event.tokens_cached !== null) {
-                        <div class="run__tokens" title="Token usage (in / out / cached)">
-                          <span>in {{ formatTokens(event.tokens_in) }}</span>
-                          <span>out {{ formatTokens(event.tokens_out) }}</span>
-                          @if (event.tokens_cached !== null) {
-                            <span>cached {{ formatTokens(event.tokens_cached) }}</span>
-                          }
-                        </div>
-                      }
-
-                      @if (event.error) {
-                        <p class="run__error">{{ event.error }}</p>
-                      }
-                    </div>
-                  }
-                </span>
-              </div>
-            }
-          </div>
-        } @else {
-          <p class="muted-text">No events yet.</p>
-        }
+        <app-activity-log
+          [events]="events()"
+          [actorLabel]="actorLabelFn"
+          [actorKind]="actorKindFn"
+        />
       </div>
 
       <!-- discussion thread column -->

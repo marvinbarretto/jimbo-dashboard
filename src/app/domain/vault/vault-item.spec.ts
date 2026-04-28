@@ -48,8 +48,8 @@ describe('isActive / isDone / isArchived', () => {
 });
 
 describe('GROOMING_STATUS_ORDER', () => {
-  it('starts with ungroomed and ends with ready', () => {
-    expect(GROOMING_STATUS_ORDER[0]).toBe('ungroomed');
+  it('starts with needs_rework and ends with ready', () => {
+    expect(GROOMING_STATUS_ORDER[0]).toBe('needs_rework');
     expect(GROOMING_STATUS_ORDER[GROOMING_STATUS_ORDER.length - 1]).toBe('ready');
   });
 

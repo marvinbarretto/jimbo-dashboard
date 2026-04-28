@@ -17,8 +17,10 @@
         <tr>
           <th>Namespace</th>
           <th>Name</th>
+          <th>Type</th>
           <th>Description</th>
           <th>Executors</th>
+          <th>Last used</th>
           <th>Active</th>
         </tr>
       </thead>
@@ -31,11 +33,19 @@
             <td class="skill-local-name">
               <a [routerLink]="skillLink(skill.id)">{{ localName(skill.id) }}</a>
             </td>
+            <td>
+              @if (skill.type) {
+                <span class="type-tag type-tag--{{ skill.type }}">{{ skill.type }}</span>
+              }
+            </td>
             <td>{{ skill.description }}</td>
             <td>
               @for (e of skill.metadata.executors; track e) {
                 <span class="executor-badge">{{ e }}</span>
               }
+            </td>
+            <td class="last-used" [title]="skill.last_used ?? ''">
+              {{ lastUsedLabel(skill.last_used) }}
             </td>
             <td>
               <span [class]="isActive(skill) ? 'status status--active' : 'status status--inactive'">
@@ -45,7 +55,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="5" class="empty">No skills found in registry.</td>
+            <td colspan="7" class="empty">No skills found in registry.</td>
           </tr>
         }
       </tbody>
