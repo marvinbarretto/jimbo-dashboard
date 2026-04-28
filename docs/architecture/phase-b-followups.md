@@ -222,6 +222,23 @@ If §9b stays out of scope: (a) likely wins. If §9b lands first: (c)-equivalent
 
 ---
 
+## 11. Phase C follow-up — hermes `vault-decompose` prompt (cross-repo)
+
+**Status:** Dashboard guard shipped (2026-04-28, AC length chips). Hermes-side update pending.
+
+The `vault-decompose` skill prompt at `hermes/skills/dispatch/vault-decompose/` should be
+updated to enforce the ≤ 120-char-per-AC policy that the dashboard now surfaces to operators.
+This closes the loop so bad AC is caught at generation time, not just flagged post-hoc.
+
+- **Repo:** `/Users/marvinbarretto/development/hub/hermes/`
+- **File to update:** `skills/dispatch/vault-decompose/` (prompt text)
+- **What to add:** A constraint instructing hermes to keep each acceptance criterion to ≤ 120
+  characters; verbose ACs should be split into multiple shorter criteria.
+- **Dashboard guard** (`acceptanceCriterionStatus`) already provides defence-in-depth; the
+  hermes change makes the guard a last-resort rather than the primary control.
+
+---
+
 ## 10. Cross-references
 
 - Archived plan: `docs/architecture/archive/phase-b-completed.md`
