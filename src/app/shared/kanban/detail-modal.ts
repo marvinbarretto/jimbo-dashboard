@@ -18,13 +18,15 @@ export function swapDetailSeq(router: Router, seq: number): void {
   });
 }
 
-// Close the modal by clearing the `?detail=` query param. The
-// withVaultDetailModal() observer reacts to the param disappearing and
-// closes the dialog. No-op for `mode === 'page'` callers (they should
-// use Router.navigate to /vault-items instead).
+// Close the modal by clearing the deep-link query params. The
+// withVaultDetailModal() observer reacts to the params disappearing and
+// closes the dialog. Clears both `detail` and the `note` alias so a
+// notification-arrived URL doesn't reopen the dialog after close. No-op
+// for `mode === 'page'` callers (they should use Router.navigate to
+// /vault-items instead).
 export function closeDetail(router: Router): void {
   router.navigate([], {
-    queryParams: { detail: null },
+    queryParams: { detail: null, note: null },
     queryParamsHandling: 'merge',
     replaceUrl: true,
   });
@@ -38,6 +40,11 @@ export function closeDetail(router: Router): void {
 // - param cleared → dialog closes
 // - close from inside the dialog (ESC, backdrop, close button) → param cleared
 //
+// `?note=<seq>` is accepted as a synonym for `?detail=<seq>` — external
+// notifiers (activity-watcher Telegram pager, future webhook senders) can
+// link to a note without knowing the dashboard's internal modal vocabulary.
+// `?detail=` wins when both are present.
+//
 // Distinct from a directive on purpose: matches the existing kanban composable
 // pattern in `shared/kanban/` (drag-state, filter-state). Boards opt in with
 // one line; nothing else changes about how they read or write the URL.
@@ -49,7 +56,7 @@ export function withVaultDetailModal(): void {
   const detailSeq = toSignal(
     route.queryParamMap.pipe(
       map(p => {
-        const raw = p.get('detail');
+        const raw = p.get('detail') ?? p.get('note');
         if (!raw) return null;
         const n = Number(raw);
         return Number.isNaN(n) ? null : n;
@@ -107,7 +114,7 @@ export function withVaultDetailModal(): void {
       if (wasFromUrl) return;
       router.navigate([], {
         relativeTo: route,
-        queryParams: { detail: null },
+        queryParams: { detail: null, note: null },
         queryParamsHandling: 'merge',
         replaceUrl: true,
       });
