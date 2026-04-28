@@ -224,7 +224,7 @@ If §9b stays out of scope: (a) likely wins. If §9b lands first: (c)-equivalent
 
 ## 11. Phase C follow-up — hermes `vault-decompose` prompt (cross-repo)
 
-**Status:** Dashboard guard shipped (2026-04-28, AC length chips). Hermes-side update pending.
+**Status:** Complete (2026-04-28). Dashboard guard shipped (AC length chips). Hermes prompt updated in `hub/hermes` commit `7b58d24`.
 
 The `vault-decompose` skill prompt at `hermes/skills/dispatch/vault-decompose/` should be
 updated to enforce the ≤ 120-char-per-AC policy that the dashboard now surfaces to operators.
