@@ -1,82 +1,68 @@
 @if (item(); as item) {
   <div class="vault-item-detail">
 
-    <!-- ===== topbar ===== -->
-    <div class="topbar">
-      <span class="topbar__seq">#{{ item.seq }}</span>
-      <span class="topbar__crumb">·</span>
-      <span class="topbar__type">{{ item.type }}</span>
-      <span class="topbar__crumb">·</span>
-      <span class="topbar__title">{{ item.title }}</span>
-      <div class="topbar__actions">
+    <!-- ===== Zone 1 — Identity + actions ===== -->
+    <header class="modal-header__zone1">
+      <div class="modal-header__id">
+        <span class="modal-header__seq">#{{ item.seq }}</span>
+        <span class="modal-header__type">{{ item.type }}</span>
+        <h1 class="modal-header__title">{{ item.title }}</h1>
+      </div>
+      <div class="modal-header__actions">
         <a [routerLink]="['/vault-items', item.seq, 'edit']"
-          class="topbar__action" aria-label="Edit this item">edit</a>
+          class="header-action" aria-label="Edit this item">edit</a>
         @if (canReject()) {
-          <button type="button" class="topbar__action topbar__action--warn" (click)="openReject()">reject</button>
+          <button type="button" class="header-action header-action--warn" (click)="openReject()">reject</button>
         }
-        <button class="topbar__action" (click)="archive()"
+        <button type="button" class="header-action" (click)="archive()"
           [attr.aria-disabled]="isItemArchived(item)"
           [disabled]="isItemArchived(item)">archive</button>
-        <button class="topbar__action topbar__action--danger" (click)="deleteItem()">delete</button>
+        <button type="button" class="header-action header-action--danger" (click)="deleteItem()">delete</button>
         @if (mode() === 'page') {
-          <a routerLink="/vault-items" class="topbar__action topbar__action--close" aria-label="Back to vault">×</a>
+          <a routerLink="/vault-items" class="header-action header-action--close" aria-label="Back to vault">×</a>
         }
       </div>
+    </header>
+
+    <!-- ===== Zone 2 — Pipeline stepper ===== -->
+    <div class="modal-header__zone2">
+      <app-pipeline-stepper [current]="item.grooming_status" />
     </div>
 
-    <!-- ===== sub-strip ===== -->
-    <div class="substrip">
+    <!-- ===== Zone 3 — State chips ===== -->
+    <div class="modal-header__zone3">
 
-      <!-- status dropdown — derived from completed_at + archived_at; archive is its own button -->
-      <span class="substrip__item">
-        <label for="status-select" class="substrip__lbl">Status</label>
-        <select id="status-select" class="status-select"
-          (change)="onStatusChange($event)"
-          [class]="'status-select status-select--' + lifecycleOf(item)"
-          [disabled]="isItemArchived(item)">
-          @for (s of statuses; track s) {
-            <!-- [selected] on each option avoids the [value] timing issue with OnPush -->
-            <option [value]="s" [selected]="lifecycleOf(item) === s">{{ s }}</option>
-          }
-          @if (isItemArchived(item)) {
-            <option value="archived" selected>archived</option>
-          }
-        </select>
+      <!-- lifecycle status -->
+      <select class="chip chip--status chip--status-{{ lifecycleOf(item) }}"
+        (change)="onStatusChange($event)"
+        [disabled]="isItemArchived(item)"
+        [attr.aria-label]="'Status: ' + lifecycleOf(item)">
+        @for (s of statuses; track s) {
+          <option [value]="s" [selected]="lifecycleOf(item) === s">{{ s }}</option>
+        }
+        @if (isItemArchived(item)) {
+          <option value="archived" selected>archived</option>
+        }
+      </select>
+
+      <!-- grooming chip -->
+      <span [class]="'chip chip--grooming chip--grooming-' + item.grooming_status">
+        {{ item.grooming_status.replace(/_/g, ' ') }}
       </span>
 
-      <!-- readiness inline bar -->
-      @if (readiness(); as r) {
-        <span class="readiness-inline">
-          <span class="substrip__lbl">Readiness</span>
-          <span class="readiness-bar" role="progressbar"
-            [attr.aria-valuenow]="r.passed"
-            [attr.aria-valuemax]="r.total"
-            [attr.aria-label]="r.passed + ' of ' + r.total + ' checks passed'">
-            <span class="readiness-bar__fill"
-              [style.width.%]="r.total > 0 ? (r.passed / r.total) * 100 : 0">
-            </span>
-          </span>
-          <span class="readiness-count">{{ r.passed }}/{{ r.total }}</span>
-          <span [class]="'readiness-verdict readiness-verdict--' + r.verdict">
-            {{ r.verdict }}
-          </span>
-        </span>
-      }
-
       <!-- owner + reassign -->
-      <span class="substrip__item substrip__item--owner">
-        <span class="substrip__lbl">Owner</span>
+      <span class="chip-group chip-group--owner">
         @if (owner(); as o) {
           <a [routerLink]="['/actors', o.id]"
-            [class]="'actor-chip actor-chip--' + o.kind">
+            [class]="'chip chip--owner chip--actor-' + o.kind">
             @{{ o.id }}
           </a>
         } @else if (item.assigned_to) {
-          <span class="actor-chip">{{ item.assigned_to }}</span>
+          <span class="chip chip--owner">{{ item.assigned_to }}</span>
         } @else {
-          <span class="muted">unassigned</span>
+          <span class="chip chip--owner chip--unassigned">unassigned</span>
         }
-        <button class="inline-btn" (click)="toggleReassignPicker()" aria-label="Reassign owner">
+        <button class="chip-action" (click)="toggleReassignPicker()" aria-label="Reassign owner">
           {{ showReassignPicker() ? '▲' : '▼' }}
         </button>
         @if (showReassignPicker()) {
@@ -92,95 +78,32 @@
         }
       </span>
 
-      <!-- primary project chip -->
-      <span class="substrip__item">
-        <span class="substrip__lbl">Project</span>
-        @if (projects().length > 0) {
-          <a [routerLink]="['/projects', projects()[0].id]" class="project-chip">
-            {{ projects()[0].display_name }}
-          </a>
-        } @else {
-          <span class="muted">—</span>
-        }
-      </span>
-
-      <!-- priority (dual source) -->
-      <span class="substrip__item">
-        <span class="substrip__lbl">Priority</span>
-        <span class="priority-source">AI
-          @if (item.ai_priority !== null) {
-            <span [class]="'priority-badge priority-P' + item.ai_priority">{{ priorityLabel(item.ai_priority) }}</span>
-          } @else {
-            <span class="muted">—</span>
-          }
-        </span>
-        <span class="priority-sep">·</span>
-        <span class="priority-source">Manual
-          @if (item.manual_priority !== null) {
-            <span [class]="'priority-badge priority-P' + item.manual_priority">{{ priorityLabel(item.manual_priority) }}</span>
-          } @else {
-            <span class="muted">—</span>
-          }
-        </span>
-        @if (effectivePriority() !== null) {
-          <span class="priority-effective">(eff: {{ priorityLabel(effectivePriority()) }})</span>
-        }
-        @if (item.priority_confidence !== null) {
-          <span class="confidence-pill">{{ (item.priority_confidence * 100).toFixed(0) }}%</span>
-        }
-      </span>
-
-      @if (item.ai_rationale) {
-        <span class="substrip__item substrip__item--rationale">
-          <span class="substrip__lbl">Rationale</span>
-          <span class="ai-rationale">{{ item.ai_rationale }}</span>
-        </span>
+      <!-- effective priority -->
+      @if (effectivePriority(); as p) {
+        <span
+          [class]="'chip chip--priority chip--priority-P' + p"
+          [title]="priorityDiverges() ? 'AI: P' + item.ai_priority + ', Manual: P' + item.manual_priority : 'Priority'"
+        >{{ priorityLabel(p) }}{{ priorityDiverges() ? ' *' : '' }}</span>
+      }
+      @if (item.actionability !== null) {
+        <span [class]="'chip chip--action chip--action-' + item.actionability">{{ item.actionability }}</span>
       }
 
-      <!-- grooming status + actionability -->
-      <span class="substrip__item">
-        <span class="substrip__lbl">Grooming</span>
-        <span [class]="'grooming-status grooming-status--' + item.grooming_status">
-          {{ item.grooming_status.replace('_', ' ') }}
-        </span>
-        @if (item.actionability !== null) {
-          <span [class]="'actionability-badge actionability-badge--' + item.actionability">
-            {{ item.actionability }}
-          </span>
-        }
-      </span>
-
-      <!-- due_at -->
-      @if (item.due_at) {
-        <span class="substrip__item">
-          <span class="substrip__lbl">Due</span>
-          <span class="due-date">{{ item.due_at }}</span>
-        </span>
+      <!-- primary project -->
+      @if (projects().length > 0) {
+        <a [routerLink]="['/projects', projects()[0].id]" class="chip chip--project">
+          {{ projects()[0].display_name }}
+        </a>
       }
 
-    </div>
-
-    <!-- ===== timeline strip — quick dates + readiness — replaces the old state column ===== -->
-    <div class="timeline-strip">
-      <span class="timeline-strip__item"><span class="timeline-strip__lbl">Created</span> {{ relativeTime(item.created_at) }}</span>
-      @if (lastActivityAt(); as lat) {
-        <span class="timeline-strip__item"><span class="timeline-strip__lbl">Last activity</span> {{ relativeTime(lat) }}</span>
-      }
-      @if (item.completed_at) {
-        <span class="timeline-strip__item"><span class="timeline-strip__lbl">Completed</span> {{ relativeTime(item.completed_at) }}</span>
-      }
-      @if (item.archived_at) {
-        <span class="timeline-strip__item"><span class="timeline-strip__lbl">Archived</span> {{ relativeTime(item.archived_at) }}</span>
-      }
+      <!-- readiness -->
       @if (readiness(); as r) {
-        <details class="timeline-strip__readiness">
-          <summary>Readiness checklist · {{ r.passed }}/{{ r.total }}</summary>
+        <details class="chip chip--readiness">
+          <summary>{{ r.passed }}/{{ r.total }} <span [class]="'readiness-verdict readiness-verdict--' + r.verdict">{{ r.verdict }}</span></summary>
           <ul class="readiness-list">
             @for (check of r.checks; track check.key) {
               <li [class]="'readiness-check readiness-check--' + (check.ok ? 'ok' : 'miss')">
-                <span class="readiness-check__mark" [attr.aria-label]="check.ok ? 'pass' : 'fail'">
-                  {{ check.ok ? '✓' : '✗' }}
-                </span>
+                <span class="readiness-check__mark">{{ check.ok ? '✓' : '✗' }}</span>
                 <span class="readiness-check__label">
                   {{ check.label }}
                   @if (!check.ok && check.blocker) {
@@ -192,7 +115,37 @@
           </ul>
         </details>
       }
+
     </div>
+
+    <!-- ===== Zone 4 — Meta (dates + rationale) ===== -->
+    <footer class="modal-header__zone4">
+      <span>created {{ relativeTime(item.created_at) }}</span>
+      @if (lastActivityAt(); as lat) {
+        <span>· last activity {{ relativeTime(lat) }}</span>
+      }
+      @if (item.completed_at) {
+        <span>· completed {{ relativeTime(item.completed_at) }}</span>
+      }
+      @if (item.archived_at) {
+        <span>· archived {{ relativeTime(item.archived_at) }}</span>
+      }
+      @if (item.due_at) {
+        <span>· due {{ item.due_at }}</span>
+      }
+      @if (item.ai_rationale) {
+        <span class="modal-header__rationale">
+          · rationale:
+          @if (rationaleExpanded()) {
+            {{ item.ai_rationale }}
+            <button type="button" class="rationale-toggle" (click)="toggleRationale()">collapse</button>
+          } @else {
+            <em>"{{ truncate(item.ai_rationale, 80) }}"</em>
+            <button type="button" class="rationale-toggle" (click)="toggleRationale()">expand</button>
+          }
+        </span>
+      }
+    </footer>
 
     @if (showRejectForm()) {
       <app-reject-form

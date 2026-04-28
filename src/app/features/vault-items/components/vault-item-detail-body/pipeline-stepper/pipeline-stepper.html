@@ -1,0 +1,15 @@
+<ol class="pipeline-stepper">
+  @for (step of steps(); track step.status) {
+    <li
+      class="pipeline-stepper__step"
+      [class.pipeline-stepper__step--active]="step.active"
+    >
+      <span class="pipeline-stepper__dot"></span>
+      <span class="pipeline-stepper__label">{{ step.label }}</span>
+    </li>
+  }
+</ol>
+
+@if (isSidebranch()) {
+  <p class="pipeline-stepper__side">↳ Currently in <strong>{{ sideLabel() }}</strong></p>
+}

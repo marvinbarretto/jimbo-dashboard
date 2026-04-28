@@ -1,0 +1,49 @@
+.pipeline-stepper {
+  display: flex;
+  list-style: none;
+  padding: 0; margin: 0;
+  gap: 0.4rem;
+  align-items: center;
+  font-size: 0.75rem;
+  flex-wrap: wrap;
+
+  &__step {
+    display: flex; align-items: center; gap: 0.3rem;
+    opacity: 0.4;
+    color: var(--color-text-muted);
+
+    &::after {
+      content: '→';
+      opacity: 0.3;
+      margin-left: 0.3rem;
+    }
+    &:last-child::after { content: ''; }
+
+    &--active {
+      opacity: 1;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+  }
+
+  &__dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.5;
+    flex-shrink: 0;
+  }
+
+  &__step--active &__dot {
+    background: var(--color-accent, #6c8cff);
+    opacity: 1;
+  }
+
+  &__side {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    color: var(--color-warning, #d99);
+
+    strong { font-weight: 600; }
+  }
+}

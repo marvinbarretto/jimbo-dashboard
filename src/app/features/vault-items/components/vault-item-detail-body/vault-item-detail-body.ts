@@ -23,12 +23,13 @@ import { actorId, projectId, vaultItemId } from '@domain/ids';
 import type { Priority } from '@domain/vault/vault-item';
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
 import { ActivityLogComponent } from './activity-log/activity-log';
+import { PipelineStepperComponent } from './pipeline-stepper/pipeline-stepper';
 import type { ProjectId, ActorId } from '@domain/ids';
 import type { Actor } from '@domain/actors';
 
 @Component({
   selector: 'app-vault-item-detail-body',
-  imports: [RouterLink, ThreadView, RejectFormComponent, ActivityLogComponent],
+  imports: [RouterLink, ThreadView, RejectFormComponent, ActivityLogComponent, PipelineStepperComponent],
   templateUrl: './vault-item-detail-body.html',
   styleUrl: './vault-item-detail-body.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -157,6 +158,19 @@ export class VaultItemDetailBody {
   readonly showReassignPicker = signal(false);
   readonly showAddProjectPicker = signal(false);
   readonly showRejectForm = signal(false);
+  readonly rationaleExpanded = signal(false);
+
+  readonly priorityDiverges = computed(() => {
+    const i = this.item();
+    if (!i || i.manual_priority == null || i.ai_priority == null) return false;
+    return i.manual_priority !== i.ai_priority;
+  });
+
+  toggleRationale(): void { this.rationaleExpanded.update(v => !v); }
+
+  truncate(s: string, n: number): string {
+    return s.length > n ? s.slice(0, n) + '…' : s;
+  }
 
   // Source from the actors registry — skills (vault-classify, etc.) are NOT
   // actors and never own an item. We list humans and agents that the operator

@@ -1,64 +1,135 @@
 .vault-item-detail { font-size: .8rem; line-height: 1.55; }
 
-.topbar {
-  display: flex; align-items: baseline; gap: .6rem;
-  padding: .5rem .75rem; border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface); flex-wrap: wrap;
-  &__seq, &__type { color: var(--color-text-muted); font-size: .7rem; }
-  &__crumb { color: var(--color-border); }
-  &__title { flex: 1; font-size: .85rem; font-weight: 500; }
-  &__actions { display: flex; gap: .4rem; margin-left: auto; }
-  &__action {
-    border: 1px solid var(--color-border); background: transparent;
-    padding: 1px 8px; font: inherit; font-size: .7rem;
-    color: var(--color-text-muted); cursor: pointer; text-decoration: none;
-    &:disabled { opacity: .4; cursor: not-allowed; }
-    &--danger { border-color: #a33; color: #a33; &:hover { background: #a33; color: #fff; } }
-    &--warn { border-color: var(--color-warning, #f59e0b); color: var(--color-warning, #f59e0b); }
+// ─── 4-Zone modal header ────────────────────────────────────────────────────
+
+.modal-header {
+  &__zone1 {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+    padding: .5rem .75rem; border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface); flex-wrap: wrap;
+  }
+  &__id {
+    display: flex; gap: .5rem; align-items: baseline; flex-wrap: wrap; flex: 1;
+  }
+  &__seq { opacity: .5; font-family: var(--font-mono, monospace); font-size: .75rem; }
+  &__type {
+    font-size: .65rem; padding: 1px .35rem;
+    background: color-mix(in oklab, var(--color-text) 8%, transparent);
+    border-radius: 3px; color: var(--color-text-muted);
+  }
+  &__title { margin: 0; font-size: .9rem; font-weight: 600; flex: 1; }
+  &__actions { display: flex; gap: .4rem; flex-shrink: 0; }
+
+  &__zone2 {
+    padding: .35rem .75rem;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+
+  &__zone3 {
+    display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
+    padding: .4rem .75rem; border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+
+  &__zone4 {
+    display: flex; gap: .4rem; flex-wrap: wrap; align-items: baseline;
+    padding: .35rem .75rem; border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+    font-size: .7rem; color: var(--color-text-muted);
+  }
+  &__rationale {
+    em { font-style: italic; }
   }
 }
 
-.substrip {
-  display: flex; align-items: center; gap: .875rem;
-  padding: .5rem .75rem; border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface); flex-wrap: wrap;
-  font-size: .7rem; color: var(--color-text-muted);
-  &__lbl { font-size: .6rem; letter-spacing: .08em; text-transform: uppercase; margin-right: .3rem; }
-  &__item { display: inline-flex; align-items: center; gap: .3rem; &--owner { position: relative; } }
+// Header action buttons
+.header-action {
+  border: 1px solid var(--color-border); background: transparent;
+  padding: 1px 8px; font: inherit; font-size: .7rem;
+  color: var(--color-text-muted); cursor: pointer; text-decoration: none;
+  &:disabled { opacity: .4; cursor: not-allowed; }
+  &--danger { border-color: #a33; color: #a33; &:hover { background: #a33; color: #fff; } }
+  &--warn { border-color: var(--color-warning, #f59e0b); color: var(--color-warning, #f59e0b); }
 }
 
-.status-pill { display: inline-block; border: 1px solid var(--color-border); padding: 1px 7px; font-size: .65rem;
-  &--active { border-color: #3b7a3b; color: #3b7a3b; }
-  &--done, &--archived { border-color: var(--color-text-muted); color: var(--color-text-muted); } }
+// Chip system for zone 3
+.chip {
+  display: inline-flex; align-items: center; gap: .25rem;
+  padding: 1px 7px; border: 1px solid var(--color-border);
+  font-size: .7rem; color: var(--color-text-muted);
+  border-radius: 3px;
 
-.status-select { font: inherit; font-size: .7rem; border: 1px solid var(--color-border); background: transparent; color: var(--color-text); padding: 1px 4px; cursor: pointer;
-  &--active { border-color: #3b7a3b; color: #3b7a3b; } &--done, &--archived { border-color: var(--color-text-muted); color: var(--color-text-muted); } }
+  &--status {
+    font: inherit; background: transparent; cursor: pointer;
+    &-active { border-color: #3b7a3b; color: #3b7a3b; }
+    &-done, &-archived { border-color: var(--color-text-muted); }
+  }
+  &--grooming {
+    &-ready { border-color: #3b7a3b; color: #3b7a3b; font-weight: 600; }
+    &-needs_rework { border-color: var(--color-warning, #f59e0b); color: var(--color-warning, #f59e0b); }
+    &-intake_rejected { border-color: #a33; color: #a33; }
+    &-classified, &-decomposed { border-color: #4a6a8a; color: #4a6a8a; }
+  }
+  &--owner {
+    text-decoration: none; color: var(--color-text);
+    &-actor-human { border-color: #d96520; color: #d96520; }
+    &-actor-agent { border-color: #4a6a8a; color: #4a6a8a; }
+  }
+  &--unassigned { opacity: .5; font-style: italic; }
+  &--priority {
+    font-weight: 600;
+    &-P0 { background: #a33; color: #fff; border-color: #a33; }
+    &-P1 { background: #d86a4a; color: #fff; border-color: #d86a4a; }
+    &-P2 { background: #e6c068; color: #222; border-color: #e6c068; }
+    &-P3 { background: #4a6a8a; color: #fff; border-color: #4a6a8a; }
+  }
+  &--action {
+    &-clear { border-color: #3b7a3b; color: #3b7a3b; }
+    &-needs-breakdown { border-color: #8a6d00; color: #8a6d00; }
+    &-vague { border-color: #a33; color: #a33; }
+  }
+  &--project { text-decoration: none; color: var(--color-accent, #06c); &:hover { text-decoration: underline; } }
+  &--readiness {
+    cursor: pointer;
+    summary { list-style: none; cursor: pointer;
+      &::-webkit-details-marker { display: none; }
+    }
+    .readiness-list {
+      position: absolute; z-index: 10; min-width: 280px;
+      margin-top: .3rem; padding: .5rem .65rem;
+      background: var(--color-bg); border: 1px solid var(--color-border);
+      border-radius: 4px;
+    }
+  }
+}
 
-.readiness-inline { display: inline-flex; align-items: center; gap: .4rem; }
-.readiness-bar { width: 100px; height: 4px; background: var(--color-border); position: relative; display: inline-block;
-  &__fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--color-accent, #d96520); transition: width .2s ease; } }
-.readiness-count { font-variant-numeric: tabular-nums; color: var(--color-text); }
-.readiness-verdict { font-size: .6rem; padding: 1px 5px; border: 1px solid var(--color-border); text-transform: uppercase; letter-spacing: .06em;
-  &--ready { border-color: #3b7a3b; color: #3b7a3b; } &--not_ready { border-color: #8a6d00; color: #8a6d00; } &--blocked { border-color: #a33; color: #a33; } }
+.chip-group {
+  display: inline-flex; align-items: center; gap: .25rem;
+  position: relative;
+}
+.chip-action {
+  background: transparent; border: 0; padding: 0 2px; font: inherit;
+  font-size: .65rem; cursor: pointer; color: var(--color-text-muted);
+}
+.rationale-toggle {
+  background: transparent; border: 0; color: var(--color-accent, #06c);
+  font: inherit; font-size: .65rem; cursor: pointer; padding: 0; margin-left: .2rem;
+}
 
-.actor-chip { display: inline-flex; align-items: center; padding: 1px 6px; border: 1px solid var(--color-border); font-size: .7rem; color: var(--color-text); text-decoration: none;
-  &--human { border-color: #d96520; color: #d96520; } &--agent { border-color: #4a6a8a; color: #4a6a8a; } &--system { color: var(--color-text-muted); } }
-
-.project-chip { font-size: .7rem; color: var(--color-accent, #06c); text-decoration: none; &:hover { text-decoration: underline; } }
-.priority-source { font-size: .7rem; }
-.priority-sep { color: var(--color-border); }
-.priority-effective { font-size: .6rem; color: var(--color-text-muted); }
+.readiness-verdict {
+  font-size: .6rem; padding: 1px 5px; border: 1px solid var(--color-border);
+  text-transform: uppercase; letter-spacing: .06em;
+  &--ready { border-color: #3b7a3b; color: #3b7a3b; }
+  &--not_ready { border-color: #8a6d00; color: #8a6d00; }
+  &--blocked { border-color: #a33; color: #a33; }
+}
 
 .priority-badge { display: inline-block; font-size: .6rem; padding: 1px 4px; font-weight: 600;
   &.priority-P0 { background: #a33; color: #fff; } &.priority-P1 { background: #d86a4a; color: #fff; }
   &.priority-P2 { background: #e6c068; color: #222; } &.priority-P3 { background: #4a6a8a; color: #fff; } }
 
-.grooming-status {
-  &--ungroomed, &--questions { color: #8a6d00; } &--analysing { color: #4a6a8a; }
-  &--proposed, &--ready { color: #3b7a3b; } &--ready { font-weight: 600; } }
-
-// .body-grid rules live further down — block lives next to the timeline-strip
-// rules so the layout reads in one place.
+// .body-grid rules live further down.
 
 .section { margin-bottom: 1rem;
   &__label { font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: .35rem; }
@@ -124,53 +195,6 @@
   }
 }
 
-// Compact dates + readiness strip — replaces the old right-side state column.
-// One line of muted metadata, with the readiness checklist behind a <details>
-// for when the operator wants to drill in. Keeps the modal's vertical budget
-// for activity and thread.
-.timeline-strip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: .9rem;
-  padding: .45rem .75rem;
-  font-size: .7rem;
-  color: var(--color-text-muted);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
-
-  &__lbl {
-    font-size: .6rem;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    margin-right: .25rem;
-  }
-
-  &__readiness {
-    margin-left: auto;
-    font-size: .7rem;
-
-    summary {
-      cursor: pointer;
-      list-style: none;
-      color: var(--color-text-muted);
-      &::-webkit-details-marker { display: none; }
-      &:hover { color: var(--color-text); }
-      &::before { content: '▸ '; font-size: .6rem; }
-    }
-    &[open] summary::before { content: '▾ '; }
-
-    .readiness-list {
-      margin: .4rem 0 .2rem;
-      padding: .5rem .65rem;
-      list-style: none;
-      background: var(--color-bg);
-      border: 1px solid var(--color-border);
-      border-radius: 4px;
-      min-width: 280px;
-    }
-  }
-}
 
 .stream__header {
   font-size: .65rem;
