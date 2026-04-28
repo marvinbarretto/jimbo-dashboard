@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { ModelsService } from '../../data-access/models.service';
+import { ToastService } from '@shared/components/toast/toast.service';
 import type { Model, ModelStatus } from '@domain/models';
 
 const ID_PATTERN = /^[a-z0-9-]+\/[a-z0-9.-]+$/;
@@ -20,6 +21,7 @@ export class ModelForm {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  private readonly toast = inject(ToastService);
 
   private readonly id = toSignal(
     this.route.paramMap.pipe(
@@ -107,14 +109,14 @@ export class ModelForm {
       this.service.update(this.id()!, {
         name: v.name, description: v.description, metadata, body: v.body,
       }).subscribe({
-        next: m => this.afterSave(m),
+        next: m => { this.toast.success('Model saved'); this.afterSave(m); },
         error: err => this.handleError(err),
       });
     } else {
       this.service.create({
         id: v.id, name: v.name, description: v.description, metadata, body: v.body,
       }).subscribe({
-        next: m => this.afterSave(m),
+        next: m => { this.toast.success('Model created'); this.afterSave(m); },
         error: err => this.handleError(err),
       });
     }
@@ -129,6 +131,7 @@ export class ModelForm {
     this.service.remove(id).subscribe({
       next: () => {
         this.saving.set(false);
+        this.toast.success('Model deleted');
         this.router.navigate(['/models']);
       },
       error: err => this.handleError(err),
@@ -147,5 +150,6 @@ export class ModelForm {
       ?? (err as { message?: string })?.message
       ?? 'request failed';
     this.saveError.set(msg);
+    this.toast.error(msg);
   }
 }

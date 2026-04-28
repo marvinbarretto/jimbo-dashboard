@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { ModelStacksService } from '../../data-access/model-stacks.service';
+import { ToastService } from '@shared/components/toast/toast.service';
 import type { ModelStack } from '@domain/model-stacks';
 
 const ID_PATTERN = /^[a-z0-9-]+$/;
@@ -28,6 +29,7 @@ export class ModelStackForm {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  private readonly toast = inject(ToastService);
 
   readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id'))));
   private readonly stacks$ = toObservable(this.service.stacks);
@@ -84,14 +86,14 @@ export class ModelStackForm {
       this.service.update(this.id()!, {
         name: v.name, description: v.description, metadata, body: v.body,
       }).subscribe({
-        next: s => this.afterSave(s),
+        next: s => { this.toast.success('Model stack saved'); this.afterSave(s); },
         error: err => this.handleError(err),
       });
     } else {
       this.service.create({
         id: v.id, name: v.name, description: v.description, metadata, body: v.body,
       }).subscribe({
-        next: s => this.afterSave(s),
+        next: s => { this.toast.success('Model stack created'); this.afterSave(s); },
         error: err => this.handleError(err),
       });
     }
@@ -105,6 +107,7 @@ export class ModelStackForm {
     this.service.remove(id).subscribe({
       next: () => {
         this.saving.set(false);
+        this.toast.success('Model stack deleted');
         this.router.navigate(['/model-stacks']);
       },
       error: err => this.handleError(err),
@@ -123,5 +126,6 @@ export class ModelStackForm {
       ?? (err as { message?: string })?.message
       ?? 'request failed';
     this.saveError.set(msg);
+    this.toast.error(msg);
   }
 }

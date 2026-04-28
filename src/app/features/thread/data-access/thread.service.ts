@@ -7,12 +7,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import type { ThreadMessage, CreateThreadMessagePayload, MarkAnsweredPayload } from '@domain/thread';
 import type { VaultItemId, ThreadMessageId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
+import { ToastService } from '@shared/components/toast/toast.service';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
 
 @Injectable({ providedIn: 'root' })
 export class ThreadService {
   private readonly http = inject(HttpClient);
+  private readonly toast = inject(ToastService);
   private readonly url = `${environment.dashboardApiUrl}/api/thread-messages`;
 
   private readonly _messagesByItem = signal<Record<string, ThreadMessage[]>>({});
@@ -69,6 +71,7 @@ export class ThreadService {
         if (payload.kind === 'answer' && payload.in_reply_to) {
           this._applyAnsweredBy(id, payload.in_reply_to, null);
         }
+        this.toast.error('Message failed to send — removed');
       },
     });
   }
@@ -89,6 +92,7 @@ export class ThreadService {
           ...map,
           [vaultItemId]: map[vaultItemId].map(m => m.id === questionId ? updated : m),
         })),
+        error: () => this.toast.error('Failed to mark question answered'),
       });
   }
 

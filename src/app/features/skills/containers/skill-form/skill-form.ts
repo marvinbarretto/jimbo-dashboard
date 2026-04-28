@@ -13,6 +13,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { SkillsService } from '../../data-access/skills.service';
+import { ToastService } from '@shared/components/toast/toast.service';
 import type { Skill } from '@domain/skills';
 
 const ID_PATTERN = /^[a-z0-9-]+\/[a-z0-9-]+$/;
@@ -37,6 +38,7 @@ export class SkillForm {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  private readonly toast = inject(ToastService);
 
   // /skills/:namespace/:name/edit — both params present means edit mode.
   // /skills/new — neither present, create mode.
@@ -116,7 +118,7 @@ export class SkillForm {
         metadata,
         body: v.body,
       }).subscribe({
-        next: skill => this.afterSave(skill),
+        next: skill => { this.toast.success('Skill saved'); this.afterSave(skill); },
         error: err => this.handleError(err),
       });
     } else {
@@ -127,7 +129,7 @@ export class SkillForm {
         metadata,
         body: v.body,
       }).subscribe({
-        next: skill => this.afterSave(skill),
+        next: skill => { this.toast.success('Skill created'); this.afterSave(skill); },
         error: err => this.handleError(err),
       });
     }
@@ -145,6 +147,7 @@ export class SkillForm {
     this.service.remove(id).subscribe({
       next: () => {
         this.saving.set(false);
+        this.toast.success('Skill deleted');
         this.router.navigate(['/skills']);
       },
       error: err => this.handleError(err),
@@ -168,6 +171,7 @@ export class SkillForm {
     this.service.rename(oldId, to).subscribe({
       next: skill => {
         this.saving.set(false);
+        this.toast.success(`Skill renamed to ${skill.id}`);
         this.router.navigate(['/skills', ...skill.id.split('/')]);
       },
       error: err => this.handleError(err),
@@ -188,5 +192,6 @@ export class SkillForm {
       ?? (err as { message?: string })?.message
       ?? 'request failed';
     this.saveError.set(msg);
+    this.toast.error(msg);
   }
 }

@@ -12,12 +12,14 @@ import type { VaultItemProject } from '@domain/vault/vault-item-project';
 import type { ProjectId, VaultItemId } from '@domain/ids';
 import { vaultItemId as toVaultItemId, projectId as toProjectId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
+import { ToastService } from '@shared/components/toast/toast.service';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
 
 @Injectable({ providedIn: 'root' })
 export class VaultItemProjectsService {
   private readonly http = inject(HttpClient);
+  private readonly toast = inject(ToastService);
   private readonly url = `${environment.dashboardApiUrl}/api/vault-item-projects`;
 
   // Keyed by vault_item_id string. Bulk-populated on construction (non-seed)
@@ -75,11 +77,13 @@ export class VaultItemProjectsService {
     if (isSeedMode()) return;
 
     this.http.post<VaultItemProject>(this.url, row).subscribe({
-      // Nothing to reconcile — composite PK row has no server-generated id.
-      error: () => this._projectsByItem.update(map => ({
-        ...map,
-        [vaultItemId]: (map[vaultItemId] ?? []).filter(r => r.project_id !== projectId),
-      })),
+      error: () => {
+        this._projectsByItem.update(map => ({
+          ...map,
+          [vaultItemId]: (map[vaultItemId] ?? []).filter(r => r.project_id !== projectId),
+        }));
+        this.toast.error('Failed to link project — removed');
+      },
     });
   }
 
@@ -94,7 +98,10 @@ export class VaultItemProjectsService {
     if (isSeedMode()) return;
 
     this.http.delete(`${this.url}/${encodeURIComponent(vaultItemId)}/${encodeURIComponent(projectId)}`).subscribe({
-      error: () => this._projectsByItem.update(map => ({ ...map, [vaultItemId]: prior })),
+      error: () => {
+        this._projectsByItem.update(map => ({ ...map, [vaultItemId]: prior }));
+        this.toast.error('Failed to unlink project — restored');
+      },
     });
   }
 }

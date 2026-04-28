@@ -9,6 +9,7 @@ import type { VaultItemId } from '@domain/ids';
 import type { OpenBlocker } from '@domain/vault/readiness';
 import { environment } from '../../../../environments/environment';
 import { VaultItemsService } from './vault-items.service';
+import { ToastService } from '@shared/components/toast/toast.service';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
 
@@ -16,6 +17,7 @@ import { SEED } from '@domain/seed';
 export class VaultItemDependenciesService {
   private readonly http = inject(HttpClient);
   private readonly vaultItemsService = inject(VaultItemsService);
+  private readonly toast = inject(ToastService);
   private readonly url = `${environment.dashboardApiUrl}/api/vault-item-dependencies`;
 
   private readonly _depsByItem = signal<Record<string, VaultItemDependency[]>>({});
@@ -61,10 +63,13 @@ export class VaultItemDependenciesService {
     if (isSeedMode()) return;
 
     this.http.post<VaultItemDependency>(this.url, { blocker_id: blockerId, blocked_id: blockedId }).subscribe({
-      error: () => this._depsByItem.update(map => ({
-        ...map,
-        [blockedId]: (map[blockedId] ?? []).filter(r => r.blocker_id !== blockerId),
-      })),
+      error: () => {
+        this._depsByItem.update(map => ({
+          ...map,
+          [blockedId]: (map[blockedId] ?? []).filter(r => r.blocker_id !== blockerId),
+        }));
+        this.toast.error('Failed to add blocker — removed');
+      },
     });
   }
 
@@ -78,7 +83,10 @@ export class VaultItemDependenciesService {
     if (isSeedMode()) return;
 
     this.http.delete(`${this.url}/${encodeURIComponent(blockerId)}/${encodeURIComponent(blockedId)}`).subscribe({
-      error: () => this._depsByItem.update(map => ({ ...map, [blockedId]: prior })),
+      error: () => {
+        this._depsByItem.update(map => ({ ...map, [blockedId]: prior }));
+        this.toast.error('Failed to remove blocker — restored');
+      },
     });
   }
 }

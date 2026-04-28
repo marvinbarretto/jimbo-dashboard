@@ -10,6 +10,7 @@ import type { Project, ProjectStatus, CreateProjectPayload, UpdateProjectPayload
 import type { ActorId, ProjectId } from '@domain/ids';
 import { actorId, projectId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
+import { ToastService } from '@shared/components/toast/toast.service';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
 import { ProjectActivityEventsService } from './project-activity-events.service';
@@ -18,6 +19,7 @@ import { ProjectActivityEventsService } from './project-activity-events.service'
 export class ProjectsService {
   private readonly http = inject(HttpClient);
   private readonly activityService = inject(ProjectActivityEventsService);
+  private readonly toast = inject(ToastService);
   private readonly url = `${environment.dashboardApiUrl}/api/projects`;
 
   private readonly _projects = signal<Project[]>([]);
@@ -72,8 +74,12 @@ export class ProjectsService {
           project_id: p.id,
           actor_id: this.currentActorId,
         });
+        this.toast.success('Project created');
       },
-      error: () => this._projects.update(ps => ps.filter(p => p.id !== payload.id)),
+      error: () => {
+        this._projects.update(ps => ps.filter(p => p.id !== payload.id));
+        this.toast.error('Failed to create project');
+      },
     });
   }
 
@@ -96,8 +102,12 @@ export class ProjectsService {
         const p = toProject(updated);
         this._projects.update(ps => ps.map(x => x.id === id ? p : x));
         this.emitDiffEvents(projectIdTyped, prior, p);
+        this.toast.success('Project saved');
       },
-      error: () => this._projects.update(ps => ps.map(p => p.id === id ? prior : p)),
+      error: () => {
+        this._projects.update(ps => ps.map(p => p.id === id ? prior : p));
+        this.toast.error('Update failed — changes reverted');
+      },
     });
   }
 
@@ -108,8 +118,10 @@ export class ProjectsService {
     if (isSeedMode()) return;
 
     this.http.delete(`${this.url}/${encodeURIComponent(id)}`).subscribe({
+      next: () => this.toast.success('Project deleted'),
       error: () => {
         if (prior) this._projects.update(ps => [...ps, prior]);
+        this.toast.error('Delete failed — project restored');
       },
     });
   }

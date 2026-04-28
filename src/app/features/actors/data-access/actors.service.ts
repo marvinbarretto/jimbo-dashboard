@@ -8,12 +8,14 @@ import { HttpClient } from '@angular/common/http';
 import type { Actor, ActorKind, ActorRuntime, CreateActorPayload, UpdateActorPayload } from '@domain/actors';
 import { actorId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
+import { ToastService } from '@shared/components/toast/toast.service';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
 
 @Injectable({ providedIn: 'root' })
 export class ActorsService {
   private readonly http = inject(HttpClient);
+  private readonly toast = inject(ToastService);
   private readonly url = `${environment.dashboardApiUrl}/api/actors`;
 
   private readonly _actors = signal<Actor[]>([]);
@@ -47,19 +49,31 @@ export class ActorsService {
     this._actors.update(as => [...as, optimistic]);
     this.http.post<ApiActor>(this.url, payload)
       .subscribe({
-        next: (created) => this._actors.update(as => as.map(a => a.id === payload.id ? toActor(created) : a)),
-        error: ()        => this._actors.update(as => as.filter(a => a.id !== payload.id)),
+        next: (created) => {
+          this._actors.update(as => as.map(a => a.id === payload.id ? toActor(created) : a));
+          this.toast.success('Actor created');
+        },
+        error: () => {
+          this._actors.update(as => as.filter(a => a.id !== payload.id));
+          this.toast.error('Failed to create actor');
+        },
       });
   }
 
   update(id: string, patch: UpdateActorPayload): void {
     this.http.patch<ApiActor>(`${this.url}/${encodeURIComponent(id)}`, patch)
-      .subscribe({ next: (updated) => this._actors.update(as => as.map(a => a.id === id ? toActor(updated) : a)) });
+      .subscribe({
+        next: (updated) => this._actors.update(as => as.map(a => a.id === id ? toActor(updated) : a)),
+        error: () => this.toast.error('Failed to update actor'),
+      });
   }
 
   remove(id: string): void {
     this.http.delete(`${this.url}/${encodeURIComponent(id)}`)
-      .subscribe({ next: () => this._actors.update(as => as.filter(a => a.id !== id)) });
+      .subscribe({
+        next: () => this._actors.update(as => as.filter(a => a.id !== id)),
+        error: () => this.toast.error('Failed to delete actor'),
+      });
   }
 }
 

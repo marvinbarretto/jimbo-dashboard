@@ -7,12 +7,14 @@ import type { DispatchQueueEntry, DispatchStatus } from '@domain/dispatch';
 import type { DispatchId, VaultItemId } from '@domain/ids';
 import { dispatchId, vaultItemId, actorId, skillId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
+import { ToastService } from '@shared/components/toast/toast.service';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
 
 @Injectable({ providedIn: 'root' })
 export class DispatchService {
   private readonly http = inject(HttpClient);
+  private readonly toast = inject(ToastService);
   private readonly url = `${environment.dashboardApiUrl}/api/dispatches`;
 
   private readonly _entries = signal<DispatchQueueEntry[]>([]);
@@ -80,8 +82,14 @@ export class DispatchService {
       retry_count:   prior.retry_count + 1,
     };
     this.http.patch<ApiDispatchEntry>(`${this.url}/${encodeURIComponent(id)}`, patch).subscribe({
-      next: (updated) => this._entries.update(es => es.map(e => e.id === id ? toDispatchEntry(updated) : e)),
-      error: ()       => this._entries.update(es => es.map(e => e.id === id ? prior : e)),
+      next: (updated) => {
+        this._entries.update(es => es.map(e => e.id === id ? toDispatchEntry(updated) : e));
+        this.toast.success('Dispatch queued for retry');
+      },
+      error: () => {
+        this._entries.update(es => es.map(e => e.id === id ? prior : e));
+        this.toast.error('Retry failed — changes reverted');
+      },
     });
   }
 }

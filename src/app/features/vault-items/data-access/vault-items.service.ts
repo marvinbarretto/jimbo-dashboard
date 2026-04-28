@@ -13,6 +13,7 @@ import type { VaultActivityEvent } from '@domain/activity/activity-event';
 import { vaultItemId, actorId, threadMessageId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { ActivityEventsService } from './activity-events.service';
+import { ToastService } from '@shared/components/toast/toast.service';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
 
@@ -25,6 +26,7 @@ type EventPayload = CreatePayload<VaultActivityEvent>;
 export class VaultItemsService {
   private readonly http = inject(HttpClient);
   private readonly activityService = inject(ActivityEventsService);
+  private readonly toast = inject(ToastService);
   private readonly url = `${environment.dashboardApiUrl}/api/vault-items`;
 
   private readonly _items = signal<VaultItem[]>([]);
@@ -87,14 +89,17 @@ export class VaultItemsService {
       .subscribe({
         next: (created) => {
           this._items.update(items => items.map(i => i.id === tempId ? created : i));
-          // Emit after reconcile so the event carries the real vault_item_id.
           this.activityService.post({
             type: 'created',
             vault_item_id: created.id,
             actor_id: this.currentActorId,
           });
+          this.toast.success('Item created');
         },
-        error: () => this._items.update(items => items.filter(i => i.id !== tempId)),
+        error: () => {
+          this._items.update(items => items.filter(i => i.id !== tempId));
+          this.toast.error('Failed to create item');
+        },
       });
   }
 
@@ -113,7 +118,10 @@ export class VaultItemsService {
     this.http.patch<VaultItem>(`${this.url}/by-seq/${prior.seq}`, patch)
       .subscribe({
         next: (updated) => this._items.update(items => items.map(i => i.id === id ? updated : i)),
-        error: ()          => this._items.update(items => items.map(i => i.id === id ? prior : i)),
+        error: () => {
+          this._items.update(items => items.map(i => i.id === id ? prior : i));
+          this.toast.error('Update failed — changes reverted');
+        },
       });
   }
 
@@ -144,8 +152,12 @@ export class VaultItemsService {
         next: (updated) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
           this.activityService.post(event);
+          this.toast.success('Item archived');
         },
-        error: () => this._items.update(items => items.map(i => i.id === id ? prior : i)),
+        error: () => {
+          this._items.update(items => items.map(i => i.id === id ? prior : i));
+          this.toast.error('Archive failed — changes reverted');
+        },
       });
   }
 
@@ -173,8 +185,12 @@ export class VaultItemsService {
         next: (updated) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
           this.activityService.post(event);
+          this.toast.success('Item restored');
         },
-        error: () => this._items.update(items => items.map(i => i.id === id ? prior : i)),
+        error: () => {
+          this._items.update(items => items.map(i => i.id === id ? prior : i));
+          this.toast.error('Restore failed — changes reverted');
+        },
       });
   }
 
@@ -209,8 +225,12 @@ export class VaultItemsService {
         next: (updated) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
           this.activityService.post(event);
+          this.toast.success(completed ? 'Marked complete' : 'Marked incomplete');
         },
-        error: () => this._items.update(items => items.map(i => i.id === id ? prior : i)),
+        error: () => {
+          this._items.update(items => items.map(i => i.id === id ? prior : i));
+          this.toast.error('Failed to update completion — changes reverted');
+        },
       });
   }
 
@@ -245,7 +265,10 @@ export class VaultItemsService {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
           this.activityService.post(event);
         },
-        error: () => this._items.update(items => items.map(i => i.id === id ? prior : i)),
+        error: () => {
+          this._items.update(items => items.map(i => i.id === id ? prior : i));
+          this.toast.error('Status change failed — changes reverted');
+        },
       });
   }
 
@@ -277,8 +300,12 @@ export class VaultItemsService {
         next: (updated) => {
           this._items.update(items => items.map(i => i.id === id ? updated : i));
           this.activityService.post(event);
+          this.toast.success('Reassigned');
         },
-        error: () => this._items.update(items => items.map(i => i.id === id ? prior : i)),
+        error: () => {
+          this._items.update(items => items.map(i => i.id === id ? prior : i));
+          this.toast.error('Reassign failed — changes reverted');
+        },
       });
   }
 
@@ -345,14 +372,12 @@ export class VaultItemsService {
         }).subscribe({ error: () => {} });
         this.activityService.post(threadEvent);
         this.activityService.post(rejectEvent);
+        this.toast.success('Item sent back for rework');
       },
       error: (err) => {
-        // Rollback so the UI doesn't lie about state. Log loudly because the
-        // dashboard has no toast layer yet; without this the rollback is silent
-        // and the operator just sees "nothing happened". Common cause: backend
-        // doesn't yet accept `needs_rework` as a grooming_status enum value.
         console.warn('[rejectItem] PATCH failed, rolling back optimistic update', err);
         this._items.update(items => items.map(i => i.id === id ? prior : i));
+        this.toast.error('Rejection failed — changes reverted');
       },
     });
   }
@@ -367,9 +392,10 @@ export class VaultItemsService {
 
     this.http.delete(`${this.url}/by-seq/${prior.seq}`)
       .subscribe({
+        next: () => this.toast.success('Item deleted'),
         error: () => {
-          // Rollback — put the item back in its original position.
           this._items.update(items => [...items, prior]);
+          this.toast.error('Delete failed — item restored');
         },
       });
   }
