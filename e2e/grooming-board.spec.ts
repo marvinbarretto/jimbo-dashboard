@@ -9,9 +9,10 @@ test.describe('Grooming board (seed mode)', () => {
   });
 
   test.describe('layout', () => {
-    test('renders all six grooming columns in canonical order', async ({ groomingBoardPage, page }) => {
+    test('renders all seven grooming columns in canonical order', async ({ groomingBoardPage, page }) => {
       const labels = await page.locator('.col__label').allTextContents();
       expect(labels).toEqual([
+        'Needs rework',
         'Ungroomed',
         'Intake rejected',
         'Intake complete',

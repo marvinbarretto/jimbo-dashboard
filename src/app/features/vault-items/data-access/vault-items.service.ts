@@ -329,7 +329,20 @@ export class VaultItemsService {
     const fromOwner  = prior.assigned_to;
     const tmId       = threadMessageId(crypto.randomUUID());
 
-    const optimistic = { ...prior, grooming_status: 'needs_rework' as const, assigned_to: newOwnerId };
+    const optimistic = {
+      ...prior,
+      grooming_status: 'needs_rework' as const,
+      assigned_to: newOwnerId,
+      latest_event: {
+        ts: new Date().toISOString(),
+        actor_id: this.currentActorId,
+        actor_display_name: null,
+        action: 'rejected',
+        from_value: fromStatus,
+        to_value: 'needs_rework' as const,
+        reason: trimmed,
+      },
+    };
     this._items.update(items => items.map(i => i.id === id ? optimistic : i));
 
     const threadEvent: EventPayload = {
