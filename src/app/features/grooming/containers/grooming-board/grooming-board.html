@@ -10,9 +10,12 @@
   <app-kanban-filter-bar
     [groups]="filterGroups()"
     [searchTerm]="searchTerm()"
+    [sortOptions]="sortOptions"
+    [activeSort]="sortMode()"
     searchPlaceholder="Search title or #seq…"
     (toggle)="onFilterToggle($event)"
     (searchChange)="onSearchChange($event)"
+    (sortChange)="onSortChange($event)"
     (reset)="resetFilters()"
   />
 

@@ -20,7 +20,7 @@ export { pulseIntensity, PULSE_WINDOW_MINUTES } from './pulse';
 
 export { stuckDays, isStuck, STUCK_THRESHOLD_DAYS } from './stuck';
 
-export { compareCardsForKanban } from './sort';
+export { compareCardsForKanban, compareCardsBy, SORT_OPTIONS, type SortMode } from './sort';
 
 export type {
   VaultItemProject,

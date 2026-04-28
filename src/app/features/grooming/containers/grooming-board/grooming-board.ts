@@ -13,14 +13,16 @@ import {
   GROOMING_EMPTY_LABELS,
   isActive,
   isDone,
+  effectivePriority,
+  stuckDays,
+  compareCardsBy,
+  SORT_OPTIONS,
   type GroomingStatus,
   type VaultItem,
   type Priority,
+  type SortMode,
 } from '@domain/vault';
 import type { ActorId } from '@domain/ids';
-import { effectivePriority } from '@domain/vault';
-import { compareCardsForKanban } from '@domain/vault';
-import { stuckDays } from '@domain/vault';
 import type { VaultItemId } from '@domain/ids';
 import { GroomingCard, type LiveSnapshot } from '../../components/grooming-card/grooming-card';
 import { GroomingNest } from '../../components/grooming-nest/grooming-nest';
@@ -87,6 +89,11 @@ export class GroomingBoard {
 
   // Free-text search — matches title or seq, case-insensitive substring.
   private readonly _searchTerm = signal<string>('');
+
+  // Sort mode — controls card order within each column. Default is priority.
+  private readonly _sortMode = signal<SortMode>('priority');
+  readonly sortMode = this._sortMode.asReadonly();
+  readonly sortOptions = SORT_OPTIONS;
   readonly searchTerm = this._searchTerm.asReadonly();
 
   // --- visible items + columns -------------------------------------------
@@ -95,13 +102,14 @@ export class GroomingBoard {
 
   readonly columns = computed<ColumnView[]>(() => {
     const items = this.visibleItems();
+    const comparator = compareCardsBy(this._sortMode());
     return GROOMING_STATUS_ORDER.map(status => ({
       status,
       label:      GROOMING_STATUS_LABELS[status],
       emptyLabel: GROOMING_EMPTY_LABELS[status],
       cards: items
         .filter(i => i.grooming_status === status)
-        .sort(compareCardsForKanban),
+        .sort(comparator),
     }));
   });
 
@@ -142,6 +150,10 @@ export class GroomingBoard {
       }
       const q = params.get('q');
       if (q) this._searchTerm.set(q);
+      const sort = params.get('sort');
+      if (sort && SORT_OPTIONS.some(o => o.value === sort)) {
+        this._sortMode.set(sort as SortMode);
+      }
     });
 
     // Sync filter state back to URL whenever it changes. `replaceUrl: true` so
@@ -151,7 +163,8 @@ export class GroomingBoard {
       const projects   = Array.from(this.projectFilter());
       const owners     = Array.from(this.ownerFilter());
       const priorities = Array.from(this.priorityFilter());
-      const q = this._searchTerm();
+      const q    = this._searchTerm();
+      const sort = this._sortMode();
 
       this.router.navigate([], {
         relativeTo: this.route,
@@ -160,6 +173,7 @@ export class GroomingBoard {
           [OWNER]:    owners.length     ? owners.join(',')     : null,
           [PRIORITY]: priorities.length ? priorities.join(',') : null,
           q:          q || null,
+          sort:       sort !== 'priority' ? sort : null,
         },
         queryParamsHandling: 'merge',
         replaceUrl: true,
@@ -424,6 +438,8 @@ export class GroomingBoard {
   }
 
   onSearchChange(term: string): void { this._searchTerm.set(term); }
+
+  onSortChange(mode: string): void { this._sortMode.set(mode as SortMode); }
 
   resetFilters(): void {
     this.filter.reset();

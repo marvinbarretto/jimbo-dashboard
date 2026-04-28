@@ -17,6 +17,19 @@
   --_s: var(--stale-norm, 0);
   --_a: var(--ancient-norm, 0);
 
+  // Card background warms with age — same amber family as the border so the
+  // card reads as progressively "hot" rather than just outlined. The dark amber
+  // targets (oklch ~32-40%) are chosen to stay legible on the dark bg (#0f1117).
+  //   fresh  → var(--color-bg), no tint
+  //   stale  → faint warm amber wash (20% blend at stale-norm=1)
+  //   ancient → richer amber wash (deeper hue as ancient-norm grows)
+  background: color-mix(
+    in oklch,
+    color-mix(in oklch, oklch(32% 0.16 55) calc(var(--_a) * 100%), oklch(40% 0.10 68))
+      calc(var(--_s) * 20%),
+    var(--color-bg)
+  );
+
   // Amber target deepens from mild to ancient as --ancient-norm grows.
   // Then that amber is mixed with --color-border via --stale-norm:
   //   stale=0 → pure border colour (no indicator)

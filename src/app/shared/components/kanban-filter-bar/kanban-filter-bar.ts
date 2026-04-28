@@ -18,6 +18,13 @@ export interface FilterGroup<TValue extends string | number = string | number> {
   active:  Set<TValue>;
 }
 
+// Single sort option — value is a string key, label is the display name.
+// Sort chips are radio-style (only one active at a time); the parent owns state.
+export interface SortOption {
+  value: string;
+  label: string;
+}
+
 // Generic kanban filter bar. The board passes in a list of named groups; this
 // component renders a labelled row of chips per group with active/disabled state
 // and counts. A single `(toggle)` event reports `(groupId, value)` so the parent
@@ -39,9 +46,14 @@ export class KanbanFilterBar {
   // the input + emits change events.
   readonly searchTerm        = input<string>('');
   readonly searchPlaceholder = input<string>('Search…');
+  // Optional sort row. Empty array = no sort section rendered. activeSort is the
+  // currently selected sort value; sortChange emits the new value on click.
+  readonly sortOptions = input<readonly SortOption[]>([]);
+  readonly activeSort  = input<string>('');
 
   readonly toggle       = output<{ groupId: string; value: string | number }>();
   readonly searchChange = output<string>();
+  readonly sortChange   = output<string>();
   readonly reset        = output<void>();
 
   readonly hasActive = computed(() =>
