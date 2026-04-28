@@ -441,6 +441,14 @@ export class GroomingBoard {
 
   onSortChange(mode: string): void { this._sortMode.set(mode as SortMode); }
 
+  onDemoteToNote(item: VaultItem): void {
+    this.vaultItemsService.update(item.id, { type: 'note' });
+  }
+
+  onRemoveItem(item: VaultItem): void {
+    this.vaultItemsService.remove(item.id);
+  }
+
   resetFilters(): void {
     this.filter.reset();
     this._searchTerm.set('');

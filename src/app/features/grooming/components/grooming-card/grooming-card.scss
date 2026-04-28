@@ -193,6 +193,37 @@
     white-space: nowrap;
   }
 
+  // Dismiss action strip — reclassify or hard-delete without opening detail.
+  // Always occupies space (no layout shift on hover); fades in when the card
+  // is hovered so it doesn't clutter the board at a glance.
+  &__actions {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.35rem;
+    padding-top: 0.3rem;
+    border-top: 1px solid var(--color-border);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  &:hover &__actions { opacity: 1; }
+
+  &__action-btn {
+    border: none;
+    background: none;
+    font: inherit;
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    padding: 0.1rem 0.3rem;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: color 0.1s, background 0.1s;
+
+    &:hover { color: var(--color-text); background: var(--color-surface); }
+
+    &--danger:hover { color: var(--color-danger); background: var(--color-surface); }
+  }
+
   // Expand toggle — small chevron that rotates 180° when open. Sits at the end
   // of the header right-slot, after epic + blocker badges.
   &__expand-btn {

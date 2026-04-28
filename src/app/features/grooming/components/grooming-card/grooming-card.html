@@ -94,6 +94,11 @@
     <span class="card__age" [attr.title]="ageTooltip()">{{ ageLabel() }}</span>
   </footer>
 
+  <div class="card__actions">
+    <button type="button" class="card__action-btn" (click)="demote.emit(); $event.stopPropagation()">→ note</button>
+    <button type="button" class="card__action-btn card__action-btn--danger" (click)="remove.emit(); $event.stopPropagation()">delete</button>
+  </div>
+
   @if (expanded() && liveSnapshot(); as snap) {
     <section class="card__live" aria-label="Recent activity">
       @if (snap.latestEvent; as ev) {

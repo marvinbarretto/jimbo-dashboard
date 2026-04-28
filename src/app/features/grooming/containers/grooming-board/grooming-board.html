@@ -50,6 +50,8 @@
               [dragging]="drag.dragging() === item.id"
               (dragstart)="onDragStart($event, item)"
               (dragend)="onDragEnd()"
+              (demote)="onDemoteToNote(item)"
+              (remove)="onRemoveItem(item)"
             />
           </app-grooming-nest>
         }

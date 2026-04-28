@@ -73,6 +73,8 @@ export class GroomingCard {
 
   readonly dragstart = output<DragEvent>();
   readonly dragend   = output<void>();
+  readonly demote    = output<void>();  // reclassify task → note
+  readonly remove    = output<void>();  // hard delete
 
   // --- expand / collapse -------------------------------------------------
   // Card-local state — operator opens one card to see what's happening,
