@@ -175,11 +175,21 @@
           @if (item.acceptance_criteria.length > 0) {
             <ul class="ac-list">
               @for (ac of item.acceptance_criteria; track ac.text) {
-                <li [class]="'ac-item' + (ac.done ? ' ac-item--done' : '')">
+                <li [class]="'ac-item' + (ac.done ? ' ac-item--done' : '') + (acStatus(ac.text) === 'verbose' ? ' ac-item--verbose' : '') + (acStatus(ac.text) === 'exceeds' ? ' ac-item--exceeds' : '')">
                   <span class="ac-item__mark" [attr.aria-label]="ac.done ? 'done' : 'pending'">
                     {{ ac.done ? '✓' : '○' }}
                   </span>
-                  <span>{{ ac.text }}</span>
+                  <span class="ac-item__text">{{ ac.text }}</span>
+                  @switch (acStatus(ac.text)) {
+                    @case ('verbose') {
+                      <span class="ac-item__chip ac-item__chip--warn"
+                        [title]="'Verbose (' + ac.text.length + ' chars). Spec recommends ≤ 120.'">verbose</span>
+                    }
+                    @case ('exceeds') {
+                      <span class="ac-item__chip ac-item__chip--err"
+                        [title]="'Exceeds policy (' + ac.text.length + ' chars). Reject or edit.'">exceeds</span>
+                    }
+                  }
                 </li>
               }
             </ul>

@@ -19,6 +19,7 @@ import { ProjectsService } from '../../../projects/data-access/projects.service'
 import { ThreadService } from '../../../thread/data-access/thread.service';
 import { ThreadView } from '../../../thread/components/thread-view/thread-view';
 import { computeReadiness, effectivePriority } from '@domain/vault/readiness';
+import { acceptanceCriterionStatus } from '@shared/validation/acceptance-criterion-length';
 import { actorId, projectId, vaultItemId } from '@domain/ids';
 import type { Priority } from '@domain/vault/vault-item';
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
@@ -305,6 +306,8 @@ export class VaultItemDetailBody {
   }
 
   // Bound arrow functions for passing to <app-activity-log> inputs.
+  acStatus(text: string) { return acceptanceCriterionStatus(text); }
+
   readonly actorLabelFn = (id: string) => this.actorDisplay(id);
   readonly actorKindFn  = (id: string) => this.actorKind(id);
 
