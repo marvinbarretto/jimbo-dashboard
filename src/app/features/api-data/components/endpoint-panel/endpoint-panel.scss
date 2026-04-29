@@ -1,0 +1,143 @@
+.endpoint {
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 86%, var(--color-bg));
+  border-radius: var(--radius);
+  padding: 1rem;
+  min-width: 0;
+}
+
+.endpoint--compact {
+  padding: 0.85rem;
+}
+
+.endpoint__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 0.85rem;
+
+  h2 {
+    font-size: 1rem;
+    margin-bottom: 0.2rem;
+  }
+
+  p {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 0.35rem;
+  }
+
+  code {
+    color: var(--color-text-muted);
+    background: var(--color-bg);
+  }
+}
+
+.endpoint__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+
+  button {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+.endpoint__count {
+  color: var(--color-info);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.endpoint__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+
+  div {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.45rem 0.55rem;
+    background: var(--color-bg);
+    min-width: 0;
+  }
+
+  dt {
+    color: var(--color-text-muted);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  dd {
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+.endpoint__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.endpoint__table {
+  min-width: 720px;
+  font-size: 0.75rem;
+
+  th,
+  td {
+    vertical-align: top;
+    max-width: 240px;
+    overflow-wrap: anywhere;
+  }
+}
+
+.endpoint__state,
+.endpoint__error {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.endpoint__error {
+  color: var(--color-danger);
+}
+
+.endpoint__raw {
+  margin-top: 0.75rem;
+
+  summary {
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-size: 0.75rem;
+  }
+
+  pre {
+    margin-top: 0.5rem;
+    max-height: 420px;
+    overflow: auto;
+    padding: 0.75rem;
+    border-radius: var(--radius);
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .endpoint__header {
+    flex-direction: column;
+  }
+
+  .endpoint__meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

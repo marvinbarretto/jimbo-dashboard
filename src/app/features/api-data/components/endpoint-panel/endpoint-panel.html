@@ -1,0 +1,61 @@
+<section class="endpoint" [class.endpoint--compact]="compact()">
+  <header class="endpoint__header">
+    <div>
+      <h2>{{ endpoint().title }}</h2>
+      <p>{{ endpoint().summary }}</p>
+      <code>{{ endpoint().path }}</code>
+    </div>
+    <div class="endpoint__meta">
+      <span class="endpoint__count">{{ countLabel() }}</span>
+      <button type="button" (click)="load()">reload</button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="endpoint__state">Loading...</p>
+  } @else if (error(); as e) {
+    <p class="endpoint__error">{{ e }}</p>
+  } @else {
+    @if (summaryEntries().length > 0) {
+      <dl class="endpoint__summary">
+        @for (entry of summaryEntries(); track entry.key) {
+          <div>
+            <dt>{{ entry.key }}</dt>
+            <dd>{{ entry.value }}</dd>
+          </div>
+        }
+      </dl>
+    }
+
+    @if (rows().length > 0) {
+      <div class="endpoint__table-wrap">
+        <table class="endpoint__table">
+          <thead>
+            <tr>
+              @for (col of columns(); track col) {
+                <th>{{ col }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows().slice(0, compact() ? 8 : 25); track $index) {
+              <tr>
+                @for (col of columns(); track col) {
+                  <td>{{ cell(row, col) }}</td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (rows().length > (compact() ? 8 : 25)) {
+        <p class="endpoint__state">Showing {{ compact() ? 8 : 25 }} of {{ rows().length }} rows.</p>
+      }
+    }
+
+    <details class="endpoint__raw">
+      <summary>raw JSON</summary>
+      <pre>{{ payload() | json }}</pre>
+    </details>
+  }
+</section>

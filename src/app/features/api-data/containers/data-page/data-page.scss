@@ -1,0 +1,38 @@
+.data-page {
+  padding: 1.5rem;
+}
+
+.data-page__header {
+  margin-bottom: 1rem;
+
+  h1 {
+    margin-bottom: 0.25rem;
+  }
+
+  p {
+    color: var(--color-text-muted);
+    max-width: 820px;
+  }
+}
+
+.data-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.data-page__missing {
+  padding: 1.5rem;
+  color: var(--color-danger);
+}
+
+@media (max-width: 900px) {
+  .data-page {
+    padding: 1rem;
+  }
+
+  .data-page__grid {
+    grid-template-columns: 1fr;
+  }
+}

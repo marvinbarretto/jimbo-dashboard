@@ -1,0 +1,16 @@
+@if (page; as p) {
+  <div class="data-page">
+    <header class="data-page__header">
+      <h1>{{ p.title }}</h1>
+      <p>{{ p.hint }}</p>
+    </header>
+
+    <div class="data-page__grid">
+      @for (endpoint of p.endpoints; track endpoint.path + endpoint.title) {
+        <app-endpoint-panel [endpoint]="endpoint" />
+      }
+    </div>
+  </div>
+} @else {
+  <p class="data-page__missing">No data page configuration found.</p>
+}
