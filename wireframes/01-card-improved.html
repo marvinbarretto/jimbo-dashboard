@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 — Card with Reply</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; background: #f5f5f5; padding: 0 0 80px; }
+
+  .wire-label { position: fixed; top: 12px; right: 12px; font-family: 'Courier New', monospace; font-size: 10px; background: #111; color: #fff; padding: 4px 8px; z-index: 100; }
+
+  .frame { max-width: 375px; margin: 0 auto; border: 1px solid #ccc; background: #fff; }
+
+  .page-title { padding: 14px 16px 10px; font-size: 16px; font-weight: bold; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+  .page-count { font-size: 11px; color: #999; font-weight: normal; }
+
+  .col-tabs { display: flex; border-bottom: 2px solid #eee; overflow-x: auto; }
+  .col-tab { flex-shrink: 0; padding: 10px 14px; font-size: 11px; font-weight: bold; border-bottom: 2px solid transparent; margin-bottom: -2px; color: #999; white-space: nowrap; }
+  .col-tab.active { color: #111; border-bottom-color: #111; }
+  .col-tab .n { display: inline-block; font-size: 9px; background: #111; color: #fff; padding: 1px 4px; border-radius: 8px; margin-left: 3px; }
+
+  /* Card */
+  .card { border-bottom: 1px solid #eee; padding: 14px 16px 0; border-left: 3px solid #111; }
+
+  .card__meta { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .card__seq { font-size: 11px; color: #999; }
+  .card__priority { font-size: 10px; font-weight: bold; padding: 1px 6px; border: 1px solid #999; color: #555; }
+  .card__age { font-size: 10px; color: #bbb; margin-left: auto; }
+
+  .card__title { font-size: 17px; font-weight: bold; line-height: 1.25; display: block; color: #111; text-decoration: none; margin-bottom: 10px; }
+
+  .card__question { padding: 10px 12px; background: #f5f5f5; border-left: 2px solid #ccc; margin-bottom: 12px; }
+  .card__question-who { font-size: 10px; font-weight: bold; color: #888; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 5px; display: flex; justify-content: space-between; }
+  .card__question-body { font-size: 13px; line-height: 1.5; color: #222; }
+
+  /* Inline reply composer (expanded state) */
+  .card__reply { border-top: 1px solid #eee; padding: 10px 0 12px; }
+  .card__reply-input {
+    width: 100%; border: 1px solid #ccc; padding: 10px; font-family: 'Courier New', monospace;
+    font-size: 13px; line-height: 1.5; resize: none; min-height: 72px; margin-bottom: 8px;
+    background: #fff;
+  }
+  .card__reply-input:focus { outline: 2px solid #111; border-color: #111; }
+  .card__reply-toolbar { display: flex; gap: 6px; align-items: center; }
+  .card__token-btn { font-size: 11px; padding: 6px 8px; border: 1px solid #ccc; background: #f5f5f5; color: #555; font-family: 'Courier New', monospace; cursor: pointer; }
+  .card__reply-send { margin-left: auto; font-size: 12px; font-weight: bold; padding: 8px 16px; background: #111; color: #fff; border: none; font-family: 'Courier New', monospace; cursor: pointer; }
+
+  /* Permanent action row */
+  .card__actions { display: flex; gap: 0; border-top: 1px solid #eee; }
+  .card__action { flex: 1; padding: 12px 0; font-size: 12px; font-weight: bold; border: none; border-right: 1px solid #eee; background: #fff; text-align: center; font-family: 'Courier New', monospace; cursor: pointer; }
+  .card__action:last-child { border-right: none; }
+  .card__action--reply { background: #111; color: #fff; }
+  .card__action--delete { color: #555; }
+  .card__action--more { color: #bbb; font-size: 16px; letter-spacing: 2px; }
+
+  .annotation { background: #fffce8; border: 1px dashed #ccc; padding: 12px; margin: 0 0 1px; font-size: 10px; line-height: 1.6; color: #666; }
+  .annotation strong { color: #111; display: block; margin-bottom: 4px; }
+
+  .screen-sep { border-top: 3px dashed #ccc; padding: 8px 16px; font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 1px; background: #fafafa; }
+</style>
+</head>
+<body>
+<div class="wire-label">01 — CARD WITH REPLY</div>
+<div class="frame">
+
+  <div class="page-title">Grooming pipeline <span class="page-count">62</span></div>
+  <div class="col-tabs">
+    <div class="col-tab">NEEDS REWORK <span class="n">0</span></div>
+    <div class="col-tab">UNGROOMED <span class="n">796</span></div>
+    <div class="col-tab active">INTAKE REJECTED <span class="n">62</span></div>
+    <div class="col-tab">IN PROG</div>
+  </div>
+
+  <!-- Card A: collapsed (default state) -->
+  <div class="card">
+    <div class="card__meta">
+      <span class="card__seq">#1753</span>
+      <span class="card__priority">P3</span>
+      <span class="card__age">10h ago</span>
+    </div>
+    <a class="card__title" href="#" data-goto="02">test</a>
+    <div class="card__question">
+      <div class="card__question-who"><span>Boris asked</span><span>10h ago</span></div>
+      <div class="card__question-body">Is this a genuine task or an accidental test entry that should be deleted?</div>
+    </div>
+    <div class="card__actions">
+      <button class="card__action card__action--reply">reply ↩</button>
+      <button class="card__action card__action--delete">delete</button>
+      <button class="card__action card__action--more">···</button>
+    </div>
+  </div>
+
+  <!-- Card B: reply expanded -->
+  <div class="screen-sep">State: reply expanded (tap "reply ↩")</div>
+  <div class="card">
+    <div class="card__meta">
+      <span class="card__seq">#1753</span>
+      <span class="card__priority">P3</span>
+      <span class="card__age">10h ago</span>
+    </div>
+    <a class="card__title" href="#" data-goto="02">test</a>
+    <div class="card__question">
+      <div class="card__question-who"><span>Boris asked</span><span>10h ago</span></div>
+      <div class="card__question-body">Is this a genuine task or an accidental test entry that should be deleted?</div>
+    </div>
+    <div class="card__reply">
+      <textarea class="card__reply-input" placeholder="Answer Boris's question…  Type # for tasks, @ for people, / for projects"></textarea>
+      <div class="card__reply-toolbar">
+        <button class="card__token-btn"># task</button>
+        <button class="card__token-btn">@ person</button>
+        <button class="card__token-btn">/ project</button>
+        <button class="card__reply-send">send ↩</button>
+      </div>
+    </div>
+    <div class="card__actions">
+      <button class="card__action card__action--reply" style="background:#333">reply ↩</button>
+      <button class="card__action card__action--delete">delete</button>
+      <button class="card__action card__action--more">···</button>
+    </div>
+  </div>
+
+  <!-- Card C: a second card for context -->
+  <div class="card">
+    <div class="card__meta">
+      <span class="card__seq">#640</span>
+      <span class="card__priority">P2</span>
+      <span class="card__age">9h ago</span>
+    </div>
+    <a class="card__title" href="#" data-goto="02">Clean notes off old computer</a>
+    <div class="card__question">
+      <div class="card__question-who"><span>Boris asked</span><span>9h ago</span></div>
+      <div class="card__question-body">Has the old MacBook already been sold or wiped — is this task already done?</div>
+    </div>
+    <div class="card__actions">
+      <button class="card__action card__action--reply">reply ↩</button>
+      <button class="card__action card__action--delete">delete</button>
+      <button class="card__action card__action--more">···</button>
+    </div>
+  </div>
+
+</div>
+
+<div style="max-width:375px; margin: 0 auto;">
+  <div class="annotation">
+    <strong>CARD ACTION ROW — always visible, 3 actions</strong>
+    — reply ↩ (primary, dark) — expands inline composer<br>
+    — delete — immediate, no confirm (undo toast instead?)<br>
+    — ··· — overflow: edit, archive, demote → note, view detail<br>
+    — Min tap height: 48px (currently card__action-btn has no height set)
+  </div>
+  <div class="annotation">
+    <strong>INLINE REPLY COMPOSER</strong>
+    — Expands below the question when reply is tapped<br>
+    — posts kind=answer, in_reply_to=questionId<br>
+    — Token buttons are shortcuts: tapping inserts # / @ / /<br>
+    — Autocomplete dropdown appears on # / @ / / keystroke (see → 04)<br>
+    — On send: question collapses, card stays in list (item still rejected until moved)
+  </div>
+  <div class="annotation">
+    <strong>WHAT CHANGED vs previous wireframe</strong>
+    — Removed: tag chips, owner chip, age in footer<br>
+    — Added: reply ↩ as primary action (replaces expand ▾)<br>
+    — Added: inline composer in expanded state<br>
+    — Token bar on composer (phase 1: manual typing; phase 2: autocomplete)
+  </div>
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>

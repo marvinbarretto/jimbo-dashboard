@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 — Config Architecture</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; background: #f5f5f5; padding: 16px 16px 80px; }
+  .frame { max-width: 375px; margin: 0 auto; }
+
+  .wire-label {
+    position: fixed; top: 12px; right: 12px;
+    font-family: 'Courier New', monospace; font-size: 10px;
+    background: #111; color: #fff; padding: 4px 8px; z-index: 100;
+  }
+
+  h1 { font-size: 16px; font-weight: bold; margin-bottom: 4px; }
+  .subtitle { font-size: 10px; color: #999; margin-bottom: 20px; }
+
+  .block {
+    background: #fff; border: 1px solid #ccc; padding: 14px 16px; margin-bottom: 16px;
+  }
+  .block h2 { font-size: 13px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 6px; }
+  .block p { font-size: 11px; color: #666; line-height: 1.6; margin-bottom: 8px; }
+
+  pre {
+    background: #f5f5f5; padding: 12px; font-size: 10px; line-height: 1.6;
+    overflow-x: auto; border: 1px solid #eee; margin-bottom: 10px;
+    white-space: pre-wrap; word-break: break-word;
+  }
+
+  .table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 10px; }
+  .table th { text-align: left; padding: 6px 8px; background: #f5f5f5; border-bottom: 2px solid #ccc; font-weight: bold; }
+  .table td { padding: 6px 8px; border-bottom: 1px solid #eee; vertical-align: top; }
+  .table td:first-child { font-weight: bold; color: #111; }
+
+  .touch-surface {
+    padding: 10px; background: #f5f5f5; border: 1px dashed #ccc;
+    font-size: 10px; color: #666; margin-bottom: 10px; line-height: 1.5;
+  }
+  .touch-surface strong { color: #111; }
+
+  .annotation {
+    background: #fffce8; border: 1px dashed #ccc;
+    padding: 12px; margin-bottom: 16px;
+    font-size: 10px; line-height: 1.6; color: #666;
+  }
+  .annotation strong { color: #111; display: block; margin-bottom: 4px; }
+
+  .divider { border: none; border-top: 1px solid #eee; margin: 16px 0; }
+</style>
+</head>
+<body>
+<div class="wire-label">03 — CONFIG ARCHITECTURE</div>
+<div class="frame">
+
+  <h1>Config Architecture</h1>
+  <p class="subtitle">How the per-status config drives card + detail without bespoke conditionals</p>
+
+  <!-- What the config is -->
+  <div class="block">
+    <h2>The problem it solves</h2>
+    <p>Currently, status-specific display logic is scattered: <code>isIntakeRejected()</code>, <code>needsRework()</code>, <code>isSidebranch()</code> computed signals each add conditional branches. Every new column-specific behaviour adds another condition.</p>
+    <p>A single config object per grooming status means: <strong>one place to define what a status looks like</strong>. Card, detail, and action bar all read from it. Adding a new column = adding one config entry.</p>
+  </div>
+
+  <!-- Config shape -->
+  <div class="block">
+    <h2>Config interface (TypeScript sketch)</h2>
+    <pre>interface ColumnConfig {
+  // Card
+  primaryContent:
+    | 'rejection_callout'   // intake_rejected
+    | 'rework_reason'       // needs_rework
+    | 'source_attribution'  // ungroomed
+    | 'body_excerpt'        // default
+  showTags: boolean
+  showOwnerChip: boolean
+
+  // Card actions (in order)
+  cardActions: CardAction[]
+
+  // Detail
+  defaultTab:
+    | 'overview'
+    | 'body'
+    | 'activity'
+    | 'thread'
+
+  // Detail sticky bar
+  primaryAction: ActionDef
+  secondaryAction: ActionDef
+  // overflow: always shows full set
+}</pre>
+  </div>
+
+  <!-- Config entries per status -->
+  <div class="block">
+    <h2>Config entries per status</h2>
+    <table class="table">
+      <tr>
+        <th>Status</th>
+        <th>Primary content</th>
+        <th>Card actions</th>
+        <th>Default tab</th>
+        <th>Sticky bar</th>
+      </tr>
+      <tr>
+        <td>intake_rejected</td>
+        <td>Boris's question</td>
+        <td>delete / edit / archive</td>
+        <td>thread</td>
+        <td>delete / edit</td>
+      </tr>
+      <tr>
+        <td>needs_rework</td>
+        <td>Rework reason + target</td>
+        <td>fix / reassign / delete</td>
+        <td>overview</td>
+        <td>edit / reassign</td>
+      </tr>
+      <tr>
+        <td>ungroomed</td>
+        <td>Source attribution</td>
+        <td>→ note / delete</td>
+        <td>overview</td>
+        <td>triage / delete</td>
+      </tr>
+      <tr>
+        <td>classified</td>
+        <td>body_excerpt</td>
+        <td>decompose / edit</td>
+        <td>body</td>
+        <td>decompose / edit</td>
+      </tr>
+      <tr>
+        <td>decomposed</td>
+        <td>body_excerpt</td>
+        <td>mark ready / edit</td>
+        <td>overview</td>
+        <td>mark ready / edit</td>
+      </tr>
+      <tr>
+        <td>ready</td>
+        <td>body_excerpt</td>
+        <td>edit / archive</td>
+        <td>overview</td>
+        <td>send to exec / edit</td>
+      </tr>
+    </table>
+    <p>intake_rejected is the first fully-designed row. Others are placeholder logic — correct the table as each column gets attention.</p>
+  </div>
+
+  <!-- Touch target note -->
+  <div class="block">
+    <h2>Touch target requirements</h2>
+    <div class="touch-surface">
+      <strong>Card action buttons: min 44px height</strong><br>
+      Current card__action-btn: no explicit height set — likely ~32px.<br>
+      All three buttons share equal width (flex: 1) within card__actions row.<br>
+      Padding: 10px top/bottom in wireframe → ~44px with 12px font line-height.<br><br>
+      <strong>Sticky bar buttons: min 48px height</strong><br>
+      Bigger surface = less precision needed when scrolling stops.<br>
+      Primary action: flex: 2 (wider, harder to miss).<br><br>
+      <strong>Tab strip: min 44px height</strong><br>
+      Currently ~36px. Worth increasing on mobile breakpoint.
+    </div>
+  </div>
+
+  <!-- Where the config lives -->
+  <div class="block">
+    <h2>Where the config lives</h2>
+    <pre>// src/app/features/grooming/
+//   grooming-column.config.ts
+
+export const COLUMN_CONFIG:
+  Record&lt;GroomingStatus, ColumnConfig&gt; = {
+  intake_rejected: { ... },
+  needs_rework: { ... },
+  ungroomed: { ... },
+  ...
+}</pre>
+    <p>Consumed by:</p>
+    <pre>// grooming-card.ts
+readonly config = computed(() =>
+  COLUMN_CONFIG[this.item().grooming_status]
+)
+
+// vault-item-detail-body.ts
+readonly config = computed(() =>
+  COLUMN_CONFIG[this.item()?.grooming_status]
+)
+readonly activeTab = signal(
+  this.config()?.defaultTab ?? 'overview'
+)</pre>
+  </div>
+
+  <!-- Implementation sequence -->
+  <div class="block">
+    <h2>Implementation sequence</h2>
+    <p><strong>Step 1</strong> — Create <code>grooming-column.config.ts</code> with the interface + intake_rejected entry.</p>
+    <p><strong>Step 2</strong> — Grooming card reads config: swap action row content, show Boris's question as primary content for intake_rejected.</p>
+    <p><strong>Step 3</strong> — Detail body reads config: initialise activeTab from config.defaultTab.</p>
+    <p><strong>Step 4</strong> — Sticky action bar in detail: new component <code>DetailActionBar</code> that receives the config's action definitions.</p>
+    <p><strong>Step 5</strong> — Fill in config entries for remaining statuses as needed (not all at once).</p>
+  </div>
+
+  <div class="annotation">
+    <strong>WHAT STAYS THE SAME</strong>
+    — Drag-drop logic (unaffected)<br>
+    — Filter bar (unaffected)<br>
+    — URL ↔ dialog wiring (unaffected)<br>
+    — Thread view component (unaffected)<br>
+    — Activity log component (unaffected)<br>
+    — grooming-nest parent indicator (unaffected)<br>
+    — The config is additive — nothing is deleted in step 1
+  </div>
+
+  <div class="annotation">
+    <strong>OPEN QUESTIONS FOR IMPLEMENTATION</strong>
+    — Does detail sticky bar replace the existing edit/reject/archive/delete row entirely, or sit alongside it?<br>
+    — Should the existing card__actions CSS class be reused or renamed?<br>
+    — ··· overflow in sticky bar: CDK overlay, native select, or a bottom sheet?<br>
+    — Tab height increase: needs SCSS breakpoint in detail-body or a global mobile tab rule?
+  </div>
+
+</div>
+</div>
+<script src="wire-nav.js"></script>
+</body>
+</html>

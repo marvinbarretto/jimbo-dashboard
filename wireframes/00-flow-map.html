@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>00 — Flow Map</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; background: #f5f5f5; padding: 24px 16px 80px; }
+  .frame { max-width: 375px; margin: 0 auto; }
+
+  h1 { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+  .subtitle { font-size: 11px; color: #999; margin-bottom: 24px; }
+
+  .legend { display: flex; gap: 16px; font-size: 10px; color: #666; margin-bottom: 24px; flex-wrap: wrap; }
+  .dot-filled { width: 10px; height: 10px; border-radius: 50%; background: #111; display:inline-block; }
+  .dot-empty  { width: 10px; height: 10px; border-radius: 50%; border: 2px solid #111; display:inline-block; }
+
+  .section-label {
+    font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
+    color: #999; margin: 20px 0 8px; border-top: 1px solid #eee; padding-top: 12px;
+  }
+
+  .step { margin-bottom: 12px; padding: 14px 16px; background: #fff; border: 1px solid #ccc; }
+  .step-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+  .step-dot { width: 12px; height: 12px; border-radius: 50%; background: #111; flex-shrink: 0; margin-top: 2px; }
+  .step-dot--empty { background: #fff; border: 2px solid #111; }
+  .step-num { font-size: 10px; font-weight: bold; color: #999; }
+  .step-title { font-size: 13px; font-weight: bold; }
+  .step-desc { font-size: 11px; color: #666; line-height: 1.5; margin-top: 4px; }
+  .step-link { font-size: 11px; color: #111; text-decoration: none; border-bottom: 1px solid #ccc; display: inline-block; margin-top: 6px; }
+  .tag { display: inline-block; font-size: 9px; padding: 1px 5px; border: 1px solid; margin-right: 4px; margin-top: 6px; }
+  .tag--new { border-color: #111; color: #111; font-weight: bold; }
+  .tag--exists { border-color: #ccc; color: #999; }
+
+  .connector { text-align: center; color: #bbb; margin: -4px 0; font-size: 16px; }
+
+  .questions { margin-top: 20px; padding: 14px 16px; border: 2px dashed #ccc; }
+  .questions h2 { font-size: 12px; font-weight: bold; margin-bottom: 8px; }
+  .questions li { font-size: 11px; color: #666; margin-bottom: 5px; line-height: 1.4; margin-left: 14px; }
+
+  .wire-label { position: fixed; top: 12px; right: 12px; font-family: 'Courier New', monospace; font-size: 10px; background: #111; color: #fff; padding: 4px 8px; }
+</style>
+</head>
+<body>
+<div class="wire-label">00 — FLOW MAP</div>
+<div class="frame">
+
+  <h1>Agent questions inbox</h1>
+  <p class="subtitle">Persona: Marvin (admin) · Mobile · 2026-04-29</p>
+
+  <div class="legend">
+    <span><span class="dot-filled"></span> screen</span>
+    <span><span class="dot-empty"></span> system action</span>
+  </div>
+
+  <!-- Surface A: Grooming board cards (existing, improved) -->
+  <div class="section-label">Surface A — Grooming board (existing, improved)</div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-dot"></div><div>
+      <div class="step-num">01</div>
+      <div class="step-title">Card in intake_rejected column</div>
+    </div></div>
+    <p class="step-desc">Card now shows Boris's question as primary content. Permanent action row (delete / edit / reply). For obvious junk: one-tap delete. For anything needing thought: tap reply to answer inline, or open detail.</p>
+    <span class="tag tag--exists">card exists</span>
+    <span class="tag tag--new">reply button + action row → 01</span><br>
+    <a class="step-link" href="01-card-improved.html" data-goto="01">→ 01-card-improved</a>
+  </div>
+
+  <div class="connector">↓</div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-dot"></div><div>
+      <div class="step-num">02</div>
+      <div class="step-title">Detail — stacked layout</div>
+    </div></div>
+    <p class="step-desc">Opens when card title is tapped. Single scrollable page — no tabs. Boris's question at top, then body, then activity, then full thread. Sticky bottom bar: delete / edit.</p>
+    <span class="tag tag--exists">detail exists</span>
+    <span class="tag tag--new">stacked sections + sticky bar → 02</span><br>
+    <a class="step-link" href="02-detail-stacked.html" data-goto="02">→ 02-detail-stacked</a>
+  </div>
+
+  <!-- Surface B: Questions page (new) -->
+  <div class="section-label">Surface B — Questions page (new)</div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-dot"></div><div>
+      <div class="step-num">03</div>
+      <div class="step-title">Questions feed — /questions</div>
+    </div></div>
+    <p class="step-desc">Dedicated page. All open thread messages of kind=question, answered_by=null, on items assigned to @marvin. Sorted newest or by item priority. Each entry is self-contained: context + question + reply button.</p>
+    <span class="tag tag--new">new page → 03</span><br>
+    <a class="step-link" href="03-questions-feed.html" data-goto="03">→ 03-questions-feed</a>
+  </div>
+
+  <div class="connector">↓</div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-dot"></div><div>
+      <div class="step-num">04</div>
+      <div class="step-title">Inline reply with rich tokens</div>
+    </div></div>
+    <p class="step-desc">Tap reply on any question → composer expands inline. Rich token triggers: # for task refs, @ for people, / for projects. Submit posts an answer message, marks answered_by on the question, question collapses from feed.</p>
+    <span class="tag tag--new">rich composer → 04</span><br>
+    <a class="step-link" href="04-question-reply.html" data-goto="04">→ 04-question-reply</a>
+  </div>
+
+  <div class="connector">↓</div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-dot step-dot--empty"></div><div>
+      <div class="step-num">—</div>
+      <div class="step-title">Question answered → item may unblock</div>
+    </div></div>
+    <p class="step-desc">POST to /api/thread-messages with kind=answer, in_reply_to=questionId. ThreadService marks answered_by. If this was the last open question, item's readiness check may now pass. Question disappears from feed.</p>
+    <span class="tag tag--exists">post + markAnswered exist in ThreadService</span>
+    <span class="tag tag--new">cross-item query endpoint needed</span>
+  </div>
+
+  <!-- Data note -->
+  <div class="step" style="background:#fafafa; border-style:dashed;">
+    <div class="step-header"><div class="step-dot" style="background:#ccc"></div><div>
+      <div class="step-title">Data gap: cross-item question query</div>
+    </div></div>
+    <p class="step-desc">ThreadService.loadFor(vaultItemId) loads per-item. Questions page needs: GET /api/thread-messages?kind=question&answered_by=null&assigned_to=marvin. New API endpoint + new QuestionsService. Everything else already exists.</p>
+  </div>
+
+  <div class="questions">
+    <h2>Open questions</h2>
+    <ul>
+      <li>Nav placement for /questions — new top-level nav item, or badge on existing?</li>
+      <li>Token autocomplete: phase 1 (plain text reply) or scope in from the start?</li>
+      <li>After answering: does the item auto-advance columns or wait for agent re-review?</li>
+      <li>Can Marvin ask a clarifying question back (kind=question from human)?</li>
+      <li>Should questions from ALL agents appear, or filter by agent (Boris vs Ralph)?</li>
+      <li>Bulk answer — if 10 questions are the same ("is this done?") can you answer in batch?</li>
+    </ul>
+  </div>
+
+</div>
+<script src="wire-nav.js"></script>
+</body>
+</html>

@@ -63,3 +63,4 @@ proxy.conf.json
 # Local snapshots of production data (large; pulled via SSH for ETL testing)
 .local/
 
+.worktrees/

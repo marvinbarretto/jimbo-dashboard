@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 — Detail Stacked</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; background: #f5f5f5; padding: 0 0 80px; }
+
+  .wire-label { position: fixed; top: 12px; right: 12px; font-family: 'Courier New', monospace; font-size: 10px; background: #111; color: #fff; padding: 4px 8px; z-index: 100; }
+
+  .frame { max-width: 375px; margin: 0 auto; border: 1px solid #ccc; background: #fff; }
+
+  /* Header */
+  .detail-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #eee; }
+  .detail-id { font-size: 13px; font-weight: bold; }
+  .detail-close { font-size: 13px; color: #999; background: none; border: none; padding: 4px 8px; font-family: 'Courier New', monospace; }
+
+  /* Slim status row */
+  .detail-status { display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 16px; border-bottom: 1px solid #eee; background: #fafafa; }
+  .chip { font-size: 10px; padding: 2px 7px; border: 1px solid #ccc; color: #666; }
+  .chip--status { font-weight: bold; border-color: #999; color: #111; }
+
+  /* Section pattern */
+  .section { border-bottom: 1px solid #eee; }
+  .section__header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; cursor: pointer;
+  }
+  .section__title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #666; }
+  .section__meta { font-size: 10px; color: #bbb; }
+  .section__body { padding: 0 16px 16px; }
+
+  /* Question section — no collapse, always open, prominent */
+  .question-section { border-bottom: 1px solid #eee; padding: 14px 16px; }
+  .question-who { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .question-body { font-size: 15px; line-height: 1.55; color: #111; font-weight: bold; margin-bottom: 10px; }
+  .question-rationale { font-size: 11px; line-height: 1.5; color: #666; padding: 8px 10px; background: #f5f5f5; border-left: 2px solid #ccc; margin-bottom: 12px; }
+  .question-rationale-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #bbb; margin-bottom: 3px; }
+
+  /* Reply composer inside question section */
+  .reply-composer { border-top: 1px solid #eee; padding-top: 12px; }
+  .reply-input { width: 100%; border: 1px solid #ccc; padding: 10px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.5; resize: none; min-height: 80px; background: #fff; }
+  .reply-toolbar { display: flex; gap: 6px; margin-top: 8px; align-items: center; }
+  .token-btn { font-size: 11px; padding: 6px 8px; border: 1px solid #ccc; background: #f5f5f5; color: #555; font-family: 'Courier New', monospace; }
+  .reply-send { margin-left: auto; font-size: 12px; font-weight: bold; padding: 8px 16px; background: #111; color: #fff; border: none; font-family: 'Courier New', monospace; }
+
+  /* Body section */
+  .body-text { font-size: 13px; line-height: 1.6; color: #333; }
+  .body-empty { font-size: 12px; color: #bbb; font-style: italic; }
+
+  /* Activity section — compact rows */
+  .activity-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; font-size: 11px; color: #666; line-height: 1.4; }
+  .activity-icon { flex-shrink: 0; color: #bbb; width: 14px; text-align: center; }
+  .activity-age { flex-shrink: 0; color: #bbb; margin-left: auto; white-space: nowrap; }
+
+  /* Thread section */
+  .thread-msg { margin-bottom: 12px; }
+  .thread-msg-who { font-size: 10px; font-weight: bold; color: #888; margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .thread-msg-body { font-size: 12px; line-height: 1.5; color: #444; padding: 8px 10px; background: #f5f5f5; }
+  .thread-msg-body.is-question { border-left: 2px solid #111; }
+  .thread-msg-body.is-answer { border-left: 2px solid #ccc; }
+
+  /* Sticky bottom bar */
+  .sticky-bar { position: sticky; bottom: 0; background: #fff; border-top: 2px solid #111; padding: 10px 16px; display: flex; gap: 8px; }
+  .bar-primary { flex: 2; padding: 13px 0; font-size: 14px; font-weight: bold; background: #111; color: #fff; border: none; text-align: center; font-family: 'Courier New', monospace; }
+  .bar-secondary { flex: 1; padding: 13px 0; font-size: 13px; background: #fff; color: #111; border: 1px solid #ccc; text-align: center; font-family: 'Courier New', monospace; }
+  .bar-overflow { padding: 13px 14px; font-size: 14px; background: #fff; color: #999; border: 1px solid #eee; font-family: 'Courier New', monospace; letter-spacing: 2px; }
+
+  .annotation { background: #fffce8; border: 1px dashed #ccc; padding: 12px; margin: 0 0 1px; font-size: 10px; line-height: 1.6; color: #666; }
+  .annotation strong { color: #111; display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="wire-label">02 — DETAIL STACKED</div>
+<div class="frame">
+
+  <!-- Minimal header -->
+  <div class="detail-bar">
+    <div class="detail-id">#1753 · test</div>
+    <button class="detail-close">✕ close</button>
+  </div>
+
+  <!-- Condensed status -->
+  <div class="detail-status">
+    <span class="chip chip--status">intake rejected</span>
+    <span class="chip">@marvin</span>
+    <span class="chip">P3</span>
+    <span class="chip">task</span>
+    <span class="chip">vague · blocked</span>
+  </div>
+
+  <!-- ── ZONE 1: Open question — always at top, always expanded, reply inline ── -->
+  <div class="question-section">
+    <div class="question-who">
+      <span>Boris — open question</span>
+      <span>10h ago</span>
+    </div>
+    <div class="question-body">Is this a genuine task or an accidental test entry that should be deleted?</div>
+    <div class="question-rationale">
+      <div class="question-rationale-label">Why Boris asked</div>
+      Title is literally "test" and note body is null — nothing to work with. Needs a real title and body if genuine, or should be deleted.
+    </div>
+    <div class="reply-composer">
+      <textarea class="reply-input" placeholder="Answer Boris's question…   # task  @ person  / project"></textarea>
+      <div class="reply-toolbar">
+        <button class="token-btn"># task</button>
+        <button class="token-btn">@ person</button>
+        <button class="token-btn">/ project</button>
+        <button class="reply-send">send ↩</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ZONE 2: Body — collapsible, shallow for this item ── -->
+  <div class="section">
+    <div class="section__header">
+      <span class="section__title">Body</span>
+      <span class="section__meta">empty ▾</span>
+    </div>
+    <div class="section__body">
+      <p class="body-empty">No body content. This is why Boris flagged it.</p>
+    </div>
+  </div>
+
+  <!-- ── ZONE 3: Activity — collapsible, count shown in header ── -->
+  <div class="section">
+    <div class="section__header">
+      <span class="section__title">Activity</span>
+      <span class="section__meta">3 events ▾</span>
+    </div>
+    <div class="section__body" style="padding-top:12px;">
+      <div class="activity-row">
+        <span class="activity-icon">◎</span>
+        <span>Boris posted a question</span>
+        <span class="activity-age">10h ago</span>
+      </div>
+      <div class="activity-row">
+        <span class="activity-icon">→</span>
+        <span>Status → intake_rejected</span>
+        <span class="activity-age">10h ago</span>
+      </div>
+      <div class="activity-row">
+        <span class="activity-icon">+</span>
+        <span>Created from capture</span>
+        <span class="activity-age">34d ago</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ZONE 4: Thread — full, with history ── -->
+  <div class="section">
+    <div class="section__header">
+      <span class="section__title">Thread</span>
+      <span class="section__meta">1 open question ▴</span>
+    </div>
+    <div class="section__body" style="padding-top:12px;">
+      <div class="thread-msg">
+        <div class="thread-msg-who"><span>Boris</span><span>10h ago · question</span></div>
+        <div class="thread-msg-body is-question">Is this a genuine task or an accidental test entry that should be deleted? Title is literally "test" and note body is null.</div>
+      </div>
+      <div style="font-size:11px;color:#bbb;padding-top:4px;">Answer in the open question zone above ↑</div>
+    </div>
+  </div>
+
+  <!-- Sticky bar -->
+  <div class="sticky-bar">
+    <button class="bar-primary">delete</button>
+    <button class="bar-secondary">edit</button>
+    <button class="bar-overflow">···</button>
+  </div>
+
+</div>
+
+<div style="max-width:375px; margin: 0 auto;">
+  <div class="annotation">
+    <strong>WHY STACKED INSTEAD OF TABS</strong>
+    — Tabs hide depth: BODY is empty here, THREAD has 1 message. Tabs treat them equally.<br>
+    — Stacked shows depth directly in the section header ("empty", "3 events", "1 open question")<br>
+    — User scrolls to what they need; shallow sections are short, deep sections are long<br>
+    — No context switch — all info on one scroll, nothing hidden behind a tap
+  </div>
+  <div class="annotation">
+    <strong>ZONE ORDER RATIONALE</strong>
+    — Open question is always at top (it's why this item is here)<br>
+    — Reply composer is inside the question zone (answer it where you read it)<br>
+    — Body next (needed to understand context)<br>
+    — Activity next (timeline, for investigation)<br>
+    — Thread last (full history, usually not needed if question zone is clear)<br>
+    — Sticky bar: delete / edit / ···
+  </div>
+  <div class="annotation">
+    <strong>WHEN THERE'S NO OPEN QUESTION</strong>
+    — Zone 1 (question) is absent entirely<br>
+    — Scroll starts at body<br>
+    — Sticky bar actions change based on status (see config table in old 03)
+  </div>
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>

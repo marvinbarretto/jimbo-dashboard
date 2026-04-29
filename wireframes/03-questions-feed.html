@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 — Questions Feed</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; background: #f5f5f5; padding: 0 0 80px; }
+
+  .wire-label { position: fixed; top: 12px; right: 12px; font-family: 'Courier New', monospace; font-size: 10px; background: #111; color: #fff; padding: 4px 8px; z-index: 100; }
+
+  .frame { max-width: 375px; margin: 0 auto; border: 1px solid #ccc; background: #fff; }
+
+  /* Page header */
+  .page-header { padding: 16px 16px 12px; border-bottom: 1px solid #eee; }
+  .page-header h1 { font-size: 20px; font-weight: bold; margin-bottom: 2px; }
+  .page-header .sub { font-size: 11px; color: #999; }
+
+  /* Sort bar */
+  .sort-bar { display: flex; gap: 0; border-bottom: 2px solid #eee; }
+  .sort-opt { flex: 1; padding: 10px 0; font-size: 11px; font-weight: bold; text-align: center; color: #999; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .sort-opt.active { color: #111; border-bottom-color: #111; }
+
+  /* Question entry */
+  .q-entry { border-bottom: 1px solid #eee; padding: 14px 16px 0; }
+  .q-entry--answered { opacity: 0.4; }
+
+  /* Context line: which item this is about */
+  .q-context { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .q-seq { font-size: 11px; color: #999; }
+  .q-title { font-size: 12px; font-weight: bold; color: #111; text-decoration: none; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .q-priority { font-size: 9px; font-weight: bold; padding: 1px 5px; border: 1px solid #999; color: #555; flex-shrink: 0; }
+  .q-status { font-size: 9px; padding: 1px 5px; border: 1px solid #ccc; color: #888; flex-shrink: 0; }
+
+  /* The question itself */
+  .q-body { font-size: 14px; line-height: 1.55; color: #111; margin-bottom: 10px; }
+  .q-who { font-size: 10px; color: #aaa; margin-bottom: 10px; }
+
+  /* Action row */
+  .q-actions { display: flex; gap: 0; border-top: 1px solid #eee; }
+  .q-action { flex: 1; padding: 12px 0; font-size: 12px; font-weight: bold; border: none; border-right: 1px solid #eee; background: #fff; text-align: center; font-family: 'Courier New', monospace; }
+  .q-action:last-child { border-right: none; }
+  .q-action--reply { background: #111; color: #fff; }
+  .q-action--open { color: #666; }
+  .q-action--skip { color: #bbb; }
+
+  /* Empty state */
+  .empty { padding: 40px 16px; text-align: center; }
+  .empty-title { font-size: 16px; font-weight: bold; margin-bottom: 8px; }
+  .empty-body { font-size: 12px; color: #999; line-height: 1.5; }
+
+  /* Answered state separator */
+  .answered-divider { padding: 8px 16px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #bbb; background: #fafafa; border-bottom: 1px solid #eee; }
+
+  .annotation { background: #fffce8; border: 1px dashed #ccc; padding: 12px; margin: 0 0 1px; font-size: 10px; line-height: 1.6; color: #666; }
+  .annotation strong { color: #111; display: block; margin-bottom: 4px; }
+
+  .screen-sep { border-top: 3px dashed #ccc; padding: 8px 16px; font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 1px; background: #fafafa; }
+</style>
+</head>
+<body>
+<div class="wire-label">03 — QUESTIONS FEED</div>
+<div class="frame">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <h1>Questions <span style="font-size:14px;font-weight:normal;color:#999;">for @marvin</span></h1>
+    <p class="sub">8 open · agents waiting for your input</p>
+  </div>
+
+  <!-- Sort bar -->
+  <div class="sort-bar">
+    <div class="sort-opt active">NEWEST FIRST</div>
+    <div class="sort-opt">PRIORITY FIRST</div>
+    <div class="sort-opt">BY AGENT</div>
+  </div>
+
+  <!-- Q1: obvious junk, Boris, intake_rejected -->
+  <div class="q-entry">
+    <div class="q-context">
+      <span class="q-seq">#1753</span>
+      <a class="q-title" href="#" data-goto="02">test</a>
+      <span class="q-priority">P3</span>
+      <span class="q-status">intake rejected</span>
+    </div>
+    <div class="q-body">Is this a genuine task or an accidental test entry that should be deleted?</div>
+    <div class="q-who">Boris · 10h ago</div>
+    <div class="q-actions">
+      <button class="q-action q-action--reply" data-goto="04">reply ↩</button>
+      <button class="q-action q-action--open" data-goto="02">open →</button>
+      <button class="q-action q-action--skip">skip</button>
+    </div>
+  </div>
+
+  <!-- Q2: needs thought -->
+  <div class="q-entry">
+    <div class="q-context">
+      <span class="q-seq">#640</span>
+      <a class="q-title" href="#" data-goto="02">Clean notes off old computer</a>
+      <span class="q-priority">P2</span>
+      <span class="q-status">intake rejected</span>
+    </div>
+    <div class="q-body">Has the old MacBook already been sold or wiped — is this task already done?</div>
+    <div class="q-who">Boris · 9h ago</div>
+    <div class="q-actions">
+      <button class="q-action q-action--reply" data-goto="04">reply ↩</button>
+      <button class="q-action q-action--open" data-goto="02">open →</button>
+      <button class="q-action q-action--skip">skip</button>
+    </div>
+  </div>
+
+  <!-- Q3: different column, different context -->
+  <div class="q-entry">
+    <div class="q-context">
+      <span class="q-seq">#1220</span>
+      <a class="q-title" href="#" data-goto="02">LocalShout event scraper refactor</a>
+      <span class="q-priority">P1</span>
+      <span class="q-status">classified</span>
+    </div>
+    <div class="q-body">Before decomposing this, should the scraper be a standalone service or stay inside the main API? This affects how I split the subtasks.</div>
+    <div class="q-who">Ralph · 2h ago</div>
+    <div class="q-actions">
+      <button class="q-action q-action--reply" data-goto="04">reply ↩</button>
+      <button class="q-action q-action--open" data-goto="02">open →</button>
+      <button class="q-action q-action--skip">skip</button>
+    </div>
+  </div>
+
+  <!-- Q4: another Boris question -->
+  <div class="q-entry">
+    <div class="q-context">
+      <span class="q-seq">#1323</span>
+      <a class="q-title" href="#" data-goto="02">Bedford events</a>
+      <span class="q-priority">P2</span>
+      <span class="q-status">intake rejected</span>
+    </div>
+    <div class="q-body">What was the intended action here — add Bedford as a city to LocalShout coverage, scout events for personal attendance, or something else?</div>
+    <div class="q-who">Boris · 14h ago</div>
+    <div class="q-actions">
+      <button class="q-action q-action--reply" data-goto="04">reply ↩</button>
+      <button class="q-action q-action--open" data-goto="02">open →</button>
+      <button class="q-action q-action--skip">skip</button>
+    </div>
+  </div>
+
+  <!-- Answered section -->
+  <div class="answered-divider">answered today (2)</div>
+
+  <div class="q-entry q-entry--answered">
+    <div class="q-context">
+      <span class="q-seq">#1100</span>
+      <a class="q-title" href="#">Migrate auth to Supabase</a>
+      <span class="q-priority">P1</span>
+    </div>
+    <div class="q-body">Should this cover social login or just email/password for the initial cut?</div>
+    <div class="q-who">Ralph · answered 3h ago</div>
+  </div>
+
+</div>
+
+<div style="max-width:375px; margin: 0 auto;">
+  <div class="annotation">
+    <strong>WHAT THIS PAGE IS</strong>
+    — All open thread_messages where kind=question, answered_by=null, item.assigned_to=marvin<br>
+    — Cross-item: questions from intake_rejected, classified, decomposed all appear together<br>
+    — Sorted by newest | priority | agent (toggle, URL-synced)<br>
+    — Context line shows which item, what priority, what column — enough to decide without opening<br>
+    — Answered questions visible below fold (dimmed), not removed — audit trail
+  </div>
+  <div class="annotation">
+    <strong>WHAT'S NEW vs. existing</strong>
+    — New route: /questions (or /inbox)<br>
+    — New API endpoint: GET /api/thread-messages?kind=question&answered_by=null&assigned_to=marvin<br>
+    — New QuestionsService (thin wrapper, same pattern as ThreadService)<br>
+    — Reply action → inline composer (see 04)<br>
+    — Open action → navigates to item detail (existing)<br>
+    — Skip → defers to bottom of list (local state, not persisted yet)
+  </div>
+  <div class="annotation">
+    <strong>QUESTIONS FROM DIFFERENT AGENTS</strong>
+    — Boris: intake/grooming questions (is this real? is it done?)<br>
+    — Ralph: pre-decomposition architecture questions (standalone vs embedded?)<br>
+    — Both shown in same feed, sorted by recency or priority by default<br>
+    — "BY AGENT" sort lets Marvin batch-handle all Boris questions together
+  </div>
+</div>
+
+<!-- State B: empty state -->
+<div style="max-width:375px; margin: 0 auto; border: 1px solid #ccc; border-top: none;">
+  <div class="screen-sep">State: all answered</div>
+  <div class="frame" style="border:none;">
+    <div class="page-header">
+      <h1>Questions <span style="font-size:14px;font-weight:normal;color:#999;">for @marvin</span></h1>
+      <p class="sub">0 open · all clear</p>
+    </div>
+    <div class="empty">
+      <div class="empty-title">All caught up</div>
+      <div class="empty-body">No open questions from agents.<br>New questions appear here when<br>Boris or Ralph need your input.</div>
+    </div>
+  </div>
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>

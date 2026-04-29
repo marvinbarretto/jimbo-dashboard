@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 — Detail (Improved)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; background: #f5f5f5; padding: 16px 16px 80px; }
+
+  .frame { max-width: 375px; margin: 0 auto; border: 1px solid #ccc; background: #fff; }
+
+  .wire-label {
+    position: fixed; top: 12px; right: 12px;
+    font-family: 'Courier New', monospace; font-size: 10px;
+    background: #111; color: #fff; padding: 4px 8px; z-index: 100;
+  }
+
+  /* Dialog header — minimal */
+  .detail-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid #eee;
+  }
+  .detail-id { font-size: 12px; font-weight: bold; color: #111; }
+  .detail-close { font-size: 14px; color: #999; background: none; border: none; padding: 4px; }
+
+  /* Status strip — collapsed / secondary */
+  .detail-status {
+    padding: 8px 16px; border-bottom: 1px solid #eee;
+    display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+  }
+  .status-chip {
+    font-size: 10px; padding: 2px 7px; border: 1px solid #ccc; color: #666;
+  }
+  .status-chip--alert { border-color: #999; color: #111; font-weight: bold; }
+
+  /* Tabs — THREAD is default */
+  .detail-tabs {
+    display: flex; border-bottom: 2px solid #eee;
+  }
+  .detail-tab {
+    flex: 1; padding: 10px 0; font-size: 11px; font-weight: bold; text-align: center;
+    border-bottom: 2px solid transparent; margin-bottom: -2px; color: #999;
+  }
+  .detail-tab.active { color: #111; border-bottom-color: #111; }
+  .detail-tab .badge {
+    display: inline-block; font-size: 9px; background: #111; color: #fff;
+    padding: 1px 4px; border-radius: 8px; margin-left: 3px; vertical-align: middle;
+  }
+
+  /* Thread content */
+  .thread-message {
+    padding: 14px 16px; border-bottom: 1px solid #eee;
+  }
+  .thread-who {
+    font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;
+    color: #999; margin-bottom: 6px; display: flex; justify-content: space-between;
+  }
+  .thread-who-name { color: #111; }
+  .thread-body {
+    font-size: 13px; line-height: 1.6; color: #111; margin-bottom: 12px;
+  }
+  .thread-body strong { font-weight: bold; }
+  .thread-rationale {
+    font-size: 11px; color: #666; line-height: 1.5;
+    padding: 8px 10px; background: #f5f5f5; border-left: 2px solid #ccc;
+    margin-bottom: 8px;
+  }
+  .thread-rationale-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #999; margin-bottom: 4px; }
+  .thread-reply-hint {
+    font-size: 11px; color: #999; border: 1px dashed #ccc; padding: 10px;
+    text-align: center;
+  }
+
+  /* Sticky bottom action bar */
+  .sticky-actions {
+    position: sticky; bottom: 0; background: #fff;
+    border-top: 2px solid #111; padding: 12px 16px;
+    display: flex; gap: 8px;
+  }
+  .action-primary {
+    flex: 2; padding: 14px 0; font-size: 14px; font-weight: bold;
+    background: #111; color: #fff; border: none; text-align: center;
+    font-family: 'Courier New', monospace; cursor: pointer;
+  }
+  .action-secondary {
+    flex: 1; padding: 14px 0; font-size: 13px;
+    background: #fff; color: #111; border: 1px solid #ccc; text-align: center;
+    font-family: 'Courier New', monospace; cursor: pointer;
+  }
+  .action-overflow {
+    padding: 14px 16px; font-size: 13px;
+    background: #fff; color: #999; border: 1px solid #eee; text-align: center;
+    font-family: 'Courier New', monospace; cursor: pointer;
+  }
+
+  /* Scrollable content area */
+  .detail-scroll {
+    /* In real implementation: overflow-y: auto with max-height to allow scroll above sticky bar */
+  }
+
+  /* Annotation */
+  .annotation {
+    background: #fffce8; border: 1px dashed #ccc;
+    padding: 12px; margin: 0 0 16px;
+    font-size: 10px; line-height: 1.6; color: #666;
+  }
+  .annotation strong { color: #111; display: block; margin-bottom: 4px; }
+
+  .screen-sep {
+    border-top: 3px dashed #ccc; padding: 8px 16px;
+    font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 1px;
+    margin-top: 40px; background: #fafafa;
+  }
+
+  /* Current detail reference */
+  .current-detail { padding: 12px 16px; opacity: 0.4; }
+  .current-actions-row { display: flex; gap: 4px; margin-bottom: 12px; }
+  .current-action { flex: 1; padding: 8px 4px; font-size: 11px; border: 1px solid #ccc; text-align: center; }
+  .current-action--reject { border-color: #999; }
+  .current-action--delete { border-color: #999; color: #c00; }
+  .current-status-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px; }
+  .current-chip { font-size: 10px; padding: 2px 6px; border: 1px solid #ccc; color: #666; }
+  .current-tabs-row { display: flex; border-bottom: 1px solid #eee; margin-bottom: 10px; }
+  .current-tab { flex: 1; padding: 8px 0; font-size: 10px; text-align: center; color: #999; }
+  .current-tab.active { color: #111; border-bottom: 2px solid #111; }
+</style>
+</head>
+<body>
+<div class="wire-label">02 — DETAIL IMPROVED</div>
+<div class="frame">
+
+  <!-- Header — minimal, just ID + close -->
+  <div class="detail-header">
+    <div class="detail-id">#1753 · test</div>
+    <button class="detail-close">✕</button>
+  </div>
+
+  <!-- Status strip — condensed, secondary -->
+  <div class="detail-status">
+    <span class="status-chip status-chip--alert">intake rejected</span>
+    <span class="status-chip">@marvin</span>
+    <span class="status-chip">P3</span>
+    <span class="status-chip">vague · blocked</span>
+  </div>
+
+  <!-- Tabs — THREAD is active (default for intake_rejected) -->
+  <div class="detail-tabs">
+    <div class="detail-tab">OVERVIEW</div>
+    <div class="detail-tab">BODY</div>
+    <div class="detail-tab">ACTIVITY <span class="badge">1</span></div>
+    <div class="detail-tab active">THREAD <span class="badge">1</span></div>
+  </div>
+
+  <div class="detail-scroll">
+    <!-- Thread message from Boris -->
+    <div class="thread-message">
+      <div class="thread-who">
+        <span class="thread-who-name">Boris</span>
+        <span>10h ago</span>
+      </div>
+      <div class="thread-body">
+        <strong>Is this a genuine task or an accidental/test entry that should be deleted?</strong>
+      </div>
+      <div class="thread-rationale">
+        <div class="thread-rationale-label">Why Boris asked</div>
+        Title is literally "test" and note body is null — there is no information to work with. If genuine, needs a real title and some body content before intake can proceed.
+      </div>
+    </div>
+
+    <!-- Reply composer -->
+    <div style="padding: 12px 16px; border-bottom: 1px solid #eee;">
+      <div class="thread-reply-hint">reply to Boris…</div>
+    </div>
+
+    <!-- Spacer so sticky bar doesn't cover last content -->
+    <div style="height: 80px;"></div>
+  </div>
+
+  <!-- Sticky bottom action bar -->
+  <div class="sticky-actions">
+    <button class="action-primary">delete</button>
+    <button class="action-secondary">edit</button>
+    <button class="action-overflow">···</button>
+  </div>
+
+</div>
+
+<!-- Annotations -->
+<div style="max-width:375px; margin: 0 auto;">
+  <div class="annotation">
+    <strong>DETAIL CHANGES (vs current)</strong>
+    — Tab default: THREAD (not OVERVIEW) when opened from intake_rejected column<br>
+    — Removed from above-fold: pipeline stepper (useless for sidebranch items)<br>
+    — Removed from above-fold: edit/reject/archive/delete row (moved to sticky bar)<br>
+    — Status strip: condensed to one line of chips (was a multi-row block)<br>
+    — Boris's question: immediately visible, with rationale expanded by default<br>
+    — Sticky bar: delete (primary, dark) / edit (secondary) / ··· (overflow for archive, reassign, reject)<br>
+    — Sticky bar actions are config-driven per grooming_status
+  </div>
+
+  <div class="annotation">
+    <strong>STICKY BAR — action config per status</strong>
+    — intake_rejected: [delete] [edit] [···]<br>
+    — needs_rework: [fix / edit] [reassign] [···]<br>
+    — ungroomed: [triage →] [delete] [···]<br>
+    — classified: [decompose] [edit] [···]<br>
+    — decomposed: [mark ready] [edit] [···]<br>
+    — Same component, config swaps the button labels + handlers<br>
+    — ··· always exposes the full set (archive, reject, demote → note, etc.)
+  </div>
+
+  <div class="annotation">
+    <strong>THREAD TAB DEFAULT — implementation note</strong>
+    — vault-item-detail-body already has activeTab signal<br>
+    — Currently always initialised to 'overview'<br>
+    — Change: initialise from a per-status config lookup<br>
+    — intake_rejected → 'thread', all others → 'overview' (or as configured)<br>
+    — One-line change in detail body constructor
+  </div>
+</div>
+
+<!-- State B: current detail (reference) -->
+<div style="max-width:375px; margin: 0 auto; border: 1px solid #ccc; border-top: none;">
+  <div class="screen-sep">Reference: current detail (before)</div>
+  <div class="current-detail">
+    <div style="font-size:11px;color:#999;margin-bottom:4px;">↑ current state</div>
+    <div style="font-size:14px;font-weight:bold;margin-bottom:10px;">#1753 · test ✕</div>
+    <div class="current-actions-row">
+      <div class="current-action">edit</div>
+      <div class="current-action current-action--reject">reject</div>
+      <div class="current-action">archive</div>
+      <div class="current-action current-action--delete">delete</div>
+    </div>
+    <div style="font-size:10px;color:#999;margin-bottom:6px;">● Ungroomed ● Intake complete ● Classified ● Decomposed ● Ready</div>
+    <div style="font-size:10px;color:#c00;margin-bottom:8px;">↓ Currently in Intake rejected</div>
+    <div class="current-tabs-row">
+      <div class="current-tab active">OVERVIEW</div>
+      <div class="current-tab">BODY</div>
+      <div class="current-tab">ACTIVITY 1</div>
+      <div class="current-tab">THREAD 1</div>
+    </div>
+    <div style="font-size:10px;color:#999;">[must switch to THREAD tab to read Boris's question]</div>
+  </div>
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>

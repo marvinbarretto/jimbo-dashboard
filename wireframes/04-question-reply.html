@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 — Reply + Tokens</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; background: #f5f5f5; padding: 0 0 80px; }
+
+  .wire-label { position: fixed; top: 12px; right: 12px; font-family: 'Courier New', monospace; font-size: 10px; background: #111; color: #fff; padding: 4px 8px; z-index: 100; }
+
+  .frame { max-width: 375px; margin: 0 auto; border: 1px solid #ccc; background: #fff; }
+
+  .page-header { padding: 14px 16px 10px; border-bottom: 1px solid #eee; }
+  .page-header h1 { font-size: 18px; font-weight: bold; margin-bottom: 2px; }
+  .page-header .sub { font-size: 11px; color: #999; }
+
+  /* The entry being replied to */
+  .q-entry { padding: 14px 16px; border-bottom: 1px solid #eee; }
+  .q-context { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .q-seq { font-size: 11px; color: #999; }
+  .q-title { font-size: 12px; font-weight: bold; color: #111; }
+  .q-priority { font-size: 9px; padding: 1px 5px; border: 1px solid #999; color: #555; }
+  .q-status { font-size: 9px; padding: 1px 5px; border: 1px solid #ccc; color: #888; }
+  .q-body { font-size: 14px; line-height: 1.5; color: #111; margin-bottom: 6px; }
+  .q-who { font-size: 10px; color: #aaa; }
+
+  /* Composer — full featured */
+  .composer { padding: 14px 16px; border-bottom: 1px solid #eee; }
+  .composer-label { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 8px; }
+
+  .composer-field {
+    position: relative; border: 2px solid #111; padding: 12px; min-height: 120px;
+    font-size: 14px; line-height: 1.6; color: #111; background: #fff;
+    margin-bottom: 10px;
+  }
+  .composer-field-text { white-space: pre-wrap; }
+
+  /* Inline token spans inside composer */
+  .token { display: inline-block; background: #111; color: #fff; padding: 1px 6px; font-size: 12px; margin: 0 1px; }
+  .token--project { background: #444; }
+  .token--person { background: #666; }
+
+  /* Autocomplete dropdown */
+  .autocomplete {
+    border: 1px solid #111; background: #fff; margin-bottom: 10px;
+  }
+  .autocomplete-header { padding: 6px 10px; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #999; background: #f5f5f5; border-bottom: 1px solid #eee; }
+  .autocomplete-item { padding: 10px 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px; }
+  .autocomplete-item:last-child { border-bottom: none; }
+  .autocomplete-item.selected { background: #111; color: #fff; }
+  .autocomplete-item.selected .autocomplete-meta { color: #aaa; }
+  .autocomplete-seq { font-size: 11px; color: #999; flex-shrink: 0; }
+  .autocomplete-item.selected .autocomplete-seq { color: #aaa; }
+  .autocomplete-title { font-size: 12px; font-weight: bold; flex: 1; }
+  .autocomplete-meta { font-size: 10px; color: #bbb; flex-shrink: 0; }
+
+  /* Token toolbar */
+  .token-toolbar { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .token-btn { font-size: 11px; padding: 7px 10px; border: 1px solid #ccc; background: #f5f5f5; color: #555; font-family: 'Courier New', monospace; }
+  .token-btn strong { color: #111; }
+
+  /* Send row */
+  .send-row { display: flex; gap: 8px; align-items: center; }
+  .send-hint { font-size: 10px; color: #bbb; flex: 1; line-height: 1.4; }
+  .send-btn { padding: 12px 20px; font-size: 14px; font-weight: bold; background: #111; color: #fff; border: none; font-family: 'Courier New', monospace; white-space: nowrap; }
+
+  /* Post-send state */
+  .answered-state { padding: 14px 16px; }
+  .answered-banner { background: #f5f5f5; border-left: 3px solid #111; padding: 10px 12px; margin-bottom: 12px; font-size: 12px; line-height: 1.5; color: #444; }
+  .answered-reply { font-size: 12px; color: #111; line-height: 1.5; margin-bottom: 6px; }
+  .answered-meta { font-size: 10px; color: #bbb; }
+
+  .annotation { background: #fffce8; border: 1px dashed #ccc; padding: 12px; margin: 0 0 1px; font-size: 10px; line-height: 1.6; color: #666; }
+  .annotation strong { color: #111; display: block; margin-bottom: 4px; }
+
+  .screen-sep { border-top: 3px dashed #ccc; padding: 8px 16px; font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 1px; background: #fafafa; }
+</style>
+</head>
+<body>
+<div class="wire-label">04 — REPLY + TOKENS</div>
+<div class="frame">
+
+  <div class="page-header">
+    <h1>Questions <span style="font-size:14px;font-weight:normal;color:#999;">for @marvin</span></h1>
+    <p class="sub">Replying to Boris on #1220</p>
+  </div>
+
+  <!-- The question being answered -->
+  <div class="q-entry">
+    <div class="q-context">
+      <span class="q-seq">#1220</span>
+      <span class="q-title">LocalShout event scraper refactor</span>
+      <span class="q-priority">P1</span>
+      <span class="q-status">classified</span>
+    </div>
+    <div class="q-body">Before decomposing this, should the scraper be a standalone service or stay inside the main API? This affects how I split the subtasks.</div>
+    <div class="q-who">Ralph · 2h ago</div>
+  </div>
+
+  <!-- Composer with token mid-autocomplete -->
+  <div class="composer">
+    <div class="composer-label">Your answer</div>
+
+    <!-- Composer field — showing typed content with tokens + mid-autocomplete -->
+    <div class="composer-field">
+      <div class="composer-field-text">Make it standalone — same pattern as
+<span class="token">/localshout</span> already uses. It should live in its own service so we can deploy it independently. See <span class="token">#1100</span> for how we structured the auth service as a reference. Assign decomp to <span class="token--person token">@ralph</span> once confirmed.</div>
+    </div>
+
+    <!-- Autocomplete dropdown — triggered by # keystroke -->
+    <div class="autocomplete">
+      <div class="autocomplete-header">Tasks matching "#110"</div>
+      <div class="autocomplete-item selected">
+        <span class="autocomplete-seq">#1100</span>
+        <span class="autocomplete-title">Migrate auth to Supabase</span>
+        <span class="autocomplete-meta">P1 · classified</span>
+      </div>
+      <div class="autocomplete-item">
+        <span class="autocomplete-seq">#1101</span>
+        <span class="autocomplete-title">Auth: social login providers</span>
+        <span class="autocomplete-meta">P2 · decomposed</span>
+      </div>
+      <div class="autocomplete-item">
+        <span class="autocomplete-seq">#1102</span>
+        <span class="autocomplete-title">Auth: session token expiry</span>
+        <span class="autocomplete-meta">P2 · ready</span>
+      </div>
+    </div>
+
+    <!-- Token shortcuts -->
+    <div class="token-toolbar">
+      <button class="token-btn"><strong>#</strong> task or GH issue</button>
+      <button class="token-btn"><strong>@</strong> person</button>
+      <button class="token-btn"><strong>/</strong> project</button>
+    </div>
+
+    <!-- Send -->
+    <div class="send-row">
+      <p class="send-hint">Sends as kind=answer · marks Boris's question resolved</p>
+      <button class="send-btn">send ↩</button>
+    </div>
+  </div>
+
+</div>
+
+<div style="max-width:375px; margin: 0 auto;">
+  <div class="annotation">
+    <strong>TOKEN TRIGGERS (rich reply)</strong>
+    — <strong>#</strong> → autocomplete against vault items (seq + title + status) AND GH issues<br>
+    — <strong>@</strong> → autocomplete against actors (boris, ralph, marvin, jimbo)<br>
+    — <strong>/</strong> → autocomplete against projects (display_name list)<br>
+    — Selected token renders as a pill in the composer<br>
+    — Stored in message body as plain text with a structured format, e.g. [#1100] or [@ralph]<br>
+    — On render: plain text linkified into tappable refs
+  </div>
+  <div class="annotation">
+    <strong>WHAT HAPPENS ON SEND</strong>
+    — POST /api/thread-messages with kind=answer, in_reply_to=questionId, body=text<br>
+    — ThreadService.post() optimistically adds the answer<br>
+    — ThreadService.markAnswered(questionId, answerId) flips answered_by on the question<br>
+    — Question disappears from /questions feed<br>
+    — If last open question on item → item readiness check may pass
+  </div>
+  <div class="annotation">
+    <strong>PHASE SPLIT</strong>
+    — Phase 1: plain textarea, no autocomplete. Token buttons insert # / @ / text that Marvin types manually. Fully functional, just no dropdown.<br>
+    — Phase 2: autocomplete dropdown on # / @ / / keystrokes. Same data, better UX.<br>
+    — Phase 3 (optional): token rendering as styled pills in the composer itself.
+  </div>
+</div>
+
+<!-- State B: after send -->
+<div style="max-width:375px; margin: 0 auto; border: 1px solid #ccc; border-top: none;">
+  <div class="screen-sep">State: after send — question answered</div>
+  <div class="frame" style="border:none;">
+    <div class="q-entry" style="opacity:0.5;">
+      <div class="q-context">
+        <span class="q-seq">#1220</span>
+        <span class="q-title">LocalShout event scraper refactor</span>
+        <span class="q-priority">P1</span>
+      </div>
+      <div class="q-body">Before decomposing this, should the scraper be standalone or stay in the main API?</div>
+      <div class="q-who">Ralph · 2h ago · question</div>
+    </div>
+    <div class="answered-state">
+      <div class="answered-banner">Question answered · Ralph has been notified</div>
+      <div class="answered-reply">Make it standalone — same pattern as /localshout already uses. See #1100 for how we structured auth. Assign decomp to @ralph once confirmed.</div>
+      <div class="answered-meta">@marvin · just now · answer</div>
+    </div>
+  </div>
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>
