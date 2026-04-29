@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import type { OpenQuestionView, CreateThreadMessagePayload } from '@domain/thread';
 import { actorId } from '@domain/ids';
 import { ActorsService } from '@features/actors/data-access/actors.service';
+import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
 import { QuestionReplyComposer } from '@shared/components/question-reply-composer/question-reply-composer';
 
 @Component({
@@ -17,9 +18,16 @@ export class QuestionCard {
   readonly answered  = output<CreateThreadMessagePayload>();
 
   private readonly actorsService = inject(ActorsService);
+  private readonly vaultItemsService = inject(VaultItemsService);
 
   readonly showReply = signal(false);
   readonly currentActorId = actorId('marvin');
+
+  readonly item = computed(() => this.vaultItemsService.getById(this.question().vault_item_id));
+  readonly parentItem = computed(() => {
+    const item = this.item();
+    return item?.parent_id ? this.vaultItemsService.getById(item.parent_id) : undefined;
+  });
 
   readonly authorLabel = computed(() => {
     const a = this.actorsService.getById(this.question().author_actor_id);
@@ -49,10 +57,71 @@ export class QuestionCard {
     return `${d}d ago`;
   });
 
+  readonly itemSourceLabel = computed(() => {
+    const source = this.item()?.source;
+    if (!source) return 'origin unknown';
+    if (source.kind === 'agent') return `agent-origin ${source.ref}`;
+    if (source.kind === 'manual') return `manual ${source.ref}`;
+    if (source.kind === 'github') return `github ${source.ref}`;
+    if (source.kind === 'pr-comment') return `pr comment ${source.ref}`;
+    return `${source.kind} ${source.ref}`;
+  });
+
+  readonly hierarchyLabel = computed(() => {
+    const parent = this.parentItem();
+    if (parent) return `sub-item of #${parent.seq}`;
+
+    const childrenCount = this.item()?.children_count ?? 0;
+    if (childrenCount > 0) return `${childrenCount} sub-item${childrenCount === 1 ? '' : 's'}`;
+
+    return 'standalone';
+  });
+
+  readonly projectLabel = computed(() => this.item()?.primary_project_name ?? null);
+
+  readonly createdLabel = computed(() => {
+    const item = this.item();
+    if (!item) return this.ageLabel();
+    return this.formatAbsoluteDate(item.created_at);
+  });
+
+  readonly updatedLabel = computed(() => {
+    const item = this.item();
+    const latest = item?.latest_activity_at;
+    return latest ? this.relativeTime(latest) : null;
+  });
+
+  readonly contextSummary = computed(() => {
+    const bits = [this.itemSourceLabel(), this.hierarchyLabel()];
+    const project = this.projectLabel();
+    if (project) bits.push(project);
+    return bits.join(' · ');
+  });
+
   toggleReply(): void { this.showReply.update(v => !v); }
 
   onReplyPosted(payload: CreateThreadMessagePayload): void {
     this.answered.emit(payload);
     this.showReply.set(false);
+  }
+
+  relativeTime(iso: string): string {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60_000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days}d ago`;
+    return this.formatAbsoluteDate(iso);
+  }
+
+  private formatAbsoluteDate(iso: string): string {
+    return new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(new Date(iso));
   }
 }

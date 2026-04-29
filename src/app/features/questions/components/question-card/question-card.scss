@@ -9,11 +9,26 @@
 
   &__header {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: .5rem;
-    padding: .5rem .75rem .2rem;
+    gap: .75rem;
+    padding: .7rem .75rem .35rem;
     flex-wrap: wrap;
+  }
+
+  &__header-main {
+    display: flex;
+    flex: 1;
+    min-width: min(22rem, 100%);
+    flex-direction: column;
+    gap: .2rem;
+  }
+
+  &__header-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .25rem;
   }
 
   &__item-link {
@@ -21,12 +36,18 @@
     font-weight: 600;
     color: var(--color-text);
     text-decoration: none;
-    flex: 1;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     &:hover { color: var(--color-accent); text-decoration: underline; }
+  }
+
+  &__context {
+    margin: 0;
+    font-size: .68rem;
+    color: var(--color-text-muted);
+    line-height: 1.35;
   }
 
   &__grooming {
@@ -40,11 +61,28 @@
     &--ready           { color: #3b7a3b; }
   }
 
+  &__timestamps {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .15rem;
+    font-size: .62rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+
   &__meta {
     display: flex;
     align-items: baseline;
     gap: .4rem;
-    padding: 0 .75rem .3rem;
+    padding: 0 .75rem .45rem;
+    flex-wrap: wrap;
+  }
+
+  &__meta-label,
+  &__meta-sep {
+    font-size: .62rem;
+    color: var(--color-text-muted);
   }
 
   &__author {
@@ -57,10 +95,16 @@
   }
 
   &__age {
-    font-size: .6rem;
+    font-size: .62rem;
     font-family: var(--font-mono);
     color: var(--color-text-muted);
-    margin-left: auto;
+  }
+
+  &__parent-link {
+    font-size: .62rem;
+    color: var(--color-accent);
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
   }
 
   &__body {
@@ -93,6 +137,19 @@
     &--active {
       background: color-mix(in oklab, var(--color-text) 5%, var(--color-surface));
       color: var(--color-text-muted);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .qcard {
+    &__header-side {
+      align-items: flex-start;
+    }
+
+    &__timestamps {
+      align-items: flex-start;
+      white-space: normal;
     }
   }
 }

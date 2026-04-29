@@ -1,16 +1,35 @@
 <article class="qcard">
   <header class="qcard__header">
-    <a [routerLink]="['/vault-items', question().vault_item_seq]" class="qcard__item-link">
-      #{{ question().vault_item_seq }} · {{ question().vault_item_title }}
-    </a>
-    <span [class]="'qcard__grooming qcard__grooming--' + question().vault_item_grooming_status">
-      {{ question().vault_item_grooming_status.replace(/_/g, ' ') }}
-    </span>
+    <div class="qcard__header-main">
+      <a [routerLink]="['/vault-items', question().vault_item_seq]" class="qcard__item-link">
+        #{{ question().vault_item_seq }} · {{ question().vault_item_title }}
+      </a>
+      <p class="qcard__context">{{ contextSummary() }}</p>
+    </div>
+    <div class="qcard__header-side">
+      <span [class]="'qcard__grooming qcard__grooming--' + question().vault_item_grooming_status">
+        {{ question().vault_item_grooming_status.replace(/_/g, ' ') }}
+      </span>
+      <div class="qcard__timestamps">
+        <span>added {{ createdLabel() }}</span>
+        @if (updatedLabel(); as updated) {
+          <span>updated {{ updated }}</span>
+        }
+      </div>
+    </div>
   </header>
 
   <div class="qcard__meta">
+    <span class="qcard__meta-label">asked by</span>
     <span [class]="'qcard__author qcard__author--' + authorKind()">{{ authorLabel() }}</span>
+    <span class="qcard__meta-sep">·</span>
     <span class="qcard__age">{{ ageLabel() }}</span>
+    @if (parentItem(); as parent) {
+      <span class="qcard__meta-sep">·</span>
+      <a [routerLink]="['/vault-items', parent.seq]" class="qcard__parent-link">
+        parent #{{ parent.seq }}
+      </a>
+    }
   </div>
 
   <p class="qcard__body">{{ question().body }}</p>
