@@ -6,7 +6,9 @@ set -euo pipefail
 
 VPS_HOST="vps"
 VPS_DIR="/home/jimbo/dashboard"
+VPS_API_DIR="/home/jimbo/dashboard-api"
 DIST_DIR="$(cd "$(dirname "$0")" && pwd)/dist/dashboard/browser"
+API_DIST_DIR="$(cd "$(dirname "$0")" && pwd)/dist-api"
 
 echo "Fetching DASHBOARD_API_KEY from ${VPS_HOST}:/opt/dashboard-api.env…"
 # Read the canonical key from the production env file via sudo so it never
@@ -20,6 +22,9 @@ fi
 
 echo "Building…"
 npx ng build
+
+echo "Building dashboard API…"
+npx tsc -p tsconfig.api.json
 
 echo "Substituting DASHBOARD_API_KEY into bundle…"
 # Angular emits hashed JS bundles; replace the placeholder anywhere it appears.
@@ -35,6 +40,10 @@ fi
 echo "Syncing to ${VPS_HOST}:${VPS_DIR}…"
 ssh "$VPS_HOST" "mkdir -p $VPS_DIR"
 rsync -a --delete "$DIST_DIR/" "$VPS_HOST:$VPS_DIR/"
+
+echo "Syncing dashboard API to ${VPS_HOST}:${VPS_API_DIR}…"
+ssh "$VPS_HOST" "mkdir -p $VPS_API_DIR/dist-api"
+rsync -a --delete "$API_DIST_DIR/" "$VPS_HOST:$VPS_API_DIR/dist-api/"
 
 # Restart the API service so its in-process env always matches the key baked
 # into the bundle we just deployed. Without this, a reboot or crash-restart

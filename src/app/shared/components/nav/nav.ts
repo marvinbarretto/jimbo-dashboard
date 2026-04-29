@@ -10,9 +10,21 @@ import pkg from '../../../../../package.json';
     <nav class="app-nav">
       <span class="app-nav__logo">jimbo <span class="app-nav__version">v{{ version }}</span></span>
       <ul>
+        <li><a routerLink="/today" routerLinkActive="active">Today</a></li>
+        <li><a routerLink="/mail" routerLinkActive="active">Mail</a></li>
+        <li><a routerLink="/calendar" routerLinkActive="active">Calendar</a></li>
+        <li><a routerLink="/tasks" routerLinkActive="active">Tasks</a></li>
+        <li><a routerLink="/ops" routerLinkActive="active">Ops</a></li>
+        <li><a routerLink="/briefings" routerLinkActive="active">Briefings</a></li>
         <li><a routerLink="/vault-items" routerLinkActive="active">Vault</a></li>
         <li><a routerLink="/grooming" routerLinkActive="active">Grooming</a></li>
+        <li><a routerLink="/grooming-admin" routerLinkActive="active">Grooming API</a></li>
         <li><a routerLink="/execution" routerLinkActive="active">Execution</a></li>
+        <li><a routerLink="/triage" routerLinkActive="active">Triage</a></li>
+        <li><a routerLink="/interrogate" routerLinkActive="active">Interrogate</a></li>
+        <li><a routerLink="/context" routerLinkActive="active">Context</a></li>
+        <li><a routerLink="/coach" routerLinkActive="active">Coach</a></li>
+        <li><a routerLink="/activity" routerLinkActive="active">Activity</a></li>
         <li><a routerLink="/projects" routerLinkActive="active">Projects</a></li>
         <li><a routerLink="/actors" routerLinkActive="active">Actors</a></li>
         <li><a routerLink="/skills" routerLinkActive="active">Skills</a></li>
@@ -26,13 +38,14 @@ import pkg from '../../../../../package.json';
     .app-nav {
       display: flex;
       flex-direction: column;
-      width: 200px;
+      width: 220px;
       min-height: 100vh;
       background: var(--color-surface);
       border-right: 1px solid var(--color-border);
       padding: 1.5rem 1rem;
       gap: 2rem;
       flex-shrink: 0;
+      overflow-y: auto;
 
       @media (max-width: 768px) {
         flex-direction: row;

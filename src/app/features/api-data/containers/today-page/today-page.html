@@ -1,0 +1,14 @@
+<div class="today-page">
+  <header class="today-page__header">
+    <div>
+      <h1>Today</h1>
+      <p>Cross-system readout from Jimbo API: health, jobs, mail, calendar, dispatch, grooming, vault, briefings, and events.</p>
+    </div>
+  </header>
+
+  <div class="today-page__grid">
+    @for (endpoint of endpoints; track endpoint.path + endpoint.title) {
+      <app-endpoint-panel [endpoint]="endpoint" [compact]="true" />
+    }
+  </div>
+</div>

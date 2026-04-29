@@ -2,6 +2,15 @@ import { Routes } from '@angular/router';
 
 export const routes: Routes = [
   {
+    path: 'today',
+    title: 'Today',
+    loadComponent: () => import('./features/api-data/containers/today-page/today-page').then(m => m.TodayPage),
+  },
+  {
+    path: '',
+    loadChildren: () => import('./features/api-data/api-data.routes').then(m => m.apiDataRoutes),
+  },
+  {
     path: 'vault-items',
     loadChildren: () => import('./features/vault-items/vault-items.routes').then(m => m.vaultItemsRoutes),
   },
@@ -43,5 +52,5 @@ export const routes: Routes = [
     title: 'Test forms',
     loadComponent: () => import('./features/test-forms/test-forms-page').then(m => m.TestFormsPage),
   },
-  { path: '', redirectTo: 'vault-items', pathMatch: 'full' },
+  { path: '', redirectTo: 'today', pathMatch: 'full' },
 ];

@@ -1,15 +1,7 @@
-import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
+import { OpenAPIHono } from '@hono/zod-openapi';
+import type { Context } from 'hono';
 
 export const jimboProxyRoute = new OpenAPIHono();
-
-const JsonValue = z.unknown().openapi('JimboProxyPayload');
-const upstreamErrorBody = z.object({
-  error: z.object({ code: z.string(), message: z.string() }),
-});
-
-const Query = z.object({
-  path: z.string().min(1).openapi({ description: 'Upstream Jimbo API path, e.g. /api/emails/reports' }),
-}).catchall(z.union([z.string(), z.array(z.string())]));
 
 const allowedPrefixes = [
   '/api/activity',
@@ -53,22 +45,7 @@ function isAllowedPath(path: string): boolean {
   return allowedPrefixes.some(prefix => path === prefix || path.startsWith(`${prefix}/`));
 }
 
-const getRoute = createRoute({
-  method: 'get',
-  path: '/',
-  tags: ['JimboProxy'],
-  summary: 'Read-only proxy to upstream Jimbo API GET endpoints',
-  request: { query: Query },
-  responses: {
-    200: { description: 'Upstream JSON payload', content: { 'application/json': { schema: JsonValue } } },
-    400: { description: 'Invalid upstream path', content: { 'application/json': { schema: upstreamErrorBody } } },
-    502: { description: 'Upstream jimbo-api unreachable', content: { 'application/json': { schema: upstreamErrorBody } } },
-  },
-});
-
-jimboProxyRoute.openapi(getRoute, async (c) => {
-  const query = c.req.valid('query');
-  const path = query.path;
+export async function proxyJimboGet(c: Context, path: string): Promise<Response> {
   if (!path.startsWith('/api/') || path.includes('..') || !isAllowedPath(path)) {
     return c.json({ error: { code: 'INVALID_UPSTREAM_PATH', message: `Path is not whitelisted: ${path}` } }, 400);
   }
@@ -92,6 +69,13 @@ jimboProxyRoute.openapi(getRoute, async (c) => {
   }
 
   const payload = await res.json().catch(() => ({ error: { code: 'UPSTREAM_NON_JSON', message: `jimbo-api returned ${res.status}` } }));
-  if (res.ok) return c.json(payload as unknown, 200);
-  return c.json(payload as unknown, 502);
+  return c.json(payload as never, res.status as never);
+}
+
+jimboProxyRoute.get('/', async (c) => {
+  const path = c.req.query('path');
+  if (!path) {
+    return c.json({ error: { code: 'MISSING_PATH', message: 'Missing path query parameter' } }, 400);
+  }
+  return proxyJimboGet(c, path);
 });

@@ -34,7 +34,7 @@ import { vaultItemDependenciesRoute } from './routes/vault-item-dependencies.js'
 import { noteActivityRoute } from './routes/note-activity.js';
 import { threadMessagesRoute } from './routes/thread-messages.js';
 import { attachmentsRoute } from './routes/attachments.js';
-import { jimboProxyRoute } from './routes/jimbo-proxy.js';
+import { jimboProxyRoute, proxyJimboGet } from './routes/jimbo-proxy.js';
 import { HealthSchema } from './schemas/shared.js';
 
 const app = new OpenAPIHono({ defaultHook: validationHook });
@@ -47,6 +47,33 @@ app.use('*', cors());
 // strip_prefix step — keeps swagger's root-relative spec URL valid both
 // locally and behind the reverse proxy.
 const BASE = '/dashboard-api';
+const JIMBO_READ_THROUGH_PREFIXES = [
+  '/api/activity',
+  '/api/ai-models',
+  '/api/briefing',
+  '/api/calendar',
+  '/api/coach',
+  '/api/context',
+  '/api/costs',
+  '/api/dispatch',
+  '/api/emails',
+  '/api/events',
+  '/api/experiments',
+  '/api/fitness',
+  '/api/google-calendar',
+  '/api/google-mail',
+  '/api/google-tasks',
+  '/api/grooming',
+  '/api/hermes',
+  '/api/interrogate',
+  '/api/pipeline',
+  '/api/search',
+  '/api/settings',
+  '/api/snapshot',
+  '/api/summaries',
+  '/api/triage',
+  '/api/vault',
+];
 
 const healthRoute = createRoute({
   method: 'get',
@@ -103,6 +130,15 @@ app.use(`${BASE}/api/note-activity/*`, apiKeyAuth);
 app.use(`${BASE}/api/thread-messages/*`, apiKeyAuth);
 app.use(`${BASE}/api/attachments/*`, apiKeyAuth);
 app.use(`${BASE}/api/jimbo/*`, apiKeyAuth);
+
+for (const prefix of JIMBO_READ_THROUGH_PREFIXES) {
+  app.get(`${BASE}${prefix}`, apiKeyAuth, c => proxyJimboGet(c, c.req.path.slice(BASE.length)));
+  app.get(`${BASE}${prefix}/*`, apiKeyAuth, c => proxyJimboGet(c, c.req.path.slice(BASE.length)));
+}
+
+// Keep the dashboard API's own /api/health liveness probe intact, but forward
+// the upstream Jimbo health sub-resources through the same path-native shape.
+app.get(`${BASE}/api/health/*`, apiKeyAuth, c => proxyJimboGet(c, c.req.path.slice(BASE.length)));
 
 app.route(`${BASE}/api/vault-items`, vaultItemsRoute);
 app.route(`${BASE}/api/dispatches`, dispatchesRoute);
