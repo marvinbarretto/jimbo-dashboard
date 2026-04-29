@@ -4,3 +4,4 @@ export type {
   CreateThreadMessagePayload,
   MarkAnsweredPayload,
 } from './thread-message';
+export type { OpenQuestionView } from './open-question-view';

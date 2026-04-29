@@ -1,0 +1,37 @@
+<div class="questions-page">
+  <header class="questions-page__header">
+    <h1 class="questions-page__title">Questions</h1>
+    <span class="questions-page__count">
+      {{ loading() ? '…' : questions().length + ' open' }}
+    </span>
+    <div class="questions-page__sort">
+      <button type="button"
+        class="sort-btn"
+        [class.sort-btn--active]="sortOrder() === 'newest'"
+        (click)="setSort('newest')">newest</button>
+      <button type="button"
+        class="sort-btn"
+        [class.sort-btn--active]="sortOrder() === 'oldest'"
+        (click)="setSort('oldest')">oldest</button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="questions-page__loading">Loading questions…</p>
+  } @else if (questions().length === 0) {
+    <div class="questions-page__empty">
+      <p>No open questions — all clear.</p>
+    </div>
+  } @else {
+    <ul class="questions-page__list">
+      @for (q of questions(); track q.id) {
+        <li>
+          <app-question-card
+            [question]="q"
+            (answered)="onAnswered($event)"
+          />
+        </li>
+      }
+    </ul>
+  }
+</div>

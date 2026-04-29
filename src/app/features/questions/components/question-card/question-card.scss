@@ -1,0 +1,98 @@
+:host { display: block; }
+
+.qcard {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-danger);
+  border-radius: var(--radius);
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .5rem;
+    padding: .5rem .75rem .2rem;
+    flex-wrap: wrap;
+  }
+
+  &__item-link {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--color-text);
+    text-decoration: none;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    &:hover { color: var(--color-accent); text-decoration: underline; }
+  }
+
+  &__grooming {
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    white-space: nowrap;
+    color: var(--color-text-muted);
+    &--intake_rejected { color: var(--color-danger); }
+    &--needs_rework    { color: var(--color-warning, #f59e0b); }
+    &--ready           { color: #3b7a3b; }
+  }
+
+  &__meta {
+    display: flex;
+    align-items: baseline;
+    gap: .4rem;
+    padding: 0 .75rem .3rem;
+  }
+
+  &__author {
+    font-size: .65rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    &--agent  { color: #4a6a8a; }
+    &--human  { color: #d96520; }
+    &--system { color: var(--color-text-muted); }
+  }
+
+  &__age {
+    font-size: .6rem;
+    font-family: var(--font-mono);
+    color: var(--color-text-muted);
+    margin-left: auto;
+  }
+
+  &__body {
+    padding: 0 .75rem .55rem;
+    margin: 0;
+    font-size: .82rem;
+    line-height: 1.5;
+    color: var(--color-text);
+  }
+
+  &__actions {
+    display: flex;
+    border-top: 1px solid var(--color-border);
+  }
+
+  &__reply-btn {
+    flex: 1;
+    min-height: 44px;
+    background: transparent;
+    border: none;
+    font: inherit;
+    font-size: .72rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    transition: background .1s, color .1s;
+
+    &:hover { background: var(--color-surface); color: var(--color-text); }
+
+    &--active {
+      background: color-mix(in oklab, var(--color-text) 5%, var(--color-surface));
+      color: var(--color-text-muted);
+    }
+  }
+}

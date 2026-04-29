@@ -18,6 +18,7 @@ import pkg from '../../../../../package.json';
         <li><a routerLink="/briefings" routerLinkActive="active">Briefings</a></li>
         <li><a routerLink="/vault-items" routerLinkActive="active">Vault</a></li>
         <li><a routerLink="/grooming" routerLinkActive="active">Grooming</a></li>
+        <li><a routerLink="/questions" routerLinkActive="active">Questions</a></li>
         <li><a routerLink="/grooming-admin" routerLinkActive="active">Grooming API</a></li>
         <li><a routerLink="/execution" routerLinkActive="active">Execution</a></li>
         <li><a routerLink="/triage" routerLinkActive="active">Triage</a></li>
