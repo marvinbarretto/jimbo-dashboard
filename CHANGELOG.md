@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.12](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.11...v0.0.12) (2026-04-29)
+
+
+### Features
+
+* **detail:** add stacked-section + sticky-bar SCSS, remove dead tab styles ([34b749b](https://github.com/marvinbarretto/jimbo-dashboard/commit/34b749b68830537efe4144a7c5a45f0db7770b1f))
+* **detail:** replace tab layout with stacked collapsible sections ([5cdb946](https://github.com/marvinbarretto/jimbo-dashboard/commit/5cdb94622c697c104c17cc97c688152d3d2cbdc6))
+* **grooming:** permanent action row with inline reply on grooming card ([53b461c](https://github.com/marvinbarretto/jimbo-dashboard/commit/53b461cbe1e3d110e47492b3d1b68868c5c8eb6b))
+* **questions:** add /questions triage page with inline reply ([40854f3](https://github.com/marvinbarretto/jimbo-dashboard/commit/40854f37d80943f30533a380375c8a2e2f114a09))
+* **shared:** add QuestionReplyComposer for inline question answering ([c840a15](https://github.com/marvinbarretto/jimbo-dashboard/commit/c840a158b03e88a7c5b14c8c30edfa17d538b46c))
+
+
+### Bug Fixes
+
+* **thread:** add 'answer' kind to DB constraint and API schema ([cb90de0](https://github.com/marvinbarretto/jimbo-dashboard/commit/cb90de01752123cbfd88d7e2c473d83799296255))
+
 ### [0.0.11](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.10...v0.0.11) (2026-04-29)
 
 
