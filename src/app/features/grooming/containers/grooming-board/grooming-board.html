@@ -7,7 +7,23 @@
     </p>
   </header>
 
+  <!-- Mobile filter toggle — desktop always shows filter bar, mobile hides it behind this button -->
+  <button
+    type="button"
+    class="board__filter-toggle"
+    [class.board__filter-toggle--active]="hasActiveFilters()"
+    (click)="showMobileFilters.update(v => !v)"
+    [attr.aria-expanded]="showMobileFilters()"
+  >
+    filter
+    @if (hasActiveFilters()) {
+      <span class="board__filter-dot" aria-hidden="true"></span>
+    }
+    <span class="board__filter-caret">{{ showMobileFilters() ? '▲' : '▼' }}</span>
+  </button>
+
   <app-kanban-filter-bar
+    [class.board__filters--collapsed]="!showMobileFilters()"
     [groups]="filterGroups()"
     [searchTerm]="searchTerm()"
     [sortOptions]="sortOptions"

@@ -70,6 +70,9 @@ export class GroomingBoard {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
+  // Filter panel visibility on mobile — collapsed by default to save screen space.
+  readonly showMobileFilters = signal(false);
+
   // Active column on narrow viewports — defaults to intake_rejected which
   // is where most operator attention lands. Chip strip in the template
   // switches this; desktop ignores it via CSS (all columns always visible).

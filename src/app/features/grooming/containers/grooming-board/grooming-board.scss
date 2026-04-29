@@ -34,6 +34,9 @@
   }
 }
 
+// Mobile filter toggle — hidden on desktop; desktop shows the filter bar inline.
+.board__filter-toggle { display: none; }
+
 // Mobile column switcher — chip strip for selecting which column to show.
 // Hidden on desktop; desktop always renders all columns side-by-side.
 .board__mobile-switcher {
@@ -47,6 +50,44 @@
 
     &__header h1 { font-size: 1.1rem; }
     &__hint { display: none; }
+  }
+
+  // Filter bar hidden behind toggle on mobile
+  .board__filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.65rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    font: inherit;
+    font-size: 0.7rem;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+    border-radius: var(--radius);
+
+    &--active {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+  }
+
+  .board__filter-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-accent);
+  }
+
+  .board__filter-caret {
+    font-size: 0.6rem;
+    opacity: 0.6;
+  }
+
+  // Collapse the filter bar when the toggle is closed
+  app-kanban-filter-bar.board__filters--collapsed {
+    display: none;
   }
 
   .board__mobile-switcher {
