@@ -6,6 +6,7 @@
   [class.card--owner-jimbo]="item().assigned_to === 'jimbo'"
   [class.card--dragging]="dragging()"
   [class.card--epic]="isEpic()"
+  [class.card--intake-rejected]="isIntakeRejected()"
   [class.card--needs-rework]="needsRework()"
   [class.card--expanded]="expanded()"
   [attr.title]="ageTooltip()"
@@ -72,6 +73,13 @@
   <a [appKanbanCardLink]="item().seq" class="card__title">
     {{ item().title }}
   </a>
+
+  @if (isIntakeRejected() && liveSnapshot()?.latestEvent; as ev) {
+    <div class="card__rejection">
+      <span class="card__rejection-label">last activity</span>
+      <span class="card__rejection-body">{{ ev.actorLabel }} {{ ev.description }}</span>
+    </div>
+  }
 
   @if (visibleTags().length > 0) {
     <div class="card__tags">

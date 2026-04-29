@@ -100,6 +100,7 @@ export class GroomingCard {
     return `${n} acceptance criteri${n === 1 ? 'on' : 'a'} drafted — drag to Ready to approve`;
   });
 
+  readonly isIntakeRejected = computed(() => this.item().grooming_status === 'intake_rejected');
   readonly needsRework = computed(() => this.item().grooming_status === 'needs_rework');
   readonly hasParent   = computed(() => this.item().parent_id !== null);
 

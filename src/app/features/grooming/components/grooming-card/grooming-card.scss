@@ -50,6 +50,12 @@
   &--owner-boris  { border-left-color: var(--actor-color-boris);  }
   &--owner-jimbo  { border-left-color: var(--actor-color-jimbo);  }
 
+  // Danger tint on the left rail when the item is stuck in intake_rejected,
+  // drawing the operator's eye to the cards that need a response.
+  &--intake-rejected {
+    border-left-color: var(--color-danger);
+  }
+
   // Warning tint when an operator has rejected the card and it's awaiting rework.
   // Left border overrides the owner rail colour — the rejection signal takes precedence.
   &--needs-rework {
@@ -246,6 +252,35 @@
 
   // Expanded "live activity" section — appears below the footer when the
   // operator opens the card. Bordered top to separate from the main card body.
+  // Rejection callout — surfaces the last activity line without requiring the
+  // operator to expand the card. Only rendered when grooming_status === 'intake_rejected'
+  // and a liveSnapshot is available. Sits between title and tags so it reads
+  // as context for the title, not metadata noise in the footer.
+  &__rejection {
+    margin: 0.3rem 0 0.35rem;
+    padding: 0.3rem 0.5rem;
+    border-left: 2px solid var(--color-danger);
+    background: color-mix(in oklab, var(--color-danger) 6%, var(--color-bg));
+  }
+
+  &__rejection-label {
+    display: block;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-danger);
+    font-weight: 500;
+    margin-bottom: 0.15rem;
+    opacity: 0.8;
+  }
+
+  &__rejection-body {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
   &__live {
     margin-top: 0.5rem;
     padding-top: 0.45rem;
