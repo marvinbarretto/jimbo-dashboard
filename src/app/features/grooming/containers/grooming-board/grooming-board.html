@@ -81,6 +81,7 @@
               [liveSnapshot]="liveSnapshot(item)"
               [daysInColumn]="daysInColumn(item)"
               [source]="sourceSummary(item)"
+              [openQuestion]="firstOpenQuestion(item)"
               [dragging]="drag.dragging() === item.id"
               (dragstart)="onDragStart($event, item)"
               (dragend)="onDragEnd()"

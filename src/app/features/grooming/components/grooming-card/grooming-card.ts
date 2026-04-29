@@ -3,7 +3,11 @@ import { RouterLink } from '@angular/router';
 import { KanbanCardLinkDirective } from '@shared/kanban/card-link.directive';
 import type { VaultItem, Priority } from '@domain/vault';
 import type { ActorId } from '@domain/ids';
+import { actorId } from '@domain/ids';
 import { effectivePriority } from '@domain/vault';
+import type { ThreadMessage, CreateThreadMessagePayload } from '@domain/thread';
+import { ThreadService } from '@features/thread/data-access/thread.service';
+import { QuestionReplyComposer } from '@shared/components/question-reply-composer/question-reply-composer';
 import { ageInDays, staleNorm, ancientNorm, pulseIntensity, isStuck } from '@domain/vault';
 import { PriorityBadge } from '@shared/components/priority-badge/priority-badge';
 import { BlockerBadge } from '@shared/components/blocker-badge/blocker-badge';
@@ -40,7 +44,7 @@ interface RejectionCallout {
 // lifecycle events so the parent owns drag state and the kanban service writes.
 @Component({
   selector: 'app-grooming-card',
-  imports: [RouterLink, KanbanCardLinkDirective, PriorityBadge, BlockerBadge, EpicBadge, ProjectChip, OwnerChip, ReworkBadgeComponent],
+  imports: [RouterLink, KanbanCardLinkDirective, PriorityBadge, BlockerBadge, EpicBadge, ProjectChip, OwnerChip, ReworkBadgeComponent, QuestionReplyComposer],
   templateUrl: './grooming-card.html',
   styleUrl: './grooming-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -83,16 +87,20 @@ export class GroomingCard {
   readonly demote    = output<void>();  // reclassify task → note
   readonly remove    = output<void>();  // hard delete
 
-  // --- expand / collapse -------------------------------------------------
-  // Card-local state — operator opens one card to see what's happening,
-  // closes it when done. Persists for as long as the @for tracks this card,
-  // which is "until the underlying VaultItem id changes".
-  private readonly _expanded = signal(false);
-  readonly expanded = this._expanded.asReadonly();
-  toggleExpanded(event: Event): void {
-    event.stopPropagation();
-    event.preventDefault();
-    this._expanded.update(v => !v);
+  readonly openQuestion = input<ThreadMessage | null>(null);
+
+  private readonly threadService = inject(ThreadService);
+
+  readonly showReply = signal(false);
+  readonly currentActorId = actorId('marvin');
+
+  toggleReply(): void {
+    this.showReply.update(v => !v);
+  }
+
+  onReplyPosted(payload: CreateThreadMessagePayload): void {
+    this.threadService.post(payload);
+    this.showReply.set(false);
   }
 
   readonly isEpic = computed(() => this.childrenCount() > 0);

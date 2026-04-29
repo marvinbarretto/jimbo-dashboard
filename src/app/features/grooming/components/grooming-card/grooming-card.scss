@@ -11,10 +11,7 @@
 }
 
 .card,
-.card__header,
-.card__footer,
-.card__live,
-.card__live-row {
+.card__header {
   // Same reason — every nested flex container needs to allow its children to
   // shrink below their content min-size, otherwise ellipsis/wrap never engages.
   min-width: 0;
@@ -28,7 +25,7 @@
   // changes, applied by the &--owner-* modifiers below.
   border-left-width: 3px;
   border-radius: var(--radius);
-  padding: 0.55rem 0.7rem;
+  padding: 0.55rem 0.7rem 0;
   cursor: grab;
   transition: border-color 0.2s, box-shadow 0.2s, opacity 0.1s;
 
@@ -64,10 +61,6 @@
   }
 
   // "N drafted" badge — appears when grooming_status === 'decomposed'.
-  // The whole card sitting in the Decomposed column is itself a column-level
-  // signal; this badge is the per-card surface that says "this one has N
-  // criteria for you to bless before it moves to Ready". Warning-tinted to
-  // mirror the stuck/blocker visual family without raising the temperature.
   &__draft {
     font-family: var(--font-mono);
     font-size: 0.6rem;
@@ -97,19 +90,12 @@
     &:hover { color: var(--color-text); }
   }
 
-  // Subitem chip — shows ↳ #1234 when this card has a parent_id. Quiet monospace
-  // marker so the hierarchy is visible without competing with the seq or title.
   &__subitem {
     font-size: 0.75rem;
     opacity: 0.6;
     font-family: var(--font-mono, monospace);
   }
 
-  // Source attribution — plain inline text after the seq, e.g. "#2341 by @jimbo".
-  // No pill / border — reads as conversational metadata, not a label. Agent
-  // sources tint the text with the agent's actor-color so the eye picks them
-  // out at a scan; other kinds (manual / email / telegram / url / pr-comment)
-  // stay muted.
   &__source {
     font-size: 0.7rem;
     color: var(--color-text-muted);
@@ -121,10 +107,6 @@
     &--actor-jimbo  { color: var(--actor-color-jimbo);  }
   }
 
-  // Category label — production's content-axis classification (travel, recipe,
-  // health, journal, ...). Quiet text-only treatment; the type-axis (task vs
-  // note) already commands stronger visuals via card layout. Cursor:help so
-  // hover surfaces the full word in the tooltip on truncated displays.
   &__category {
     font-size: 0.6rem;
     color: var(--color-text-muted);
@@ -133,15 +115,32 @@
     cursor: help;
   }
 
-  // Right-edge cluster in the header — epic badge + blocker badge stack here.
-  // margin-left: auto pushes the whole cluster to the right; gap between badges
-  // when both are present.
   &__right-slot {
     margin-left: auto;
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
     line-height: 1;
+  }
+
+  // Age label in right-slot — "4d", "today".
+  &__age {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    cursor: help;
+  }
+
+  // Stuck indicator — "Nd" pill in header when item has been in column too long.
+  &__stuck {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    border: 1px solid currentColor;
+    padding: 0 0.25rem;
+    border-radius: 2px;
+    cursor: help;
   }
 
   &__title {
@@ -151,214 +150,90 @@
     color: var(--color-text);
     text-decoration: none;
     margin-bottom: 0.4rem;
-    // Long unbreakable strings (URLs, kebab-ids) would push the card past its
-    // 280px column. Scoped to title only so chips/owner labels stay intact.
     overflow-wrap: anywhere;
     &:hover { text-decoration: underline; }
   }
 
-  // Tag row — sits between title and footer. Own row so the footer stays a
-  // single-line signals strip (owner · stuck · age) at 280px, instead of
-  // competing with tag chips that have unpredictable text widths.
-  &__tags {
+  // Question display — replaces the old rejection callout.
+  // Boris's question IS the primary decision content for intake_rejected cards.
+  &__question {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 0.25rem;
-    margin-bottom: 0.4rem;
-  }
-
-  &__footer {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.7rem;
-    color: var(--color-text-muted);
-    // Footer children are short fixed-width signals — never let them shrink
-    // below their content (e.g. "@marvin" wrapping per-letter). The first
-    // child that should absorb extra space gets margin-left: auto explicitly.
-    > * { flex-shrink: 0; }
-  }
-
-  // Age label — "4d", "today". Pins to far right of footer.
-  &__age {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    color: var(--color-text-muted);
-    margin-left: auto;
-    cursor: help;
-  }
-
-  &__tag,
-  &__tag-more {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    padding: 0.05rem 0.35rem;
-    border-radius: 3px;
-    font-size: 0.65rem;
-    color: var(--color-text-muted);
-    white-space: nowrap;
-  }
-
-  // Dismiss action strip — reclassify or hard-delete without opening detail.
-  // Always occupies space (no layout shift on hover); fades in when the card
-  // is hovered so it doesn't clutter the board at a glance.
-  &__actions {
-    display: flex;
-    gap: 0.4rem;
-    margin-top: 0.35rem;
-    padding-top: 0.3rem;
-    border-top: 1px solid var(--color-border);
-    opacity: 0;
-    transition: opacity 0.15s;
-  }
-
-  &:hover &__actions { opacity: 1; }
-
-  &__action-btn {
-    border: none;
-    background: none;
-    font: inherit;
-    font-size: 0.65rem;
-    color: var(--color-text-muted);
-    padding: 0.1rem 0.3rem;
-    cursor: pointer;
-    border-radius: 3px;
-    transition: color 0.1s, background 0.1s;
-
-    &:hover { color: var(--color-text); background: var(--color-surface); }
-
-    &--danger:hover { color: var(--color-danger); background: var(--color-surface); }
-  }
-
-  // Expand toggle — small chevron that rotates 180° when open. Sits at the end
-  // of the header right-slot, after epic + blocker badges.
-  &__expand-btn {
-    border: none;
-    background: none;
-    color: var(--color-text-muted);
-    font-size: 0.7rem;
-    line-height: 1;
-    padding: 0.1rem 0.3rem;
-    cursor: pointer;
-    transition: transform 0.15s, color 0.15s;
-    transform: rotate(0deg);
-
-    &:hover { color: var(--color-text); }
-    &--open {
-      transform: rotate(180deg);
-      color: var(--color-text);
-    }
-  }
-
-  // Expanded "live activity" section — appears below the footer when the
-  // operator opens the card. Bordered top to separate from the main card body.
-  // Rejection callout — surfaces the latest thread item without requiring the
-  // operator to expand the card. Only rendered when grooming_status === 'intake_rejected'
-  // and a liveSnapshot is available. Sits between title and tags so it reads
-  // as context for the title, not metadata noise in the footer.
-  &__rejection {
-    margin: 0.3rem 0 0.35rem;
-    padding: 0.3rem 0.5rem;
+    margin: 0 0 0.4rem;
+    padding: 0.4rem 0.5rem;
     border-left: 2px solid var(--color-danger);
     background: color-mix(in oklab, var(--color-danger) 6%, var(--color-bg));
   }
 
-  &__rejection-label {
-    display: block;
+  &__question-who {
     font-size: 0.6rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em;
     color: var(--color-danger);
-    font-weight: 500;
-    margin-bottom: 0.15rem;
     opacity: 0.8;
   }
 
-  &__rejection-body {
-    font-size: 0.7rem;
+  &__question-body {
+    font-size: 0.72rem;
     color: var(--color-text-muted);
-    line-height: 1.35;
+    line-height: 1.4;
     overflow-wrap: anywhere;
   }
 
-  &__live {
-    margin-top: 0.5rem;
-    padding-top: 0.45rem;
-    border-top: 1px dashed var(--color-border);
+  // Permanent action row — always visible, 44px+ tap targets on mobile.
+  // Previously opacity:0 on hover only; now always present.
+  &__actions {
     display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    font-size: 0.7rem;
+    margin: 0 -0.7rem; // bleed to card edges
+    border-top: 1px solid var(--color-border);
+    margin-top: 0.4rem;
   }
 
-  &__live-row {
-    display: flex;
-    align-items: baseline;
-    gap: 0.35rem;
-    color: var(--color-text-muted);
-    line-height: 1.35;
-
-    &--message { font-style: italic; }
-  }
-
-  &__live-icon {
-    font-size: 0.7rem;
-    opacity: 0.6;
-    flex-shrink: 0;
-  }
-
-  &__live-actor {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    color: var(--color-text);
-    flex-shrink: 0;
-  }
-
-  &__live-text {
-    color: var(--color-text-muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  &__action {
     flex: 1;
-
-    &--quoted { color: var(--color-text); }
-  }
-
-  &__live-when {
-    font-size: 0.6rem;
-    opacity: 0.7;
-    flex-shrink: 0;
-    font-variant-numeric: tabular-nums;
-  }
-
-  &__live-empty {
-    margin: 0;
+    min-height: 44px;
+    padding: 0 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border: none;
+    border-right: 1px solid var(--color-border);
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
     color: var(--color-text-muted);
-    font-style: italic;
-    opacity: 0.6;
-  }
+    transition: background 0.1s, color 0.1s;
 
-  // Pulse dot — fires when activity is recent. The host element binds
-  // --pulse-intensity (0..1) — high for just-now, fades to 0 over 24h.
-  // The dot's base opacity scales with intensity; the keyframe layers a
-  // breathing effect on top so it reads as alive without flashing.
-  // Sits left of the age label so the eye sweeps "pulse → age" left-to-right.
-  &__pulse {
-    --pulse-base-opacity: calc(var(--pulse-intensity, 0) * 0.9);
-    width: 0.45rem;
-    height: 0.45rem;
-    border-radius: 50%;
-    background: var(--color-accent);
-    opacity: var(--pulse-base-opacity);
-    box-shadow: 0 0 calc(var(--pulse-intensity, 0) * 6px)
-                color-mix(in oklch, transparent, var(--color-accent) calc(var(--pulse-intensity, 0) * 60%));
-    animation: card-pulse 2.4s ease-in-out infinite;
-    cursor: help;
-    flex-shrink: 0;
-  }
+    &:last-child { border-right: none; }
 
-  @media (prefers-reduced-motion: reduce) {
-    &__pulse { animation: none; }
+    &:hover { background: var(--color-surface); color: var(--color-text); }
+
+    // Primary — reply: dark background so it reads as the main CTA.
+    &--reply {
+      background: var(--color-text, #111);
+      color: var(--color-bg, #fff);
+      flex: 2;
+
+      &:hover { opacity: 0.85; background: var(--color-text, #111); color: var(--color-bg, #fff); }
+    }
+
+    // Active state when reply composer is open.
+    &--reply-active {
+      background: color-mix(in oklab, var(--color-text) 70%, var(--color-surface));
+      color: var(--color-bg, #fff);
+    }
+
+    &--delete {
+      color: var(--color-text-muted);
+    }
+
+    // Overflow trigger — narrower, muted.
+    &--more {
+      flex: 0 0 44px;
+      color: var(--color-text-muted);
+      letter-spacing: 0.15em;
+    }
   }
 }
 

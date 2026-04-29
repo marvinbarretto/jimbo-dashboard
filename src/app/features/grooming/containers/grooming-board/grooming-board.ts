@@ -7,6 +7,7 @@ import { ProjectsService } from '@features/projects/data-access/projects.service
 import { VaultItemProjectsService } from '@features/vault-items/data-access/vault-item-projects.service';
 import { ActivityEventsService } from '@features/vault-items/data-access/activity-events.service';
 import { ThreadService } from '@features/thread/data-access/thread.service';
+import type { ThreadMessage } from '@domain/thread';
 import {
   GROOMING_STATUS_ORDER,
   GROOMING_STATUS_LABELS,
@@ -214,6 +215,10 @@ export class GroomingBoard {
   openQuestionsCount(item: VaultItem): number {
     return item.open_questions_count
         ?? this.threadService.openQuestionsFor(item.id)().length;
+  }
+
+  firstOpenQuestion(item: VaultItem): ThreadMessage | null {
+    return this.threadService.openQuestionsFor(item.id)()[0] ?? null;
   }
 
   childrenCount(item: VaultItem): number {

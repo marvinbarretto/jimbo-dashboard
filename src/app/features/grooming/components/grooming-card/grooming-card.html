@@ -8,8 +8,7 @@
   [class.card--epic]="isEpic()"
   [class.card--intake-rejected]="isIntakeRejected()"
   [class.card--needs-rework]="needsRework()"
-  [class.card--expanded]="expanded()"
-  [attr.title]="ageTooltip()"
+  [class.card--reply-open]="showReply()"
   draggable="true"
   (dragstart)="onDragStart($event)"
   (dragend)="onDragEnd()"
@@ -19,21 +18,6 @@
 
     @if (hasParent() && parentSeq() !== null) {
       <span class="card__subitem">↳ #{{ parentSeq() }}</span>
-    }
-
-    @if (source(); as s) {
-      <span
-        class="card__source"
-        [class]="s.actorId ? 'card__source card__source--actor-' + s.actorId : 'card__source'"
-      >{{ s.text }}</span>
-    }
-
-    @if (item().category; as cat) {
-      <span class="card__category" [attr.title]="'Category: ' + cat">{{ cat }}</span>
-    }
-
-    @if (project(); as proj) {
-      <app-project-chip [projectId]="proj.id" [displayName]="proj.display_name" />
     }
 
     @if (displayedPriority() !== null) {
@@ -47,19 +31,10 @@
       @if (openQuestionsCount() > 0) {
         <app-blocker-badge [count]="openQuestionsCount()" />
       }
-      @if (hasDraft()) {
-        <span class="card__draft" [attr.title]="draftTooltip()">
-          {{ draftCount() }} drafted
-        </span>
+      @if (isStuck()) {
+        <span class="card__stuck" [attr.title]="stuckTooltip()">{{ stuckDaysRounded() }}d</span>
       }
-      <button
-        type="button"
-        class="card__expand-btn"
-        [class.card__expand-btn--open]="expanded()"
-        [attr.aria-expanded]="expanded()"
-        [attr.aria-label]="expanded() ? 'Collapse card' : 'Expand card'"
-        (click)="toggleExpanded($event)"
-      >▾</button>
+      <span class="card__age" [attr.title]="ageTooltip()">{{ ageLabel() }}</span>
     </span>
   </header>
 
@@ -75,61 +50,41 @@
   </a>
 
   @if (isIntakeRejected() && rejectionCallout(); as callout) {
-    <div class="card__rejection">
-      <span class="card__rejection-label">{{ callout.label }}</span>
-      <span class="card__rejection-body">
-        {{ callout.actorLabel }} {{ callout.body }} · {{ formatRelativeTime(callout.at) }}
-      </span>
+    <div class="card__question">
+      <span class="card__question-who">{{ callout.actorLabel }}</span>
+      <span class="card__question-body">{{ callout.body }}</span>
     </div>
   }
 
-  @if (visibleTags().length > 0) {
-    <div class="card__tags">
-      @for (tag of visibleTags(); track tag) {
-        <span class="card__tag">{{ tag }}</span>
-      }
-      @if (extraTagCount() > 0) {
-        <span class="card__tag-more">+{{ extraTagCount() }}</span>
-      }
-    </div>
+  @if (showReply() && openQuestion(); as q) {
+    <app-question-reply-composer
+      [question]="q"
+      [vaultItemId]="item().id"
+      [currentActor]="currentActorId"
+      (posted)="onReplyPosted($event)"
+    />
   }
-
-  <footer class="card__footer">
-    <app-owner-chip [actorId]="item().assigned_to" />
-
-    @if (hasPulse()) {
-      <span class="card__pulse" [attr.title]="pulseTooltip()" aria-hidden="true"></span>
-    }
-
-    <span class="card__age" [attr.title]="ageTooltip()">{{ ageLabel() }}</span>
-  </footer>
 
   <div class="card__actions">
-    <button type="button" class="card__action-btn" (click)="demote.emit(); $event.stopPropagation()">→ note</button>
-    <button type="button" class="card__action-btn card__action-btn--danger" (click)="remove.emit(); $event.stopPropagation()">delete</button>
+    @if (openQuestion()) {
+      <button
+        type="button"
+        class="card__action card__action--reply"
+        [class.card__action--reply-active]="showReply()"
+        (click)="toggleReply(); $event.stopPropagation()"
+      >reply ↩</button>
+    }
+    <button
+      type="button"
+      class="card__action card__action--delete"
+      (click)="remove.emit(); $event.stopPropagation()"
+    >delete</button>
+    <button
+      type="button"
+      class="card__action card__action--more"
+      (click)="$event.stopPropagation()"
+      aria-label="More actions"
+    >···</button>
   </div>
 
-  @if (expanded() && liveSnapshot(); as snap) {
-    <section class="card__live" aria-label="Recent activity">
-      @if (snap.latestEvent; as ev) {
-        <div class="card__live-row">
-          <span class="card__live-icon" aria-hidden="true">⏱</span>
-          <span class="card__live-actor">{{ ev.actorLabel }}</span>
-          <span class="card__live-text">{{ ev.description }}</span>
-          <span class="card__live-when">· {{ formatRelativeTime(ev.at) }}</span>
-        </div>
-      }
-      @if (snap.latestMessage; as msg) {
-        <div class="card__live-row card__live-row--message">
-          <span class="card__live-icon" aria-hidden="true">💬</span>
-          <span class="card__live-actor">{{ msg.authorLabel }}</span>
-          <span class="card__live-text card__live-text--quoted">{{ msg.bodyExcerpt }}</span>
-          <span class="card__live-when">· {{ formatRelativeTime(msg.at) }}</span>
-        </div>
-      }
-      @if (!snap.latestEvent && !snap.latestMessage) {
-        <p class="card__live-empty">no activity yet</p>
-      }
-    </section>
-  }
 </article>
