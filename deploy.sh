@@ -36,4 +36,10 @@ echo "Syncing to ${VPS_HOST}:${VPS_DIR}…"
 ssh "$VPS_HOST" "mkdir -p $VPS_DIR"
 rsync -a --delete "$DIST_DIR/" "$VPS_HOST:$VPS_DIR/"
 
+# Restart the API service so its in-process env always matches the key baked
+# into the bundle we just deployed. Without this, a reboot or crash-restart
+# between deploys can load a stale env and produce 401s.
+echo "Restarting dashboard-api.service…"
+ssh "$VPS_HOST" "sudo systemctl restart dashboard-api.service"
+
 echo "Done — https://jimbo.fourfoldmedia.uk"
