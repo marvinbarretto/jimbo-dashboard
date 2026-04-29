@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Wireframe · Mobile Kanban</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --ink:     #222;
+    --dim:     #666;
+    --faint:   #999;
+    --bg:      #fff;
+    --panel:   #fafafa;
+    --line:    #cfcfcf;
+    --line-2:  #e6e6e6;
+    --hot:     #d96520;
+    --ok:      #3b7a3b;
+    --bad:     #a33;
+    --maybe:   #8a6d00;
+    --actor-marvin: #b8860b;
+    --actor-ralph:  #1d4ed8;
+    --actor-boris:  #6b46c1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--ink);
+    background: #f0f0f0;
+  }
+
+  .proto-nav {
+    font-size: 11px;
+    color: var(--faint);
+    padding: 8px 14px;
+    background: #fff;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .proto-nav a { color: #06c; text-decoration: none; }
+
+  /* ─── Frame ─────────────────────────────────────── */
+  .frame {
+    max-width: 375px;
+    margin: 16px auto;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    min-height: 700px;
+    position: relative;
+  }
+
+  .wire-label {
+    position: absolute;
+    top: -22px;
+    right: 0;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+  }
+
+  /* ─── Top nav ───────────────────────────────────── */
+  .top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    height: 44px;
+    border-bottom: 1px solid var(--line-2);
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .top-nav .brand {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+  }
+  .top-nav .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--dim);
+  }
+  .top-nav .nav-actor {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--actor-marvin);
+  }
+  .actor-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    display: inline-block;
+  }
+  .nav-btn {
+    font: inherit;
+    font-size: 11px;
+    padding: 3px 8px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  /* ─── Column switcher (chip strip) ─────────────── */
+  .col-switcher {
+    display: flex;
+    gap: 6px;
+    padding: 8px 12px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--line-2);
+    background: var(--panel);
+    /* hide scrollbar */
+    scrollbar-width: none;
+  }
+  .col-switcher::-webkit-scrollbar { display: none; }
+  .col-chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    font-size: 10px;
+    font-family: inherit;
+    color: var(--dim);
+    background: var(--bg);
+    white-space: nowrap;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .col-chip.active {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
+  .col-chip .count {
+    opacity: 0.7;
+    font-size: 10px;
+  }
+  .col-chip.active .count { opacity: 0.8; }
+
+  /* ─── Card list ─────────────────────────────────── */
+  .card-list {
+    padding: 10px 10px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* ─── Base card ─────────────────────────────────── */
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--faint);
+    padding: 10px 12px;
+    cursor: pointer;
+  }
+  .card:hover { border-color: var(--ink); }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-size: 10px;
+    color: var(--faint);
+  }
+  .card-seq { color: var(--faint); }
+  .project-tag {
+    border: 1px solid var(--line);
+    padding: 1px 5px;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--dim);
+  }
+  .priority-chip {
+    font-size: 9px;
+    padding: 1px 5px;
+    font-weight: 500;
+    color: #fff;
+    background: var(--hot);
+  }
+  .card-time {
+    font-size: 10px;
+    color: var(--faint);
+    white-space: nowrap;
+    margin-left: auto;
+  }
+
+  .card-title {
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.35;
+    margin-bottom: 6px;
+  }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  .tag {
+    font-size: 9px;
+    padding: 1px 6px;
+    border: 1px solid var(--line-2);
+    color: var(--faint);
+  }
+  .tag.more {
+    border-color: transparent;
+    color: var(--faint);
+    font-style: italic;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+  }
+  .card-assignee {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--actor-marvin);
+  }
+
+  /* ─── Intake rejected card variant ─────────────── */
+  .card.intake-rejected {
+    border-left-color: var(--bad);
+  }
+
+  .rejection-callout {
+    margin: 6px 0;
+    border-left: 2px solid var(--bad);
+    padding: 5px 8px;
+    background: #fff5f5;
+    font-size: 11px;
+    color: var(--dim);
+    line-height: 1.4;
+  }
+  .rejection-callout .rejection-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--bad);
+    margin-bottom: 2px;
+    font-weight: 500;
+  }
+  .rejection-callout .rejection-reason {
+    color: var(--ink);
+  }
+
+  .card-questions {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    padding: 2px 7px;
+    border: 1px solid var(--bad);
+    color: var(--bad);
+    background: #fff5f5;
+  }
+  .q-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--bad);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+  /* ─── Blocked badge ─────────────────────────────── */
+  .blocked-badge {
+    font-size: 9px;
+    padding: 1px 6px;
+    border: 1px solid var(--bad);
+    color: var(--bad);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* ─── Annotations ───────────────────────────────── */
+  .annotation {
+    max-width: 375px;
+    margin: 0 auto 16px;
+    padding: 10px 14px;
+    background: #fffaeb;
+    border-left: 3px solid var(--maybe);
+    font-size: 11px;
+    color: var(--dim);
+    line-height: 1.5;
+  }
+  .annotation strong { color: var(--maybe); display: block; margin-bottom: 4px; font-size: 10px; text-transform: uppercase; }
+
+  /* ─── Reality callout ───────────────────────────── */
+  .reality {
+    max-width: 375px;
+    margin: 0 auto 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    font-size: 11.5px;
+  }
+  .reality h3 {
+    margin: 0 0 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+    font-weight: 500;
+  }
+  .reality dl {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 4px 12px;
+    margin: 0;
+  }
+  .reality dt { color: var(--faint); }
+  .reality dd { margin: 0; color: var(--ink); }
+  .reality .new {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line-2);
+    color: var(--bad);
+  }
+  code { background: var(--line-2); padding: 0 4px; border-radius: 2px; }
+
+  .section-title {
+    max-width: 375px;
+    margin: 24px auto 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+    padding: 0 2px;
+  }
+
+  /* ─── Screen separator ──────────────────────────── */
+  .screen-sep {
+    max-width: 375px;
+    margin: 40px auto 16px;
+    border-top: 3px dashed var(--line);
+    padding: 8px 0;
+    font-size: 10px;
+    color: var(--faint);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: #fafafa;
+  }
+</style>
+</head>
+<body>
+
+<div class="proto-nav">
+  <a href="index.html">← prototypes</a> &nbsp;|&nbsp; mobile-kanban.html &nbsp;|&nbsp;
+  see also: <a href="mobile-detail-tabs.html">detail (tabs)</a> · <a href="mobile-detail-stacked.html">detail (stacked)</a>
+</div>
+
+<!-- ─── Reality callout ───────────────────────── -->
+<div class="reality" style="margin-top:16px;">
+  <h3>What this prototype addresses</h3>
+  <dl>
+    <dt>Problem</dt>
+    <dd>Desktop left-nav unusable on mobile; cards show too little useful info; intake_rejected column gives no hint of why</dd>
+    <dt>Approach</dt>
+    <dd>Sticky top nav + horizontal chip strip to switch columns; new intake_rejected card variant with surfaced last-activity excerpt</dd>
+    <dt>What's real</dt>
+    <dd>Kanban feature at <code>features/kanban/</code>; card data shape; status pipeline</dd>
+  </dl>
+  <div class="new">
+    New: top nav replaces sidenav on &lt;768px; column chip strip; intake_rejected card variant with rejection-callout block
+  </div>
+</div>
+
+<!-- ─── Screen A: Intake Rejected column active ── -->
+<div class="section-title">Screen A — Intake Rejected column selected</div>
+
+<div class="frame">
+  <div class="wire-label">A — KANBAN MOBILE</div>
+
+  <!-- Top nav -->
+  <div class="top-nav">
+    <div class="brand">JIMBO</div>
+    <div class="nav-actions">
+      <div class="nav-actor">
+        <span class="actor-dot"></span>
+        @marvin
+      </div>
+      <button class="nav-btn">+ add</button>
+    </div>
+  </div>
+
+  <!-- Column chip strip -->
+  <div class="col-switcher">
+    <button class="col-chip">Ungroomed <span class="count">12</span></button>
+    <button class="col-chip active">Intake Rejected <span class="count">57</span></button>
+    <button class="col-chip">Classified <span class="count">8</span></button>
+    <button class="col-chip">Decomposed <span class="count">4</span></button>
+    <button class="col-chip">Ready <span class="count">3</span></button>
+  </div>
+
+  <!-- Card list -->
+  <div class="card-list">
+
+    <!-- Intake rejected card — OPEN QUESTION (centerpiece) -->
+    <div class="card intake-rejected">
+      <div class="card-top">
+        <div class="card-meta">
+          <span class="card-seq">#1627</span>
+          <span class="project-tag">OPENCLAW</span>
+          <span class="priority-chip">P1</span>
+        </div>
+        <span class="card-time">5h ago</span>
+      </div>
+      <div class="card-title">GitHub issue maker</div>
+      <div class="rejection-callout">
+        <div class="rejection-label">Last activity</div>
+        <div class="rejection-reason">@boris moved: ungroomed → intake_rejected — intake questions raised</div>
+      </div>
+      <div class="card-footer">
+        <span class="card-questions">
+          <span class="q-dot"></span>
+          1 open question
+        </span>
+        <span class="card-assignee">
+          <span class="actor-dot"></span>
+          @marvin
+        </span>
+      </div>
+    </div>
+
+    <!-- Intake rejected card — BLOCKED -->
+    <div class="card intake-rejected">
+      <div class="card-top">
+        <div class="card-meta">
+          <span class="card-seq">#1452</span>
+          <span class="project-tag">LOCALSHOUT</span>
+          <span class="priority-chip">P1</span>
+        </div>
+        <span class="card-time">today</span>
+      </div>
+      <div class="card-title">Focus on the flyer logic</div>
+      <div class="rejection-callout">
+        <div class="rejection-label">Last activity</div>
+        <div class="rejection-reason">@boris moved: classified → intake_rejected — decomposition complete but ready-gate unmet: missing acceptance_criteria</div>
+      </div>
+      <div class="card-footer">
+        <span class="blocked-badge">2/5 BLOCKED</span>
+        <span class="card-assignee">
+          <span class="actor-dot"></span>
+          @marvin
+        </span>
+      </div>
+    </div>
+
+    <!-- Intake rejected card — stale, no open questions -->
+    <div class="card intake-rejected">
+      <div class="card-top">
+        <div class="card-meta">
+          <span class="card-seq">#1473</span>
+          <span class="project-tag">JIMBO</span>
+          <span class="priority-chip" style="background: var(--dim)">P2</span>
+        </div>
+        <span class="card-time">3d ago</span>
+      </div>
+      <div class="card-title">Hermes watchdog — missed-cron detection</div>
+      <div class="rejection-callout">
+        <div class="rejection-label">Last activity</div>
+        <div class="rejection-reason">@boris moved: ungroomed → intake_rejected — vague scope: "watchdog" could mean alerting, auto-restart, or logging only</div>
+      </div>
+      <div class="card-footer">
+        <span style="font-size:10px; color: var(--faint)">no open questions</span>
+        <span class="card-assignee">
+          <span class="actor-dot"></span>
+          @marvin
+        </span>
+      </div>
+    </div>
+
+    <!-- Older card, collapsed tags -->
+    <div class="card intake-rejected">
+      <div class="card-top">
+        <div class="card-meta">
+          <span class="card-seq">#1389</span>
+          <span class="project-tag">OPENCLAW</span>
+          <span class="priority-chip" style="background: var(--dim)">P3</span>
+        </div>
+        <span class="card-time">12d ago</span>
+      </div>
+      <div class="card-title">Add webhook support for PR events</div>
+      <div class="rejection-callout">
+        <div class="rejection-label">Last activity</div>
+        <div class="rejection-reason">@boris moved: ungroomed → intake_rejected — no acceptance criteria; scope unclear (which events? what payload shape?)</div>
+      </div>
+      <div class="card-footer">
+        <span style="font-size:10px; color: var(--faint)">no open questions · <span style="color:var(--bad)">stale 12d</span></span>
+        <span class="card-assignee">
+          <span class="actor-dot"></span>
+          @marvin
+        </span>
+      </div>
+    </div>
+
+  </div><!-- /card-list -->
+</div><!-- /frame -->
+
+<div class="annotation">
+  <strong>Annotations — Screen A</strong>
+  — Top nav replaces left sidebar entirely on mobile; "JIMBO" brand anchors left, actor chip + add CTA right<br>
+  — Chip strip scrolls horizontally; selected column is filled/inverted; counts shown inline<br>
+  — intake_rejected card: red left border, rejection-callout block surfaces last activity log line verbatim<br>
+  — "1 open question" pulse indicator signals Boris needs a response — most actionable items appear here<br>
+  — Stale marker ("stale 12d") appears when no activity for >7 days<br>
+  — Q: Should chips be persistent top or collapse into a dropdown select on narrowest viewports?<br>
+  — Q: Should each card have a swipe-right "answer" action for quick reply?
+</div>
+
+
+<!-- ─── Screen B: Ungroomed column ──────────────── -->
+<div class="screen-sep">Screen B — Ungroomed column (standard card variant)</div>
+
+<div class="frame">
+  <div class="wire-label">B — UNGROOMED COLUMN</div>
+
+  <div class="top-nav">
+    <div class="brand">JIMBO</div>
+    <div class="nav-actions">
+      <div class="nav-actor">
+        <span class="actor-dot"></span>
+        @marvin
+      </div>
+      <button class="nav-btn">+ add</button>
+    </div>
+  </div>
+
+  <div class="col-switcher">
+    <button class="col-chip active">Ungroomed <span class="count">12</span></button>
+    <button class="col-chip">Intake Rejected <span class="count">57</span></button>
+    <button class="col-chip">Classified <span class="count">8</span></button>
+    <button class="col-chip">Decomposed <span class="count">4</span></button>
+    <button class="col-chip">Ready <span class="count">3</span></button>
+  </div>
+
+  <div class="card-list">
+
+    <!-- Standard card: no rejection callout -->
+    <div class="card">
+      <div class="card-top">
+        <div class="card-meta">
+          <span class="card-seq">#1632</span>
+          <span class="project-tag">JIMBO</span>
+          <span class="priority-chip" style="background: var(--dim)">P2</span>
+        </div>
+        <span class="card-time">just now</span>
+      </div>
+      <div class="card-title">Add CSV export to briefing</div>
+      <div class="card-tags">
+        <span class="tag">briefing</span>
+        <span class="tag">export</span>
+        <span class="tag more">+2</span>
+      </div>
+      <div class="card-footer">
+        <span style="font-size:10px;color:var(--faint)">awaiting grooming</span>
+        <span class="card-assignee">
+          <span class="actor-dot"></span>
+          @marvin
+        </span>
+      </div>
+    </div>
+
+    <!-- Standard card -->
+    <div class="card">
+      <div class="card-top">
+        <div class="card-meta">
+          <span class="card-seq">#1631</span>
+          <span class="project-tag">LOCALSHOUT</span>
+          <span class="priority-chip">P1</span>
+        </div>
+        <span class="card-time">1h ago</span>
+      </div>
+      <div class="card-title">Mobile push notification opt-in flow</div>
+      <div class="card-tags">
+        <span class="tag">mobile</span>
+        <span class="tag">notifications</span>
+        <span class="tag more">+3</span>
+      </div>
+      <div class="card-footer">
+        <span style="font-size:10px;color:var(--faint)">awaiting grooming</span>
+        <span class="card-assignee">
+          <span class="actor-dot"></span>
+          @marvin
+        </span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="annotation">
+  <strong>Annotations — Screen B</strong>
+  — Standard card on Ungroomed: no rejection callout, no open-question indicator<br>
+  — Tags still shown but collapsed to 2 + overflow count (saves vertical space)<br>
+  — Card left-border uses --faint (grey) for neutral columns; only intake_rejected uses red<br>
+  — Q: Should "awaiting grooming" be omitted entirely (implicit from column) or kept as explicit hint?
+</div>
+
+</body>
+</html>

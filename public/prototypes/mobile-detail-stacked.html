@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Wireframe · Mobile Detail — Stacked (Accordion)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --ink:     #222;
+    --dim:     #666;
+    --faint:   #999;
+    --bg:      #fff;
+    --panel:   #fafafa;
+    --line:    #cfcfcf;
+    --line-2:  #e6e6e6;
+    --hot:     #d96520;
+    --ok:      #3b7a3b;
+    --bad:     #a33;
+    --maybe:   #8a6d00;
+    --actor-marvin: #b8860b;
+    --actor-ralph:  #1d4ed8;
+    --actor-boris:  #6b46c1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--ink);
+    background: #f0f0f0;
+  }
+  .proto-nav {
+    font-size: 11px;
+    color: var(--faint);
+    padding: 8px 14px;
+    background: #fff;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .proto-nav a { color: #06c; text-decoration: none; }
+
+  .frame {
+    max-width: 375px;
+    margin: 16px auto;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    min-height: 700px;
+    position: relative;
+  }
+  .wire-label {
+    position: absolute;
+    top: -22px;
+    right: 0;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+  }
+
+  /* ─── Header + actions (same as tabs version) ── */
+  .detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line-2);
+    background: #f3f3f3;
+    gap: 8px;
+  }
+  .detail-header .title-block { flex: 1; min-width: 0; }
+  .seq-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--faint);
+    margin-bottom: 2px;
+  }
+  .type-chip {
+    font-size: 9px;
+    padding: 1px 5px;
+    border: 1px solid var(--line);
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .title-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .close-btn {
+    font: inherit;
+    font-size: 14px;
+    padding: 4px 8px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--dim);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .action-row {
+    display: flex;
+    gap: 6px;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--line-2);
+    flex-wrap: wrap;
+  }
+  .btn {
+    font: inherit;
+    font-size: 11px;
+    padding: 3px 9px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .btn.warn  { color: var(--hot); border-color: #e8c0a0; }
+  .btn.danger { color: var(--bad); border-color: #d4a8a8; }
+
+  .stage-strip {
+    padding: 8px 12px 6px;
+    border-bottom: 1px solid var(--line-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .stage-strip::-webkit-scrollbar { display: none; }
+  .stages {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    font-size: 10px;
+    color: var(--faint);
+  }
+  .stages .stage { color: var(--faint); }
+  .stages .arrow { color: var(--line); }
+  .stage-status {
+    padding: 4px 0 0;
+    font-size: 11px;
+    color: var(--bad);
+  }
+
+  /* ─── Accordion sections ────────────────────────── */
+  .acc-section {
+    border-bottom: 1px solid var(--line-2);
+  }
+  .acc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    cursor: pointer;
+    background: var(--bg);
+    user-select: none;
+  }
+  .acc-header:hover { background: var(--panel); }
+  .acc-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .acc-badge {
+    font-size: 9px;
+    padding: 1px 5px;
+    border: 1px solid var(--bad);
+    color: var(--bad);
+  }
+  .acc-badge.ok { border-color: var(--ok); color: var(--ok); }
+  .acc-caret {
+    font-size: 10px;
+    color: var(--faint);
+    transition: transform 0.15s;
+  }
+  .acc-caret.open { transform: rotate(90deg); }
+  .acc-body {
+    padding: 0 12px 12px;
+    background: var(--bg);
+  }
+  .acc-body.collapsed { display: none; }
+
+  /* ─── Fields ────────────────────────────────────── */
+  .field-group { margin-bottom: 12px; }
+  .field-group:last-child { margin-bottom: 0; }
+  .field-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+    font-weight: 500;
+    margin-bottom: 3px;
+  }
+  .field-value { font-size: 12px; color: var(--ink); }
+  .field-value.dim { color: var(--dim); }
+
+  .select-mock {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .select-arrow { color: var(--faint); font-size: 10px; }
+
+  .meta-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .chips-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .chip {
+    font-size: 10px;
+    padding: 2px 8px;
+    border: 1px solid var(--line);
+    color: var(--dim);
+  }
+  .chip.blocked { border-color: var(--bad); color: var(--bad); }
+  .chip.priority { border-color: var(--hot); color: var(--hot); background: #fff7f2; }
+
+  .divider { border: none; border-top: 1px solid var(--line-2); margin: 10px 0; }
+
+  /* ─── Body section content ──────────────────────── */
+  .intake-body {
+    background: var(--panel);
+    border: 1px solid var(--line-2);
+    padding: 8px 10px;
+    font-size: 12px;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+  .intake-meta {
+    font-size: 10px;
+    color: var(--faint);
+    margin-top: 4px;
+  }
+  .error-callout {
+    border: 1px dashed var(--bad);
+    padding: 8px 10px;
+    background: #fff5f5;
+    font-size: 11px;
+    color: var(--bad);
+    margin-bottom: 10px;
+  }
+  .tag { font-size: 10px; padding: 2px 7px; border: 1px solid var(--line-2); color: var(--faint); }
+
+  /* ─── Activity entries ──────────────────────────── */
+  .activity-entry {
+    padding: 7px 0;
+    border-bottom: 1px dashed var(--line-2);
+    font-size: 11px;
+  }
+  .activity-entry:last-child { border-bottom: none; }
+  .act-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+  }
+  .act-actor { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; }
+  .act-actor.boris { color: var(--actor-boris); }
+  .act-actor.marvin { color: var(--actor-marvin); }
+  .act-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; }
+  .act-type-chip { font-size: 9px; padding: 1px 5px; border: 1px solid var(--line); color: var(--faint); }
+  .act-time { font-size: 10px; color: var(--faint); }
+  .act-body { color: var(--dim); line-height: 1.4; }
+
+  /* ─── Thread ────────────────────────────────────── */
+  .thread-msg {
+    border: 1px solid var(--line);
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+  .thread-msg.question { border-left: 3px solid var(--bad); }
+  .thread-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+  .thread-actor { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--actor-boris); }
+  .thread-badges { display: flex; gap: 4px; }
+  .badge { font-size: 9px; padding: 1px 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .badge.q-badge { border: 1px solid var(--bad); color: var(--bad); }
+  .badge.open-badge { border: 1px solid var(--bad); color: var(--bad); background: #fff5f5; }
+  .thread-time { font-size: 10px; color: var(--faint); }
+  .thread-body { color: var(--ink); line-height: 1.5; }
+  .compose-block { border: 1px solid var(--line); margin-top: 10px; }
+  .compose-types {
+    display: flex;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .compose-type {
+    flex: 1;
+    padding: 5px 8px;
+    text-align: center;
+    color: var(--faint);
+    cursor: pointer;
+    border: none;
+    font: inherit;
+    font-size: 10px;
+    background: var(--panel);
+  }
+  .compose-type.active { background: var(--bg); color: var(--ink); border-bottom: 2px solid var(--ink); }
+  .compose-input {
+    width: 100%;
+    border: none;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 12px;
+    color: var(--ink);
+    background: var(--bg);
+    outline: none;
+    resize: none;
+    height: 56px;
+  }
+  .compose-footer {
+    padding: 6px 10px;
+    border-top: 1px solid var(--line-2);
+    display: flex;
+    justify-content: flex-end;
+  }
+  .btn-post {
+    font: inherit;
+    font-size: 11px;
+    padding: 4px 12px;
+    background: var(--hot);
+    border: 1px solid var(--hot);
+    color: #fff;
+    cursor: pointer;
+  }
+
+  /* ─── Meta etc ──────────────────────────────────── */
+  .annotation {
+    max-width: 375px;
+    margin: 0 auto 16px;
+    padding: 10px 14px;
+    background: #fffaeb;
+    border-left: 3px solid var(--maybe);
+    font-size: 11px;
+    color: var(--dim);
+    line-height: 1.5;
+  }
+  .annotation strong { color: var(--maybe); display: block; margin-bottom: 4px; font-size: 10px; text-transform: uppercase; }
+
+  .reality {
+    max-width: 375px;
+    margin: 0 auto 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    font-size: 11.5px;
+  }
+  .reality h3 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); font-weight: 500; }
+  .reality dl { display: grid; grid-template-columns: 100px 1fr; gap: 4px 12px; margin: 0; }
+  .reality dt { color: var(--faint); }
+  .reality dd { margin: 0; color: var(--ink); }
+  .reality .new { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line-2); color: var(--bad); }
+  code { background: var(--line-2); padding: 0 4px; border-radius: 2px; }
+
+  .section-title {
+    max-width: 375px;
+    margin: 24px auto 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+    padding: 0 2px;
+  }
+
+  .comparison-table {
+    max-width: 375px;
+    margin: 0 auto 20px;
+    font-size: 11px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+  }
+  .comparison-table th {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+    text-align: left;
+    color: var(--dim);
+  }
+  .comparison-table td {
+    padding: 5px 10px;
+    border-bottom: 1px dashed var(--line-2);
+    color: var(--dim);
+    vertical-align: top;
+  }
+  .comparison-table tr:last-child td { border-bottom: none; }
+  .comparison-table td:first-child { color: var(--faint); width: 90px; }
+  .pro { color: var(--ok); }
+  .con { color: var(--bad); }
+</style>
+</head>
+<body>
+
+<div class="proto-nav">
+  <a href="index.html">← prototypes</a> &nbsp;|&nbsp; mobile-detail-stacked.html &nbsp;|&nbsp;
+  see also: <a href="mobile-kanban.html">mobile kanban</a> · <a href="mobile-detail-tabs.html">detail (tabs)</a>
+</div>
+
+<div class="reality" style="margin-top:16px;">
+  <h3>What this prototype addresses</h3>
+  <dl>
+    <dt>Problem</dt>
+    <dd>Detail modal on mobile is a scrolling wall; tabs (other prototype) fragment context; can we do better with accordions?</dd>
+    <dt>Approach</dt>
+    <dd>One scrollable page; sections are collapsible accordions; most-important (Status + Body) expanded by default; Activity + Discussion start collapsed but show counts in their headers</dd>
+    <dt>Key difference</dt>
+    <dd>No tab switching — everything on one scroll. Better for scanning; worse for deep-focus on one section</dd>
+  </dl>
+  <div class="new">
+    New: accordion sections replace 3-column split; no tabs required; section headers carry badge counts
+  </div>
+</div>
+
+<!-- ─── Comparison table ──────────────────────── -->
+<div class="section-title">Approach comparison</div>
+<table class="comparison-table">
+  <tr>
+    <th></th>
+    <th>Tabs (other proto)</th>
+    <th>Stacked (this proto)</th>
+  </tr>
+  <tr>
+    <td>Navigation</td>
+    <td>Tap tab to switch context</td>
+    <td>Scroll to section</td>
+  </tr>
+  <tr>
+    <td>Scanning</td>
+    <td class="con">Must switch tabs to compare</td>
+    <td class="pro">All content in one scroll</td>
+  </tr>
+  <tr>
+    <td>Focus</td>
+    <td class="pro">Clean, one section at a time</td>
+    <td class="con">Visual noise from other sections</td>
+  </tr>
+  <tr>
+    <td>Urgency</td>
+    <td>Tab badges hint at open items</td>
+    <td>Section headers show counts inline</td>
+  </tr>
+  <tr>
+    <td>Familiar</td>
+    <td>Tab metaphor — widely understood</td>
+    <td>Accordion — less common in admin tools</td>
+  </tr>
+</table>
+
+
+<!-- ─── Screen A: full stacked view ─────────────── -->
+<div class="section-title">Screen A — Stacked view (Status + Body expanded)</div>
+
+<div class="frame">
+  <div class="wire-label">A — DETAIL / STACKED</div>
+
+  <!-- Header -->
+  <div class="detail-header">
+    <div class="title-block">
+      <div class="seq-row">
+        <span>#1627</span>
+        <span class="type-chip">task</span>
+      </div>
+      <div class="title-text">GitHub issue maker</div>
+    </div>
+    <button class="close-btn">x</button>
+  </div>
+
+  <!-- Action row -->
+  <div class="action-row">
+    <button class="btn">edit</button>
+    <button class="btn warn">reject</button>
+    <button class="btn">archive</button>
+    <button class="btn danger">delete</button>
+  </div>
+
+  <!-- Stage strip -->
+  <div class="stage-strip">
+    <div class="stages">
+      <span class="stage">Ungroomed</span>
+      <span class="arrow">→</span>
+      <span class="stage">Intake complete</span>
+      <span class="arrow">→</span>
+      <span class="stage">Classified</span>
+      <span class="arrow">→</span>
+      <span class="stage">Decomposed</span>
+      <span class="arrow">→</span>
+      <span class="stage">Ready</span>
+    </div>
+    <div class="stage-status"><span>↳</span> Currently in <strong>Intake rejected</strong></div>
+  </div>
+
+  <!-- Accordion: Status & Meta (EXPANDED) -->
+  <div class="acc-section">
+    <div class="acc-header">
+      <div class="acc-label">Status &amp; Meta</div>
+      <span class="acc-caret open">▶</span>
+    </div>
+    <div class="acc-body">
+      <div class="field-group">
+        <div class="field-label">Status</div>
+        <div class="select-mock">active <span class="select-arrow">▾</span></div>
+      </div>
+      <div class="meta-row">
+        <div>
+          <div class="field-label">Assignee</div>
+          <div class="field-value" style="color: var(--actor-marvin)">@marvin</div>
+        </div>
+        <div>
+          <div class="field-label">Priority</div>
+          <div class="chips-row"><span class="chip priority">P1</span></div>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Labels</div>
+        <div class="chips-row">
+          <span class="chip">intake rejected</span>
+          <span class="chip">vague</span>
+        </div>
+      </div>
+      <div class="meta-row">
+        <div>
+          <div class="field-label">Project</div>
+          <div class="chips-row"><span class="chip">Openclaw</span></div>
+        </div>
+        <div>
+          <div class="field-label">Decomp</div>
+          <div class="field-value">2/5 <span class="chip blocked" style="font-size:9px">BLOCKED</span></div>
+        </div>
+      </div>
+      <div style="font-size:10px; color: var(--faint); margin-top: 6px; line-height:1.6">
+        created 91d ago · last activity 5h ago<br>
+        rationale: <em>"Aligns with the active Jimbo/Hermes project..."</em>
+        <span style="color:#06c">expand</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accordion: Body (EXPANDED) -->
+  <div class="acc-section">
+    <div class="acc-header">
+      <div class="acc-label">Body &amp; Acceptance Criteria</div>
+      <span class="acc-caret open">▶</span>
+    </div>
+    <div class="acc-body">
+      <div class="field-label" style="margin-bottom:4px">Body (intake, immutable)</div>
+      <div class="intake-body">
+        Gh issue maker
+        <div class="intake-meta">91d ago · operator intake</div>
+      </div>
+      <div class="field-label" style="margin-bottom:4px">Acceptance Criteria</div>
+      <div class="error-callout">No acceptance criteria yet — blocks readiness</div>
+      <div class="field-label" style="margin-bottom:4px">Tags</div>
+      <div class="chips-row">
+        <span class="tag">github</span>
+        <span class="tag">developer-tools</span>
+        <span class="tag">project:openclaw</span>
+        <span class="tag">feature</span>
+        <span class="tag">jimbo</span>
+        <span class="tag">integration</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accordion: Activity (COLLAPSED, shows count) -->
+  <div class="acc-section">
+    <div class="acc-header">
+      <div class="acc-label">
+        Activity log
+        <span class="acc-badge">4 events</span>
+      </div>
+      <span class="acc-caret">▶</span>
+    </div>
+    <div class="acc-body collapsed">
+      <!-- collapsed -->
+    </div>
+  </div>
+
+  <!-- Accordion: Discussion (COLLAPSED, shows open question) -->
+  <div class="acc-section">
+    <div class="acc-header">
+      <div class="acc-label">
+        Discussion Thread
+        <span class="acc-badge">1 open question</span>
+      </div>
+      <span class="acc-caret">▶</span>
+    </div>
+    <div class="acc-body collapsed">
+      <!-- collapsed -->
+    </div>
+  </div>
+
+</div><!-- /frame -->
+
+<div class="annotation">
+  <strong>Annotations — Screen A (default state)</strong>
+  — Status &amp; Meta + Body expanded by default — the user needs context before acting<br>
+  — Activity + Discussion collapsed but their headers show counts ("4 events", "1 open question") — urgency visible without expanding<br>
+  — Red "1 open question" badge draws eye to the discussion section needing attention<br>
+  — Caret rotates 90° when section is expanded (no JS in proto, shown statically with "open" class)<br>
+  — Q: Should "1 open question" badge pulse (same red-dot animation as kanban cards)?<br>
+  — Q: Auto-expand Discussion when there's an open question?
+</div>
+
+
+<!-- ─── Screen B: Activity section expanded ──────── -->
+<div class="section-title">Screen B — Activity + Discussion both expanded</div>
+
+<div class="frame">
+  <div class="wire-label">B — DETAIL / STACKED / ALL EXPANDED</div>
+
+  <div class="detail-header">
+    <div class="title-block">
+      <div class="seq-row"><span>#1627</span><span class="type-chip">task</span></div>
+      <div class="title-text">GitHub issue maker</div>
+    </div>
+    <button class="close-btn">x</button>
+  </div>
+  <div class="action-row">
+    <button class="btn">edit</button>
+    <button class="btn warn">reject</button>
+    <button class="btn">archive</button>
+    <button class="btn danger">delete</button>
+  </div>
+  <div class="stage-strip">
+    <div class="stages">
+      <span class="stage">Ungroomed</span><span class="arrow">→</span>
+      <span class="stage">Intake complete</span><span class="arrow">→</span>
+      <span class="stage">Classified</span><span class="arrow">→</span>
+      <span class="stage">Decomposed</span><span class="arrow">→</span>
+      <span class="stage">Ready</span>
+    </div>
+    <div class="stage-status"><span>↳</span> Currently in <strong>Intake rejected</strong></div>
+  </div>
+
+  <!-- Status collapsed -->
+  <div class="acc-section">
+    <div class="acc-header">
+      <div class="acc-label">Status &amp; Meta</div>
+      <span class="acc-caret">▶</span>
+    </div>
+    <div class="acc-body collapsed"></div>
+  </div>
+
+  <!-- Body collapsed -->
+  <div class="acc-section">
+    <div class="acc-header">
+      <div class="acc-label">Body &amp; Acceptance Criteria</div>
+      <span class="acc-caret">▶</span>
+    </div>
+    <div class="acc-body collapsed"></div>
+  </div>
+
+  <!-- Activity EXPANDED -->
+  <div class="acc-section">
+    <div class="acc-header">
+      <div class="acc-label">
+        Activity log
+        <span class="acc-badge ok">4 events</span>
+      </div>
+      <span class="acc-caret open">▶</span>
+    </div>
+    <div class="acc-body">
+      <div class="activity-entry">
+        <div class="act-header">
+          <span class="act-actor boris"><span class="act-dot"></span>@boris</span>
+          <span class="act-type-chip">agent</span>
+          <span class="act-time">4/29 1:28AM</span>
+        </div>
+        <div class="act-body">moved: ungroomed → intake_rejected — intake questions raised</div>
+      </div>
+      <div class="activity-entry">
+        <div class="act-header">
+          <span class="act-actor marvin"><span class="act-dot"></span>@marvin</span>
+          <span class="act-type-chip">human</span>
+          <span class="act-time">4/28 10:20PM</span>
+        </div>
+        <div class="act-body">moved: intake_rejected → ungroomed — feedback_reject: recalibration</div>
+      </div>
+      <div class="activity-entry">
+        <div class="act-header">
+          <span class="act-actor boris"><span class="act-dot"></span>@boris</span>
+          <span class="act-type-chip">agent</span>
+          <span class="act-time">4/24 3:08AM</span>
+        </div>
+        <div class="act-body">moved: classified → intake_rejected — missing acceptance_criteria</div>
+      </div>
+      <div class="activity-entry">
+        <div class="act-header">
+          <span class="act-actor boris"><span class="act-dot"></span>@boris</span>
+          <span class="act-type-chip">agent</span>
+          <span class="act-time">4/24 3:00AM</span>
+        </div>
+        <div class="act-body">moved: ungroomed → classified — analysis submitted</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Discussion EXPANDED -->
+  <div class="acc-section">
+    <div class="acc-header">
+      <div class="acc-label">
+        Discussion Thread
+        <span class="acc-badge">1 open question</span>
+      </div>
+      <span class="acc-caret open">▶</span>
+    </div>
+    <div class="acc-body">
+      <div class="thread-msg question">
+        <div class="thread-header">
+          <span class="thread-actor"><span class="act-dot"></span>@Boris</span>
+          <div class="thread-badges">
+            <span class="badge q-badge">question</span>
+            <span class="badge open-badge">open</span>
+          </div>
+        </div>
+        <div class="thread-time" style="margin-bottom:5px">5h ago</div>
+        <div class="thread-body">
+          <strong>Is this a Jimbo CLI feature or a Hermes agent tool?</strong><br>
+          <em style="font-size:11px;color:var(--dim)">Scope and implementation path differ significantly — CLI vs agent tool with GitHub API integration</em>
+        </div>
+      </div>
+      <div class="compose-block">
+        <div class="compose-types">
+          <button class="compose-type active">comment</button>
+          <button class="compose-type">question</button>
+          <button class="compose-type">answer</button>
+        </div>
+        <textarea class="compose-input" placeholder="write your message..."></textarea>
+        <div class="compose-footer">
+          <button class="btn-post">post message</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /frame -->
+
+<div class="annotation">
+  <strong>Annotations — Screen B (lower sections expanded)</strong>
+  — User has scrolled past Status/Body (collapsed) and expanded Activity + Discussion<br>
+  — Activity badge goes green (ok) once expanded — signals "seen"; stays red when collapsed and unseen<br>
+  — Compose block sits directly below the open question — no extra navigation step to reply<br>
+  — Biggest concern: on a real 375px phone, all-expanded = very long page; user may lose their place<br>
+  — Mitigation: persistent sticky header (title + seq) always shows context<br>
+  — Q: Tabs vs stacked — recommend TABS for this use case (less scrolling, more focused) — stacked better if user frequently needs to cross-reference meta with activity simultaneously
+</div>
+
+</body>
+</html>
