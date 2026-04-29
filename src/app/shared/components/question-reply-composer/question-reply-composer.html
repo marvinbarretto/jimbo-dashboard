@@ -1,0 +1,29 @@
+<div class="reply-composer">
+  <textarea
+    class="reply-composer__input"
+    [formControl]="bodyControl"
+    placeholder="Answer this question…   # task  @ person  / project"
+    rows="3"
+    (keydown.meta.enter)="submit()"
+    (keydown.ctrl.enter)="submit()"
+  ></textarea>
+  <div class="reply-composer__toolbar">
+    <button type="button" class="reply-composer__token-btn" (click)="insertToken('#')">
+      # task
+    </button>
+    <button type="button" class="reply-composer__token-btn" (click)="insertToken('@')">
+      @ person
+    </button>
+    <button type="button" class="reply-composer__token-btn" (click)="insertToken('/')">
+      / project
+    </button>
+    <button
+      type="button"
+      class="reply-composer__send"
+      [disabled]="!bodyControl.value.trim()"
+      (click)="submit()"
+    >
+      send ↩
+    </button>
+  </div>
+</div>
