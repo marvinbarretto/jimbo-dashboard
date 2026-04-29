@@ -1,7 +1,8 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
-import { eq, asc, and, inArray } from 'drizzle-orm';
+import { eq, asc, desc, and, inArray, isNull } from 'drizzle-orm';
 import { db } from '../../db/client.js';
 import { threadMessages } from '../../db/schema/index.js';
+import { vaultNotes } from '../../db/schema/vault.js';
 import { ErrorSchema, listResponse } from '../schemas/shared.js';
 import { errorResponse } from '../middleware/error.js';
 
@@ -12,6 +13,67 @@ import { errorResponse } from '../middleware/error.js';
 export const threadMessagesRoute = new OpenAPIHono();
 
 const Row = z.record(z.string(), z.unknown()).openapi('ThreadMessage');
+
+const OpenQuestionRow = z.object({
+  id: z.string(),
+  vault_item_id: z.string(),
+  vault_item_seq: z.number(),
+  vault_item_title: z.string(),
+  vault_item_grooming_status: z.string(),
+  vault_item_assigned_to: z.string().nullable(),
+  author_actor_id: z.string(),
+  kind: z.literal('question'),
+  body: z.string(),
+  in_reply_to: z.string().nullable(),
+  answered_by: z.null(),
+  created_at: z.string(),
+  age_days: z.number(),
+}).openapi('OpenQuestionView');
+
+// Must be registered before the `GET /` route so it isn't shadowed.
+threadMessagesRoute.openapi(createRoute({
+  method: 'get', path: '/open-questions', tags: ['ThreadMessages'], summary: 'Cross-item open question queue',
+  request: { query: z.object({ assigned_to: z.string().optional() }) },
+  responses: { 200: { description: 'OK', content: { 'application/json': { schema: listResponse(OpenQuestionRow) } } } },
+}), async (c) => {
+  const { assigned_to } = c.req.valid('query');
+
+  const rows = await db
+    .select({
+      id: threadMessages.id,
+      vault_item_id: threadMessages.vault_item_id,
+      vault_item_seq: vaultNotes.seq,
+      vault_item_title: vaultNotes.title,
+      vault_item_grooming_status: vaultNotes.grooming_status,
+      vault_item_assigned_to: vaultNotes.assigned_to,
+      author_actor_id: threadMessages.author_actor_id,
+      kind: threadMessages.kind,
+      body: threadMessages.body,
+      in_reply_to: threadMessages.in_reply_to,
+      answered_by: threadMessages.answered_by,
+      created_at: threadMessages.created_at,
+    })
+    .from(threadMessages)
+    .innerJoin(vaultNotes, eq(threadMessages.vault_item_id, vaultNotes.id))
+    .where(and(
+      eq(threadMessages.kind, 'question'),
+      isNull(threadMessages.answered_by),
+      ...(assigned_to ? [eq(vaultNotes.assigned_to, assigned_to)] : []),
+    ))
+    .orderBy(desc(threadMessages.created_at));
+
+  const now = Date.now();
+  const items = rows.map(r => ({
+    ...r,
+    vault_item_assigned_to: r.vault_item_assigned_to ?? null,
+    kind: 'question' as const,
+    answered_by: null,
+    created_at: r.created_at.toISOString(),
+    age_days: Math.floor((now - r.created_at.getTime()) / 86_400_000),
+  }));
+
+  return c.json({ items }, 200);
+});
 
 const IdParam = z.object({
   id: z.string().min(1).openapi({ param: { name: 'id', in: 'path' } }),
