@@ -1,7 +1,3 @@
-// Overflow trigger hidden on desktop; menu renders inline via display:contents.
-.header-action-overflow-btn { display: none; }
-.header-action-menu { display: contents; }
-
 // Mobile tab strip — hidden on desktop. Shows/hides the 4 detail sections via
 // the activeTab signal on <768px; on desktop all sections are always visible.
 .detail-tabs {
@@ -56,39 +52,15 @@
     display: none !important;
   }
 
-  // Overflow menu for secondary actions — shown only on mobile.
-  .header-action-overflow-btn {
-    display: inline-flex;
-    align-items: center;
-    letter-spacing: .1em;
-  }
+  // Actions row drops below the title and stretches buttons across the full width.
+  .modal-header__actions {
+    width: 100%;
+    border-top: 1px solid var(--color-border);
 
-  .modal-header__zone1 { position: relative; }
-
-  .header-action-menu {
-    display: none;
-
-    &--open {
-      display: flex;
-      flex-direction: column;
-      position: absolute;
-      top: 100%;
-      right: 0;
-      z-index: 20;
-      background: var(--color-bg);
-      border: 1px solid var(--color-border);
-      min-width: 8rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-
-      .header-action {
-        border: none;
-        border-bottom: 1px solid var(--color-border);
-        padding: .55rem .75rem;
-        text-align: left;
-        width: 100%;
-
-        &:last-child { border-bottom: none; }
-      }
+    .header-action {
+      flex: 1;
+      text-align: center;
+      padding: .45rem .5rem;
     }
   }
 }

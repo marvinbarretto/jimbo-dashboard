@@ -11,22 +11,13 @@
       <div class="modal-header__actions">
         <a [routerLink]="['/vault-items', item.seq, 'edit']"
           class="header-action" aria-label="Edit this item">edit</a>
-        <button type="button" class="header-action header-action-overflow-btn"
-          (click)="toggleActionsMenu()"
-          [attr.aria-expanded]="showActionsMenu()"
-          aria-label="More actions">•••</button>
-        <div class="header-action-menu" [class.header-action-menu--open]="showActionsMenu()">
-          @if (canReject()) {
-            <button type="button" class="header-action header-action--warn"
-              (click)="openReject(); closeActionsMenu()">reject</button>
-          }
-          <button type="button" class="header-action"
-            (click)="archive(); closeActionsMenu()"
-            [attr.aria-disabled]="isItemArchived(item)"
-            [disabled]="isItemArchived(item)">archive</button>
-          <button type="button" class="header-action header-action--danger"
-            (click)="deleteItem(); closeActionsMenu()">delete</button>
-        </div>
+        @if (canReject()) {
+          <button type="button" class="header-action header-action--warn" (click)="openReject()">reject</button>
+        }
+        <button type="button" class="header-action" (click)="archive()"
+          [attr.aria-disabled]="isItemArchived(item)"
+          [disabled]="isItemArchived(item)">archive</button>
+        <button type="button" class="header-action header-action--danger" (click)="deleteItem()">delete</button>
         @if (mode() === 'page') {
           <a routerLink="/vault-items" class="header-action header-action--close" aria-label="Back to vault">×</a>
         }
