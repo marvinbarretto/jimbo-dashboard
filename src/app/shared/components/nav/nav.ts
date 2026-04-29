@@ -35,6 +35,21 @@ import pkg from '../../../../../package.json';
       padding: 1.5rem 1rem;
       gap: 2rem;
       flex-shrink: 0;
+
+      @media (max-width: 768px) {
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        min-height: unset;
+        padding: 0.5rem 0.75rem;
+        gap: 0;
+        border-right: none;
+        border-bottom: 1px solid var(--color-border);
+        overflow-x: auto;
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar { display: none; }
+      }
     }
 
     .app-nav__logo {
@@ -42,6 +57,12 @@ import pkg from '../../../../../package.json';
       font-size: 1.1rem;
       letter-spacing: 0.05em;
       color: var(--color-accent);
+      flex-shrink: 0;
+
+      @media (max-width: 768px) {
+        font-size: 0.85rem;
+        margin-right: 0.5rem;
+      }
     }
 
     .app-nav__version {
@@ -56,6 +77,13 @@ import pkg from '../../../../../package.json';
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
+
+      @media (max-width: 768px) {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 0;
+        flex: 1;
+      }
     }
 
     a {
@@ -68,6 +96,13 @@ import pkg from '../../../../../package.json';
 
       &:hover { color: var(--color-text); }
       &.active { color: var(--color-text); background: var(--color-border); }
+
+      @media (max-width: 768px) {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        border-radius: 0;
+      }
     }
   `],
 })

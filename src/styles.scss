@@ -5,6 +5,10 @@
 .app-shell {
   display: flex;
   min-height: 100vh;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 }
 
 .app-main {
