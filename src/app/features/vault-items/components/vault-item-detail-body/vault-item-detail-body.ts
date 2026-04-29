@@ -160,6 +160,10 @@ export class VaultItemDetailBody {
   readonly showAddProjectPicker = signal(false);
   readonly showRejectForm = signal(false);
   readonly rationaleExpanded = signal(false);
+  readonly showActionsMenu = signal(false);
+
+  toggleActionsMenu(): void { this.showActionsMenu.update(v => !v); }
+  closeActionsMenu(): void  { this.showActionsMenu.set(false); }
 
   // Mobile tab selection. On desktop all sections are visible; below 768px
   // this drives a tab strip that shows one section at a time.
