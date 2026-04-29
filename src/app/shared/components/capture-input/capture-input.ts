@@ -62,14 +62,14 @@ interface CaptureResponse {
   styles: [`
     :host {
       display: block;
-      padding: 0.5rem 1rem;
-      border-bottom: 1px solid var(--color-border);
+      padding: 0 0 0.9rem;
     }
     .capture {
       position: relative;
       display: flex;
       flex-direction: column;
       gap: 0.4rem;
+      max-width: 40rem;
     }
     .capture__title,
     .capture__body {

@@ -1,8 +1,15 @@
 <div class="app-shell">
-  <app-nav />
+  <header class="app-header">
+    <div class="app-header__inner">
+      <app-nav />
+      <app-capture-input />
+    </div>
+  </header>
+
   <main class="app-main">
-    <app-capture-input />
-    <router-outlet />
+    <div class="app-main__inner">
+      <router-outlet />
+    </div>
   </main>
 </div>
 <app-toast-stack />
