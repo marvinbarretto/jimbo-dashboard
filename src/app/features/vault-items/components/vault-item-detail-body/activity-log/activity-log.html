@@ -1,5 +1,8 @@
 <header class="activity-log__header">
-  <span class="activity-log__title">Activity log · {{ events().length }} events</span>
+  <div class="activity-log__header-copy">
+    <span class="activity-log__eyebrow">Review history</span>
+    <span class="activity-log__title">{{ events().length }} activity events</span>
+  </div>
   <app-verbosity-toggle [value]="verbosity()" (changed)="setVerbosity($event)" />
 </header>
 

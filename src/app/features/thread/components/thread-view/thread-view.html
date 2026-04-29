@@ -1,13 +1,20 @@
 <div class="thread-view">
 
   <header class="thread-view__header">
-    <span class="thread-view__label">thread</span>
-    <span class="thread-view__summary">
-      <strong>{{ totalCount() }}</strong> messages
-      @if (openCount() > 0) {
-        ·
-        <strong class="thread-view__open-count">{{ openCount() }} open {{ openCount() === 1 ? 'question' : 'questions' }}</strong>
-      }
+    <div class="thread-view__header-copy">
+      <span class="thread-view__label">Conversation</span>
+      <span class="thread-view__summary">
+        <strong>{{ totalCount() }}</strong> messages
+        @if (openCount() > 0) {
+          ·
+          <strong class="thread-view__open-count">{{ openCount() }} open {{ openCount() === 1 ? 'question' : 'questions' }}</strong>
+        }
+      </span>
+    </div>
+    <span
+      class="thread-view__status"
+      [class.thread-view__status--alert]="openCount() > 0">
+      {{ openCount() > 0 ? 'needs reply' : 'clear' }}
     </span>
   </header>
 

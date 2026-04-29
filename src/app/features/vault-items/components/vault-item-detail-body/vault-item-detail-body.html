@@ -170,168 +170,185 @@
     <section class="detail-section">
       <button type="button" class="detail-section__header" (click)="toggleSection('body')">
         <span class="detail-section__title">Body</span>
-        <span class="detail-section__meta">{{ sectionBody() ? '▴' : '▾' }}</span>
+        <span class="detail-section__meta">
+          intake · delivery · links {{ sectionBody() ? '▴' : '▾' }}
+        </span>
       </button>
       @if (sectionBody()) {
         <div class="detail-section__content">
-
-          <section class="section">
-            <div class="section__label">Body <span class="section__hint">(intake, immutable)</span></div>
-            @if (item.body) {
-              <pre class="intake">{{ item.body }}</pre>
-            } @else {
-              <p class="muted-text">no body content</p>
-            }
-            <p class="intake__note">{{ relativeTime(item.created_at) }} · operator intake</p>
-          </section>
-
-          <section class="section">
-            <div class="section__label">Acceptance criteria</div>
-            @if (item.acceptance_criteria.length > 0) {
-              <ul class="ac-list">
-                @for (ac of item.acceptance_criteria; track ac.text) {
-                  <li [class]="'ac-item' + (ac.done ? ' ac-item--done' : '') + (acStatus(ac.text) === 'verbose' ? ' ac-item--verbose' : '') + (acStatus(ac.text) === 'exceeds' ? ' ac-item--exceeds' : '')">
-                    <span class="ac-item__mark" [attr.aria-label]="ac.done ? 'done' : 'pending'">
-                      {{ ac.done ? '✓' : '○' }}
-                    </span>
-                    <span class="ac-item__text">{{ ac.text }}</span>
-                    @switch (acStatus(ac.text)) {
-                      @case ('verbose') {
-                        <span class="ac-item__chip ac-item__chip--warn"
-                          [title]="'Verbose (' + ac.text.length + ' chars). Spec recommends ≤ 120.'">verbose</span>
-                      }
-                      @case ('exceeds') {
-                        <span class="ac-item__chip ac-item__chip--err"
-                          [title]="'Exceeds policy (' + ac.text.length + ' chars). Reject or edit.'">exceeds</span>
-                      }
-                    }
-                  </li>
-                }
-              </ul>
-            } @else {
-              <div class="ac-empty">No acceptance criteria yet — blocks readiness</div>
-            }
-          </section>
-
-          <section class="section">
-            <div class="section__label">Tags</div>
-            @if (item.tags.length > 0) {
-              <div class="chip-row">
-                @for (tag of item.tags; track tag) {
-                  <span class="chip">{{ tag }}</span>
-                }
-              </div>
-            } @else {
-              <div class="chip-row">
-                <span class="chip chip--empty">none yet</span>
-              </div>
-            }
-          </section>
-
-          @if (children().length > 0) {
-            <section class="section">
-              <div class="section__label">
-                Subtasks
-                <span class="hint">({{ children().length }} — this item is an epic)</span>
-              </div>
-              <ul class="subtask-list">
-                @for (child of children(); track child.id) {
-                  <li class="subtask-row">
-                    <button type="button" class="subtask-row__link" (click)="swapToSeq(child.seq)">
-                      #{{ child.seq }} · {{ child.title }}
-                    </button>
-                    <span class="subtask-row__status">{{ child.grooming_status }}</span>
-                  </li>
-                }
-              </ul>
+          <div class="detail-body-layout">
+            <section class="section section-card section-card--intake">
+              <div class="section__label">Intake <span class="section__hint">(immutable input)</span></div>
+              @if (item.body) {
+                <pre class="intake">{{ item.body }}</pre>
+              } @else {
+                <p class="muted-text">no body content</p>
+              }
+              <p class="intake__note">{{ relativeTime(item.created_at) }} · operator intake</p>
             </section>
-          }
 
-          <section class="section">
-            <div class="section__label">Projects</div>
-            <div class="junction-list">
-              @for (p of projects(); track p.id) {
-                <span class="junction-chip">
-                  <a [routerLink]="['/projects', p.id]" class="junction-chip__label">
-                    {{ p.display_name }}
-                  </a>
-                  <button class="junction-chip__remove"
-                    (click)="removeProject(p.id)"
-                    [attr.aria-label]="'Remove ' + p.display_name">×</button>
-                </span>
-              }
-              <button class="inline-btn junction-add-btn"
-                (click)="toggleAddProjectPicker()"
-                aria-label="Link a project">
-                + add project
-              </button>
-            </div>
-            @if (showAddProjectPicker()) {
-              <div class="junction-picker">
-                @for (p of activeProjects(); track p.id) {
-                  <button class="junction-picker__opt" (click)="addProject(p.id)">
-                    {{ p.display_name }}
-                  </button>
-                } @empty {
-                  <span class="muted">No active projects</span>
+            <div class="detail-body-layout__column">
+              <section class="section section-card">
+                <div class="section__label">Delivery</div>
+                @if (readiness(); as r) {
+                  <details class="readiness-panel" open>
+                    <summary class="readiness-panel__summary">
+                      <span>{{ r.passed }}/{{ r.total }} checks passed</span>
+                      <span [class]="'readiness-verdict readiness-verdict--' + r.verdict">{{ r.verdict }}</span>
+                    </summary>
+                    <ul class="readiness-list">
+                      @for (check of r.checks; track check.key) {
+                        <li [class]="'readiness-check readiness-check--' + (check.ok ? 'ok' : 'miss')">
+                          <span class="readiness-check__mark">{{ check.ok ? '✓' : '✗' }}</span>
+                          <span class="readiness-check__label">
+                            {{ check.label }}
+                            @if (!check.ok && check.blocker) {
+                              <span class="readiness-check__blocker"> — {{ check.blocker }}</span>
+                            }
+                          </span>
+                        </li>
+                      }
+                    </ul>
+                  </details>
                 }
-              </div>
-            }
-          </section>
 
-          <section class="section">
-            <div class="section__label">Blocked by</div>
-            <div class="junction-list">
-              @for (b of openBlockers(); track b.blocker_id) {
-                <span class="junction-chip junction-chip--blocker">
-                  <button type="button" class="junction-chip__label" (click)="swapToSeq(b.blocker_seq)">
-                    #{{ b.blocker_seq }} · {{ b.blocker_title }}
-                  </button>
-                  <button class="junction-chip__remove"
-                    (click)="removeBlocker(b.blocker_id)"
-                    [attr.aria-label]="'Remove blocker #' + b.blocker_seq">×</button>
-                </span>
-              } @empty {
-                <span class="muted">no blockers</span>
-              }
-            </div>
-            <div class="blocker-add">
-              <label for="blocker-seq-input" class="visually-hidden">Add blocker by seq number</label>
-              <input id="blocker-seq-input"
-                type="number" min="1"
-                placeholder="seq # e.g. 1820"
-                class="blocker-input"
-                [value]="addBlockerSeqInput()"
-                (input)="onBlockerSeqInput($event)" />
-              <button class="inline-btn" (click)="addBlockerBySeq()"
-                [disabled]="!addBlockerSeqInput()">
-                + add blocker
-              </button>
-            </div>
-          </section>
-
-          @if (readiness(); as r) {
-            <section class="section">
-              <div class="section__label">Readiness</div>
-              <details class="chip chip--readiness">
-                <summary>{{ r.passed }}/{{ r.total }} <span [class]="'readiness-verdict readiness-verdict--' + r.verdict">{{ r.verdict }}</span></summary>
-                <ul class="readiness-list">
-                  @for (check of r.checks; track check.key) {
-                    <li [class]="'readiness-check readiness-check--' + (check.ok ? 'ok' : 'miss')">
-                      <span class="readiness-check__mark">{{ check.ok ? '✓' : '✗' }}</span>
-                      <span class="readiness-check__label">
-                        {{ check.label }}
-                        @if (!check.ok && check.blocker) {
-                          <span class="readiness-check__blocker"> — {{ check.blocker }}</span>
+                <div class="section__subhead">
+                  Acceptance criteria
+                  <span class="section__submeta">{{ item.acceptance_criteria.length }}</span>
+                </div>
+                @if (item.acceptance_criteria.length > 0) {
+                  <ul class="ac-list">
+                    @for (ac of item.acceptance_criteria; track ac.text) {
+                      <li [class]="'ac-item' + (ac.done ? ' ac-item--done' : '') + (acStatus(ac.text) === 'verbose' ? ' ac-item--verbose' : '') + (acStatus(ac.text) === 'exceeds' ? ' ac-item--exceeds' : '')">
+                        <span class="ac-item__mark" [attr.aria-label]="ac.done ? 'done' : 'pending'">
+                          {{ ac.done ? '✓' : '○' }}
+                        </span>
+                        <span class="ac-item__text">{{ ac.text }}</span>
+                        @switch (acStatus(ac.text)) {
+                          @case ('verbose') {
+                            <span class="ac-item__chip ac-item__chip--warn"
+                              [title]="'Verbose (' + ac.text.length + ' chars). Spec recommends ≤ 120.'">verbose</span>
+                          }
+                          @case ('exceeds') {
+                            <span class="ac-item__chip ac-item__chip--err"
+                              [title]="'Exceeds policy (' + ac.text.length + ' chars). Reject or edit.'">exceeds</span>
+                          }
                         }
-                      </span>
-                    </li>
-                  }
-                </ul>
-              </details>
-            </section>
-          }
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <div class="ac-empty">No acceptance criteria yet — blocks readiness</div>
+                }
+              </section>
+            </div>
 
+            <div class="detail-body-layout__column">
+              <section class="section section-card">
+                <div class="section__label">Links</div>
+
+                @if (children().length > 0) {
+                  <div class="section__subhead">
+                    Subtasks
+                    <span class="section__submeta">{{ children().length }}</span>
+                  </div>
+                  <ul class="subtask-list">
+                    @for (child of children(); track child.id) {
+                      <li class="subtask-row">
+                        <button type="button" class="subtask-row__link" (click)="swapToSeq(child.seq)">
+                          #{{ child.seq }} · {{ child.title }}
+                        </button>
+                        <span class="subtask-row__status">{{ child.grooming_status }}</span>
+                      </li>
+                    }
+                  </ul>
+                }
+
+                <div class="section__subhead">
+                  Projects
+                  <span class="section__submeta">{{ projects().length }}</span>
+                </div>
+                <div class="junction-list">
+                  @for (p of projects(); track p.id) {
+                    <span class="junction-chip">
+                      <a [routerLink]="['/projects', p.id]" class="junction-chip__label">
+                        {{ p.display_name }}
+                      </a>
+                      <button class="junction-chip__remove"
+                        (click)="removeProject(p.id)"
+                        [attr.aria-label]="'Remove ' + p.display_name">×</button>
+                    </span>
+                  } @empty {
+                    <span class="muted">no linked projects</span>
+                  }
+                  <button class="inline-btn junction-add-btn"
+                    (click)="toggleAddProjectPicker()"
+                    aria-label="Link a project">
+                    + add project
+                  </button>
+                </div>
+                @if (showAddProjectPicker()) {
+                  <div class="junction-picker">
+                    @for (p of activeProjects(); track p.id) {
+                      <button class="junction-picker__opt" (click)="addProject(p.id)">
+                        {{ p.display_name }}
+                      </button>
+                    } @empty {
+                      <span class="muted">No active projects</span>
+                    }
+                  </div>
+                }
+
+                <div class="section__subhead">
+                  Blocked by
+                  <span class="section__submeta">{{ openBlockers().length }}</span>
+                </div>
+                <div class="junction-list">
+                  @for (b of openBlockers(); track b.blocker_id) {
+                    <span class="junction-chip junction-chip--blocker">
+                      <button type="button" class="junction-chip__label" (click)="swapToSeq(b.blocker_seq)">
+                        #{{ b.blocker_seq }} · {{ b.blocker_title }}
+                      </button>
+                      <button class="junction-chip__remove"
+                        (click)="removeBlocker(b.blocker_id)"
+                        [attr.aria-label]="'Remove blocker #' + b.blocker_seq">×</button>
+                    </span>
+                  } @empty {
+                    <span class="muted">no blockers</span>
+                  }
+                </div>
+                <div class="blocker-add">
+                  <label for="blocker-seq-input" class="visually-hidden">Add blocker by seq number</label>
+                  <input id="blocker-seq-input"
+                    type="number" min="1"
+                    placeholder="seq # e.g. 1820"
+                    class="blocker-input"
+                    [value]="addBlockerSeqInput()"
+                    (input)="onBlockerSeqInput($event)" />
+                  <button class="inline-btn" (click)="addBlockerBySeq()"
+                    [disabled]="!addBlockerSeqInput()">
+                    + add blocker
+                  </button>
+                </div>
+
+                <div class="section__subhead">
+                  Tags
+                  <span class="section__submeta">{{ item.tags.length }}</span>
+                </div>
+                @if (item.tags.length > 0) {
+                  <div class="chip-row">
+                    @for (tag of item.tags; track tag) {
+                      <span class="chip">{{ tag }}</span>
+                    }
+                  </div>
+                } @else {
+                  <div class="chip-row">
+                    <span class="chip chip--empty">none yet</span>
+                  </div>
+                }
+              </section>
+            </div>
+          </div>
         </div>
       }
     </section>
@@ -341,11 +358,11 @@
       <button type="button" class="detail-section__header" (click)="toggleSection('activity')">
         <span class="detail-section__title">Activity</span>
         <span class="detail-section__meta">
-          {{ events().length }} events {{ sectionActivity() ? '▴' : '▾' }}
+          timeline · filters · {{ events().length }} events {{ sectionActivity() ? '▴' : '▾' }}
         </span>
       </button>
       @if (sectionActivity()) {
-        <div class="detail-section__content">
+        <div class="detail-section__content detail-section__content--review">
           <app-activity-log
             [events]="events()"
             [actorLabel]="actorLabelFn"
@@ -360,11 +377,11 @@
       <button type="button" class="detail-section__header" (click)="toggleSection('thread')">
         <span class="detail-section__title">Thread</span>
         <span class="detail-section__meta">
-          {{ messages().length }} messages {{ sectionThread() ? '▴' : '▾' }}
+          conversation · {{ messages().length }} messages {{ sectionThread() ? '▴' : '▾' }}
         </span>
       </button>
       @if (sectionThread()) {
-        <div class="detail-section__content">
+        <div class="detail-section__content detail-section__content--review">
           <app-thread-view
             [vaultItemId]="item.id"
             [currentActor]="currentActorId"
@@ -379,22 +396,22 @@
 
     <!-- ===== Sticky action bar ===== -->
     <div class="detail-sticky-bar">
-      <button type="button" class="detail-sticky-bar__primary" (click)="deleteItem()">
-        delete
-      </button>
-      <a [routerLink]="['/vault-items', item.seq, 'edit']" class="detail-sticky-bar__secondary">
+      <a [routerLink]="['/vault-items', item.seq, 'edit']" class="detail-sticky-bar__primary">
         edit
       </a>
-      <div class="detail-sticky-bar__overflow" role="group" aria-label="More actions">
+      <div class="detail-sticky-bar__secondary-group" role="group" aria-label="Secondary actions">
         @if (canReject()) {
-          <button type="button" class="detail-sticky-bar__overflow-btn" (click)="openReject()">
+          <button type="button" class="detail-sticky-bar__secondary-btn" (click)="openReject()">
             reject
           </button>
         }
-        <button type="button" class="detail-sticky-bar__overflow-btn"
+        <button type="button" class="detail-sticky-bar__secondary-btn"
           (click)="archive()"
           [disabled]="isItemArchived(item)">
           archive
+        </button>
+        <button type="button" class="detail-sticky-bar__danger-btn" (click)="deleteItem()">
+          delete
         </button>
       </div>
     </div>

@@ -1,29 +1,60 @@
 .thread-view {
   border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--color-bg);
 
   &__header {
-    padding: 8px 12px;
+    padding: 10px 12px;
     border-bottom: 1px solid var(--color-border);
-    background: var(--color-bg);
+    background: color-mix(in oklab, var(--color-bg) 78%, var(--color-surface));
     display: flex;
-    align-items: baseline;
-    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__header-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 
   &__label {
     font-size: 10px;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--color-text-muted);
   }
 
   &__summary {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--color-text-muted);
   }
 
   &__open-count {
     color: var(--color-warning);
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 1.9rem;
+    padding: 0 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+
+    &--alert {
+      border-color: color-mix(in srgb, var(--color-warning) 50%, var(--color-border));
+      color: var(--color-warning);
+      background: color-mix(in srgb, var(--color-warning) 8%, var(--color-surface));
+    }
   }
 }
