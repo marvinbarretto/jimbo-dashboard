@@ -19,6 +19,10 @@
         ↻{{ dispatch().retry_count }}
       </span>
     }
+
+    @if (isGitHubTask()) {
+      <span class="card__source-badge">github</span>
+    }
   </header>
 
   <div class="card__skill" [attr.title]="dispatch().skill">

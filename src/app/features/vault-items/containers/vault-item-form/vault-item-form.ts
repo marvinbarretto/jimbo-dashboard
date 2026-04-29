@@ -46,7 +46,7 @@ export class VaultItemForm {
   // All six grooming statuses shown; intake_rejected is system-managed but shown as an operator escape hatch.
   readonly groomingStatuses: GroomingStatus[] = ['ungroomed', 'intake_rejected', 'intake_complete', 'classified', 'decomposed', 'ready'];
   readonly priorityOptions = PRIORITY_OPTIONS;
-  readonly sourceKinds: Array<SourceKind | ''> = ['', 'manual', 'email', 'telegram', 'agent', 'url', 'pr-comment'];
+  readonly sourceKinds: Array<SourceKind | ''> = ['', 'manual', 'email', 'telegram', 'agent', 'url', 'pr-comment', 'github'];
 
   readonly form = this.fb.nonNullable.group({
     title:               ['', Validators.required],
@@ -189,6 +189,11 @@ function buildSource(kind: SourceKind | '', ref: string, url: string): Source | 
     case 'url':      return { kind, ref, url: url || ref };
     case 'pr-comment': {
       // Enforce 'repo#N' shape at runtime — the type system requires the literal too.
+      const match = /^.+#\d+$/.test(ref);
+      if (!match || !url) return null;
+      return { kind, ref: ref as `${string}#${number}`, url };
+    }
+    case 'github': {
       const match = /^.+#\d+$/.test(ref);
       if (!match || !url) return null;
       return { kind, ref: ref as `${string}#${number}`, url };

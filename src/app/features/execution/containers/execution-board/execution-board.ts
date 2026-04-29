@@ -156,6 +156,10 @@ export class ExecutionBoard {
     return this.vaultItemsService.getById(entry.task_id)?.title ?? null;
   }
 
+  taskSourceKind(entry: DispatchQueueEntry): string | null {
+    return this.vaultItemsService.getById(entry.task_id)?.source?.kind ?? null;
+  }
+
   skillDisplayName(entry: DispatchQueueEntry): string | null {
     return this.skillsService.getById(entry.skill)?.name ?? null;
   }

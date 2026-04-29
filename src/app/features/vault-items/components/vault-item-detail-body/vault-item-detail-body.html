@@ -72,6 +72,10 @@
             {{ projects()[0].display_name }}
           </a>
         }
+
+        @if (isGitHubItem()) {
+          <span class="chip chip--source chip--source-github">github</span>
+        }
       </div>
 
       <div class="detail-meta">
@@ -301,10 +305,10 @@
               <dl class="kv">
                 <dt>Kind</dt>
                 <dd>{{ item.source.kind }}</dd>
-                <dt>Ref</dt>
+                <dt>{{ item.source.kind === 'github' ? 'Issue' : 'Ref' }}</dt>
                 <dd>{{ item.source.ref }}</dd>
                 @if (item.source.url) {
-                  <dt>URL</dt>
+                  <dt>{{ item.source.kind === 'github' ? 'GitHub' : 'URL' }}</dt>
                   <dd><a [href]="item.source.url" target="_blank" rel="noopener noreferrer" class="external-link">{{ item.source.url }}</a></dd>
                 }
               </dl>

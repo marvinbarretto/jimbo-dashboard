@@ -609,6 +609,17 @@
 
 .external-link { color: var(--color-accent); &:hover { text-decoration: underline; } }
 
+.chip--source {
+  text-transform: lowercase;
+  border-style: dashed;
+}
+
+.chip--source-github {
+  color: color-mix(in oklab, var(--color-text) 88%, #24292f);
+  border-color: color-mix(in oklab, var(--color-border) 55%, #24292f);
+  background: color-mix(in oklab, var(--color-surface) 84%, #f6f8fa);
+}
+
 .visually-hidden {
   position: absolute; width: 1px; height: 1px;
   padding: 0; margin: -1px; overflow: hidden;

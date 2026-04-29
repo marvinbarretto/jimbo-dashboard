@@ -65,6 +65,7 @@
               [taskTitle]="taskTitle(entry)"
               [skillDisplayName]="skillDisplayName(entry)"
               [project]="primaryProject(entry)"
+              [sourceKind]="taskSourceKind(entry)"
               (retry)="onRetry(entry.id)"
             />
           }

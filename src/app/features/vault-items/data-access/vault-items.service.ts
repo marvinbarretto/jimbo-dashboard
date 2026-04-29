@@ -8,6 +8,7 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import type { VaultItem, CreateVaultItemPayload, UpdateVaultItemPayload, GroomingStatus, VaultItemType, VaultItemCategory, Priority, Actionability } from '@domain/vault/vault-item';
 import { isActive } from '@domain/vault/vault-item';
+import type { Source } from '@domain/vault/source';
 import type { ActorId, VaultItemId } from '@domain/ids';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
 import { vaultItemId, actorId, threadMessageId } from '@domain/ids';
@@ -519,6 +520,23 @@ function narrowPriority(p: number | null): Priority | null {
   return p === 0 || p === 1 || p === 2 || p === 3 ? p : null;
 }
 
+function buildSource(kind: string | null, ref: string | null, url: string | null): Source | null {
+  if (!kind || !ref) return null;
+  switch (kind) {
+    case 'manual':    return { kind, ref, url: null };
+    case 'email':     return { kind, ref, url: url ?? null };
+    case 'telegram':  return { kind, ref, url: null };
+    case 'agent':     return { kind, ref: actorId(ref), url: null };
+    case 'url':       return { kind, ref, url: url ?? ref };
+    case 'pr-comment':
+      return url ? { kind, ref: ref as `${string}#${number}`, url } : null;
+    case 'github':
+      return url ? { kind, ref: ref as `${string}#${number}`, url } : null;
+    default:
+      return null;
+  }
+}
+
 function toVaultItem(a: ApiVaultItem): VaultItem {
   const { type, category } = splitType(a.type);
   return {
@@ -548,10 +566,7 @@ function toVaultItem(a: ApiVaultItem): VaultItem {
     archived_at: a.status === 'archived' ? a.updated_at : null,
     due_at: a.due_at,
     completed_at: a.completed_at,
-    // Production splits source into kind/ref/url; the dashboard's Source union
-    // is richer than we can honestly reconstruct. Surface null for now —
-    // detail page can re-fetch and parse properly when needed.
-    source: null,
+    source: buildSource(a.source_kind, a.source_ref, a.source_url),
     created_at: a.created_at,
 
     // View-state embeds — board reads these instead of calling parallel services.

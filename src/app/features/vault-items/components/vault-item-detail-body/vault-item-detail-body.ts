@@ -70,6 +70,8 @@ export class VaultItemDetailBody {
     return this.actorsService.getById(i.assigned_to);
   });
 
+  readonly isGitHubItem = computed(() => this.item()?.source?.kind === 'github');
+
   readonly junctionProjects = computed(() => {
     const i = this.item();
     if (!i) return [];

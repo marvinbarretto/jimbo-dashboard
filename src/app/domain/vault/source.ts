@@ -49,12 +49,19 @@ export interface PrCommentSource {
   url:  string;            // GitHub link — required for navigability
 }
 
+export interface GitHubSource {
+  kind: 'github';
+  ref:  `${string}#${number}`; // 'owner/repo#123'
+  url:  string;                // canonical issue URL
+}
+
 export type Source =
   | ManualSource
   | EmailSource
   | TelegramSource
   | AgentSource
   | UrlSource
-  | PrCommentSource;
+  | PrCommentSource
+  | GitHubSource;
 
 export type SourceKind = Source['kind'];

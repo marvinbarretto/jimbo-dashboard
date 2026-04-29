@@ -24,10 +24,12 @@ export class ExecutionCard {
   readonly taskTitle         = input<string | null>(null);
   readonly skillDisplayName  = input<string | null>(null);
   readonly project           = input<{ id: string; display_name: string } | null>(null);
+  readonly sourceKind        = input<string | null>(null);
 
   readonly retry = output<void>();
 
   readonly canRetry = computed(() => this.dispatch().status === 'failed');
+  readonly isGitHubTask = computed(() => this.sourceKind() === 'github');
 
   // Compact runtime label — the operator's eye sees this and knows roughly how
   // long the entry has been in its current state without doing arithmetic.
