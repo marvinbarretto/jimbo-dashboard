@@ -1,180 +1,109 @@
 @if (item(); as item) {
   <div class="vault-item-detail">
 
-    <!-- ===== Zone 1 — Identity + actions ===== -->
+    <!-- ===== Zone 1 — Identity ===== -->
     <header class="modal-header__zone1">
       <div class="modal-header__id">
         <span class="modal-header__seq">#{{ item.seq }}</span>
         <span class="modal-header__type">{{ item.type }}</span>
         <h1 class="modal-header__title">{{ item.title }}</h1>
       </div>
-      <div class="modal-header__actions">
-        <a [routerLink]="['/vault-items', item.seq, 'edit']"
-          class="header-action" aria-label="Edit this item">edit</a>
-        @if (canReject()) {
-          <button type="button" class="header-action header-action--warn" (click)="openReject()">reject</button>
-        }
-        <button type="button" class="header-action" (click)="archive()"
-          [attr.aria-disabled]="isItemArchived(item)"
-          [disabled]="isItemArchived(item)">archive</button>
-        <button type="button" class="header-action header-action--danger" (click)="deleteItem()">delete</button>
-        @if (mode() === 'page') {
-          <a routerLink="/vault-items" class="header-action header-action--close" aria-label="Back to vault">×</a>
-        }
-      </div>
     </header>
 
-    <!-- ===== Zone 2 — Pipeline stepper ===== -->
+    <!-- ===== Zone 2 — Condensed status chips + meta ===== -->
     <div class="modal-header__zone2">
-      <app-pipeline-stepper [current]="item.grooming_status" />
-    </div>
+      <div class="detail-chips">
+        <select class="chip chip--status chip--status-{{ lifecycleOf(item) }}"
+          (change)="onStatusChange($event)"
+          [disabled]="isItemArchived(item)"
+          [attr.aria-label]="'Status: ' + lifecycleOf(item)">
+          @for (s of statuses; track s) {
+            <option [value]="s" [selected]="lifecycleOf(item) === s">{{ s }}</option>
+          }
+          @if (isItemArchived(item)) {
+            <option value="archived" selected>archived</option>
+          }
+        </select>
 
-    <!-- Mobile tab strip — hidden on desktop via CSS -->
-    <nav class="detail-tabs" aria-label="Detail sections">
-      <button type="button" class="detail-tab"
-        [class.detail-tab--active]="activeTab() === 'overview'"
-        (click)="setActiveTab('overview')">Overview</button>
-      <button type="button" class="detail-tab"
-        [class.detail-tab--active]="activeTab() === 'body'"
-        (click)="setActiveTab('body')">Body</button>
-      <button type="button" class="detail-tab"
-        [class.detail-tab--active]="activeTab() === 'activity'"
-        (click)="setActiveTab('activity')">
-        Activity
-        @if (events().length > 0) {
-          <span class="detail-tab__badge">{{ events().length }}</span>
+        <span [class]="'chip chip--grooming chip--grooming-' + item.grooming_status">
+          {{ item.grooming_status.replace(/_/g, ' ') }}
+        </span>
+
+        <span class="chip-group chip-group--owner">
+          @if (owner(); as o) {
+            <a [routerLink]="['/actors', o.id]"
+              [class]="'chip chip--owner chip--actor-' + o.kind">
+              @{{ o.id }}
+            </a>
+          } @else if (item.assigned_to) {
+            <span class="chip chip--owner">{{ item.assigned_to }}</span>
+          } @else {
+            <span class="chip chip--owner chip--unassigned">unassigned</span>
+          }
+          <button class="chip-action" (click)="toggleReassignPicker()" aria-label="Reassign owner">
+            {{ showReassignPicker() ? '▲' : '▼' }}
+          </button>
+          @if (showReassignPicker()) {
+            <span class="inline-picker" role="listbox" aria-label="Select new owner">
+              @for (a of activeActors(); track a.id) {
+                <button class="inline-picker__opt" role="option"
+                  [attr.aria-selected]="a.id === item.assigned_to"
+                  (click)="reassign(a.id)">
+                  @{{ a.id }}
+                </button>
+              }
+            </span>
+          }
+        </span>
+
+        @if (effectivePriority(); as p) {
+          <span
+            [class]="'chip chip--priority chip--priority-P' + p"
+            [title]="priorityDiverges() ? 'AI: P' + item.ai_priority + ', Manual: P' + item.manual_priority : 'Priority'"
+          >{{ priorityLabel(p) }}{{ priorityDiverges() ? ' *' : '' }}</span>
         }
-      </button>
-      <button type="button" class="detail-tab"
-        [class.detail-tab--active]="activeTab() === 'thread'"
-        (click)="setActiveTab('thread')">
-        Thread
-        @if (messages().length > 0) {
-          <span class="detail-tab__badge">{{ messages().length }}</span>
+
+        @if (item.actionability !== null) {
+          <span [class]="'chip chip--action chip--action-' + item.actionability">{{ item.actionability }}</span>
         }
-      </button>
-    </nav>
 
-    <!-- ===== Zone 3 — State chips ===== -->
-    <div class="modal-header__zone3" [class.detail-section--tab-inactive]="activeTab() !== 'overview'">
-
-      <!-- lifecycle status -->
-      <select class="chip chip--status chip--status-{{ lifecycleOf(item) }}"
-        (change)="onStatusChange($event)"
-        [disabled]="isItemArchived(item)"
-        [attr.aria-label]="'Status: ' + lifecycleOf(item)">
-        @for (s of statuses; track s) {
-          <option [value]="s" [selected]="lifecycleOf(item) === s">{{ s }}</option>
-        }
-        @if (isItemArchived(item)) {
-          <option value="archived" selected>archived</option>
-        }
-      </select>
-
-      <!-- grooming chip -->
-      <span [class]="'chip chip--grooming chip--grooming-' + item.grooming_status">
-        {{ item.grooming_status.replace(/_/g, ' ') }}
-      </span>
-
-      <!-- owner + reassign -->
-      <span class="chip-group chip-group--owner">
-        @if (owner(); as o) {
-          <a [routerLink]="['/actors', o.id]"
-            [class]="'chip chip--owner chip--actor-' + o.kind">
-            @{{ o.id }}
+        @if (projects().length > 0) {
+          <a [routerLink]="['/projects', projects()[0].id]" class="chip chip--project">
+            {{ projects()[0].display_name }}
           </a>
-        } @else if (item.assigned_to) {
-          <span class="chip chip--owner">{{ item.assigned_to }}</span>
-        } @else {
-          <span class="chip chip--owner chip--unassigned">unassigned</span>
         }
-        <button class="chip-action" (click)="toggleReassignPicker()" aria-label="Reassign owner">
-          {{ showReassignPicker() ? '▲' : '▼' }}
-        </button>
-        @if (showReassignPicker()) {
-          <span class="inline-picker" role="listbox" aria-label="Select new owner">
-            @for (a of activeActors(); track a.id) {
-              <button class="inline-picker__opt" role="option"
-                [attr.aria-selected]="a.id === item.assigned_to"
-                (click)="reassign(a.id)">
-                @{{ a.id }}
-              </button>
+      </div>
+
+      <div class="detail-meta">
+        <span>created {{ relativeTime(item.created_at) }}</span>
+        @if (lastActivityAt(); as lat) {
+          <span>· last activity {{ relativeTime(lat) }}</span>
+        }
+        @if (item.completed_at) {
+          <span>· completed {{ relativeTime(item.completed_at) }}</span>
+        }
+        @if (item.archived_at) {
+          <span>· archived {{ relativeTime(item.archived_at) }}</span>
+        }
+        @if (item.due_at) {
+          <span>· due {{ item.due_at }}</span>
+        }
+        @if (item.ai_rationale) {
+          <span class="detail-meta__rationale">
+            · rationale:
+            @if (rationaleExpanded()) {
+              {{ item.ai_rationale }}
+              <button type="button" class="rationale-toggle" (click)="toggleRationale()">collapse</button>
+            } @else {
+              <em>"{{ truncate(item.ai_rationale, 80) }}"</em>
+              <button type="button" class="rationale-toggle" (click)="toggleRationale()">expand</button>
             }
           </span>
         }
-      </span>
-
-      <!-- effective priority -->
-      @if (effectivePriority(); as p) {
-        <span
-          [class]="'chip chip--priority chip--priority-P' + p"
-          [title]="priorityDiverges() ? 'AI: P' + item.ai_priority + ', Manual: P' + item.manual_priority : 'Priority'"
-        >{{ priorityLabel(p) }}{{ priorityDiverges() ? ' *' : '' }}</span>
-      }
-      @if (item.actionability !== null) {
-        <span [class]="'chip chip--action chip--action-' + item.actionability">{{ item.actionability }}</span>
-      }
-
-      <!-- primary project -->
-      @if (projects().length > 0) {
-        <a [routerLink]="['/projects', projects()[0].id]" class="chip chip--project">
-          {{ projects()[0].display_name }}
-        </a>
-      }
-
-      <!-- readiness -->
-      @if (readiness(); as r) {
-        <details class="chip chip--readiness">
-          <summary>{{ r.passed }}/{{ r.total }} <span [class]="'readiness-verdict readiness-verdict--' + r.verdict">{{ r.verdict }}</span></summary>
-          <ul class="readiness-list">
-            @for (check of r.checks; track check.key) {
-              <li [class]="'readiness-check readiness-check--' + (check.ok ? 'ok' : 'miss')">
-                <span class="readiness-check__mark">{{ check.ok ? '✓' : '✗' }}</span>
-                <span class="readiness-check__label">
-                  {{ check.label }}
-                  @if (!check.ok && check.blocker) {
-                    <span class="readiness-check__blocker"> — {{ check.blocker }}</span>
-                  }
-                </span>
-              </li>
-            }
-          </ul>
-        </details>
-      }
-
+      </div>
     </div>
 
-    <!-- ===== Zone 4 — Meta (dates + rationale) ===== -->
-    <footer class="modal-header__zone4" [class.detail-section--tab-inactive]="activeTab() !== 'overview'">
-      <span>created {{ relativeTime(item.created_at) }}</span>
-      @if (lastActivityAt(); as lat) {
-        <span>· last activity {{ relativeTime(lat) }}</span>
-      }
-      @if (item.completed_at) {
-        <span>· completed {{ relativeTime(item.completed_at) }}</span>
-      }
-      @if (item.archived_at) {
-        <span>· archived {{ relativeTime(item.archived_at) }}</span>
-      }
-      @if (item.due_at) {
-        <span>· due {{ item.due_at }}</span>
-      }
-      @if (item.ai_rationale) {
-        <span class="modal-header__rationale">
-          · rationale:
-          @if (rationaleExpanded()) {
-            {{ item.ai_rationale }}
-            <button type="button" class="rationale-toggle" (click)="toggleRationale()">collapse</button>
-          } @else {
-            <em>"{{ truncate(item.ai_rationale, 80) }}"</em>
-            <button type="button" class="rationale-toggle" (click)="toggleRationale()">expand</button>
-          }
-        </span>
-      }
-    </footer>
-
     @if (showRejectForm()) {
-      <div [class.detail-section--tab-inactive]="activeTab() !== 'overview'">
       <app-reject-form
         [itemId]="item.id"
         [currentOwner]="item.assigned_to"
@@ -183,204 +112,292 @@
         (cancelled)="closeReject()"
         (submitted)="onRejectSubmitted($event)"
       />
-      </div>
     }
 
-    <!-- ===== main 3-column grid: content · activity · thread ===== -->
-    <div class="body-grid">
-
-      <!-- content column -->
-      <div class="body-grid__content" [class.detail-section--tab-inactive]="activeTab() !== 'body'">
-
-        <section class="section">
-          <div class="section__label">Body <span class="section__hint">(intake, immutable)</span></div>
-          <pre class="intake">{{ item.body }}</pre>
-          <p class="intake__note">{{ relativeTime(item.created_at) }} · operator intake</p>
-        </section>
-
-        <section class="section">
-          <div class="section__label">Acceptance criteria</div>
-          @if (item.acceptance_criteria.length > 0) {
-            <ul class="ac-list">
-              @for (ac of item.acceptance_criteria; track ac.text) {
-                <li [class]="'ac-item' + (ac.done ? ' ac-item--done' : '') + (acStatus(ac.text) === 'verbose' ? ' ac-item--verbose' : '') + (acStatus(ac.text) === 'exceeds' ? ' ac-item--exceeds' : '')">
-                  <span class="ac-item__mark" [attr.aria-label]="ac.done ? 'done' : 'pending'">
-                    {{ ac.done ? '✓' : '○' }}
-                  </span>
-                  <span class="ac-item__text">{{ ac.text }}</span>
-                  @switch (acStatus(ac.text)) {
-                    @case ('verbose') {
-                      <span class="ac-item__chip ac-item__chip--warn"
-                        [title]="'Verbose (' + ac.text.length + ' chars). Spec recommends ≤ 120.'">verbose</span>
-                    }
-                    @case ('exceeds') {
-                      <span class="ac-item__chip ac-item__chip--err"
-                        [title]="'Exceeds policy (' + ac.text.length + ' chars). Reject or edit.'">exceeds</span>
-                    }
-                  }
-                </li>
-              }
-            </ul>
-          } @else {
-            <div class="ac-empty">No acceptance criteria yet — blocks readiness</div>
-          }
-        </section>
-
-        <section class="section">
-          <div class="section__label">Tags</div>
-          @if (item.tags.length > 0) {
-            <div class="chip-row">
-              @for (tag of item.tags; track tag) {
-                <span class="chip">{{ tag }}</span>
-              }
+    <!-- ===== Zone 3 — Open questions (always visible when present) ===== -->
+    @if (openQuestions().length > 0) {
+      <section class="detail-section detail-section--questions">
+        @for (q of openQuestions(); track q.id) {
+          <div class="detail-question">
+            <div class="detail-question__who">
+              <span class="detail-question__author">{{ q.author_actor_id }}</span>
+              <span class="detail-question__kind">open question</span>
+              <span class="detail-question__age">{{ relativeTime(q.created_at) }}</span>
             </div>
-          } @else {
-            <div class="chip-row">
-              <span class="chip chip--empty">none yet</span>
-            </div>
-          }
-        </section>
+            <p class="detail-question__body">{{ q.body }}</p>
+            <app-question-reply-composer
+              [question]="q"
+              [vaultItemId]="item.id"
+              [currentActor]="currentActorId"
+              (posted)="onDetailReplyPosted($event)"
+            />
+          </div>
+        }
+      </section>
+    }
 
-        <section class="section">
-          <div class="section__label">Parent</div>
-          @if (parentItem(); as parent) {
-            <button type="button" class="parent-link" (click)="swapToSeq(parent.seq)">
-              ↳ #{{ parent.seq }} · {{ parent.title }}
-            </button>
-          } @else if (item.parent_id) {
-            <span class="muted">{{ item.parent_id }} (parent not loaded)</span>
-          } @else if (children().length === 0) {
-            <p class="muted-text">standalone — not part of an epic</p>
-          } @else {
-            <p class="muted-text">root of an epic</p>
-          }
-        </section>
+    <!-- ===== Zone 4 — Body (collapsible) ===== -->
+    <section class="detail-section">
+      <button type="button" class="detail-section__header" (click)="toggleSection('body')">
+        <span class="detail-section__title">Body</span>
+        <span class="detail-section__meta">{{ sectionBody() ? '▴' : '▾' }}</span>
+      </button>
+      @if (sectionBody()) {
+        <div class="detail-section__content">
 
-        @if (children().length > 0) {
           <section class="section">
-            <div class="section__label">
-              Subtasks
-              <span class="hint">({{ children().length }} — this item is an epic)</span>
+            <div class="section__label">Body <span class="section__hint">(intake, immutable)</span></div>
+            @if (item.body) {
+              <pre class="intake">{{ item.body }}</pre>
+            } @else {
+              <p class="muted-text">no body content</p>
+            }
+            <p class="intake__note">{{ relativeTime(item.created_at) }} · operator intake</p>
+          </section>
+
+          <section class="section">
+            <div class="section__label">Acceptance criteria</div>
+            @if (item.acceptance_criteria.length > 0) {
+              <ul class="ac-list">
+                @for (ac of item.acceptance_criteria; track ac.text) {
+                  <li [class]="'ac-item' + (ac.done ? ' ac-item--done' : '') + (acStatus(ac.text) === 'verbose' ? ' ac-item--verbose' : '') + (acStatus(ac.text) === 'exceeds' ? ' ac-item--exceeds' : '')">
+                    <span class="ac-item__mark" [attr.aria-label]="ac.done ? 'done' : 'pending'">
+                      {{ ac.done ? '✓' : '○' }}
+                    </span>
+                    <span class="ac-item__text">{{ ac.text }}</span>
+                    @switch (acStatus(ac.text)) {
+                      @case ('verbose') {
+                        <span class="ac-item__chip ac-item__chip--warn"
+                          [title]="'Verbose (' + ac.text.length + ' chars). Spec recommends ≤ 120.'">verbose</span>
+                      }
+                      @case ('exceeds') {
+                        <span class="ac-item__chip ac-item__chip--err"
+                          [title]="'Exceeds policy (' + ac.text.length + ' chars). Reject or edit.'">exceeds</span>
+                      }
+                    }
+                  </li>
+                }
+              </ul>
+            } @else {
+              <div class="ac-empty">No acceptance criteria yet — blocks readiness</div>
+            }
+          </section>
+
+          <section class="section">
+            <div class="section__label">Tags</div>
+            @if (item.tags.length > 0) {
+              <div class="chip-row">
+                @for (tag of item.tags; track tag) {
+                  <span class="chip">{{ tag }}</span>
+                }
+              </div>
+            } @else {
+              <div class="chip-row">
+                <span class="chip chip--empty">none yet</span>
+              </div>
+            }
+          </section>
+
+          <section class="section">
+            <div class="section__label">Parent</div>
+            @if (parentItem(); as parent) {
+              <button type="button" class="parent-link" (click)="swapToSeq(parent.seq)">
+                ↳ #{{ parent.seq }} · {{ parent.title }}
+              </button>
+            } @else if (item.parent_id) {
+              <span class="muted">{{ item.parent_id }} (parent not loaded)</span>
+            } @else if (children().length === 0) {
+              <p class="muted-text">standalone — not part of an epic</p>
+            } @else {
+              <p class="muted-text">root of an epic</p>
+            }
+          </section>
+
+          @if (children().length > 0) {
+            <section class="section">
+              <div class="section__label">
+                Subtasks
+                <span class="hint">({{ children().length }} — this item is an epic)</span>
+              </div>
+              <ul class="subtask-list">
+                @for (child of children(); track child.id) {
+                  <li class="subtask-row">
+                    <button type="button" class="subtask-row__link" (click)="swapToSeq(child.seq)">
+                      #{{ child.seq }} · {{ child.title }}
+                    </button>
+                    <span class="subtask-row__status">{{ child.grooming_status }}</span>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+
+          <section class="section">
+            <div class="section__label">Projects</div>
+            <div class="junction-list">
+              @for (p of projects(); track p.id) {
+                <span class="junction-chip">
+                  <a [routerLink]="['/projects', p.id]" class="junction-chip__label">
+                    {{ p.display_name }}
+                  </a>
+                  <button class="junction-chip__remove"
+                    (click)="removeProject(p.id)"
+                    [attr.aria-label]="'Remove ' + p.display_name">×</button>
+                </span>
+              }
+              <button class="inline-btn junction-add-btn"
+                (click)="toggleAddProjectPicker()"
+                aria-label="Link a project">
+                + add project
+              </button>
             </div>
-            <ul class="subtask-list">
-              @for (child of children(); track child.id) {
-                <li class="subtask-row">
-                  <button type="button" class="subtask-row__link" (click)="swapToSeq(child.seq)">
-                    #{{ child.seq }} · {{ child.title }}
+            @if (showAddProjectPicker()) {
+              <div class="junction-picker">
+                @for (p of activeProjects(); track p.id) {
+                  <button class="junction-picker__opt" (click)="addProject(p.id)">
+                    {{ p.display_name }}
                   </button>
-                  <span class="subtask-row__status">{{ child.grooming_status }}</span>
-                </li>
-              }
-            </ul>
-          </section>
-        }
-
-        <!-- ===== Projects section ===== -->
-        <section class="section">
-          <div class="section__label">Projects</div>
-          <div class="junction-list">
-            @for (p of projects(); track p.id) {
-              <span class="junction-chip">
-                <a [routerLink]="['/projects', p.id]" class="junction-chip__label">
-                  {{ p.display_name }}
-                </a>
-                <button class="junction-chip__remove"
-                  (click)="removeProject(p.id)"
-                  [attr.aria-label]="'Remove ' + p.display_name">×</button>
-              </span>
+                } @empty {
+                  <span class="muted">No active projects</span>
+                }
+              </div>
             }
-            <button class="inline-btn junction-add-btn"
-              (click)="toggleAddProjectPicker()"
-              aria-label="Link a project">
-              + add project
-            </button>
-          </div>
-          @if (showAddProjectPicker()) {
-            <div class="junction-picker">
-              @for (p of activeProjects(); track p.id) {
-                <button class="junction-picker__opt" (click)="addProject(p.id)">
-                  {{ p.display_name }}
-                </button>
+          </section>
+
+          <section class="section">
+            <div class="section__label">Blocked by</div>
+            <div class="junction-list">
+              @for (b of openBlockers(); track b.blocker_id) {
+                <span class="junction-chip junction-chip--blocker">
+                  <button type="button" class="junction-chip__label" (click)="swapToSeq(b.blocker_seq)">
+                    #{{ b.blocker_seq }} · {{ b.blocker_title }}
+                  </button>
+                  <button class="junction-chip__remove"
+                    (click)="removeBlocker(b.blocker_id)"
+                    [attr.aria-label]="'Remove blocker #' + b.blocker_seq">×</button>
+                </span>
               } @empty {
-                <span class="muted">No active projects</span>
+                <span class="muted">no blockers</span>
               }
             </div>
-          }
-        </section>
-
-        <!-- ===== Blocked-by section ===== -->
-        <section class="section">
-          <div class="section__label">Blocked by</div>
-          <div class="junction-list">
-            @for (b of openBlockers(); track b.blocker_id) {
-              <span class="junction-chip junction-chip--blocker">
-                <button type="button" class="junction-chip__label" (click)="swapToSeq(b.blocker_seq)">
-                  #{{ b.blocker_seq }} · {{ b.blocker_title }}
-                </button>
-                <button class="junction-chip__remove"
-                  (click)="removeBlocker(b.blocker_id)"
-                  [attr.aria-label]="'Remove blocker #' + b.blocker_seq">×</button>
-              </span>
-            } @empty {
-              <span class="muted">no blockers</span>
-            }
-          </div>
-          <div class="blocker-add">
-            <label for="blocker-seq-input" class="visually-hidden">Add blocker by seq number</label>
-            <input id="blocker-seq-input"
-              type="number" min="1"
-              placeholder="seq # e.g. 1820"
-              class="blocker-input"
-              [value]="addBlockerSeqInput()"
-              (input)="onBlockerSeqInput($event)" />
-            <button class="inline-btn" (click)="addBlockerBySeq()"
-              [disabled]="!addBlockerSeqInput()">
-              + add blocker
-            </button>
-          </div>
-        </section>
-
-        <!-- ===== Source section ===== -->
-        @if (item.source) {
-          <section class="section">
-            <div class="section__label">Source</div>
-            <dl class="kv">
-              <dt>Kind</dt>
-              <dd>{{ item.source.kind }}</dd>
-              <dt>Ref</dt>
-              <dd>{{ item.source.ref }}</dd>
-              @if (item.source.url) {
-                <dt>URL</dt>
-                <dd><a [href]="item.source.url" target="_blank" rel="noopener noreferrer" class="external-link">{{ item.source.url }}</a></dd>
-              }
-            </dl>
+            <div class="blocker-add">
+              <label for="blocker-seq-input" class="visually-hidden">Add blocker by seq number</label>
+              <input id="blocker-seq-input"
+                type="number" min="1"
+                placeholder="seq # e.g. 1820"
+                class="blocker-input"
+                [value]="addBlockerSeqInput()"
+                (input)="onBlockerSeqInput($event)" />
+              <button class="inline-btn" (click)="addBlockerBySeq()"
+                [disabled]="!addBlockerSeqInput()">
+                + add blocker
+              </button>
+            </div>
           </section>
+
+          @if (item.source) {
+            <section class="section">
+              <div class="section__label">Source</div>
+              <dl class="kv">
+                <dt>Kind</dt>
+                <dd>{{ item.source.kind }}</dd>
+                <dt>Ref</dt>
+                <dd>{{ item.source.ref }}</dd>
+                @if (item.source.url) {
+                  <dt>URL</dt>
+                  <dd><a [href]="item.source.url" target="_blank" rel="noopener noreferrer" class="external-link">{{ item.source.url }}</a></dd>
+                }
+              </dl>
+            </section>
+          }
+
+          @if (readiness(); as r) {
+            <section class="section">
+              <div class="section__label">Readiness</div>
+              <details class="chip chip--readiness">
+                <summary>{{ r.passed }}/{{ r.total }} <span [class]="'readiness-verdict readiness-verdict--' + r.verdict">{{ r.verdict }}</span></summary>
+                <ul class="readiness-list">
+                  @for (check of r.checks; track check.key) {
+                    <li [class]="'readiness-check readiness-check--' + (check.ok ? 'ok' : 'miss')">
+                      <span class="readiness-check__mark">{{ check.ok ? '✓' : '✗' }}</span>
+                      <span class="readiness-check__label">
+                        {{ check.label }}
+                        @if (!check.ok && check.blocker) {
+                          <span class="readiness-check__blocker"> — {{ check.blocker }}</span>
+                        }
+                      </span>
+                    </li>
+                  }
+                </ul>
+              </details>
+            </section>
+          }
+
+        </div>
+      }
+    </section>
+
+    <!-- ===== Zone 5 — Activity (collapsible) ===== -->
+    <section class="detail-section">
+      <button type="button" class="detail-section__header" (click)="toggleSection('activity')">
+        <span class="detail-section__title">Activity</span>
+        <span class="detail-section__meta">
+          {{ events().length }} events {{ sectionActivity() ? '▴' : '▾' }}
+        </span>
+      </button>
+      @if (sectionActivity()) {
+        <div class="detail-section__content">
+          <app-activity-log
+            [events]="events()"
+            [actorLabel]="actorLabelFn"
+            [actorKind]="actorKindFn"
+          />
+        </div>
+      }
+    </section>
+
+    <!-- ===== Zone 6 — Thread (collapsible) ===== -->
+    <section class="detail-section">
+      <button type="button" class="detail-section__header" (click)="toggleSection('thread')">
+        <span class="detail-section__title">Thread</span>
+        <span class="detail-section__meta">
+          {{ messages().length }} messages {{ sectionThread() ? '▴' : '▾' }}
+        </span>
+      </button>
+      @if (sectionThread()) {
+        <div class="detail-section__content">
+          <app-thread-view
+            [vaultItemId]="item.id"
+            [currentActor]="currentActorId"
+            [actorMap]="actorMap()">
+          </app-thread-view>
+        </div>
+      }
+    </section>
+
+    <!-- Spacer so sticky bar doesn't cover the last section -->
+    <div class="detail-sticky-spacer"></div>
+
+    <!-- ===== Sticky action bar ===== -->
+    <div class="detail-sticky-bar">
+      <button type="button" class="detail-sticky-bar__primary" (click)="deleteItem()">
+        delete
+      </button>
+      <a [routerLink]="['/vault-items', item.seq, 'edit']" class="detail-sticky-bar__secondary">
+        edit
+      </a>
+      <div class="detail-sticky-bar__overflow" role="group" aria-label="More actions">
+        @if (canReject()) {
+          <button type="button" class="detail-sticky-bar__overflow-btn" (click)="openReject()">
+            reject
+          </button>
         }
-
+        <button type="button" class="detail-sticky-bar__overflow-btn"
+          (click)="archive()"
+          [disabled]="isItemArchived(item)">
+          archive
+        </button>
       </div>
-
-      <!-- activity log column -->
-      <div class="body-grid__activity" [class.detail-section--tab-inactive]="activeTab() !== 'activity'">
-        <app-activity-log
-          [events]="events()"
-          [actorLabel]="actorLabelFn"
-          [actorKind]="actorKindFn"
-        />
-      </div>
-
-      <!-- discussion thread column -->
-      <div class="body-grid__thread" [class.detail-section--tab-inactive]="activeTab() !== 'thread'">
-        <header class="stream__header">
-          <span>Discussion thread</span>
-          <span class="stream__count">{{ messages().length }} messages</span>
-        </header>
-        <app-thread-view
-          [vaultItemId]="item.id"
-          [currentActor]="currentActorId"
-          [actorMap]="actorMap()">
-        </app-thread-view>
-      </div>
-
     </div>
 
   </div>

@@ -25,12 +25,13 @@ import type { Priority } from '@domain/vault/vault-item';
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
 import { ActivityLogComponent } from './activity-log/activity-log';
 import { PipelineStepperComponent } from './pipeline-stepper/pipeline-stepper';
+import { QuestionReplyComposer } from '@shared/components/question-reply-composer/question-reply-composer';
 import type { ProjectId, ActorId } from '@domain/ids';
 import type { Actor } from '@domain/actors';
 
 @Component({
   selector: 'app-vault-item-detail-body',
-  imports: [RouterLink, ThreadView, RejectFormComponent, ActivityLogComponent, PipelineStepperComponent],
+  imports: [RouterLink, ThreadView, RejectFormComponent, ActivityLogComponent, PipelineStepperComponent, QuestionReplyComposer],
   templateUrl: './vault-item-detail-body.html',
   styleUrl: './vault-item-detail-body.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -161,11 +162,26 @@ export class VaultItemDetailBody {
   readonly showRejectForm = signal(false);
   readonly rationaleExpanded = signal(false);
 
-  // Mobile tab selection. On desktop all sections are visible; below 768px
-  // this drives a tab strip that shows one section at a time.
-  readonly activeTab = signal<'overview' | 'body' | 'activity' | 'thread'>('overview');
-  setActiveTab(tab: 'overview' | 'body' | 'activity' | 'thread'): void {
-    this.activeTab.set(tab);
+  // Stacked section collapse state. Body starts expanded; activity + thread start collapsed.
+  readonly sectionBody     = signal(true);
+  readonly sectionActivity = signal(false);
+  readonly sectionThread   = signal(false);
+
+  toggleSection(section: 'body' | 'activity' | 'thread'): void {
+    if (section === 'body')     this.sectionBody.update(v => !v);
+    if (section === 'activity') this.sectionActivity.update(v => !v);
+    if (section === 'thread')   this.sectionThread.update(v => !v);
+  }
+
+  // Open questions for the current item — rendered above body in their own zone.
+  readonly openQuestions = computed(() => {
+    const i = this.item();
+    if (!i) return [];
+    return this.threadService.openQuestionsFor(i.id)();
+  });
+
+  onDetailReplyPosted(payload: import('@domain/thread').CreateThreadMessagePayload): void {
+    this.threadService.post(payload);
   }
 
   readonly priorityDiverges = computed(() => {
@@ -197,7 +213,7 @@ export class VaultItemDetailBody {
     return i.grooming_status !== 'ungroomed' && i.grooming_status !== 'needs_rework';
   });
 
-  openReject(): void  { this.showRejectForm.set(true); this.activeTab.set('overview'); }
+  openReject(): void  { this.showRejectForm.set(true); }
   closeReject(): void { this.showRejectForm.set(false); }
 
   onRejectSubmitted(submission: RejectSubmission): void {
