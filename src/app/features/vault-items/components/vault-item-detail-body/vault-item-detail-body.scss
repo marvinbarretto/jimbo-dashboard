@@ -1,71 +1,5 @@
 @use 'breakpoints' as bp;
 
-// Mobile tab strip — hidden on desktop. Shows/hides the 4 detail sections via
-// the activeTab signal on <768px; on desktop all sections are always visible.
-.detail-tabs {
-  display: none;
-}
-
-@include bp.mobile {
-  .detail-tabs {
-    display: flex;
-    border-bottom: 2px solid var(--color-border);
-    flex-shrink: 0;
-    background: var(--color-surface);
-  }
-
-  .detail-tab {
-    flex: 1;
-    padding: 0.55rem 0.25rem;
-    font: inherit;
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-    background: none;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    white-space: nowrap;
-
-    &--active {
-      color: var(--color-text);
-      border-bottom-color: var(--color-accent);
-    }
-
-    &:hover:not(&--active) { color: var(--color-text); }
-  }
-
-  .detail-tab__badge {
-    display: inline-block;
-    margin-left: 0.2rem;
-    font-size: 0.6rem;
-    padding: 0 0.25rem;
-    border: 1px solid currentColor;
-    border-radius: 2px;
-    opacity: 0.7;
-    vertical-align: middle;
-  }
-
-  // Hide inactive sections on mobile. The class is always toggled by Angular;
-  // the CSS rule only activates here so desktop is never affected.
-  .detail-section--tab-inactive {
-    display: none !important;
-  }
-
-  // Actions row drops below the title and stretches buttons across the full width.
-  .modal-header__actions {
-    width: 100%;
-    border-top: 1px solid var(--color-border);
-
-    .header-action {
-      flex: 1;
-      text-align: center;
-      padding: .45rem .5rem;
-    }
-  }
-}
 
 .vault-item-detail { font-size: .8rem; line-height: 1.55; }
 
@@ -95,21 +29,6 @@
     background: var(--color-surface);
   }
 
-  &__zone3 {
-    display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
-    padding: .4rem .75rem; border-bottom: 1px solid var(--color-border);
-    background: var(--color-surface);
-  }
-
-  &__zone4 {
-    display: flex; gap: .4rem; flex-wrap: wrap; align-items: baseline;
-    padding: .35rem .75rem; border-bottom: 1px solid var(--color-border);
-    background: var(--color-surface);
-    font-size: .7rem; color: var(--color-text-muted);
-  }
-  &__rationale {
-    em { font-style: italic; }
-  }
 }
 
 // Header action buttons
@@ -198,7 +117,6 @@
   &.priority-P0 { background: #a33; color: #fff; } &.priority-P1 { background: #d86a4a; color: #fff; }
   &.priority-P2 { background: #e6c068; color: #222; } &.priority-P3 { background: #4a6a8a; color: #fff; } }
 
-// .body-grid rules live further down.
 
 .section { margin-bottom: 1rem;
   &__label { font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: .35rem; }
@@ -239,59 +157,6 @@
   dt { color: var(--color-text-muted); font-size: .65rem; letter-spacing: .06em; text-transform: uppercase; }
   dd { margin: 0; color: var(--color-text); } &__hint { display: block; font-size: .6rem; color: var(--color-text-muted); } }
 
-// 3-column body grid: content (where the editable substance lives) + activity
-// log + discussion thread. The two streams used to sit BELOW the body grid in a
-// separate `.streams` block — that pushed the activity log out of sight on every
-// open. Promoting them to peers of `content` is the whole point of this layout.
-//
-// Sizing: content takes more room because it has the long-form intake body and
-// AC list; activity and thread split the remainder evenly. Stack on narrow
-// screens — at < 1100px the columns can't usefully be next to each other.
-.body-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
-  border-bottom: 1px solid var(--color-border);
-
-  @include bp.wide {
-    grid-template-columns: 1fr;
-  }
-
-  &__content,
-  &__activity,
-  &__thread {
-    padding: .75rem .875rem;
-    min-width: 0;
-  }
-
-  &__activity,
-  &__thread {
-    border-left: 1px solid var(--color-border);
-
-    @include bp.wide {
-      border-left: none;
-      border-top: 1px solid var(--color-border);
-    }
-  }
-}
-
-
-.stream__header {
-  font-size: .65rem;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  margin-bottom: .5rem;
-  display: flex;
-  align-items: baseline;
-  gap: .5rem;
-
-  .stream__count {
-    color: var(--color-text-muted);
-    font-size: .65rem;
-    letter-spacing: 0;
-    text-transform: none;
-  }
-}
 
 .event-list { display: flex; flex-direction: column; }
 .event { display: flex; gap: .5rem; padding: .35rem 0; font-size: .7rem; color: var(--color-text-muted); border-bottom: 1px dashed var(--color-border);
@@ -384,3 +249,368 @@
 .muted-text { color: var(--color-text-muted); font-size: .75rem; margin: 0; }
 .vault-item-not-found { padding: 2rem; p { color: var(--color-text-muted); } }
 .back-link { font-size: .8rem; color: var(--color-text-muted); text-decoration: none; &:hover { text-decoration: underline; } }
+
+// ─── Zone 2 — chips + meta row ──────────────────────────────────────────────
+
+.detail-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+  align-items: center;
+  margin-bottom: .35rem;
+}
+
+.detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem;
+  font-size: .68rem;
+  color: var(--color-text-muted);
+
+  &__rationale {
+    em { font-style: italic; }
+  }
+}
+
+// ─── Collapsible stacked sections ───────────────────────────────────────────
+
+.detail-section {
+  border-bottom: 1px solid var(--color-border);
+
+  // Question zone has no toggle — always visible when present.
+  &--questions {
+    padding: .5rem .75rem;
+    background: color-mix(in oklab, var(--color-danger) 4%, var(--color-bg));
+    border-left: 2px solid var(--color-danger);
+  }
+
+  &__header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .55rem .75rem;
+    background: transparent;
+    border: none;
+    font: inherit;
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--color-text);
+    cursor: pointer;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+
+    &:hover { background: color-mix(in oklab, var(--color-text) 4%, transparent); }
+  }
+
+  &__title { flex: 1; }
+
+  &__meta {
+    font-size: .65rem;
+    font-weight: 400;
+    color: var(--color-text-muted);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  &__content {
+    padding: .6rem .75rem .9rem;
+
+    .section { margin-bottom: .9rem; &:last-child { margin-bottom: 0; } }
+  }
+}
+
+// ─── Open-question display ───────────────────────────────────────────────────
+
+.detail-question {
+  padding: .4rem 0;
+  &:not(:last-child) { border-bottom: 1px solid color-mix(in oklab, var(--color-danger) 30%, transparent); }
+
+  &__who {
+    display: flex;
+    gap: .45rem;
+    align-items: baseline;
+    margin-bottom: .3rem;
+  }
+
+  &__author {
+    font-size: .65rem;
+    font-weight: 700;
+    color: var(--color-danger);
+  }
+
+  &__kind {
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--color-text-muted);
+  }
+
+  &__age {
+    font-size: .6rem;
+    color: var(--color-text-muted);
+    margin-left: auto;
+  }
+
+  &__body {
+    font-size: .78rem;
+    line-height: 1.45;
+    color: var(--color-text);
+    margin: 0 0 .5rem;
+  }
+}
+
+// ─── Sticky action bar ───────────────────────────────────────────────────────
+
+// Spacer prevents the sticky bar from covering the last section.
+.detail-sticky-spacer { height: 56px; }
+
+.detail-sticky-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 1px;
+  background: var(--color-border);
+  border-top: 1px solid var(--color-border);
+  z-index: 10;
+
+  &__primary,
+  &__secondary {
+    flex: 1;
+    min-height: 44px;
+    padding: 0 .75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font: inherit;
+    font-size: .72rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+    transition: background .1s, color .1s;
+
+    &:hover { background: var(--color-surface); color: var(--color-text); }
+  }
+
+  &__primary {
+    color: var(--color-danger);
+    &:hover { background: color-mix(in oklab, var(--color-danger) 10%, var(--color-bg)); color: var(--color-danger); }
+  }
+
+  &__overflow {
+    display: flex;
+    gap: 1px;
+    background: var(--color-border);
+  }
+
+  &__overflow-btn {
+    min-height: 44px;
+    padding: 0 .7rem;
+    font: inherit;
+    font-size: .7rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+    transition: background .1s, color .1s;
+    white-space: nowrap;
+
+    &:hover { background: var(--color-surface); color: var(--color-text); }
+    &:disabled { opacity: .35; cursor: not-allowed; }
+  }
+}
+
+// ─── Junction chips (projects / blockers) ───────────────────────────────────
+
+.junction-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+  align-items: center;
+  margin-bottom: .4rem;
+}
+
+.junction-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  overflow: hidden;
+  font-size: .7rem;
+
+  &--blocker { border-color: #a33; }
+
+  &__label {
+    padding: 1px 6px;
+    color: var(--color-text);
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    font: inherit;
+    font-size: .7rem;
+    cursor: pointer;
+    &:hover { text-decoration: underline; color: var(--color-accent); }
+  }
+
+  &__remove {
+    padding: 1px 5px;
+    background: transparent;
+    border: none;
+    border-left: 1px solid var(--color-border);
+    cursor: pointer;
+    color: var(--color-text-muted);
+    font-size: .75rem;
+    line-height: 1;
+    &:hover { background: var(--color-surface); color: var(--color-danger); }
+  }
+}
+
+.junction-add-btn { margin-left: .15rem; }
+
+.junction-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+  margin-top: .3rem;
+}
+
+.junction-picker__opt {
+  padding: 2px 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  font: inherit;
+  font-size: .7rem;
+  cursor: pointer;
+  color: var(--color-text);
+  &:hover { border-color: var(--color-accent); color: var(--color-accent); }
+}
+
+// ─── Add-blocker row ─────────────────────────────────────────────────────────
+
+.blocker-add {
+  display: flex;
+  gap: .4rem;
+  align-items: center;
+  margin-top: .25rem;
+}
+
+.blocker-input {
+  width: 120px;
+  padding: 2px 6px;
+  font: inherit;
+  font-size: .72rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 3px;
+
+  &::placeholder { color: var(--color-text-muted); opacity: .6; }
+  &:focus { outline: none; border-color: var(--color-accent); }
+}
+
+// ─── Inline buttons ──────────────────────────────────────────────────────────
+
+.inline-btn {
+  padding: 2px 8px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  font: inherit;
+  font-size: .7rem;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  &:hover { border-color: var(--color-text); color: var(--color-text); }
+  &:disabled { opacity: .35; cursor: not-allowed; }
+}
+
+.inline-picker {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  margin-top: .2rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px color-mix(in oklab, var(--color-text) 10%, transparent);
+}
+
+.inline-picker__opt {
+  padding: .35rem .6rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  font: inherit;
+  font-size: .72rem;
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-text);
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--color-surface); }
+  &[aria-selected='true'] { background: color-mix(in oklab, var(--color-accent) 10%, var(--color-bg)); }
+}
+
+// ─── Subtask list ────────────────────────────────────────────────────────────
+
+.subtask-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.subtask-row {
+  display: flex;
+  align-items: baseline;
+  gap: .5rem;
+  padding: .25rem .4rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+
+  &__link {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 0;
+    font: inherit;
+    font-size: .75rem;
+    color: var(--color-text);
+    cursor: pointer;
+    text-align: left;
+    &:hover { color: var(--color-accent); text-decoration: underline; }
+  }
+
+  &__status {
+    font-size: .6rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    white-space: nowrap;
+  }
+}
+
+// ─── Misc ────────────────────────────────────────────────────────────────────
+
+.external-link { color: var(--color-accent); &:hover { text-decoration: underline; } }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
