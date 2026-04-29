@@ -70,6 +70,16 @@ export class GroomingBoard {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
+  // Active column on narrow viewports — defaults to intake_rejected which
+  // is where most operator attention lands. Chip strip in the template
+  // switches this; desktop ignores it via CSS (all columns always visible).
+  private readonly _mobileColumn = signal<GroomingStatus>('intake_rejected');
+  readonly mobileColumn = this._mobileColumn.asReadonly();
+
+  setMobileColumn(status: GroomingStatus): void {
+    this._mobileColumn.set(status);
+  }
+
   // --- drag state ---------------------------------------------------------
   // Composable: gives us dragging / dropTarget signals + DOM event plumbing +
   // drop-validity logic. Same helper will run the execution kanban.

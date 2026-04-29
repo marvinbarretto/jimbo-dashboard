@@ -33,3 +33,68 @@
     padding-bottom: 0.5rem;
   }
 }
+
+// Mobile column switcher — chip strip for selecting which column to show.
+// Hidden on desktop; desktop always renders all columns side-by-side.
+.board__mobile-switcher {
+  display: none;
+}
+
+// On narrow viewports: show the chip strip, hide all columns except the active one.
+@media (max-width: 768px) {
+  .board {
+    padding: 0.75rem;
+
+    &__header h1 { font-size: 1.1rem; }
+    &__hint { display: none; }
+  }
+
+  .board__mobile-switcher {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.5rem 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-shrink: 0;
+
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  .board__col-chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.65rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    font: inherit;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    white-space: nowrap;
+    border-radius: var(--radius);
+
+    &--active {
+      background: var(--color-text);
+      color: var(--color-bg);
+      border-color: var(--color-text);
+    }
+  }
+
+  .board__col-count {
+    font-size: 0.65rem;
+    opacity: 0.7;
+  }
+
+  // Non-active columns hidden on mobile; active column fills the container.
+  .board__col-wrap {
+    display: none;
+
+    &--active {
+      display: contents;
+    }
+  }
+}

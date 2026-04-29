@@ -19,8 +19,26 @@
     (reset)="resetFilters()"
   />
 
+  <!-- Mobile column switcher — hidden on desktop via CSS, scrolls horizontally -->
+  <div class="board__mobile-switcher" role="tablist" aria-label="Select column">
+    @for (col of columns(); track col.status) {
+      <button
+        type="button"
+        class="board__col-chip"
+        [class.board__col-chip--active]="mobileColumn() === col.status"
+        role="tab"
+        [attr.aria-selected]="mobileColumn() === col.status"
+        (click)="setMobileColumn(col.status)"
+      >
+        {{ col.label }}
+        <span class="board__col-count">{{ col.cards.length }}</span>
+      </button>
+    }
+  </div>
+
   <div class="board__columns">
     @for (col of columns(); track col.status) {
+      <div class="board__col-wrap" [class.board__col-wrap--active]="mobileColumn() === col.status">
       <app-kanban-column
         [label]="col.label"
         [count]="col.cards.length"
@@ -56,6 +74,7 @@
           </app-grooming-nest>
         }
       </app-kanban-column>
+      </div>
     }
   </div>
 </div>

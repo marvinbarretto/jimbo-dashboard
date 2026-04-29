@@ -10,6 +10,11 @@ $accent-hot: #d96520;
   // past its 280px basis. Lock width so columns stay rigid; content overflow is
   // handled inside the card.
   min-width: 0;
+
+  // On mobile, the board shows one column at a time — fill the available space.
+  @media (max-width: 768px) {
+    flex: 1 1 auto;
+  }
 }
 
 .col {
