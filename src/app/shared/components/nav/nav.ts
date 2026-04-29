@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { SyncButton } from '../sync-button/sync-button';
 import pkg from '../../../../../package.json';
 
 @Component({
   selector: 'app-nav',
-  imports: [RouterLink, RouterLinkActive, SyncButton],
+  imports: [RouterLink, RouterLinkActive],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <nav class="app-nav">
@@ -21,7 +20,6 @@ import pkg from '../../../../../package.json';
         <li><a routerLink="/model-stacks" routerLinkActive="active">Stacks</a></li>
         <li><a routerLink="/coverage" routerLinkActive="active">Coverage</a></li>
       </ul>
-      <app-sync-button />
     </nav>
   `,
   styles: [`

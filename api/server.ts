@@ -27,7 +27,6 @@ import { dispatchesRoute } from './routes/dispatches.js';
 import { actorsRoute } from './routes/actors.js';
 import { projectsRoute } from './routes/projects.js';
 import { vaultItemProjectsRoute } from './routes/vault-item-projects.js';
-import { syncRoute } from './routes/sync.js';
 import { skillsRoute } from './routes/skills.js';
 import { hubModelsRoute } from './routes/hub-models.js';
 import { hubModelStacksRoute } from './routes/hub-model-stacks.js';
@@ -95,7 +94,6 @@ app.use(`${BASE}/api/dispatches/*`, apiKeyAuth);
 app.use(`${BASE}/api/actors/*`, apiKeyAuth);
 app.use(`${BASE}/api/projects/*`, apiKeyAuth);
 app.use(`${BASE}/api/vault-item-projects/*`, apiKeyAuth);
-app.use(`${BASE}/api/sync/*`, apiKeyAuth);
 app.use(`${BASE}/api/skills/*`, apiKeyAuth);
 app.use(`${BASE}/api/hub-models/*`, apiKeyAuth);
 app.use(`${BASE}/api/hub-model-stacks/*`, apiKeyAuth);
@@ -116,13 +114,6 @@ app.route(`${BASE}/api/vault-item-dependencies`, vaultItemDependenciesRoute);
 app.route(`${BASE}/api/note-activity`, noteActivityRoute);
 app.route(`${BASE}/api/thread-messages`, threadMessagesRoute);
 app.route(`${BASE}/api/attachments`, attachmentsRoute);
-
-// ⚠️ Production guard — sync route is destructive (TRUNCATE + ETL against
-// jimbo_pg). Mounted only when running locally so the live service can never
-// expose it, even if auth were bypassed.
-if (process.env['NODE_ENV'] !== 'production') {
-  app.route(`${BASE}/api/sync`, syncRoute);
-}
 
 const port = Number(process.env['API_PORT'] ?? 3201);
 serve({ fetch: app.fetch, port }, ({ port }) => {
