@@ -105,6 +105,32 @@
           </span>
         }
       </div>
+
+      <div class="detail-overview" aria-label="Item overview">
+        <section class="detail-overview__card">
+          <span class="detail-overview__label">{{ sourceSummary().label }}</span>
+          <strong class="detail-overview__value">{{ sourceSummary().value }}</strong>
+          <p class="detail-overview__detail">{{ sourceSummary().detail }}</p>
+        </section>
+
+        <section class="detail-overview__card">
+          <span class="detail-overview__label">{{ hierarchySummary().label }}</span>
+          <strong class="detail-overview__value">{{ hierarchySummary().value }}</strong>
+          <p class="detail-overview__detail">{{ hierarchySummary().detail }}</p>
+        </section>
+
+        <section class="detail-overview__card">
+          <span class="detail-overview__label">{{ timelineSummary().label }}</span>
+          <strong class="detail-overview__value">{{ timelineSummary().value }}</strong>
+          <p class="detail-overview__detail">{{ timelineSummary().detail }}</p>
+        </section>
+
+        <section class="detail-overview__card">
+          <span class="detail-overview__label">{{ queueSummary().label }}</span>
+          <strong class="detail-overview__value">{{ queueSummary().value }}</strong>
+          <p class="detail-overview__detail">{{ queueSummary().detail }}</p>
+        </section>
+      </div>
     </div>
 
     @if (showRejectForm()) {
@@ -202,21 +228,6 @@
             }
           </section>
 
-          <section class="section">
-            <div class="section__label">Parent</div>
-            @if (parentItem(); as parent) {
-              <button type="button" class="parent-link" (click)="swapToSeq(parent.seq)">
-                ↳ #{{ parent.seq }} · {{ parent.title }}
-              </button>
-            } @else if (item.parent_id) {
-              <span class="muted">{{ item.parent_id }} (parent not loaded)</span>
-            } @else if (children().length === 0) {
-              <p class="muted-text">standalone — not part of an epic</p>
-            } @else {
-              <p class="muted-text">root of an epic</p>
-            }
-          </section>
-
           @if (children().length > 0) {
             <section class="section">
               <div class="section__label">
@@ -298,22 +309,6 @@
               </button>
             </div>
           </section>
-
-          @if (item.source) {
-            <section class="section">
-              <div class="section__label">Source</div>
-              <dl class="kv">
-                <dt>Kind</dt>
-                <dd>{{ item.source.kind }}</dd>
-                <dt>{{ item.source.kind === 'github' ? 'Issue' : 'Ref' }}</dt>
-                <dd>{{ item.source.ref }}</dd>
-                @if (item.source.url) {
-                  <dt>{{ item.source.kind === 'github' ? 'GitHub' : 'URL' }}</dt>
-                  <dd><a [href]="item.source.url" target="_blank" rel="noopener noreferrer" class="external-link">{{ item.source.url }}</a></dd>
-                }
-              </dl>
-            </section>
-          }
 
           @if (readiness(); as r) {
             <section class="section">

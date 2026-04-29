@@ -114,6 +114,92 @@ export class VaultItemDetailBody {
     return evts[0].at;
   });
 
+  readonly sourceSummary = computed(() => {
+    const source = this.item()?.source;
+    if (!source) return { label: 'Origin', value: 'Unknown', detail: 'No source metadata recorded.' };
+
+    if (source.kind === 'agent') {
+      return {
+        label: 'Origin',
+        value: `Agent · ${source.ref}`,
+        detail: 'Likely created or expanded by an agent workflow.',
+      };
+    }
+
+    if (source.kind === 'manual') {
+      return {
+        label: 'Origin',
+        value: `Manual · ${source.ref}`,
+        detail: 'Operator-created intake.',
+      };
+    }
+
+    return {
+      label: 'Origin',
+      value: `${source.kind} · ${source.ref}`,
+      detail: source.url ?? 'Imported from an external source.',
+    };
+  });
+
+  readonly hierarchySummary = computed(() => {
+    const item = this.item();
+    const parent = this.parentItem();
+    const childCount = this.children().length;
+
+    if (parent) {
+      return {
+        label: 'Hierarchy',
+        value: `Sub-item of #${parent.seq}`,
+        detail: parent.title,
+      };
+    }
+
+    if (childCount > 0) {
+      return {
+        label: 'Hierarchy',
+        value: `Epic root · ${childCount} child${childCount === 1 ? '' : 'ren'}`,
+        detail: 'This item owns sub-items.',
+      };
+    }
+
+    return {
+      label: 'Hierarchy',
+      value: 'Standalone',
+      detail: item?.parent_id ? item.parent_id : 'Not linked into an epic.',
+    };
+  });
+
+  readonly timelineSummary = computed(() => {
+    const item = this.item();
+    if (!item) return { label: 'Timeline', value: 'Unknown', detail: '' };
+
+    const created = `Added ${this.formatDateTime(item.created_at)}`;
+    const latest = item.latest_activity_at
+      ? `Last change ${this.formatDateTime(item.latest_activity_at)}`
+      : 'No later activity recorded';
+
+    return {
+      label: 'Timeline',
+      value: created,
+      detail: latest,
+    };
+  });
+
+  readonly queueSummary = computed(() => {
+    const item = this.item();
+    if (!item) return { label: 'Context', value: 'Unknown', detail: '' };
+
+    const project = item.primary_project_name ?? 'No project';
+    const blockerCount = this.openBlockers().length;
+    const questionCount = this.openQuestions().length;
+
+    return {
+      label: 'Context',
+      value: project,
+      detail: `${blockerCount} blocker${blockerCount === 1 ? '' : 's'} · ${questionCount} open question${questionCount === 1 ? '' : 's'}`,
+    };
+  });
+
   readonly effectivePriority = computed(() => {
     const i = this.item();
     return i ? effectivePriority(i) : null;
@@ -345,5 +431,15 @@ export class VaultItemDetailBody {
     if (hrs < 24) return `${hrs}h ago`;
     const days = Math.floor(hrs / 24);
     return `${days}d ago`;
+  }
+
+  private formatDateTime(iso: string): string {
+    return new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(iso));
   }
 }
