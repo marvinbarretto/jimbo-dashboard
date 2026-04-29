@@ -197,7 +197,7 @@ export class VaultItemDetailBody {
     return i.grooming_status !== 'ungroomed' && i.grooming_status !== 'needs_rework';
   });
 
-  openReject(): void  { this.showRejectForm.set(true); }
+  openReject(): void  { this.showRejectForm.set(true); this.activeTab.set('overview'); }
   closeReject(): void { this.showRejectForm.set(false); }
 
   onRejectSubmitted(submission: RejectSubmission): void {
