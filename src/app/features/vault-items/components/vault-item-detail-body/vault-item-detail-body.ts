@@ -161,6 +161,13 @@ export class VaultItemDetailBody {
   readonly showRejectForm = signal(false);
   readonly rationaleExpanded = signal(false);
 
+  // Mobile tab selection. On desktop all sections are visible; below 768px
+  // this drives a tab strip that shows one section at a time.
+  readonly activeTab = signal<'overview' | 'body' | 'activity' | 'thread'>('overview');
+  setActiveTab(tab: 'overview' | 'body' | 'activity' | 'thread'): void {
+    this.activeTab.set(tab);
+  }
+
   readonly priorityDiverges = computed(() => {
     const i = this.item();
     if (!i || i.manual_priority == null || i.ai_priority == null) return false;

@@ -298,6 +298,12 @@ h2 { font-size: 1.25rem; font-weight: 600; }
   width: min(1500px, calc(100vw - 2rem));
   max-height: calc(100vh - 4rem);
   display: flex;
+
+  @media (max-width: 768px) {
+    width: 100vw;
+    max-height: 100dvh;
+    height: 100dvh;
+  }
 }
 .cdk-overlay-dark-backdrop {
   background: rgba(0, 0, 0, 0.55);

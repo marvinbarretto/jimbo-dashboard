@@ -29,8 +29,34 @@
       <app-pipeline-stepper [current]="item.grooming_status" />
     </div>
 
+    <!-- Mobile tab strip — hidden on desktop via CSS -->
+    <nav class="detail-tabs" aria-label="Detail sections">
+      <button type="button" class="detail-tab"
+        [class.detail-tab--active]="activeTab() === 'overview'"
+        (click)="setActiveTab('overview')">Overview</button>
+      <button type="button" class="detail-tab"
+        [class.detail-tab--active]="activeTab() === 'body'"
+        (click)="setActiveTab('body')">Body</button>
+      <button type="button" class="detail-tab"
+        [class.detail-tab--active]="activeTab() === 'activity'"
+        (click)="setActiveTab('activity')">
+        Activity
+        @if (events().length > 0) {
+          <span class="detail-tab__badge">{{ events().length }}</span>
+        }
+      </button>
+      <button type="button" class="detail-tab"
+        [class.detail-tab--active]="activeTab() === 'thread'"
+        (click)="setActiveTab('thread')">
+        Thread
+        @if (messages().length > 0) {
+          <span class="detail-tab__badge">{{ messages().length }}</span>
+        }
+      </button>
+    </nav>
+
     <!-- ===== Zone 3 — State chips ===== -->
-    <div class="modal-header__zone3">
+    <div class="modal-header__zone3" [class.detail-section--tab-inactive]="activeTab() !== 'overview'">
 
       <!-- lifecycle status -->
       <select class="chip chip--status chip--status-{{ lifecycleOf(item) }}"
@@ -119,7 +145,7 @@
     </div>
 
     <!-- ===== Zone 4 — Meta (dates + rationale) ===== -->
-    <footer class="modal-header__zone4">
+    <footer class="modal-header__zone4" [class.detail-section--tab-inactive]="activeTab() !== 'overview'">
       <span>created {{ relativeTime(item.created_at) }}</span>
       @if (lastActivityAt(); as lat) {
         <span>· last activity {{ relativeTime(lat) }}</span>
@@ -148,6 +174,7 @@
     </footer>
 
     @if (showRejectForm()) {
+      <div [class.detail-section--tab-inactive]="activeTab() !== 'overview'">
       <app-reject-form
         [itemId]="item.id"
         [currentOwner]="item.assigned_to"
@@ -156,13 +183,14 @@
         (cancelled)="closeReject()"
         (submitted)="onRejectSubmitted($event)"
       />
+      </div>
     }
 
     <!-- ===== main 3-column grid: content · activity · thread ===== -->
     <div class="body-grid">
 
       <!-- content column -->
-      <div class="body-grid__content">
+      <div class="body-grid__content" [class.detail-section--tab-inactive]="activeTab() !== 'body'">
 
         <section class="section">
           <div class="section__label">Body <span class="section__hint">(intake, immutable)</span></div>
@@ -332,7 +360,7 @@
       </div>
 
       <!-- activity log column -->
-      <div class="body-grid__activity">
+      <div class="body-grid__activity" [class.detail-section--tab-inactive]="activeTab() !== 'activity'">
         <app-activity-log
           [events]="events()"
           [actorLabel]="actorLabelFn"
@@ -341,7 +369,7 @@
       </div>
 
       <!-- discussion thread column -->
-      <div class="body-grid__thread">
+      <div class="body-grid__thread" [class.detail-section--tab-inactive]="activeTab() !== 'thread'">
         <header class="stream__header">
           <span>Discussion thread</span>
           <span class="stream__count">{{ messages().length }} messages</span>

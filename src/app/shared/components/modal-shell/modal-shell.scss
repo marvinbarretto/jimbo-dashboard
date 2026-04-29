@@ -10,6 +10,13 @@
   // No host-level width cap — sizing is the panel's job (set on the CDK
   // overlay-pane class, e.g. `.vault-detail-dialog`). Capping here means every
   // consumer who wants a wider modal has to fight this rule with ::ng-deep.
+
+  @media (max-width: 768px) {
+    max-height: 100dvh;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
 }
 
 .modal-shell__header {
