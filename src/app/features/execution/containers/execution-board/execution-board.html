@@ -8,7 +8,22 @@
     </p>
   </header>
 
+  <button
+    type="button"
+    class="board__filter-toggle"
+    [class.board__filter-toggle--active]="hasActiveFilters()"
+    (click)="showMobileFilters.update(v => !v)"
+    [attr.aria-expanded]="showMobileFilters()"
+  >
+    filter
+    @if (hasActiveFilters()) {
+      <span class="board__filter-dot" aria-hidden="true"></span>
+    }
+    <span class="board__filter-caret">{{ showMobileFilters() ? '▲' : '▼' }}</span>
+  </button>
+
   <app-kanban-filter-bar
+    [class.board__filters--collapsed]="!showMobileFilters()"
     [groups]="filterGroups()"
     [searchTerm]="searchTerm()"
     searchPlaceholder="Search task / skill / executor…"
@@ -17,26 +32,44 @@
     (reset)="resetFilters()"
   />
 
+  <div class="board__mobile-switcher" role="tablist" aria-label="Select column">
+    @for (col of columns(); track col.status) {
+      <button
+        type="button"
+        class="board__col-chip"
+        [class.board__col-chip--active]="mobileColumn() === col.status"
+        role="tab"
+        [attr.aria-selected]="mobileColumn() === col.status"
+        (click)="setMobileColumn(col.status)"
+      >
+        {{ col.label }}
+        <span class="board__col-count">{{ col.cards.length }}</span>
+      </button>
+    }
+  </div>
+
   <div class="board__columns">
     @for (col of columns(); track col.status) {
-      <app-kanban-column
-        [label]="col.label"
-        [count]="col.cards.length"
-        [emptyLabel]="col.emptyLabel"
-        [loading]="isLoading()"
-        [dropDisabled]="col.systemManaged"
-      >
-        @for (entry of col.cards; track entry.id) {
-          <app-execution-card
-            [dispatch]="entry"
-            [taskSeq]="taskSeq(entry)"
-            [taskTitle]="taskTitle(entry)"
-            [skillDisplayName]="skillDisplayName(entry)"
-            [project]="primaryProject(entry)"
-            (retry)="onRetry(entry.id)"
-          />
-        }
-      </app-kanban-column>
+      <div class="board__col-wrap" [class.board__col-wrap--active]="mobileColumn() === col.status">
+        <app-kanban-column
+          [label]="col.label"
+          [count]="col.cards.length"
+          [emptyLabel]="col.emptyLabel"
+          [loading]="isLoading()"
+          [dropDisabled]="col.systemManaged"
+        >
+          @for (entry of col.cards; track entry.id) {
+            <app-execution-card
+              [dispatch]="entry"
+              [taskSeq]="taskSeq(entry)"
+              [taskTitle]="taskTitle(entry)"
+              [skillDisplayName]="skillDisplayName(entry)"
+              [project]="primaryProject(entry)"
+              (retry)="onRetry(entry.id)"
+            />
+          }
+        </app-kanban-column>
+      </div>
     }
   </div>
 </div>

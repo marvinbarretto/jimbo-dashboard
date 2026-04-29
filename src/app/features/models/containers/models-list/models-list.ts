@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ModelsService } from '../../data-access/models.service';
 import { modelProvider, modelLocalName } from '@domain/models';
+import { TableShell } from '@shared/components/table-shell/table-shell';
 
 @Component({
   selector: 'app-models-list',
-  imports: [RouterLink],
+  imports: [RouterLink, TableShell],
   templateUrl: './models-list.html',
   styleUrl: './models-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

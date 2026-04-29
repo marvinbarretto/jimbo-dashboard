@@ -1,10 +1,12 @@
+@use 'breakpoints' as bp;
+
 // Mobile tab strip — hidden on desktop. Shows/hides the 4 detail sections via
 // the activeTab signal on <768px; on desktop all sections are always visible.
 .detail-tabs {
   display: none;
 }
 
-@media (max-width: 768px) {
+@include bp.mobile {
   .detail-tabs {
     display: flex;
     border-bottom: 2px solid var(--color-border);
@@ -250,7 +252,7 @@
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
   border-bottom: 1px solid var(--color-border);
 
-  @media (max-width: 1100px) {
+  @include bp.wide {
     grid-template-columns: 1fr;
   }
 
@@ -265,7 +267,7 @@
   &__thread {
     border-left: 1px solid var(--color-border);
 
-    @media (max-width: 1100px) {
+    @include bp.wide {
       border-left: none;
       border-top: 1px solid var(--color-border);
     }

@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink } from '@angular/router';
 import { SkillsService } from '../../data-access/skills.service';
 import { skillNamespace, skillLocalName, type Skill } from '@domain/skills';
+import { TableShell } from '@shared/components/table-shell/table-shell';
 
 @Component({
   selector: 'app-skills-list',
-  imports: [RouterLink],
+  imports: [RouterLink, TableShell],
   templateUrl: './skills-list.html',
   styleUrl: './skills-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

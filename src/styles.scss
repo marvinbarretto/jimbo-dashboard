@@ -1,14 +1,13 @@
 // CDK overlay prebuilt — required for Dialog backdrop, panel positioning,
 // scroll lock. Without this the modal renders with no styles applied.
 @use '@angular/cdk/overlay-prebuilt.css';
+@use 'breakpoints' as bp;
 
 .app-shell {
   display: flex;
   min-height: 100vh;
 
-  @media (max-width: 768px) {
-    flex-direction: column;
-  }
+  @include bp.mobile { flex-direction: column; }
 }
 
 .app-main {
@@ -249,6 +248,8 @@ h2 { font-size: 1.25rem; font-weight: 600; }
     color: var(--color-text-muted);
     padding-top: 0.1rem;
   }
+
+  @include bp.mobile { grid-template-columns: 1fr; }
 }
 
 .back-link {
@@ -263,7 +264,11 @@ h2 { font-size: 1.25rem; font-weight: 600; }
   padding: 1.5rem 0.75rem;
 }
 
-.page { padding: 1.5rem 2rem; }
+.page {
+  padding: 1.5rem 2rem;
+
+  @include bp.mobile { padding: 1rem; }
+}
 
 // Vault item detail — Pass B mutation UI helpers.
 // Kept global so the component SCSS stays under the 8 kB anyComponentStyle budget.
@@ -299,7 +304,7 @@ h2 { font-size: 1.25rem; font-weight: 600; }
   max-height: calc(100vh - 4rem);
   display: flex;
 
-  @media (max-width: 768px) {
+  @include bp.mobile {
     width: 100vw;
     max-height: 100dvh;
     height: 100dvh;

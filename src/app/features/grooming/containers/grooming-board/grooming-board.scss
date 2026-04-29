@@ -1,5 +1,6 @@
 // Board container only — every visual atom lives in its own component.
 // Card / column / filter / chip styles are scoped to those components.
+@use 'breakpoints' as bp;
 
 .board {
   padding: 1.25rem 1.5rem;
@@ -44,7 +45,7 @@
 }
 
 // On narrow viewports: show the chip strip, hide all columns except the active one.
-@media (max-width: 768px) {
+@include bp.mobile {
   .board {
     padding: 0.75rem;
 

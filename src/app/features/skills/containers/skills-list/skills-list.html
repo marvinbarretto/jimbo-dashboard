@@ -12,6 +12,7 @@
   } @else if (error()) {
     <p class="error">Failed to load: {{ error() }}</p>
   } @else {
+    <app-table-shell>
     <table class="skills-table">
       <thead>
         <tr>
@@ -60,5 +61,6 @@
         }
       </tbody>
     </table>
+    </app-table-shell>
   }
 </div>

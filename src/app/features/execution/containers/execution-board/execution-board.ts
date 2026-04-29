@@ -66,6 +66,16 @@ export class ExecutionBoard {
   private readonly _searchTerm = signal<string>('');
   readonly searchTerm = this._searchTerm.asReadonly();
 
+  // --- mobile state -------------------------------------------------------
+  readonly showMobileFilters = signal(false);
+  private readonly _mobileColumn = signal<DispatchStatus>('approved');
+  readonly mobileColumn = this._mobileColumn.asReadonly();
+  protected readonly hasActiveFilters = this.filter.hasActive;
+
+  setMobileColumn(status: DispatchStatus): void {
+    this._mobileColumn.set(status);
+  }
+
   // --- visible entries + columns -----------------------------------------
 
   readonly visibleEntries = computed(() => this.applyFilters());

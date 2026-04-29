@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 .endpoint {
   border: 1px solid var(--color-border);
   background: color-mix(in srgb, var(--color-surface) 86%, var(--color-bg));
@@ -131,7 +133,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@include bp.mobile {
   .endpoint__header {
     flex-direction: column;
   }

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { TableShell } from '@shared/components/table-shell/table-shell';
 import { VaultItemsService } from '../../data-access/vault-items.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
 import { effectivePriority } from '@domain/vault/readiness';
@@ -22,7 +23,7 @@ interface CountedOption<T> {
 
 @Component({
   selector: 'app-vault-items-list',
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, TableShell],
   templateUrl: './vault-items-list.html',
   styleUrl: './vault-items-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,0 +1,35 @@
+@use 'breakpoints' as bp;
+
+.today-page {
+  padding: 1.5rem;
+}
+
+.today-page__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+
+  p {
+    color: var(--color-text-muted);
+    max-width: 900px;
+  }
+}
+
+.today-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+@include bp.mobile {
+  .today-page {
+    padding: 1rem;
+  }
+
+  .today-page__grid {
+    grid-template-columns: 1fr;
+  }
+}
