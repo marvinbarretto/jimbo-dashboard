@@ -29,6 +29,13 @@ export interface LiveSnapshot {
   } | null;
 }
 
+interface RejectionCallout {
+  label: string;
+  actorLabel: string;
+  body: string;
+  at: string;
+}
+
 // Presentation-only card. Receives all derived data via inputs; emits drag
 // lifecycle events so the parent owns drag state and the kanban service writes.
 @Component({
@@ -149,6 +156,34 @@ export class GroomingCard {
     const days = this.ageDaysRounded();
     if (days <= 0) return 'today';
     return `${days} day${days === 1 ? '' : 's'} since last activity`;
+  });
+
+  // Intake rejection callout — prefer the latest thread item, since that is
+  // what the operator needs to resolve the rejection. Fall back to the latest
+  // activity only when the thread has not loaded yet.
+  readonly rejectionCallout = computed<RejectionCallout | null>(() => {
+    const snapshot = this.liveSnapshot();
+    if (!snapshot) return null;
+
+    if (snapshot.latestMessage) {
+      return {
+        label: 'latest thread item',
+        actorLabel: snapshot.latestMessage.authorLabel,
+        body: snapshot.latestMessage.bodyExcerpt,
+        at: snapshot.latestMessage.at,
+      };
+    }
+
+    if (snapshot.latestEvent) {
+      return {
+        label: 'last activity',
+        actorLabel: snapshot.latestEvent.actorLabel,
+        body: snapshot.latestEvent.description,
+        at: snapshot.latestEvent.at,
+      };
+    }
+
+    return null;
   });
 
   // Compact label shown on the card itself ("4d", "today"). The gradient conveys

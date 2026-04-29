@@ -36,6 +36,13 @@ test.describe('Grooming board (seed mode)', () => {
       await groomingBoardPage.expectCardInColumn(2401, 'Intake rejected');
     });
 
+    test('A (#2401) shows the latest thread item in its rejection callout', async ({ groomingBoardPage }) => {
+      const rejection = groomingBoardPage.cardForSeq(2401).locator('.card__rejection');
+      await expect(rejection).toContainText('latest thread item');
+      await expect(rejection).toContainText("I can't tell what action this needs");
+      await expect(rejection).not.toContainText('last activity');
+    });
+
     test('B (#2402) sits in Ready', async ({ groomingBoardPage }) => {
       await groomingBoardPage.expectCardInColumn(2402, 'Ready');
     });

@@ -252,7 +252,7 @@
 
   // Expanded "live activity" section — appears below the footer when the
   // operator opens the card. Bordered top to separate from the main card body.
-  // Rejection callout — surfaces the last activity line without requiring the
+  // Rejection callout — surfaces the latest thread item without requiring the
   // operator to expand the card. Only rendered when grooming_status === 'intake_rejected'
   // and a liveSnapshot is available. Sits between title and tags so it reads
   // as context for the title, not metadata noise in the footer.

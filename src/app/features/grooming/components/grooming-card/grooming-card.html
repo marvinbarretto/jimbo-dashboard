@@ -74,10 +74,12 @@
     {{ item().title }}
   </a>
 
-  @if (isIntakeRejected() && liveSnapshot()?.latestEvent; as ev) {
+  @if (isIntakeRejected() && rejectionCallout(); as callout) {
     <div class="card__rejection">
-      <span class="card__rejection-label">last activity</span>
-      <span class="card__rejection-body">{{ ev.actorLabel }} {{ ev.description }}</span>
+      <span class="card__rejection-label">{{ callout.label }}</span>
+      <span class="card__rejection-body">
+        {{ callout.actorLabel }} {{ callout.body }} · {{ formatRelativeTime(callout.at) }}
+      </span>
     </div>
   }
 
