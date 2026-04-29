@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.11](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.10...v0.0.11) (2026-04-29)
+
+
+### Features
+
+* **dashboard:** expose jimbo api data pages ([c8644e6](https://github.com/marvinbarretto/jimbo-dashboard/commit/c8644e68c0f3e77f10bc3e1a34f23dc51268cc70))
+* **jimbo-proxy:** read-only proxy to jimbo-api from dashboard API ([99d6713](https://github.com/marvinbarretto/jimbo-dashboard/commit/99d6713c790ca7658f6753ed5478378f29076706))
+* **mobile:** responsive layout system with shared breakpoints and TableShell ([400e8ad](https://github.com/marvinbarretto/jimbo-dashboard/commit/400e8adc3d65938653ad5832ac55a11f1e37a13f))
+
+
+### Bug Fixes
+
+* **auth:** log 401 reason + restart API on deploy ([2deaeb9](https://github.com/marvinbarretto/jimbo-dashboard/commit/2deaeb93eccc0db35be594ba5d1d32250da746b8))
+
 ### [0.0.10](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.9...v0.0.10) (2026-04-29)
 
 ### [0.0.9](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.8...v0.0.9) (2026-04-29)
