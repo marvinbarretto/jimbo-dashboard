@@ -26,7 +26,7 @@ const CreateBody = z.object({
   id: z.string().min(1),
   vault_item_id: z.string().min(1),
   author_actor_id: z.string().min(1),
-  kind: z.enum(['comment', 'question', 'correction', 'rejection']),
+  kind: z.enum(['comment', 'question', 'answer', 'correction', 'rejection']),
   body: z.string().min(1),
   in_reply_to: z.string().nullable().optional(),
 });

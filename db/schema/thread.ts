@@ -36,7 +36,7 @@ export const threadMessages = pgTable('thread_messages', {
   vaultIdx: index('idx_thread_messages_vault').on(t.vault_item_id),
   kindCheck: check(
     'thread_messages_kind_check',
-    sql`${t.kind} IN ('comment','question','correction','rejection')`,
+    sql`${t.kind} IN ('comment','question','answer','correction','rejection')`,
   ),
 }));
 
