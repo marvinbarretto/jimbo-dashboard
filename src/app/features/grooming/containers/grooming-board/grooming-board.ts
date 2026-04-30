@@ -392,6 +392,12 @@ export class GroomingBoard {
     this.buildPriorityGroup(),
   ]);
 
+  readonly assignableActors = computed<readonly ActorId[]>(() =>
+    this.actorsService.activeActors()
+      .filter(actor => actor.kind === 'human' || actor.kind === 'agent')
+      .map(actor => actor.id)
+  );
+
   private buildProjectGroup(): FilterGroup<string> {
     const items = this.applyFilters({ skipProject: true });
     const counts = new Map<string, number>();
@@ -459,12 +465,13 @@ export class GroomingBoard {
 
   onSortChange(mode: string): void { this._sortMode.set(mode as SortMode); }
 
-  onDemoteToNote(item: VaultItem): void {
-    this.vaultItemsService.update(item.id, { type: 'note' });
+  onArchiveItem(item: VaultItem): void {
+    this.vaultItemsService.archive(item.id);
   }
 
-  onRemoveItem(item: VaultItem): void {
-    this.vaultItemsService.remove(item.id);
+  onAssignItem(item: VaultItem, actor: ActorId): void {
+    if (item.assigned_to === actor) return;
+    this.vaultItemsService.reassign(item.id, actor, null);
   }
 
   resetFilters(): void {

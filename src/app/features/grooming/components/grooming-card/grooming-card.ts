@@ -81,17 +81,19 @@ export class GroomingCard {
   // `actorId` is set only for agent sources and drives the colour tint so an
   // agent name reads in their actor-color.
   readonly source             = input<{ text: string; actorId: ActorId | null } | null>(null);
+  readonly assignOptions      = input<readonly ActorId[]>([]);
 
   readonly dragstart = output<DragEvent>();
   readonly dragend   = output<void>();
-  readonly demote    = output<void>();  // reclassify task → note
-  readonly remove    = output<void>();  // hard delete
+  readonly archive   = output<void>();
+  readonly assign    = output<ActorId>();
 
   readonly openQuestion = input<ThreadMessage | null>(null);
 
   private readonly threadService = inject(ThreadService);
 
   readonly showReply = signal(false);
+  readonly showAssign = signal(false);
   readonly currentActorId = actorId('marvin');
 
   toggleReply(): void {
@@ -101,6 +103,15 @@ export class GroomingCard {
   onReplyPosted(payload: CreateThreadMessagePayload): void {
     this.threadService.post(payload);
     this.showReply.set(false);
+  }
+
+  toggleAssign(): void {
+    this.showAssign.update(v => !v);
+  }
+
+  onAssignSelected(actor: ActorId): void {
+    this.assign.emit(actor);
+    this.showAssign.set(false);
   }
 
   readonly isEpic = computed(() => this.childrenCount() > 0);
@@ -166,10 +177,19 @@ export class GroomingCard {
     return `${days} day${days === 1 ? '' : 's'} since last activity`;
   });
 
-  // Intake rejection callout — prefer the latest thread item, since that is
-  // what the operator needs to resolve the rejection. Fall back to the latest
-  // activity only when the thread has not loaded yet.
+  // Intake rejection callout — prefer the actual open question body so the
+  // operator can read the prompt on-card without arbitrary truncation.
   readonly rejectionCallout = computed<RejectionCallout | null>(() => {
+    const openQuestion = this.openQuestion();
+    if (openQuestion) {
+      return {
+        label: 'open question',
+        actorLabel: `@${openQuestion.author_actor_id}`,
+        body: openQuestion.body,
+        at: openQuestion.created_at,
+      };
+    }
+
     const snapshot = this.liveSnapshot();
     if (!snapshot) return null;
 

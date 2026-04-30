@@ -72,19 +72,33 @@
         class="card__action card__action--reply"
         [class.card__action--reply-active]="showReply()"
         (click)="toggleReply(); $event.stopPropagation()"
-      >reply ↩</button>
+      >answer</button>
     }
     <button
       type="button"
-      class="card__action card__action--delete"
-      (click)="remove.emit(); $event.stopPropagation()"
-    >delete</button>
+      class="card__action"
+      (click)="archive.emit(); $event.stopPropagation()"
+    >archive</button>
     <button
       type="button"
-      class="card__action card__action--more"
-      (click)="$event.stopPropagation()"
-      aria-label="More actions"
-    >···</button>
+      class="card__action"
+      [class.card__action--active]="showAssign()"
+      (click)="toggleAssign(); $event.stopPropagation()"
+    >assign</button>
   </div>
+
+  @if (showAssign()) {
+    <div class="card__assign-picker">
+      @for (actor of assignOptions(); track actor) {
+        <button
+          type="button"
+          class="card__assign-option"
+          [disabled]="item().assigned_to === actor"
+          (click)="onAssignSelected(actor); $event.stopPropagation()">
+          @{{ actor }}
+        </button>
+      }
+    </div>
+  }
 
 </article>

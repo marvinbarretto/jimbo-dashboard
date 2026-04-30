@@ -6,8 +6,7 @@
 .app-shell {
   display: flex;
   min-height: 100vh;
-
-  @include bp.mobile { flex-direction: column; }
+  flex-direction: column;
 }
 
 .app-main {

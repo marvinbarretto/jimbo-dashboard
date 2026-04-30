@@ -82,11 +82,12 @@
               [daysInColumn]="daysInColumn(item)"
               [source]="sourceSummary(item)"
               [openQuestion]="firstOpenQuestion(item)"
+              [assignOptions]="assignableActors()"
               [dragging]="drag.dragging() === item.id"
               (dragstart)="onDragStart($event, item)"
               (dragend)="onDragEnd()"
-              (demote)="onDemoteToNote(item)"
-              (remove)="onRemoveItem(item)"
+              (archive)="onArchiveItem(item)"
+              (assign)="onAssignItem(item, $event)"
             />
           </app-grooming-nest>
         }

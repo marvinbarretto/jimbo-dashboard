@@ -177,7 +177,7 @@
 
   &__question-body {
     font-size: 0.72rem;
-    color: var(--color-text-muted);
+    color: var(--color-text);
     line-height: 1.4;
     overflow-wrap: anywhere;
   }
@@ -209,30 +209,46 @@
 
     &:hover { background: var(--color-surface); color: var(--color-text); }
 
-    // Primary — reply: dark background so it reads as the main CTA.
     &--reply {
       background: var(--color-text, #111);
       color: var(--color-bg, #fff);
-      flex: 2;
 
       &:hover { opacity: 0.85; background: var(--color-text, #111); color: var(--color-bg, #fff); }
     }
 
-    // Active state when reply composer is open.
     &--reply-active {
       background: color-mix(in oklab, var(--color-text) 70%, var(--color-surface));
       color: var(--color-bg, #fff);
     }
 
-    &--delete {
-      color: var(--color-text-muted);
+    &--active {
+      background: color-mix(in oklab, var(--color-text) 5%, var(--color-surface));
+      color: var(--color-text);
     }
+  }
 
-    // Overflow trigger — narrower, muted.
-    &--more {
-      flex: 0 0 44px;
-      color: var(--color-text-muted);
-      letter-spacing: 0.15em;
+  &__assign-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.6rem 0 0.1rem;
+  }
+
+  &__assign-option {
+    min-height: 2rem;
+    padding: 0 0.7rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: default;
     }
   }
 }
