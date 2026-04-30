@@ -11,7 +11,6 @@
 
 .app-main {
   flex: 1;
-  overflow-y: auto;
 }
 
 *, *::before, *::after {
@@ -23,9 +22,13 @@
 :root {
   --color-bg: #0f1117;
   --color-surface: #1a1d27;
+  --color-surface-raised: #202432;
+  --color-surface-soft: #171b26;
   --color-border: #2a2d3a;
+  --color-border-strong: #3a4052;
   --color-text: #e2e8f0;
   --color-text-muted: #64748b;
+  --color-text-soft: #94a3b8;
   --color-accent: #6366f1;
   --color-danger: #ef4444;
   --color-success: #22c55e;
@@ -36,7 +39,10 @@
   --font-mono: 'SF Mono', 'Fira Code', monospace;
 
   --radius: 6px;
+  --radius-lg: 12px;
   --space: 1rem;
+  --shadow-soft: 0 4px 12px color-mix(in srgb, #000 12%, transparent);
+  --focus-ring: 0 0 0 2px color-mix(in srgb, var(--color-accent) 55%, transparent);
 
   // Per-actor identity colours. Used for owner chips on cards and author chips
   // in threads. Restrained palette — borders and text only, never card fills,
@@ -111,6 +117,11 @@ button {
   border-radius: var(--radius);
 
   &:hover { border-color: var(--color-accent); }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
 }
 
 .btn {

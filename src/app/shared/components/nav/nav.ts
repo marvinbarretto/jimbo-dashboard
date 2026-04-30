@@ -156,5 +156,6 @@ export class Nav {
     { href: '/models', label: 'Models' },
     { href: '/model-stacks', label: 'Stacks' },
     { href: '/coverage', label: 'Coverage' },
+    { href: '/ui-lab', label: 'UI Lab' },
   ];
 }

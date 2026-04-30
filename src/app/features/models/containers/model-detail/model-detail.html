@@ -1,5 +1,5 @@
 @if (isLoading()) {
-  <p class="loading">Loading…</p>
+  <app-ui-loading-state label="Loading model details" message="Fetching model details." />
 } @else if (model(); as model) {
   <div class="model-detail">
     <header class="model-detail__header">

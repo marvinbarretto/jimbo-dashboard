@@ -1,0 +1,36 @@
+.projects-list {
+  padding: 2rem;
+
+  &__header h1 {
+    margin: 0;
+  }
+}
+
+.projects-table {
+  min-width: 680px;
+
+  tbody tr.archived {
+    opacity: 0.72;
+  }
+
+  td {
+    vertical-align: middle;
+  }
+}
+
+.project-id {
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.actions {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .projects-list {
+    padding: 1rem;
+  }
+}

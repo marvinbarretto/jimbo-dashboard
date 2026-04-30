@@ -4,15 +4,23 @@ import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { formatPageTitle } from '@app/app-title-strategy';
+import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
+import { UiCard } from '@shared/components/ui-card/ui-card';
+import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
+import { UiMetaList } from '@shared/components/ui-meta-list/ui-meta-list';
+import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
+import { UiSection } from '@shared/components/ui-section/ui-section';
+import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { ProjectsService } from '../../data-access/projects.service';
 import { ProjectActivityEventsService } from '../../data-access/project-activity-events.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
 import type { ProjectActivityEvent } from '@domain/activity/activity-event';
-import type { ActorId, ProjectId } from '@domain/ids';
+import type { ActorId } from '@domain/ids';
 
 @Component({
   selector: 'app-project-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, UiBackLink, UiBadge, UiCard, UiEmptyState, UiMetaList, UiPageHeader, UiSection, UiStack],
   templateUrl: './project-detail.html',
   styleUrl: './project-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -84,5 +92,9 @@ export class ProjectDetail {
     const hrs = Math.floor(mins / 60);
     if (hrs < 24) return `${hrs}h ago`;
     return `${Math.floor(hrs / 24)}d ago`;
+  }
+
+  statusTone(status: string): 'success' | 'neutral' {
+    return status === 'active' ? 'success' : 'neutral';
   }
 }

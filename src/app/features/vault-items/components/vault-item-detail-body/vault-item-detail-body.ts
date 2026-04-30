@@ -26,12 +26,16 @@ import { lifecycleState, isArchived } from '@domain/vault/vault-item';
 import { ActivityLogComponent } from './activity-log/activity-log';
 import { PipelineStepperComponent } from './pipeline-stepper/pipeline-stepper';
 import { QuestionReplyComposer } from '@shared/components/question-reply-composer/question-reply-composer';
+import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiButton } from '@shared/components/ui-button/ui-button';
+import { UiCard } from '@shared/components/ui-card/ui-card';
+import { UiSection } from '@shared/components/ui-section/ui-section';
 import type { ProjectId, ActorId } from '@domain/ids';
 import type { Actor } from '@domain/actors';
 
 @Component({
   selector: 'app-vault-item-detail-body',
-  imports: [RouterLink, ThreadView, RejectFormComponent, ActivityLogComponent, QuestionReplyComposer],
+  imports: [RouterLink, ThreadView, RejectFormComponent, ActivityLogComponent, QuestionReplyComposer, UiBadge, UiButton, UiCard, UiSection],
   templateUrl: './vault-item-detail-body.html',
   styleUrl: './vault-item-detail-body.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -441,5 +445,34 @@ export class VaultItemDetailBody {
       hour: '2-digit',
       minute: '2-digit',
     }).format(new Date(iso));
+  }
+
+  groomingTone(status: string): 'neutral' | 'success' | 'warning' | 'danger' | 'info' {
+    switch (status) {
+      case 'ready':
+        return 'success';
+      case 'needs_rework':
+        return 'warning';
+      case 'intake_rejected':
+        return 'danger';
+      case 'classified':
+      case 'decomposed':
+        return 'info';
+      default:
+        return 'neutral';
+    }
+  }
+
+  actionabilityTone(actionability: string | null): 'neutral' | 'success' | 'warning' | 'danger' {
+    switch (actionability) {
+      case 'clear':
+        return 'success';
+      case 'needs-breakdown':
+        return 'warning';
+      case 'vague':
+        return 'danger';
+      default:
+        return 'neutral';
+    }
   }
 }

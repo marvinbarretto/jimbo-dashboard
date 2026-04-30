@@ -3,6 +3,10 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
+import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
+import { UiFormActions } from '@shared/components/ui-form-actions/ui-form-actions';
+import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
+import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { ProjectsService } from '../../data-access/projects.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
 import { projectId, actorId } from '@domain/ids';
@@ -10,7 +14,7 @@ import type { ProjectStatus } from '@domain/projects';
 
 @Component({
   selector: 'app-project-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, UiBackLink, UiFormActions, UiPageHeader, UiStack],
   templateUrl: './project-form.html',
   styleUrl: './project-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

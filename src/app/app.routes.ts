@@ -56,5 +56,10 @@ export const routes: Routes = [
     title: 'Test forms',
     loadComponent: () => import('./features/test-forms/test-forms-page').then(m => m.TestFormsPage),
   },
+  {
+    path: 'ui-lab',
+    title: 'UI Lab',
+    loadComponent: () => import('./features/ui-lab/ui-lab-page').then(m => m.UiLabPage),
+  },
   { path: '', redirectTo: 'today', pathMatch: 'full' },
 ];

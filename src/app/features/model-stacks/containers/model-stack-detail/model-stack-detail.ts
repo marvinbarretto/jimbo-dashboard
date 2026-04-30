@@ -4,11 +4,12 @@ import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { formatPageTitle } from '@app/app-title-strategy';
+import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { ModelStacksService } from '../../data-access/model-stacks.service';
 
 @Component({
   selector: 'app-model-stack-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, UiLoadingState],
   templateUrl: './model-stack-detail.html',
   styleUrl: './model-stack-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

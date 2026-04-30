@@ -1,44 +1,50 @@
-<div class="projects-list">
-  <header class="projects-list__header">
-    <h1>Projects</h1>
-    <a routerLink="new" class="btn btn--primary">Add project</a>
-  </header>
+<app-ui-stack class="projects-list" gap="lg">
+  <app-ui-page-header class="projects-list__header">
+    <h1 uiPageHeaderTitle>Projects</h1>
+    <a uiPageHeaderActions routerLink="new" class="btn btn--primary">Add project</a>
+  </app-ui-page-header>
 
-  <table class="projects-table">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Display name</th>
-        <th>Status</th>
-        <th>Owner</th>
-        <th>Created</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (project of projects(); track project.id) {
-        <tr [class.archived]="project.status === 'archived'">
-          <td class="project-id">
-            <a [routerLink]="[project.id]">{{ project.id }}</a>
-          </td>
-          <td>{{ project.display_name }}</td>
-          <td>
-            <span [class]="project.status === 'active' ? 'status status--active' : 'status status--inactive'">
-              {{ project.status }}
-            </span>
-          </td>
-          <td>{{ project.owner_actor_id }}</td>
-          <td>{{ project.created_at.slice(0, 10) }}</td>
-          <td class="actions">
-            <a [routerLink]="[project.id, 'edit']">Edit</a>
-            <button (click)="remove(project.id)">Remove</button>
-          </td>
-        </tr>
-      } @empty {
-        <tr>
-          <td colspan="6" class="empty">No projects registered.</td>
-        </tr>
-      }
-    </tbody>
-  </table>
-</div>
+  @if (projects().length === 0) {
+    <app-ui-empty-state
+      title="No projects registered"
+      message="Create the first project to start organizing dashboard work." />
+  } @else {
+    <app-table-shell>
+      <table class="projects-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Display name</th>
+            <th>Status</th>
+            <th>Owner</th>
+            <th>Created</th>
+            <th aria-label="Actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (project of projects(); track project.id) {
+            <tr [class.archived]="project.status === 'archived'">
+              <td class="project-id">
+                <a [routerLink]="[project.id]">{{ project.id }}</a>
+              </td>
+              <td>{{ project.display_name }}</td>
+              <td>
+                <app-ui-badge [tone]="statusTone(project.status)">
+                  {{ project.status }}
+                </app-ui-badge>
+              </td>
+              <td>{{ project.owner_actor_id }}</td>
+              <td>{{ project.created_at.slice(0, 10) }}</td>
+              <td class="actions">
+                <app-ui-cluster justify="end" gap="sm">
+                  <a [routerLink]="[project.id, 'edit']">Edit</a>
+                  <button type="button" (click)="remove(project.id)">Remove</button>
+                </app-ui-cluster>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </app-table-shell>
+  }
+</app-ui-stack>

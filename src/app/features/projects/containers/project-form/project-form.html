@@ -1,8 +1,8 @@
-<div class="project-form">
-  <header class="project-form__header">
-    <a routerLink="/projects" class="back-link">← Projects</a>
-    <h1>{{ isEdit() ? 'Edit project' : 'Add project' }}</h1>
-  </header>
+<app-ui-stack class="project-form" gap="lg">
+  <app-ui-page-header class="project-form__header">
+    <app-ui-back-link uiPageHeaderLead [to]="['/projects']">← Projects</app-ui-back-link>
+    <h1 uiPageHeaderTitle>{{ isEdit() ? 'Edit project' : 'Add project' }}</h1>
+  </app-ui-page-header>
 
   <form [formGroup]="form" (ngSubmit)="submit()">
     <div class="field">
@@ -58,11 +58,11 @@
       <input id="repo_url" formControlName="repo_url" type="url" />
     </div>
 
-    <div class="form-actions">
+    <app-ui-form-actions>
       <button type="submit" class="btn btn--primary">
         {{ isEdit() ? 'Save changes' : 'Add project' }}
       </button>
       <a routerLink="/projects" class="btn btn--ghost">Cancel</a>
-    </div>
+    </app-ui-form-actions>
   </form>
-</div>
+</app-ui-stack>

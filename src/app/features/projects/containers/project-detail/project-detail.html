@@ -1,28 +1,29 @@
 @if (project(); as p) {
-  <div class="project-detail">
-    <header class="project-detail__header">
-      <a routerLink="/projects" class="back-link">← Projects</a>
-      <h1>{{ p.display_name }}</h1>
-      <a routerLink="edit" class="btn btn--secondary">Edit</a>
-    </header>
+  <app-ui-stack class="project-detail" gap="lg">
+    <app-ui-page-header class="project-detail__header">
+      <app-ui-back-link uiPageHeaderLead [to]="['/projects']">← Projects</app-ui-back-link>
+      <h1 uiPageHeaderTitle>{{ p.display_name }}</h1>
+      <a uiPageHeaderActions routerLink="edit" class="btn btn--secondary">Edit</a>
+    </app-ui-page-header>
 
-    <section class="project-detail__meta">
-      <dl>
+    <app-ui-section title="Project Metadata" [collapsible]="false">
+      <app-ui-card tone="soft" [compact]="true">
+        <app-ui-meta-list>
         <dt>ID</dt><dd><code>{{ p.id }}</code></dd>
         <dt>Status</dt>
         <dd>
-          <span [class]="p.status === 'active' ? 'status status--active' : 'status status--inactive'">
+          <app-ui-badge [tone]="statusTone(p.status)">
             {{ p.status }}
-          </span>
+          </app-ui-badge>
         </dd>
         <dt>Owner</dt>
         <dd>
           @if (owner(); as o) {
             <a [routerLink]="['/actors', o.id]">{{ o.display_name }}</a>
-            <span class="hint"> ({{ o.kind }}<span>)</span></span>
+            <span class="hint">({{ o.kind }})</span>
           } @else {
             <code>{{ p.owner_actor_id }}</code>
-            <span class="hint"> (actor not found)</span>
+            <span class="hint">(actor not found)</span>
           }
         </dd>
         @if (p.description) {
@@ -32,33 +33,36 @@
           <dt>Repo</dt><dd><a [href]="p.repo_url" target="_blank" rel="noopener noreferrer">{{ p.repo_url }}</a></dd>
         }
         <dt>Created</dt><dd>{{ p.created_at.slice(0, 10) }}</dd>
-      </dl>
-    </section>
+        </app-ui-meta-list>
+      </app-ui-card>
+    </app-ui-section>
 
     @if (p.criteria) {
-      <section class="project-detail__criteria">
-        <h2>Criteria</h2>
-        <pre class="criteria-block">{{ p.criteria }}</pre>
-      </section>
+      <app-ui-section title="Criteria" [collapsible]="false">
+        <app-ui-card tone="soft" [compact]="true">
+          <pre class="criteria-block">{{ p.criteria }}</pre>
+        </app-ui-card>
+      </app-ui-section>
     }
 
-    <section class="project-detail__activity">
-      <h2>Activity</h2>
+    <app-ui-section title="Activity" [collapsible]="false">
       @if (events().length === 0) {
-        <p class="empty">No project activity yet.</p>
+        <app-ui-empty-state message="No project activity yet." />
       } @else {
-        <ul class="activity-log">
-          @for (event of events(); track event.id) {
-            <li class="activity-log__row">
-              <span class="activity-log__actor">{{ actorDisplay(event.actor_id) }}</span>
-              <span class="activity-log__desc">{{ eventDescription(event) }}</span>
-              <span class="activity-log__when">· {{ relativeTime(event.at) }}</span>
-            </li>
-          }
-        </ul>
+        <app-ui-card tone="soft" [compact]="true">
+          <ul class="activity-log">
+            @for (event of events(); track event.id) {
+              <li class="activity-log__row">
+                <span class="activity-log__actor">{{ actorDisplay(event.actor_id) }}</span>
+                <span class="activity-log__desc">{{ eventDescription(event) }}</span>
+                <span class="activity-log__when">· {{ relativeTime(event.at) }}</span>
+              </li>
+            }
+          </ul>
+        </app-ui-card>
       }
-    </section>
-  </div>
+    </app-ui-section>
+  </app-ui-stack>
 } @else {
-  <p>Project not found.</p>
+  <app-ui-empty-state title="Project not found" message="The requested project could not be found." />
 }

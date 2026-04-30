@@ -5,7 +5,7 @@
     <header class="modal-header__zone1">
       <div class="modal-header__id">
         <span class="modal-header__seq">#{{ item.seq }}</span>
-        <span class="modal-header__type">{{ item.type }}</span>
+        <app-ui-badge tone="info" [subtle]="true">{{ item.type }}</app-ui-badge>
         <h1 class="modal-header__title">{{ item.title }}</h1>
       </div>
     </header>
@@ -25,24 +25,28 @@
           }
         </select>
 
-        <span [class]="'chip chip--grooming chip--grooming-' + item.grooming_status">
+        <app-ui-badge [tone]="groomingTone(item.grooming_status)">
           {{ item.grooming_status.replace(/_/g, ' ') }}
-        </span>
+        </app-ui-badge>
 
         <span class="chip-group chip-group--owner">
           @if (owner(); as o) {
             <a [routerLink]="['/actors', o.id]"
-              [class]="'chip chip--owner chip--actor-' + o.kind">
+              [class]="'detail-link-badge detail-link-badge--owner detail-link-badge--actor-' + o.kind">
               @{{ o.id }}
             </a>
           } @else if (item.assigned_to) {
-            <span class="chip chip--owner">{{ item.assigned_to }}</span>
+            <span class="detail-link-badge detail-link-badge--owner">{{ item.assigned_to }}</span>
           } @else {
-            <span class="chip chip--owner chip--unassigned">unassigned</span>
+            <span class="detail-link-badge detail-link-badge--owner detail-link-badge--unassigned">unassigned</span>
           }
-          <button class="chip-action" (click)="toggleReassignPicker()" aria-label="Reassign owner">
+          <app-ui-button
+            variant="ghost"
+            size="sm"
+            ariaLabel="Reassign owner"
+            (pressed)="toggleReassignPicker()">
             {{ showReassignPicker() ? '▲' : '▼' }}
-          </button>
+          </app-ui-button>
           @if (showReassignPicker()) {
             <span class="inline-picker" role="listbox" aria-label="Select new owner">
               @for (a of activeActors(); track a.id) {
@@ -57,24 +61,26 @@
         </span>
 
         @if (effectivePriority(); as p) {
-          <span
-            [class]="'chip chip--priority chip--priority-P' + p"
+          <app-ui-badge
+            [tone]="p <= 1 ? 'danger' : p === 2 ? 'warning' : 'info'"
             [title]="priorityDiverges() ? 'AI: P' + item.ai_priority + ', Manual: P' + item.manual_priority : 'Priority'"
-          >{{ priorityLabel(p) }}{{ priorityDiverges() ? ' *' : '' }}</span>
+          >{{ priorityLabel(p) }}{{ priorityDiverges() ? ' *' : '' }}</app-ui-badge>
         }
 
         @if (item.actionability !== null) {
-          <span [class]="'chip chip--action chip--action-' + item.actionability">{{ item.actionability }}</span>
+          <app-ui-badge [tone]="actionabilityTone(item.actionability)">{{ item.actionability }}</app-ui-badge>
         }
 
         @if (projects().length > 0) {
-          <a [routerLink]="['/projects', projects()[0].id]" class="chip chip--project">
+          <a
+            [routerLink]="['/projects', projects()[0].id]"
+            [class]="'detail-link-badge detail-link-badge--project detail-link-badge--project-' + projects()[0].id">
             {{ projects()[0].display_name }}
           </a>
         }
 
         @if (isGitHubItem()) {
-          <span class="chip chip--source chip--source-github">github</span>
+          <app-ui-badge tone="info" [subtle]="true">github</app-ui-badge>
         }
       </div>
 
@@ -97,39 +103,39 @@
             · rationale:
             @if (rationaleExpanded()) {
               {{ item.ai_rationale }}
-              <button type="button" class="rationale-toggle" (click)="toggleRationale()">collapse</button>
+              <app-ui-button variant="ghost" size="sm" (pressed)="toggleRationale()">collapse</app-ui-button>
             } @else {
               <em>"{{ truncate(item.ai_rationale, 80) }}"</em>
-              <button type="button" class="rationale-toggle" (click)="toggleRationale()">expand</button>
+              <app-ui-button variant="ghost" size="sm" (pressed)="toggleRationale()">expand</app-ui-button>
             }
           </span>
         }
       </div>
 
       <div class="detail-overview" aria-label="Item overview">
-        <section class="detail-overview__card">
+        <app-ui-card tone="soft" [compact]="true" class="detail-overview__card">
           <span class="detail-overview__label">{{ sourceSummary().label }}</span>
           <strong class="detail-overview__value">{{ sourceSummary().value }}</strong>
           <p class="detail-overview__detail">{{ sourceSummary().detail }}</p>
-        </section>
+        </app-ui-card>
 
-        <section class="detail-overview__card">
+        <app-ui-card tone="soft" [compact]="true" class="detail-overview__card">
           <span class="detail-overview__label">{{ hierarchySummary().label }}</span>
           <strong class="detail-overview__value">{{ hierarchySummary().value }}</strong>
           <p class="detail-overview__detail">{{ hierarchySummary().detail }}</p>
-        </section>
+        </app-ui-card>
 
-        <section class="detail-overview__card">
+        <app-ui-card tone="soft" [compact]="true" class="detail-overview__card">
           <span class="detail-overview__label">{{ timelineSummary().label }}</span>
           <strong class="detail-overview__value">{{ timelineSummary().value }}</strong>
           <p class="detail-overview__detail">{{ timelineSummary().detail }}</p>
-        </section>
+        </app-ui-card>
 
-        <section class="detail-overview__card">
+        <app-ui-card tone="soft" [compact]="true" class="detail-overview__card">
           <span class="detail-overview__label">{{ queueSummary().label }}</span>
           <strong class="detail-overview__value">{{ queueSummary().value }}</strong>
           <p class="detail-overview__detail">{{ queueSummary().detail }}</p>
-        </section>
+        </app-ui-card>
       </div>
     </div>
 
@@ -146,7 +152,11 @@
 
     <!-- ===== Zone 3 — Open questions (always visible when present) ===== -->
     @if (openQuestions().length > 0) {
-      <section class="detail-section detail-section--questions">
+      <app-ui-section
+        title="Open Questions"
+        tone="alert"
+        [collapsible]="false"
+        [meta]="openQuestions().length + ' blocking question' + (openQuestions().length === 1 ? '' : 's')">
         @for (q of openQuestions(); track q.id) {
           <div class="detail-question">
             <div class="detail-question__who">
@@ -163,20 +173,16 @@
             />
           </div>
         }
-      </section>
+      </app-ui-section>
     }
 
     <!-- ===== Zone 4 — Body (collapsible) ===== -->
-    <section class="detail-section">
-      <button type="button" class="detail-section__header" (click)="toggleSection('body')">
-        <span class="detail-section__title">Body</span>
-        <span class="detail-section__meta">
-          intake · delivery · links {{ sectionBody() ? '▴' : '▾' }}
-        </span>
-      </button>
-      @if (sectionBody()) {
-        <div class="detail-section__content">
-          <div class="detail-body-layout">
+    <app-ui-section
+      title="Body"
+      [expanded]="sectionBody()"
+      [meta]="'intake · delivery · links ' + (sectionBody() ? '▴' : '▾')"
+      (toggled)="toggleSection('body')">
+      <div class="detail-body-layout">
             <section class="section section-card section-card--intake">
               <div class="section__label">Intake <span class="section__hint">(immutable input)</span></div>
               @if (item.body) {
@@ -348,48 +354,36 @@
                 }
               </section>
             </div>
-          </div>
-        </div>
-      }
-    </section>
+      </div>
+    </app-ui-section>
 
     <!-- ===== Zone 5 — Activity (collapsible) ===== -->
-    <section class="detail-section">
-      <button type="button" class="detail-section__header" (click)="toggleSection('activity')">
-        <span class="detail-section__title">Activity</span>
-        <span class="detail-section__meta">
-          timeline · filters · {{ events().length }} events {{ sectionActivity() ? '▴' : '▾' }}
-        </span>
-      </button>
-      @if (sectionActivity()) {
-        <div class="detail-section__content detail-section__content--review">
-          <app-activity-log
-            [events]="events()"
-            [actorLabel]="actorLabelFn"
-            [actorKind]="actorKindFn"
-          />
-        </div>
-      }
-    </section>
+    <app-ui-section
+      title="Activity"
+      tone="subtle"
+      [expanded]="sectionActivity()"
+      [meta]="'timeline · filters · ' + events().length + ' events ' + (sectionActivity() ? '▴' : '▾')"
+      (toggled)="toggleSection('activity')">
+      <app-activity-log
+        [events]="events()"
+        [actorLabel]="actorLabelFn"
+        [actorKind]="actorKindFn"
+      />
+    </app-ui-section>
 
     <!-- ===== Zone 6 — Thread (collapsible) ===== -->
-    <section class="detail-section">
-      <button type="button" class="detail-section__header" (click)="toggleSection('thread')">
-        <span class="detail-section__title">Thread</span>
-        <span class="detail-section__meta">
-          conversation · {{ messages().length }} messages {{ sectionThread() ? '▴' : '▾' }}
-        </span>
-      </button>
-      @if (sectionThread()) {
-        <div class="detail-section__content detail-section__content--review">
-          <app-thread-view
-            [vaultItemId]="item.id"
-            [currentActor]="currentActorId"
-            [actorMap]="actorMap()">
-          </app-thread-view>
-        </div>
-      }
-    </section>
+    <app-ui-section
+      title="Thread"
+      tone="subtle"
+      [expanded]="sectionThread()"
+      [meta]="'conversation · ' + messages().length + ' messages ' + (sectionThread() ? '▴' : '▾')"
+      (toggled)="toggleSection('thread')">
+      <app-thread-view
+        [vaultItemId]="item.id"
+        [currentActor]="currentActorId"
+        [actorMap]="actorMap()">
+      </app-thread-view>
+    </app-ui-section>
 
     <!-- Spacer so sticky bar doesn't cover the last section -->
     <div class="detail-sticky-spacer"></div>

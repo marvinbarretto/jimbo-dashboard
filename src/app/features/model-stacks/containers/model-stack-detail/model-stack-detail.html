@@ -1,5 +1,5 @@
 @if (isLoading()) {
-  <p class="loading">Loading…</p>
+  <app-ui-loading-state label="Loading model stack details" message="Fetching model stack details." />
 } @else if (stack(); as stack) {
   <div class="stack-detail">
     <header class="stack-detail__header">

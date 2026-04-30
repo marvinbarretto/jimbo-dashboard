@@ -1,18 +1,19 @@
 .actor-detail {
   padding: 2rem;
-  max-width: 720px;
+  max-width: 760px;
 
-  &__header {
-    display: flex;
-    align-items: baseline;
-    gap: 1rem;
-    margin-bottom: 2rem;
-
-    h1 { flex: 1; margin: 0; }
+  &__header h1 {
+    margin: 0;
   }
 }
 
 .back-link {
   font-size: 0.8rem;
   color: var(--color-text-muted);
+}
+
+@media (max-width: 768px) {
+  .actor-detail {
+    padding: 1rem;
+  }
 }

@@ -4,12 +4,13 @@ import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { formatPageTitle } from '@app/app-title-strategy';
+import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { ModelsService } from '../../data-access/models.service';
 import { modelProvider, modelLocalName } from '@domain/models';
 
 @Component({
   selector: 'app-model-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, UiLoadingState],
   templateUrl: './model-detail.html',
   styleUrl: './model-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

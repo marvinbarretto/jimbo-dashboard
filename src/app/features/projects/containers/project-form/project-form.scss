@@ -2,15 +2,13 @@
   padding: 2rem;
   max-width: 560px;
 
-  &__header {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 2rem;
+  &__header h1 {
+    margin: 0;
   }
 }
 
-.back-link {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
+@media (max-width: 768px) {
+  .project-form {
+    padding: 1rem;
+  }
 }

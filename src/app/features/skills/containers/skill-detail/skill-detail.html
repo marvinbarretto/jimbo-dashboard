@@ -1,23 +1,24 @@
 @if (isLoading()) {
-  <p class="loading">Loading…</p>
+  <app-ui-loading-state label="Loading skill details" message="Fetching skill details." />
 } @else if (skill(); as skill) {
-  <div class="skill-detail">
-    <header class="skill-detail__header">
-      <a routerLink="/skills" class="back-link">← Skills</a>
-      <div class="skill-detail__title">
+  <app-ui-stack class="skill-detail" gap="lg">
+    <app-ui-page-header class="skill-detail__header">
+      <app-ui-back-link uiPageHeaderLead [to]="['/skills']">← Skills</app-ui-back-link>
+      <div uiPageHeaderTitle class="skill-detail__title">
         <span class="ns-tag">{{ namespace() }}</span>
         <h1>{{ localName() }}</h1>
       </div>
-      <div class="skill-detail__badges">
-        <span [class]="isActive() ? 'status status--active' : 'status status--inactive'">
-          {{ isActive() ? 'Active' : 'Inactive' }}
-        </span>
-      </div>
-      <a routerLink="edit" class="btn btn--secondary">Edit</a>
-    </header>
+      <app-ui-cluster uiPageHeaderActions gap="sm">
+        <app-ui-badge [tone]="isActive() ? 'success' : 'neutral'">
+          {{ statusLabel() }}
+        </app-ui-badge>
+        <a routerLink="edit" class="btn btn--secondary">Edit</a>
+      </app-ui-cluster>
+    </app-ui-page-header>
 
-    <section class="skill-detail__meta">
-      <dl>
+    <app-ui-section title="Skill Metadata" [collapsible]="false">
+      <app-ui-card tone="soft" [compact]="true">
+        <app-ui-meta-list>
         <dt>ID</dt>
         <dd><code>{{ skill.id }}</code></dd>
 
@@ -31,9 +32,11 @@
 
         <dt>Executors</dt>
         <dd>
-          @for (e of skill.metadata.executors; track e) {
-            <span class="executor-badge">{{ e }}</span>
-          }
+          <app-ui-cluster gap="xs">
+            @for (e of skill.metadata.executors; track e) {
+              <app-ui-badge tone="info" [subtle]="true">{{ e }}</app-ui-badge>
+            }
+          </app-ui-cluster>
         </dd>
 
         @if (skill.metadata.timeout_minutes != null) {
@@ -44,18 +47,22 @@
         @if (skill.metadata.required_context && skill.metadata.required_context.length) {
           <dt>Required context</dt>
           <dd>
-            @for (c of skill.metadata.required_context; track c) {
-              <code class="ctx-tag">{{ c }}</code>
-            }
+            <app-ui-cluster gap="xs">
+              @for (c of skill.metadata.required_context; track c) {
+                <code class="skill-detail__code-tag">{{ c }}</code>
+              }
+            </app-ui-cluster>
           </dd>
         }
 
         @if (skill.metadata.produces && skill.metadata.produces.length) {
           <dt>Produces</dt>
           <dd>
-            @for (p of skill.metadata.produces; track p) {
-              <code class="produces-tag">{{ p }}</code>
-            }
+            <app-ui-cluster gap="xs">
+              @for (p of skill.metadata.produces; track p) {
+                <code class="skill-detail__code-tag">{{ p }}</code>
+              }
+            </app-ui-cluster>
           </dd>
         }
 
@@ -63,17 +70,18 @@
           <dt>Completes dispatch</dt>
           <dd>{{ skill.metadata.completes_dispatch ? 'Yes' : 'No' }}</dd>
         }
-      </dl>
-    </section>
+        </app-ui-meta-list>
+      </app-ui-card>
+    </app-ui-section>
 
-    <section class="skill-detail__body">
-      <h2>Prompt body</h2>
-      <pre class="schema-block"><code>{{ skill.body }}</code></pre>
-    </section>
-  </div>
+    <app-ui-section title="Prompt Body" [collapsible]="false">
+      <app-ui-card tone="soft" [compact]="true">
+        <pre class="schema-block"><code>{{ skill.body }}</code></pre>
+      </app-ui-card>
+    </app-ui-section>
+  </app-ui-stack>
 } @else {
-  <div class="skill-detail skill-detail--not-found">
-    <p>Skill not found in registry.</p>
-    <a routerLink="/skills" class="back-link">← Back to skills</a>
-  </div>
+  <app-ui-empty-state title="Skill not found" message="The requested skill is not present in the registry.">
+    <app-ui-back-link [to]="['/skills']">← Back to skills</app-ui-back-link>
+  </app-ui-empty-state>
 }
