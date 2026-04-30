@@ -31,7 +31,7 @@ import type { Actor } from '@domain/actors';
 
 @Component({
   selector: 'app-vault-item-detail-body',
-  imports: [RouterLink, ThreadView, RejectFormComponent, ActivityLogComponent, PipelineStepperComponent, QuestionReplyComposer],
+  imports: [RouterLink, ThreadView, RejectFormComponent, ActivityLogComponent, QuestionReplyComposer],
   templateUrl: './vault-item-detail-body.html',
   styleUrl: './vault-item-detail-body.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -44,7 +44,7 @@ interface RejectionCallout {
 // lifecycle events so the parent owns drag state and the kanban service writes.
 @Component({
   selector: 'app-grooming-card',
-  imports: [RouterLink, KanbanCardLinkDirective, PriorityBadge, BlockerBadge, EpicBadge, ProjectChip, OwnerChip, ReworkBadgeComponent, QuestionReplyComposer],
+  imports: [RouterLink, KanbanCardLinkDirective, PriorityBadge, BlockerBadge, EpicBadge, ReworkBadgeComponent, QuestionReplyComposer],
   templateUrl: './grooming-card.html',
   styleUrl: './grooming-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
