@@ -4,9 +4,10 @@
 
 .board {
   padding: 1.25rem 1.5rem;
-  height: 100vh;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
 
   &__header {
     margin-bottom: 1rem;
@@ -29,9 +30,17 @@
     display: flex;
     gap: 0.75rem;
     flex: 1;
+    min-height: 0;
     overflow-x: auto;
     overflow-y: hidden;
     padding-bottom: 0.5rem;
+  }
+
+  &__col-wrap {
+    flex: 0 0 320px;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
   }
 }
 
@@ -51,6 +60,9 @@
 
     &__header h1 { font-size: 1.1rem; }
     &__hint { display: none; }
+    &__col-wrap {
+      flex: 1 1 auto;
+    }
   }
 
   // Filter bar hidden behind toggle on mobile
@@ -136,7 +148,7 @@
     display: none;
 
     &--active {
-      display: contents;
+      display: flex;
     }
   }
 }
