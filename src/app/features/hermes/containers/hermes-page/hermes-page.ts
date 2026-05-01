@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { UiTabBar } from '@shared/components/ui-tab-bar/ui-tab-bar';
 import { HermesService } from '../../data-access/hermes.service';
 
 @Component({
   selector: 'app-hermes-page',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, UiTabBar],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="hermes-page">
@@ -27,11 +28,11 @@ import { HermesService } from '../../data-access/hermes.service';
         </div>
       </header>
 
-      <nav class="hermes-page__tabs" aria-label="Hermes views">
-        <a routerLink="pulse" routerLinkActive="active" class="hermes-page__tab">Pulse</a>
-        <a routerLink="control-room" routerLinkActive="active" class="hermes-page__tab">Control Room</a>
-        <a routerLink="timeline" routerLinkActive="active" class="hermes-page__tab">Timeline</a>
-      </nav>
+      <app-ui-tab-bar label="Hermes views">
+        <a routerLink="pulse" routerLinkActive="active" class="ui-tab">Pulse</a>
+        <a routerLink="control-room" routerLinkActive="active" class="ui-tab">Control Room</a>
+        <a routerLink="timeline" routerLinkActive="active" class="ui-tab">Timeline</a>
+      </app-ui-tab-bar>
 
       <div class="hermes-page__body">
         <router-outlet />
@@ -105,32 +106,6 @@ import { HermesService } from '../../data-access/hermes.service';
     @keyframes pulse-dot {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.4; transform: scale(0.7); }
-    }
-
-    .hermes-page__tabs {
-      display: flex;
-      gap: 0;
-      padding: 0 1.5rem;
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .hermes-page__tab {
-      padding: 0.6rem 1.1rem;
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-decoration: none;
-      color: var(--color-text-muted);
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      transition: color 0.15s, border-color 0.15s;
-    }
-
-    .hermes-page__tab:hover { color: var(--color-text); }
-
-    .hermes-page__tab.active {
-      color: var(--color-accent);
-      border-bottom-color: var(--color-accent);
     }
 
     .hermes-page__body {

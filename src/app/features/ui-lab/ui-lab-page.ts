@@ -12,6 +12,7 @@ import { UiMetaList } from '@shared/components/ui-meta-list/ui-meta-list';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
+import { UiTabBar } from '@shared/components/ui-tab-bar/ui-tab-bar';
 import { TableShell } from '@shared/components/table-shell/table-shell';
 
 type LabProjectStatus = 'active' | 'archived';
@@ -53,6 +54,7 @@ interface LabMailRow {
     UiPageHeader,
     UiSection,
     UiStack,
+    UiTabBar,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -95,6 +97,44 @@ interface LabMailRow {
             <dt>Next phase</dt>
             <dd>Apply a neon theme over stable semantic components instead of styling one-off pages.</dd>
           </app-ui-meta-list>
+        </app-ui-stack>
+      </app-ui-section>
+
+      <app-ui-section title="Tab Bar" [collapsible]="false">
+        <app-ui-stack gap="md">
+
+          <app-ui-meta-list>
+            <dt>Component</dt>
+            <dd><code>app-ui-tab-bar</code> — wraps a <code>nav</code> with the underline-tab border. Tabs are projected as <code>.ui-tab</code> elements (links or buttons).</dd>
+            <dt>Active state</dt>
+            <dd>Router tabs: <code>routerLinkActive="active"</code>. Signal tabs: <code>[class.active]="activeTab() === 'x'"</code>.</dd>
+          </app-ui-meta-list>
+
+          <div>
+            <p class="ui-lab__subhead">Router-style (static demo)</p>
+            <app-ui-tab-bar label="Demo navigation">
+              <a class="ui-tab active" href="#" (click)="$event.preventDefault()">Overview</a>
+              <a class="ui-tab" href="#" (click)="$event.preventDefault()">Detail</a>
+              <a class="ui-tab" href="#" (click)="$event.preventDefault()">Settings</a>
+            </app-ui-tab-bar>
+          </div>
+
+          <div>
+            <p class="ui-lab__subhead">Signal-based (functional)</p>
+            <app-ui-tab-bar label="Signal tab demo">
+              <button type="button" class="ui-tab" [class.active]="labActiveTab() === 'overview'" (click)="labActiveTab.set('overview')">Overview</button>
+              <button type="button" class="ui-tab" [class.active]="labActiveTab() === 'detail'" (click)="labActiveTab.set('detail')">Detail</button>
+              <button type="button" class="ui-tab" [class.active]="labActiveTab() === 'settings'" (click)="labActiveTab.set('settings')">Settings</button>
+            </app-ui-tab-bar>
+            <div class="ui-lab__tab-content">
+              @switch (labActiveTab()) {
+                @case ('overview') { <p>Overview content — project list, summary stats.</p> }
+                @case ('detail') { <p>Detail content — expanded fields, related items.</p> }
+                @case ('settings') { <p>Settings content — configuration, permissions.</p> }
+              }
+            </div>
+          </div>
+
         </app-ui-stack>
       </app-ui-section>
 
@@ -501,10 +541,20 @@ interface LabMailRow {
     }
 
     .ui-lab__subhead {
-      margin: 0;
-      font-size: 0.95rem;
+      margin: 0 0 0.5rem;
+      font-size: 0.72rem;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+    }
+
+    .ui-lab__tab-content {
+      padding: 1rem;
+      border: 1px solid var(--color-border);
+      border-top: none;
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
     }
 
     .ui-lab__support-copy {
@@ -639,6 +689,8 @@ export class UiLabPage {
       body: 'Digest contains workspace highlights, trending documents, and reminder suggestions.',
     },
   ];
+
+  readonly labActiveTab = signal<'overview' | 'detail' | 'settings'>('overview');
 
   readonly projectTitle = signal('Hermes');
   readonly projectStatus = signal<LabProjectStatus>('active');
