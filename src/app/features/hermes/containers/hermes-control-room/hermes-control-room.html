@@ -112,9 +112,9 @@
             <div class="cr__field">
               <dt>Model</dt>
               <dd class="cr__model-field">
-                {{ job.model ?? 'openrouter/free' }}
+                {{ job.model ?? '—' }}
                 @if (!job.model) {
-                  <app-ui-badge tone="warning" [subtle]="true" title="Default model — consider pinning a specific model per job to control cost">default</app-ui-badge>
+                  <app-ui-badge tone="warning" [subtle]="true" title="No model pinned — using Hermes default; pin a specific model per job to control cost and routing">default</app-ui-badge>
                 }
               </dd>
             </div>
