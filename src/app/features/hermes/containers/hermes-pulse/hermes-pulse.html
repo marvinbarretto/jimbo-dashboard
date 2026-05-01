@@ -1,0 +1,86 @@
+@if (!isLoaded()) {
+  <div class="pulse-loading">
+    @if (loadError()) {
+      <p class="pulse-loading__error">{{ loadError() }}</p>
+    } @else {
+      <p class="pulse-loading__text">Connecting to Hermes&hellip;</p>
+    }
+  </div>
+} @else {
+  <div class="pulse">
+
+    <!-- Big metrics -->
+    <div class="pulse__metrics">
+      @for (stat of stats(); track stat.label) {
+        <div class="pulse__metric" [class]="'pulse__metric--' + stat.tone">
+          <span class="pulse__metric-value">{{ stat.value }}</span>
+          <span class="pulse__metric-label">{{ stat.label }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Now indicator -->
+    <div class="pulse__now" [class.pulse__now--running]="isRunning()">
+      <div class="pulse__now-indicator">
+        <span class="pulse__now-dot"></span>
+        <span class="pulse__now-status">{{ isRunning() ? 'Running now' : 'Idle' }}</span>
+      </div>
+      @if (isRunning()) {
+        <ul class="pulse__now-jobs">
+          @for (job of runningJobs(); track job.id) {
+            <li class="pulse__now-job">{{ job.name }}</li>
+          }
+        </ul>
+      }
+    </div>
+
+    <div class="pulse__lower">
+
+      <!-- Next fire -->
+      @if (nextJob(); as next) {
+        <div class="pulse__next">
+          <p class="pulse__next-label">Up next</p>
+          <p class="pulse__next-job">{{ next.name }}</p>
+          <p class="pulse__next-countdown">{{ countdown() }}</p>
+          <p class="pulse__next-schedule">{{ next.schedule_display }}</p>
+        </div>
+      }
+
+      <!-- Failing jobs alert -->
+      @if (failingJobs().length > 0) {
+        <div class="pulse__alerts">
+          <p class="pulse__alerts-label">Needs attention</p>
+          @for (job of failingJobs(); track job.id) {
+            <div class="pulse__alert-item">
+              <span class="pulse__alert-name">{{ job.name }}</span>
+              <span class="pulse__alert-error">{{ job.last_error ?? job.last_delivery_error ?? 'last run failed' }}</span>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Activity feed -->
+      <div class="pulse__feed">
+        <p class="pulse__feed-label">Recent runs</p>
+        @if (recentRuns().length === 0) {
+          <p class="pulse__feed-empty">No runs recorded yet.</p>
+        }
+        <ul class="pulse__feed-list">
+          @for (job of recentRuns(); track job.id) {
+            <li class="pulse__feed-item" [class.pulse__feed-item--error]="job.last_status !== 'ok'">
+              <span class="pulse__feed-name">{{ job.name }}</span>
+              <span class="pulse__feed-schedule">{{ job.schedule_display }}</span>
+              <span class="pulse__feed-status" [class]="'pulse__feed-status--' + (job.last_status ?? 'unknown')">
+                {{ job.last_status ?? '—' }}
+              </span>
+              <span class="pulse__feed-time">{{ relativeTime(job.last_run_at) }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+
+    </div>
+
+    <p class="pulse__sync">synced {{ syncAge() }}</p>
+  </div>
+}

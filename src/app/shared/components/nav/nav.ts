@@ -135,7 +135,9 @@ export class Nav {
   readonly version = pkg.version;
   protected readonly navItems: readonly NavItem[] = [
     { href: '/today', label: 'Today' },
+    { href: '/hermes', label: 'Hermes' },
     { href: '/mail', label: 'Mail' },
+    { href: '/mail-next', label: 'Mail Next' },
     { href: '/calendar', label: 'Calendar' },
     { href: '/tasks', label: 'Tasks' },
     { href: '/ops', label: 'Ops' },

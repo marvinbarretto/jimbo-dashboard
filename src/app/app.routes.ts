@@ -7,6 +7,16 @@ export const routes: Routes = [
     loadComponent: () => import('./features/api-data/containers/today-page/today-page').then(m => m.TodayPage),
   },
   {
+    path: 'hermes',
+    title: 'Hermes',
+    loadChildren: () => import('./features/hermes/hermes.routes').then(m => m.hermesRoutes),
+  },
+  {
+    path: 'mail-next',
+    title: 'Mail Next',
+    loadComponent: () => import('./features/mail/containers/mail-next-page/mail-next-page').then(m => m.MailNextPage),
+  },
+  {
     path: '',
     loadChildren: () => import('./features/api-data/api-data.routes').then(m => m.apiDataRoutes),
   },

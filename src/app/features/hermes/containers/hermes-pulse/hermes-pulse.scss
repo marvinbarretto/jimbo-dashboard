@@ -1,0 +1,315 @@
+@use 'breakpoints' as bp;
+
+.pulse-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+
+  &__error { color: var(--color-danger); }
+}
+
+.pulse {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// --- Metrics row ---
+
+.pulse__metrics {
+  display: flex;
+  gap: 1px;
+  background: var(--color-border);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.pulse__metric {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 1.25rem 0.5rem;
+  background: var(--color-surface-soft);
+  min-width: 0;
+}
+
+.pulse__metric-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+.pulse__metric-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.pulse__metric--success .pulse__metric-value { color: var(--color-success); }
+.pulse__metric--warning .pulse__metric-value { color: var(--color-warning); }
+.pulse__metric--danger  .pulse__metric-value { color: var(--color-danger); }
+
+// --- Now indicator ---
+
+.pulse__now {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-soft);
+  transition: border-color 0.3s, background 0.3s;
+}
+
+.pulse__now--running {
+  border-color: color-mix(in srgb, var(--color-success) 50%, var(--color-border));
+  background: color-mix(in srgb, var(--color-success) 5%, var(--color-surface-soft));
+}
+
+.pulse__now-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.pulse__now-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+  flex-shrink: 0;
+
+  .pulse__now--running & {
+    background: var(--color-success);
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 60%, transparent); }
+  50% { opacity: 0.7; transform: scale(1.15); box-shadow: 0 0 0 5px transparent; }
+}
+
+.pulse__now-status {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+
+  .pulse__now--running & { color: var(--color-success); }
+}
+
+.pulse__now-jobs {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.pulse__now-job {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+// --- Lower row: next + feed ---
+
+.pulse__lower {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 1rem;
+  align-items: start;
+
+  @include bp.mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+// --- Next fire ---
+
+.pulse__next {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-soft);
+}
+
+.pulse__next-label {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.pulse__next-job {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.pulse__next-countdown {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent);
+  line-height: 1.1;
+}
+
+.pulse__next-schedule {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+// --- Alerts ---
+
+.pulse__alerts {
+  border: 1px solid color-mix(in srgb, var(--color-danger) 40%, var(--color-border));
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  background: color-mix(in srgb, var(--color-danger) 5%, var(--color-surface-soft));
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  grid-column: 1 / -1;
+}
+
+.pulse__alerts-label {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-danger);
+}
+
+.pulse__alert-item {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+}
+
+.pulse__alert-name {
+  font-weight: 600;
+  color: var(--color-text);
+  flex-shrink: 0;
+}
+
+.pulse__alert-error {
+  color: var(--color-danger);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// --- Feed ---
+
+.pulse__feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-soft);
+}
+
+.pulse__feed-label {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.pulse__feed-empty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.pulse__feed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.pulse__feed-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.8rem;
+
+  &:first-child { border-top: none; }
+
+  &--error { background: color-mix(in srgb, var(--color-danger) 3%, transparent); }
+}
+
+.pulse__feed-name {
+  font-weight: 600;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pulse__feed-schedule {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.pulse__feed-status {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.35rem;
+  border-radius: calc(var(--radius) / 2);
+
+  &--ok      { color: var(--color-success); background: color-mix(in srgb, var(--color-success) 12%, transparent); }
+  &--error   { color: var(--color-danger);  background: color-mix(in srgb, var(--color-danger)  12%, transparent); }
+  &--unknown { color: var(--color-text-muted); }
+}
+
+.pulse__feed-time {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+// --- Sync age ---
+
+.pulse__sync {
+  margin: 0;
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  text-align: right;
+  opacity: 0.7;
+}

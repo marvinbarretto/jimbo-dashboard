@@ -1,0 +1,194 @@
+@if (!isLoaded()) {
+  <p class="cr-loading">
+    @if (loadError()) { {{ loadError() }} } @else { Connecting to Hermes… }
+  </p>
+} @else {
+  <div class="cr">
+
+    <!-- Job list -->
+    <div class="cr__list">
+      @for (job of sortedJobs(); track job.id) {
+        <button
+          type="button"
+          class="cr__job"
+          [class.cr__job--selected]="selectedJob()?.id === job.id"
+          [class.cr__job--paused]="job.state === 'paused'"
+          (click)="select(job)">
+
+          <span class="cr__job-indicator cr__job-indicator--{{ stateBadgeTone(job.state, job.last_status) }}"></span>
+
+          <span class="cr__job-main">
+            <span class="cr__job-name">{{ job.name }}</span>
+            <span class="cr__job-schedule">{{ job.schedule_display ?? '—' }}</span>
+          </span>
+
+          <span class="cr__job-meta">
+            @if (job.last_status && job.last_status !== 'ok') {
+              <span class="cr__job-badge cr__job-badge--danger">fail</span>
+            }
+            @if (job.state === 'paused') {
+              <span class="cr__job-badge cr__job-badge--warning">paused</span>
+            }
+            <span class="cr__job-time">{{ relativeTime(job.last_run_at) }}</span>
+          </span>
+        </button>
+      }
+    </div>
+
+    <!-- Detail pane -->
+    <div class="cr__detail">
+      @if (selectedJob(); as job) {
+        <div class="cr__detail-content">
+
+          <div class="cr__detail-header">
+            <div class="cr__detail-title-group">
+
+              @if (editingName()) {
+                <div class="cr__inline-edit">
+                  <input
+                    class="cr__inline-input"
+                    type="text"
+                    [ngModel]="editNameValue()"
+                    (ngModelChange)="editNameValue.set($event)"
+                    (keydown.enter)="saveName()"
+                    (keydown.escape)="cancelEditName()"
+                    #nameInput />
+                  <button type="button" class="cr__btn cr__btn--primary cr__btn--sm" (click)="saveName()" [disabled]="actionState() === 'loading'">Save</button>
+                  <button type="button" class="cr__btn cr__btn--ghost cr__btn--sm" (click)="cancelEditName()">Cancel</button>
+                </div>
+              } @else {
+                <h2 class="cr__detail-name">
+                  {{ job.name }}
+                  <button type="button" class="cr__edit-inline-btn" (click)="startEditName()" title="Rename">✎</button>
+                </h2>
+              }
+
+              <p class="cr__detail-id">{{ job.id }}</p>
+            </div>
+            <span class="cr__state-badge cr__state-badge--{{ stateBadgeTone(job.state, job.last_status) }}">
+              {{ job.state }}
+            </span>
+          </div>
+
+          <dl class="cr__detail-fields">
+            <div class="cr__field">
+              <dt>Schedule</dt>
+              @if (editingSchedule()) {
+                <dd class="cr__field-edit">
+                  <input
+                    class="cr__inline-input cr__inline-input--sm"
+                    type="text"
+                    [ngModel]="editScheduleValue()"
+                    (ngModelChange)="editScheduleValue.set($event)"
+                    (keydown.enter)="saveSchedule()"
+                    (keydown.escape)="cancelEditSchedule()"
+                    placeholder="e.g. every 30m or 0 9 * * *" />
+                  <button type="button" class="cr__btn cr__btn--primary cr__btn--sm" (click)="saveSchedule()" [disabled]="actionState() === 'loading'">Save</button>
+                  <button type="button" class="cr__btn cr__btn--ghost cr__btn--sm" (click)="cancelEditSchedule()">Cancel</button>
+                </dd>
+              } @else {
+                <dd>
+                  {{ job.schedule_display ?? '—' }}
+                  <button type="button" class="cr__edit-inline-btn" (click)="startEditSchedule()" title="Edit schedule">✎</button>
+                </dd>
+              }
+            </div>
+            <div class="cr__field">
+              <dt>Last run</dt>
+              <dd>{{ relativeTime(job.last_run_at) }}</dd>
+            </div>
+            <div class="cr__field">
+              <dt>Next run</dt>
+              <dd>{{ relativeTime(job.next_run_at) }}</dd>
+            </div>
+            <div class="cr__field">
+              <dt>Completed runs</dt>
+              <dd>{{ job.runs_completed ?? '—' }}</dd>
+            </div>
+            <div class="cr__field">
+              <dt>Skill</dt>
+              <dd>{{ job.skill ?? '—' }}</dd>
+            </div>
+            <div class="cr__field">
+              <dt>Deliver to</dt>
+              <dd>{{ deliverLabel(job.deliver) }}</dd>
+            </div>
+            @if (job.paused_reason) {
+              <div class="cr__field cr__field--alert">
+                <dt>Pause reason</dt>
+                <dd>{{ job.paused_reason }}</dd>
+              </div>
+            }
+          </dl>
+
+          @if (job.last_error) {
+            <div class="cr__detail-error">
+              <p class="cr__detail-error-label">Last error</p>
+              <p class="cr__detail-error-text">{{ job.last_error }}</p>
+            </div>
+          }
+
+          @if (job.last_delivery_error) {
+            <div class="cr__detail-error">
+              <p class="cr__detail-error-label">Delivery error</p>
+              <p class="cr__detail-error-text">{{ job.last_delivery_error }}</p>
+            </div>
+          }
+
+          <!-- Actions -->
+          <div class="cr__actions">
+            <button
+              type="button"
+              class="cr__btn cr__btn--primary"
+              [disabled]="actionState() === 'loading'"
+              (click)="runNow()">
+              @switch (actionState()) {
+                @case ('loading') { Working… }
+                @case ('done') { Done ✓ }
+                @default { Run now }
+              }
+            </button>
+
+            @if (job.state === 'scheduled' || job.state === 'running') {
+              <button
+                type="button"
+                class="cr__btn cr__btn--secondary"
+                [disabled]="actionState() === 'loading'"
+                (click)="pause()">
+                Pause
+              </button>
+            }
+
+            @if (job.state === 'paused') {
+              <button
+                type="button"
+                class="cr__btn cr__btn--secondary"
+                [disabled]="actionState() === 'loading'"
+                (click)="resume()">
+                Resume
+              </button>
+            }
+
+            <button
+              type="button"
+              class="cr__btn cr__btn--ghost cr__btn--danger"
+              [disabled]="actionState() === 'loading'"
+              (click)="remove()">
+              Delete
+            </button>
+          </div>
+
+          @if (actionState() === 'error') {
+            <p class="cr__action-error">{{ actionError() }}</p>
+          }
+
+        </div>
+      } @else {
+        <div class="cr__detail-empty">
+          <p>Select a job to inspect and manage it.</p>
+        </div>
+      }
+    </div>
+
+  </div>
+}

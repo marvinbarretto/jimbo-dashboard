@@ -1,0 +1,85 @@
+@if (!isLoaded()) {
+  <p class="tl-loading">
+    @if (loadError()) { {{ loadError() }} } @else { Connecting to Hermes… }
+  </p>
+} @else {
+  <div class="tl">
+
+    <div class="tl__header">
+      <h2 class="tl__date">{{ todayLabel() }}</h2>
+      <p class="tl__now-label">Now: {{ nowLabel() }}</p>
+    </div>
+
+    <!-- Hour ruler -->
+    <div class="tl__ruler">
+      @for (marker of hourPercents; track marker.percent) {
+        <span class="tl__ruler-mark" [style.left.%]="marker.percent">{{ marker.label }}</span>
+      }
+    </div>
+
+    <!-- Per-job strips -->
+    <div class="tl__jobs">
+      @for (item of activeTimelines(); track item.job.id) {
+        <div class="tl__job">
+          <span class="tl__job-name" [title]="item.job.name">
+            <span class="tl__job-dot tl__job-dot--{{ stateBadgeTone(item.job.state, item.job.last_status) }}"></span>
+            {{ item.job.name }}
+          </span>
+          <div class="tl__bar">
+            <!-- "now" cursor -->
+            <div class="tl__now-cursor" [style.left.%]="nowPercent()"></div>
+            <!-- Fire dots -->
+            @for (time of item.fireTimes; track $index) {
+              @if (dayPercent(time) > 0) {
+                <div
+                  class="tl__dot"
+                  [class.tl__dot--past]="time < minuteTick()"
+                  [class.tl__dot--state]="true"
+                  [style.left.%]="dayPercent(time)"
+                  [title]="formatTime(time)">
+                </div>
+              }
+            }
+          </div>
+          <span class="tl__job-count">{{ item.fireTimes.length }}×</span>
+        </div>
+      }
+    </div>
+
+    <div class="tl__lower">
+      <!-- Upcoming fires -->
+      @if (upcomingToday().length > 0) {
+        <div class="tl__upcoming">
+          <h3 class="tl__section-title">Upcoming today</h3>
+          <ul class="tl__upcoming-list">
+            @for (fire of upcomingToday(); track $index) {
+              <li class="tl__upcoming-item">
+                <span class="tl__upcoming-time">{{ formatTime(fire.time) }}</span>
+                <span class="tl__upcoming-name">{{ fire.job.name }}</span>
+                <span class="tl__upcoming-rel">{{ relativeTime(fire.time.toISOString()) }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      <!-- Off-schedule jobs -->
+      @if (offScheduleJobs().length > 0) {
+        <div class="tl__offschedule">
+          <h3 class="tl__section-title">Not scheduled today</h3>
+          <ul class="tl__offschedule-list">
+            @for (item of offScheduleJobs(); track item.job.id) {
+              <li class="tl__offschedule-item">
+                <span class="tl__job-dot tl__job-dot--{{ stateBadgeTone(item.job.state, item.job.last_status) }}"></span>
+                <span class="tl__offschedule-name">{{ item.job.name }}</span>
+                <span class="tl__offschedule-schedule">{{ item.job.schedule_display ?? '—' }}</span>
+                <span class="tl__offschedule-state">{{ item.job.state }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+
+  </div>
+}
