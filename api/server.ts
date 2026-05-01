@@ -34,7 +34,7 @@ import { vaultItemDependenciesRoute } from './routes/vault-item-dependencies.js'
 import { noteActivityRoute } from './routes/note-activity.js';
 import { threadMessagesRoute } from './routes/thread-messages.js';
 import { attachmentsRoute } from './routes/attachments.js';
-import { jimboProxyRoute, proxyJimboGet } from './routes/jimbo-proxy.js';
+import { jimboProxyRoute, proxyJimboGet, proxyJimboMutate } from './routes/jimbo-proxy.js';
 import { HealthSchema } from './schemas/shared.js';
 
 const app = new OpenAPIHono({ defaultHook: validationHook });
@@ -134,6 +134,14 @@ app.use(`${BASE}/api/jimbo/*`, apiKeyAuth);
 for (const prefix of JIMBO_READ_THROUGH_PREFIXES) {
   app.get(`${BASE}${prefix}`, apiKeyAuth, c => proxyJimboGet(c, c.req.path.slice(BASE.length)));
   app.get(`${BASE}${prefix}/*`, apiKeyAuth, c => proxyJimboGet(c, c.req.path.slice(BASE.length)));
+}
+
+// Hermes mutations — trigger, pause, resume (POST), update (PATCH), delete (DELETE)
+// Only hermes has mutable state managed through this proxy.
+for (const path of [`${BASE}/api/hermes`, `${BASE}/api/hermes/*`]) {
+  app.post(path, apiKeyAuth, c => proxyJimboMutate(c, c.req.path.slice(BASE.length)));
+  app.patch(path, apiKeyAuth, c => proxyJimboMutate(c, c.req.path.slice(BASE.length)));
+  app.delete(path, apiKeyAuth, c => proxyJimboMutate(c, c.req.path.slice(BASE.length)));
 }
 
 // Keep the dashboard API's own /api/health liveness probe intact, but forward

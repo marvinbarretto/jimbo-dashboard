@@ -72,6 +72,38 @@ export async function proxyJimboGet(c: Context, path: string): Promise<Response>
   return c.json(payload as never, res.status as never);
 }
 
+export async function proxyJimboMutate(c: Context, path: string): Promise<Response> {
+  if (!path.startsWith('/api/') || path.includes('..') || !isAllowedPath(path)) {
+    return c.json({ error: { code: 'INVALID_UPSTREAM_PATH', message: `Path is not whitelisted: ${path}` } }, 400);
+  }
+
+  const up = readUpstream();
+  if (!up) {
+    return c.json({ error: { code: 'UPSTREAM_NOT_CONFIGURED', message: 'JIMBO_API_URL or JIMBO_API_KEY not set' } }, 502);
+  }
+
+  const upstreamUrl = new URL(path, up.url);
+  const method = c.req.method;
+
+  const headers: Record<string, string> = { 'X-API-Key': up.key, 'Content-Type': 'application/json' };
+  const fetchInit: RequestInit = { method, headers };
+
+  if (method === 'POST' || method === 'PATCH' || method === 'PUT') {
+    const body = await c.req.text();
+    if (body) fetchInit.body = body;
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(upstreamUrl, fetchInit);
+  } catch (e) {
+    return c.json({ error: { code: 'UPSTREAM_FETCH_FAILED', message: (e as Error).message } }, 502);
+  }
+
+  const payload = await res.json().catch(() => ({ error: { code: 'UPSTREAM_NON_JSON', message: `jimbo-api returned ${res.status}` } }));
+  return c.json(payload as never, res.status as never);
+}
+
 jimboProxyRoute.get('/', async (c) => {
   const path = c.req.query('path');
   if (!path) {
