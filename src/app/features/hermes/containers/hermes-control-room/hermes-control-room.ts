@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { HermesService } from '../../data-access/hermes.service';
 import type { HermesJob, HermesRun } from '../../hermes.types';
@@ -9,7 +10,7 @@ type ActionState = 'idle' | 'loading' | 'done' | 'error';
 
 @Component({
   selector: 'app-hermes-control-room',
-  imports: [FormsModule, UiSection],
+  imports: [FormsModule, UiBadge, UiSection],
   templateUrl: './hermes-control-room.html',
   styleUrl: './hermes-control-room.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,6 +34,7 @@ export class HermesControlRoom {
   readonly expandedRunId = signal<string | null>(null);
   readonly expandedRunOutput = signal<string | null>(null);
   readonly expandedRunHasToolCalls = signal(false);
+  readonly expandedRunToolCalls = signal<string[]>([]);
   readonly expandedRunLoading = signal(false);
 
   readonly promptOpen = signal(false);
@@ -75,6 +77,7 @@ export class HermesControlRoom {
       this.expandedRunId.set(null);
       this.expandedRunOutput.set(null);
       this.expandedRunHasToolCalls.set(false);
+      this.expandedRunToolCalls.set([]);
       return;
     }
     this.expandedRunId.set(runId);
@@ -87,6 +90,7 @@ export class HermesControlRoom {
       next: (out) => {
         this.expandedRunOutput.set(out.response);
         this.expandedRunHasToolCalls.set(out.has_tool_calls);
+        this.expandedRunToolCalls.set(out.tool_calls);
         this.expandedRunLoading.set(false);
       },
       error: () => {

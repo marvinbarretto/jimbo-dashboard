@@ -110,6 +110,15 @@
               <dd>{{ job.skill ?? '—' }}</dd>
             </div>
             <div class="cr__field">
+              <dt>Model</dt>
+              <dd class="cr__model-field">
+                {{ job.model ?? 'openrouter/free' }}
+                @if (!job.model) {
+                  <app-ui-badge tone="warning" [subtle]="true" title="Default model — consider pinning a specific model per job to control cost">default</app-ui-badge>
+                }
+              </dd>
+            </div>
+            <div class="cr__field">
               <dt>Deliver to</dt>
               <dd>{{ deliverLabel(job.deliver) }}</dd>
             </div>
@@ -193,6 +202,13 @@
                             <p class="cr__run-tool-call-notice">
                               ⚡ Contains tool calls — agent was mid-execution when captured
                             </p>
+                          }
+                          @if (expandedRunToolCalls().length) {
+                            <div class="cr__run-tools">
+                              @for (tool of expandedRunToolCalls(); track tool) {
+                                <app-ui-badge tone="neutral" [subtle]="true">{{ tool }}</app-ui-badge>
+                              }
+                            </div>
                           }
                           <pre class="cr__run-response">{{ expandedRunOutput() }}</pre>
                         }

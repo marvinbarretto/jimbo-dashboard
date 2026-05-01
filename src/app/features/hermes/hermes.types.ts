@@ -33,6 +33,7 @@ export interface HermesRunOutput {
   response: string;
   has_tool_calls: boolean;
   response_chars: number;
+  tool_calls: string[];
 }
 
 export interface HermesRunsResponse {

@@ -218,6 +218,14 @@
   &--alert dd { color: var(--color-warning); }
 }
 
+.cr__model-field {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: normal;
+  overflow: visible;
+}
+
 // --- Error blocks ---
 
 .cr__detail-error {
@@ -499,6 +507,13 @@
   font-size: 0.72rem;
   color: var(--color-warning);
   font-weight: 600;
+}
+
+.cr__run-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.5rem;
 }
 
 .cr__run-output {
