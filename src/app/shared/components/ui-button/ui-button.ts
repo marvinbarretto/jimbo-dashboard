@@ -23,22 +23,25 @@ type UiButtonSize = 'sm' | 'md';
       align-items: center;
       justify-content: center;
       gap: 0.35rem;
-      min-height: 2rem;
-      border-radius: 999px;
-      border: 1px solid color-mix(in srgb, var(--button-color, var(--color-border)) 40%, var(--color-border));
-      padding: 0.35rem 0.75rem;
+      min-height: 2.75rem;
+      border-radius: var(--radius);
+      border: 2px solid color-mix(in srgb, var(--button-color, var(--color-border-strong)) 65%, var(--color-border));
+      background: var(--color-black);
+      padding: 0.55rem 1rem;
       font-size: 0.78rem;
-      font-weight: 600;
+      font-weight: 700;
       line-height: 1.1;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
       transition:
         border-color 120ms ease,
         background-color 120ms ease,
         color 120ms ease,
-        transform 120ms ease;
+        box-shadow 120ms ease;
     }
 
     .ui-button:hover:not(:disabled) {
-      transform: translateY(-1px);
+      border-color: var(--button-color, var(--color-accent));
     }
 
     .ui-button:disabled {
@@ -46,35 +49,42 @@ type UiButtonSize = 'sm' | 'md';
       cursor: not-allowed;
     }
 
+    .ui-button:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+
     .ui-button--sm {
-      min-height: 1.7rem;
-      padding-inline: 0.55rem;
-      font-size: 0.68rem;
+      min-height: 2.2rem;
+      padding-inline: 0.75rem;
+      font-size: 0.7rem;
     }
 
     .ui-button--ghost {
       --button-color: var(--color-text-soft);
       background: transparent;
       color: var(--color-text-soft);
-      border-color: transparent;
+      border-color: var(--color-border);
     }
 
     .ui-button--secondary {
-      --button-color: var(--color-text-soft);
-      background: color-mix(in srgb, var(--color-surface-raised) 72%, transparent);
+      --button-color: var(--color-border-strong);
+      background: var(--color-black);
       color: var(--color-text);
     }
 
     .ui-button--primary {
       --button-color: var(--color-accent);
-      background: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface));
+      background: var(--color-black);
       color: var(--color-text);
+      box-shadow: inset 0 0 0 1px var(--color-accent-glow);
     }
 
     .ui-button--danger {
       --button-color: var(--color-danger);
-      background: color-mix(in srgb, var(--color-danger) 12%, var(--color-surface));
-      color: var(--color-danger);
+      background: var(--color-black);
+      color: color-mix(in srgb, var(--color-danger) 88%, white);
+      box-shadow: inset 0 0 0 1px var(--color-danger-glow);
     }
   `],
 })

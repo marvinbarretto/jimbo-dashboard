@@ -1,66 +1,62 @@
-<div class="skills-list">
-  <header class="skills-list__header">
-    <h1>Skills</h1>
-    <p class="skills-list__hint">
+<app-ui-stack class="skills-list" gap="lg">
+  <app-ui-page-header class="skills-list__header">
+    <h1 uiPageHeaderTitle>Skills</h1>
+    <p uiPageHeaderHint>
       Edits commit + push to <code>hub/skills/</code> via jimbo-api.
     </p>
-    <a routerLink="new" class="btn btn--primary">Add skill</a>
-  </header>
+    <a uiPageHeaderActions routerLink="new" class="btn btn--primary">Add skill</a>
+  </app-ui-page-header>
 
   @if (isLoading()) {
-    <p class="loading">Loading…</p>
+    <app-ui-loading-state label="Loading skills" message="Fetching the skill registry." />
   } @else if (error()) {
-    <p class="error">Failed to load: {{ error() }}</p>
+    <app-ui-empty-state
+      title="Failed to load skills"
+      [message]="'The skill registry could not be loaded. ' + error()" />
   } @else {
-    <app-table-shell>
-    <table class="skills-table">
-      <thead>
-        <tr>
-          <th>Namespace</th>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Executors</th>
-          <th>Last used</th>
-          <th>Active</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (skill of skills(); track skill.id) {
-          <tr [class.inactive]="!isActive(skill)">
-            <td class="skill-namespace">
-              <span class="ns-tag">{{ namespace(skill.id) }}</span>
-            </td>
-            <td class="skill-local-name">
-              <a [routerLink]="skillLink(skill.id)">{{ localName(skill.id) }}</a>
-            </td>
-            <td>
-              @if (skill.type) {
-                <span class="type-tag type-tag--{{ skill.type }}">{{ skill.type }}</span>
-              }
-            </td>
-            <td>{{ skill.description }}</td>
-            <td>
-              @for (e of skill.metadata.executors; track e) {
-                <span class="executor-badge">{{ e }}</span>
-              }
-            </td>
-            <td class="last-used" [title]="skill.last_used ?? ''">
-              {{ lastUsedLabel(skill.last_used) }}
-            </td>
-            <td>
-              <span [class]="isActive(skill) ? 'status status--active' : 'status status--inactive'">
-                {{ isActive(skill) ? 'Yes' : 'No' }}
-              </span>
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="7" class="empty">No skills found in registry.</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-    </app-table-shell>
+    <app-ui-data-table
+      ariaLabel="Skills"
+      caption="Track active skills, who can run them, and what is actually being used."
+      [columns]="columns"
+      [data]="skills()"
+      [rowClass]="skillRowClass"
+      emptyTitle="No skills found in registry"
+      emptyMessage="Add a skill to start building out the registry." />
   }
-</div>
+
+  <ng-template #namespaceCell let-context>
+    <span class="ns-tag">{{ context.getValue() ?? '—' }}</span>
+  </ng-template>
+
+  <ng-template #nameCell let-context>
+    <a [routerLink]="skillLink(context.row.original.id)">{{ context.getValue() }}</a>
+  </ng-template>
+
+  <ng-template #typeCell let-context>
+    @if (context.getValue(); as type) {
+      <app-ui-badge [tone]="typeTone(type)">{{ type }}</app-ui-badge>
+    } @else {
+      <span>—</span>
+    }
+  </ng-template>
+
+  <ng-template #executorsCell let-context>
+    <app-ui-cluster gap="xs">
+      @for (executor of context.getValue(); track executor) {
+        <app-ui-badge tone="neutral" [subtle]="true">{{ executor }}</app-ui-badge>
+      }
+    </app-ui-cluster>
+  </ng-template>
+
+  <ng-template #lastUsedCell let-context>
+    <span class="last-used" [title]="context.getValue() ?? ''">
+      {{ lastUsedLabel(context.getValue()) }}
+    </span>
+  </ng-template>
+
+  <ng-template #activeCell let-context>
+    <app-ui-badge [tone]="context.getValue() ? 'success' : 'neutral'">
+      {{ context.getValue() ? 'Yes' : 'No' }}
+    </app-ui-badge>
+  </ng-template>
+</app-ui-stack>

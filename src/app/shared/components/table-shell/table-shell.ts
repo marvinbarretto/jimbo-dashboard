@@ -9,6 +9,8 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       display: block;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-soft);
     }
   `],
 })

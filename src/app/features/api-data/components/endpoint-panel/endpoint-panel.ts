@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { JsonPipe } from '@angular/common';
+import { createColumnHelper, type ColumnDef } from '@tanstack/angular-table';
+import { UiDataTable } from '@shared/components/ui-data-table/ui-data-table';
+import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
+import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import type { EndpointConfig } from '../../data-pages';
 import { JimboDataService, type JsonObject } from '../../data-access/jimbo-data.service';
 
@@ -10,7 +14,7 @@ interface SummaryEntry {
 
 @Component({
   selector: 'app-endpoint-panel',
-  imports: [JsonPipe],
+  imports: [JsonPipe, UiDataTable, UiEmptyState, UiLoadingState],
   templateUrl: './endpoint-panel.html',
   styleUrl: './endpoint-panel.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,6 +24,7 @@ export class EndpointPanel implements OnInit {
   readonly compact = input<boolean>(false);
 
   private readonly data = inject(JimboDataService);
+  private readonly columnHelper = createColumnHelper<Record<string, string>>();
 
   readonly loading = signal(false);
   readonly payload = signal<unknown>(null);
@@ -27,6 +32,18 @@ export class EndpointPanel implements OnInit {
 
   readonly rows = computed(() => extractRows(this.payload()));
   readonly columns = computed(() => inferColumns(this.rows()));
+  readonly displayedRows = computed(() => {
+    const limit = this.compact() ? 8 : 25;
+    return toDisplayRows(this.rows(), this.columns()).slice(0, limit);
+  });
+  readonly tableColumns = computed<ColumnDef<Record<string, string>, any>[]>(() =>
+    this.columns().map(key =>
+      this.columnHelper.accessor(key, {
+        id: key,
+        header: key,
+      }),
+    ),
+  );
   readonly summaryEntries = computed(() => extractSummary(this.payload()));
   readonly countLabel = computed(() => countLabel(this.payload(), this.rows()));
 
@@ -51,10 +68,6 @@ export class EndpointPanel implements OnInit {
     });
   }
 
-  cell(row: unknown, key: string): string {
-    if (!isRecord(row)) return formatValue(row);
-    return formatValue(row[key]);
-  }
 }
 
 function extractRows(payload: unknown): unknown[] {
@@ -81,6 +94,20 @@ function inferColumns(rows: unknown[]): string[] {
   const scalar = keys.filter(key => isScalar(first[key]));
   const complex = keys.filter(key => !isScalar(first[key]));
   return [...scalar, ...complex].slice(0, 8);
+}
+
+function toDisplayRows(rows: unknown[], columns: string[]): Array<Record<string, string>> {
+  return rows.map(row => {
+    const record: Record<string, string> = {};
+    if (!isRecord(row)) {
+      record['value'] = formatValue(row);
+      return record;
+    }
+    for (const key of columns) {
+      record[key] = formatValue(row[key]);
+    }
+    return record;
+  });
 }
 
 function extractSummary(payload: unknown): SummaryEntry[] {

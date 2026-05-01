@@ -12,9 +12,9 @@
   </header>
 
   @if (loading()) {
-    <p class="endpoint__state">Loading...</p>
+    <app-ui-loading-state label="Loading endpoint" message="Fetching latest response payload." />
   } @else if (error(); as e) {
-    <p class="endpoint__error">{{ e }}</p>
+    <app-ui-empty-state title="Request failed" [message]="e" />
   } @else {
     @if (summaryEntries().length > 0) {
       <dl class="endpoint__summary">
@@ -28,26 +28,12 @@
     }
 
     @if (rows().length > 0) {
-      <div class="endpoint__table-wrap">
-        <table class="endpoint__table">
-          <thead>
-            <tr>
-              @for (col of columns(); track col) {
-                <th>{{ col }}</th>
-              }
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of rows().slice(0, compact() ? 8 : 25); track $index) {
-              <tr>
-                @for (col of columns(); track col) {
-                  <td>{{ cell(row, col) }}</td>
-                }
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <app-ui-data-table
+        ariaLabel="Endpoint response rows"
+        [columns]="tableColumns()"
+        [data]="displayedRows()"
+        emptyTitle="No rows returned"
+        emptyMessage="This endpoint returned no tabular rows." />
       @if (rows().length > (compact() ? 8 : 25)) {
         <p class="endpoint__state">Showing {{ compact() ? 8 : 25 }} of {{ rows().length }} rows.</p>
       }

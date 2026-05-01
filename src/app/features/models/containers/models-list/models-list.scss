@@ -1,52 +1,23 @@
 .models-list {
-  padding: 1.5rem;
-}
+  padding: 2rem;
 
-.models-list__header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-
-  h1 { margin: 0; }
-  .models-list__hint { color: var(--color-text-muted); font-size: 0.875rem; flex: 1; }
-}
-
-.models-table {
-  width: 100%;
-  border-collapse: collapse;
-
-  th, td {
-    padding: 0.5rem 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid var(--color-border);
+  &__header h1 {
+    margin: 0;
   }
-
-  th { font-weight: 600; color: var(--color-text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
-
-  tr.deprecated { opacity: 0.5; }
 }
 
 .provider-tag {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  background: var(--color-surface);
-  padding: 0.1rem 0.4rem;
-  border-radius: var(--radius);
+  color: var(--color-text-muted);
 }
 
-.status {
-  font-size: 0.75rem;
-  padding: 0.1rem 0.5rem;
-  border-radius: var(--radius);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-
-  &--candidate { background: var(--color-surface); color: var(--color-text-muted); }
-  &--preferred { background: rgb(34 197 94 / 0.15); color: rgb(34 197 94); }
-  &--deprecated { background: rgb(239 68 68 / 0.15); color: rgb(239 68 68); }
+:host ::ng-deep .deprecated {
+  opacity: 0.5;
 }
 
-.empty { text-align: center; color: var(--color-text-muted); padding: 2rem; }
-.loading, .error { padding: 1rem; color: var(--color-text-muted); }
-.error { color: rgb(239 68 68); }
+@media (max-width: 768px) {
+  .models-list {
+    padding: 1rem;
+  }
+}

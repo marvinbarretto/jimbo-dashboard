@@ -84,22 +84,16 @@
   }
 }
 
-.endpoint__table-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+:host ::ng-deep app-ui-data-table {
+  display: block;
+  font-size: 0.75rem;
 }
 
-.endpoint__table {
-  min-width: 720px;
-  font-size: 0.75rem;
-
-  th,
-  td {
-    vertical-align: top;
-    max-width: 240px;
-    overflow-wrap: anywhere;
-  }
+:host ::ng-deep app-ui-data-table td,
+:host ::ng-deep app-ui-data-table th {
+  vertical-align: top;
+  max-width: 240px;
+  overflow-wrap: anywhere;
 }
 
 .endpoint__state,

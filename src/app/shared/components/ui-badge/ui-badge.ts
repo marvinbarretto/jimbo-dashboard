@@ -21,16 +21,16 @@ type UiBadgeTone =
       display: inline-flex;
       align-items: center;
       gap: 0.3rem;
-      min-height: 1.6rem;
-      padding: 0.18rem 0.55rem;
-      border: 1px solid color-mix(in srgb, var(--badge-color, var(--color-border)) 45%, var(--color-border));
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--badge-color, var(--color-surface)) 10%, var(--color-surface));
-      color: var(--badge-color, var(--color-text-muted));
-      font-size: 0.68rem;
-      font-weight: 600;
+      min-height: 1.45rem;
+      padding: 0.1rem 0.45rem;
+      border: 1px solid color-mix(in srgb, var(--badge-color, var(--color-border-strong)) 45%, var(--color-border));
+      border-radius: var(--radius);
+      background: color-mix(in srgb, var(--badge-color, transparent) 8%, transparent);
+      color: var(--badge-color, var(--color-text-soft));
+      font-size: 0.64rem;
+      font-weight: 700;
       line-height: 1.2;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
       white-space: nowrap;
     }

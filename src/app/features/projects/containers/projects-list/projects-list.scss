@@ -8,22 +8,18 @@
 
 .projects-table {
   min-width: 680px;
-
-  tbody tr.archived {
-    opacity: 0.72;
-  }
-
-  td {
-    vertical-align: middle;
-  }
 }
 
-.project-id {
+:host ::ng-deep .archived {
+  opacity: 0.72;
+}
+
+:host ::ng-deep td:first-child {
   font-family: var(--font-mono);
   white-space: nowrap;
 }
 
-.actions {
+:host ::ng-deep td:last-child {
   width: 1%;
   white-space: nowrap;
   text-align: right;

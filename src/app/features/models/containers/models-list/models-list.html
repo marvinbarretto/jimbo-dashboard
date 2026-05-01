@@ -1,48 +1,40 @@
-<div class="models-list">
-  <header class="models-list__header">
-    <h1>Models</h1>
-    <p class="models-list__hint">
+<app-ui-stack class="models-list" gap="lg">
+  <app-ui-page-header class="models-list__header">
+    <h1 uiPageHeaderTitle>Models</h1>
+    <p uiPageHeaderHint>
       LLMs you're tracking. Edits commit + push to <code>hub/models/</code> via jimbo-api.
     </p>
-    <a routerLink="new" class="btn btn--primary">Add model</a>
-  </header>
+    <a uiPageHeaderActions routerLink="new" class="btn btn--primary">Add model</a>
+  </app-ui-page-header>
 
   @if (isLoading()) {
-    <p class="loading">Loading…</p>
+    <app-ui-loading-state label="Loading models" message="Fetching the tracked model registry." />
   } @else if (error()) {
-    <p class="error">Failed to load: {{ error() }}</p>
+    <app-ui-empty-state
+      title="Failed to load models"
+      [message]="'The model registry could not be loaded. ' + error()" />
   } @else {
-    <app-table-shell>
-    <table class="models-table">
-      <thead>
-        <tr>
-          <th>Provider</th>
-          <th>Name</th>
-          <th>Status</th>
-          <th>Context</th>
-          <th>Input $/MTok</th>
-          <th>Output $/MTok</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (model of models(); track model.id) {
-          <tr [class.deprecated]="model.metadata.status === 'deprecated'">
-            <td><span class="provider-tag">{{ provider(model.id) }}</span></td>
-            <td><a [routerLink]="modelLink(model.id)">{{ localName(model.id) }}</a></td>
-            <td>
-              <span class="status status--{{ model.metadata.status }}">{{ model.metadata.status }}</span>
-            </td>
-            <td>{{ model.metadata.context_window ?? '—' }}</td>
-            <td>{{ model.metadata.prices_usd_per_million?.input ?? '—' }}</td>
-            <td>{{ model.metadata.prices_usd_per_million?.output ?? '—' }}</td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="6" class="empty">No models tracked yet. Click "Add model" to start.</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-    </app-table-shell>
+    <app-ui-data-table
+      ariaLabel="Models"
+      caption="Compare tracked models by provider, status, context window, and price."
+      [columns]="columns"
+      [data]="models()"
+      [rowClass]="modelRowClass"
+      emptyTitle="No models tracked yet"
+      emptyMessage="Add a model to start building the registry." />
   }
-</div>
+
+  <ng-template #providerCell let-context>
+    <span class="provider-tag">{{ context.getValue() ?? '—' }}</span>
+  </ng-template>
+
+  <ng-template #nameCell let-context>
+    <a [routerLink]="modelLink(context.row.original.id)">{{ context.getValue() }}</a>
+  </ng-template>
+
+  <ng-template #statusCell let-context>
+    <app-ui-badge [tone]="statusTone(context.getValue())">
+      {{ context.getValue() }}
+    </app-ui-badge>
+  </ng-template>
+</app-ui-stack>

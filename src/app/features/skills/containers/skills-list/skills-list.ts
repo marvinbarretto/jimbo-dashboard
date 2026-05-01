@@ -1,18 +1,35 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, TemplateRef, computed, inject, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { type CellContext, createColumnHelper, type ColumnDef } from '@tanstack/angular-table';
+import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
+import { UiDataTable } from '@shared/components/ui-data-table/ui-data-table';
+import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
+import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
+import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { SkillsService } from '../../data-access/skills.service';
 import { skillNamespace, skillLocalName, type Skill } from '@domain/skills';
-import { TableShell } from '@shared/components/table-shell/table-shell';
 
 @Component({
   selector: 'app-skills-list',
-  imports: [RouterLink, TableShell],
+  imports: [
+    RouterLink,
+    UiBadge,
+    UiCluster,
+    UiDataTable,
+    UiEmptyState,
+    UiLoadingState,
+    UiPageHeader,
+    UiStack,
+  ],
   templateUrl: './skills-list.html',
   styleUrl: './skills-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SkillsList {
   private readonly service = inject(SkillsService);
+  private readonly columnHelper = createColumnHelper<Skill>();
 
   readonly isLoading = this.service.isLoading;
   readonly error = this.service.error;
@@ -30,6 +47,67 @@ export class SkillsList {
       return a.id.localeCompare(b.id);
     });
   });
+  private readonly namespaceCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, string | null> }>>('namespaceCell');
+  private readonly nameCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, string> }>>('nameCell');
+  private readonly typeCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, Skill['type']> }>>('typeCell');
+  private readonly executorsCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, string[]> }>>('executorsCell');
+  private readonly lastUsedCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, string | undefined> }>>('lastUsedCell');
+  private readonly activeCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, boolean> }>>('activeCell');
+
+  readonly columns: ColumnDef<Skill, any>[] = [
+    this.columnHelper.accessor(row => this.namespace(row.id), {
+      id: 'namespace',
+      header: 'Namespace',
+      cell: () => this.namespaceCell(),
+      sortingFn: 'alphanumeric',
+    }),
+    this.columnHelper.accessor(row => this.localName(row.id), {
+      id: 'name',
+      header: 'Name',
+      cell: () => this.nameCell(),
+      sortingFn: 'alphanumeric',
+    }),
+    this.columnHelper.accessor('type', {
+      header: 'Type',
+      cell: () => this.typeCell(),
+      sortingFn: 'alphanumeric',
+    }),
+    this.columnHelper.accessor('description', {
+      header: 'Description',
+    }),
+    this.columnHelper.accessor(row => row.metadata.executors, {
+      id: 'executors',
+      header: 'Executors',
+      cell: () => this.executorsCell(),
+      enableSorting: false,
+    }),
+    this.columnHelper.accessor('last_used', {
+      header: 'Last used',
+      cell: () => this.lastUsedCell(),
+      sortingFn: (a, b, columnId) => {
+        const left = a.getValue<string | undefined>(columnId) ?? '';
+        const right = b.getValue<string | undefined>(columnId) ?? '';
+        if (left && !right) return -1;
+        if (!left && right) return 1;
+        return right.localeCompare(left);
+      },
+    }),
+    this.columnHelper.accessor(row => this.isActive(row), {
+      id: 'active',
+      header: 'Active',
+      cell: () => this.activeCell(),
+      sortingFn: (a, b, columnId) => Number(b.getValue<boolean>(columnId)) - Number(a.getValue<boolean>(columnId)),
+    }),
+  ];
+
+  readonly skillRowClass = (skill: Skill): string =>
+    this.isActive(skill) ? '' : 'inactive';
 
   namespace = skillNamespace;
   localName = skillLocalName;
@@ -42,6 +120,12 @@ export class SkillsList {
   // Skills are filesystem-managed; `metadata.is_active !== false` is "live".
   isActive(skill: { metadata: { is_active?: boolean } }): boolean {
     return skill.metadata.is_active !== false;
+  }
+
+  typeTone(type: Skill['type']): 'info' | 'warning' | 'neutral' {
+    if (type === 'interactive') return 'info';
+    if (type === 'agent') return 'warning';
+    return 'neutral';
   }
 
   // Coarse relative time so the table doesn't churn while the user reads it.

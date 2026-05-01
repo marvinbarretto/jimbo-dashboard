@@ -45,7 +45,8 @@ type UiSectionTone = 'default' | 'subtle' | 'alert';
     }
 
     .ui-section {
-      border-bottom: 1px solid var(--color-border);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-soft);
     }
 
     .ui-section__heading {
@@ -59,7 +60,7 @@ type UiSectionTone = 'default' | 'subtle' | 'alert';
       align-items: center;
       justify-content: space-between;
       gap: 0.75rem;
-      padding: 0.65rem 0.75rem;
+      padding: 0.85rem 1rem;
     }
 
     .ui-section__header {
@@ -68,23 +69,28 @@ type UiSectionTone = 'default' | 'subtle' | 'alert';
 
     .ui-section__trigger {
       background: transparent;
-      border: none;
+      border: 0;
       color: var(--color-text);
       cursor: pointer;
       text-align: left;
     }
 
     .ui-section__trigger:hover {
-      background: color-mix(in oklab, var(--color-text) 4%, transparent);
+      background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+    }
+
+    .ui-section__trigger:focus-visible {
+      outline: none;
+      box-shadow: inset var(--focus-ring);
     }
 
     .ui-section__title {
       flex: 1;
       margin: 0;
       font-size: 0.72rem;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--color-text);
-      letter-spacing: 0.07em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
     }
 
@@ -98,16 +104,17 @@ type UiSectionTone = 'default' | 'subtle' | 'alert';
     }
 
     .ui-section__content {
-      padding: 0.6rem 0.75rem 0.9rem;
+      padding: 0.8rem 1rem 1rem;
+      border-top: 1px solid var(--color-border);
     }
 
     .ui-section--subtle .ui-section__content {
       padding-top: 0.75rem;
-      background: color-mix(in oklab, var(--color-bg) 92%, var(--color-surface));
+      background: color-mix(in srgb, var(--color-surface-soft) 80%, var(--color-bg));
     }
 
     .ui-section--alert .ui-section__content {
-      background: color-mix(in oklab, var(--color-danger) 4%, var(--color-bg));
+      background: color-mix(in srgb, var(--color-danger) 5%, var(--color-surface-soft));
       border-left: 2px solid var(--color-danger);
     }
   `],

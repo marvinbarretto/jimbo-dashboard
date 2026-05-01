@@ -24,6 +24,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       justify-content: space-between;
       gap: 1rem;
       min-width: 0;
+      padding-bottom: 0.25rem;
     }
 
     .ui-page-header__main {
@@ -57,8 +58,8 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 
     :host ::ng-deep [uiPageHeaderHint] {
       margin: 0;
-      color: var(--color-text-muted);
-      font-size: 0.9rem;
+      color: var(--color-text-soft);
+      font-size: 0.92rem;
       line-height: 1.5;
     }
 

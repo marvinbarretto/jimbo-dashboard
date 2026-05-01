@@ -1,4 +1,14 @@
-.inactive td { opacity: 0.45; }
+.skills-list {
+  padding: 2rem;
+
+  &__header h1 {
+    margin: 0;
+  }
+}
+
+:host ::ng-deep .inactive {
+  opacity: 0.45;
+}
 
 .ns-tag {
   font-family: var(--font-mono, monospace);
@@ -6,42 +16,14 @@
   color: var(--color-text-muted);
 }
 
-.skill-local-name {
-  font-weight: 500;
-}
-
-.actions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-}
-
-.type-tag {
-  font-size: 0.7rem;
-  padding: 0.1rem 0.4rem;
-  border-radius: 3px;
-  font-family: var(--font-mono, monospace);
-  border: 1px solid transparent;
-
-  // Different stripe per audience — interactive (Marvin) vs agent (Jimbo).
-  // Helps the "what's actually MINE" question land at a glance. Uses
-  // existing design tokens with low-opacity fills so it works in both
-  // theme modes without inventing new vars.
-  &--interactive {
-    background: color-mix(in srgb, var(--color-info) 18%, transparent);
-    color: var(--color-info);
-    border-color: color-mix(in srgb, var(--color-info) 35%, transparent);
-  }
-
-  &--agent {
-    background: color-mix(in srgb, var(--color-warning) 18%, transparent);
-    color: var(--color-warning);
-    border-color: color-mix(in srgb, var(--color-warning) 35%, transparent);
-  }
-}
-
 .last-used {
   font-variant-numeric: tabular-nums;
   color: var(--color-text-muted);
   font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .skills-list {
+    padding: 1rem;
+  }
 }

@@ -4,47 +4,29 @@
     <a uiPageHeaderActions routerLink="new" class="btn btn--primary">Add project</a>
   </app-ui-page-header>
 
-  @if (projects().length === 0) {
-    <app-ui-empty-state
-      title="No projects registered"
-      message="Create the first project to start organizing dashboard work." />
-  } @else {
-    <app-table-shell>
-      <table class="projects-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Display name</th>
-            <th>Status</th>
-            <th>Owner</th>
-            <th>Created</th>
-            <th aria-label="Actions"></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (project of projects(); track project.id) {
-            <tr [class.archived]="project.status === 'archived'">
-              <td class="project-id">
-                <a [routerLink]="[project.id]">{{ project.id }}</a>
-              </td>
-              <td>{{ project.display_name }}</td>
-              <td>
-                <app-ui-badge [tone]="statusTone(project.status)">
-                  {{ project.status }}
-                </app-ui-badge>
-              </td>
-              <td>{{ project.owner_actor_id }}</td>
-              <td>{{ project.created_at.slice(0, 10) }}</td>
-              <td class="actions">
-                <app-ui-cluster justify="end" gap="sm">
-                  <a [routerLink]="[project.id, 'edit']">Edit</a>
-                  <button type="button" (click)="remove(project.id)">Remove</button>
-                </app-ui-cluster>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </app-table-shell>
-  }
+  <app-ui-data-table
+    ariaLabel="Projects"
+    caption="Browse projects and sort columns before opening a detail or edit view."
+    [columns]="columns"
+    [data]="projects()"
+    [rowClass]="projectRowClass"
+    emptyTitle="No projects registered"
+    emptyMessage="Create the first project to start organizing dashboard work." />
+
+  <ng-template #idCell let-context>
+    <a [routerLink]="[context.row.original.id]">{{ context.getValue() }}</a>
+  </ng-template>
+
+  <ng-template #statusCell let-context>
+    <app-ui-badge [tone]="statusTone(context.getValue())">
+      {{ context.getValue() }}
+    </app-ui-badge>
+  </ng-template>
+
+  <ng-template #actionsCell let-context>
+    <app-ui-cluster justify="end" gap="sm">
+      <a [routerLink]="[context.row.original.id, 'edit']">Edit</a>
+      <button type="button" (click)="remove(context.row.original.id)">Remove</button>
+    </app-ui-cluster>
+  </ng-template>
 </app-ui-stack>
