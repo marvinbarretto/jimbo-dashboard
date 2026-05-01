@@ -177,40 +177,49 @@
             } @else if (runs().length === 0) {
               <p class="cr__runs-empty">No output files found for this job.</p>
             } @else {
+              <div class="cr__runs-toolbar">
+                @if (anyExpanded()) {
+                  <button type="button" class="cr__runs-toggle" (click)="collapseAll()">Collapse all</button>
+                } @else {
+                  <button type="button" class="cr__runs-toggle" (click)="expandAll()">Expand all</button>
+                }
+              </div>
               <div class="cr__runs-list">
                 @for (run of runs(); track run.runId) {
+                  @let isOpen = expandedRunIds().has(run.runId);
+                  @let detail = runDetails().get(run.runId);
                   <div class="cr__run-entry"
-                    [class.cr__run-entry--open]="expandedRunId() === run.runId"
+                    [class.cr__run-entry--open]="isOpen"
                     [class.cr__run-entry--warn]="run.file_size_bytes < 5000 && run.duration_seconds !== null && run.duration_seconds < 30">
                     <button
                       type="button"
                       class="cr__run-row"
                       (click)="toggleRun(run.runId)">
-                      <span class="cr__run-chevron">{{ expandedRunId() === run.runId ? '▾' : '▸' }}</span>
+                      <span class="cr__run-chevron">{{ isOpen ? '▾' : '▸' }}</span>
                       <span class="cr__run-time">{{ relativeTime(run.run_at) }}</span>
                       <span class="cr__run-meta">
                         <span class="cr__run-duration">{{ formatDuration(run.duration_seconds) }}</span>
                         <span class="cr__run-size">{{ formatBytes(run.file_size_bytes) }}</span>
                       </span>
                     </button>
-                    @if (expandedRunId() === run.runId) {
+                    @if (isOpen) {
                       <div class="cr__run-output">
-                        @if (expandedRunLoading()) {
+                        @if (detail?.loading) {
                           <p class="cr__runs-loading">Loading…</p>
                         } @else {
-                          @if (expandedRunHasToolCalls()) {
+                          @if (detail?.hasToolCalls) {
                             <p class="cr__run-tool-call-notice">
                               ⚡ Contains tool calls — agent was mid-execution when captured
                             </p>
                           }
-                          @if (expandedRunToolCalls().length) {
+                          @if (detail?.toolCalls?.length) {
                             <div class="cr__run-tools">
-                              @for (tool of expandedRunToolCalls(); track tool) {
+                              @for (tool of detail!.toolCalls; track tool) {
                                 <app-ui-badge tone="neutral" [subtle]="true">{{ tool }}</app-ui-badge>
                               }
                             </div>
                           }
-                          <pre class="cr__run-response">{{ expandedRunOutput() }}</pre>
+                          <pre class="cr__run-response">{{ detail?.output }}</pre>
                         }
                       </div>
                     }

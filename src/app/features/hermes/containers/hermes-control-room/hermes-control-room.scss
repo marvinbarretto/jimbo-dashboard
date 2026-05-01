@@ -432,11 +432,32 @@
   padding: 0.5rem 0;
 }
 
+.cr__runs-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: -0.4rem -1rem 0;
+  padding: 0.3rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cr__runs-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  letter-spacing: 0.04em;
+
+  &:hover { color: var(--color-accent); }
+}
+
 .cr__runs-list {
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin: -0.8rem -1rem -1rem;
+  margin: 0 -1rem -1rem;
 }
 
 .cr__run-entry {

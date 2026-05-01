@@ -8,6 +8,13 @@ import { deliverLabel, formatBytes, formatDuration, relativeTime, stateBadgeTone
 
 type ActionState = 'idle' | 'loading' | 'done' | 'error';
 
+interface RunDetail {
+  output: string | null;
+  loading: boolean;
+  hasToolCalls: boolean;
+  toolCalls: string[];
+}
+
 @Component({
   selector: 'app-hermes-control-room',
   imports: [FormsModule, UiBadge, UiSection],
@@ -31,11 +38,15 @@ export class HermesControlRoom {
   readonly runs = signal<HermesRun[]>([]);
   readonly runsTotal = signal(0);
   readonly runsLoading = signal(false);
-  readonly expandedRunId = signal<string | null>(null);
-  readonly expandedRunOutput = signal<string | null>(null);
-  readonly expandedRunHasToolCalls = signal(false);
-  readonly expandedRunToolCalls = signal<string[]>([]);
-  readonly expandedRunLoading = signal(false);
+
+  // Multi-expand: set of open run IDs + per-run detail map
+  readonly expandedRunIds = signal<ReadonlySet<string>>(new Set());
+  readonly runDetails = signal<ReadonlyMap<string, RunDetail>>(new Map());
+
+  readonly anyExpanded = computed(() => this.expandedRunIds().size > 0);
+  readonly allExpanded = computed(() =>
+    this.runs().length > 0 && this.runs().every(r => this.expandedRunIds().has(r.runId))
+  );
 
   readonly promptOpen = signal(false);
   readonly runsOpen = signal(true);
@@ -55,8 +66,8 @@ export class HermesControlRoom {
     this.resetAction();
     this.editingName.set(false);
     this.editingSchedule.set(false);
-    this.expandedRunId.set(null);
-    this.expandedRunOutput.set(null);
+    this.expandedRunIds.set(new Set());
+    this.runDetails.set(new Map());
     this.loadRuns(job.id);
   }
 
@@ -73,29 +84,49 @@ export class HermesControlRoom {
   }
 
   toggleRun(runId: string): void {
-    if (this.expandedRunId() === runId) {
-      this.expandedRunId.set(null);
-      this.expandedRunOutput.set(null);
-      this.expandedRunHasToolCalls.set(false);
-      this.expandedRunToolCalls.set([]);
+    const ids = new Set(this.expandedRunIds());
+    if (ids.has(runId)) {
+      ids.delete(runId);
+      this.expandedRunIds.set(ids);
       return;
     }
-    this.expandedRunId.set(runId);
-    this.expandedRunOutput.set(null);
-    this.expandedRunHasToolCalls.set(false);
+    ids.add(runId);
+    this.expandedRunIds.set(ids);
+    this.loadRunDetail(runId);
+  }
+
+  expandAll(): void {
+    const ids = new Set(this.runs().map(r => r.runId));
+    this.expandedRunIds.set(ids);
+    for (const run of this.runs()) {
+      this.loadRunDetail(run.runId);
+    }
+  }
+
+  collapseAll(): void {
+    this.expandedRunIds.set(new Set());
+  }
+
+  private loadRunDetail(runId: string): void {
     const job = this.selectedJob();
     if (!job) return;
-    this.expandedRunLoading.set(true);
+    // Skip if already loaded or currently loading
+    if (this.runDetails().has(runId)) return;
+
+    const map = new Map(this.runDetails());
+    map.set(runId, { output: null, loading: true, hasToolCalls: false, toolCalls: [] });
+    this.runDetails.set(map);
+
     this.hermes.getRunOutput(job.id, runId).subscribe({
       next: (out) => {
-        this.expandedRunOutput.set(out.response);
-        this.expandedRunHasToolCalls.set(out.has_tool_calls);
-        this.expandedRunToolCalls.set(out.tool_calls);
-        this.expandedRunLoading.set(false);
+        const m = new Map(this.runDetails());
+        m.set(runId, { output: out.response, loading: false, hasToolCalls: out.has_tool_calls, toolCalls: out.tool_calls });
+        this.runDetails.set(m);
       },
       error: () => {
-        this.expandedRunOutput.set('Failed to load output.');
-        this.expandedRunLoading.set(false);
+        const m = new Map(this.runDetails());
+        m.set(runId, { output: 'Failed to load output.', loading: false, hasToolCalls: false, toolCalls: [] });
+        this.runDetails.set(m);
       },
     });
   }
