@@ -18,18 +18,13 @@
 }
 
 .today-page__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
-  align-items: start;
 }
 
 @include bp.mobile {
   .today-page {
     padding: 1rem;
-  }
-
-  .today-page__grid {
-    grid-template-columns: 1fr;
   }
 }
