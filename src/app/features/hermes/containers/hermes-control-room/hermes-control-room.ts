@@ -1,14 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { UiSection } from '@shared/components/ui-section/ui-section';
 import { HermesService } from '../../data-access/hermes.service';
-import type { HermesJob } from '../../hermes.types';
-import { deliverLabel, relativeTime, stateBadgeTone } from '../../hermes.utils';
+import type { HermesJob, HermesRun } from '../../hermes.types';
+import { deliverLabel, formatBytes, formatDuration, relativeTime, stateBadgeTone } from '../../hermes.utils';
 
 type ActionState = 'idle' | 'loading' | 'done' | 'error';
 
 @Component({
   selector: 'app-hermes-control-room',
-  imports: [FormsModule],
+  imports: [FormsModule, UiSection],
   templateUrl: './hermes-control-room.html',
   styleUrl: './hermes-control-room.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,6 +27,17 @@ export class HermesControlRoom {
   readonly editNameValue = signal('');
   readonly editScheduleValue = signal('');
 
+  readonly runs = signal<HermesRun[]>([]);
+  readonly runsTotal = signal(0);
+  readonly runsLoading = signal(false);
+  readonly expandedRunId = signal<string | null>(null);
+  readonly expandedRunOutput = signal<string | null>(null);
+  readonly expandedRunHasToolCalls = signal(false);
+  readonly expandedRunLoading = signal(false);
+
+  readonly promptOpen = signal(false);
+  readonly runsOpen = signal(true);
+
   readonly sortedJobs = computed(() => {
     const order: Record<string, number> = { running: 0, scheduled: 1, paused: 2, completed: 3 };
     return [...this.hermes.jobs()].sort(
@@ -41,6 +53,47 @@ export class HermesControlRoom {
     this.resetAction();
     this.editingName.set(false);
     this.editingSchedule.set(false);
+    this.expandedRunId.set(null);
+    this.expandedRunOutput.set(null);
+    this.loadRuns(job.id);
+  }
+
+  loadRuns(jobId: string): void {
+    this.runsLoading.set(true);
+    this.hermes.getRuns(jobId).subscribe({
+      next: (res) => {
+        this.runs.set(res.runs);
+        this.runsTotal.set(res.total);
+        this.runsLoading.set(false);
+      },
+      error: () => this.runsLoading.set(false),
+    });
+  }
+
+  toggleRun(runId: string): void {
+    if (this.expandedRunId() === runId) {
+      this.expandedRunId.set(null);
+      this.expandedRunOutput.set(null);
+      this.expandedRunHasToolCalls.set(false);
+      return;
+    }
+    this.expandedRunId.set(runId);
+    this.expandedRunOutput.set(null);
+    this.expandedRunHasToolCalls.set(false);
+    const job = this.selectedJob();
+    if (!job) return;
+    this.expandedRunLoading.set(true);
+    this.hermes.getRunOutput(job.id, runId).subscribe({
+      next: (out) => {
+        this.expandedRunOutput.set(out.response);
+        this.expandedRunHasToolCalls.set(out.has_tool_calls);
+        this.expandedRunLoading.set(false);
+      },
+      error: () => {
+        this.expandedRunOutput.set('Failed to load output.');
+        this.expandedRunLoading.set(false);
+      },
+    });
   }
 
   runNow(): void {
@@ -84,6 +137,8 @@ export class HermesControlRoom {
     this.hermes.remove(job.id).subscribe({
       next: () => {
         this.selectedJob.set(null);
+        this.runs.set([]);
+        this.runsTotal.set(0);
         this.actionState.set('idle');
       },
       error: (err) => this.fail(err),
@@ -160,4 +215,6 @@ export class HermesControlRoom {
   protected readonly relativeTime = relativeTime;
   protected readonly stateBadgeTone = stateBadgeTone;
   protected readonly deliverLabel = deliverLabel;
+  protected readonly formatDuration = formatDuration;
+  protected readonly formatBytes = formatBytes;
 }

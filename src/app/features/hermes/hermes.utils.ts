@@ -94,3 +94,15 @@ export function dayPercent(date: Date): number {
   midnight.setHours(0, 0, 0, 0);
   return ((date.getTime() - midnight.getTime()) / 86_400_000) * 100;
 }
+
+export function formatDuration(seconds: number | null): string {
+  if (seconds === null) return '—';
+  if (seconds < 60) return `~${seconds}s`;
+  if (seconds < 3600) return `~${Math.round(seconds / 60)}m`;
+  return `~${Math.round(seconds / 3600)}h`;
+}
+
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  return `${(bytes / 1024).toFixed(0)} KB`;
+}

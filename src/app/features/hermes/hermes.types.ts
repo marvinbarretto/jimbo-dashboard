@@ -14,6 +14,31 @@ export interface HermesJob {
   runs_completed: number | null;
   skill: string | null;
   deliver: string | null;
+  prompt: string | null;
+  skills: string[] | null;
+  model: string | null;
+  created_at: string | null;
+}
+
+export interface HermesRun {
+  runId: string;
+  run_at: string;
+  duration_seconds: number | null;
+  file_size_bytes: number;
+}
+
+export interface HermesRunOutput {
+  runId: string;
+  run_at: string;
+  response: string;
+  has_tool_calls: boolean;
+  response_chars: number;
+}
+
+export interface HermesRunsResponse {
+  jobId: string;
+  runs: HermesRun[];
+  total: number;
 }
 
 export interface HermesSnapshot {

@@ -135,6 +135,75 @@
             </div>
           }
 
+          <!-- Prompt -->
+          @if (job.prompt) {
+            <app-ui-section
+              title="Prompt"
+              [expanded]="promptOpen()"
+              [collapsible]="true"
+              (toggled)="promptOpen.set(!promptOpen())">
+              <div class="cr__prompt-block">
+                @if (job.skills?.length) {
+                  <p class="cr__prompt-skills">
+                    @for (s of job.skills!; track s) {
+                      <span class="cr__prompt-skill-tag">{{ s }}</span>
+                    }
+                  </p>
+                }
+                <p class="cr__prompt-text">{{ job.prompt }}</p>
+              </div>
+            </app-ui-section>
+          }
+
+          <!-- Run History -->
+          <app-ui-section
+            [title]="'Run History'"
+            [meta]="runsTotal() > 0 ? runsTotal() + ' total' : null"
+            [expanded]="runsOpen()"
+            [collapsible]="true"
+            (toggled)="runsOpen.set(!runsOpen())">
+
+            @if (runsLoading()) {
+              <p class="cr__runs-loading">Loading…</p>
+            } @else if (runs().length === 0) {
+              <p class="cr__runs-empty">No output files found for this job.</p>
+            } @else {
+              <div class="cr__runs-list">
+                @for (run of runs(); track run.runId) {
+                  <div class="cr__run-entry"
+                    [class.cr__run-entry--open]="expandedRunId() === run.runId"
+                    [class.cr__run-entry--warn]="run.file_size_bytes < 5000 && run.duration_seconds !== null && run.duration_seconds < 30">
+                    <button
+                      type="button"
+                      class="cr__run-row"
+                      (click)="toggleRun(run.runId)">
+                      <span class="cr__run-chevron">{{ expandedRunId() === run.runId ? '▾' : '▸' }}</span>
+                      <span class="cr__run-time">{{ relativeTime(run.run_at) }}</span>
+                      <span class="cr__run-meta">
+                        <span class="cr__run-duration">{{ formatDuration(run.duration_seconds) }}</span>
+                        <span class="cr__run-size">{{ formatBytes(run.file_size_bytes) }}</span>
+                      </span>
+                    </button>
+                    @if (expandedRunId() === run.runId) {
+                      <div class="cr__run-output">
+                        @if (expandedRunLoading()) {
+                          <p class="cr__runs-loading">Loading…</p>
+                        } @else {
+                          @if (expandedRunHasToolCalls()) {
+                            <p class="cr__run-tool-call-notice">
+                              ⚡ Contains tool calls — agent was mid-execution when captured
+                            </p>
+                          }
+                          <pre class="cr__run-response">{{ expandedRunOutput() }}</pre>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </app-ui-section>
+
           <!-- Actions -->
           <div class="cr__actions">
             <button
