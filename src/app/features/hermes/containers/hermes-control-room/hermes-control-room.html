@@ -95,11 +95,21 @@
             </div>
             <div class="cr__field">
               <dt>Last run</dt>
-              <dd>{{ relativeTime(job.last_run_at) }}</dd>
+              <dd>
+                {{ relativeTime(job.last_run_at) }}
+                @if (absoluteTime(job.last_run_at)) {
+                  <span class="cr__field-abs">{{ absoluteTime(job.last_run_at) }}</span>
+                }
+              </dd>
             </div>
             <div class="cr__field">
               <dt>Next run</dt>
-              <dd>{{ relativeTime(job.next_run_at) }}</dd>
+              <dd>
+                {{ relativeTime(job.next_run_at) }}
+                @if (absoluteTime(job.next_run_at)) {
+                  <span class="cr__field-abs">{{ absoluteTime(job.next_run_at) }}</span>
+                }
+              </dd>
             </div>
             <div class="cr__field">
               <dt>Completed runs</dt>
@@ -196,7 +206,10 @@
                       class="cr__run-row"
                       (click)="toggleRun(run.runId)">
                       <span class="cr__run-chevron">{{ isOpen ? '▾' : '▸' }}</span>
-                      <span class="cr__run-time">{{ relativeTime(run.run_at) }}</span>
+                      <span class="cr__run-time">
+                        {{ relativeTime(run.run_at) }}
+                        <span class="cr__run-time-abs">{{ absoluteTime(run.run_at) }}</span>
+                      </span>
                       <span class="cr__run-meta">
                         <span class="cr__run-duration">{{ formatDuration(run.duration_seconds) }}</span>
                         <span class="cr__run-size">{{ formatBytes(run.file_size_bytes) }}</span>

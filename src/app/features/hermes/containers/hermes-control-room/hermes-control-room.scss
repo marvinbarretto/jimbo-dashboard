@@ -226,6 +226,14 @@
   overflow: visible;
 }
 
+.cr__field-abs {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-left: 0.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
 // --- Error blocks ---
 
 .cr__detail-error {
@@ -506,6 +514,14 @@
   color: var(--color-text);
   flex-shrink: 0;
   min-width: 5rem;
+}
+
+.cr__run-time-abs {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .cr__run-meta {

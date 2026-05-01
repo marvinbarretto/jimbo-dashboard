@@ -4,7 +4,7 @@ import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { HermesService } from '../../data-access/hermes.service';
 import type { HermesJob, HermesRun } from '../../hermes.types';
-import { deliverLabel, formatBytes, formatDuration, relativeTime, stateBadgeTone } from '../../hermes.utils';
+import { absoluteTime, deliverLabel, formatBytes, formatDuration, relativeTime, stateBadgeTone } from '../../hermes.utils';
 
 type ActionState = 'idle' | 'loading' | 'done' | 'error';
 
@@ -248,6 +248,7 @@ export class HermesControlRoom {
   }
 
   protected readonly relativeTime = relativeTime;
+  protected readonly absoluteTime = absoluteTime;
   protected readonly stateBadgeTone = stateBadgeTone;
   protected readonly deliverLabel = deliverLabel;
   protected readonly formatDuration = formatDuration;

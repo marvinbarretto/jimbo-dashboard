@@ -95,6 +95,15 @@ export function dayPercent(date: Date): number {
   return ((date.getTime() - midnight.getTime()) / 86_400_000) * 100;
 }
 
+export function absoluteTime(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (d.toDateString() === now.toDateString()) return time;
+  return d.toLocaleDateString([], { day: 'numeric', month: 'short' }) + ' ' + time;
+}
+
 export function formatDuration(seconds: number | null): string {
   if (seconds === null) return '—';
   if (seconds < 60) return `~${seconds}s`;
