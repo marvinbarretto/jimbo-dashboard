@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.15](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.14...v0.0.15) (2026-05-02)
+
+
+### Features
+
+* **hermes:** add /hermes control surface with three prototype views ([7a8cb81](https://github.com/marvinbarretto/jimbo-dashboard/commit/7a8cb81e23f40526a7488126418e1c590ff5ac92))
+* **hermes:** multi-expand run history with expand/collapse all toggle ([f792746](https://github.com/marvinbarretto/jimbo-dashboard/commit/f792746599899483a70620f814e55674380664bf))
+* **hermes:** show absolute timestamps alongside relative times in control room ([82e7bf9](https://github.com/marvinbarretto/jimbo-dashboard/commit/82e7bf94d9288df270cb54e257b31994391adf6e))
+* **hermes:** show tool names, model, and run metadata in Control Room ([602d975](https://github.com/marvinbarretto/jimbo-dashboard/commit/602d975a8676e04302cb97584647d070e28f95f0))
+* **hermes:** surface run duration, size, and tool-call signal in Control Room ([2004424](https://github.com/marvinbarretto/jimbo-dashboard/commit/2004424a30d463a431b91e2174eeff2e02776cff))
+* **ui:** add UiTabBar component; standardise tab pattern from hermes-page ([895f6ea](https://github.com/marvinbarretto/jimbo-dashboard/commit/895f6ea01c335ff0ff80b6e97ea0d9bca62bb36e))
+* **ui:** neutral admin UI component library and UI Lab showcase ([1c9b24c](https://github.com/marvinbarretto/jimbo-dashboard/commit/1c9b24c9433c26b25ab25e76fd30e6159bd0b9db))
+
+
+### Bug Fixes
+
+* **dashboard-api:** forward POST, PATCH, DELETE to jimbo-api for hermes mutations ([4a88be1](https://github.com/marvinbarretto/jimbo-dashboard/commit/4a88be10ebc15955959b549295a935ce6faaf6d2))
+* **hermes:** don't hardcode openrouter/free as model display fallback ([5ef8cda](https://github.com/marvinbarretto/jimbo-dashboard/commit/5ef8cda4da7af796325cb87520ff71df782d758f))
+* **today:** stack sections vertically on all screen sizes ([d082f7d](https://github.com/marvinbarretto/jimbo-dashboard/commit/d082f7df7b33364efa08b84e5ba0d2c53feebd23))
+
 ### [0.0.14](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.13...v0.0.14) (2026-04-30)
 
 ### [0.0.13](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.12...v0.0.13) (2026-04-30)
