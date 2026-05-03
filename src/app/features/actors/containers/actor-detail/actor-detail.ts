@@ -12,10 +12,11 @@ import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { ActorsService } from '../../data-access/actors.service';
+import { DatetimePipe } from '@shared/pipes/datetime.pipe';
 
 @Component({
   selector: 'app-actor-detail',
-  imports: [RouterLink, UiBackLink, UiBadge, UiEmptyState, UiMetaList, UiPageHeader, UiSection, UiStack],
+  imports: [RouterLink, UiBackLink, UiBadge, UiEmptyState, UiMetaList, UiPageHeader, UiSection, UiStack, DatetimePipe],
   templateUrl: './actor-detail.html',
   styleUrl: './actor-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -2,6 +2,7 @@
 // scroll lock. Without this the modal renders with no styles applied.
 @use '@angular/cdk/overlay-prebuilt.css';
 @use 'breakpoints' as bp;
+@use 'utilities';
 
 .app-shell {
   display: flex;

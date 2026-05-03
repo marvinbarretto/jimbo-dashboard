@@ -1,5 +1,5 @@
 <div class="event-line" [class.event-line--debug]="showDebug()">
-  <span class="event-line__time">{{ event().at | date:'short' }}</span>
+  <span class="event-line__time">{{ event().at | datetime }}</span>
   <span class="event-line__actor">{{ actorLabel()(line().actorId) }}</span>
   <span class="event-line__kind event-line__kind--{{ actorKind()(line().actorId) }}">{{ actorKind()(line().actorId) }}</span>
   <span class="event-line__verb">{{ line().verb }}</span>

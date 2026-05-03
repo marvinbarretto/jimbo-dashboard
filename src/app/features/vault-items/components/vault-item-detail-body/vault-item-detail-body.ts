@@ -19,23 +19,41 @@ import { ProjectsService } from '../../../projects/data-access/projects.service'
 import { ThreadService } from '../../../thread/data-access/thread.service';
 import { ThreadView } from '../../../thread/components/thread-view/thread-view';
 import { computeReadiness, effectivePriority } from '@domain/vault/readiness';
-import { acceptanceCriterionStatus } from '@shared/validation/acceptance-criterion-length';
 import { actorId, projectId, vaultItemId } from '@domain/ids';
-import type { Priority } from '@domain/vault/vault-item';
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
 import { ActivityLogComponent } from './activity-log/activity-log';
-import { PipelineStepperComponent } from './pipeline-stepper/pipeline-stepper';
-import { QuestionReplyComposer } from '@shared/components/question-reply-composer/question-reply-composer';
-import { UiBadge } from '@shared/components/ui-badge/ui-badge';
-import { UiButton } from '@shared/components/ui-button/ui-button';
-import { UiCard } from '@shared/components/ui-card/ui-card';
+import { formatDatetime } from '@shared/utils/datetime.utils';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import type { ProjectId, ActorId } from '@domain/ids';
 import type { Actor } from '@domain/actors';
+import { VaultItemActionBar } from './vault-item-action-bar/vault-item-action-bar';
+import { VaultItemDeliveryBlock } from './vault-item-delivery-block/vault-item-delivery-block';
+import { VaultItemIdentityHeader } from './vault-item-identity-header/vault-item-identity-header';
+import { VaultItemIntakeBlock } from './vault-item-intake-block/vault-item-intake-block';
+import { VaultItemLinksBlock } from './vault-item-links-block/vault-item-links-block';
+import { VaultItemMetaLine } from './vault-item-meta-line/vault-item-meta-line';
+import { VaultItemOverviewCards } from './vault-item-overview-cards/vault-item-overview-cards';
+import { VaultItemQuestions } from './vault-item-questions/vault-item-questions';
+import { VaultItemStatusChips } from './vault-item-status-chips/vault-item-status-chips';
 
 @Component({
   selector: 'app-vault-item-detail-body',
-  imports: [RouterLink, ThreadView, RejectFormComponent, ActivityLogComponent, QuestionReplyComposer, UiBadge, UiButton, UiCard, UiSection],
+  imports: [
+    RouterLink,
+    ThreadView,
+    RejectFormComponent,
+    ActivityLogComponent,
+    UiSection,
+    VaultItemActionBar,
+    VaultItemDeliveryBlock,
+    VaultItemIdentityHeader,
+    VaultItemIntakeBlock,
+    VaultItemLinksBlock,
+    VaultItemMetaLine,
+    VaultItemOverviewCards,
+    VaultItemQuestions,
+    VaultItemStatusChips,
+  ],
   templateUrl: './vault-item-detail-body.html',
   styleUrl: './vault-item-detail-body.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -68,7 +86,7 @@ export class VaultItemDetailBody {
     });
   }
 
-  readonly owner = computed(() => {
+  readonly owner = computed<Actor | undefined>(() => {
     const i = this.item();
     if (!i?.assigned_to) return undefined;
     return this.actorsService.getById(i.assigned_to);
@@ -177,9 +195,9 @@ export class VaultItemDetailBody {
     const item = this.item();
     if (!item) return { label: 'Timeline', value: 'Unknown', detail: '' };
 
-    const created = `Added ${this.formatDateTime(item.created_at)}`;
+    const created = `Added ${formatDatetime(item.created_at)}`;
     const latest = item.latest_activity_at
-      ? `Last change ${this.formatDateTime(item.latest_activity_at)}`
+      ? `Last change ${formatDatetime(item.latest_activity_at)}`
       : 'No later activity recorded';
 
     return {
@@ -209,10 +227,6 @@ export class VaultItemDetailBody {
     return i ? effectivePriority(i) : null;
   });
 
-  priorityLabel(p: Priority | null): string {
-    return p === null ? '—' : 'P' + p;
-  }
-
   // In modal mode, update ?detail= so withVaultDetailModal() swaps the dialog
   // body without a full navigation. In page mode, navigate normally so the URL
   // stays meaningful and browser back works as expected.
@@ -222,6 +236,10 @@ export class VaultItemDetailBody {
       return;
     }
     this.router.navigate(['/vault-items', seq]);
+  }
+
+  onProjectClicked(id: string): void {
+    this.router.navigate(['/projects', id]);
   }
 
   readonly parentItem = computed(() => {
@@ -249,8 +267,6 @@ export class VaultItemDetailBody {
     return map;
   });
 
-  readonly showReassignPicker = signal(false);
-  readonly showAddProjectPicker = signal(false);
   readonly showRejectForm = signal(false);
   readonly rationaleExpanded = signal(false);
 
@@ -283,10 +299,6 @@ export class VaultItemDetailBody {
   });
 
   toggleRationale(): void { this.rationaleExpanded.update(v => !v); }
-
-  truncate(s: string, n: number): string {
-    return s.length > n ? s.slice(0, n) + '…' : s;
-  }
 
   // Source from the actors registry — skills (vault-classify, etc.) are NOT
   // actors and never own an item. We list humans and agents that the operator
@@ -326,8 +338,6 @@ export class VaultItemDetailBody {
   }
   readonly addBlockerSeqInput = signal('');
 
-  readonly statuses: ('active' | 'done')[] = ['active', 'done'];
-
   lifecycleOf = lifecycleState;
   isItemArchived = isArchived;
 
@@ -345,44 +355,33 @@ export class VaultItemDetailBody {
     this.vaultItemsService.remove(i.id);
   }
 
-  onStatusChange(event: Event): void {
+  onStatusChange(next: 'active' | 'done'): void {
     const i = this.item();
     if (!i) return;
-    const next = (event.target as HTMLSelectElement).value as 'active' | 'done';
     const isCurrentlyDone = i.completed_at !== null;
     const wantDone = next === 'done';
     if (isCurrentlyDone === wantDone) return;
     this.vaultItemsService.setCompleted(i.id, wantDone, null);
   }
 
-  toggleReassignPicker(): void {
-    this.showReassignPicker.update(v => !v);
-  }
-
   reassign(toActorIdStr: string): void {
     const i = this.item();
     if (!i) return;
     this.vaultItemsService.reassign(i.id, actorId(toActorIdStr), null);
-    this.showReassignPicker.set(false);
   }
 
-  removeProject(pid: ProjectId): void {
+  removeProject(pid: string): void {
     const i = this.item();
     if (!i) return;
-    this.vaultItemProjectsService.remove(i.id, pid);
-  }
-
-  toggleAddProjectPicker(): void {
-    this.showAddProjectPicker.update(v => !v);
+    this.vaultItemProjectsService.remove(i.id, pid as ProjectId);
   }
 
   addProject(pidStr: string): void {
     const i = this.item();
     if (!i || !pidStr) return;
     const already = this.junctionProjects().some(j => j.project_id === pidStr);
-    if (already) { this.showAddProjectPicker.set(false); return; }
+    if (already) return;
     this.vaultItemProjectsService.add(i.id, projectId(pidStr));
-    this.showAddProjectPicker.set(false);
   }
 
   removeBlocker(blockerIdStr: string): void {
@@ -404,10 +403,6 @@ export class VaultItemDetailBody {
     this.addBlockerSeqInput.set('');
   }
 
-  onBlockerSeqInput(event: Event): void {
-    this.addBlockerSeqInput.set((event.target as HTMLInputElement).value);
-  }
-
   actorDisplay(actorIdStr: string): string {
     const actor = this.actorsService.getById(actorIdStr as ReturnType<typeof actorId>);
     return actor ? `@${actor.id}` : `@${actorIdStr}`;
@@ -421,58 +416,6 @@ export class VaultItemDetailBody {
   }
 
   // Bound arrow functions for passing to <app-activity-log> inputs.
-  acStatus(text: string) { return acceptanceCriterionStatus(text); }
-
   readonly actorLabelFn = (id: string) => this.actorDisplay(id);
   readonly actorKindFn  = (id: string) => this.actorKind(id);
-
-  relativeTime(iso: string): string {
-    const diff = Date.now() - new Date(iso).getTime();
-    const mins = Math.floor(diff / 60_000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs / 24);
-    return `${days}d ago`;
-  }
-
-  private formatDateTime(iso: string): string {
-    return new Intl.DateTimeFormat('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(iso));
-  }
-
-  groomingTone(status: string): 'neutral' | 'success' | 'warning' | 'danger' | 'info' {
-    switch (status) {
-      case 'ready':
-        return 'success';
-      case 'needs_rework':
-        return 'warning';
-      case 'intake_rejected':
-        return 'danger';
-      case 'classified':
-      case 'decomposed':
-        return 'info';
-      default:
-        return 'neutral';
-    }
-  }
-
-  actionabilityTone(actionability: string | null): 'neutral' | 'success' | 'warning' | 'danger' {
-    switch (actionability) {
-      case 'clear':
-        return 'success';
-      case 'needs-breakdown':
-        return 'warning';
-      case 'vague':
-        return 'danger';
-      default:
-        return 'neutral';
-    }
-  }
 }

@@ -32,7 +32,7 @@
         @if (p.repo_url) {
           <dt>Repo</dt><dd><a [href]="p.repo_url" target="_blank" rel="noopener noreferrer">{{ p.repo_url }}</a></dd>
         }
-        <dt>Created</dt><dd>{{ p.created_at.slice(0, 10) }}</dd>
+        <dt>Created</dt><dd>{{ p.created_at | datetime }}</dd>
         </app-ui-meta-list>
       </app-ui-card>
     </app-ui-section>
@@ -55,7 +55,7 @@
               <li class="activity-log__row">
                 <span class="activity-log__actor">{{ actorDisplay(event.actor_id) }}</span>
                 <span class="activity-log__desc">{{ eventDescription(event) }}</span>
-                <span class="activity-log__when">· {{ relativeTime(event.at) }}</span>
+                <span class="activity-log__when">· {{ event.at | relativeTime }}</span>
               </li>
             }
           </ul>

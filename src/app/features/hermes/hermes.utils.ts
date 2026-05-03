@@ -1,40 +1,13 @@
 import type { HermesJob } from './hermes.types';
+export { absoluteTime, dayPercent, formatBytes, formatCountdown, formatDuration, formatTime, relativeTime } from '@shared/utils/datetime.utils';
 
-export function relativeTime(iso: string | null): string {
-  if (!iso) return 'never';
-  const diff = Date.now() - new Date(iso).getTime();
-  const abs = Math.abs(diff);
-  const future = diff < 0;
-  if (abs < 60_000) return future ? 'in <1m' : 'just now';
-  if (abs < 3_600_000) {
-    const mins = Math.round(abs / 60_000);
-    return future ? `in ${mins}m` : `${mins}m ago`;
-  }
-  if (abs < 86_400_000) {
-    const hrs = Math.round(abs / 3_600_000);
-    return future ? `in ${hrs}h` : `${hrs}h ago`;
-  }
-  const days = Math.round(abs / 86_400_000);
-  return future ? `in ${days}d` : `${days}d ago`;
-}
-
-export function formatCountdown(iso: string | null, now: Date): string {
-  if (!iso) return '—';
-  const secs = Math.round((new Date(iso).getTime() - now.getTime()) / 1000);
-  if (secs < 0) return 'overdue';
-  if (secs < 60) return `${secs}s`;
-  const mins = Math.floor(secs / 60);
-  const remSecs = secs % 60;
-  if (mins < 60) return `${mins}m ${remSecs}s`;
-  const hrs = Math.floor(mins / 60);
-  const remMins = mins % 60;
-  return `${hrs}h ${remMins}m`;
-}
-
-export function formatTime(date: Date): string {
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
+/**
+ * Maps a job's runtime state and last run status to a badge tone for visual triage.
+ *
+ * @param state - Current job state (e.g. "running", "paused", "scheduled")
+ * @param lastStatus - Result of the last run (e.g. "ok", "error"), or null
+ * @returns Badge tone string suitable for `<app-ui-badge [tone]>`
+ */
 export function stateBadgeTone(state: string, lastStatus: string | null): string {
   if (state === 'running') return 'accent';
   if (state === 'paused') return 'warning';
@@ -43,6 +16,12 @@ export function stateBadgeTone(state: string, lastStatus: string | null): string
   return 'neutral';
 }
 
+/**
+ * Normalises a raw deliver string to a short display label.
+ *
+ * @param deliver - Raw deliver value from the job config, or null
+ * @returns e.g. "telegram", "discord", "slack", or "local" for null/unrecognised values
+ */
 export function deliverLabel(deliver: string | null): string {
   if (!deliver) return 'local';
   if (deliver.startsWith('telegram')) return 'telegram';
@@ -51,12 +30,25 @@ export function deliverLabel(deliver: string | null): string {
   return deliver;
 }
 
+/**
+ * Extracts the repeat interval in minutes from a schedule display string.
+ *
+ * @param scheduleDisplay - Human-readable schedule string, e.g. "every 15m"
+ * @returns Interval in minutes, or null if the format is unrecognised
+ */
 export function extractIntervalMinutes(scheduleDisplay: string | null): number | null {
   if (!scheduleDisplay) return null;
   const match = scheduleDisplay.match(/every (\d+)m/);
   return match ? parseInt(match[1], 10) : null;
 }
 
+/**
+ * Returns all fire times for a job within the current calendar day,
+ * reconstructed by walking backwards from `next_run_at` using the schedule interval.
+ *
+ * @param job - The HermesJob to compute fire times for
+ * @returns Array of Date objects representing each scheduled fire within today
+ */
 export function todayFireTimes(job: HermesJob): Date[] {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -87,31 +79,4 @@ export function todayFireTimes(job: HermesJob): Date[] {
     t += intervalMs;
   }
   return times;
-}
-
-export function dayPercent(date: Date): number {
-  const midnight = new Date(date);
-  midnight.setHours(0, 0, 0, 0);
-  return ((date.getTime() - midnight.getTime()) / 86_400_000) * 100;
-}
-
-export function absoluteTime(iso: string | null): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  const now = new Date();
-  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  if (d.toDateString() === now.toDateString()) return time;
-  return d.toLocaleDateString([], { day: 'numeric', month: 'short' }) + ' ' + time;
-}
-
-export function formatDuration(seconds: number | null): string {
-  if (seconds === null) return '—';
-  if (seconds < 60) return `~${seconds}s`;
-  if (seconds < 3600) return `~${Math.round(seconds / 60)}m`;
-  return `~${Math.round(seconds / 3600)}h`;
-}
-
-export function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  return `${(bytes / 1024).toFixed(0)} KB`;
 }

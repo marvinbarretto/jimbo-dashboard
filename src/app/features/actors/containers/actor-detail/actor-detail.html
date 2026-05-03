@@ -21,8 +21,8 @@
         @if (a.description) {
           <dt>Description</dt><dd>{{ a.description }}</dd>
         }
-        <dt>Created</dt><dd>{{ a.created_at.slice(0, 10) }}</dd>
-        <dt>Updated</dt><dd>{{ a.updated_at.slice(0, 10) }}</dd>
+        <dt>Created</dt><dd>{{ a.created_at | datetime }}</dd>
+        <dt>Updated</dt><dd>{{ a.updated_at | datetime }}</dd>
       </app-ui-meta-list>
     </app-ui-section>
   </app-ui-stack>

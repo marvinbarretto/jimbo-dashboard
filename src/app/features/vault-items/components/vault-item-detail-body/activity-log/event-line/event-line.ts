@@ -1,12 +1,12 @@
 import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatetimePipe } from '@shared/pipes/datetime.pipe';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
 import { formatEvent } from '../event-formatter';
 import type { VerbosityLevel } from '../verbosity';
 
 @Component({
   selector: 'app-event-line',
-  imports: [DatePipe],
+  imports: [DatetimePipe],
   templateUrl: './event-line.html',
   styleUrl: './event-line.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
