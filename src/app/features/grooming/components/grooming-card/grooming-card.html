@@ -95,7 +95,7 @@
           class="card__assign-option"
           [disabled]="item().assigned_to === actor"
           (click)="onAssignSelected(actor); $event.stopPropagation()">
-          @{{ actor }}
+          <app-entity-chip type="actor" [id]="actor" [label]="actor" />
         </button>
       }
     </div>

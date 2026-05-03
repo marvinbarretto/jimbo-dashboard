@@ -13,11 +13,11 @@
       [attr.aria-label]="group.message.kind + ' by ' + authorName(group.message)"
     >
       <header class="msg__header">
-        <span
-          [class]="'msg__author msg__author--' + group.message.author_actor_id"
-          [class.msg__author--agent]="authorKind(group.message) === 'agent'"
-          [class.msg__author--human]="authorKind(group.message) === 'human'"
-        >@{{ authorName(group.message) }}</span>
+        <app-entity-chip
+          type="actor"
+          [id]="group.message.author_actor_id"
+          [label]="authorName(group.message)"
+        />
 
         <span class="msg__kind-tag" aria-label="message kind">{{ group.message.kind }}</span>
 
@@ -30,7 +30,7 @@
         }
 
         <time class="msg__when" [attr.datetime]="group.message.created_at">
-          {{ relativeTime(group.message.created_at) }}
+          {{ group.message.created_at | relativeTime }}
         </time>
       </header>
 
@@ -84,18 +84,18 @@
         [attr.aria-label]="'answer by ' + authorName(answer) + ' replying to ' + answer.in_reply_to"
       >
         <header class="msg__header">
-          <span
-            [class]="'msg__author msg__author--' + answer.author_actor_id"
-            [class.msg__author--agent]="authorKind(answer) === 'agent'"
-            [class.msg__author--human]="authorKind(answer) === 'human'"
-          >@{{ authorName(answer) }}</span>
+          <app-entity-chip
+            type="actor"
+            [id]="answer.author_actor_id"
+            [label]="authorName(answer)"
+          />
 
           <span class="msg__kind-tag">answer</span>
-          @if (replyToAuthorName(answer); as parentAuthor) {
-            <span class="msg__reply-ref">↳ replying to @{{ parentAuthor }}</span>
+          @if (replyToAuthor(answer); as ref) {
+            <span class="msg__reply-ref">↳ <app-entity-chip type="actor" [id]="ref.id" [label]="ref.label" /></span>
           }
           <time class="msg__when" [attr.datetime]="answer.created_at">
-            {{ relativeTime(answer.created_at) }}
+            {{ answer.created_at | relativeTime }}
           </time>
         </header>
 

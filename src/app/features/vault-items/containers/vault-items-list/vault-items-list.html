@@ -134,8 +134,20 @@
             <td>
               <span [class]="'status status--' + lifecycleOf(item)">{{ lifecycleOf(item) }}</span>
             </td>
-            <td>{{ ownerDisplay(item) }}</td>
-            <td>{{ primaryProjectDisplay(item) }}</td>
+            <td>
+              @if (item.assigned_to) {
+                <app-entity-chip type="actor" [id]="item.assigned_to" [label]="ownerLabel(item)" />
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td>
+              @if (item.primary_project_id && item.primary_project_name) {
+                <app-entity-chip type="project" [id]="item.primary_project_id" [label]="item.primary_project_name" />
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
             <td>
               @if (effectivePriority(item) !== null) {
                 <span [class]="'priority-badge priority-P' + effectivePriority(item)">

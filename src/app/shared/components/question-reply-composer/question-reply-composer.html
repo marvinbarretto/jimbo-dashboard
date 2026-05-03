@@ -1,26 +1,15 @@
 <div class="reply-composer">
-  <textarea
-    class="reply-composer__input"
+  <app-smart-composer-input
     [formControl]="bodyControl"
-    placeholder="Answer this question…   # task  @ person  / project"
-    rows="3"
+    placeholder="Answer this question…  @ person  # task  / project"
+    ariaLabel="Reply body"
     (keydown.meta.enter)="submit()"
     (keydown.ctrl.enter)="submit()"
-  ></textarea>
+  />
   <div class="reply-composer__toolbar">
-    <button type="button" class="reply-composer__token-btn" (click)="insertToken('#')">
-      # task
-    </button>
-    <button type="button" class="reply-composer__token-btn" (click)="insertToken('@')">
-      @ person
-    </button>
-    <button type="button" class="reply-composer__token-btn" (click)="insertToken('/')">
-      / project
-    </button>
     <button
       type="button"
       class="reply-composer__send"
-      [disabled]="!bodyControl.value.trim()"
       (click)="submit()"
     >
       send ↩

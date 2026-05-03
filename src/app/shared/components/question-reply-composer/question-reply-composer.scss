@@ -2,49 +2,13 @@
   padding: 12px 0;
 }
 
-.reply-composer__input {
-  width: 100%;
-  padding: 10px 12px;
-  font-family: inherit;
-  font-size: 14px;
-  line-height: 1.5;
-  border: 1px solid #ccc;
-  resize: vertical;
-  min-height: 80px;
-  display: block;
-  box-sizing: border-box;
-
-  &:focus {
-    outline: 2px solid var(--color-text, #111);
-    border-color: var(--color-text, #111);
-  }
-}
-
 .reply-composer__toolbar {
   display: flex;
-  gap: 6px;
+  justify-content: flex-end;
   margin-top: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.reply-composer__token-btn {
-  font-size: 11px;
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  background: transparent;
-  color: #555;
-  cursor: pointer;
-  font-family: inherit;
-
-  &:hover {
-    border-color: #999;
-    color: #111;
-  }
 }
 
 .reply-composer__send {
-  margin-left: auto;
   padding: 8px 18px;
   font-size: 13px;
   font-weight: 600;

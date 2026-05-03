@@ -7,6 +7,7 @@ import { ActorsService } from '../../../actors/data-access/actors.service';
 import { effectivePriority } from '@domain/vault/readiness';
 import type { VaultItem, VaultItemType, Priority } from '@domain/vault/vault-item';
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
+import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 
 // "Lifecycle" derived from completed_at + archived_at; surfaced as a single
 // pillar in the table so filters and rendering use the same vocabulary.
@@ -23,7 +24,7 @@ interface CountedOption<T> {
 
 @Component({
   selector: 'app-vault-items-list',
-  imports: [RouterLink, FormsModule, TableShell],
+  imports: [RouterLink, FormsModule, TableShell, EntityChip],
   templateUrl: './vault-items-list.html',
   styleUrl: './vault-items-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -184,10 +185,10 @@ export class VaultItemsList {
   lifecycleOf = lifecycleState;
   isItemArchived = isArchived;
 
-  ownerDisplay(item: VaultItem): string {
-    if (!item.assigned_to) return '—';
+  ownerLabel(item: VaultItem): string {
+    if (!item.assigned_to) return '';
     const actor = this.actorsService.getById(item.assigned_to);
-    return actor ? `@${actor.id}` : item.assigned_to;
+    return actor?.display_name ?? item.assigned_to;
   }
 
   // Use the embedded primary_project_name from the API response — no per-row

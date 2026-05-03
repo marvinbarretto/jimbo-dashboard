@@ -5,10 +5,12 @@ import { actorId } from '@domain/ids';
 import { ActorsService } from '@features/actors/data-access/actors.service';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
 import { QuestionReplyComposer } from '@shared/components/question-reply-composer/question-reply-composer';
+import { EntityChip } from '@shared/components/entity-chip/entity-chip';
+import { relativeTime } from '@shared/utils/datetime.utils';
 
 @Component({
   selector: 'app-question-card',
-  imports: [RouterLink, QuestionReplyComposer],
+  imports: [RouterLink, QuestionReplyComposer, EntityChip],
   templateUrl: './question-card.html',
   styleUrl: './question-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,7 +33,7 @@ export class QuestionCard {
 
   readonly authorLabel = computed(() => {
     const a = this.actorsService.getById(this.question().author_actor_id);
-    return a ? `@${a.id}` : `@${this.question().author_actor_id}`;
+    return a?.display_name ?? this.question().author_actor_id;
   });
 
   readonly authorKind = computed(() => {
@@ -88,7 +90,7 @@ export class QuestionCard {
   readonly updatedLabel = computed(() => {
     const item = this.item();
     const latest = item?.latest_activity_at;
-    return latest ? this.relativeTime(latest) : null;
+    return latest ? relativeTime(latest) : null;
   });
 
   readonly contextSummary = computed(() => {
@@ -103,18 +105,6 @@ export class QuestionCard {
   onReplyPosted(payload: CreateThreadMessagePayload): void {
     this.answered.emit(payload);
     this.showReply.set(false);
-  }
-
-  relativeTime(iso: string): string {
-    const diff = Date.now() - new Date(iso).getTime();
-    const mins = Math.floor(diff / 60_000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs / 24);
-    if (days < 7) return `${days}d ago`;
-    return this.formatAbsoluteDate(iso);
   }
 
   private formatAbsoluteDate(iso: string): string {

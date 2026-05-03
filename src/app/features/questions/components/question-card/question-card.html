@@ -21,7 +21,7 @@
 
   <div class="qcard__meta">
     <span class="qcard__meta-label">asked by</span>
-    <span [class]="'qcard__author qcard__author--' + authorKind()">{{ authorLabel() }}</span>
+    <app-entity-chip type="actor" [id]="question().author_actor_id" [label]="authorLabel()" />
     <span class="qcard__meta-sep">·</span>
     <span class="qcard__age">{{ ageLabel() }}</span>
     @if (parentItem(); as parent) {

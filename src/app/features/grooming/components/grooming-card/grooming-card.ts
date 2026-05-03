@@ -12,9 +12,8 @@ import { ageInDays, staleNorm, ancientNorm, pulseIntensity, isStuck } from '@dom
 import { PriorityBadge } from '@shared/components/priority-badge/priority-badge';
 import { BlockerBadge } from '@shared/components/blocker-badge/blocker-badge';
 import { EpicBadge } from '@shared/components/epic-badge/epic-badge';
-import { ProjectChip } from '@shared/components/project-chip/project-chip';
-import { OwnerChip } from '@shared/components/owner-chip/owner-chip';
 import { ReworkBadgeComponent } from './rework-badge/rework-badge';
+import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
 
 // Pre-formatted "what just happened" data passed in from the board. Both
@@ -44,7 +43,7 @@ interface RejectionCallout {
 // lifecycle events so the parent owns drag state and the kanban service writes.
 @Component({
   selector: 'app-grooming-card',
-  imports: [RouterLink, KanbanCardLinkDirective, PriorityBadge, BlockerBadge, EpicBadge, ReworkBadgeComponent, QuestionReplyComposer],
+  imports: [RouterLink, KanbanCardLinkDirective, PriorityBadge, BlockerBadge, EpicBadge, ReworkBadgeComponent, QuestionReplyComposer, EntityChip],
   templateUrl: './grooming-card.html',
   styleUrl: './grooming-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

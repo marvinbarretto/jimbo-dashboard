@@ -9,7 +9,7 @@
     }
 
     @if (project(); as proj) {
-      <app-project-chip [projectId]="proj.id" [displayName]="proj.display_name" />
+      <app-entity-chip type="project" [id]="proj.id" [label]="proj.display_name" />
     }
 
     <app-dispatch-status-badge [status]="dispatch().status" />
@@ -46,7 +46,7 @@
   }
 
   <footer class="card__footer">
-    <app-owner-chip [actorId]="dispatch().executor" />
+    <app-entity-chip type="actor" [id]="dispatch().executor" [label]="dispatch().executor" />
     <span class="card__runtime">{{ runtimeLabel() }}</span>
 
     @if (canRetry()) {
