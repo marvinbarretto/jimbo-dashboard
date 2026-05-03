@@ -1,11 +1,9 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map, startWith } from 'rxjs';
 import pkg from '../../../../../package.json';
-
-interface NavItem {
-  readonly href: string;
-  readonly label: string;
-}
+import { navGroups, primaryNavItems, type NavGroup } from './nav-config';
 
 @Component({
   selector: 'app-nav',
@@ -19,13 +17,24 @@ interface NavItem {
       </a>
 
       <ul class="app-nav__list">
-        @for (item of navItems; track item.href) {
+        @for (item of primaryItems; track item.href) {
           <li class="app-nav__item">
             <a
               [routerLink]="item.href"
               routerLinkActive="active"
               class="app-nav__link">
               {{ item.label }}
+            </a>
+          </li>
+        }
+
+        @for (group of groups; track group.id) {
+          <li class="app-nav__item">
+            <a
+              [routerLink]="group.items[0].href"
+              [class.active]="activeGroupId() === group.id"
+              class="app-nav__link app-nav__link--group">
+              {{ group.label }}
             </a>
           </li>
         }
@@ -97,6 +106,10 @@ interface NavItem {
         background-color 120ms ease;
     }
 
+    .app-nav__link--group {
+      font-style: italic;
+    }
+
     .app-nav__brand:focus-visible,
     .app-nav__link:focus-visible {
       outline: 2px solid var(--color-accent);
@@ -133,31 +146,21 @@ interface NavItem {
 })
 export class Nav {
   readonly version = pkg.version;
-  protected readonly navItems: readonly NavItem[] = [
-    { href: '/today', label: 'Today' },
-    { href: '/hermes', label: 'Hermes' },
-    { href: '/mail', label: 'Mail' },
-    { href: '/mail-next', label: 'Mail Next' },
-    { href: '/calendar', label: 'Calendar' },
-    { href: '/tasks', label: 'Tasks' },
-    { href: '/ops', label: 'Ops' },
-    { href: '/briefings', label: 'Briefings' },
-    { href: '/vault-items', label: 'Vault' },
-    { href: '/grooming', label: 'Grooming' },
-    { href: '/questions', label: 'Questions' },
-    { href: '/grooming-admin', label: 'Grooming API' },
-    { href: '/execution', label: 'Execution' },
-    { href: '/triage', label: 'Triage' },
-    { href: '/interrogate', label: 'Interrogate' },
-    { href: '/context', label: 'Context' },
-    { href: '/coach', label: 'Coach' },
-    { href: '/activity', label: 'Activity' },
-    { href: '/projects', label: 'Projects' },
-    { href: '/actors', label: 'Actors' },
-    { href: '/skills', label: 'Skills' },
-    { href: '/models', label: 'Models' },
-    { href: '/model-stacks', label: 'Stacks' },
-    { href: '/coverage', label: 'Coverage' },
-    { href: '/ui-lab', label: 'UI Lab' },
-  ];
+  protected readonly primaryItems = primaryNavItems;
+  protected readonly groups: readonly NavGroup[] = navGroups;
+
+  private readonly router = inject(Router);
+  private readonly currentUrl = toSignal(
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd),
+      map(e => (e as NavigationEnd).urlAfterRedirects),
+      startWith(this.router.url),
+    ),
+    { initialValue: this.router.url },
+  );
+
+  protected readonly activeGroupId = computed(() => {
+    const segment = (this.currentUrl() ?? '').split('/')[1];
+    return navGroups.find(g => g.paths.includes(segment))?.id ?? null;
+  });
 }
