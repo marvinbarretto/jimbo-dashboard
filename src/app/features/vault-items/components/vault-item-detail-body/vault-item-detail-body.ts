@@ -24,6 +24,7 @@ import { lifecycleState, isArchived } from '@domain/vault/vault-item';
 import { ActivityLogComponent } from './activity-log/activity-log';
 import { formatDatetime } from '@shared/utils/datetime.utils';
 import { UiSection } from '@shared/components/ui-section/ui-section';
+import { ToastService } from '@shared/components/toast/toast.service';
 import type { ProjectId, ActorId } from '@domain/ids';
 import type { Actor } from '@domain/actors';
 import { VaultItemActionBar } from './vault-item-action-bar/vault-item-action-bar';
@@ -70,6 +71,7 @@ export class VaultItemDetailBody {
   private readonly vaultItemProjectsService = inject(VaultItemProjectsService);
   private readonly vaultItemDepsService = inject(VaultItemDependenciesService);
   private readonly actorsService = inject(ActorsService);
+  private readonly toast = inject(ToastService);
   private readonly projectsService = inject(ProjectsService);
   private readonly threadService = inject(ThreadService);
 
@@ -396,10 +398,8 @@ export class VaultItemDetailBody {
     const seqRaw = this.addBlockerSeqInput().trim();
     const seq = Number(seqRaw);
     if (!seqRaw || isNaN(seq)) return;
-    const blocker = this.vaultItemsService.getBySeq(seq);
-    if (!blocker) { alert(`#${seq} not found.`); return; }
-    if (blocker.id === i.id) { alert('An item cannot block itself.'); return; }
-    this.vaultItemDepsService.add(blocker.id, i.id);
+    const err = this.vaultItemDepsService.addBySeq(seq, i.id);
+    if (err) { this.toast.error(err); return; }
     this.addBlockerSeqInput.set('');
   }
 
