@@ -1,0 +1,105 @@
+// Layout-only — visual styling comes from the shared ui-* components and
+// the global theme tokens (--color-border, --color-surface, --color-text).
+// Local styles cover bare elements (input, ul, li, anchor) that have no
+// shared wrapper component yet.
+
+:host {
+  display: block;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.add-form {
+  display: block;
+
+  &__input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    font-size: 0.9rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-accent);
+    }
+  }
+
+  &__name { flex: 4; }
+  &__qty  { flex: 0 0 4.5rem; }
+}
+
+.items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child { border-bottom: 0; }
+
+  &__check {
+    margin-top: 0.25rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    cursor: pointer;
+    accent-color: var(--color-accent);
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: 0.95rem;
+    color: var(--color-text);
+  }
+
+  &__qty {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__note {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    margin: 0.2rem 0 0;
+  }
+
+  &__url {
+    display: inline-block;
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+    color: var(--color-accent);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+
+    &:hover { text-decoration: underline; }
+  }
+}
+
+.item--bought {
+  opacity: 0.65;
+
+  .item__name {
+    text-decoration: line-through;
+    color: var(--color-text-muted);
+  }
+}

@@ -17,6 +17,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/mail/containers/mail-next-page/mail-next-page').then(m => m.MailNextPage),
   },
   {
+    path: 'shopping',
+    loadChildren: () => import('./features/shopping/shopping.routes').then(m => m.shoppingRoutes),
+  },
+  {
     path: '',
     loadChildren: () => import('./features/api-data/api-data.routes').then(m => m.apiDataRoutes),
   },

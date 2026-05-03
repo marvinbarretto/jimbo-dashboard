@@ -69,6 +69,7 @@ const JIMBO_READ_THROUGH_PREFIXES = [
   '/api/pipeline',
   '/api/search',
   '/api/settings',
+  '/api/shopping',
   '/api/snapshot',
   '/api/summaries',
   '/api/triage',
@@ -136,12 +137,17 @@ for (const prefix of JIMBO_READ_THROUGH_PREFIXES) {
   app.get(`${BASE}${prefix}/*`, apiKeyAuth, c => proxyJimboGet(c, c.req.path.slice(BASE.length)));
 }
 
-// Hermes mutations — trigger, pause, resume (POST), update (PATCH), delete (DELETE)
-// Only hermes has mutable state managed through this proxy.
-for (const path of [`${BASE}/api/hermes`, `${BASE}/api/hermes/*`]) {
-  app.post(path, apiKeyAuth, c => proxyJimboMutate(c, c.req.path.slice(BASE.length)));
-  app.patch(path, apiKeyAuth, c => proxyJimboMutate(c, c.req.path.slice(BASE.length)));
-  app.delete(path, apiKeyAuth, c => proxyJimboMutate(c, c.req.path.slice(BASE.length)));
+// Prefixes that need POST/PATCH/DELETE proxied to jimbo-api in addition to GET.
+// Add a prefix here when the dashboard needs full CRUD against an upstream
+// route family (rather than reimplementing it in dashboard-api).
+const JIMBO_MUTATE_PREFIXES = ['/api/hermes', '/api/shopping'];
+
+for (const prefix of JIMBO_MUTATE_PREFIXES) {
+  for (const path of [`${BASE}${prefix}`, `${BASE}${prefix}/*`]) {
+    app.post(path, apiKeyAuth, c => proxyJimboMutate(c, c.req.path.slice(BASE.length)));
+    app.patch(path, apiKeyAuth, c => proxyJimboMutate(c, c.req.path.slice(BASE.length)));
+    app.delete(path, apiKeyAuth, c => proxyJimboMutate(c, c.req.path.slice(BASE.length)));
+  }
 }
 
 // Keep the dashboard API's own /api/health liveness probe intact, but forward

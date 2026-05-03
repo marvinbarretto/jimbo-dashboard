@@ -1,0 +1,130 @@
+<app-ui-stack gap="lg" class="shopping">
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Shopping</h1>
+    <div uiPageHeaderActions>
+      <app-ui-badge tone="neutral">{{ active().length }} active</app-ui-badge>
+    </div>
+  </app-ui-page-header>
+
+  <app-ui-card>
+    <form class="add-form" [formGroup]="form" (ngSubmit)="add()">
+      <app-ui-stack gap="sm">
+        <app-ui-cluster gap="sm" align="center">
+          <input
+            class="add-form__input add-form__name"
+            type="text"
+            placeholder="Add an item…"
+            formControlName="name"
+            autocomplete="off"
+          />
+          <input
+            class="add-form__input add-form__qty"
+            type="number"
+            min="1"
+            formControlName="qty"
+            title="Quantity"
+          />
+        </app-ui-cluster>
+
+        @if (showDetails()) {
+          <app-ui-cluster gap="sm" align="center">
+            <input class="add-form__input" type="text" placeholder="unit (L, kg…)" formControlName="unit" />
+            <input class="add-form__input" type="text" placeholder="store (tesco…)" formControlName="store" />
+          </app-ui-cluster>
+          <app-ui-cluster gap="sm" align="center">
+            <input class="add-form__input" type="text" placeholder="note" formControlName="note" />
+            <input class="add-form__input" type="url"  placeholder="url"  formControlName="url" />
+          </app-ui-cluster>
+        }
+
+        <app-ui-form-actions align="end">
+          <app-ui-button variant="ghost" size="sm" (pressed)="showDetails.set(!showDetails())">
+            {{ showDetails() ? 'Less' : 'More fields' }}
+          </app-ui-button>
+          <app-ui-button variant="primary" type="submit" [disabled]="form.invalid">
+            Add
+          </app-ui-button>
+        </app-ui-form-actions>
+      </app-ui-stack>
+    </form>
+  </app-ui-card>
+
+  <app-ui-section title="Active" [collapsible]="false">
+    @if (isLoading()) {
+      <app-ui-empty-state message="Loading…" />
+    } @else if (active().length === 0) {
+      <app-ui-empty-state title="Nothing on the list." message="Add an item above to get started." />
+    } @else {
+      <ul class="items">
+        @for (item of active(); track item.id) {
+          <li class="item">
+            <input
+              type="checkbox"
+              class="item__check"
+              [checked]="false"
+              (change)="toggleBought(item.id, false)"
+              [attr.aria-label]="'Mark ' + item.name + ' as bought'"
+            />
+            <div class="item__body">
+              <app-ui-cluster gap="sm" align="baseline">
+                <span class="item__name">{{ item.name }}</span>
+                @if (item.qty !== 1 || item.unit) {
+                  <span class="item__qty">{{ item.qty }}@if (item.unit) {{{ item.unit }}}</span>
+                }
+                @if (item.store) {
+                  <app-ui-badge tone="accent" [subtle]="true">{{ item.store }}</app-ui-badge>
+                }
+              </app-ui-cluster>
+              @if (item.note) {
+                <p class="item__note">{{ item.note }}</p>
+              }
+              @if (item.url) {
+                <a class="item__url" [href]="item.url" target="_blank" rel="noopener">{{ item.url }}</a>
+              }
+            </div>
+            <app-ui-button
+              variant="ghost"
+              size="sm"
+              [ariaLabel]="'Delete ' + item.name"
+              (pressed)="remove(item.id, item.name)">
+              ×
+            </app-ui-button>
+          </li>
+        }
+      </ul>
+    }
+  </app-ui-section>
+
+  @if (bought().length > 0) {
+    <app-ui-section title="Bought" [collapsible]="true" [expanded]="false" tone="subtle">
+      <ul class="items">
+        @for (item of bought(); track item.id) {
+          <li class="item item--bought">
+            <input
+              type="checkbox"
+              class="item__check"
+              [checked]="true"
+              (change)="toggleBought(item.id, true)"
+              [attr.aria-label]="'Move ' + item.name + ' back to active'"
+            />
+            <div class="item__body">
+              <app-ui-cluster gap="sm" align="baseline">
+                <span class="item__name">{{ item.name }}</span>
+                @if (item.qty !== 1 || item.unit) {
+                  <span class="item__qty">{{ item.qty }}@if (item.unit) {{{ item.unit }}}</span>
+                }
+              </app-ui-cluster>
+            </div>
+            <app-ui-button
+              variant="ghost"
+              size="sm"
+              [ariaLabel]="'Delete ' + item.name"
+              (pressed)="remove(item.id, item.name)">
+              ×
+            </app-ui-button>
+          </li>
+        }
+      </ul>
+    </app-ui-section>
+  }
+</app-ui-stack>

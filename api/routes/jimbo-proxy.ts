@@ -27,6 +27,7 @@ const allowedPrefixes = [
   '/api/pipeline',
   '/api/search',
   '/api/settings',
+  '/api/shopping',
   '/api/snapshot',
   '/api/summaries',
   '/api/triage',
