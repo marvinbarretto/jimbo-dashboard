@@ -73,6 +73,15 @@ export class VaultItemDependenciesService {
     });
   }
 
+  /** Resolves seq → id, validates, then delegates to add(). Returns an error string on failure. */
+  addBySeq(seq: number, blockedId: VaultItemId): string | null {
+    const blocker = this.vaultItemsService.getBySeq(seq);
+    if (!blocker) return `#${seq} not found`;
+    if (blocker.id === blockedId) return 'An item cannot block itself';
+    this.add(blocker.id as VaultItemId, blockedId);
+    return null;
+  }
+
   remove(blockerId: VaultItemId, blockedId: VaultItemId): void {
     const prior = this._depsByItem()[blockedId] ?? [];
     this._depsByItem.update(map => ({

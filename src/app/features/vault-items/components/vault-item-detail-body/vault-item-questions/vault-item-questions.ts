@@ -50,13 +50,10 @@ import type { CreateThreadMessagePayload, ThreadMessage } from '@domain/thread';
     }
 
     .vault-item-questions__who {
-      display: flex;
-      gap: 0.45rem;
-      align-items: baseline;
       margin-bottom: 0.3rem;
     }
 
-    .vault-item-questions__author {
+.vault-item-questions__author {
       font-size: 0.65rem;
       font-weight: 700;
       color: var(--color-danger);
