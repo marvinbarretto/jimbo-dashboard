@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { Chip } from '@shared/components/chip/chip';
+import { EntityChip, type EntityType } from '@shared/components/entity-chip/entity-chip';
 
 export interface FilterOption<TValue extends string | number> {
   value: TValue;
   label: string;
   count: number;
-  // Optional `tone` string passed through to the Chip component for colour tinting.
   tone?: string;
+  entityType?: EntityType;
 }
 
 // One filter group = one labelled row of chips that share a state Set.
@@ -34,7 +35,7 @@ export interface SortOption {
 // project) — same chrome, different inputs.
 @Component({
   selector: 'app-kanban-filter-bar',
-  imports: [Chip],
+  imports: [Chip, EntityChip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './kanban-filter-bar.html',
   styleUrl: './kanban-filter-bar.scss',

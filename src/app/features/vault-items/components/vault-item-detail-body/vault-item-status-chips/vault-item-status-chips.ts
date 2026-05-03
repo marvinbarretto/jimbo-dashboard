@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiDropdown } from '@shared/components/ui-dropdown/ui-dropdown';
 import type { Actor } from '@domain/actors';
@@ -8,7 +9,7 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
 
 @Component({
   selector: 'app-vault-item-status-chips',
-  imports: [RouterLink, UiBadge, UiDropdown],
+  imports: [RouterLink, EntityChip, UiBadge, UiDropdown],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="vault-item-status-chips">
@@ -40,7 +41,7 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
         #ownerDrop
         ariaHaspopup="listbox"
         ariaLabel="Reassign owner">
-        <span trigger [class]="ownerTriggerClass()">{{ ownerTriggerLabel() }}</span>
+        <app-entity-chip trigger type="actor" [id]="ownerChip().id" [label]="ownerChip().label" />
         <div panel role="listbox" class="vault-item-status-chips__panel">
           @for (a of activeActors(); track a.id) {
             <button
@@ -65,11 +66,8 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
       }
 
       @if (firstProject(); as p) {
-        <a
-          [routerLink]="['/projects', p.id]"
-          [class]="'detail-link-badge detail-link-badge--project detail-link-badge--project-' + p.id">
-          <span class="detail-link-badge__prefix">Project</span>
-          {{ p.display_name }}
+        <a class="chip-link" [routerLink]="['/projects', p.id]">
+          <app-entity-chip type="project" [id]="p.id" [label]="p.display_name" />
         </a>
       }
 
@@ -119,7 +117,10 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
       }
     }
 
-    /* .detail-link-badge and modifiers live in _utilities.scss */
+    .chip-link {
+      display: inline-flex;
+      text-decoration: none;
+    }
   `],
 })
 export class VaultItemStatusChips {
@@ -142,18 +143,10 @@ export class VaultItemStatusChips {
     this.lifecycle() === 'active' ? 'success' as const : 'neutral' as const
   );
 
-  readonly ownerTriggerLabel = computed(() => {
+  readonly ownerChip = computed(() => {
     const o = this.owner();
-    if (o) return `@${o.id}`;
-    const assigned = this.item().assigned_to;
-    return assigned ?? 'unassigned';
-  });
-
-  readonly ownerTriggerClass = computed(() => {
-    const o = this.owner();
-    const base = 'detail-link-badge detail-link-badge--owner';
-    if (!o) return `${base} detail-link-badge--unassigned`;
-    return `${base} detail-link-badge--actor-${o.kind}`;
+    if (o) return { id: o.id as string, label: o.id as string };
+    return { id: 'unassigned', label: 'unassigned' };
   });
 
   readonly groomingLabel = computed(() => this.item().grooming_status.replace(/_/g, ' '));

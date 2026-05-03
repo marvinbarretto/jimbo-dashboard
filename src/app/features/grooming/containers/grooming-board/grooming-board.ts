@@ -408,10 +408,10 @@ export class GroomingBoard {
       }
     }
     const options: FilterOption<string>[] = this.projectsService.activeProjects().map(p => ({
-      value: p.id as string,
-      label: p.display_name,
-      count: counts.get(p.id as string) ?? 0,
-      tone:  p.id as string,
+      value:      p.id as string,
+      label:      p.display_name,
+      count:      counts.get(p.id as string) ?? 0,
+      entityType: 'project' as const,
     }));
     return { id: PROJECT, label: 'Project', options, active: this.projectFilter() };
   }
@@ -428,10 +428,10 @@ export class GroomingBoard {
       }
     }
     const options: FilterOption<string>[] = this.actorsService.activeActors().map(a => ({
-      value: a.id as string,
-      label: `@${a.id}`,
-      count: counts.get(a.id as string) ?? 0,
-      tone:  a.id as string,
+      value:      a.id as string,
+      label:      a.id as string,
+      count:      counts.get(a.id as string) ?? 0,
+      entityType: 'actor' as const,
     }));
     options.push({ value: UNASSIGNED, label: 'unassigned', count: unassigned });
     return { id: OWNER, label: 'Owner', options, active: this.ownerFilter() };

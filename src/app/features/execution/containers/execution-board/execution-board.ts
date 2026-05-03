@@ -211,10 +211,10 @@ export class ExecutionBoard {
     }
     const executorIds = new Set(this.dispatchService.entries().map(e => e.executor as string));
     const options: FilterOption<string>[] = Array.from(executorIds).map(id => ({
-      value: id,
-      label: `@${id}`,
-      count: counts.get(id) ?? 0,
-      tone:  id,
+      value:      id,
+      label:      id,
+      count:      counts.get(id) ?? 0,
+      entityType: 'actor' as const,
     })).sort((a, b) => a.label.localeCompare(b.label));
     return { id: EXECUTOR, label: 'Executor', options, active: this.executorFilter() };
   }
@@ -229,10 +229,10 @@ export class ExecutionBoard {
       }
     }
     const options: FilterOption<string>[] = this.projectsService.activeProjects().map(p => ({
-      value: p.id as string,
-      label: p.display_name,
-      count: counts.get(p.id as string) ?? 0,
-      tone:  p.id as string,
+      value:      p.id as string,
+      label:      p.display_name,
+      count:      counts.get(p.id as string) ?? 0,
+      entityType: 'project' as const,
     }));
     return { id: PROJECT, label: 'Project', options, active: this.projectFilter() };
   }

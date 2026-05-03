@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { EntityChip, type EntityType } from '@shared/components/entity-chip/entity-chip';
 
 export type UiChipListTone = 'default' | 'blocker';
 
@@ -6,36 +7,53 @@ export interface UiChipListItem {
   readonly id: string;
   readonly label: string;
   readonly tone?: UiChipListTone;
+  readonly entityType?: EntityType;
+  readonly seq?: number;
 }
 
 export interface UiChipListPickerOption {
   readonly id: string;
   readonly label: string;
+  readonly entityType?: EntityType;
 }
 
 @Component({
   selector: 'app-ui-chip-list',
+  imports: [EntityChip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="ui-chip-list">
       @for (item of items(); track item.id) {
-        <span
-          class="ui-chip-list__chip"
-          [class.ui-chip-list__chip--blocker]="item.tone === 'blocker'">
-          <button
-            type="button"
-            class="ui-chip-list__label"
-            (click)="itemClicked.emit(item.id)">
-            {{ item.label }}
-          </button>
-          @if (allowRemove()) {
+        @if (item.entityType) {
+          <span class="ui-chip-list__chip ui-chip-list__chip--entity">
+            <button type="button" class="ui-chip-list__entity-btn" (click)="itemClicked.emit(item.id)">
+              <app-entity-chip [type]="item.entityType" [id]="item.id" [label]="item.label" [seq]="item.seq ?? null" />
+            </button>
+            @if (allowRemove()) {
+              <button type="button" class="ui-chip-list__remove"
+                [attr.aria-label]="'Remove ' + item.label"
+                (click)="removed.emit(item.id)">×</button>
+            }
+          </span>
+        } @else {
+          <span
+            class="ui-chip-list__chip"
+            [class.ui-chip-list__chip--blocker]="item.tone === 'blocker'">
             <button
               type="button"
-              class="ui-chip-list__remove"
-              [attr.aria-label]="'Remove ' + item.label"
-              (click)="removed.emit(item.id)">×</button>
-          }
-        </span>
+              class="ui-chip-list__label"
+              (click)="itemClicked.emit(item.id)">
+              {{ item.label }}
+            </button>
+            @if (allowRemove()) {
+              <button
+                type="button"
+                class="ui-chip-list__remove"
+                [attr.aria-label]="'Remove ' + item.label"
+                (click)="removed.emit(item.id)">×</button>
+            }
+          </span>
+        }
       } @empty {
         <span class="ui-chip-list__empty">{{ emptyLabel() }}</span>
       }
@@ -52,11 +70,12 @@ export interface UiChipListPickerOption {
     @if (pickerOpen()) {
       <div class="ui-chip-list__picker">
         @for (opt of pickerOptions(); track opt.id) {
-          <button
-            type="button"
-            class="ui-chip-list__picker-opt"
-            (click)="onAdd(opt.id)">
-            {{ opt.label }}
+          <button type="button" class="ui-chip-list__picker-opt" (click)="onAdd(opt.id)">
+            @if (opt.entityType) {
+              <app-entity-chip [type]="opt.entityType" [id]="opt.id" [label]="opt.label" />
+            } @else {
+              {{ opt.label }}
+            }
           </button>
         } @empty {
           <span class="ui-chip-list__picker-empty">No options available</span>
@@ -89,6 +108,21 @@ export interface UiChipListPickerOption {
 
     .ui-chip-list__chip--blocker {
       border-color: #a33;
+    }
+
+    .ui-chip-list__chip--entity {
+      border: none;
+      border-radius: 0;
+      background: none;
+    }
+
+    .ui-chip-list__entity-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      font: inherit;
+      cursor: pointer;
     }
 
     .ui-chip-list__label {

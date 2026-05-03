@@ -79,15 +79,5 @@
   }
 
   // Colour modifiers.
-  &--owner        { --badge-color: var(--color-text-soft); }
-  &--project      { --badge-color: var(--color-accent); }
-  &--project-hermes     { --badge-color: var(--project-color-hermes); }
-  &--project-localshout { --badge-color: var(--project-color-localshout); }
-  &--project-dashboard  { --badge-color: var(--project-color-dashboard); }
-  &--project-personal   { --badge-color: var(--project-color-personal); }
-  &--actor-human  { --badge-color: var(--actor-color-marvin); }
-  &--actor-agent  { --badge-color: var(--actor-color-boris); }
-  &--actor-system { --badge-color: var(--actor-color-jimbo); }
-  &--subtask      { --badge-color: var(--color-text-soft); white-space: normal; border-radius: 4px; }
-  &--unassigned   { font-style: italic; opacity: 0.78; }
+  &--subtask { --badge-color: var(--color-text-soft); white-space: normal; border-radius: 4px; }
 }

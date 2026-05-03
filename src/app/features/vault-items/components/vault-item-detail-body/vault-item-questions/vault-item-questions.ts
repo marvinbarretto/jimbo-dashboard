@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import { QuestionReplyComposer } from '@shared/components/question-reply-composer/question-reply-composer';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiSection } from '@shared/components/ui-section/ui-section';
@@ -8,7 +9,7 @@ import type { CreateThreadMessagePayload, ThreadMessage } from '@domain/thread';
 
 @Component({
   selector: 'app-vault-item-questions',
-  imports: [QuestionReplyComposer, UiCluster, UiSection, RelativeTimePipe],
+  imports: [EntityChip, QuestionReplyComposer, UiCluster, UiSection, RelativeTimePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (questions().length > 0) {
@@ -20,7 +21,7 @@ import type { CreateThreadMessagePayload, ThreadMessage } from '@domain/thread';
         @for (q of questions(); track q.id) {
           <div class="vault-item-questions__item">
             <app-ui-cluster align="baseline" gap="sm" class="vault-item-questions__who">
-              <span class="vault-item-questions__author">{{ q.author_actor_id }}</span>
+              <app-entity-chip type="actor" [id]="q.author_actor_id" [label]="q.author_actor_id" />
               <span class="vault-item-questions__kind">open question</span>
               <span class="vault-item-questions__age">{{ q.created_at | relativeTime }}</span>
             </app-ui-cluster>
@@ -51,12 +52,6 @@ import type { CreateThreadMessagePayload, ThreadMessage } from '@domain/thread';
 
     .vault-item-questions__who {
       margin-bottom: 0.3rem;
-    }
-
-.vault-item-questions__author {
-      font-size: 0.65rem;
-      font-weight: 700;
-      color: var(--color-danger);
     }
 
     .vault-item-questions__kind {

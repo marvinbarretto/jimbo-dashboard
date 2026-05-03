@@ -4,6 +4,7 @@ import { createColumnHelper, type ColumnDef } from '@tanstack/angular-table';
 import { UiDataTable } from '@shared/components/ui-data-table/ui-data-table';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { formatDatetime } from '@shared/utils/datetime.utils';
 import type { EndpointConfig } from '../../data-pages';
 import { JimboDataService, type JsonObject } from '../../data-access/jimbo-data.service';
 
@@ -137,9 +138,14 @@ function isScalar(value: unknown): boolean {
   return value === null || ['string', 'number', 'boolean'].includes(typeof value);
 }
 
+const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
+
 function formatValue(value: unknown): string {
   if (value === null || value === undefined) return '-';
-  if (typeof value === 'string') return value.length > 140 ? `${value.slice(0, 137)}...` : value;
+  if (typeof value === 'string') {
+    if (ISO_RE.test(value)) return formatDatetime(value);
+    return value.length > 140 ? `${value.slice(0, 137)}...` : value;
+  }
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   try {
     const json = JSON.stringify(value);

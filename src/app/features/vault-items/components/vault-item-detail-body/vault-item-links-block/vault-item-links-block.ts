@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { UiChipList, type UiChipListItem, type UiChipListPickerOption } from '@shared/components/ui-chip-list/ui-chip-list';
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
+import { VaultItemTagList } from '../vault-item-tag-list/vault-item-tag-list';
 import type { Project } from '@domain/projects/project';
 import type { OpenBlocker } from '@domain/vault/readiness';
 
@@ -14,7 +15,7 @@ export interface VaultItemSubtask {
 
 @Component({
   selector: 'app-vault-item-links-block',
-  imports: [UiChipList, UiSubhead, UiSubsection],
+  imports: [UiChipList, UiSubhead, UiSubsection, VaultItemTagList],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-ui-subsection label="Links">
@@ -71,17 +72,7 @@ export interface VaultItemSubtask {
       </div>
 
       <app-ui-subhead label="Tags" [count]="tags().length" />
-      @if (tags().length > 0) {
-        <div class="vault-item-links-block__tag-row">
-          @for (tag of tags(); track tag) {
-            <span class="vault-item-links-block__tag">{{ tag }}</span>
-          }
-        </div>
-      } @else {
-        <div class="vault-item-links-block__tag-row">
-          <span class="vault-item-links-block__tag vault-item-links-block__tag--empty">none yet</span>
-        </div>
-      }
+      <app-vault-item-tag-list [tags]="tags()" />
     </app-ui-subsection>
   `,
   styles: [`
@@ -148,22 +139,6 @@ export interface VaultItemSubtask {
       cursor: not-allowed;
     }
 
-    .vault-item-links-block__tag-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-    }
-
-    .vault-item-links-block__tag {
-      border: 1px solid var(--color-border);
-      font-size: 0.7rem;
-      padding: 1px 7px;
-      color: var(--color-text-muted);
-    }
-
-    .vault-item-links-block__tag--empty {
-      font-style: italic;
-    }
   `],
 })
 export class VaultItemLinksBlock {
@@ -184,20 +159,21 @@ export class VaultItemLinksBlock {
   readonly blockerSeqInputChange = output<string>();
 
   readonly projectChips = computed<readonly UiChipListItem[]>(() =>
-    this.projects().map(p => ({ id: p.id, label: p.display_name }))
+    this.projects().map(p => ({ id: p.id, label: p.display_name, entityType: 'project' as const }))
   );
 
   readonly projectPickerOptions = computed<readonly UiChipListPickerOption[]>(() =>
     this.activeProjects()
       .filter(p => !this.projects().some(linked => linked.id === p.id))
-      .map(p => ({ id: p.id, label: p.display_name }))
+      .map(p => ({ id: p.id, label: p.display_name, entityType: 'project' as const }))
   );
 
   readonly blockerChips = computed<readonly UiChipListItem[]>(() =>
     this.openBlockers().map(b => ({
       id: b.blocker_id,
-      label: `#${b.blocker_seq} · ${b.blocker_title}`,
-      tone: 'blocker',
+      label: b.blocker_title,
+      seq: b.blocker_seq,
+      entityType: 'vault-item' as const,
     }))
   );
 

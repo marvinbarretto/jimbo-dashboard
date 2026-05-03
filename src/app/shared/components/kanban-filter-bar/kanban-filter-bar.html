@@ -14,13 +14,27 @@
     <div class="filters__group">
       <span class="filters__label">{{ group.label }}</span>
       @for (opt of group.options; track opt.value) {
-        <app-chip
-          [active]="group.active.has(opt.value)"
-          [disabled]="opt.count === 0 && !group.active.has(opt.value)"
-          [count]="opt.count"
-          [tone]="opt.tone ?? null"
-          (toggle)="onToggle(group.id, opt.value)"
-        >{{ opt.label }}</app-chip>
+        @if (opt.entityType) {
+          <button type="button" class="filters__entity-btn"
+            [disabled]="opt.count === 0 && !group.active.has(opt.value)"
+            (click)="onToggle(group.id, opt.value)">
+            <app-entity-chip
+              [type]="opt.entityType"
+              [id]="opt.value.toString()"
+              [label]="opt.label"
+              [count]="opt.count"
+              [active]="group.active.has(opt.value)"
+              [disabled]="opt.count === 0 && !group.active.has(opt.value)" />
+          </button>
+        } @else {
+          <app-chip
+            [active]="group.active.has(opt.value)"
+            [disabled]="opt.count === 0 && !group.active.has(opt.value)"
+            [count]="opt.count"
+            [tone]="opt.tone ?? null"
+            (toggle)="onToggle(group.id, opt.value)"
+          >{{ opt.label }}</app-chip>
+        }
       }
     </div>
   }
