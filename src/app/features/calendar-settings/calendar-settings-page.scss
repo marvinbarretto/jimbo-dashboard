@@ -52,6 +52,21 @@
 
 .calendar-row__badges {
   display: flex;
-  gap: 0.4rem;
+  align-items: center;
+  gap: 0.75rem;
   flex-shrink: 0;
+}
+
+.calendar-row__potential {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.calendar-row__potential-label {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }

@@ -34,6 +34,14 @@
                 @if (row.calendar.primary) {
                   <app-ui-badge tone="accent">primary</app-ui-badge>
                 }
+                <label class="calendar-row__potential">
+                  <app-ui-toggle
+                    [checked]="row.potential"
+                    [label]="'Mark ' + row.calendar.summary + ' as potential'"
+                    (changed)="togglePotential(row.calendar.id, row.potential)"
+                  />
+                  <span class="calendar-row__potential-label">potential</span>
+                </label>
               </div>
             </div>
           }
@@ -59,6 +67,14 @@
                   <span class="calendar-row__tag">{{ row.tag }}</span>
                 }
               </div>
+              <label class="calendar-row__potential">
+                <app-ui-toggle
+                  [checked]="row.potential"
+                  [label]="'Mark ' + row.calendar.summary + ' as potential'"
+                  (changed)="togglePotential(row.calendar.id, row.potential)"
+                />
+                <span class="calendar-row__potential-label">potential</span>
+              </label>
             </div>
           }
         </div>

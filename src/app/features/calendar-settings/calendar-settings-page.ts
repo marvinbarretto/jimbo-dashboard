@@ -15,6 +15,7 @@ interface CalendarRow {
   readonly calendar: CalendarEntry;
   readonly enabled: boolean;
   readonly tag: string | null;
+  readonly potential: boolean;
 }
 
 // Coalesces rapid toggle clicks into one PUT — the API takes a full-config
@@ -66,6 +67,7 @@ export class CalendarSettingsPage {
         calendar: c,
         enabled: config[c.id]?.enabled ?? !!c.primary,
         tag: config[c.id]?.tag ?? null,
+        potential: config[c.id]?.potential ?? false,
       }));
   });
 
@@ -78,6 +80,7 @@ export class CalendarSettingsPage {
         calendar: c,
         enabled: config[c.id]?.enabled ?? false,
         tag: config[c.id]?.tag ?? null,
+        potential: config[c.id]?.potential ?? false,
       }));
   });
 
@@ -102,7 +105,15 @@ export class CalendarSettingsPage {
   protected toggle(id: string, current: boolean): void {
     this.localConfig.update(cfg => ({
       ...cfg,
-      [id]: { enabled: !current, tag: cfg[id]?.tag ?? null },
+      [id]: { enabled: !current, tag: cfg[id]?.tag ?? null, potential: cfg[id]?.potential ?? false },
+    }));
+    this.scheduleSave();
+  }
+
+  protected togglePotential(id: string, current: boolean): void {
+    this.localConfig.update(cfg => ({
+      ...cfg,
+      [id]: { enabled: cfg[id]?.enabled ?? false, tag: cfg[id]?.tag ?? null, potential: !current },
     }));
     this.scheduleSave();
   }

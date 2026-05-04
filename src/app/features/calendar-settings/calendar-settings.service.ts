@@ -15,6 +15,7 @@ export interface CalendarEntry {
 export interface CalendarItemConfig {
   enabled: boolean;
   tag: string | null;
+  potential: boolean;
 }
 
 export interface CalendarConfigValue {
