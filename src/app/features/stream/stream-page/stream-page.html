@@ -243,7 +243,11 @@
                                     >{{ st }}</span>
                                   }
                                   @if (asString(payloadField(ev.payload, 'session_id')); as sid) {
-                                    <span class="stream-page__id-chip stream-page__id-chip--mono" [title]="'session_id: ' + sid">session: {{ shortId(sid, 14) }}</span>
+                                    @if (sid | cronJobName; as jobName) {
+                                      <span class="stream-page__id-chip stream-page__id-chip--job" [title]="'cron job: ' + jobName + '\nsession: ' + sid">⏰ {{ jobName }}</span>
+                                    } @else {
+                                      <span class="stream-page__id-chip stream-page__id-chip--mono" [title]="'session_id: ' + sid">session: {{ shortId(sid, 14) }}</span>
+                                    }
                                   }
                                   @if (asString(payloadField(ev.payload, 'task_id')); as tid) {
                                     <span class="stream-page__id-chip stream-page__id-chip--mono" [title]="'task_id: ' + tid">task: {{ shortId(tid) }}</span>
@@ -252,6 +256,12 @@
                                     <span class="stream-page__id-chip stream-page__id-chip--mono" [title]="'tool_call_id: ' + tcid">call: {{ shortId(tcid, 10) }}</span>
                                   }
                                 </app-ui-cluster>
+                                @if (extractOutput(ev.detail); as out) {
+                                  <div class="stream-page__detail-section">
+                                    <h4 class="stream-page__detail-heading">output</h4>
+                                    <pre class="stream-page__code-block stream-page__code-block--output"><code>{{ out }}</code></pre>
+                                  </div>
+                                }
                                 @if (ev.detail) {
                                   <div class="stream-page__detail-section">
                                     <h4 class="stream-page__detail-heading">detail</h4>

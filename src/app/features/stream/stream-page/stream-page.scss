@@ -305,6 +305,13 @@
   word-break: break-word;
   max-height: 400px;
   overflow-y: auto;
+
+  // Output (script stdout) gets a distinct tint so it's separable from
+  // the raw JSON dump below — operator's eye can land on it instantly.
+  &--output {
+    background: color-mix(in srgb, var(--color-accent) 6%, var(--color-bg, #fff));
+    border-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-border));
+  }
 }
 
 .stream-page__error-callout {
@@ -330,6 +337,11 @@
   white-space: nowrap;
 
   &--mono { font-family: var(--font-mono); }
+  &--job {
+    background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+    color: var(--color-accent);
+    font-weight: 600;
+  }
   &--ok {
     background: color-mix(in srgb, var(--color-success, #2e7d32) 18%, transparent);
     color: var(--color-success, #2e7d32);

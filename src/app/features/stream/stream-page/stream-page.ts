@@ -7,6 +7,8 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { VaultItemsService } from '../../vault-items/data-access/vault-items.service';
+import { CronJobNamePipe } from '../cron-job-name.pipe';
+import { CronJobsService } from '../cron-jobs.service';
 import { ErrorAggregationService, type ErrorClass } from '../error-aggregation.service';
 import { EventDetailService } from '../event-detail.service';
 import { StreamService, type SystemEventSummary } from '../stream.service';
@@ -80,6 +82,7 @@ function fmtDuration(ms: number | null): string {
   selector: 'app-stream-page',
   imports: [
     Chip,
+    CronJobNamePipe,
     EntityChip,
     UiBadge,
     UiCluster,
@@ -96,6 +99,7 @@ export class StreamPage implements OnInit, OnDestroy {
   private readonly vault = inject(VaultItemsService);
   private readonly detailService = inject(EventDetailService);
   private readonly errorAgg = inject(ErrorAggregationService);
+  private readonly cronJobs = inject(CronJobsService);
 
   readonly status = this.service.status;
   readonly lastError = this.service.lastError;
@@ -250,11 +254,13 @@ export class StreamPage implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.service.connect();
     this.errorAgg.start();
+    this.cronJobs.start();
   }
 
   ngOnDestroy(): void {
     this.service.disconnect();
     this.errorAgg.stop();
+    this.cronJobs.stop();
   }
 
   protected refreshErrors(): void {
@@ -378,6 +384,23 @@ export class StreamPage implements OnInit, OnDestroy {
   protected fmtDurationMs(ms: number | null | undefined): string {
     if (ms === null || ms === undefined) return '';
     return fmtDuration(ms);
+  }
+
+  // Best-effort extraction of the actual script output for tool.post
+  // events. Plugin parsing one layer deep means detail.result.output is
+  // either a string (raw stdout from terminal) or a structured value
+  // (terminal+JSON response). Only return strings — rendering a parsed
+  // dict belongs to the JSON code-block fallback.
+  protected extractOutput(detail: unknown): string | null {
+    if (!detail || typeof detail !== 'object' || Array.isArray(detail)) return null;
+    const d = detail as Record<string, unknown>;
+    const result = d['result'];
+    if (!result || typeof result !== 'object' || Array.isArray(result)) {
+      // Some legacy/raw cases store result as a string directly.
+      return typeof result === 'string' && result.length > 0 ? result : null;
+    }
+    const output = (result as Record<string, unknown>)['output'];
+    return typeof output === 'string' && output.length > 0 ? output : null;
   }
 
   // Detail blobs from hermes have `result.output` parsed one level deep

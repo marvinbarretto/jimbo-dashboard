@@ -5,11 +5,23 @@ import { environment } from '../../../environments/environment';
 import type { SystemEventFull } from './event-detail.service';
 
 // Aggregation row — one entry per distinct error class. Class key is the
-// first 80 chars of payload.error (which the plugin already caps to a
-// compact one-liner — see hermes _compact_error). 80 is enough to keep
-// `FileNotFoundError: [Errno 2] No such file or directory: 'jimbo-api'`
-// together but stop "request_id: <uuid>" tails from splitting groups.
+// first 80 chars of the *compacted* payload.error (the plugin caps this
+// at the source, but historic rows from before that change still carry
+// full tracebacks; we re-compact here so display + grouping match).
 const CLASS_KEY_LIMIT = 80;
+const LABEL_LIMIT = 200;
+
+// Mirror of the server's _compact_error: take the last line of a
+// Python traceback, the first line of anything else, and cap at
+// LABEL_LIMIT. Forward-emitted events already arrive compacted, but
+// rows in the table from before the cap shipped still need it.
+function compactError(s: string): string {
+  if (!s) return s;
+  const lines = s.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0);
+  if (lines.length === 0) return '';
+  const line = lines[0]!.startsWith('Traceback') ? lines[lines.length - 1]! : lines[0]!;
+  return line.length > LABEL_LIMIT ? line.slice(0, LABEL_LIMIT - 1) + '…' : line;
+}
 
 // How many recent events to fetch for aggregation. The list endpoint
 // already filters server-side by level. 500 covers a few hours of
@@ -101,8 +113,9 @@ export class ErrorAggregationService {
   private aggregate(events: SystemEventFull[]): ErrorClass[] {
     const groups = new Map<string, ErrorClass>();
     for (const ev of events) {
-      const errStr = this.extractErrorString(ev.payload);
-      if (!errStr) continue;
+      const rawErr = this.extractErrorString(ev.payload);
+      if (!rawErr) continue;
+      const errStr = compactError(rawErr);
       const key = errStr.slice(0, CLASS_KEY_LIMIT);
       const existing = groups.get(key);
       if (existing) {
