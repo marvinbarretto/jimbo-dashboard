@@ -1,5 +1,5 @@
-// Reads + mutates dispatch_queue rows via dashboard-api at
-// /dashboard-api/api/dispatches (jimbo_pg-backed).
+// Reads dispatch_queue rows from jimbo-api at /api/dispatch/queue.
+// Retry mutation has no direct jimbo-api equivalent yet — see retry() below.
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -15,7 +15,7 @@ import { SEED } from '@domain/seed';
 export class DispatchService {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
-  private readonly url = `${environment.dashboardApiUrl}/api/dispatches`;
+  private readonly url = `${environment.dashboardApiUrl}/api/dispatch/queue`;
 
   private readonly _entries = signal<DispatchQueueEntry[]>([]);
   private readonly _loading = signal(true);
@@ -72,8 +72,9 @@ export class DispatchService {
 
     if (isSeedMode()) return;
 
-    // dashboard-api uses domain field names (error_message, started_at, completed_at).
-    // Send only what changed so other fields stay untouched.
+    // TODO: jimbo-api has no PATCH-by-dispatch-id endpoint. POST /api/dispatch/approve
+    // takes item_ids (task IDs) not dispatch IDs. Needs a dedicated retry endpoint.
+    // For now this 404s and the optimistic update reverts cleanly.
     const patch = {
       status:        'approved' as const,
       error_message: null,
@@ -81,7 +82,7 @@ export class DispatchService {
       completed_at:  null,
       retry_count:   prior.retry_count + 1,
     };
-    this.http.patch<ApiDispatchEntry>(`${this.url}/${encodeURIComponent(id)}`, patch).subscribe({
+    this.http.patch<ApiDispatchEntry>(`${environment.dashboardApiUrl}/api/dispatch/${encodeURIComponent(id)}`, patch).subscribe({
       next: (updated) => {
         this._entries.update(es => es.map(e => e.id === id ? toDispatchEntry(updated) : e));
         this.toast.success('Dispatch queued for retry');

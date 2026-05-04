@@ -1,0 +1,72 @@
+[
+  {
+    "id": "library-surface",
+    "name": "Library Surface",
+    "description": "Badges, buttons, and meta-list overview."
+  },
+  {
+    "id": "toggle",
+    "name": "Toggle",
+    "selector": "app-ui-toggle",
+    "description": "Boolean slide toggle with role=\"switch\" accessibility."
+  },
+  {
+    "id": "entity-chip",
+    "name": "Entity Chip",
+    "selector": "app-entity-chip",
+    "description": "Inline chip for actors, projects, and vault items."
+  },
+  {
+    "id": "vault-detail-primitives",
+    "name": "Vault Primitives",
+    "description": "Stat card, chip list, inline picker, dropdown, readiness panel, checklist, sticky action bar, subsection."
+  },
+  {
+    "id": "tab-bar",
+    "name": "Tab Bar",
+    "selector": "app-ui-tab-bar",
+    "description": "Underline-style tab bar for router or signal-based tabs."
+  },
+  {
+    "id": "list-workflow",
+    "name": "List Workflow",
+    "description": "Typical page header + table pattern for browsable lists."
+  },
+  {
+    "id": "detail-workflow",
+    "name": "Detail Workflow",
+    "description": "Typical back-link + meta-list pattern for entity detail pages."
+  },
+  {
+    "id": "hybrid-edit",
+    "name": "Hybrid Edit",
+    "description": "Inline edit for scalar fields; advanced edit for structured fields."
+  },
+  {
+    "id": "expandable-rows",
+    "name": "Expandable Rows",
+    "description": "Whole-row trigger revealing inline context without leaving the table."
+  },
+  {
+    "id": "side-panel-inspector",
+    "name": "Side-Panel Inspector",
+    "description": "Persistent inspector panel for richer detail and actions."
+  },
+  {
+    "id": "loading-states",
+    "name": "Loading States",
+    "selector": "app-ui-loading-state",
+    "description": "Labelled loading spinner for async content."
+  },
+  {
+    "id": "datetime-pipes",
+    "name": "Date & Time Pipes",
+    "description": "datetime and relativeTime pipes for ISO string formatting."
+  },
+  {
+    "id": "form-actions",
+    "name": "Form Actions",
+    "selector": "app-ui-form-actions",
+    "description": "Standardised bottom-of-form action row layout."
+  }
+]

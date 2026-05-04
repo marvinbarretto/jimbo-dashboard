@@ -25,16 +25,6 @@ import { primaryNavItems } from './nav-config';
             </a>
           </li>
         }
-
-        <li class="app-nav__item app-nav__item--search">
-          <input
-            type="search"
-            class="app-nav__search"
-            placeholder="Search…"
-            aria-label="Global search"
-            disabled
-          />
-        </li>
       </ul>
     </nav>
   `,
