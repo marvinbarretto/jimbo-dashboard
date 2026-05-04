@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.18](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.17...v0.0.18) (2026-05-04)
+
+
+### Features
+
+* **calendar-settings:** add potential toggle per calendar ([32cacf9](https://github.com/marvinbarretto/jimbo-dashboard/commit/32cacf92dce264dfcb7ed21d9f9b6a2e58ce5132))
+* **mail:** prune to lean email_reports surface ([6dad5ea](https://github.com/marvinbarretto/jimbo-dashboard/commit/6dad5eaffa0d968ea52c31ccc987e714bcb302fb))
+* **nav:** full-bleed chunky nav, per-section accents, calendar settings, UiToggle ([0aa567c](https://github.com/marvinbarretto/jimbo-dashboard/commit/0aa567c6dc47710991e5ce96b7398a8f12df98b5))
+* **phase-c:** remove dashboard-api BFF, point all services at jimbo-api ([6be8fc4](https://github.com/marvinbarretto/jimbo-dashboard/commit/6be8fc4f9c48523e88b6c44210c8479ed6dc1a34))
+* **pomo:** standalone timer at /pomo + reports stub at /pomo-reports ([4d5a867](https://github.com/marvinbarretto/jimbo-dashboard/commit/4d5a867a804aa7128d053f9e98b4776ebae4fb1c))
+* **settings:** auto-save calendar + tasks settings on toggle ([c1a44e5](https://github.com/marvinbarretto/jimbo-dashboard/commit/c1a44e5cf2206b6a1e366103bce3509ae95c09a7))
+* **stream:** switch activity stream from WebSocket to SSE ([6b44ebc](https://github.com/marvinbarretto/jimbo-dashboard/commit/6b44ebcfaa2296388b576fe9c0192a6b60837471))
+* **types:** regenerate api-types against lean email_reports shape ([eca24cd](https://github.com/marvinbarretto/jimbo-dashboard/commit/eca24cd61da2c567bb0536db1129869ec89156a4))
+* **ui-lab:** left-nav with component registry; fix BFF migration tail ([d86e2b7](https://github.com/marvinbarretto/jimbo-dashboard/commit/d86e2b7da9fd02820a849bcffb73eeebdbbc04b0))
+
+
+### Code Refactoring
+
+* **ux:** include entity names in all toast messages ([0035f1a](https://github.com/marvinbarretto/jimbo-dashboard/commit/0035f1a02ae27f6fb226f1a7f0674276f551124f))
+
 ### [0.0.17](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.16...v0.0.17) (2026-05-04)
 
 
