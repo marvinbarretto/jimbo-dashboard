@@ -148,6 +148,7 @@
                       <span class="stream-page__time" [title]="row.event.ts">{{ row.time }}</span>
                       <code class="stream-page__kind">{{ row.event.kind }}</code>
                       <span class="stream-page__sub-title">{{ row.event.title }}</span>
+                      <span class="stream-page__sub-id" [title]="'event id: ' + row.event.id">#{{ row.event.id }}</span>
                       <span class="stream-page__chevron" aria-hidden="true">{{ isEventExpanded(row.event.id) ? '▾' : '▸' }}</span>
                     </button>
                     @if (isEventExpanded(row.event.id)) {
@@ -163,20 +164,49 @@
                               </p>
                             }
                             @case ('loaded') {
-                              @if (entry.event?.payload; as payload) {
-                                <div class="stream-page__detail-section">
-                                  <h4 class="stream-page__detail-heading">payload</h4>
-                                  <pre class="stream-page__code-block"><code>{{ formatJson(payload) }}</code></pre>
-                                </div>
-                              }
-                              @if (entry.event?.detail; as detail) {
-                                <div class="stream-page__detail-section">
-                                  <h4 class="stream-page__detail-heading">detail</h4>
-                                  <pre class="stream-page__code-block"><code>{{ formatJson(detail) }}</code></pre>
-                                </div>
-                              }
-                              @if (!entry.event?.payload && !entry.event?.detail) {
-                                <p class="stream-page__detail-status">(no detail or payload recorded)</p>
+                              @if (entry.event; as ev) {
+                                @if (extractError(ev.detail); as errMsg) {
+                                  <p class="stream-page__error-callout">⚠ {{ errMsg }}</p>
+                                }
+                                <app-ui-cluster gap="xs" align="center">
+                                  @if (asNumber(payloadField(ev.payload, 'duration_ms')); as ms) {
+                                    <span class="stream-page__id-chip" [title]="ms + 'ms'">⏱ {{ fmtDurationMs(ms) }}</span>
+                                  }
+                                  @if (asString(payloadField(ev.payload, 'tool_name')); as tn) {
+                                    <span class="stream-page__id-chip stream-page__id-chip--mono" title="tool_name">🔧 {{ tn }}</span>
+                                  }
+                                  @if (asString(payloadField(ev.payload, 'status')); as st) {
+                                    <span
+                                      class="stream-page__id-chip"
+                                      [class.stream-page__id-chip--ok]="st === 'ok'"
+                                      [class.stream-page__id-chip--error]="st !== 'ok'"
+                                    >{{ st }}</span>
+                                  }
+                                  @if (asString(payloadField(ev.payload, 'session_id')); as sid) {
+                                    <span class="stream-page__id-chip stream-page__id-chip--mono" [title]="'session_id: ' + sid">session: {{ shortId(sid, 14) }}</span>
+                                  }
+                                  @if (asString(payloadField(ev.payload, 'task_id')); as tid) {
+                                    <span class="stream-page__id-chip stream-page__id-chip--mono" [title]="'task_id: ' + tid">task: {{ shortId(tid) }}</span>
+                                  }
+                                  @if (asString(payloadField(ev.payload, 'tool_call_id')); as tcid) {
+                                    <span class="stream-page__id-chip stream-page__id-chip--mono" [title]="'tool_call_id: ' + tcid">call: {{ shortId(tcid, 10) }}</span>
+                                  }
+                                </app-ui-cluster>
+                                @if (ev.detail) {
+                                  <div class="stream-page__detail-section">
+                                    <h4 class="stream-page__detail-heading">detail</h4>
+                                    <pre class="stream-page__code-block"><code>{{ formatJson(ev.detail) }}</code></pre>
+                                  </div>
+                                }
+                                @if (ev.payload) {
+                                  <div class="stream-page__detail-section">
+                                    <h4 class="stream-page__detail-heading">payload</h4>
+                                    <pre class="stream-page__code-block"><code>{{ formatJson(ev.payload) }}</code></pre>
+                                  </div>
+                                }
+                                @if (!ev.detail && !ev.payload) {
+                                  <p class="stream-page__detail-status">(no detail or payload recorded)</p>
+                                }
                               }
                             }
                           }

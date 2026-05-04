@@ -313,6 +313,70 @@ export class StreamPage implements OnInit, OnDestroy {
     }
   }
 
+  // Pull a typed view of the structured payload for the row header. The
+  // server returns payload as `unknown` (jsonb is free-form); these
+  // accessors narrow it without enforcing a strict shape — different
+  // event kinds populate different fields.
+  protected payloadField(payload: unknown, key: string): unknown {
+    if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+      return (payload as Record<string, unknown>)[key];
+    }
+    return undefined;
+  }
+
+  protected asString(value: unknown): string | null {
+    return typeof value === 'string' && value.length > 0 ? value : null;
+  }
+
+  protected asNumber(value: unknown): number | null {
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
+  }
+
+  // Short ID helper — show first N chars with "…" suffix for chip display.
+  // The full id stays on the chip's title attribute.
+  protected shortId(id: string | null | undefined, take = 8): string {
+    if (!id) return '';
+    return id.length > take ? `${id.slice(0, take)}…` : id;
+  }
+
+  protected fmtDurationMs(ms: number | null | undefined): string {
+    if (ms === null || ms === undefined) return '';
+    return fmtDuration(ms);
+  }
+
+  // Detail blobs from hermes have `result.output` parsed one level deep
+  // (terminal wrapping a JSON response). Surface the nested error here so
+  // the renderer can show an error callout above the raw JSON.
+  protected extractError(detail: unknown): string | null {
+    if (!detail || typeof detail !== 'object' || Array.isArray(detail)) return null;
+    const d = detail as Record<string, unknown>;
+    const result = d['result'];
+    if (!result || typeof result !== 'object' || Array.isArray(result)) return null;
+    const r = result as Record<string, unknown>;
+    const direct = r['error'];
+    if (typeof direct === 'string' && direct) return direct;
+    if (direct && typeof direct === 'object' && !Array.isArray(direct)) {
+      const e = direct as Record<string, unknown>;
+      const msg = e['message'] ?? e['code'];
+      if (typeof msg === 'string' && msg) return msg;
+    }
+    const output = r['output'];
+    if (output && typeof output === 'object' && !Array.isArray(output)) {
+      const o = output as Record<string, unknown>;
+      const innerErr = o['error'];
+      if (typeof innerErr === 'string' && innerErr) return innerErr;
+      if (innerErr && typeof innerErr === 'object' && !Array.isArray(innerErr)) {
+        const e = innerErr as Record<string, unknown>;
+        const code = e['code'];
+        const msg = e['message'];
+        if (typeof code === 'string' && typeof msg === 'string') return `${code}: ${msg}`;
+        if (typeof msg === 'string' && msg) return msg;
+        if (typeof code === 'string' && code) return code;
+      }
+    }
+    return null;
+  }
+
   protected statusTone(): 'success' | 'warning' | 'danger' | 'neutral' {
     switch (this.status()) {
       case 'open': return 'success';
