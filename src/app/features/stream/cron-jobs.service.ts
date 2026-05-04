@@ -82,7 +82,7 @@ export class CronJobsService {
     try {
       const response = await firstValueFrom(
         this.http.get<CronJobsResponse>(
-          `${environment.dashboardApiUrl}/api/jimbo?path=/api/hermes/jobs`,
+          `${environment.dashboardApiUrl}/api/hermes/jobs`,
         ),
       );
       this._jobs.set(response.items ?? []);

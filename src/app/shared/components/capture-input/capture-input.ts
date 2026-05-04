@@ -14,8 +14,7 @@ import { environment } from '../../../../environments/environment';
 // MVP quick-capture, mirrors the spirit of the old dashboard's `db-capture`:
 // type a title → Enter to save, Tab to expose body. Embellishments deferred:
 // `#tag !type p:N @owner` parser, autocomplete, search shortcut, flash anim.
-// Posts to dashboard-api `/api/vault-items`, which proxies to jimbo-api so
-// the canonical create logic (id/seq/ready) stays single-source.
+// Posts directly to jimbo-api `/api/vault/notes`.
 
 interface CaptureResponse {
   id: string;
@@ -182,7 +181,7 @@ export class CaptureInput {
     const body = this.body().trim() || undefined;
 
     this.http
-      .post<CaptureResponse>(`${environment.dashboardApiUrl}/api/vault-items`, { title, body })
+      .post<CaptureResponse>(`${environment.dashboardApiUrl}/api/vault/notes`, { title, body })
       .subscribe({
         next: (note) => {
           this.flash.set(`saved · #${note.seq}`);

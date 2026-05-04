@@ -1,8 +1,6 @@
-// Reads from the dashboard's new Hono+Drizzle API at /api/vault-items, which
-// in turn reads from the jimbo_pg Postgres (the PoC entity store).
-//
-// Mutations still go via the legacy PostgREST path until we add write
-// endpoints to the new API. Seed mode is preserved for offline UI work.
+// Reads from jimbo-api /api/vault/board (board-shaped enriched query).
+// Mutations go to /api/vault/notes (by-seq variants). Seed mode is preserved
+// for offline UI work.
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -28,7 +26,7 @@ export class VaultItemsService {
   private readonly http = inject(HttpClient);
   private readonly activityService = inject(ActivityEventsService);
   private readonly toast = inject(ToastService);
-  private readonly url = `${environment.dashboardApiUrl}/api/vault-items`;
+  private readonly url = `${environment.dashboardApiUrl}/api/vault/notes`;
 
   private readonly _items = signal<VaultItem[]>([]);
   private readonly _loading = signal(true);
@@ -48,12 +46,7 @@ export class VaultItemsService {
       this._loading.set(false);
       return;
     }
-    // /api/vault-items returns the board-shaped response from the new Hono
-    // service (jimbo_pg-backed). Map each row to the dashboard's VaultItem
-    // shape — the production schema is wider than VaultItem and uses
-    // different conventions (status: 'archived' instead of archived_at, etc.),
-    // so we adapt at the boundary rather than reshape every consumer.
-    this.http.get<ApiVaultItemsResponse>(`${environment.dashboardApiUrl}/api/vault-items?limit=2000`).subscribe({
+    this.http.get<ApiVaultItemsResponse>(`${environment.dashboardApiUrl}/api/vault/board?limit=2000`).subscribe({
       next: ({ items }) => { this._items.set(items.map(toVaultItem)); this._loading.set(false); },
       error: ()         => this._loading.set(false),
     });
