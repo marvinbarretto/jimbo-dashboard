@@ -23,6 +23,13 @@ if (!cred) {
 
 module.exports = [
   {
+    // SSE stream → local jimbo-api. Run `npm run dev:api` in another terminal.
+    context: ['/stream'],
+    target: 'http://localhost:3100',
+    secure: false,
+    changeOrigin: true,
+  },
+  {
     context: ['/dashboard-api/ws'],
     target: 'ws://localhost:3201',
     ws: true,

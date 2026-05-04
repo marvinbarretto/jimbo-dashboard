@@ -4,4 +4,6 @@ export const environment = {
   // gated by basic_auth at the host level. Bundle ships nothing
   // sensitive — same artifact as dev.
   dashboardApiUrl: '/dashboard-api',
+  // SSE activity stream — served directly by jimbo-api, Caddy basic_auth gated.
+  streamUrl: '/stream/system-events',
 };

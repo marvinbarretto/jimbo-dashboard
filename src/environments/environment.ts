@@ -5,4 +5,7 @@ export const environment = {
   // prod → Caddy → :3201. Auth: Caddy basic_auth on the public host —
   // the bundle ships nothing sensitive.
   dashboardApiUrl: '/dashboard-api',
+  // SSE activity stream — served directly by jimbo-api, Caddy basic_auth gated.
+  // Dev: Angular proxy forwards /stream/* → localhost:3100.
+  streamUrl: '/stream/system-events',
 };
