@@ -16,7 +16,24 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.app-header__inner,
+.app-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.2rem 1.5rem;
+  min-height: 1.75rem;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 40%, var(--color-bg));
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  gap: 1rem;
+}
+
+.app-header__inner {
+  padding-inline: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
 .app-main__inner {
   width: min(100%, 108rem);
   margin: 0 auto;
@@ -37,7 +54,10 @@
 }
 
 @media (max-width: 768px) {
-  .app-header__inner,
+  .app-header__inner {
+    padding-inline: 0.75rem;
+  }
+
   .app-main__inner {
     padding-inline: 0.75rem;
   }

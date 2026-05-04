@@ -71,6 +71,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/stream/stream-page/stream-page').then(m => m.StreamPage),
   },
   {
+    path: 'pomo-reports',
+    title: 'Pomo reports',
+    loadComponent: () => import('./features/pomo/containers/pomo-page/pomo-page').then(m => m.PomoPage),
+  },
+  {
     path: 'test-forms',
     title: 'Test forms',
     loadComponent: () => import('./features/test-forms/test-forms-page').then(m => m.TestFormsPage),
@@ -79,6 +84,11 @@ export const routes: Routes = [
     path: 'ui-lab',
     title: 'UI Lab',
     loadComponent: () => import('./features/ui-lab/ui-lab-page').then(m => m.UiLabPage),
+  },
+  {
+    path: 'calendar-settings',
+    title: 'Calendar settings',
+    loadComponent: () => import('./features/calendar-settings/calendar-settings-page').then(m => m.CalendarSettingsPage),
   },
   { path: '', redirectTo: 'today', pathMatch: 'full' },
 ];

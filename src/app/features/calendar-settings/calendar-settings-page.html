@@ -1,0 +1,81 @@
+<app-ui-stack gap="lg">
+  <app-ui-page-header>
+    <app-ui-back-link uiPageHeaderLead [to]="['/today']">← Today</app-ui-back-link>
+    <h1 uiPageHeaderTitle>Calendar settings</h1>
+    <p uiPageHeaderHint>
+      Choose which calendars Jimbo reads when fetching events. Disabled calendars are ignored
+      by all skills and briefings.
+    </p>
+  </app-ui-page-header>
+
+  @if (loading()) {
+    <app-ui-loading-state message="Loading calendars…" />
+  } @else {
+    <div class="calendar-sections-grid">
+    <app-ui-section title="Your calendars" [meta]="ownedRows().length + ' calendars'" [collapsible]="false">
+      @if (ownedRows().length === 0) {
+        <app-ui-empty-state message="No owned calendars found." />
+      } @else {
+        <div class="calendar-list">
+          @for (row of ownedRows(); track row.calendar.id) {
+            <div class="calendar-row">
+              <app-ui-toggle
+                [checked]="row.enabled"
+                [label]="'Toggle ' + row.calendar.summary"
+                (changed)="toggle(row.calendar.id, row.enabled)"
+              />
+              <div class="calendar-row__info">
+                <span class="calendar-row__name">{{ row.calendar.summary }}</span>
+                @if (row.tag) {
+                  <span class="calendar-row__tag">{{ row.tag }}</span>
+                }
+              </div>
+              <div class="calendar-row__badges">
+                @if (row.calendar.primary) {
+                  <app-ui-badge tone="accent">primary</app-ui-badge>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </app-ui-section>
+
+    <app-ui-section title="Shared & subscribed" [meta]="readerRows().length + ' calendars'" [collapsible]="true" [expanded]="readerExpanded()" (toggled)="readerExpanded.set(!readerExpanded())">
+      @if (readerRows().length === 0) {
+        <app-ui-empty-state message="No shared or subscribed calendars found." />
+      } @else {
+        <div class="calendar-list">
+          @for (row of readerRows(); track row.calendar.id) {
+            <div class="calendar-row">
+              <app-ui-toggle
+                [checked]="row.enabled"
+                [label]="'Toggle ' + row.calendar.summary"
+                (changed)="toggle(row.calendar.id, row.enabled)"
+              />
+              <div class="calendar-row__info">
+                <span class="calendar-row__name">{{ row.calendar.summary }}</span>
+                @if (row.tag) {
+                  <span class="calendar-row__tag">{{ row.tag }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </app-ui-section>
+    </div>
+  }
+
+  <app-ui-sticky-action-bar>
+    <ng-container uiStickyActionBarSecondary>
+      <app-ui-button
+        variant="primary"
+        [disabled]="loading() || saving()"
+        (pressed)="save()"
+      >
+        {{ saving() ? 'Saving…' : 'Save' }}
+      </app-ui-button>
+    </ng-container>
+  </app-ui-sticky-action-bar>
+</app-ui-stack>

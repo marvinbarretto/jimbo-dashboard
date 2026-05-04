@@ -22,6 +22,7 @@ import { UiStickyActionBar } from '@shared/components/ui-sticky-action-bar/ui-st
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
 import { UiTabBar } from '@shared/components/ui-tab-bar/ui-tab-bar';
+import { UiToggle } from '@shared/components/ui-toggle/ui-toggle';
 import { TableShell } from '@shared/components/table-shell/table-shell';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import { DatetimePipe } from '@shared/pipes/datetime.pipe';
@@ -77,6 +78,7 @@ interface LabMailRow {
     UiSubhead,
     UiSubsection,
     UiTabBar,
+    UiToggle,
     DatetimePipe,
     RelativeTimePipe,
   ],
@@ -121,6 +123,40 @@ interface LabMailRow {
             <dt>Next phase</dt>
             <dd>Apply a neon theme over stable semantic components instead of styling one-off pages.</dd>
           </app-ui-meta-list>
+        </app-ui-stack>
+      </app-ui-section>
+
+      <app-ui-section title="Toggle" [collapsible]="false">
+        <app-ui-stack gap="md">
+          <p class="ui-lab__support-copy">
+            Slide toggle for boolean settings. Uses <code>role="switch"</code> and
+            <code>aria-checked</code>. OFF state is <code>--color-danger</code> (red);
+            ON state is <code>--color-success</code> (green). Inputs: <code>checked</code>,
+            <code>label</code>, <code>disabled</code>. Output: <code>changed</code> emits the
+            new boolean.
+          </p>
+
+          <div>
+            <p class="ui-lab__subhead">States</p>
+            <app-ui-cluster gap="lg" align="center">
+              <app-ui-toggle [checked]="false" label="Off example" />
+              <app-ui-toggle [checked]="true" label="On example" />
+              <app-ui-toggle [checked]="false" [disabled]="true" label="Disabled off" />
+              <app-ui-toggle [checked]="true" [disabled]="true" label="Disabled on" />
+            </app-ui-cluster>
+          </div>
+
+          <div>
+            <p class="ui-lab__subhead">Interactive</p>
+            <app-ui-cluster gap="md" align="center">
+              <app-ui-toggle
+                [checked]="labToggle()"
+                label="Interactive toggle"
+                (changed)="labToggle.set($event)"
+              />
+              <span class="ui-lab__support-copy">Value: {{ labToggle() ? 'on' : 'off' }}</span>
+            </app-ui-cluster>
+          </div>
         </app-ui-stack>
       </app-ui-section>
 
@@ -1066,6 +1102,8 @@ export class UiLabPage {
       body: 'Digest contains workspace highlights, trending documents, and reminder suggestions.',
     },
   ];
+
+  protected readonly labToggle = signal(false);
 
   protected readonly labProjectChipsState = signal<readonly UiChipListItem[]>([
     { id: 'localshout', label: 'Localshout' },

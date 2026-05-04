@@ -1,9 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { filter, map, startWith } from 'rxjs';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import pkg from '../../../../../package.json';
-import { navGroups, primaryNavItems, type NavGroup } from './nav-config';
+import { primaryNavItems } from './nav-config';
 
 @Component({
   selector: 'app-nav',
@@ -18,44 +16,44 @@ import { navGroups, primaryNavItems, type NavGroup } from './nav-config';
 
       <ul class="app-nav__list">
         @for (item of primaryItems; track item.href) {
-          <li class="app-nav__item">
+          <li class="app-nav__item" [style.--nav-accent]="item.accent">
             <a
               [routerLink]="item.href"
               routerLinkActive="active"
-              class="app-nav__link app-nav__link--primary">
+              class="app-nav__link">
               {{ item.label }}
             </a>
           </li>
         }
 
-        @for (group of groups; track group.id) {
-          <li class="app-nav__item app-nav__item--archive">
-            <a
-              [routerLink]="group.items[0].href"
-              [class.active]="activeGroupId() === group.id"
-              class="app-nav__link app-nav__link--archive">
-              {{ group.label }}
-            </a>
-          </li>
-        }
+        <li class="app-nav__item app-nav__item--search">
+          <input
+            type="search"
+            class="app-nav__search"
+            placeholder="Search…"
+            aria-label="Global search"
+            disabled
+          />
+        </li>
       </ul>
     </nav>
   `,
   styles: [`
     .app-nav {
       display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.9rem 0 0.75rem;
+      align-items: stretch;
       min-width: 0;
     }
 
     .app-nav__brand {
       display: inline-flex;
-      align-items: baseline;
+      align-items: center;
       gap: 0.45rem;
       flex-shrink: 0;
+      padding: 0 1.5rem 0 0;
+      margin-right: 0.5rem;
       text-decoration: none;
+      border-right: 1px solid var(--color-border);
     }
 
     .app-nav__logo {
@@ -70,15 +68,13 @@ import { navGroups, primaryNavItems, type NavGroup } from './nav-config';
       font-size: 0.72rem;
       font-weight: 500;
       color: var(--color-text-muted);
-      letter-spacing: 0;
     }
 
     .app-nav__list {
       list-style: none;
       display: flex;
       flex: 1;
-      align-items: center;
-      gap: 0.45rem;
+      align-items: stretch;
       margin: 0;
       padding: 0;
       min-width: 0;
@@ -86,82 +82,68 @@ import { navGroups, primaryNavItems, type NavGroup } from './nav-config';
 
     .app-nav__item {
       display: flex;
+      flex: 1;
     }
 
-    /* push Archive to the far right */
-    .app-nav__item--archive {
+    .app-nav__item--search {
+      flex: 0 0 auto;
+      align-items: center;
       margin-left: auto;
+      padding: 0 0 0 1rem;
     }
 
     .app-nav__link {
-      display: inline-flex;
+      display: flex;
+      width: 100%;
       align-items: center;
-      min-height: 2.2rem;
-      padding: 0.35rem 0.85rem;
-      border: 1px solid transparent;
-      border-radius: 999px;
-      font-size: 0.85rem;
+      justify-content: center;
+      padding: 0.9rem 1rem;
+      font-size: 0.875rem;
       font-weight: 500;
       text-decoration: none;
       white-space: nowrap;
-      transition:
-        color 120ms ease,
-        border-color 120ms ease,
-        background-color 120ms ease;
-    }
-
-    /* UI Lab — prominent */
-    .app-nav__link--primary {
-      color: var(--color-text);
-      border-color: var(--color-border);
-      background: color-mix(in srgb, var(--color-surface) 60%, transparent);
-    }
-
-    .app-nav__link--primary:hover {
-      border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-border));
-      background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
-    }
-
-    .app-nav__link--primary.active {
-      color: var(--color-text);
-      border-color: color-mix(in srgb, var(--color-accent) 60%, var(--color-border));
-      background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
-    }
-
-    /* Archive — quiet, secondary */
-    .app-nav__link--archive {
-      font-size: 0.78rem;
       color: var(--color-text-muted);
-      opacity: 0.6;
+      border-bottom: 3px solid transparent;
+      transition: color 120ms ease, border-bottom-color 120ms ease;
     }
 
-    .app-nav__link--archive:hover {
-      color: var(--color-text-muted);
-      border-color: color-mix(in srgb, var(--color-border) 70%, transparent);
-      opacity: 0.9;
+    .app-nav__link:hover {
+      color: var(--nav-accent, var(--color-accent));
     }
 
-    .app-nav__link--archive.active {
+    .app-nav__link.active {
+      color: var(--nav-accent, var(--color-accent));
+      border-bottom-color: var(--nav-accent, var(--color-accent));
+    }
+
+    .app-nav__search {
+      height: 1.75rem;
+      padding: 0 0.6rem;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      background: var(--color-surface-soft, var(--color-surface));
       color: var(--color-text-muted);
-      border-color: color-mix(in srgb, var(--color-border) 80%, transparent);
-      opacity: 1;
+      font: inherit;
+      font-size: 0.8rem;
+      width: 9rem;
+      transition: border-color 120ms ease;
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
     }
 
     .app-nav__brand:focus-visible,
     .app-nav__link:focus-visible {
       outline: 2px solid var(--color-accent);
-      outline-offset: 2px;
+      outline-offset: -2px;
     }
 
     @media (max-width: 768px) {
       .app-nav {
         flex-direction: column;
         align-items: stretch;
-        gap: 0.7rem;
-      }
-
-      .app-nav__item--archive {
-        margin-left: 0;
       }
 
       .app-nav__list {
@@ -169,26 +151,18 @@ import { navGroups, primaryNavItems, type NavGroup } from './nav-config';
         padding-bottom: 0.2rem;
         scrollbar-width: thin;
       }
+
+      .app-nav__item {
+        flex: 0 0 auto;
+      }
+
+      .app-nav__item--search {
+        display: none;
+      }
     }
   `],
 })
 export class Nav {
   readonly version = pkg.version;
   protected readonly primaryItems = primaryNavItems;
-  protected readonly groups: readonly NavGroup[] = navGroups;
-
-  private readonly router = inject(Router);
-  private readonly currentUrl = toSignal(
-    this.router.events.pipe(
-      filter(e => e instanceof NavigationEnd),
-      map(e => (e as NavigationEnd).urlAfterRedirects),
-      startWith(this.router.url),
-    ),
-    { initialValue: this.router.url },
-  );
-
-  protected readonly activeGroupId = computed(() => {
-    const segment = (this.currentUrl() ?? '').split('/')[1];
-    return navGroups.find(g => g.paths.includes(segment))?.id ?? null;
-  });
 }

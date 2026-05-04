@@ -64,31 +64,23 @@ import { navGroups, type NavGroup } from '../nav/nav-config';
     .app-sub-nav__link {
       display: inline-flex;
       align-items: center;
-      min-height: 1.75rem;
-      padding: 0.2rem 0.6rem;
-      border: 1px solid transparent;
-      border-radius: 999px;
+      padding: 0.2rem 0.5rem;
       font-size: 0.8rem;
       font-weight: 500;
       color: var(--color-text-muted);
       text-decoration: none;
       white-space: nowrap;
-      transition:
-        color 120ms ease,
-        border-color 120ms ease,
-        background-color 120ms ease;
+      border-bottom: 2px solid transparent;
+      transition: color 120ms ease, border-bottom-color 120ms ease;
     }
 
     .app-sub-nav__link:hover {
       color: var(--color-text);
-      border-color: color-mix(in srgb, var(--color-border) 90%, transparent);
-      background: color-mix(in srgb, var(--color-surface) 75%, transparent);
     }
 
     .app-sub-nav__link.active {
       color: var(--color-text);
-      border-color: color-mix(in srgb, var(--color-accent) 38%, var(--color-border));
-      background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface));
+      border-bottom-color: color-mix(in srgb, var(--color-accent) 60%, var(--color-border));
     }
 
     .app-sub-nav__link:focus-visible {
