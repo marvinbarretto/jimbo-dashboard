@@ -9,6 +9,13 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { VaultItemsService } from '../../vault-items/data-access/vault-items.service';
 import { StreamService, type SystemEventSummary } from '../stream.service';
 
+// en-GB enforces 24h clock; en-CA gives ISO-style YYYY-MM-DD for sortable
+// day keys. Both pick up the operator's local timezone automatically.
+const fmtTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString('en-GB', { hour12: false });
+const fmtDay  = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-CA');
+
 interface NoteRef {
   seq: number | null;
   title: string;
@@ -102,12 +109,12 @@ export class StreamPage implements OnInit, OnDestroy {
 
     const map = new Map<string, DisplayRow[]>();
     for (const event of filtered) {
-      const day = event.ts.slice(0, 10);
+      const day = fmtDay(event.ts);
       const note =
         event.ref_type === 'vault_note' && event.ref_id
           ? lookup.get(event.ref_id) ?? { seq: null, title: event.ref_id }
           : null;
-      const row: DisplayRow = { event, time: event.ts.slice(11, 19), note };
+      const row: DisplayRow = { event, time: fmtTime(event.ts), note };
       const arr = map.get(day);
       if (arr) arr.push(row);
       else map.set(day, [row]);
