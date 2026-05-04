@@ -101,6 +101,12 @@ export async function proxyJimboMutate(c: Context, path: string): Promise<Respon
     return c.json({ error: { code: 'UPSTREAM_FETCH_FAILED', message: (e as Error).message } }, 502);
   }
 
+  // 204 No Content: forward as-is. Trying to JSON-parse an empty body throws,
+  // and Hono refuses to attach a body to a 204 response — both paths 500.
+  if (res.status === 204) {
+    return c.body(null, 204);
+  }
+
   const payload = await res.json().catch(() => ({ error: { code: 'UPSTREAM_NON_JSON', message: `jimbo-api returned ${res.status}` } }));
   return c.json(payload as never, res.status as never);
 }
