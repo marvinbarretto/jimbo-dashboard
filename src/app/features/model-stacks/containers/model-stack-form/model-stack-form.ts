@@ -86,14 +86,14 @@ export class ModelStackForm {
       this.service.update(this.id()!, {
         name: v.name, description: v.description, metadata, body: v.body,
       }).subscribe({
-        next: s => { this.toast.success('Model stack saved'); this.afterSave(s); },
+        next: s => { this.toast.success(`Model stack "${v.name}" saved`); this.afterSave(s); },
         error: err => this.handleError(err),
       });
     } else {
       this.service.create({
         id: v.id, name: v.name, description: v.description, metadata, body: v.body,
       }).subscribe({
-        next: s => { this.toast.success('Model stack created'); this.afterSave(s); },
+        next: s => { this.toast.success(`Model stack "${v.name}" created`); this.afterSave(s); },
         error: err => this.handleError(err),
       });
     }
@@ -107,7 +107,7 @@ export class ModelStackForm {
     this.service.remove(id).subscribe({
       next: () => {
         this.saving.set(false);
-        this.toast.success('Model stack deleted');
+        this.toast.success(`Model stack "${id}" deleted`);
         this.router.navigate(['/model-stacks']);
       },
       error: err => this.handleError(err),

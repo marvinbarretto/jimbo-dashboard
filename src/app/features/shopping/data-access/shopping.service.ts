@@ -59,7 +59,7 @@ export class ShoppingService {
   add(payload: CreateShoppingItemPayload): void {
     this.http.post<ShoppingItem>(this.url, payload).subscribe({
       next: (created) => this._items.update(xs => [created, ...xs]),
-      error: () => this.toast.error('Failed to add item'),
+      error: () => this.toast.error(`Failed to add "${payload.name}"`),
     });
   }
 
@@ -72,16 +72,18 @@ export class ShoppingService {
   }
 
   remove(id: number): void {
+    const item = this._items().find(i => i.id === id);
     this.http.delete(`${this.url}/${id}`).subscribe({
       next: () => this._items.update(xs => xs.filter(i => i.id !== id)),
-      error: () => this.toast.error('Failed to delete item'),
+      error: () => this.toast.error(`Failed to delete "${item?.name ?? id}"`),
     });
   }
 
   private patch(id: number, body: Partial<ShoppingItem>): void {
+    const item = this._items().find(i => i.id === id);
     this.http.patch<ShoppingItem>(`${this.url}/${id}`, body).subscribe({
       next: (updated) => this._items.update(xs => xs.map(i => i.id === id ? updated : i)),
-      error: () => this.toast.error('Failed to update item'),
+      error: () => this.toast.error(`Failed to update "${item?.name ?? id}"`),
     });
   }
 }

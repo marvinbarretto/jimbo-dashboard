@@ -118,7 +118,7 @@ export class SkillForm {
         metadata,
         body: v.body,
       }).subscribe({
-        next: skill => { this.toast.success('Skill saved'); this.afterSave(skill); },
+        next: skill => { this.toast.success(`Skill "${v.name}" saved`); this.afterSave(skill); },
         error: err => this.handleError(err),
       });
     } else {
@@ -129,7 +129,7 @@ export class SkillForm {
         metadata,
         body: v.body,
       }).subscribe({
-        next: skill => { this.toast.success('Skill created'); this.afterSave(skill); },
+        next: skill => { this.toast.success(`Skill "${v.name}" created`); this.afterSave(skill); },
         error: err => this.handleError(err),
       });
     }
@@ -147,7 +147,7 @@ export class SkillForm {
     this.service.remove(id).subscribe({
       next: () => {
         this.saving.set(false);
-        this.toast.success('Skill deleted');
+        this.toast.success(`Skill "${id}" deleted`);
         this.router.navigate(['/skills']);
       },
       error: err => this.handleError(err),
@@ -171,7 +171,7 @@ export class SkillForm {
     this.service.rename(oldId, to).subscribe({
       next: skill => {
         this.saving.set(false);
-        this.toast.success(`Skill renamed to ${skill.id}`);
+        this.toast.success(`Skill renamed: ${oldId} → ${skill.id}`);
         this.router.navigate(['/skills', ...skill.id.split('/')]);
       },
       error: err => this.handleError(err),

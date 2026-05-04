@@ -109,14 +109,14 @@ export class ModelForm {
       this.service.update(this.id()!, {
         name: v.name, description: v.description, metadata, body: v.body,
       }).subscribe({
-        next: m => { this.toast.success('Model saved'); this.afterSave(m); },
+        next: m => { this.toast.success(`Model "${v.name}" saved`); this.afterSave(m); },
         error: err => this.handleError(err),
       });
     } else {
       this.service.create({
         id: v.id, name: v.name, description: v.description, metadata, body: v.body,
       }).subscribe({
-        next: m => { this.toast.success('Model created'); this.afterSave(m); },
+        next: m => { this.toast.success(`Model "${v.name}" created`); this.afterSave(m); },
         error: err => this.handleError(err),
       });
     }
@@ -131,7 +131,7 @@ export class ModelForm {
     this.service.remove(id).subscribe({
       next: () => {
         this.saving.set(false);
-        this.toast.success('Model deleted');
+        this.toast.success(`Model "${id}" deleted`);
         this.router.navigate(['/models']);
       },
       error: err => this.handleError(err),

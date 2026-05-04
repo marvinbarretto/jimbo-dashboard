@@ -51,28 +51,30 @@ export class ActorsService {
       .subscribe({
         next: (created) => {
           this._actors.update(as => as.map(a => a.id === payload.id ? toActor(created) : a));
-          this.toast.success('Actor created');
+          this.toast.success(`Actor "${payload.display_name}" created`);
         },
         error: () => {
           this._actors.update(as => as.filter(a => a.id !== payload.id));
-          this.toast.error('Failed to create actor');
+          this.toast.error(`Failed to create actor "${payload.display_name}"`);
         },
       });
   }
 
   update(id: string, patch: UpdateActorPayload): void {
+    const prior = this.getById(id);
     this.http.patch<ApiActor>(`${this.url}/${encodeURIComponent(id)}`, patch)
       .subscribe({
         next: (updated) => this._actors.update(as => as.map(a => a.id === id ? toActor(updated) : a)),
-        error: () => this.toast.error('Failed to update actor'),
+        error: () => this.toast.error(`Failed to update actor "${prior?.display_name ?? id}"`),
       });
   }
 
   remove(id: string): void {
+    const prior = this.getById(id);
     this.http.delete(`${this.url}/${encodeURIComponent(id)}`)
       .subscribe({
         next: () => this._actors.update(as => as.filter(a => a.id !== id)),
-        error: () => this.toast.error('Failed to delete actor'),
+        error: () => this.toast.error(`Failed to delete actor "${prior?.display_name ?? id}"`),
       });
   }
 }
