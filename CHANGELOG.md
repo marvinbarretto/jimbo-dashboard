@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.17](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.16...v0.0.17) (2026-05-04)
+
+
+### Features
+
+* **nav:** promote UI Lab to primary; archive everything else ([16f4f40](https://github.com/marvinbarretto/jimbo-dashboard/commit/16f4f40525728c0224fa56d7495b032611276a4c))
+* **stream:** map session_id → cron job name; surface script output ([9795989](https://github.com/marvinbarretto/jimbo-dashboard/commit/979598946c8514d363bb3cbc57c0776a35fe17ca))
+* **stream:** prefer agent.end as thread head + show all by default ([a4a198d](https://github.com/marvinbarretto/jimbo-dashboard/commit/a4a198d4f4bffd8a971c39d4b11e94e449f27a0e))
+* **stream:** surface recent error classes panel above the firehose ([018875d](https://github.com/marvinbarretto/jimbo-dashboard/commit/018875d7d5ee1a48c1128b76e906e081ea65d6cc))
+* **stream:** surface tool details — id chips, error callouts, duration ([384b2ca](https://github.com/marvinbarretto/jimbo-dashboard/commit/384b2ca9bda3293d3e75273bbce13ace2c92676d))
+
 ### [0.0.16](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.15...v0.0.16) (2026-05-04)
 
 

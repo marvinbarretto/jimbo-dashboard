@@ -1,6 +1,6 @@
 {
   "name": "dashboard",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -20,6 +20,7 @@
     "api": "node --env-file=.env --import tsx --watch api/server.ts",
     "build:api": "tsc -p tsconfig.api.json",
     "start:api": "node dist-api/api/server.js",
+    "gen:api-types": "openapi-typescript ${JIMBO_API_OPENAPI_URL:-https://jimbo.fourfoldmedia.uk/docs/openapi.json} -o src/app/domain/api-types.generated.ts",
     "release": "standard-version",
     "release:minor": "standard-version --release-as minor",
     "release:major": "standard-version --release-as major",
@@ -59,6 +60,7 @@
     "dotenv": "17.4.2",
     "drizzle-kit": "0.31.10",
     "jsdom": "^28.0.0",
+    "openapi-typescript": "7.13.0",
     "prettier": "^3.8.1",
     "standard-version": "9.5.0",
     "tsx": "4.21.0",
