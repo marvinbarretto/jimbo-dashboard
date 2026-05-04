@@ -115,8 +115,10 @@ export class StreamPage implements OnInit, OnDestroy {
   // Filters — null (or empty) = no constraint.
   protected readonly sourceFilter = signal<string | null>(null);
   protected readonly cidFilter = signal<string | null>(null);
-  protected readonly showDebug = signal(false);
-  protected readonly showChattyKinds = signal(false);
+  // Default-on: operator wants the full firehose by default; chips at the
+  // top of the page let them toggle classes off to manage noise.
+  protected readonly showDebug = signal(true);
+  protected readonly showChattyKinds = signal(true);
 
   // Per-thread expansion: thread.key → bool. Persisted across re-renders so
   // a live thread keeps its open drawer while new tool calls land.
@@ -205,13 +207,17 @@ export class StreamPage implements OnInit, OnDestroy {
         else if (r.event.level === 'warn') warnCount++;
       }
 
-      // Lead/head: prefer the most recent informative event. Skip
-      // tool.* leads when there's a non-tool event available — agent.start
-      // / dispatch.* etc. are far better summaries.
+      // Lead/head: prefer agent.end — it carries the OUTCOME slot
+      // (`docs/design/stream-row-anatomy.md`): response text, duration, and
+      // tokens. session.end is just a lifecycle marker; agent.start lacks
+      // the result. Falls back to the most recent non-tool event for
+      // threads without agent.end (gateway.startup-only, ad-hoc rows, etc.).
       const informative = rows.filter((r) => !r.event.kind.startsWith('tool.'));
-      const head = informative.length > 0
-        ? informative[informative.length - 1]!
-        : rows[rows.length - 1]!;
+      const agentEnd = rows.find((r) => r.event.kind === 'agent.end');
+      const head = agentEnd
+        ?? (informative.length > 0
+              ? informative[informative.length - 1]!
+              : rows[rows.length - 1]!);
 
       threads.push({
         key,
