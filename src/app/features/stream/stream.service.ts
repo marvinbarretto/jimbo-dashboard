@@ -70,7 +70,9 @@ export class StreamService {
 
   private openSocket(): void {
     this._status.set('connecting');
-    const url = `${this.computeWsUrl()}?key=${encodeURIComponent(environment.dashboardApiKey)}`;
+    // Caddy basic_auth gates the WS upgrade; the browser includes the
+    // credential automatically. No query param, no app-level token.
+    const url = this.computeWsUrl();
     const ws = new WebSocket(url);
     this.ws = ws;
 

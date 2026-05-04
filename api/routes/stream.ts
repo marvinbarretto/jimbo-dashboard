@@ -4,7 +4,6 @@
 // Mounted directly in server.ts so it can capture the `upgradeWebSocket`
 // instance returned by `serve({ websocket })` without a circular import.
 
-import type { MiddlewareHandler } from 'hono';
 import type { WSEvents } from 'hono/ws';
 import { desc } from 'drizzle-orm';
 import { db } from '../../db/client.js';
@@ -16,21 +15,6 @@ import { activityBroadcaster, type SystemEventSummary } from '../services/activi
 // WS frame and the page doesn't lag rendering. 200 rows ≈ a few minutes
 // of hermes activity at current rates.
 const HYDRATE_LIMIT = 200;
-
-// Browsers can't set custom headers on WS upgrades, so we accept the API
-// key as a query param. Non-browser clients (curl, server-to-server) can
-// still use X-API-Key for parity with /api/*.
-export const streamAuth: MiddlewareHandler = async (c, next) => {
-  const expected = process.env.DASHBOARD_API_KEY;
-  if (!expected) {
-    return c.text('Server misconfigured: no DASHBOARD_API_KEY', 500);
-  }
-  const provided = c.req.query('key') ?? c.req.header('X-API-Key');
-  if (provided !== expected) {
-    return c.text('Unauthorized', 401);
-  }
-  await next();
-};
 
 interface HydrateMessage {
   type: 'hydrate';

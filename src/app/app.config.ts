@@ -1,16 +1,18 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient } from '@angular/common/http';
 import { TitleStrategy, provideRouter } from '@angular/router';
 
 import { AppTitleStrategy } from './app-title-strategy';
 import { routes } from './app.routes';
-import { dashboardApiKeyInterceptor } from './shared/dashboard-api.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-    provideHttpClient(withInterceptors([dashboardApiKeyInterceptor])),
+    // Auth: Caddy basic_auth gates jimbo.fourfoldmedia.uk; the browser
+    // includes the credential automatically on every request, including
+    // WS upgrades. No app-level key.
+    provideHttpClient(),
     provideRouter(routes),
     { provide: TitleStrategy, useClass: AppTitleStrategy },
   ],

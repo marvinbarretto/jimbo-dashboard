@@ -9,7 +9,10 @@
 //   open http://localhost:3201/dashboard-api/docs
 //
 // Production: rsync dist-api/ to VPS, run via systemd unit dashboard-api.service.
-// Caddy routes /dashboard-api/* → :3201.
+// Service binds to 127.0.0.1 only — Caddy is the sole public entry, with
+// basic_auth gating /dashboard-api/* and the static dashboard. No app-level
+// API key: the bundle has nothing sensitive to substitute, deploys are
+// trivial, and rotation = one Caddyfile edit.
 //
 // Distinct from jimbo-api on the VPS — that service owns ingestion, cron,
 // and AI orchestration. This service owns operator-facing reads/writes.
@@ -22,7 +25,6 @@ import { cors } from 'hono/cors';
 import { WebSocketServer } from 'ws';
 import { requestId } from './middleware/request-id.js';
 import { validationHook } from './middleware/error.js';
-import { apiKeyAuth } from './middleware/auth.js';
 import { vaultItemsRoute } from './routes/vault-items.js';
 import { dispatchesRoute } from './routes/dispatches.js';
 import { actorsRoute } from './routes/actors.js';
@@ -36,7 +38,7 @@ import { noteActivityRoute } from './routes/note-activity.js';
 import { threadMessagesRoute } from './routes/thread-messages.js';
 import { attachmentsRoute } from './routes/attachments.js';
 import { jimboProxyRoute, proxyJimboGet, proxyJimboMutate } from './routes/jimbo-proxy.js';
-import { createStreamHandlers, streamAuth } from './routes/stream.js';
+import { createStreamHandlers } from './routes/stream.js';
 import { activityBroadcaster } from './services/activity-broadcaster.js';
 import { HealthSchema } from './schemas/shared.js';
 
@@ -108,36 +110,16 @@ app.doc(`${BASE}/docs/openapi.json`, {
     { url: 'http://localhost:3201', description: 'Local development' },
     { url: 'https://jimbo.fourfoldmedia.uk', description: 'Production' },
   ],
-  security: [{ apiKey: [] as string[] }],
-});
-
-app.openAPIRegistry.registerComponent('securitySchemes', 'apiKey', {
-  type: 'apiKey',
-  in: 'header',
-  name: 'X-API-Key',
 });
 
 app.get(`${BASE}/docs`, swaggerUI({ url: `${BASE}/docs/openapi.json` }));
 
-// Auth-protected — all data routes require X-API-Key (locally too, so behaviour
-// matches production). /docs and health stay public.
-app.use(`${BASE}/api/vault-items/*`, apiKeyAuth);
-app.use(`${BASE}/api/dispatches/*`, apiKeyAuth);
-app.use(`${BASE}/api/actors/*`, apiKeyAuth);
-app.use(`${BASE}/api/projects/*`, apiKeyAuth);
-app.use(`${BASE}/api/vault-item-projects/*`, apiKeyAuth);
-app.use(`${BASE}/api/skills/*`, apiKeyAuth);
-app.use(`${BASE}/api/hub-models/*`, apiKeyAuth);
-app.use(`${BASE}/api/hub-model-stacks/*`, apiKeyAuth);
-app.use(`${BASE}/api/vault-item-dependencies/*`, apiKeyAuth);
-app.use(`${BASE}/api/note-activity/*`, apiKeyAuth);
-app.use(`${BASE}/api/thread-messages/*`, apiKeyAuth);
-app.use(`${BASE}/api/attachments/*`, apiKeyAuth);
-app.use(`${BASE}/api/jimbo/*`, apiKeyAuth);
-
+// No app-level auth: dashboard-api binds to 127.0.0.1 and Caddy basic_auth
+// gates /dashboard-api/* on the public host. Removing the per-route guards
+// also means the bundle ships nothing sensitive — see deploy.sh.
 for (const prefix of JIMBO_READ_THROUGH_PREFIXES) {
-  app.get(`${BASE}${prefix}`, apiKeyAuth, c => proxyJimboGet(c, c.req.path.slice(BASE.length)));
-  app.get(`${BASE}${prefix}/*`, apiKeyAuth, c => proxyJimboGet(c, c.req.path.slice(BASE.length)));
+  app.get(`${BASE}${prefix}`, c => proxyJimboGet(c, c.req.path.slice(BASE.length)));
+  app.get(`${BASE}${prefix}/*`, c => proxyJimboGet(c, c.req.path.slice(BASE.length)));
 }
 
 // Prefixes that need POST/PATCH/DELETE proxied to jimbo-api in addition to GET.
@@ -147,15 +129,15 @@ const JIMBO_MUTATE_PREFIXES = ['/api/hermes', '/api/shopping'];
 
 for (const prefix of JIMBO_MUTATE_PREFIXES) {
   for (const path of [`${BASE}${prefix}`, `${BASE}${prefix}/*`]) {
-    app.post(path, apiKeyAuth, c => proxyJimboMutate(c, c.req.path.slice(BASE.length)));
-    app.patch(path, apiKeyAuth, c => proxyJimboMutate(c, c.req.path.slice(BASE.length)));
-    app.delete(path, apiKeyAuth, c => proxyJimboMutate(c, c.req.path.slice(BASE.length)));
+    app.post(path, c => proxyJimboMutate(c, c.req.path.slice(BASE.length)));
+    app.patch(path, c => proxyJimboMutate(c, c.req.path.slice(BASE.length)));
+    app.delete(path, c => proxyJimboMutate(c, c.req.path.slice(BASE.length)));
   }
 }
 
 // Keep the dashboard API's own /api/health liveness probe intact, but forward
 // the upstream Jimbo health sub-resources through the same path-native shape.
-app.get(`${BASE}/api/health/*`, apiKeyAuth, c => proxyJimboGet(c, c.req.path.slice(BASE.length)));
+app.get(`${BASE}/api/health/*`, c => proxyJimboGet(c, c.req.path.slice(BASE.length)));
 
 app.route(`${BASE}/api/vault-items`, vaultItemsRoute);
 app.route(`${BASE}/api/dispatches`, dispatchesRoute);
@@ -171,15 +153,16 @@ app.route(`${BASE}/api/thread-messages`, threadMessagesRoute);
 app.route(`${BASE}/api/attachments`, attachmentsRoute);
 app.route(`${BASE}/api/jimbo`, jimboProxyRoute);
 
-// Mounted outside the per-route apiKeyAuth chain — browsers can't set
-// custom headers on WS upgrades, so streamAuth checks ?key= (with
-// X-API-Key fallback) instead.
-app.get(`${BASE}/ws/stream`, streamAuth, upgradeWebSocket(createStreamHandlers));
+// WS upgrade — Caddy's basic_auth runs on the upgrade request before
+// proxying, so the connection is gated at the edge.
+app.get(`${BASE}/ws/stream`, upgradeWebSocket(createStreamHandlers));
 
 const port = Number(process.env['API_PORT'] ?? 3201);
 const wss = new WebSocketServer({ noServer: true });
-serve({ fetch: app.fetch, port, websocket: { server: wss } }, ({ port }) => {
-  console.log(`[api] listening on http://localhost:${port}${BASE}`);
+// Bind to localhost only — Caddy is the sole public entry. Prevents accidental
+// 0.0.0.0 exposure if firewall rules drift.
+serve({ fetch: app.fetch, port, hostname: '127.0.0.1', websocket: { server: wss } }, ({ port }) => {
+  console.log(`[api] listening on http://127.0.0.1:${port}${BASE}`);
   console.log(`[api]   docs → http://localhost:${port}${BASE}/docs`);
 });
 
