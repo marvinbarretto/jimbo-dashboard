@@ -61,6 +61,10 @@ export const systemEvents = pgTable('system_events', {
   actor: text('actor'),
   title: text('title').notNull(),
   detail: text('detail'),
+  // Structured per-kind data (added 2026-05). Use payload for fields the UI
+  // renders programmatically (duration_ms, tokens_in, status_to/from); leave
+  // detail for free-form blobs and human-readable strings.
+  payload: jsonb('payload'),
 
   // Soft reference: ref_type='vault_note', ref_id='note_xxx'. Lets us trace
   // events back to the entity without requiring a hard FK (events refer to

@@ -1,7 +1,7 @@
 <app-ui-stack gap="lg" class="stream-page">
   <app-ui-page-header>
     <h1 uiPageHeaderTitle>Stream</h1>
-    <p uiPageHeaderHint>Live tail of <code>system_events</code>. Newest first.</p>
+    <p uiPageHeaderHint>Live tail of <code>system_events</code>. Threaded by correlation id; click any thread to see its timeline.</p>
     <div uiPageHeaderActions>
       <app-ui-cluster gap="sm" align="center">
         <app-ui-badge [tone]="statusTone()">{{ statusLabel() }}</app-ui-badge>
@@ -44,6 +44,14 @@
     }
   </app-ui-cluster>
 
+  @if (cidFilter(); as cid) {
+    <app-ui-cluster gap="sm" align="center">
+      <span class="stream-page__chip-label">thread</span>
+      <app-chip [active]="true" (toggle)="setCidFilter(null)">{{ cid.slice(0, 8) }} ✕</app-chip>
+      <span class="stream-page__hidden-hint">filtering to one correlation thread</span>
+    </app-ui-cluster>
+  }
+
   @if (grouped().length === 0) {
     <app-ui-empty-state
       title="No events"
@@ -54,40 +62,175 @@
   @for (group of grouped(); track group.day) {
     <section class="stream-page__day">
       <h2 class="stream-page__day-heading">{{ group.day }}</h2>
-      <ul class="stream-page__rows">
-        @for (row of group.rows; track row.event.id) {
-          <li class="stream-page__row" [class]="'stream-page__row--' + row.event.level">
-            <span class="stream-page__time" [title]="row.event.ts">{{ row.time }}</span>
-            <app-ui-badge [tone]="levelTone(row.event.level)" class="stream-page__level">{{ row.event.source }}</app-ui-badge>
-            <div class="stream-page__body">
-              <app-ui-cluster gap="sm" align="baseline">
-                <code class="stream-page__kind">{{ row.event.kind }}</code>
-                @if (row.event.actor; as actor) {
-                  <app-entity-chip
-                    type="actor"
-                    [id]="actor"
-                    [label]="actor"
-                  />
+      <ul class="stream-page__threads">
+        @for (thread of group.threads; track thread.key) {
+          <li
+            class="stream-page__thread"
+            [class.stream-page__thread--multi]="thread.rows.length > 1"
+            [class.stream-page__thread--expanded]="isThreadExpanded(thread.key)"
+            [class]="'stream-page__thread--level-' + thread.topLevel"
+          >
+            <button
+              type="button"
+              class="stream-page__thread-head"
+              [class.stream-page__thread-head--clickable]="thread.rows.length > 1"
+              [attr.aria-expanded]="thread.rows.length > 1 ? isThreadExpanded(thread.key) : null"
+              (click)="thread.rows.length > 1 && toggleThread(thread.key)"
+            >
+              <span class="stream-page__time" [title]="thread.head.event.ts">{{ thread.head.time }}</span>
+              <app-ui-badge [tone]="levelTone(thread.topLevel)" class="stream-page__level">{{ thread.head.event.source }}</app-ui-badge>
+              <div class="stream-page__body">
+                <app-ui-cluster gap="sm" align="baseline">
+                  <code class="stream-page__kind">{{ thread.head.event.kind }}</code>
+                  @if (thread.head.event.actor; as actor) {
+                    <app-entity-chip type="actor" [id]="actor" [label]="actor" />
+                  }
+                  @if (thread.head.note; as note) {
+                    <app-entity-chip
+                      type="vault-item"
+                      [id]="thread.head.event.ref_id ?? ''"
+                      [label]="note.title"
+                      [seq]="note.seq"
+                    />
+                  } @else if (thread.head.event.ref_type && thread.head.event.ref_id) {
+                    <span class="stream-page__ref">
+                      <span class="stream-page__ref-type">{{ thread.head.event.ref_type }}</span>
+                      <span class="stream-page__ref-id">{{ thread.head.event.ref_id }}</span>
+                    </span>
+                  }
+                  @if (thread.rows.length > 1) {
+                    <span
+                      class="stream-page__thread-meta"
+                      [title]="thread.rows.length + ' events spanning ' + fmtDuration(thread.durationMs)"
+                    >
+                      {{ thread.rows.length }} events
+                      @if (thread.durationMs !== null) {
+                        · {{ fmtDuration(thread.durationMs) }}
+                      }
+                      @if (thread.errorCount > 0) {
+                        · <span class="stream-page__count stream-page__count--error">{{ thread.errorCount }} err</span>
+                      }
+                      @if (thread.warnCount > 0) {
+                        · <span class="stream-page__count stream-page__count--warn">{{ thread.warnCount }} warn</span>
+                      }
+                    </span>
+                  }
+                  @if (thread.cid; as cid) {
+                    <button
+                      type="button"
+                      class="stream-page__cid-btn"
+                      [title]="'Filter to correlation_id: ' + cid"
+                      (click)="$event.stopPropagation(); setCidFilter(cid)"
+                    >⤳ {{ cid.slice(0, 6) }}</button>
+                  }
+                </app-ui-cluster>
+                <p class="stream-page__title">{{ thread.head.event.title }}</p>
+              </div>
+              @if (thread.rows.length > 1) {
+                <span class="stream-page__chevron" aria-hidden="true">{{ isThreadExpanded(thread.key) ? '▾' : '▸' }}</span>
+              }
+            </button>
+
+            @if (thread.rows.length > 1 && isThreadExpanded(thread.key)) {
+              <ol class="stream-page__timeline">
+                @for (row of thread.rows; track row.event.id) {
+                  <li
+                    class="stream-page__sub-row"
+                    [class]="'stream-page__sub-row--' + row.event.level"
+                    [class.stream-page__sub-row--expanded]="isEventExpanded(row.event.id)"
+                  >
+                    <button
+                      type="button"
+                      class="stream-page__sub-head"
+                      [attr.aria-expanded]="isEventExpanded(row.event.id)"
+                      (click)="toggleEvent(row.event.id)"
+                    >
+                      <span class="stream-page__time" [title]="row.event.ts">{{ row.time }}</span>
+                      <code class="stream-page__kind">{{ row.event.kind }}</code>
+                      <span class="stream-page__sub-title">{{ row.event.title }}</span>
+                      <span class="stream-page__chevron" aria-hidden="true">{{ isEventExpanded(row.event.id) ? '▾' : '▸' }}</span>
+                    </button>
+                    @if (isEventExpanded(row.event.id)) {
+                      <div class="stream-page__detail">
+                        @if (detailEntry(row.event.id); as entry) {
+                          @switch (entry.state) {
+                            @case ('loading') {
+                              <p class="stream-page__detail-status">loading…</p>
+                            }
+                            @case ('error') {
+                              <p class="stream-page__detail-status stream-page__detail-status--error">
+                                failed to load: {{ entry.error }}
+                              </p>
+                            }
+                            @case ('loaded') {
+                              @if (entry.event?.payload; as payload) {
+                                <div class="stream-page__detail-section">
+                                  <h4 class="stream-page__detail-heading">payload</h4>
+                                  <pre class="stream-page__code-block"><code>{{ formatJson(payload) }}</code></pre>
+                                </div>
+                              }
+                              @if (entry.event?.detail; as detail) {
+                                <div class="stream-page__detail-section">
+                                  <h4 class="stream-page__detail-heading">detail</h4>
+                                  <pre class="stream-page__code-block"><code>{{ formatJson(detail) }}</code></pre>
+                                </div>
+                              }
+                              @if (!entry.event?.payload && !entry.event?.detail) {
+                                <p class="stream-page__detail-status">(no detail or payload recorded)</p>
+                              }
+                            }
+                          }
+                        }
+                      </div>
+                    }
+                  </li>
                 }
-                @if (row.note; as note) {
-                  <app-entity-chip
-                    type="vault-item"
-                    [id]="row.event.ref_id ?? ''"
-                    [label]="note.title"
-                    [seq]="note.seq"
-                  />
-                } @else if (row.event.ref_type && row.event.ref_id) {
-                  <span class="stream-page__ref">
-                    <span class="stream-page__ref-type">{{ row.event.ref_type }}</span>
-                    <span class="stream-page__ref-id">{{ row.event.ref_id }}</span>
-                  </span>
-                }
-                @if (row.event.correlation_id; as cid) {
-                  <span class="stream-page__cid" [title]="'correlation_id: ' + cid">⤳ {{ cid.slice(0, 6) }}</span>
-                }
-              </app-ui-cluster>
-              <p class="stream-page__title">{{ row.event.title }}</p>
-            </div>
+              </ol>
+            }
+
+            @if (thread.rows.length === 1) {
+              <button
+                type="button"
+                class="stream-page__solo-detail-toggle"
+                [attr.aria-expanded]="isEventExpanded(thread.head.event.id)"
+                (click)="toggleEvent(thread.head.event.id)"
+              >
+                {{ isEventExpanded(thread.head.event.id) ? '▾ hide detail' : '▸ show detail' }}
+              </button>
+              @if (isEventExpanded(thread.head.event.id)) {
+                <div class="stream-page__detail stream-page__detail--solo">
+                  @if (detailEntry(thread.head.event.id); as entry) {
+                    @switch (entry.state) {
+                      @case ('loading') {
+                        <p class="stream-page__detail-status">loading…</p>
+                      }
+                      @case ('error') {
+                        <p class="stream-page__detail-status stream-page__detail-status--error">
+                          failed to load: {{ entry.error }}
+                        </p>
+                      }
+                      @case ('loaded') {
+                        @if (entry.event?.payload; as payload) {
+                          <div class="stream-page__detail-section">
+                            <h4 class="stream-page__detail-heading">payload</h4>
+                            <pre class="stream-page__code-block"><code>{{ formatJson(payload) }}</code></pre>
+                          </div>
+                        }
+                        @if (entry.event?.detail; as detail) {
+                          <div class="stream-page__detail-section">
+                            <h4 class="stream-page__detail-heading">detail</h4>
+                            <pre class="stream-page__code-block"><code>{{ formatJson(detail) }}</code></pre>
+                          </div>
+                        }
+                        @if (!entry.event?.payload && !entry.event?.detail) {
+                          <p class="stream-page__detail-status">(no detail or payload recorded)</p>
+                        }
+                      }
+                    }
+                  }
+                </div>
+              }
+            }
           </li>
         }
       </ul>
