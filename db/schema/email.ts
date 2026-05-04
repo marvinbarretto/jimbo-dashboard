@@ -1,92 +1,61 @@
-import { sql } from 'drizzle-orm';
 import {
-  pgTable, text, integer, real, boolean, timestamp, bigserial,
+  pgTable, text, timestamp, jsonb,
   index,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 
-// ── email_reports ──────────────────────────────────────────────────────────
+// email_reports — short-lived working table for the email triage pipeline.
 //
-// Gmail ingestion artefact: one row per processed message. Drives the
-// email-triage UI and the localshout forwarding pipeline. Source data is
-// raw email; everything beyond gmail_id is derived (extraction, scoring,
-// enrichment). Enrichment columns added after initial schema — many older
-// rows will be null on those fields, hence no NOT NULLs there.
+// Gmail is the source of truth for content; the vault is the long-term store
+// for anything important. Rows here exist only to drive in-flight processing
+// stages and TTL out after 90 days. Pipeline progresses by setting stage
+// timestamps; the next job picks up rows where its stage is still null.
 
 export const emailReports = pgTable('email_reports', {
-  // Synthetic surrogate. AUTOINCREMENT in SQLite → bigserial here. Gmail's
-  // own id (gmail_id below) is the natural key, but we keep the integer pk
-  // for cheap FKs from forwarded_to_localshout-style references.
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  // Natural key from Gmail. Primary key — no surrogate id needed.
+  gmail_id: text('gmail_id').primaryKey(),
 
-  // Natural key from Gmail. UNIQUE — re-ingesting the same message must
-  // upsert, not duplicate.
-  gmail_id: text('gmail_id').notNull().unique(),
-
-  // Empty string default (not null) preserves existing semantics: thread_id
-  // is *always* populated, but historically with '' for unthreaded messages.
-  thread_id: text('thread_id').notNull().default(''),
-
-  // When jimbo finished extracting/analysing — distinct from created_at
-  // (when the row was inserted) and from the email's own date.
-  processed_at: timestamp('processed_at', { withTimezone: true }).notNull(),
-
-  from_name: text('from_name').notNull().default(''),
+  thread_id: text('thread_id'),
+  from_name: text('from_name'),
   from_email: text('from_email').notNull(),
-  subject: text('subject').notNull(),
-  body_analysis: text('body_analysis').notNull(),
+  subject: text('subject'),
 
-  // JSON-string in SQLite ('[]' default). Kept as text for now — structure
-  // varies per extractor version and we don't query inside it. Promote to
-  // jsonb if/when we need to.
-  links: text('links').notNull().default('[]'),
+  // Plain-text body. Null until job 2 (detail-fetch) populates it.
+  body_text: text('body_text'),
 
-  model: text('model').notNull().default(''),
-  processing_time_seconds: real('processing_time_seconds').default(0),
+  // Gmail labels at discovery time (e.g. ['INBOX','UNREAD','CATEGORY_UPDATES']).
+  // Cheap signal for rules-based gating without needing the body.
+  label_ids: jsonb('label_ids'),
 
-  // boolean (was 0/1). decided=true means operator has triaged this report.
-  decided: boolean('decided').notNull().default(false),
-  decided_at: timestamp('decided_at', { withTimezone: true }),
+  // ── Pipeline stage timestamps ──────────────────────────────────────
+  // Each timestamp doubles as audit log and queue marker. Null = not done.
+  discovered_at:   timestamp('discovered_at',   { withTimezone: true }).notNull().defaultNow(),
+  body_fetched_at: timestamp('body_fetched_at', { withTimezone: true }),
+  gated_at:        timestamp('gated_at',        { withTimezone: true }),
 
-  // Operator's verdict — free text, low cardinality (keep/discard/forward/...).
-  // No CHECK; values still settling.
-  decision: text('decision'),
+  // ── Verdict (set when gated_at is set) ─────────────────────────────
+  verdict:         text('verdict'),         // 'keep' | 'toss' | null (until gated)
+  verdict_reason:  text('verdict_reason'),  // one-line model justification
+  verdict_model:   text('verdict_model'),   // which model decided
 
-  // 0..100 (or similar) heuristic. Real not int because a future model may
-  // emit fractional scores; promotion is free.
-  relevance_score: integer('relevance_score'),
-
-  // Where this row originated. Default 'email' for the Gmail path; future
-  // sources (telegram, manual paste) will use other values.
-  source: text('source').notNull().default('email'),
-
-  // Plain-text body for fulltext search / LLM context. '' default keeps
-  // older rows valid before we started storing it.
-  body_text: text('body_text').notNull().default(''),
-
-  // Url/identifier of where the message was forwarded (localshout endpoint).
-  // Nullable: most reports are not forwarded.
-  forwarded_to_localshout: text('forwarded_to_localshout'),
-
-  // ── Enrichment audit (added later — all nullable) ────────────────────────
-  // Tracks which prompt/model produced the enrichment so we can replay or
-  // diff when prompts evolve.
-  enrichment_prompt_id: text('enrichment_prompt_id'),
-  enrichment_prompt_version: integer('enrichment_prompt_version'),
-  enrichment_model: text('enrichment_model'),
-  enrichment_reasoning: text('enrichment_reasoning'),
-  enrichment_cost_cents: real('enrichment_cost_cents'),
-  enrichment_tokens_input: integer('enrichment_tokens_input'),
-  enrichment_tokens_output: integer('enrichment_tokens_output'),
-  enriched_at: timestamp('enriched_at', { withTimezone: true }),
+  // ── Promotion to vault ─────────────────────────────────────────────
+  // Set when an email graduates into a permanent vault note. Outlives the
+  // 90-day TTL on this row only via the foreign key on vault_notes —
+  // this column is just a back-reference for inspection.
+  vault_note_id:   text('vault_note_id'),
 
   created_at: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({
-  decidedIdx: index('idx_email_reports_decided').on(t.decided),
-  threadIdx: index('idx_email_reports_thread').on(t.thread_id),
+  // Queue indexes — partial, so they only cover rows still needing work.
+  needsFetchIdx: index('idx_email_reports_needs_fetch')
+    .on(t.discovered_at).where(sql`body_fetched_at IS NULL`),
+  needsGateIdx: index('idx_email_reports_needs_gate')
+    .on(t.body_fetched_at).where(sql`gated_at IS NULL AND body_fetched_at IS NOT NULL`),
+
+  // General indexes
   createdIdx: index('idx_email_reports_created').on(t.created_at),
-  relevanceIdx: index('idx_email_reports_relevance').on(t.relevance_score),
-  forwardedIdx: index('idx_email_reports_forwarded').on(t.forwarded_to_localshout),
-  enrichedAtIdx: index('idx_email_reports_enriched_at').on(t.enriched_at),
+  verdictIdx: index('idx_email_reports_verdict').on(t.verdict),
 }));
 
 export type EmailReport = typeof emailReports.$inferSelect;

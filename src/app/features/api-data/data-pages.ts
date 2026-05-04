@@ -17,8 +17,6 @@ export interface DataPageConfig {
 export const TODAY_ENDPOINTS: EndpointConfig[] = [
   { title: 'Health', path: '/api/health', summary: 'Current API health and dependency status.' },
   { title: 'Hermes jobs', path: '/api/hermes/jobs', summary: 'Cron job state and recent run status.' },
-  { title: 'Email gems', path: '/api/emails/reports/gems/today', summary: "Today's high-value processed email." },
-  { title: 'Undecided email', path: '/api/emails/reports/undecided', summary: 'Email reports waiting for a decision.' },
   { title: 'Calendar', path: '/api/google-calendar/events', summary: 'Upcoming events over the next two days.', params: { days: 2 } },
   { title: 'Dispatch status', path: '/api/dispatch/status', summary: 'Current execution queue state.' },
   { title: 'Grooming pipeline', path: '/api/grooming/pipeline', summary: 'Grooming work currently moving through the pipeline.' },
@@ -31,12 +29,9 @@ export const DATA_PAGES: DataPageConfig[] = [
   {
     key: 'mail',
     title: 'Mail',
-    hint: 'Processed email intelligence, raw Gmail visibility, decisions, gems, and enrichment candidates.',
+    hint: 'Email triage pipeline (working table) and raw Gmail visibility.',
     endpoints: [
-      { title: 'Email stats', path: '/api/emails/reports/stats', summary: 'Aggregate report counts and score distribution.' },
-      { title: 'Today gems', path: '/api/emails/reports/gems/today', summary: 'High-value email surfaced today.' },
-      { title: 'Undecided', path: '/api/emails/reports/undecided', summary: 'Reports still awaiting a score or operator decision.' },
-      { title: 'Recent reports', path: '/api/emails/reports', summary: 'Latest processed email reports.', params: { limit: 50, sort: 'processed_at', order: 'desc' } },
+      { title: 'Recent reports', path: '/api/emails/reports', summary: 'Email pipeline rows, most recent first.', params: { limit: 50 } },
       { title: 'Gmail profile', path: '/api/google-mail/profile', summary: 'Connected Gmail account metadata.' },
       { title: 'Recent Gmail', path: '/api/google-mail/messages', summary: 'Raw Gmail messages before processing.', params: { hours: 24, limit: 30 } },
     ],

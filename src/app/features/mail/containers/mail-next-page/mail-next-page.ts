@@ -6,41 +6,23 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { MailDatasetCard } from '../../components/mail-dataset-card/mail-dataset-card';
 import type { EndpointConfig } from '../../../api-data/data-pages';
 
-const MAIL_STATS_ENDPOINT: EndpointConfig = {
-  title: 'Email stats',
-  path: '/api/emails/reports/stats',
-  summary: 'Aggregate report counts and score distribution.',
-};
-
 const MAIL_GMAIL_PROFILE_ENDPOINT: EndpointConfig = {
   title: 'Gmail profile',
   path: '/api/google-mail/profile',
   summary: 'Connected Gmail account metadata.',
 };
 
-const MAIL_GEMS_ENDPOINT: EndpointConfig = {
-  title: 'Today gems',
-  path: '/api/emails/reports/gems/today',
-  summary: 'High-value email surfaced today.',
-};
-
-const MAIL_UNDECIDED_ENDPOINT: EndpointConfig = {
-  title: 'Undecided',
-  path: '/api/emails/reports/undecided',
-  summary: 'Reports still awaiting a score or operator decision.',
-};
-
 const MAIL_REPORTS_ENDPOINT: EndpointConfig = {
-  title: 'Recent reports',
+  title: 'Pipeline rows',
   path: '/api/emails/reports',
-  summary: 'Latest processed email reports.',
-  params: { limit: 50, sort: 'processed_at', order: 'desc' },
+  summary: 'Email triage pipeline rows, most recent first.',
+  params: { limit: 50 },
 };
 
 const MAIL_GMAIL_ENDPOINT: EndpointConfig = {
   title: 'Recent Gmail',
   path: '/api/google-mail/messages',
-  summary: 'Raw Gmail messages before processing.',
+  summary: 'Raw Gmail messages.',
   params: { hours: 24, limit: 30 },
 };
 
@@ -52,10 +34,7 @@ const MAIL_GMAIL_ENDPOINT: EndpointConfig = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MailNextPage {
-  protected readonly statsEndpoint = MAIL_STATS_ENDPOINT;
   protected readonly profileEndpoint = MAIL_GMAIL_PROFILE_ENDPOINT;
-  protected readonly gemsEndpoint = MAIL_GEMS_ENDPOINT;
-  protected readonly undecidedEndpoint = MAIL_UNDECIDED_ENDPOINT;
   protected readonly reportsEndpoint = MAIL_REPORTS_ENDPOINT;
   protected readonly gmailEndpoint = MAIL_GMAIL_ENDPOINT;
 }

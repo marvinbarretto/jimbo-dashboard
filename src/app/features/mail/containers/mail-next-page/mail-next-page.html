@@ -3,28 +3,19 @@
     <app-ui-back-link uiPageHeaderLead [to]="['/mail']">← Mail Explorer</app-ui-back-link>
     <h1 uiPageHeaderTitle>Mail Next</h1>
     <p uiPageHeaderHint>
-      A dedicated operator-facing mail workspace using the same Jimbo API sources as the current
-      explorer, but grouped into higher-signal datasets for comparison.
+      Email triage pipeline view: working-table rows from jimbo-api alongside raw Gmail.
     </p>
   </app-ui-page-header>
 
-  <app-ui-section title="Snapshot" [collapsible]="false">
+  <app-ui-section title="Pipeline" [collapsible]="false">
     <div class="mail-next-page__stack">
-      <app-mail-dataset-card [endpoint]="statsEndpoint" [rowsLimit]="8" />
+      <app-mail-dataset-card [endpoint]="reportsEndpoint" [rowsLimit]="12" />
       <app-mail-dataset-card [endpoint]="profileEndpoint" [rowsLimit]="8" />
     </div>
   </app-ui-section>
 
-  <app-ui-section title="Queues" [collapsible]="false">
+  <app-ui-section title="Raw Gmail" [collapsible]="false">
     <div class="mail-next-page__stack">
-      <app-mail-dataset-card [endpoint]="gemsEndpoint" [rowsLimit]="12" />
-      <app-mail-dataset-card [endpoint]="undecidedEndpoint" [rowsLimit]="12" />
-    </div>
-  </app-ui-section>
-
-  <app-ui-section title="Recent Activity" [collapsible]="false">
-    <div class="mail-next-page__stack">
-      <app-mail-dataset-card [endpoint]="reportsEndpoint" [rowsLimit]="12" />
       <app-mail-dataset-card [endpoint]="gmailEndpoint" [rowsLimit]="12" />
     </div>
   </app-ui-section>
