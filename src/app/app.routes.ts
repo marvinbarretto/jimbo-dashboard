@@ -90,5 +90,10 @@ export const routes: Routes = [
     title: 'Calendar settings',
     loadComponent: () => import('./features/calendar-settings/calendar-settings-page').then(m => m.CalendarSettingsPage),
   },
+  {
+    path: 'google-tasks-settings',
+    title: 'Google Tasks settings',
+    loadComponent: () => import('./features/google-tasks-settings/google-tasks-settings-page').then(m => m.GoogleTasksSettingsPage),
+  },
   { path: '', redirectTo: 'today', pathMatch: 'full' },
 ];

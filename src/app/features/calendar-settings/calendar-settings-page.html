@@ -66,16 +66,4 @@
     </app-ui-section>
     </div>
   }
-
-  <app-ui-sticky-action-bar>
-    <ng-container uiStickyActionBarSecondary>
-      <app-ui-button
-        variant="primary"
-        [disabled]="loading() || saving()"
-        (pressed)="save()"
-      >
-        {{ saving() ? 'Saving…' : 'Save' }}
-      </app-ui-button>
-    </ng-container>
-  </app-ui-sticky-action-bar>
 </app-ui-stack>

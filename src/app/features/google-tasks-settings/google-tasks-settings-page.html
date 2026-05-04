@@ -1,0 +1,38 @@
+<app-ui-stack gap="lg">
+  <app-ui-page-header>
+    <app-ui-back-link uiPageHeaderLead [to]="['/today']">← Today</app-ui-back-link>
+    <h1 uiPageHeaderTitle>Google Tasks</h1>
+    <p uiPageHeaderHint>
+      Choose which Google Task lists Jimbo reads. Disabled lists are ignored by triage skills
+      and briefings.
+    </p>
+  </app-ui-page-header>
+
+  @if (loading()) {
+    <app-ui-loading-state message="Loading task lists…" />
+  } @else {
+    <app-ui-section title="Your task lists" [meta]="rows().length + ' lists'" [collapsible]="false">
+      @if (rows().length === 0) {
+        <app-ui-empty-state message="No Google Task lists found." />
+      } @else {
+        <div class="task-list">
+          @for (row of rows(); track row.list.id) {
+            <div class="task-row">
+              <app-ui-toggle
+                [checked]="row.enabled"
+                [label]="'Toggle ' + row.list.title"
+                (changed)="toggle(row.list.id, row.enabled)"
+              />
+              <div class="task-row__info">
+                <span class="task-row__name">{{ row.list.title }}</span>
+                @if (row.tag) {
+                  <span class="task-row__tag">{{ row.tag }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </app-ui-section>
+  }
+</app-ui-stack>

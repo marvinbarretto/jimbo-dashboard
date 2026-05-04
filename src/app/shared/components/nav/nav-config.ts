@@ -12,9 +12,10 @@ export interface NavGroup {
 }
 
 export const primaryNavItems: readonly NavLink[] = [
-  { href: '/ui-lab',            label: 'UI Lab',       accent: '#a78bfa' },
-  { href: '/pomo-reports',      label: 'Pomo reports', accent: '#fb923c' },
-  { href: '/calendar-settings', label: 'Calendars',    accent: '#34d399' },
+  { href: '/ui-lab',                label: 'UI Lab',       accent: '#a78bfa' },
+  { href: '/pomo-reports',          label: 'Pomo reports', accent: '#fb923c' },
+  { href: '/calendar-settings',     label: 'Calendars',    accent: '#34d399' },
+  { href: '/google-tasks-settings', label: 'Tasks',        accent: '#60a5fa' },
 ];
 
 export const navGroups: readonly NavGroup[] = [
@@ -22,7 +23,7 @@ export const navGroups: readonly NavGroup[] = [
     id: 'archive',
     label: 'Archive',
     paths: [
-      'today', 'shopping', 'mail-next', 'briefings', 'calendar-settings',
+      'today', 'shopping', 'mail-next', 'briefings', 'calendar-settings', 'google-tasks-settings',
       'projects', 'grooming', 'execution', 'vault-items', 'questions', 'activity',
       'actors', 'skills', 'models', 'model-stacks', 'context', 'coach', 'interrogate',
       'hermes', 'ops', 'triage', 'stream', 'coverage', 'grooming-admin', 'pomo-reports',

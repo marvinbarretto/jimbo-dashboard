@@ -2,17 +2,20 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 import { Subscription } from 'rxjs';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
-import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiToggle } from '@shared/components/ui-toggle/ui-toggle';
-import { CalendarSettingsService, type CalendarEntry, type CalendarItemConfig } from './calendar-settings.service';
+import {
+  GoogleTasksSettingsService,
+  type GoogleTaskListEntry,
+  type TaskListItemConfig,
+} from './google-tasks-settings.service';
 
-interface CalendarRow {
-  readonly calendar: CalendarEntry;
+interface TaskListRow {
+  readonly list: GoogleTaskListEntry;
   readonly enabled: boolean;
   readonly tag: string | null;
 }
@@ -22,10 +25,9 @@ interface CalendarRow {
 const SAVE_DEBOUNCE_MS = 300;
 
 @Component({
-  selector: 'app-calendar-settings-page',
+  selector: 'app-google-tasks-settings-page',
   imports: [
     UiBackLink,
-    UiBadge,
     UiEmptyState,
     UiLoadingState,
     UiPageHeader,
@@ -33,62 +35,47 @@ const SAVE_DEBOUNCE_MS = 300;
     UiStack,
     UiToggle,
   ],
-  templateUrl: './calendar-settings-page.html',
-  styleUrl: './calendar-settings-page.scss',
+  templateUrl: './google-tasks-settings-page.html',
+  styleUrl: './google-tasks-settings-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CalendarSettingsPage {
-  private readonly service = inject(CalendarSettingsService);
+export class GoogleTasksSettingsPage {
+  private readonly service = inject(GoogleTasksSettingsService);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly localConfig = signal<Record<string, CalendarItemConfig>>({});
-  protected readonly readerExpanded = signal(true);
+  protected readonly localConfig = signal<Record<string, TaskListItemConfig>>({});
 
   // Last server-confirmed state. On a failed save we restore the UI to this
   // so the user sees the truth, not their stale optimistic toggle.
-  private lastConfirmed: Record<string, CalendarItemConfig> = {};
+  private lastConfirmed: Record<string, TaskListItemConfig> = {};
 
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
   private inFlight: Subscription | null = null;
 
   protected readonly loading = computed(
-    () => this.service.calendars() === undefined || this.service.config() === undefined,
+    () => this.service.lists() === undefined || this.service.config() === undefined,
   );
 
-  protected readonly ownedRows = computed<CalendarRow[]>(() => {
-    const calendars = this.service.calendars() ?? [];
+  protected readonly rows = computed<TaskListRow[]>(() => {
+    const lists = this.service.lists() ?? [];
     const config = this.localConfig();
-    return calendars
-      .filter(c => c.accessRole === 'owner' || !!c.primary)
-      .sort((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0))
-      .map(c => ({
-        calendar: c,
-        enabled: config[c.id]?.enabled ?? !!c.primary,
-        tag: config[c.id]?.tag ?? null,
-      }));
-  });
-
-  protected readonly readerRows = computed<CalendarRow[]>(() => {
-    const calendars = this.service.calendars() ?? [];
-    const config = this.localConfig();
-    return calendars
-      .filter(c => c.accessRole !== 'owner' && !c.primary)
-      .map(c => ({
-        calendar: c,
-        enabled: config[c.id]?.enabled ?? false,
-        tag: config[c.id]?.tag ?? null,
+    return [...lists]
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .map(list => ({
+        list,
+        enabled: config[list.id]?.enabled ?? false,
+        tag: config[list.id]?.tag ?? null,
       }));
   });
 
   constructor() {
-    // Initialise local + last-confirmed state once config loads from the API.
     effect(() => {
       const config = this.service.config();
       if (config !== undefined) {
         untracked(() => {
-          this.localConfig.set({ ...config.calendars });
-          this.lastConfirmed = { ...config.calendars };
+          this.localConfig.set({ ...config.lists });
+          this.lastConfirmed = { ...config.lists };
         });
       }
     });
@@ -118,18 +105,18 @@ export class CalendarSettingsPage {
     this.inFlight?.unsubscribe();
 
     const snapshot = this.localConfig();
-    this.inFlight = this.service.saveConfig({ calendars: snapshot }).subscribe({
+    this.inFlight = this.service.saveConfig({ lists: snapshot }).subscribe({
       next: () => {
         this.lastConfirmed = snapshot;
         this.inFlight = null;
-        this.toast.success('Calendar settings saved');
+        this.toast.success('Google Tasks settings saved');
       },
       error: (err) => {
         this.inFlight = null;
         this.localConfig.set({ ...this.lastConfirmed });
         const detail = err?.error?.message ?? err?.message ?? 'Unknown error';
         this.toast.error(`Couldn't save: ${detail}`);
-        console.error('[CalendarSettings] save error', err);
+        console.error('[GoogleTasksSettings] save error', err);
       },
     });
   }

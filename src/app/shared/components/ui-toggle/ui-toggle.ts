@@ -50,7 +50,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
       width: 2.25rem;
       height: 1.25rem;
       border-radius: 9999px;
-      background: var(--color-danger);
+      background: var(--color-border);
       transition: background 150ms ease;
     }
 
