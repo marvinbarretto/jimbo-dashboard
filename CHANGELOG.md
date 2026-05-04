@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.16](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.15...v0.0.16) (2026-05-04)
+
+
+### Features
+
+* **auth:** move dashboard auth from app-level X-API-Key to Caddy basic_auth ([21a29b9](https://github.com/marvinbarretto/jimbo-dashboard/commit/21a29b919c6335aeb7cfd5317ca27e8aec7d748a))
+* **nav:** replace flat 24-item nav with primary links + contextual sub-nav ([2cc5bb4](https://github.com/marvinbarretto/jimbo-dashboard/commit/2cc5bb485808b7cffb832a9e9eb2b0b3f295097b))
+* **shopping:** add shopping feature — schema, migration, routes, API proxy ([b2fec57](https://github.com/marvinbarretto/jimbo-dashboard/commit/b2fec57e32d1531fb47699678a8d116b16d966cf))
+* **stream:** correlation grouping + expandable rows with detail/payload ([f54e4a2](https://github.com/marvinbarretto/jimbo-dashboard/commit/f54e4a24eda41ebe8f0d98a78d6e91de688fc15b))
+* **stream:** live tail of system_events via WebSocket ([3230fc5](https://github.com/marvinbarretto/jimbo-dashboard/commit/3230fc5e83f10d1c95f7e4f82021d46a639cb74a))
+* **ui:** add EntityChip + SmartComposerInput; retire OwnerChip and ProjectChip ([1d275c0](https://github.com/marvinbarretto/jimbo-dashboard/commit/1d275c099a6099aee7da927bd8c7b4fbb9a0c67f))
+* **ui:** propagate EntityChip across filter bars, chip lists, and detail zones ([d6bda9b](https://github.com/marvinbarretto/jimbo-dashboard/commit/d6bda9b11ff41ba1ad042f8d47fe90996c85ea6b))
+
+
+### Bug Fixes
+
+* **jimbo-proxy:** forward 204 No Content responses without body parse ([df9b22a](https://github.com/marvinbarretto/jimbo-dashboard/commit/df9b22af20b88909468f03dc06a0493ae1d82787))
+* **stream:** render timestamps in operator's local timezone ([5c623c4](https://github.com/marvinbarretto/jimbo-dashboard/commit/5c623c4c826ecf23e352227fdffe99d3bd64dbd8))
+* **vault-item:** add addBySeq helper; fix vault-item-questions CSS indent ([4ee9aca](https://github.com/marvinbarretto/jimbo-dashboard/commit/4ee9aca00220f2897e1ded642916a98f0bebeffe))
+* **vault-item:** replace alert() with toast in add-blocker flow ([3f61146](https://github.com/marvinbarretto/jimbo-dashboard/commit/3f6114674ec5fcce150d55d274513fe6a2dbcee9))
+
+
+### Code Refactoring
+
+* **vault-item:** decompose vault-item-detail-body; extract shared datetime utils ([8e1d510](https://github.com/marvinbarretto/jimbo-dashboard/commit/8e1d510ac6d72f62d69d0d770ae7a2463eaccc34))
+
 ### [0.0.15](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.14...v0.0.15) (2026-05-02)
 
 
