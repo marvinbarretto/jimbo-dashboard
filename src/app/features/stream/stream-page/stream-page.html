@@ -1,0 +1,96 @@
+<app-ui-stack gap="lg" class="stream-page">
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Stream</h1>
+    <p uiPageHeaderHint>Live tail of <code>system_events</code>. Newest first.</p>
+    <div uiPageHeaderActions>
+      <app-ui-cluster gap="sm" align="center">
+        <app-ui-badge [tone]="statusTone()">{{ statusLabel() }}</app-ui-badge>
+        <app-ui-badge tone="neutral">{{ eventCount() }} events</app-ui-badge>
+      </app-ui-cluster>
+    </div>
+  </app-ui-page-header>
+
+  @if (lastError(); as err) {
+    <p class="stream-page__error">{{ err }}</p>
+  }
+
+  <app-ui-cluster gap="sm" align="center">
+    <span class="stream-page__chip-label">source</span>
+    <app-chip
+      [active]="sourceFilter() === null"
+      (toggle)="setSource(null)"
+    >any</app-chip>
+    @for (source of sources(); track source) {
+      <app-chip
+        [active]="sourceFilter() === source"
+        [count]="sourceCounts().get(source) ?? null"
+        (toggle)="setSource(sourceFilter() === source ? null : source)"
+      >{{ source }}</app-chip>
+    }
+  </app-ui-cluster>
+
+  <app-ui-cluster gap="sm" align="center">
+    <span class="stream-page__chip-label">noise</span>
+    <app-chip
+      [active]="showDebug()"
+      (toggle)="toggleDebug()"
+    >debug events</app-chip>
+    <app-chip
+      [active]="showChattyKinds()"
+      (toggle)="toggleChattyKinds()"
+    >heartbeats &amp; tool calls</app-chip>
+    @if (hiddenCount() > 0) {
+      <span class="stream-page__hidden-hint">{{ hiddenCount() }} hidden</span>
+    }
+  </app-ui-cluster>
+
+  @if (grouped().length === 0) {
+    <app-ui-empty-state
+      title="No events"
+      message="Either nothing is firing right now, or your filters are hiding everything. Try toggling noise filters above."
+    />
+  }
+
+  @for (group of grouped(); track group.day) {
+    <section class="stream-page__day">
+      <h2 class="stream-page__day-heading">{{ group.day }}</h2>
+      <ul class="stream-page__rows">
+        @for (row of group.rows; track row.event.id) {
+          <li class="stream-page__row" [class]="'stream-page__row--' + row.event.level">
+            <span class="stream-page__time" [title]="row.event.ts">{{ row.time }}</span>
+            <app-ui-badge [tone]="levelTone(row.event.level)" class="stream-page__level">{{ row.event.source }}</app-ui-badge>
+            <div class="stream-page__body">
+              <app-ui-cluster gap="sm" align="baseline">
+                <code class="stream-page__kind">{{ row.event.kind }}</code>
+                @if (row.event.actor; as actor) {
+                  <app-entity-chip
+                    type="actor"
+                    [id]="actor"
+                    [label]="actor"
+                  />
+                }
+                @if (row.note; as note) {
+                  <app-entity-chip
+                    type="vault-item"
+                    [id]="row.event.ref_id ?? ''"
+                    [label]="note.title"
+                    [seq]="note.seq"
+                  />
+                } @else if (row.event.ref_type && row.event.ref_id) {
+                  <span class="stream-page__ref">
+                    <span class="stream-page__ref-type">{{ row.event.ref_type }}</span>
+                    <span class="stream-page__ref-id">{{ row.event.ref_id }}</span>
+                  </span>
+                }
+                @if (row.event.correlation_id; as cid) {
+                  <span class="stream-page__cid" [title]="'correlation_id: ' + cid">⤳ {{ cid.slice(0, 6) }}</span>
+                }
+              </app-ui-cluster>
+              <p class="stream-page__title">{{ row.event.title }}</p>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</app-ui-stack>

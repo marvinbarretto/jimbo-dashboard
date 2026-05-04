@@ -1,0 +1,133 @@
+:host {
+  display: block;
+  padding: 1.5rem 2rem;
+  max-width: 1200px;
+}
+
+.stream-page__error {
+  margin: 0;
+  color: var(--color-warning, #c08b00);
+  font-size: 0.8125rem;
+}
+
+.stream-page__chip-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.stream-page__hidden-hint {
+  margin-left: 0.25rem;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.stream-page__day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stream-page__day-heading {
+  margin: 0.5rem 0 0;
+  padding-bottom: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.stream-page__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.stream-page__row {
+  display: grid;
+  grid-template-columns: 4.5rem 5rem 1fr;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.4rem 0.25rem 0.4rem 0.6rem;
+  border-bottom: 1px dashed var(--color-border);
+  border-left: 3px solid transparent;
+
+  // Newest event subtly highlighted.
+  &:first-child {
+    background: color-mix(in srgb, var(--color-accent) 5%, transparent);
+  }
+
+  // Level-tinted left border so warn/error rows leap out.
+  &--warn  { border-left-color: var(--color-warning, #c08b00); }
+  &--error { border-left-color: var(--color-error, #b3261e); }
+  &--debug { opacity: 0.75; }
+}
+
+.stream-page__time {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.stream-page__level {
+  // Sized to fit the source name (hermes, jimbo-api, …).
+  justify-self: start;
+  white-space: nowrap;
+}
+
+.stream-page__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.stream-page__kind {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-border) 50%, transparent);
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+}
+
+.stream-page__ref {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.stream-page__ref-type {
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.62rem;
+}
+
+.stream-page__ref-id {
+  color: var(--color-text);
+}
+
+.stream-page__cid {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+
+.stream-page__title {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  line-height: 1.35;
+}

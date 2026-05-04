@@ -66,6 +66,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/coverage/coverage-page/coverage-page').then(m => m.CoveragePage),
   },
   {
+    path: 'stream',
+    title: 'Stream',
+    loadComponent: () => import('./features/stream/stream-page/stream-page').then(m => m.StreamPage),
+  },
+  {
     path: 'test-forms',
     title: 'Test forms',
     loadComponent: () => import('./features/test-forms/test-forms-page').then(m => m.TestFormsPage),

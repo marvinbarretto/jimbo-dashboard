@@ -48,11 +48,12 @@ export const navGroups: readonly NavGroup[] = [
   {
     id: 'system',
     label: 'System',
-    paths: ['hermes', 'ops', 'triage', 'coverage', 'ui-lab', 'grooming-admin'],
+    paths: ['hermes', 'ops', 'triage', 'stream', 'coverage', 'ui-lab', 'grooming-admin'],
     items: [
       { href: '/hermes', label: 'Hermes' },
       { href: '/ops', label: 'Ops' },
       { href: '/triage', label: 'Triage' },
+      { href: '/stream', label: 'Stream' },
       { href: '/coverage', label: 'Coverage' },
       { href: '/ui-lab', label: 'UI Lab' },
       { href: '/grooming-admin', label: 'Grooming API' },
