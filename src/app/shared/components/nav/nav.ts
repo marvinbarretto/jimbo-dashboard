@@ -11,7 +11,7 @@ import { navGroups, primaryNavItems, type NavGroup } from './nav-config';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <nav aria-label="Primary" class="app-nav">
-      <a class="app-nav__brand" routerLink="/today">
+      <a class="app-nav__brand" routerLink="/ui-lab">
         <span class="app-nav__logo">jimbo</span>
         <span class="app-nav__version">v{{ version }}</span>
       </a>
@@ -22,18 +22,18 @@ import { navGroups, primaryNavItems, type NavGroup } from './nav-config';
             <a
               [routerLink]="item.href"
               routerLinkActive="active"
-              class="app-nav__link">
+              class="app-nav__link app-nav__link--primary">
               {{ item.label }}
             </a>
           </li>
         }
 
         @for (group of groups; track group.id) {
-          <li class="app-nav__item">
+          <li class="app-nav__item app-nav__item--archive">
             <a
               [routerLink]="group.items[0].href"
               [class.active]="activeGroupId() === group.id"
-              class="app-nav__link app-nav__link--group">
+              class="app-nav__link app-nav__link--archive">
               {{ group.label }}
             </a>
           </li>
@@ -77,27 +77,31 @@ import { navGroups, primaryNavItems, type NavGroup } from './nav-config';
       list-style: none;
       display: flex;
       flex: 1;
-      flex-wrap: wrap;
+      align-items: center;
       gap: 0.45rem;
-      min-width: 0;
       margin: 0;
       padding: 0;
+      min-width: 0;
     }
 
     .app-nav__item {
       display: flex;
     }
 
+    /* push Archive to the far right */
+    .app-nav__item--archive {
+      margin-left: auto;
+    }
+
     .app-nav__link {
       display: inline-flex;
       align-items: center;
       min-height: 2.2rem;
-      padding: 0.35rem 0.75rem;
+      padding: 0.35rem 0.85rem;
       border: 1px solid transparent;
       border-radius: 999px;
       font-size: 0.85rem;
       font-weight: 500;
-      color: var(--color-text-muted);
       text-decoration: none;
       white-space: nowrap;
       transition:
@@ -106,26 +110,47 @@ import { navGroups, primaryNavItems, type NavGroup } from './nav-config';
         background-color 120ms ease;
     }
 
-    .app-nav__link--group {
-      font-style: italic;
+    /* UI Lab — prominent */
+    .app-nav__link--primary {
+      color: var(--color-text);
+      border-color: var(--color-border);
+      background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+    }
+
+    .app-nav__link--primary:hover {
+      border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-border));
+      background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+    }
+
+    .app-nav__link--primary.active {
+      color: var(--color-text);
+      border-color: color-mix(in srgb, var(--color-accent) 60%, var(--color-border));
+      background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+    }
+
+    /* Archive — quiet, secondary */
+    .app-nav__link--archive {
+      font-size: 0.78rem;
+      color: var(--color-text-muted);
+      opacity: 0.6;
+    }
+
+    .app-nav__link--archive:hover {
+      color: var(--color-text-muted);
+      border-color: color-mix(in srgb, var(--color-border) 70%, transparent);
+      opacity: 0.9;
+    }
+
+    .app-nav__link--archive.active {
+      color: var(--color-text-muted);
+      border-color: color-mix(in srgb, var(--color-border) 80%, transparent);
+      opacity: 1;
     }
 
     .app-nav__brand:focus-visible,
     .app-nav__link:focus-visible {
       outline: 2px solid var(--color-accent);
       outline-offset: 2px;
-    }
-
-    .app-nav__link:hover {
-      color: var(--color-text);
-      border-color: color-mix(in srgb, var(--color-border) 90%, transparent);
-      background: color-mix(in srgb, var(--color-surface) 75%, transparent);
-    }
-
-    .app-nav__link.active {
-      color: var(--color-text);
-      border-color: color-mix(in srgb, var(--color-accent) 38%, var(--color-border));
-      background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface));
     }
 
     @media (max-width: 768px) {
@@ -135,8 +160,11 @@ import { navGroups, primaryNavItems, type NavGroup } from './nav-config';
         gap: 0.7rem;
       }
 
+      .app-nav__item--archive {
+        margin-left: 0;
+      }
+
       .app-nav__list {
-        flex-wrap: nowrap;
         overflow-x: auto;
         padding-bottom: 0.2rem;
         scrollbar-width: thin;
