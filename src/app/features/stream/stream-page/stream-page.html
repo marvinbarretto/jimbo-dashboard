@@ -14,6 +14,66 @@
     <p class="stream-page__error">{{ err }}</p>
   }
 
+  <section
+    class="stream-page__errors"
+    [class.stream-page__errors--collapsed]="!errorPanelOpen()"
+  >
+    <header class="stream-page__errors-head">
+      <button
+        type="button"
+        class="stream-page__errors-toggle"
+        [attr.aria-expanded]="errorPanelOpen()"
+        (click)="toggleErrorPanel()"
+      >
+        <span class="stream-page__chevron" aria-hidden="true">{{ errorPanelOpen() ? '▾' : '▸' }}</span>
+        <span class="stream-page__errors-title">Recent error classes</span>
+        <app-ui-badge tone="danger">{{ errorTotal() }}</app-ui-badge>
+        @if (errorClasses().length > 0) {
+          <span class="stream-page__errors-count">across {{ errorClasses().length }} classes</span>
+        }
+      </button>
+      <button
+        type="button"
+        class="stream-page__errors-refresh"
+        [disabled]="errorLoading()"
+        (click)="refreshErrors()"
+      >
+        {{ errorLoading() ? '…' : '↻' }} refresh
+      </button>
+      @if (errorLastFetch(); as ts) {
+        <span class="stream-page__errors-fresh" [title]="ts">updated {{ fmtRelative(ts) }}</span>
+      }
+    </header>
+
+    @if (errorPanelOpen()) {
+      @if (errorLastError(); as err) {
+        <p class="stream-page__detail-status stream-page__detail-status--error">{{ err }}</p>
+      } @else if (errorClasses().length === 0 && !errorLoading()) {
+        <p class="stream-page__detail-status">No errors in the last few hundred events.</p>
+      } @else {
+        <ul class="stream-page__errors-list">
+          @for (cls of errorClasses(); track cls.key) {
+            <li class="stream-page__error-row">
+              <button
+                type="button"
+                class="stream-page__error-row-btn"
+                [title]="cls.sampleCorrelationId ? 'Filter stream to this thread' : 'Open sample event'"
+                (click)="drilldownError(cls)"
+              >
+                <span class="stream-page__error-count">{{ cls.count }}×</span>
+                <span class="stream-page__error-label">{{ cls.label }}</span>
+                <span class="stream-page__error-meta">
+                  <span class="stream-page__error-time" [title]="cls.lastTs">{{ fmtRelative(cls.lastTs) }}</span>
+                  <span class="stream-page__sub-id">#{{ cls.sampleEventId }}</span>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    }
+  </section>
+
   <app-ui-cluster gap="sm" align="center">
     <span class="stream-page__chip-label">source</span>
     <app-chip

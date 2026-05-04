@@ -7,8 +7,10 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { VaultItemsService } from '../../vault-items/data-access/vault-items.service';
+import { ErrorAggregationService, type ErrorClass } from '../error-aggregation.service';
 import { EventDetailService } from '../event-detail.service';
 import { StreamService, type SystemEventSummary } from '../stream.service';
+import { relativeTime } from '@shared/utils/datetime.utils';
 
 // en-GB enforces 24h clock; en-CA gives ISO-style YYYY-MM-DD for sortable
 // day keys. Both pick up the operator's local timezone automatically.
@@ -93,10 +95,18 @@ export class StreamPage implements OnInit, OnDestroy {
   private readonly service = inject(StreamService);
   private readonly vault = inject(VaultItemsService);
   private readonly detailService = inject(EventDetailService);
+  private readonly errorAgg = inject(ErrorAggregationService);
 
   readonly status = this.service.status;
   readonly lastError = this.service.lastError;
   readonly eventCount = computed(() => this.service.events().length);
+
+  readonly errorClasses = this.errorAgg.classes;
+  readonly errorTotal = this.errorAgg.totalErrors;
+  readonly errorLoading = this.errorAgg.loading;
+  readonly errorLastFetch = this.errorAgg.lastFetch;
+  readonly errorLastError = this.errorAgg.lastError;
+  protected readonly errorPanelOpen = signal(true);
 
   // Filters — null (or empty) = no constraint.
   protected readonly sourceFilter = signal<string | null>(null);
@@ -239,11 +249,37 @@ export class StreamPage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.service.connect();
+    this.errorAgg.start();
   }
 
   ngOnDestroy(): void {
     this.service.disconnect();
+    this.errorAgg.stop();
   }
+
+  protected refreshErrors(): void {
+    void this.errorAgg.refresh();
+  }
+
+  protected toggleErrorPanel(): void {
+    this.errorPanelOpen.update((v) => !v);
+  }
+
+  // Filter the stream to a failing thread by clicking an error class row.
+  // Falls back to setting source=hermes if the sample has no cid (rare —
+  // most tool-call errors carry a session cid).
+  protected drilldownError(cls: ErrorClass): void {
+    if (cls.sampleCorrelationId) {
+      this.cidFilter.set(cls.sampleCorrelationId);
+    } else {
+      // Without a cid we can't filter to one thread — open the sample
+      // event drawer so the operator at least sees the offender.
+      this.expandedEvents.update((prev) => new Set(prev).add(cls.sampleEventId));
+      this.detailService.load(cls.sampleEventId);
+    }
+  }
+
+  protected fmtRelative = relativeTime;
 
   private isHidden(e: SystemEventSummary): boolean {
     const sourceOk = !this.sourceFilter() || e.source === this.sourceFilter();
