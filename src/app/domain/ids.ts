@@ -34,6 +34,7 @@ export type ProjectId      = Brand<string, 'ProjectId'>;
 export type ThreadMessageId = Brand<string, 'ThreadMessageId'>;
 export type AttachmentId   = Brand<string, 'AttachmentId'>;
 export type DispatchId     = Brand<string, 'DispatchId'>;
+export type FocusSessionId = Brand<string, 'FocusSessionId'>;
 
 // Constructor helpers. Use at API boundaries where the raw string arrives.
 // Inside the app, prefer passing the branded type around.
@@ -51,3 +52,4 @@ export const projectId       = (v: string): ProjectId       => v as ProjectId;
 export const threadMessageId = (v: string): ThreadMessageId => v as ThreadMessageId;
 export const attachmentId    = (v: string): AttachmentId    => v as AttachmentId;
 export const dispatchId      = (v: string): DispatchId      => v as DispatchId;
+export const focusSessionId  = (v: string): FocusSessionId  => v as FocusSessionId;

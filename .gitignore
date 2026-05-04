@@ -3,12 +3,14 @@
 # Compiled output
 /dist
 /dist-api
+/pomo-app/dist
 /tmp
 /out-tsc
 /bazel-out
 
 # Node
 /node_modules
+/pomo-app/node_modules
 npm-debug.log
 yarn-error.log
 

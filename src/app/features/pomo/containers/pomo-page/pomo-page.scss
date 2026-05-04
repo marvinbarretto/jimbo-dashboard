@@ -1,0 +1,161 @@
+.pomo {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.pomo__hint {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: 0.85rem;
+}
+
+.pomo__field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.pomo__label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-soft);
+}
+
+.pomo__field {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-family: inherit;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  resize: vertical;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-color: var(--color-accent);
+  }
+}
+
+.pomo__preset {
+  flex: 1;
+  min-width: 4rem;
+  padding: 0.85rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+
+  &--active {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft, color-mix(in srgb, var(--color-accent) 16%, transparent));
+    color: var(--color-text);
+  }
+}
+
+.pomo__live {
+  padding: 1.5rem 1rem;
+}
+
+.pomo__project {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pomo__clock {
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(4rem, 22vw, 7rem);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.pomo__live--expired .pomo__clock {
+  color: var(--color-accent);
+}
+
+.pomo__progress {
+  width: 100%;
+  height: 0.4rem;
+  background: var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.pomo__progress-fill {
+  height: 100%;
+  background: var(--color-accent);
+  transition: width 1s linear;
+}
+
+.pomo__capture {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  text-align: left;
+}
+
+.pomo__capture-prompt {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-soft);
+}
+
+.pomo__recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.pomo__recent-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font-size: 0.85rem;
+
+  &[data-status='abandoned'] {
+    opacity: 0.55;
+  }
+}
+
+.pomo__recent-when {
+  color: var(--color-text-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.pomo__recent-project {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pomo__recent-duration {
+  font-variant-numeric: tabular-nums;
+}
+
+.pomo__recent-status {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--color-text-soft);
+}

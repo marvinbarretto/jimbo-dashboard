@@ -1,0 +1,109 @@
+<app-ui-stack class="pomo" gap="lg">
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Pomo reports</h1>
+    <p uiPageHeaderHint class="pomo__hint">
+      Time allocated to projects. Timer lives at <a href="/pomo">/pomo</a>.
+    </p>
+  </app-ui-page-header>
+
+  @if (active(); as s) {
+    <app-ui-card class="pomo__live" [class.pomo__live--expired]="isExpired()">
+      <app-ui-stack gap="md" align="center">
+        <p class="pomo__project">{{ projectName(s.project_id) }}</p>
+
+        <div class="pomo__clock">{{ displayTime() }}</div>
+
+        <div class="pomo__progress" [attr.aria-valuenow]="progressPct()" role="progressbar">
+          <div class="pomo__progress-fill" [style.width.%]="progressPct()"></div>
+        </div>
+
+        @if (isExpired()) {
+          <form class="pomo__capture" [formGroup]="captureForm" (ngSubmit)="complete()">
+            <p class="pomo__capture-prompt">What did you get done?</p>
+            <textarea
+              class="pomo__field"
+              rows="3"
+              placeholder="A line about the session…"
+              formControlName="notes">
+            </textarea>
+            <input
+              class="pomo__field"
+              type="text"
+              placeholder="tags (space or comma separated)"
+              formControlName="tags">
+            <app-ui-button type="submit" variant="primary">
+              Save & finish
+            </app-ui-button>
+          </form>
+        } @else {
+          <app-ui-cluster gap="sm" justify="center">
+            <app-ui-button variant="primary" (pressed)="complete()">Finish early</app-ui-button>
+            <app-ui-button variant="ghost" (pressed)="abandon()">Abandon</app-ui-button>
+          </app-ui-cluster>
+        }
+      </app-ui-stack>
+    </app-ui-card>
+  } @else {
+    <app-ui-card>
+      <form class="pomo__setup" [formGroup]="setupForm" (ngSubmit)="start()">
+        <app-ui-stack gap="md">
+          <div class="pomo__field-group">
+            <label class="pomo__label" for="pomo-project">Project</label>
+            <select id="pomo-project" class="pomo__field" formControlName="project_id">
+              <option value="">— Unassigned —</option>
+              @for (p of activeProjects(); track p.id) {
+                <option [value]="p.id">{{ p.display_name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="pomo__field-group">
+            <span class="pomo__label">Duration</span>
+            <app-ui-cluster gap="sm">
+              @for (m of presets; track m) {
+                <button
+                  type="button"
+                  class="pomo__preset"
+                  [class.pomo__preset--active]="isPreset(m)"
+                  (click)="selectPreset(m)">
+                  {{ m }}m
+                </button>
+              }
+            </app-ui-cluster>
+          </div>
+
+          <div class="pomo__field-group">
+            <label class="pomo__label" for="pomo-minutes">Minutes</label>
+            <input
+              id="pomo-minutes"
+              type="number"
+              min="1"
+              max="480"
+              class="pomo__field"
+              formControlName="minutes">
+          </div>
+
+          <app-ui-button type="submit" variant="primary" size="md">Start</app-ui-button>
+        </app-ui-stack>
+      </form>
+    </app-ui-card>
+
+    @if (recent().length) {
+      <app-ui-stack gap="sm">
+        <app-ui-subhead label="Last 7 days" [count]="recent().length" />
+        <ul class="pomo__recent-list">
+          @for (s of recent(); track trackById($index, s)) {
+            <li class="pomo__recent-item" [attr.data-status]="s.status">
+              <span class="pomo__recent-when">{{ s.started_at | date:'EEE HH:mm' }}</span>
+              <span class="pomo__recent-project">{{ projectName(s.project_id) }}</span>
+              <span class="pomo__recent-duration">
+                {{ ((s.actual_seconds ?? 0) / 60) | number:'1.0-0' }}m
+              </span>
+              <span class="pomo__recent-status">{{ s.status }}</span>
+            </li>
+          }
+        </ul>
+      </app-ui-stack>
+    }
+  }
+</app-ui-stack>

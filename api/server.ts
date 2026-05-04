@@ -65,6 +65,7 @@ const JIMBO_READ_THROUGH_PREFIXES = [
   '/api/events',
   '/api/experiments',
   '/api/fitness',
+  '/api/focus-sessions',
   '/api/google-calendar',
   '/api/google-mail',
   '/api/google-tasks',
@@ -125,7 +126,7 @@ for (const prefix of JIMBO_READ_THROUGH_PREFIXES) {
 // Prefixes that need POST/PATCH/DELETE proxied to jimbo-api in addition to GET.
 // Add a prefix here when the dashboard needs full CRUD against an upstream
 // route family (rather than reimplementing it in dashboard-api).
-const JIMBO_MUTATE_PREFIXES = ['/api/hermes', '/api/shopping'];
+const JIMBO_MUTATE_PREFIXES = ['/api/hermes', '/api/shopping', '/api/focus-sessions'];
 
 for (const prefix of JIMBO_MUTATE_PREFIXES) {
   for (const path of [`${BASE}${prefix}`, `${BASE}${prefix}/*`]) {
