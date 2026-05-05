@@ -70,30 +70,33 @@ async function abandonSession(config: StoredConfig, id: string): Promise<void> {
 // Wrapped in try/catch — if unavailable we fall back to badge text only.
 function tryMakeIcon(label: string): ImageData | null {
   try {
-    const size = 32;
+    const size = 128;
     const canvas = new OffscreenCanvas(size, size);
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
+    const cx = size / 2;
+    const cy = size / 2;
+
     // Tomato red circle
     ctx.fillStyle = '#c0392b';
     ctx.beginPath();
-    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.arc(cx, cy, cx, 0, Math.PI * 2);
     ctx.fill();
 
-    // Tiny green leaf nub at the top
+    // Green leaf nub at the top
     ctx.fillStyle = '#27ae60';
     ctx.beginPath();
-    ctx.ellipse(size / 2, 3, 4, 2.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, 8, 14, 8, 0, 0, Math.PI * 2);
     ctx.fill();
 
     if (label) {
-      const fontSize = label.length > 2 ? 10 : 13;
+      const fontSize = label.length > 2 ? 48 : 62;
       ctx.fillStyle = 'white';
       ctx.font = `bold ${fontSize}px system-ui, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(label, size / 2, size / 2 + 2);
+      ctx.fillText(label, cx, cy + 6);
     }
 
     return ctx.getImageData(0, 0, size, size);
