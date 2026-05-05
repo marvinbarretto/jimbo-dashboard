@@ -3,7 +3,7 @@ const API_BASE = 'https://jimbo.fourfoldmedia.uk';
 interface ActiveSession {
   id: string;
   started_at: string;
-  duration_minutes: number;
+  planned_seconds: number;
   project_id: string | null;
 }
 
@@ -37,7 +37,7 @@ function hide(e: HTMLElement): void { e.hidden = true; }
 let tickTimer = 0;
 
 function startCountdown(session: ActiveSession): void {
-  const expiresAt = new Date(session.started_at).getTime() + session.duration_minutes * 60_000;
+  const expiresAt = new Date(session.started_at).getTime() + session.planned_seconds * 1000;
   const tick = (): void => {
     const ms = expiresAt - Date.now();
     if (ms <= 0) {
@@ -75,7 +75,7 @@ function send<T>(msg: object): Promise<T> {
 function renderRunning(session: ActiveSession): void {
   hide(loadingEl); hide(idleEl); show(runningEl);
   startCountdown(session);
-  sessionInfoEl.textContent = `${session.duration_minutes} min`;
+  sessionInfoEl.textContent = `${Math.round(session.planned_seconds / 60)} min`;
 }
 
 function renderIdle(): void {

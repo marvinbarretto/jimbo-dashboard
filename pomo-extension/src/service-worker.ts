@@ -11,7 +11,7 @@ interface StoredConfig {
 interface ActiveSession {
   id: string;
   started_at: string;
-  duration_minutes: number;
+  planned_seconds: number;
   project_id: string | null;
   status: 'running';
 }
@@ -31,9 +31,9 @@ async function fetchActive(config: StoredConfig): Promise<ActiveSession | null> 
     const res = await fetch(`${API_BASE}/api/focus-sessions/active`, {
       headers: authHeader(config),
     });
-    if (res.status === 404) return null;
     if (!res.ok) return null;
-    return res.json() as Promise<ActiveSession>;
+    const body = (await res.json()) as { active: ActiveSession | null };
+    return body.active;
   } catch {
     return null;
   }
@@ -52,7 +52,7 @@ async function refreshBadge(): Promise<void> {
     return;
   }
 
-  const expiresAt = new Date(session.started_at).getTime() + session.duration_minutes * 60_000;
+  const expiresAt = new Date(session.started_at).getTime() + session.planned_seconds * 1000;
   const remainingMs = expiresAt - Date.now();
 
   if (remainingMs <= 0) {
@@ -95,8 +95,9 @@ async function handleMessage(
     }
 
     case 'START_SESSION': {
+      const durationMins = (msg['duration'] as number) ?? config.defaultDuration;
       const body = {
-        duration_minutes: (msg['duration'] as number) ?? config.defaultDuration,
+        planned_seconds: durationMins * 60,
         project_id: (msg['projectId'] as string | null) ?? null,
         notes: null,
         tags: [],
