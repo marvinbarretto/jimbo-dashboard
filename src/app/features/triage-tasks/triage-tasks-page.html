@@ -1,10 +1,8 @@
 <app-ui-stack gap="lg">
   <app-ui-page-header>
-    <app-ui-back-link uiPageHeaderLead [to]="['/today']">← Today</app-ui-back-link>
     <h1 uiPageHeaderTitle>Triage tasks</h1>
     <p uiPageHeaderHint>
-      Clear your Google Tasks inbox. Today: just looking at what's there — across the lists
-      enabled in Tasks settings.
+      Tap a task to triage it. Discard, skip for later, or promote to a vault item.
     </p>
   </app-ui-page-header>
 
@@ -23,15 +21,17 @@
   } @else {
     <ul class="task-list">
       @for (row of rows(); track row.task.id) {
-        <li class="task-row" [class.url]="row.isUrl">
-          <div class="task-title">{{ row.task.title }}</div>
-          <div class="task-meta">
-            <span class="list-tag">{{ row.task.listTitle }}</span>
-            · updated {{ row.task.updated | relativeTime }}
-            @if (row.task.due) {
-              · due {{ row.task.due | relativeTime }}
-            }
-          </div>
+        <li>
+          <button class="task-row" type="button" [class.url]="row.isUrl" (click)="openTask(row.task)">
+            <div class="task-title">{{ row.task.title }}</div>
+            <div class="task-meta">
+              <span class="list-tag">{{ row.task.listTitle }}</span>
+              · updated {{ row.task.updated | relativeTime }}
+              @if (row.task.due) {
+                · due {{ row.task.due | relativeTime }}
+              }
+            </div>
+          </button>
         </li>
       }
     </ul>
@@ -43,3 +43,73 @@
     </app-ui-button>
   </div>
 </app-ui-stack>
+
+@if (selectedTask(); as task) {
+  <div class="modal-backdrop" (click)="closeModal()"></div>
+  <div class="modal-frame" role="presentation" (click)="closeModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <app-modal-shell closeLabel="Close triage" (close)="closeModal()">
+        <h2 modal-header class="modal-title">Triage</h2>
+
+        <div modal-body class="triage-body">
+          <nav class="mobile-tabs" aria-label="Triage view">
+            <button
+              type="button"
+              class="mobile-tab"
+              [class.active]="mobileTab() === 'jimbo'"
+              (click)="mobileTab.set('jimbo')"
+            >Jimbo</button>
+            <button
+              type="button"
+              class="mobile-tab"
+              [class.active]="mobileTab() === 'you'"
+              (click)="mobileTab.set('you')"
+            >You</button>
+          </nav>
+
+          <div class="panes">
+            <section class="pane pane-jimbo" [class.hidden-mobile]="mobileTab() !== 'jimbo'">
+              <div class="pane-label">Jimbo's view</div>
+              <div class="task-card-mini" [class.url]="looksLikeUrl(task.title)">
+                <div class="task-card-mini__title">{{ task.title }}</div>
+                <div class="task-card-mini__meta">
+                  <span class="list-tag">{{ task.listTitle }}</span>
+                  · updated {{ task.updated | relativeTime }}
+                  @if (task.due) { · due {{ task.due | relativeTime }} }
+                </div>
+                @if (task.notes) {
+                  <div class="task-card-mini__notes">{{ task.notes }}</div>
+                }
+              </div>
+
+              <div class="empty-thinking">
+                Nothing to say yet — I'll learn from this one.
+              </div>
+            </section>
+
+            <section class="pane pane-you" [class.hidden-mobile]="mobileTab() !== 'you'">
+              <div class="pane-label">Your view</div>
+              <label class="context-label" for="ctx-input">Your context</label>
+              <textarea
+                id="ctx-input"
+                class="context-input"
+                placeholder="Why did you save this? Anything I'm missing?"
+                [value]="userContext()"
+                (input)="onContextInput($any($event.target).value)"
+              ></textarea>
+              <div class="context-hint">
+                Saved with the vault item if you promote, and fed back to me on the next pass.
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <footer modal-footer class="triage-actions">
+          <app-ui-button variant="secondary" (pressed)="skip()">Skip for now</app-ui-button>
+          <app-ui-button variant="danger" (pressed)="discard()">Discard</app-ui-button>
+          <app-ui-button variant="primary" (pressed)="promote()">Promote to Vault Item →</app-ui-button>
+        </footer>
+      </app-modal-shell>
+    </div>
+  </div>
+}
