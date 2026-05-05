@@ -1,0 +1,13 @@
+{
+  "name": "jimbo-pomo-extension",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "bash build.sh"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "esbuild": "^0.25.0",
+    "typescript": "~5.6.0"
+  }
+}

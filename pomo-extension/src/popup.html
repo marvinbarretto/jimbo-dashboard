@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Jimbo Pomo</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div id="loading">Loading…</div>
+
+  <div id="not-configured" hidden>
+    <p>Set your credentials to get started.</p>
+    <a href="#" id="open-options">Open Options →</a>
+  </div>
+
+  <div id="idle" hidden>
+    <h2>Focus session</h2>
+    <label>
+      Duration (min)
+      <input id="duration" type="number" min="1" max="180" value="25" />
+    </label>
+    <label>
+      Project
+      <select id="project">
+        <option value="">No project</option>
+      </select>
+    </label>
+    <button id="start-btn">Start</button>
+    <a href="#" id="open-options">Options</a>
+  </div>
+
+  <div id="running" hidden>
+    <div id="countdown">0:00</div>
+    <p id="session-info"></p>
+    <button id="abandon-btn">Abandon</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

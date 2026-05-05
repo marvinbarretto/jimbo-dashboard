@@ -1,0 +1,108 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  width: 260px;
+  padding: 1rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  background: #0d1f2d;
+  color: #cde4f0;
+}
+
+h2 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8aacbf;
+  margin-bottom: 0.875rem;
+}
+
+#countdown {
+  font-size: 3rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: #e0f4ff;
+  line-height: 1;
+  margin-bottom: 0.375rem;
+}
+
+#session-info {
+  text-align: center;
+  font-size: 12px;
+  color: #5a7d8f;
+  margin-bottom: 1rem;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.625rem;
+  font-size: 12px;
+  color: #8aacbf;
+}
+
+input, select {
+  padding: 0.375rem 0.5rem;
+  background: #152c3d;
+  border: 1px solid #1f4460;
+  border-radius: 4px;
+  color: #cde4f0;
+  font-size: 13px;
+  outline: none;
+}
+
+input:focus, select:focus {
+  border-color: #3dd6ff;
+}
+
+button {
+  display: block;
+  width: 100%;
+  padding: 0.5rem;
+  background: #1a6e2e;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  transition: background 0.15s;
+}
+
+button:hover { background: #218838; }
+button:disabled { opacity: 0.5; cursor: default; }
+
+#abandon-btn { background: #6b2222; }
+#abandon-btn:hover { background: #8b3030; }
+
+a {
+  display: block;
+  text-align: center;
+  font-size: 11px;
+  color: #3dd6ff;
+  text-decoration: none;
+  opacity: 0.7;
+}
+
+a:hover { opacity: 1; }
+
+#loading { color: #5a7d8f; }
+
+#not-configured {
+  text-align: center;
+}
+
+#not-configured p {
+  margin-bottom: 0.75rem;
+  color: #8aacbf;
+  font-size: 13px;
+}
+
+#not-configured a {
+  font-size: 13px;
+  opacity: 1;
+}

@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Jimbo Pomo",
+  "version": "1.0.0",
+  "description": "Start Jimbo focus sessions from your browser",
+  "permissions": ["storage", "alarms", "tabs"],
+  "host_permissions": ["https://jimbo.fourfoldmedia.uk/*"],
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Jimbo Pomo"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  }
+}
