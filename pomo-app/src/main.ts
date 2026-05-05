@@ -3,6 +3,17 @@
 // Three states: idle (setup) → running (countdown) → expired (retrospective).
 // Server row is source of truth — wall-clock countdown survives tab close.
 
+interface ActivitySummary {
+  tab_switches: number;
+  distinct_domains: number;
+  top_domain: string | null;
+  top_domain_seconds: number;
+  focus_ratio: number;
+  idle_seconds: number;
+  unfocused_seconds: number;
+  domain_breakdown: Array<{ domain: string; seconds: number }>;
+}
+
 interface FocusSession {
   id: string;
   project_id: string | null;
@@ -15,6 +26,7 @@ interface FocusSession {
   interrupted: boolean;
   notes: string | null;
   tags: string[];
+  activity: ActivitySummary | null;
   created_at: string;
 }
 
@@ -42,10 +54,16 @@ const $app = document.getElementById('app') as HTMLElement;
 // ── State ─────────────────────────────────────────────────────────────────
 
 let active: FocusSession | null = null;
+/** A session that the extension auto-completed but hasn't been reflected on yet. */
+let pendingReflection: FocusSession | null = null;
 let projects: Project[] = [];
 let tickHandle: number | null = null;
 let wakeLock: WakeLockSentinel | null = null;
 let lastSetup: { project_id: string; minutes: number } = loadSetup();
+
+/** A completed session is "fresh" if it ended within this window — past that
+ *  we assume the user has moved on and don't auto-pop the retrospective. */
+const REFLECTION_FRESHNESS_MS = 60 * 60 * 1000;
 
 // ── API ───────────────────────────────────────────────────────────────────
 
@@ -62,6 +80,8 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
 
 const fetchActive    = () => api<{ active: FocusSession | null }>('/api/focus-sessions/active');
 const fetchProjects  = () => api<Project[]>('/api/projects');
+const fetchRecentCompleted = () =>
+  api<{ items: FocusSession[] }>('/api/focus-sessions?status=completed&days=1&limit=1');
 const searchVault    = (q: string) =>
   api<{ items: VaultNote[] }>(`/api/vault/search?q=${encodeURIComponent(q)}&limit=10`);
 
@@ -72,6 +92,13 @@ const completeSession = (id: string, body: {
   notes?: string; tags?: string[]; mood?: Mood; interrupted?: boolean;
 }) =>
   api<FocusSession>(`/api/focus-sessions/${encodeURIComponent(id)}/complete`, {
+    method: 'PATCH', body: JSON.stringify(body),
+  });
+
+const updateSession = (id: string, body: {
+  notes?: string | null; tags?: string[]; mood?: Mood | null; interrupted?: boolean;
+}) =>
+  api<FocusSession>(`/api/focus-sessions/${encodeURIComponent(id)}`, {
     method: 'PATCH', body: JSON.stringify(body),
   });
 
@@ -177,8 +204,60 @@ function releaseWakeLock(): void {
 // ── Render ────────────────────────────────────────────────────────────────
 
 function render(): void {
-  $app.replaceChildren(active ? renderLive(active) : renderSetup());
+  if (active) {
+    $app.replaceChildren(renderLive(active));
+  } else if (pendingReflection) {
+    $app.replaceChildren(renderPostSession(pendingReflection));
+  } else {
+    $app.replaceChildren(renderSetup());
+  }
   syncTitleAndTicker();
+}
+
+/**
+ * The post-session screen for a pomo the extension already auto-completed.
+ * Same retrospective form but submits via PATCH and includes the activity panel.
+ */
+function renderPostSession(s: FocusSession): HTMLElement {
+  const root = el('section', { class: 'pomo__live pomo__live--expired' }, [
+    el('p', { class: 'pomo__project' }, [projectName(s.project_id)]),
+    el('div', { class: 'pomo__clock' }, ['00:00']),
+  ]);
+  if (s.activity) {
+    root.append(renderActivity(s.activity, s.planned_seconds));
+  }
+  root.append(renderRetrospective(s, 'patch'));
+  return root;
+}
+
+function renderActivity(a: ActivitySummary, plannedSeconds: number): HTMLElement {
+  const focusPct = Math.round(a.focus_ratio * 100);
+  const headlines: string[] = [];
+  if (a.top_domain) headlines.push(`${focusPct}% on ${a.top_domain}`);
+  headlines.push(`${a.tab_switches} switch${a.tab_switches === 1 ? '' : 'es'}`);
+  if (a.unfocused_seconds > 0) headlines.push(`${formatMins(a.unfocused_seconds)} unfocused`);
+  if (a.idle_seconds > 0)      headlines.push(`${formatMins(a.idle_seconds)} idle`);
+
+  const headlineRow = el('p', { class: 'pomo__activity-headline' }, [headlines.join(' · ')]);
+
+  const breakdown = el('ul', { class: 'pomo__activity-breakdown' },
+    a.domain_breakdown.slice(0, 5).map((d) => {
+      const pct = plannedSeconds > 0 ? Math.round((d.seconds / plannedSeconds) * 100) : 0;
+      return el('li', { class: 'pomo__activity-row' }, [
+        el('span', { class: 'pomo__activity-domain' }, [d.domain]),
+        el('span', { class: 'pomo__activity-bar' }, [
+          el('span', { class: 'pomo__activity-bar-fill', style: `width: ${pct}%` }),
+        ]),
+        el('span', { class: 'pomo__activity-seconds' }, [formatMins(d.seconds)]),
+      ]);
+    }),
+  );
+
+  return el('div', { class: 'pomo__activity' }, [
+    el('p', { class: 'pomo__label' }, ['Activity']),
+    headlineRow,
+    a.domain_breakdown.length > 0 ? breakdown : el('p', { class: 'pomo__retro-meta' }, ['No tracked activity.']),
+  ]);
 }
 
 function renderSetup(): HTMLElement {
@@ -307,9 +386,13 @@ function renderLive(s: FocusSession): HTMLElement {
 
 // ── Retrospective form ─────────────────────────────────────────────────────
 
-function renderRetrospective(s: FocusSession): HTMLElement {
-  let selectedMood: Mood | null = null;
-  let interrupted = false;
+type RetroMode = 'complete' | 'patch';
+
+function renderRetrospective(s: FocusSession, mode: RetroMode = 'complete'): HTMLElement {
+  // For an already-completed session, prefill the form so the user can refine
+  // their reflection rather than start from scratch.
+  let selectedMood: Mood | null = mode === 'patch' ? s.mood : null;
+  let interrupted = mode === 'patch' ? s.interrupted : false;
   const linkedNotes = new Map<string, string>(); // id → title
 
   // ── Mood ────────────────────────────────────────────────────────────────
@@ -321,9 +404,10 @@ function renderRetrospective(s: FocusSession): HTMLElement {
   ];
 
   const moodBtns = MOOD_OPTIONS.map(([value, icon, label]) => {
+    const isPreselected = selectedMood === value;
     const btn = el('button', {
       type: 'button',
-      class: 'pomo__mood-btn',
+      class: `pomo__mood-btn${isPreselected ? ' pomo__mood-btn--active' : ''}`,
       'aria-label': label,
       'data-mood': value,
     }, [el('span', { class: 'pomo__mood-icon' }, [icon]), el('span', { class: 'pomo__mood-label' }, [label])]);
@@ -343,6 +427,7 @@ function renderRetrospective(s: FocusSession): HTMLElement {
   // ── Interrupted ──────────────────────────────────────────────────────────
 
   const interruptedChk = el('input', { type: 'checkbox', id: 'interrupted-chk' }) as HTMLInputElement;
+  if (interrupted) interruptedChk.checked = true;
   interruptedChk.addEventListener('change', () => { interrupted = interruptedChk.checked; });
 
   const interruptedRow = el('label', { class: 'pomo__interrupted', for: 'interrupted-chk' }, [
@@ -414,12 +499,14 @@ function renderRetrospective(s: FocusSession): HTMLElement {
   const notesField = el('textarea', {
     class: 'pomo__field', rows: 3, placeholder: 'What did you get done? Reflections…',
   }) as HTMLTextAreaElement;
+  if (mode === 'patch' && s.notes) notesField.value = s.notes;
 
   // ── Tags ──────────────────────────────────────────────────────────────────
 
   const tagsField = el('input', {
     type: 'text', class: 'pomo__field', placeholder: 'tags, comma or space separated',
   }) as HTMLInputElement;
+  if (mode === 'patch' && s.tags.length > 0) tagsField.value = s.tags.join(' ');
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
@@ -427,11 +514,17 @@ function renderRetrospective(s: FocusSession): HTMLElement {
 
   const skipBtn = el('button', { type: 'button', class: 'pomo__btn pomo__btn--ghost' }, ['Skip']);
   skipBtn.addEventListener('click', async () => {
-    if (!active) return;
     skipBtn.setAttribute('disabled', '');
     try {
-      await completeSession(active.id, {});
-      active = null; releaseWakeLock(); render();
+      if (mode === 'complete' && active) {
+        await completeSession(active.id, {});
+        active = null;
+      } else {
+        // For an already-completed session, "Skip" just dismisses without saving.
+        pendingReflection = null;
+      }
+      releaseWakeLock();
+      render();
     } catch (err) {
       alert(`Could not save: ${(err as Error).message}`);
       skipBtn.removeAttribute('disabled');
@@ -444,25 +537,38 @@ function renderRetrospective(s: FocusSession): HTMLElement {
     class: 'pomo__retro',
     onsubmit: async (e: Event) => {
       e.preventDefault();
-      if (!active) return;
+      const sessionId = mode === 'complete' ? active?.id : pendingReflection?.id;
+      if (!sessionId) return;
       saveBtn.setAttribute('disabled', '');
       try {
-        const sessionId = active.id;
-        const body: Parameters<typeof completeSession>[1] = {};
-        if (selectedMood !== null)    body.mood        = selectedMood;
-        if (interrupted)              body.interrupted = true;
         const notesTrimmed = notesField.value.trim();
-        if (notesTrimmed)             body.notes       = notesTrimmed;
         const tagsParsed = parseTags(tagsField.value);
-        if (tagsParsed)               body.tags        = tagsParsed;
 
-        await completeSession(sessionId, body);
+        if (mode === 'complete') {
+          const body: Parameters<typeof completeSession>[1] = {};
+          if (selectedMood !== null)    body.mood        = selectedMood;
+          if (interrupted)              body.interrupted = true;
+          if (notesTrimmed)             body.notes       = notesTrimmed;
+          if (tagsParsed)               body.tags        = tagsParsed;
+          await completeSession(sessionId, body);
+        } else {
+          // PATCH: send everything explicitly so users can also clear fields.
+          await updateSession(sessionId, {
+            mood: selectedMood,
+            interrupted,
+            notes: notesTrimmed || null,
+            tags: tagsParsed ?? [],
+          });
+        }
 
         if (linkedNotes.size > 0) {
           await Promise.all([...linkedNotes.keys()].map(nid => linkVaultNote(sessionId, nid)));
         }
 
-        active = null; releaseWakeLock(); render();
+        active = null;
+        pendingReflection = null;
+        releaseWakeLock();
+        render();
       } catch (err) {
         alert(`Could not save: ${(err as Error).message}`);
         saveBtn.removeAttribute('disabled');
@@ -558,12 +664,31 @@ async function boot(): Promise<void> {
     const [{ active: a }, items] = await Promise.all([fetchActive(), fetchProjects()]);
     active = a;
     projects = items;
-    if (active) await requestWakeLock();
+    if (active) {
+      await requestWakeLock();
+    } else {
+      // No active timer — see if the extension just auto-completed one and
+      // we should pop the retrospective for it.
+      pendingReflection = await loadPendingReflection();
+    }
   } catch (err) {
     $app.textContent = `Couldn't reach the API: ${(err as Error).message}`;
     return;
   }
   render();
+}
+
+async function loadPendingReflection(): Promise<FocusSession | null> {
+  try {
+    const { items } = await fetchRecentCompleted();
+    const last = items[0];
+    if (!last || !last.ended_at) return null;
+    const age = Date.now() - new Date(last.ended_at).getTime();
+    if (age > REFLECTION_FRESHNESS_MS) return null;
+    return last;
+  } catch {
+    return null;
+  }
 }
 
 boot();
