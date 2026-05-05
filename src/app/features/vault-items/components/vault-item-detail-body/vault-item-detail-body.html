@@ -19,6 +19,7 @@
         [activeActors]="activeActors()"
         (statusChange)="onStatusChange($event)"
         (reassign)="reassign($event)"
+        (epicToggle)="onEpicToggle($event)"
       />
 
       <app-vault-item-meta-line

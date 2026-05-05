@@ -11,6 +11,7 @@ export const PROJECTS = [
     display_name: 'LocalShout',
     description: 'Hyperlocal events aggregator. Pulls events from multiple sources, qualifies them.',
     status: 'active',
+    kind: 'major',
     owner_actor_id: actorId('marvin'),
     criteria:
       '## Event qualification\n\n' +
@@ -27,6 +28,7 @@ export const PROJECTS = [
     display_name: 'Hermes',
     description: 'The orchestrator itself. Hosts universal skills used across every project.',
     status: 'active',
+    kind: 'major',
     owner_actor_id: actorId('marvin'),
     criteria: null,
     repo_url: 'https://github.com/marvinbarretto/hermes',
@@ -37,6 +39,7 @@ export const PROJECTS = [
     display_name: 'Dashboard',
     description: 'This Angular control plane. UI, kanban, vault-item screens.',
     status: 'active',
+    kind: 'major',
     owner_actor_id: actorId('marvin'),
     criteria: null,
     repo_url: 'https://github.com/marvinbarretto/jimbo-dashboard',
@@ -49,6 +52,7 @@ export const PROJECTS = [
       'Life-admin items that don\'t belong to a software project. Errands, notes, ' +
       'follow-ups with people outside work. Operator-owned by default.',
     status: 'active',
+    kind: 'major',
     owner_actor_id: actorId('marvin'),
     criteria: null,
     repo_url: null,

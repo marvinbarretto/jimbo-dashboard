@@ -169,7 +169,8 @@ export class VaultItemForm {
       this.router.navigate(['/vault-items', seq]);
     } else {
       // completed_at always null on create; setCompleted() is the only writer (K6).
-      this.service.create({ ...payload, completed_at: null });
+      // is_epic defaults false on create; toggled explicitly from the detail view.
+      this.service.create({ ...payload, completed_at: null, is_epic: false });
       // Navigate to list — we don't know the real seq until the server responds.
       this.router.navigate(['/vault-items']);
     }

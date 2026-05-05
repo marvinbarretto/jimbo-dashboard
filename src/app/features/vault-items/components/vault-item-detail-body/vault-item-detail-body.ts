@@ -433,6 +433,12 @@ export class VaultItemDetailBody {
     this.vaultItemsService.reassign(i.id, actorId(toActorIdStr), null);
   }
 
+  onEpicToggle(next: boolean): void {
+    const i = this.item();
+    if (!i) return;
+    this.vaultItemsService.setEpic(i.id, next);
+  }
+
   removeProject(pid: string): void {
     const i = this.item();
     if (!i) return;

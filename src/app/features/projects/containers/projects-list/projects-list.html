@@ -1,32 +1,114 @@
-<app-ui-stack class="projects-list" gap="lg">
+<app-ui-stack class="projects-list" gap="xl">
   <app-ui-page-header class="projects-list__header">
     <h1 uiPageHeaderTitle>Projects</h1>
-    <a uiPageHeaderActions routerLink="new" class="btn btn--primary">Add project</a>
+    <a uiPageHeaderActions routerLink="new" class="btn btn--primary">+ New project</a>
   </app-ui-page-header>
 
-  <app-ui-data-table
-    ariaLabel="Projects"
-    caption="Browse projects and sort columns before opening a detail or edit view."
-    [columns]="columns"
-    [data]="projects()"
-    [rowClass]="projectRowClass"
-    emptyTitle="No projects registered"
-    emptyMessage="Create the first project to start organizing dashboard work." />
+  <!-- MAJOR PROJECTS -->
+  <section class="projects-list__section">
+    <h2 class="projects-list__section-title">Major projects</h2>
+    @if (majorProjects().length === 0) {
+      <p class="projects-list__empty">No major projects yet.</p>
+    }
+    <div class="projects-list__grid">
+      @for (p of majorProjects(); track p.id) {
+        <div class="project-card project-card--major">
+          <div class="project-card__header">
+            <a [routerLink]="[p.id]" class="project-card__name">{{ p.display_name }}</a>
+            @if (p.repo_url) {
+              <a [href]="p.repo_url" target="_blank" rel="noopener" class="project-card__repo">repo ↗</a>
+            }
+          </div>
+          @if (p.description) {
+            <p class="project-card__desc">{{ p.description }}</p>
+          }
+          <div class="project-card__footer">
+            <span class="project-card__owner">{{ p.owner_actor_id }}</span>
+            <app-ui-cluster gap="xs">
+              <a [routerLink]="[p.id, 'edit']" class="btn btn--ghost btn--sm">Edit</a>
+              <button type="button" class="btn btn--ghost btn--sm" (click)="remove(p.id)">Remove</button>
+            </app-ui-cluster>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
 
-  <ng-template #idCell let-context>
-    <a [routerLink]="[context.row.original.id]">{{ context.getValue() }}</a>
-  </ng-template>
+  <!-- MINOR PROJECTS -->
+  <section class="projects-list__section">
+    <h2 class="projects-list__section-title">Mini projects</h2>
+    @if (minorProjects().length === 0) {
+      <p class="projects-list__empty">No mini projects yet.</p>
+    }
+    <div class="projects-list__grid">
+      @for (p of minorProjects(); track p.id) {
+        <div class="project-card project-card--minor">
+          <div class="project-card__header">
+            <a [routerLink]="[p.id]" class="project-card__name">{{ p.display_name }}</a>
+            @if (p.repo_url) {
+              <a [href]="p.repo_url" target="_blank" rel="noopener" class="project-card__repo">repo ↗</a>
+            }
+          </div>
+          @if (p.description) {
+            <p class="project-card__desc">{{ p.description }}</p>
+          }
+          <div class="project-card__footer">
+            <span class="project-card__owner">{{ p.owner_actor_id }}</span>
+            <app-ui-cluster gap="xs">
+              <a [routerLink]="[p.id, 'edit']" class="btn btn--ghost btn--sm">Edit</a>
+              <button type="button" class="btn btn--ghost btn--sm" (click)="remove(p.id)">Remove</button>
+            </app-ui-cluster>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
 
-  <ng-template #statusCell let-context>
-    <app-ui-badge [tone]="statusTone(context.getValue())">
-      {{ context.getValue() }}
-    </app-ui-badge>
-  </ng-template>
+  <!-- EPICS -->
+  <section class="projects-list__section">
+    <h2 class="projects-list__section-title">Epics</h2>
+    @if (epics().length === 0) {
+      <p class="projects-list__empty">No epics yet — mark a vault item as epic from its detail view.</p>
+    }
+    <div class="projects-list__epics">
+      @for (epic of epics(); track epic.id) {
+        <div class="epic-row">
+          <span class="epic-row__seq">#{{ epic.seq }}</span>
+          <a [routerLink]="['/vault-items', epic.seq]" class="epic-row__title">{{ epic.title }}</a>
+          @if (epic.primary_project_name) {
+            <app-ui-badge tone="info">{{ epic.primary_project_name }}</app-ui-badge>
+          }
+          @if (epic.children_count > 0) {
+            <span class="epic-row__children">{{ epic.children_count }} tasks</span>
+          }
+        </div>
+      }
+    </div>
+  </section>
 
-  <ng-template #actionsCell let-context>
-    <app-ui-cluster justify="end" gap="sm">
-      <a [routerLink]="[context.row.original.id, 'edit']">Edit</a>
-      <button type="button" (click)="remove(context.row.original.id)">Remove</button>
-    </app-ui-cluster>
-  </ng-template>
+  <!-- ARCHIVED -->
+  @if (archivedProjects().length > 0) {
+    <section class="projects-list__section projects-list__section--archived">
+      <h2 class="projects-list__section-title">Archived</h2>
+      <div class="projects-list__grid">
+        @for (p of archivedProjects(); track p.id) {
+          <div class="project-card project-card--archived">
+            <div class="project-card__header">
+              <a [routerLink]="[p.id]" class="project-card__name">{{ p.display_name }}</a>
+              <app-ui-badge tone="neutral">archived</app-ui-badge>
+            </div>
+            @if (p.description) {
+              <p class="project-card__desc">{{ p.description }}</p>
+            }
+            <div class="project-card__footer">
+              <app-ui-cluster gap="xs">
+                <a [routerLink]="[p.id, 'edit']" class="btn btn--ghost btn--sm">Edit</a>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="remove(p.id)">Remove</button>
+              </app-ui-cluster>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  }
 </app-ui-stack>

@@ -10,11 +10,17 @@ import type { ActorId, ProjectId } from '../ids';
 // the fact that nothing is moving forward on them is already visible via item counts.
 export type ProjectStatus = 'active' | 'archived';
 
+// Scope of the project.
+//   'major' = permanent, long-running (e.g. localshout, jimbo-hermes)
+//   'minor' = time-boxed, 1–6 months (e.g. nz-passport-renewal)
+export type ProjectKind = 'major' | 'minor';
+
 export interface Project {
   id:             ProjectId;                // slug: 'localshout', 'jimbo-hermes', 'nz-passport'
   display_name:   string;
   description:    string | null;            // one-liner shown in lists
   status:         ProjectStatus;
+  kind:           ProjectKind;
 
   // The actor who initiated the project and carries responsibility.
   // Most projects today are owned by marvin; future: jimbo can own prototypes it spawns.

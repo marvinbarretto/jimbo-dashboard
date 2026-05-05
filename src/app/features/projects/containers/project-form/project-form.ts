@@ -10,7 +10,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { ProjectsService } from '../../data-access/projects.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
 import { projectId, actorId } from '@domain/ids';
-import type { ProjectStatus } from '@domain/projects';
+import type { ProjectKind, ProjectStatus } from '@domain/projects';
 
 @Component({
   selector: 'app-project-form',
@@ -31,6 +31,7 @@ export class ProjectForm {
   readonly isEdit = computed(() => !!this.id());
 
   readonly statuses: ProjectStatus[] = ['active', 'archived'];
+  readonly kinds: ProjectKind[] = ['major', 'minor'];
 
   // Actor dropdown options — only active actors can own new projects.
   // For existing projects owned by a now-inactive actor, the id stays as a
@@ -42,6 +43,7 @@ export class ProjectForm {
     display_name:   ['', Validators.required],
     description:    [null as string | null],
     status:         ['active' as ProjectStatus, Validators.required],
+    kind:           ['major' as ProjectKind, Validators.required],
     owner_actor_id: ['', Validators.required],
     criteria:       [null as string | null],
     repo_url:       [null as string | null],
@@ -71,6 +73,7 @@ export class ProjectForm {
       display_name:   v.display_name,
       description:    v.description,
       status:         v.status,
+      kind:           v.kind,
       owner_actor_id: actorId(v.owner_actor_id),
       criteria:       v.criteria,
       repo_url:       v.repo_url,

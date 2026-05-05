@@ -75,6 +75,15 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
         <app-ui-badge tone="info" [subtle]="true">github</app-ui-badge>
       }
 
+      <button
+        type="button"
+        class="vault-item-status-chips__epic-toggle"
+        [class.vault-item-status-chips__epic-toggle--active]="item().is_epic"
+        (click)="epicToggle.emit(!item().is_epic)"
+        [title]="item().is_epic ? 'Remove epic flag' : 'Mark as epic'">
+        {{ item().is_epic ? 'EPIC ×' : '+ epic' }}
+      </button>
+
     </div>
   `,
   styles: [`
@@ -121,6 +130,30 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
       display: inline-flex;
       text-decoration: none;
     }
+
+    .vault-item-status-chips__epic-toggle {
+      padding: 0.2rem 0.5rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      border: 1px dashed var(--color-border);
+      border-radius: 0.25rem;
+      background: none;
+      color: var(--color-text-muted);
+      cursor: pointer;
+
+      &--active {
+        border-style: solid;
+        border-color: var(--color-accent, #818cf8);
+        color: var(--color-accent, #818cf8);
+        background: color-mix(in oklab, var(--color-accent, #818cf8) 10%, transparent);
+      }
+
+      &:hover {
+        border-color: var(--color-accent, #818cf8);
+        color: var(--color-accent, #818cf8);
+      }
+    }
   `],
 })
 export class VaultItemStatusChips {
@@ -136,6 +169,7 @@ export class VaultItemStatusChips {
 
   readonly statusChange = output<'active' | 'done'>();
   readonly reassign = output<string>();
+  readonly epicToggle = output<boolean>();
 
   readonly statuses: readonly ('active' | 'done')[] = ['active', 'done'];
 

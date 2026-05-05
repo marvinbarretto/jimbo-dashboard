@@ -86,7 +86,7 @@ export class VaultItemsService {
       grooming_status: groomingStatus,
       ai_priority: null, manual_priority: input.manual_priority ?? null,
       ai_rationale: null, priority_confidence: null,
-      actionability: null, parent_id: null,
+      actionability: null, parent_id: null, is_epic: false,
       archived_at: null, due_at: null, completed_at: null,
       source: { kind: 'manual', ref: 'board', url: null },
       created_at: now,
@@ -407,6 +407,22 @@ export class VaultItemsService {
       });
   }
 
+  setEpic(id: VaultItemId, next: boolean): void {
+    const prior = this.getById(id);
+    if (!prior || prior.is_epic === next) return;
+    this._items.update(items => items.map(i => i.id === id ? { ...i, is_epic: next } : i));
+
+    if (isSeedMode()) return;
+
+    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, { is_epic: next })
+      .subscribe({
+        error: () => {
+          this._items.update(items => items.map(i => i.id === id ? prior : i));
+          this.toast.error(`Epic toggle failed — "${prior.title}" reverted`);
+        },
+      });
+  }
+
   // Atomic reject-with-reason composition. Composes three writes:
   //   1. PATCH vault-item: grooming_status='needs_rework', assigned_to=newOwnerId
   //   2. POST thread message of kind 'rejection' with the reason
@@ -591,6 +607,7 @@ interface ApiVaultItem {
   is_epic: boolean;
   parent_id: string | null;
   acceptance_criteria: string | null;              // production stores as text
+  is_epic: boolean;
   blocked_by: string | null;
   blocked_reason: string | null;
   blocked_at: string | null;
@@ -747,6 +764,7 @@ function toApiUpdateBody(p: UpdateVaultItemPayload): Record<string, unknown> {
   if (p.due_at !== undefined) body['due_at'] = p.due_at;
   if (p.completed_at !== undefined) body['completed_at'] = p.completed_at;
   if (p.grooming_status !== undefined) body['grooming_status'] = p.grooming_status;
+  if (p.is_epic !== undefined) body['is_epic'] = p.is_epic;
   if (p.source !== undefined) {
     if (p.source === null) {
       body['source_kind'] = null;
@@ -792,6 +810,7 @@ function toVaultItem(a: ApiVaultItem): VaultItem {
     priority_confidence: a.priority_confidence,
     actionability: narrowActionability(a.actionability),
     parent_id: a.parent_id ? vaultItemId(a.parent_id) : null,
+    is_epic: a.is_epic,
     // Dashboard's archived_at is derived; production uses status='archived'.
     // Reconstruct an archived_at from updated_at when archived.
     archived_at: a.status === 'archived' ? a.updated_at : null,

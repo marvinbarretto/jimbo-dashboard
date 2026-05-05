@@ -36,6 +36,15 @@
     </div>
 
     <div class="field">
+      <label for="kind">Kind</label>
+      <select id="kind" formControlName="kind">
+        @for (k of kinds; track k) {
+          <option [value]="k">{{ k === 'major' ? 'Major — permanent' : 'Minor — time-boxed (1–6 months)' }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
       <label for="owner_actor_id">Owner</label>
       <select id="owner_actor_id" formControlName="owner_actor_id">
         <option value="">— select an owner —</option>

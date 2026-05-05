@@ -169,6 +169,11 @@ export interface VaultItem {
 
   parent_id:           VaultItemId | null;          // epic hierarchy edge
 
+  // Explicit epic flag — manually set by the operator to elevate a parent task
+  // to a named body of work. Having children does NOT automatically make something
+  // an epic; is_epic must be set deliberately.
+  is_epic:             boolean;
+
   // Soft-archive timestamp. When set, the item is hidden from default views.
   // Items can be archived whether or not they're complete — archive is orthogonal.
   archived_at:         string | null;

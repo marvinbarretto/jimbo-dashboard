@@ -181,6 +181,7 @@ interface ApiProject {
   display_name: string;
   description: string | null;
   status: string;                 // 'active' | 'paused' | 'archived' (CHECK-bound)
+  kind: string;                   // 'major' | 'minor'
   owner_actor_id: string | null;
   criteria: string | null;
   repo_url: string | null;
@@ -200,6 +201,7 @@ function toProject(p: ApiProject): Project {
     display_name: p.display_name,
     description: p.description,
     status: narrowStatus(p.status),
+    kind: p.kind === 'minor' ? 'minor' : 'major',
     owner_actor_id: actorId(p.owner_actor_id ?? 'marvin'),
     criteria: p.criteria,
     repo_url: p.repo_url,
