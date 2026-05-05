@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.20](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.19...v0.0.20) (2026-05-05)
+
+
+### Features
+
+* **jimbo-workspace:** add primary nav page with Mail/Calendar/Tasks tabs ([7892e93](https://github.com/marvinbarretto/jimbo-dashboard/commit/7892e935ffc32372efef87125fb8928aa158873a))
+* **pomo:** retrospective form on session expiry ([85ce71a](https://github.com/marvinbarretto/jimbo-dashboard/commit/85ce71aa5dfa5f4827e6ac2ad1493b6a2eecf8ad))
+* **pomo:** show #seq in vault note typeahead results ([530b1b8](https://github.com/marvinbarretto/jimbo-dashboard/commit/530b1b820c4b0aa82b8da6a1d24f9bac7d7bd98c))
+
 ### [0.0.19](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.18...v0.0.19) (2026-05-05)
 
 
