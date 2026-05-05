@@ -31,7 +31,7 @@ export interface TriageDebug {
   model: string;
   url_detected: string | null;
   url_kind: 'x' | 'generic' | 'none';
-  url_fetch_status: 'fetched' | 'skipped-x-no-creds' | 'fetch-failed' | 'no-url';
+  url_fetch_status: 'fetched' | 'x-fetched' | 'skipped-x-no-creds' | 'fetch-failed' | 'no-url';
   url_fetch_summary: string | null;
   prompt_chars: number;
   raw_response_chars: number;
