@@ -52,185 +52,169 @@
         <h2 modal-header class="modal-title">Triage</h2>
 
         <div modal-body class="triage-body">
-          <nav class="mobile-tabs" aria-label="Triage view">
-            <button
-              type="button"
-              class="mobile-tab"
-              [class.active]="mobileTab() === 'jimbo'"
-              (click)="mobileTab.set('jimbo')"
-            >Jimbo</button>
-            <button
-              type="button"
-              class="mobile-tab"
-              [class.active]="mobileTab() === 'you'"
-              (click)="mobileTab.set('you')"
-            >You</button>
-          </nav>
+          <!-- Section: the raw Google Task we're triaging -->
+          <section class="triage-section">
+            <div class="section-label">Task</div>
+            <div class="task-card-mini" [class.url]="looksLikeUrl(task.title)">
+              <div class="task-card-mini__title">{{ task.title }}</div>
+              <div class="task-card-mini__meta">
+                <span class="list-tag">{{ task.listTitle }}</span>
+                · updated {{ task.updated | relativeTime }}
+                @if (task.due) { · due {{ task.due | relativeTime }} }
+              </div>
+              @if (task.notes) {
+                <div class="task-card-mini__notes">{{ task.notes }}</div>
+              }
+            </div>
+          </section>
 
-          <div class="panes">
-            <section class="pane pane-jimbo" [class.hidden-mobile]="mobileTab() !== 'jimbo'">
-              <div class="pane-label">Jimbo's view</div>
-              <div class="task-card-mini" [class.url]="looksLikeUrl(task.title)">
-                <div class="task-card-mini__title">{{ task.title }}</div>
-                <div class="task-card-mini__meta">
-                  <span class="list-tag">{{ task.listTitle }}</span>
-                  · updated {{ task.updated | relativeTime }}
-                  @if (task.due) { · due {{ task.due | relativeTime }} }
+          <!-- Section: operator's optional context -->
+          <section class="triage-section">
+            <label class="section-label" for="ctx-input">Your context</label>
+            <textarea
+              id="ctx-input"
+              class="context-input"
+              placeholder="Why did you save this? Anything I'm missing?"
+              [value]="userContext()"
+              (input)="onContextInput($any($event.target).value)"
+            ></textarea>
+            <div class="section-hint">
+              Saved with the vault item if you promote, and fed back to Jimbo on the next pass.
+            </div>
+          </section>
+
+          <!-- Section: Jimbo's analysis -->
+          <section class="triage-section">
+            <div class="section-label">Jimbo's analysis</div>
+
+            @if (!proposal() && !proposalLoading() && !proposalError()) {
+              <div class="ask-jimbo">
+                <app-ui-button variant="secondary" (pressed)="askJimbo()">Ask Jimbo →</app-ui-button>
+                <div class="section-hint">
+                  Sync call to OpenRouter. Console logs every step.
                 </div>
+              </div>
+            }
+
+            @if (proposalLoading()) {
+              <app-ui-loading-state message="Asking Jimbo…" />
+            }
+
+            @if (proposalError()) {
+              <div class="proposal-error">
+                <strong>Error:</strong> {{ proposalError() }}
+                <button type="button" class="retry-link" (click)="askJimbo()">Retry</button>
+              </div>
+            }
+
+            @if (proposal(); as p) {
+              <div class="proposal-rationale">{{ p.ai_rationale }}</div>
+
+              @if (p.questions.length) {
+                <div class="proposal-questions">
+                  <div class="section-label">Jimbo asks</div>
+                  <ul>
+                    @for (q of p.questions; track q.q) {
+                      <li>
+                        <div class="q-text">{{ q.q }}</div>
+                        <div class="q-why">why: {{ q.why }}</div>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+
+              @if (proposalDebug(); as d) {
+                <div class="proposal-meta">
+                  <span>{{ d.model }}</span>
+                  <span>·</span>
+                  <span>{{ d.latency_ms }}ms</span>
+                  @if (d.usage.total_tokens !== null) {
+                    <span>·</span>
+                    <span>{{ d.usage.prompt_tokens }}+{{ d.usage.completion_tokens }} tok</span>
+                  }
+                  @if (d.skill_version) {
+                    <span>·</span>
+                    <span>v{{ d.skill_version }}</span>
+                  }
+                </div>
+              }
+
+              <div class="proposal-actions">
+                <app-ui-button variant="secondary" (pressed)="askJimbo()">↻ Re-ask</app-ui-button>
+                <button type="button" class="debug-toggle" (click)="toggleDetails()">
+                  {{ detailsOpen() ? '▾' : '▸' }} details
+                </button>
+                <button type="button" class="debug-toggle" (click)="toggleDebug()">
+                  {{ debugOpen() ? '▾' : '▸' }} debug
+                </button>
+              </div>
+
+              @if (detailsOpen()) {
+                <div class="proposal-details">
+                  <div class="proposal-row">
+                    <span class="proposal-label">Type</span>
+                    <span class="tag tag-type tag-{{ p.type }}">{{ p.type }}</span>
+                    @if (p.category) {
+                      <span class="tag tag-category">{{ p.category }}</span>
+                    }
+                  </div>
+                  @if (p.suggested_parent_id) {
+                    <div class="proposal-row">
+                      <span class="proposal-label">Parent</span>
+                      <span class="tag tag-parent">project:{{ p.suggested_parent_id }}</span>
+                    </div>
+                  }
+                  @if (p.suggested_agent_type) {
+                    <div class="proposal-row">
+                      <span class="proposal-label">Agent</span>
+                      <span class="tag tag-agent">{{ p.suggested_agent_type }}</span>
+                    </div>
+                  }
+                  <div class="proposal-row">
+                    <span class="proposal-label">Tags</span>
+                    <span class="tag-list">
+                      @for (t of p.tags; track t) {
+                        <span class="tag tag-soft">{{ t }}</span>
+                      }
+                    </span>
+                  </div>
+                </div>
+              }
+
+              @if (debugOpen() && proposalDebug(); as d) {
+                <pre class="proposal-debug">{{ d | json }}</pre>
+              }
+            }
+          </section>
+
+          <!-- Section: vault item preview (only when proposal exists) -->
+          @if (proposal(); as p) {
+            <section class="triage-section">
+              <div class="section-label">Preview — as vault item</div>
+              <article class="vault-preview" [attr.data-type]="p.type">
+                <header class="vault-preview__header">
+                  <span class="vault-preview__type">
+                    {{ p.type }}@if (p.category) { · {{ p.category }} }
+                  </span>
+                  @if (p.suggested_parent_id) {
+                    <span class="vault-preview__parent">project:{{ p.suggested_parent_id }}</span>
+                  }
+                </header>
+                <div class="vault-preview__title">{{ task.title }}</div>
                 @if (task.notes) {
-                  <div class="task-card-mini__notes">{{ task.notes }}</div>
+                  <div class="vault-preview__body">{{ task.notes }}</div>
                 }
-              </div>
-
-              @if (!proposal() && !proposalLoading() && !proposalError()) {
-                <div class="ask-jimbo">
-                  <app-ui-button variant="secondary" (pressed)="askJimbo()">Ask Jimbo →</app-ui-button>
-                  <div class="ask-jimbo-hint">
-                    Sync call to OpenRouter. Console logs every step.
-                  </div>
-                </div>
-              }
-
-              @if (proposalLoading()) {
-                <app-ui-loading-state message="Asking Jimbo…" />
-              }
-
-              @if (proposalError()) {
-                <div class="proposal-error">
-                  <strong>Error:</strong> {{ proposalError() }}
-                  <button type="button" class="retry-link" (click)="askJimbo()">Retry</button>
-                </div>
-              }
-
-              @if (proposal(); as p) {
-                <div class="proposal">
-                  <!-- Preview: what this would become in the vault -->
-                  <article class="vault-preview" [attr.data-type]="p.type">
-                    <header class="vault-preview__header">
-                      <span class="vault-preview__type">
-                        {{ p.type }}@if (p.category) { · {{ p.category }} }
-                      </span>
-                      @if (p.suggested_parent_id) {
-                        <span class="vault-preview__parent">project:{{ p.suggested_parent_id }}</span>
-                      }
-                    </header>
-
-                    <div class="vault-preview__title">{{ task.title }}</div>
-
-                    @if (task.notes) {
-                      <div class="vault-preview__body">{{ task.notes }}</div>
+                @if (p.tags.length) {
+                  <div class="vault-preview__tags">
+                    @for (t of p.tags; track t) {
+                      <span class="tag tag-soft">{{ t }}</span>
                     }
-
-                    @if (p.tags.length) {
-                      <div class="vault-preview__tags">
-                        @for (t of p.tags; track t) {
-                          <span class="tag tag-soft">{{ t }}</span>
-                        }
-                      </div>
-                    }
-                  </article>
-
-                  <!-- Jimbo's reasoning + any clarifying questions -->
-                  <div class="proposal-rationale">{{ p.ai_rationale }}</div>
-
-                  @if (p.questions.length) {
-                    <div class="proposal-questions">
-                      <div class="proposal-label">Jimbo asks</div>
-                      <ul>
-                        @for (q of p.questions; track q.q) {
-                          <li>
-                            <div class="q-text">{{ q.q }}</div>
-                            <div class="q-why">why: {{ q.why }}</div>
-                          </li>
-                        }
-                      </ul>
-                    </div>
-                  }
-
-                  <!-- Meta line -->
-                  @if (proposalDebug(); as d) {
-                    <div class="proposal-meta">
-                      <span>{{ d.model }}</span>
-                      <span>·</span>
-                      <span>{{ d.latency_ms }}ms</span>
-                      @if (d.usage.total_tokens !== null) {
-                        <span>·</span>
-                        <span>{{ d.usage.prompt_tokens }}+{{ d.usage.completion_tokens }} tok</span>
-                      }
-                      @if (d.skill_version) {
-                        <span>·</span>
-                        <span>v{{ d.skill_version }}</span>
-                      }
-                    </div>
-                  }
-
-                  <!-- Action row -->
-                  <div class="proposal-actions">
-                    <app-ui-button variant="secondary" (pressed)="askJimbo()">↻ Re-ask</app-ui-button>
-                    <button type="button" class="debug-toggle" (click)="toggleDetails()">
-                      {{ detailsOpen() ? '▾' : '▸' }} details
-                    </button>
-                    <button type="button" class="debug-toggle" (click)="toggleDebug()">
-                      {{ debugOpen() ? '▾' : '▸' }} debug
-                    </button>
                   </div>
-
-                  <!-- Schema details (collapsed by default) -->
-                  @if (detailsOpen()) {
-                    <div class="proposal-details">
-                      <div class="proposal-row">
-                        <span class="proposal-label">Type</span>
-                        <span class="tag tag-type tag-{{ p.type }}">{{ p.type }}</span>
-                        @if (p.category) {
-                          <span class="tag tag-category">{{ p.category }}</span>
-                        }
-                      </div>
-                      @if (p.suggested_parent_id) {
-                        <div class="proposal-row">
-                          <span class="proposal-label">Parent</span>
-                          <span class="tag tag-parent">project:{{ p.suggested_parent_id }}</span>
-                        </div>
-                      }
-                      @if (p.suggested_agent_type) {
-                        <div class="proposal-row">
-                          <span class="proposal-label">Agent</span>
-                          <span class="tag tag-agent">{{ p.suggested_agent_type }}</span>
-                        </div>
-                      }
-                      <div class="proposal-row">
-                        <span class="proposal-label">Tags</span>
-                        <span class="tag-list">
-                          @for (t of p.tags; track t) {
-                            <span class="tag tag-soft">{{ t }}</span>
-                          }
-                        </span>
-                      </div>
-                    </div>
-                  }
-
-                  <!-- Raw debug JSON -->
-                  @if (debugOpen() && proposalDebug(); as d) {
-                    <pre class="proposal-debug">{{ d | json }}</pre>
-                  }
-                </div>
-              }
+                }
+              </article>
             </section>
-
-            <section class="pane pane-you" [class.hidden-mobile]="mobileTab() !== 'you'">
-              <div class="pane-label">Your view</div>
-              <label class="context-label" for="ctx-input">Your context</label>
-              <textarea
-                id="ctx-input"
-                class="context-input"
-                placeholder="Why did you save this? Anything I'm missing?"
-                [value]="userContext()"
-                (input)="onContextInput($any($event.target).value)"
-              ></textarea>
-              <div class="context-hint">
-                Saved with the vault item if you promote, and fed back to me on the next pass.
-              </div>
-            </section>
-          </div>
+          }
         </div>
 
         <footer modal-footer class="triage-actions">

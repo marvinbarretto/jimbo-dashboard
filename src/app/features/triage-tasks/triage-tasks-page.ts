@@ -15,8 +15,6 @@ interface TaskRow {
   readonly isUrl: boolean;
 }
 
-type MobileTab = 'jimbo' | 'you';
-
 @Component({
   selector: 'app-triage-tasks-page',
   imports: [
@@ -38,7 +36,6 @@ export class TriageTasksPage {
   protected readonly service = inject(TriageTasksService);
 
   protected readonly selectedTask = signal<InboxTask | null>(null);
-  protected readonly mobileTab = signal<MobileTab>('jimbo');
   protected readonly userContext = signal('');
 
   // Jimbo's view state
@@ -73,7 +70,6 @@ export class TriageTasksPage {
   protected openTask(task: InboxTask): void {
     console.log('[triage] openTask', task.id, task.title);
     this.selectedTask.set(task);
-    this.mobileTab.set('jimbo');
     this.userContext.set('');
     this.resetProposalState();
   }
