@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.23](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.22...v0.0.23) (2026-05-05)
+
+
+### Features
+
+* **boards, vault-items:** create-opens-dialog with edit-in-place title/body ([ce18da9](https://github.com/marvinbarretto/jimbo-dashboard/commit/ce18da9171c6d7037fc10e0a527cc0bf26ea4cc4))
+* **boards:** wire grooming + execution back to current api ([f420c35](https://github.com/marvinbarretto/jimbo-dashboard/commit/f420c355881b8378bce8bb12f24b85d0b31739c1))
+* **pomo-app:** post-session retrospective with activity panel ([bb2ca5f](https://github.com/marvinbarretto/jimbo-dashboard/commit/bb2ca5f05adcf133b30fb4e46b6f367152cfb075))
+* **vault-items:** edit-in-place for tags, AC, and parent ([edab2a5](https://github.com/marvinbarretto/jimbo-dashboard/commit/edab2a5b08265f559666cf7241395b8ee7e4a874))
+
+
+### Bug Fixes
+
+* **vault-item-projects:** unwrap raw-array response ([d57256e](https://github.com/marvinbarretto/jimbo-dashboard/commit/d57256e8717f90b1f80519bb791f33fff075d9bd))
+
 ### [0.0.22](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.21...v0.0.22) (2026-05-05)
 
 
