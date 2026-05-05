@@ -60,6 +60,85 @@ export class VaultItemsService {
     return this._items().find(i => i.seq === seq);
   }
 
+  // Lightweight create for board-level "+ new" inputs. Posts the small slice the
+  // API actually accepts (CreateNoteBody — title/type/manual_priority/...), then
+  // PATCHes grooming_status/assigned_to as a follow-up if they differ from server
+  // defaults (CreateNoteBody doesn't accept grooming_status directly).
+  // Use this from board UIs; reserve `create()` for the full vault-item-form.
+  createOnBoard(input: {
+    title: string;
+    type?: 'task' | 'note' | 'bookmark';
+    grooming_status?: GroomingStatus;
+    manual_priority?: Priority;
+  }): void {
+    const trimmed = input.title.trim();
+    if (!trimmed) return;
+    const now = new Date().toISOString();
+    const tempId = vaultItemId(crypto.randomUUID());
+    const type = input.type ?? 'task';
+    const groomingStatus = input.grooming_status ?? 'ungroomed';
+
+    const optimistic: VaultItem = {
+      id: tempId, seq: -1, title: trimmed, body: '',
+      type, category: null,
+      assigned_to: this.currentActorId, tags: [],
+      acceptance_criteria: [],
+      grooming_status: groomingStatus,
+      ai_priority: null, manual_priority: input.manual_priority ?? null,
+      ai_rationale: null, priority_confidence: null,
+      actionability: null, parent_id: null,
+      archived_at: null, due_at: null, completed_at: null,
+      source: { kind: 'manual', ref: 'board', url: null },
+      created_at: now,
+      primary_project_id: null, primary_project_name: null,
+      open_questions_count: 0, latest_activity_at: null,
+      children_count: 0, latest_event: null, latest_message: null,
+      days_in_column: 0,
+    };
+    this._items.update(items => [optimistic, ...items]);
+
+    if (isSeedMode()) return;
+
+    // source_kind/source_ref tag the row as operator-created so the execution
+    // board's manual-track filter (`source.kind === 'manual'`) survives reload.
+    const body: Record<string, unknown> = {
+      title: trimmed,
+      type,
+      source_kind: 'manual',
+      source_ref: 'board',
+    };
+    if (input.manual_priority != null) body['manual_priority'] = input.manual_priority;
+
+    this.http.post<ApiVaultNoteResponse>(this.url, body).subscribe({
+      next: (note) => {
+        const realId = vaultItemId(note.id);
+        const realSeq = Number(note.seq);
+        this._items.update(items => items.map(i => i.id === tempId
+          ? { ...optimistic, id: realId, seq: realSeq }
+          : i));
+        this.toast.success(`"${trimmed}" created · #${realSeq}`);
+
+        // CreateNoteBody doesn't accept grooming_status or assigned_to overrides
+        // for board-driven flows — the server defaults to ungroomed/jimbo. PATCH
+        // any drift in a follow-up so the UI sees what we asked for.
+        const patch: Record<string, unknown> = {};
+        if (groomingStatus !== 'ungroomed') patch['grooming_status'] = groomingStatus;
+        if (note.assigned_to !== this.currentActorId) patch['assigned_to'] = this.currentActorId;
+        if (Object.keys(patch).length === 0) return;
+        this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${realSeq}`, patch).subscribe({
+          next: () => this._items.update(items => items.map(i => i.id === realId
+            ? { ...i, grooming_status: groomingStatus, assigned_to: this.currentActorId }
+            : i)),
+          error: () => this.toast.error('Created but status/owner follow-up failed'),
+        });
+      },
+      error: () => {
+        this._items.update(items => items.filter(i => i.id !== tempId));
+        this.toast.error(`Failed to create "${trimmed}"`);
+      },
+    });
+  }
+
   // Optimistic create. `created` event emitted after server confirms — we need
   // the real vault_item_id, so we can't emit the event against the temp id.
   create(payload: CreateVaultItemPayload): void {
@@ -79,15 +158,36 @@ export class VaultItemsService {
       return;
     }
 
-    this.http.post<VaultItem>(this.url, payload)
+    // The API's CreateNoteBody is a slim subset of the dashboard's payload
+    // (no nested `source`, no array tags/AC, no derived embeds) — flatten before posting.
+    const body = toApiCreateBody(payload);
+
+    this.http.post<ApiVaultNoteResponse>(this.url, body)
       .subscribe({
         next: (created) => {
-          this._items.update(items => items.map(i => i.id === tempId ? created : i));
+          // Keep the optimistic shape (which is already correct) and just splice in
+          // the server-managed fields. The raw API response is the production VaultNote
+          // shape (string tags, null AC, no embeds) — replacing wholesale would corrupt
+          // the row until the next board reload.
+          const realId = vaultItemId(created.id);
+          const realSeq = Number(created.seq);
+          this._items.update(items => items.map(i => i.id === tempId
+            ? { ...optimistic, id: realId, seq: realSeq, created_at: created.created_at ?? now }
+            : i));
           this.activityService.post({
             type: 'created',
-            vault_item_id: created.id,
+            vault_item_id: realId,
             actor_id: this.currentActorId,
           });
+          // Apply any fields the create endpoint doesn't accept (grooming_status,
+          // assigned_to overrides, archived_at) as a follow-up PATCH, so the
+          // server state matches what the form asked for.
+          const followUp = createFollowUpPatch(payload);
+          if (Object.keys(followUp).length > 0) {
+            this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${realSeq}`, followUp).subscribe({
+              error: () => this.toast.error('Created but follow-up update failed'),
+            });
+          }
           this.toast.success(`"${payload.title}" created`);
         },
         error: () => {
@@ -109,9 +209,13 @@ export class VaultItemsService {
 
     if (isSeedMode()) return;
 
-    this.http.patch<VaultItem>(`${this.url}/by-seq/${prior.seq}`, patch)
+    const body = toApiUpdateBody(patch);
+    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, body)
       .subscribe({
-        next: (updated) => this._items.update(items => items.map(i => i.id === id ? updated : i)),
+        // Trust the optimistic shape — the API response is the wider production
+        // VaultNote (different shape from VaultItem); replacing it wholesale would
+        // corrupt the row.
+        next: () => {},
         error: () => {
           this._items.update(items => items.map(i => i.id === id ? prior : i));
           this.toast.error('Update failed — changes reverted');
@@ -141,10 +245,11 @@ export class VaultItemsService {
       return;
     }
 
-    this.http.patch<VaultItem>(`${this.url}/by-seq/${prior.seq}`, patch)
+    // API doesn't accept `archived_at` — production uses `status='archived'`.
+    // The dashboard keeps the derived `archived_at` locally for lifecycle helpers.
+    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, { status: 'archived' })
       .subscribe({
-        next: (updated) => {
-          this._items.update(items => items.map(i => i.id === id ? updated : i));
+        next: () => {
           this.activityService.post(event);
           this.toast.success(`"${prior.title}" archived`);
         },
@@ -174,10 +279,10 @@ export class VaultItemsService {
       return;
     }
 
-    this.http.patch<VaultItem>(`${this.url}/by-seq/${prior.seq}`, patch)
+    // Mirror of archive() — API uses `status` not `archived_at`.
+    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, { status: 'active' })
       .subscribe({
-        next: (updated) => {
-          this._items.update(items => items.map(i => i.id === id ? updated : i));
+        next: () => {
           this.activityService.post(event);
           this.toast.success(`"${prior.title}" restored`);
         },
@@ -214,10 +319,11 @@ export class VaultItemsService {
       return;
     }
 
-    this.http.patch<VaultItem>(`${this.url}/by-seq/${prior.seq}`, patch)
+    // API doesn't accept `completed_at` directly — write `status='done'` and the
+    // server stamps completed_at server-side. Reverse via `status='active'`.
+    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, { status: completed ? 'done' : 'active' })
       .subscribe({
-        next: (updated) => {
-          this._items.update(items => items.map(i => i.id === id ? updated : i));
+        next: () => {
           this.activityService.post(event);
           this.toast.success(`"${prior.title}" marked ${completed ? 'complete' : 'incomplete'}`);
         },
@@ -253,12 +359,9 @@ export class VaultItemsService {
       return;
     }
 
-    this.http.patch<VaultItem>(`${this.url}/by-seq/${prior.seq}`, patch)
+    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, { grooming_status: next })
       .subscribe({
-        next: (updated) => {
-          this._items.update(items => items.map(i => i.id === id ? updated : i));
-          this.activityService.post(event);
-        },
+        next: () => this.activityService.post(event),
         error: () => {
           this._items.update(items => items.map(i => i.id === id ? prior : i));
           this.toast.error(`Status change failed — "${prior.title}" reverted`);
@@ -289,10 +392,9 @@ export class VaultItemsService {
       return;
     }
 
-    this.http.patch<VaultItem>(`${this.url}/by-seq/${prior.seq}`, patch)
+    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, { assigned_to: toActorId })
       .subscribe({
-        next: (updated) => {
-          this._items.update(items => items.map(i => i.id === id ? updated : i));
+        next: () => {
           this.activityService.post(event);
           this.toast.success(`"${prior.title}" reassigned to ${toActorId}`);
         },
@@ -364,10 +466,8 @@ export class VaultItemsService {
       return;
     }
 
-    const patch: UpdateVaultItemPayload = { grooming_status: 'needs_rework', assigned_to: newOwnerId };
-    this.http.patch<VaultItem>(`${this.url}/by-seq/${prior.seq}`, patch).subscribe({
-      next: (updated) => {
-        this._items.update(items => items.map(i => i.id === id ? updated : i));
+    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, { grooming_status: 'needs_rework', assigned_to: newOwnerId }).subscribe({
+      next: () => {
         this.http.post(`${environment.dashboardApiUrl}/api/thread-messages`, {
           id: tmId,
           vault_item_id: id,
@@ -412,6 +512,63 @@ export class VaultItemsService {
 // The new /api/vault-items endpoint returns the production schema shape, which
 // is wider and uses different conventions than the dashboard's VaultItem.
 // Map at the boundary so consumers don't need to know about the drift.
+
+// Production VaultNote shape returned by single-row endpoints (POST /api/vault/notes,
+// PATCH /api/vault/notes/by-seq/{seq}, etc). Wider than the dashboard's VaultItem
+// and shaped differently (string tags, free-text acceptance_criteria, flat
+// source_kind/source_ref/source_url, no view-state embeds). Mirrors the API's
+// VaultNoteSchema. Treat as opaque outside the adapter — most write paths only
+// need to confirm success and read {id, seq, created_at} off the response.
+interface ApiVaultNoteResponse {
+  id: string;
+  // Postgres returns int8 columns as strings; the API may forward either form.
+  seq: number | string | null;
+  title: string;
+  type: string;
+  category: string | null;
+  status: string;
+  body: string | null;
+  ai_priority: number | null;
+  ai_rationale: string | null;
+  manual_priority: number | null;
+  sort_position: number | null;
+  actionability: string | null;
+  source_kind: string | null;
+  source_ref: string | null;
+  source_url: string | null;
+  tags: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  completed_at: string | null;
+  raw_frontmatter: string | null;
+  assigned_to: string;
+  due_at: string | null;
+  blocked_by: string | null;
+  parent_id: string | null;
+  source_signal: string | null;
+  last_nudged_at: string | null;
+  nudge_count: number;
+  route: string;
+  agent_type: string | null;
+  acceptance_criteria: string | null;
+  ready: number;
+  suggested_agent_type: string | null;
+  suggested_parent_id: string | null;
+  cited_lesson_ids: string | null;
+  suggested_route: string | null;
+  suggested_ac: string | null;
+  grooming_status: string;
+  suggested_skills: string | null;
+  executor: string | null;
+  is_epic: number;
+  epic_started_at: string | null;
+  blocked_reason: string | null;
+  blocked_at: string | null;
+  grooming_started_at: string | null;
+  retry_count: number;
+  priority_confidence: number | null;
+  ai_rationale_model: string | null;
+}
 
 interface ApiVaultItem {
   id: string;
@@ -530,11 +687,85 @@ function buildSource(kind: string | null, ref: string | null, url: string | null
   }
 }
 
+// ── Outbound serialization ────────────────────────────────────────────────
+// API CreateNoteBody / UpdateNoteBody accept a flat shape with scalar fields.
+// The dashboard's CreateVaultItemPayload / UpdateVaultItemPayload carries arrays
+// (tags, acceptance_criteria) and a nested `source` object. Flatten before send;
+// drop fields the API doesn't accept on the relevant endpoint.
+
+// CreateNoteBody intentionally omits grooming_status, assigned_to, archived_at,
+// completed_at — those happen via dedicated mutations or PATCH follow-ups.
+function toApiCreateBody(p: CreateVaultItemPayload): Record<string, unknown> {
+  const body: Record<string, unknown> = { title: p.title, type: p.type };
+  if (p.body) body['body'] = p.body;
+  if (p.tags?.length) body['tags'] = p.tags.join(', ');
+  if (p.acceptance_criteria?.length) {
+    body['acceptance_criteria'] = p.acceptance_criteria.map(ac => ac.text).join('\n');
+  }
+  if (p.manual_priority != null) body['manual_priority'] = p.manual_priority;
+  if (p.actionability) body['actionability'] = p.actionability;
+  if (p.parent_id) body['parent_id'] = p.parent_id;
+  if (p.due_at) body['due_at'] = p.due_at;
+  if (p.source) {
+    body['source_kind'] = p.source.kind;
+    body['source_ref']  = p.source.ref;
+    if ('url' in p.source && p.source.url) body['source_url'] = p.source.url;
+  }
+  return body;
+}
+
+// Fields CreateNoteBody doesn't accept but we still want to set on create —
+// applied via a PATCH follow-up after the row exists.
+function createFollowUpPatch(p: CreateVaultItemPayload): Record<string, unknown> {
+  const patch: Record<string, unknown> = {};
+  if (p.grooming_status && p.grooming_status !== 'ungroomed') patch['grooming_status'] = p.grooming_status;
+  if (p.assigned_to) patch['assigned_to'] = p.assigned_to;
+  return patch;
+}
+
+// UpdateNoteBody is wider than CreateNoteBody (accepts grooming_status, ai_*,
+// completed_at-via-dedicated-mutation, etc). Flatten the same way; pass through
+// scalars. Callers must NOT use this for `archived_at` — production uses
+// status='archived' instead, owned by archive()/unarchive().
+function toApiUpdateBody(p: UpdateVaultItemPayload): Record<string, unknown> {
+  const body: Record<string, unknown> = {};
+  if (p.title !== undefined) body['title'] = p.title;
+  if (p.body !== undefined) body['body'] = p.body;
+  if (p.tags !== undefined) body['tags'] = p.tags.join(', ');
+  if (p.acceptance_criteria !== undefined) {
+    body['acceptance_criteria'] = p.acceptance_criteria.map(ac => ac.text).join('\n');
+  }
+  if (p.manual_priority !== undefined) body['manual_priority'] = p.manual_priority;
+  if (p.ai_priority !== undefined) body['ai_priority'] = p.ai_priority;
+  if (p.ai_rationale !== undefined) body['ai_rationale'] = p.ai_rationale;
+  if (p.priority_confidence !== undefined) body['priority_confidence'] = p.priority_confidence;
+  if (p.actionability !== undefined) body['actionability'] = p.actionability;
+  if (p.assigned_to !== undefined) body['assigned_to'] = p.assigned_to;
+  if (p.parent_id !== undefined) body['parent_id'] = p.parent_id;
+  if (p.due_at !== undefined) body['due_at'] = p.due_at;
+  if (p.completed_at !== undefined) body['completed_at'] = p.completed_at;
+  if (p.grooming_status !== undefined) body['grooming_status'] = p.grooming_status;
+  if (p.source !== undefined) {
+    if (p.source === null) {
+      body['source_kind'] = null;
+      body['source_ref']  = null;
+      body['source_url']  = null;
+    } else {
+      body['source_kind'] = p.source.kind;
+      body['source_ref']  = p.source.ref;
+      body['source_url']  = 'url' in p.source ? p.source.url : null;
+    }
+  }
+  return body;
+}
+
 function toVaultItem(a: ApiVaultItem): VaultItem {
   const { type, category } = splitType(a.type);
   return {
     id: vaultItemId(a.id),
-    seq: a.seq,
+    // Postgres returns int8/numeric as strings; the dashboard treats `seq` as a number
+    // (URL `?detail=<seq>` lookups, optimistic-create reconciliation use strict equality).
+    seq: Number(a.seq),
     title: a.title,
     body: a.body ?? '',
     type,

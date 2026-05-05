@@ -30,6 +30,7 @@ import { GroomingNest } from '../../components/grooming-nest/grooming-nest';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
+import { BoardCreateBar } from '@shared/components/board-create-bar/board-create-bar';
 import { createKanbanDragState } from '@shared/kanban/drag-state';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
 import { withVaultDetailModal } from '@shared/kanban/detail-modal';
@@ -56,7 +57,7 @@ interface ColumnView {
 
 @Component({
   selector: 'app-grooming-board',
-  imports: [GroomingCard, GroomingNest, KanbanColumn, KanbanFilterBar],
+  imports: [GroomingCard, GroomingNest, KanbanColumn, KanbanFilterBar, BoardCreateBar],
   templateUrl: './grooming-board.html',
   styleUrl: './grooming-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -467,6 +468,11 @@ export class GroomingBoard {
 
   onArchiveItem(item: VaultItem): void {
     this.vaultItemsService.archive(item.id);
+  }
+
+  // New tasks land in the Ungroomed column and follow the standard pipeline.
+  onCreateTask(title: string): void {
+    this.vaultItemsService.createOnBoard({ title, type: 'task', grooming_status: 'ungroomed' });
   }
 
   onAssignItem(item: VaultItem, actor: ActorId): void {

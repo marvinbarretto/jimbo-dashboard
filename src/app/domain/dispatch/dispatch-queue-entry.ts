@@ -80,6 +80,13 @@ export interface DispatchQueueEntry {
   error:          string | null;
 
   created_at:     string;
+
+  // Joined from vault_notes by the API so the execution card can render task
+  // context without a parallel board fetch (which is paginated; older items
+  // referenced by long-lived dispatches may fall outside that window).
+  // Optional so seed/fixture rows don't have to carry stub values.
+  task_title?:    string | null;
+  task_seq?:      number | null;
 }
 
 // Dashboard rarely creates dispatches directly (hermes does that via pipeline-pump).

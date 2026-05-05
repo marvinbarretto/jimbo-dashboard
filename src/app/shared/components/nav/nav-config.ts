@@ -17,6 +17,8 @@ export const primaryNavItems: readonly NavLink[] = [
   { href: '/calendar-settings',     label: 'Calendars',      accent: '#34d399' },
   { href: '/google-tasks-settings', label: 'Tasks',          accent: '#60a5fa' },
   { href: '/triage-tasks',          label: 'Triage',         accent: '#fbbf24' },
+  { href: '/grooming',              label: 'Grooming',       accent: '#22d3ee' },
+  { href: '/execution',             label: 'Execution',      accent: '#f87171' },
   { href: '/shopping',              label: 'Shopping',       accent: '#4ade80' },
   { href: '/jimbo-workspace',       label: 'Jimbo Workspace', accent: '#f472b6' },
 ];

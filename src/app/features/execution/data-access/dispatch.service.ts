@@ -34,7 +34,8 @@ export class DispatchService {
     // /api/dispatches returns the production schema (6 status values, more
     // columns). Map at the service boundary to the dashboard's narrower
     // DispatchQueueEntry shape.
-    this.http.get<ApiDispatchesResponse>(`${this.url}?limit=500`).subscribe({
+    // jimbo-api caps `limit` at 100 — sending more gets a 400 from zod validation.
+    this.http.get<ApiDispatchesResponse>(`${this.url}?limit=100`).subscribe({
       next: ({ items }) => { this._entries.set(items.map(toDispatchEntry)); this._loading.set(false); },
       error: ()         => this._loading.set(false),
     });
@@ -101,7 +102,7 @@ export class DispatchService {
 // (approved, dispatching, running, completed, failed). Map at the boundary.
 
 interface ApiDispatchEntry {
-  id: number;
+  id: number | string;
   task_id: string;
   task_source: string;
   flow: string;
@@ -109,7 +110,7 @@ interface ApiDispatchEntry {
   executor: string | null;
   skill: string | null;
   skill_context: unknown;
-  status: 'proposed' | 'approved' | 'running' | 'rejected' | 'completed' | 'failed' | 'removed';
+  status: 'proposed' | 'approved' | 'dispatching' | 'running' | 'rejected' | 'completed' | 'failed' | 'removed';
   result_summary: string | null;
   error_message: string | null;
   retry_count: number;
@@ -118,8 +119,10 @@ interface ApiDispatchEntry {
   started_at: string | null;
   completed_at: string | null;
   created_at: string;
+  // Joined from vault_notes by the API. Postgres returns int8 columns as strings,
+  // so coerce on the dashboard side.
   task_title: string | null;
-  task_seq: number | null;
+  task_seq: number | string | null;
 }
 
 interface ApiDispatchesResponse {
@@ -138,13 +141,14 @@ interface ApiDispatchesResponse {
 // equivalent — that column is reserved for a future real-time signal.
 function narrowStatus(s: ApiDispatchEntry['status']): DispatchStatus {
   switch (s) {
-    case 'proposed':  return 'approved';
-    case 'running':   return 'running';
-    case 'rejected':  return 'failed';
-    case 'removed':   return 'failed';
-    case 'approved':  return 'approved';
-    case 'completed': return 'completed';
-    case 'failed':    return 'failed';
+    case 'proposed':    return 'approved';
+    case 'running':     return 'running';
+    case 'rejected':    return 'failed';
+    case 'removed':     return 'failed';
+    case 'approved':    return 'approved';
+    case 'dispatching': return 'dispatching';
+    case 'completed':   return 'completed';
+    case 'failed':      return 'failed';
   }
 }
 
@@ -162,5 +166,7 @@ function toDispatchEntry(a: ApiDispatchEntry): DispatchQueueEntry {
     result_summary: a.result_summary,
     error: a.error_message,
     created_at: a.created_at,
+    task_title: a.task_title ?? null,
+    task_seq: a.task_seq != null ? Number(a.task_seq) : null,
   };
 }

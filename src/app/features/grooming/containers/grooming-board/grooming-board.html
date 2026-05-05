@@ -5,6 +5,11 @@
       Drag a card to move it between columns. Each move emits a
       <code>grooming_status_changed</code> event.
     </p>
+    <app-board-create-bar
+      buttonLabel="New task"
+      placeholder="New task title — Enter to add"
+      (create)="onCreateTask($event)"
+    />
   </header>
 
   <!-- Mobile filter toggle — desktop always shows filter bar, mobile hides it behind this button -->

@@ -4,8 +4,14 @@
     <p class="board__hint">
       Skills running on vault items. <strong>Approved</strong> are queued,
       <strong>dispatching</strong>/<strong>running</strong> are system-managed,
-      <strong>failed</strong> can be retried.
+      <strong>failed</strong> can be retried. <strong>Manual</strong> tracks
+      operator-owned work that bypasses agent dispatch.
     </p>
+    <app-board-create-bar
+      buttonLabel="New manual A-item"
+      placeholder="What are you working on? Enter to add"
+      (create)="onCreateManualItem($event)"
+    />
   </header>
 
   <button
@@ -49,6 +55,29 @@
   </div>
 
   <div class="board__columns">
+    <div class="board__col-wrap board__col-wrap--manual board__col-wrap--active">
+      <app-kanban-column
+        label="Manual"
+        [count]="manualItems().length"
+        emptyLabel="No manual items"
+        [loading]="false"
+      >
+        @for (item of manualItems(); track item.id) {
+          <article class="manual-card">
+            <header class="manual-card__head">
+              <span class="manual-card__seq">#{{ item.seq }}</span>
+              <button
+                type="button"
+                class="manual-card__done"
+                (click)="onCompleteManualItem(item)"
+                title="Mark complete"
+              >done</button>
+            </header>
+            <p class="manual-card__title">{{ item.title }}</p>
+          </article>
+        }
+      </app-kanban-column>
+    </div>
     @for (col of columns(); track col.status) {
       <div class="board__col-wrap" [class.board__col-wrap--active]="mobileColumn() === col.status">
         <app-kanban-column

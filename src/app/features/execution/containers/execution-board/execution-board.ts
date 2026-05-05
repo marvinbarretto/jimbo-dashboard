@@ -19,8 +19,10 @@ import type { DispatchId, SkillId, ActorId, ProjectId } from '@domain/ids';
 import { ExecutionCard } from '../../components/execution-card/execution-card';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
+import { BoardCreateBar } from '@shared/components/board-create-bar/board-create-bar';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
 import { withVaultDetailModal } from '@shared/kanban/detail-modal';
+import { isActive, type VaultItem } from '@domain/vault';
 
 const SKILL    = 'skill';
 const EXECUTOR = 'executor';
@@ -36,7 +38,7 @@ interface ColumnView {
 
 @Component({
   selector: 'app-execution-board',
-  imports: [ExecutionCard, KanbanColumn, KanbanFilterBar],
+  imports: [ExecutionCard, KanbanColumn, KanbanFilterBar, BoardCreateBar],
   templateUrl: './execution-board.html',
   styleUrl: './execution-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -148,12 +150,14 @@ export class ExecutionBoard {
 
   // --- per-card derived data --------------------------------------------
 
+  // Prefer the embed shipped by the API (always present); fall back to the
+  // vault-items signal only for legacy fixtures / seed mode.
   taskSeq(entry: DispatchQueueEntry): number | null {
-    return this.vaultItemsService.getById(entry.task_id)?.seq ?? null;
+    return entry.task_seq ?? this.vaultItemsService.getById(entry.task_id)?.seq ?? null;
   }
 
   taskTitle(entry: DispatchQueueEntry): string | null {
-    return this.vaultItemsService.getById(entry.task_id)?.title ?? null;
+    return entry.task_title ?? this.vaultItemsService.getById(entry.task_id)?.title ?? null;
   }
 
   taskSourceKind(entry: DispatchQueueEntry): string | null {
@@ -169,6 +173,33 @@ export class ExecutionBoard {
     if (!links.length) return null;
     const project = this.projectsService.getById(links[0].project_id);
     return project ? { id: project.id as string, display_name: project.display_name } : null;
+  }
+
+  // --- manual track ------------------------------------------------------
+  // Operator-managed vault tasks that bypass agent dispatch entirely. Created
+  // straight to grooming_status='ready' so they show up here without a stop in
+  // the grooming pipeline. "Done" via standard setCompleted; the row drops out
+  // when completed_at is set.
+  readonly manualItems = computed(() =>
+    this.vaultItemsService.items().filter(item =>
+      item.type === 'task' &&
+      isActive(item) &&
+      item.grooming_status === 'ready' &&
+      item.source?.kind === 'manual',
+    ).sort((a, b) => b.created_at.localeCompare(a.created_at)),
+  );
+
+  onCreateManualItem(title: string): void {
+    this.vaultItemsService.createOnBoard({
+      title,
+      type: 'task',
+      grooming_status: 'ready',
+      manual_priority: 0,
+    });
+  }
+
+  onCompleteManualItem(item: VaultItem): void {
+    this.vaultItemsService.setCompleted(item.id, true);
   }
 
   // --- mutations ---------------------------------------------------------
