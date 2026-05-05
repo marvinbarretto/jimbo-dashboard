@@ -9,7 +9,7 @@ interface ActiveSession {
 
 interface Project {
   id: string;
-  name: string;
+  display_name: string;
 }
 
 // ── DOM ───────────────────────────────────────────────────────────────────────
@@ -126,7 +126,7 @@ async function loadProjects(basicAuth: string, defaultProjectId: string | null):
       projects
         .map(
           (p) =>
-            `<option value="${p.id}"${p.id === defaultProjectId ? ' selected' : ''}>${p.name}</option>`,
+            `<option value="${p.id}"${p.id === defaultProjectId ? ' selected' : ''}>${p.display_name}</option>`,
         )
         .join('');
   } catch {
@@ -174,9 +174,12 @@ abandonBtn.addEventListener('click', async () => {
   }
 });
 
-document.getElementById('open-options')?.addEventListener('click', (e) => {
+function openOptions(e: Event): void {
   e.preventDefault();
   chrome.runtime.openOptionsPage();
-});
+}
+
+document.getElementById('open-options')?.addEventListener('click', openOptions);
+document.getElementById('open-options-idle')?.addEventListener('click', openOptions);
 
 init();
