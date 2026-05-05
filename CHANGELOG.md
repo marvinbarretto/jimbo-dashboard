@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.22](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.21...v0.0.22) (2026-05-05)
+
+
+### Features
+
+* **triage-tasks:** include Jimbo's rationale in promoted vault body ([3455a94](https://github.com/marvinbarretto/jimbo-dashboard/commit/3455a94f486ee0f800f9df3cef11cd8ac128a12f))
+* **triage-tasks:** render project ids as labels via shared pipes ([270b7b0](https://github.com/marvinbarretto/jimbo-dashboard/commit/270b7b0e03f45eaaca61e49e3661e05a6c43cc75))
+
+
+### Code Refactoring
+
+* **triage-tasks:** adopt 200-with-body cache lookup + clearer logs ([5e03dd4](https://github.com/marvinbarretto/jimbo-dashboard/commit/5e03dd44b9863d29cdb04a2d2edf27d4c4ba8958))
+
 ### [0.0.21](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.20...v0.0.21) (2026-05-05)
 
 
