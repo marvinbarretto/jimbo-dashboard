@@ -1,0 +1,20 @@
+{
+  "type": "note",
+  "category": "bookmark",
+  "ai_priority": null,
+  "priority_confidence": null,
+  "tags": ["bookmark", "twitter", "url-only"],
+  "suggested_parent_id": null,
+  "suggested_agent_type": null,
+  "ai_rationale": "Bare X/Twitter URL with no notes, no due date, captured into the 'Test' list — classifying as a bookmark note since there is no verb or success criterion. Parent project cannot be inferred without knowing the tweet's content.",
+  "questions": [
+    {
+      "q": "What is this tweet about, and which project (if any) does it relate to — LocalShout, Jimbo/Hermes, or just personal reading?",
+      "why": "Title is a bare X.com URL with no notes; can't infer parent project or topic tags from the ID alone."
+    },
+    {
+      "q": "Is this a save-for-later read, or a reference you want to act on (e.g. reply, quote, build something from it)?",
+      "why": "Determines whether this stays a bookmark note or should become a task/idea with a verb attached."
+    }
+  ]
+}

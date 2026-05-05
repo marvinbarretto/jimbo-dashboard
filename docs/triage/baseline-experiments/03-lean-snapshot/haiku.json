@@ -1,0 +1,13 @@
+{
+  "type": "note",
+  "category": "bookmark",
+  "ai_priority": null,
+  "priority_confidence": null,
+  "tags": ["bookmark", "social-media"],
+  "suggested_parent_id": null,
+  "suggested_agent_type": null,
+  "ai_rationale": "Bare X/Twitter URL with no context; classified as reference bookmark pending operator clarification on intent.",
+  "questions": [
+    {"q": "What's the intent — save for reference, research a specific topic, or share with someone?", "why": "Title is only a URL with no notes; unclear whether this is a bookmark, research lead, or reminder."}
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "projects": [
+    {
+      "content": "Community platform (Next.js). Close to shipping but has been haphazard \u2014 scope kept expanding. Path to v1: drop remaining unfinished features behind feature flags, focus on App Store requirements (leg"
+    },
+    {
+      "content": "pub check-in app (Angular/Firebase/Capacitor). On hold until LocalShout alpha ships."
+    },
+    {
+      "content": "AI assistant. Daily briefing pipeline running well. Hermes framework is maturing and genuinely exciting \u2014 seen as the main accelerant for all projects once LocalShout ships. Currently: model of Marvin"
+    },
+    {
+      "content": "Dating parked until post-LocalShout launch. Wants to date from confidence (having shipped) rather than aspirationally. Recent potential date: no inclination to follow up."
+    },
+    {
+      "content": "Application started but stalled. Two hours of admin work. Keeps getting forgotten \u2014 needs a nudge."
+    },
+    {
+      "content": "Feeling invisible and restless. Airbnb guest staying long-term opens subletting possibility. No concrete plan yet but the feeling is strong. Apps can be finished anywhere. Not a commitment \u2014 legitimis"
+    }
+  ],
+  "active_epics": [
+    {
+      "id": "note_d1e09925",
+      "title": "Build token cost reporting query or endpoint for Jimbo"
+    },
+    {
+      "id": "note_6bfd014b",
+      "title": "Instrument Jimbo pipeline to capture token usage per dispatch"
+    },
+    {
+      "id": "note_1e9226d0",
+      "title": "Read thoroughly this business plan, convert it into actionable items and update our intern"
+    },
+    {
+      "id": "note_6a06de7e",
+      "title": "Share event from Instagram to local shout"
+    },
+    {
+      "id": "note_3baa3953",
+      "title": "Add Norfolk Suffolk to events source"
+    },
+    {
+      "id": "track-how-many-tokens-used-for-pr-cost-associated-track--note_da25d25",
+      "title": "Track AI token usage and costs for reporting"
+    },
+    {
+      "id": "does-my-header-need-to-be-so-big-all-the-time-could-i-animat--note_41b2a11",
+      "title": "Spoons App UI and Gamification Ideas"
+    },
+    {
+      "id": "work-on-the-llm-from-clicking-the-flyer-how-can-i-make-sens--note_b4bb710",
+      "title": "Improve LLM for flyer event extraction"
+    },
+    {
+      "id": "home-pub-points-mechanism--note_37f7942",
+      "title": "Home pub points mechanism"
+    },
+    {
+      "id": "hk-eye--note_53735a4",
+      "title": "HK eye"
+    },
+    {
+      "id": "holi-all-over-mathura-area--note_46ef64c",
+      "title": "Holi in Mathura area"
+    },
+    {
+      "id": "filter-by-free-covers--note_1e3ac65",
+      "title": "Filter by Free, Covers"
+    },
+    {
+      "id": "hotel-gokyo-lake--note_eefdf4f",
+      "title": "Hotel Gokyo Lake"
+    },
+    {
+      "id": "home-improvements--note_3a3448f",
+      "title": "Home improvements"
+    },
+    {
+      "id": "note_0fc06f66",
+      "title": "[Idea] Voice gym tracker PWA"
+    }
+  ],
+  "task_summary": {
+    "done_today": 121,
+    "done_this_week": 121,
+    "new_today": 9,
+    "inbox_count": 517,
+    "active_count": 1569,
+    "in_progress": {},
+    "blocked": 0,
+    "deferred": 0,
+    "velocity_7d": 17.29,
+    "velocity_30d": 4.07,
+    "overdue": 0
+  }
+}

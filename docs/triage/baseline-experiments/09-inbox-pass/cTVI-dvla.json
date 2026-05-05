@@ -1,0 +1,15 @@
+{
+  "_input": "Check DVLA halfiax",
+  "type": "idea",
+  "category": null,
+  "ai_priority": null,
+  "priority_confidence": null,
+  "tags": ["title-only"],
+  "suggested_parent_id": null,
+  "suggested_agent_type": null,
+  "ai_rationale": "Cryptic title with no context — could be a reference lookup or exploratory thought about DVLA/halfiax, but intent is unclear.",
+  "questions": [
+    {"q": "Is this a task (something to do) or a reference (something to read/check)?", "why": "Title is a noun phrase without a verb or target state — unclear if there's an action or just a bookmark."},
+    {"q": "What is 'halfiax' and why does it matter to Jimbo?", "why": "No context provided; could be a person, document, system, or inside reference."}
+  ]
+}

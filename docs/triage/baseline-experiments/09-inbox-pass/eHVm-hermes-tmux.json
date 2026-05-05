@@ -1,0 +1,14 @@
+{
+  "_input": "Lots of Hermes in tmux! Omg https://x.com/i/status/2050605436752330840",
+  "type": "note",
+  "category": "bookmark",
+  "ai_priority": null,
+  "priority_confidence": null,
+  "tags": ["project:4", "hermes-agent", "local-ai", "agentic-harness", "architecture"],
+  "suggested_parent_id": "4",
+  "suggested_agent_type": null,
+  "ai_rationale": "Twitter thread about Hermes agentic harness mattering more than the model itself for local AI — directly relevant to Jimbo/Hermes architecture thinking.",
+  "questions": [
+    {"q": "Is this captured for general Hermes architecture reference, or does it relate to a specific current blocker/design decision?", "why": "Title is URL-only with minimal context; clarifying intent helps determine downstream use (bookmark vs. discussion seed)."}
+  ]
+}

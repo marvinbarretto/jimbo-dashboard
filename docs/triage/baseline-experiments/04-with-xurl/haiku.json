@@ -1,0 +1,11 @@
+{
+  "type": "note",
+  "category": "bookmark",
+  "ai_priority": null,
+  "priority_confidence": null,
+  "tags": ["reference", "project:jimbo", "hermes-agent", "ai-assistant"],
+  "suggested_parent_id": null,
+  "suggested_agent_type": null,
+  "ai_rationale": "Article on Hermes Agent use cases — bookmarked for future reference on agent application patterns.",
+  "questions": []
+}

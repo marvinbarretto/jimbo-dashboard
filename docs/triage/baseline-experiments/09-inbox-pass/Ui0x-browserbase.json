@@ -1,0 +1,14 @@
+{
+  "_input": "browserbase.com",
+  "type": "idea",
+  "category": null,
+  "ai_priority": null,
+  "priority_confidence": null,
+  "tags": ["url-only", "ai-agent", "web-automation", "research"],
+  "suggested_parent_id": "4",
+  "suggested_agent_type": "research",
+  "ai_rationale": "Web automation platform that could inform Jimbo/Hermes agent capabilities; captured as exploratory bookmark with no implementation context yet.",
+  "questions": [
+    {"q": "Is this a potential tool integration for Hermes agents, or just background reading?", "why": "URL-only capture makes intent unclear — knowing whether you're evaluating Browserbase as a dependency or just gathering knowledge would clarify grooming direction."}
+  ]
+}

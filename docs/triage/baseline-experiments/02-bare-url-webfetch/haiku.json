@@ -1,0 +1,15 @@
+{
+  "_url_resolved": "WebFetch returned 402 Payment Required — X blocks unauthenticated scrapes. URL content NOT retrieved.",
+  "type": "note",
+  "category": "bookmark",
+  "ai_priority": null,
+  "priority_confidence": null,
+  "tags": ["twitter", "external-content"],
+  "suggested_parent_id": null,
+  "suggested_agent_type": null,
+  "ai_rationale": "Bare Twitter URL with no description or context — captured as bookmark pending manual review to determine actual topic and relevance.",
+  "questions": [
+    {"q": "What is the main topic or reason you captured this tweet?", "why": "Unable to fetch tweet content; need manual summary to classify correctly."},
+    {"q": "Should this become a task, reference note, or just a bookmark for later?", "why": "Type depends on whether this tweet contains something actionable vs. purely for reference."}
+  ]
+}

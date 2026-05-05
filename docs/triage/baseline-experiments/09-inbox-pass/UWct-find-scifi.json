@@ -1,0 +1,15 @@
+{
+  "_input": "Find some ai sci fi",
+  "type": "note",
+  "category": "reference",
+  "ai_priority": null,
+  "priority_confidence": null,
+  "tags": ["ai", "science-fiction", "media", "title-only"],
+  "suggested_parent_id": null,
+  "suggested_agent_type": null,
+  "ai_rationale": "Media discovery request for AI science fiction; minimal context on preferred medium (books, film, shows) or specific angle.",
+  "questions": [
+    {"q": "What medium — books, films, TV shows, or a mix?", "why": "Title alone doesn't specify; narrows scope for recommendations"},
+    {"q": "Any specific angle — AI ethics, dystopia, sentience, cyberpunk?", "why": "AI sci-fi is broad; helps filter relevant suggestions"}
+  ]
+}

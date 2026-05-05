@@ -1,0 +1,11 @@
+{
+  "type": "idea",
+  "category": null,
+  "ai_priority": null,
+  "priority_confidence": null,
+  "tags": ["project:hermes", "ai-agents", "infrastructure", "agentic-harness"],
+  "suggested_parent_id": "4",
+  "suggested_agent_type": null,
+  "ai_rationale": "Tweet explores agentic harness selection as critical design decision for local AI — resonates with Hermes infrastructure choices; captured as exploratory idea for project:hermes.",
+  "clarifying_questions": []
+}

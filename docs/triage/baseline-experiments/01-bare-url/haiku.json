@@ -1,0 +1,16 @@
+{
+  "type": "note",
+  "category": "bookmark",
+  "ai_priority": null,
+  "priority_confidence": null,
+  "tags": ["bookmark", "twitter", "social-media"],
+  "suggested_parent_id": null,
+  "suggested_agent_type": null,
+  "ai_rationale": "Bare Twitter URL with no context — treating as a bookmark pending clarification of content and relevance.",
+  "questions": [
+    {
+      "q": "What's the tweet about, and which project does it relate to?",
+      "why": "Title is only a URL; no notes or context provided. Can't determine relevance to LocalShout, Jimbo/Hermes, or another area without knowing the content."
+    }
+  ]
+}

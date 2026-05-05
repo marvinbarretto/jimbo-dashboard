@@ -1,0 +1,11 @@
+{
+  "type": "note",
+  "category": "bookmark",
+  "ai_priority": null,
+  "priority_confidence": null,
+  "tags": ["project:4", "hermes", "agents", "local-ai", "agentic-harness"],
+  "suggested_parent_id": "4",
+  "suggested_agent_type": null,
+  "ai_rationale": "Reference material on agentic harness design principles (Hermes agent framework praised for reliable tool-calling and performance) — directly relevant to Jimbo/Hermes project as practical validation of framework choice and scaling patterns.",
+  "questions": []
+}

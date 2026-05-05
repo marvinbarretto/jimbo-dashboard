@@ -1,0 +1,11 @@
+{
+  "type": "note",
+  "category": "bookmark",
+  "ai_priority": null,
+  "priority_confidence": null,
+  "tags": ["project:jimbo", "hermes", "reference", "url-only"],
+  "suggested_parent_id": null,
+  "suggested_agent_type": null,
+  "ai_rationale": "Article about Hermes agent usage patterns; captured as URL-only bookmark without notes or context.",
+  "clarifying_questions": []
+}

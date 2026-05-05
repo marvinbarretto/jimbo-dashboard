@@ -1,0 +1,20 @@
+{
+  "type": "note",
+  "category": "bookmark",
+  "ai_priority": null,
+  "priority_confidence": null,
+  "tags": ["bookmark", "social-media", "twitter", "x-com"],
+  "suggested_parent_id": null,
+  "suggested_agent_type": null,
+  "ai_rationale": "Bare X/Twitter URL with no notes or context — treated as a bookmark note; cannot infer project fit or intent without knowing what the post contains.",
+  "questions": [
+    {
+      "q": "What is this tweet about and why did you save it — is it a reference, an idea, or something to act on?",
+      "why": "Title is a raw URL with no notes; the content and intent are entirely opaque, making type, parent project, and priority impossible to determine."
+    },
+    {
+      "q": "Which project does this relate to, if any — LocalShout, Jimbo/Hermes, SpoonsCount, or something personal?",
+      "why": "List is 'Test' (not a named project list), so there is no project signal to anchor a parent suggestion."
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "_input": "art - https://sebastianfoster.com/sunset-on-long-beach-by-grant-haffner 100 bucks - am i ready yet?",
+  "type": "idea",
+  "category": null,
+  "ai_priority": null,
+  "priority_confidence": null,
+  "tags": ["personal", "discretionary-spend", "art"],
+  "suggested_parent_id": null,
+  "suggested_agent_type": null,
+  "ai_rationale": "Personal deliberation about purchasing art—exploring readiness to spend $100 during active focus on LocalShout shipping and financial consciousness.",
+  "questions": [
+    {"q": "Is this about evaluating the artwork itself, or about personal/financial readiness to buy?", "why": "Phrasing 'am i ready yet?' suggests emotional/financial readiness check, but unclear if you're deciding on the art or deciding on your ability to afford it"}
+  ]
+}

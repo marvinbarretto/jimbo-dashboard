@@ -1,0 +1,12 @@
+{
+  "_input": "https://x.com/i/status/2050984556790939731 (DUPLICATE of STNx)",
+  "type": "note",
+  "category": "bookmark",
+  "ai_priority": null,
+  "priority_confidence": null,
+  "tags": ["project:4", "hermes", "agent", "reference", "workflow"],
+  "suggested_parent_id": "4",
+  "suggested_agent_type": null,
+  "ai_rationale": "Article by vmiss33 on Hermes agent usage patterns—reference resource for the Jimbo/Hermes project.",
+  "questions": []
+}
