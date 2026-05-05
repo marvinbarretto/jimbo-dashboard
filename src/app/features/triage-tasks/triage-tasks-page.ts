@@ -43,6 +43,8 @@ export class TriageTasksPage {
   protected readonly proposalDebug = signal<TriageDebug | null>(null);
   protected readonly proposalLoading = signal(false);
   protected readonly proposalError = signal<string | null>(null);
+  protected readonly cacheChecking = signal(false);
+  protected readonly proposalFromCache = signal(false);
   protected readonly debugOpen = signal(false);
   protected readonly detailsOpen = signal(false);
 
@@ -78,6 +80,34 @@ export class TriageTasksPage {
     this.selectedTask.set(task);
     this.userContext.set('');
     this.resetProposalState();
+    this.loadCachedProposal(task);
+  }
+
+  private loadCachedProposal(task: InboxTask): void {
+    this.cacheChecking.set(true);
+    const t0 = performance.now();
+    this.service.getCachedProposal(task.listId, task.id).subscribe({
+      next: result => {
+        const elapsed = Math.round(performance.now() - t0);
+        // Bail if the user already moved on to another task or closed the modal.
+        if (this.selectedTask()?.id !== task.id) return;
+        console.log(`[triage] cache HIT in ${elapsed}ms`, { skill_version: result.debug.skill_version });
+        this.proposal.set(result.proposal);
+        this.proposalDebug.set(result.debug);
+        this.proposalFromCache.set(true);
+        this.cacheChecking.set(false);
+      },
+      error: err => {
+        if (this.selectedTask()?.id !== task.id) return;
+        const status = (err as { status?: number })?.status;
+        if (status === 404) {
+          console.log('[triage] cache MISS — Ask Jimbo affordance shown');
+        } else {
+          console.warn('[triage] cache lookup failed (non-fatal)', err);
+        }
+        this.cacheChecking.set(false);
+      },
+    });
   }
 
   protected closeModal(): void {
@@ -91,6 +121,8 @@ export class TriageTasksPage {
     this.proposalDebug.set(null);
     this.proposalError.set(null);
     this.proposalLoading.set(false);
+    this.cacheChecking.set(false);
+    this.proposalFromCache.set(false);
     this.debugOpen.set(false);
     this.actionLoading.set(false);
     this.actionError.set(null);
@@ -108,6 +140,7 @@ export class TriageTasksPage {
     this.proposalError.set(null);
     this.proposal.set(null);
     this.proposalDebug.set(null);
+    this.proposalFromCache.set(false);
 
     const t0 = performance.now();
     this.service.triageNow(task.listId, task.id, ctx).subscribe({
@@ -149,12 +182,27 @@ export class TriageTasksPage {
     const task = this.selectedTask();
     if (!task) return;
     console.log('[triage] skip', task.id, task.title);
+    this.fireLog(task, 'skip');
     this.skippedIds.update(s => {
       const next = new Set(s);
       next.add(task.id);
       return next;
     });
     this.closeModal();
+  }
+
+  private fireLog(task: InboxTask, action: 'promote' | 'discard' | 'skip'): void {
+    const ctx = this.userContext().trim();
+    this.service.logTriageAction({
+      listId: task.listId,
+      taskId: task.id,
+      proposal: this.proposal(),
+      user_context: ctx ? ctx : null,
+      action,
+    }).subscribe({
+      next: () => console.log(`[triage] log written (${action}) for ${task.id}`),
+      error: err => console.warn(`[triage] log write failed (${action}) — non-fatal`, err),
+    });
   }
 
   protected discard(): void {
@@ -172,6 +220,7 @@ export class TriageTasksPage {
     this.service.deleteTask(task.listId, task.id).subscribe({
       next: r => {
         console.log(`[triage] discard OK in ${Math.round(performance.now() - t0)}ms`, r);
+        this.fireLog(task, 'discard');
         this.service.removeFromCache(task.id);
         this.actionLoading.set(false);
         this.closeModal();
@@ -213,6 +262,7 @@ export class TriageTasksPage {
     this.service.commit(payload).subscribe({
       next: r => {
         console.log(`[triage] promote OK in ${Math.round(performance.now() - t0)}ms`, r);
+        this.fireLog(task, 'promote');
         this.service.removeFromCache(task.id);
         this.actionLoading.set(false);
         this.closeModal();

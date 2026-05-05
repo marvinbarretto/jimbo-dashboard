@@ -68,6 +68,25 @@ export class TriageTasksService {
     });
   }
 
+  getCachedProposal(listId: string, taskId: string): Observable<TriageNowResult> {
+    console.log('[TriageTasks] getCachedProposal ->', { listId, taskId });
+    return this.http.get<TriageNowResult>(`${this.base}/api/google-tasks/triage-now/cached`, {
+      params: { listId, taskId },
+    });
+  }
+
+  logTriageAction(payload: {
+    listId: string;
+    taskId: string;
+    proposal: TriageProposal | null;
+    user_context: string | null;
+    action: 'promote' | 'discard' | 'skip';
+    override?: Record<string, unknown> | null;
+  }): Observable<{ ok: true }> {
+    console.log('[TriageTasks] logTriageAction ->', { taskId: payload.taskId, action: payload.action, hasProposal: !!payload.proposal });
+    return this.http.post<{ ok: true }>(`${this.base}/api/google-tasks/triage-log`, payload);
+  }
+
   commit(payload: {
     taskId: string;
     listId: string;

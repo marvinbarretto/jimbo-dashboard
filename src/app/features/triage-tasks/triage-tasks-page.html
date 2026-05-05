@@ -87,7 +87,9 @@
           <section class="triage-section">
             <div class="section-label">Jimbo's analysis</div>
 
-            @if (!proposal() && !proposalLoading() && !proposalError()) {
+            @if (cacheChecking()) {
+              <app-ui-loading-state message="Checking cache…" />
+            } @else if (!proposal() && !proposalLoading() && !proposalError()) {
               <div class="ask-jimbo">
                 <app-ui-button variant="secondary" (pressed)="askJimbo()">Ask Jimbo →</app-ui-button>
                 <div class="section-hint">
@@ -136,6 +138,10 @@
                   @if (d.skill_version) {
                     <span>·</span>
                     <span>v{{ d.skill_version }}</span>
+                  }
+                  @if (proposalFromCache()) {
+                    <span>·</span>
+                    <span class="proposal-cached">cached</span>
                   }
                 </div>
               }
