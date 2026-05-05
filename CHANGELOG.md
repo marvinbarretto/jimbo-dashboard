@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.25](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.24...v0.0.25) (2026-05-05)
+
+
+### Bug Fixes
+
+* **build:** add is_epic to vault fixtures, remove duplicate field, fix gap value ([eab63f3](https://github.com/marvinbarretto/jimbo-dashboard/commit/eab63f3ff53b8054f1ef4a7cc58dd91e1c4ad598))
+
 ### [0.0.24](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.23...v0.0.24) (2026-05-05)
 
 
