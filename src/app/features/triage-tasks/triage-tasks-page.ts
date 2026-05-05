@@ -244,10 +244,13 @@ export class TriageTasksPage {
     const ctx = this.userContext().trim();
     const proposal = this.proposal();
 
-    // Body: combine task notes + operator context if either present.
+    // Body: task notes + operator context + Jimbo's rationale (if any).
+    // Rationale is appended verbatim — grooming can read it as plain prose
+    // until/unless we plumb it as a structured field.
     const bodyParts: string[] = [];
     if (task.notes) bodyParts.push(task.notes);
     if (ctx) bodyParts.push(`---\nContext: ${ctx}`);
+    if (proposal?.ai_rationale) bodyParts.push(`---\nJimbo: ${proposal.ai_rationale}`);
     const body = bodyParts.join('\n\n');
 
     const payload = {
