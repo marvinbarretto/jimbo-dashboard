@@ -74,6 +74,8 @@
         <app-vault-item-delivery-block
           [readiness]="readiness()"
           [criteria]="item.acceptance_criteria"
+          [editable]="true"
+          (criteriaChange)="onCriteriaChange($event)"
         />
 
         <app-vault-item-links-block
@@ -83,6 +85,8 @@
           [openBlockers]="openBlockers()"
           [tags]="item.tags"
           [addBlockerSeqInput]="addBlockerSeqInput()"
+          [parent]="parentRef()"
+          [editable]="true"
           (subtaskClicked)="swapToSeq($event)"
           (projectClicked)="onProjectClicked($event)"
           (projectAdded)="addProject($event)"
@@ -91,6 +95,9 @@
           (blockerRemoved)="removeBlocker($event)"
           (blockerAddBySeq)="addBlockerBySeq()"
           (blockerSeqInputChange)="addBlockerSeqInput.set($event)"
+          (tagsChange)="onTagsChange($event)"
+          (parentClicked)="swapToSeq($event)"
+          (parentChange)="onParentChange($event)"
         />
       </div>
     </app-ui-section>

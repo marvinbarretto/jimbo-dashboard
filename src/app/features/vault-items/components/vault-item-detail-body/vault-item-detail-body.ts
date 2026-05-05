@@ -21,6 +21,7 @@ import { ThreadView } from '../../../thread/components/thread-view/thread-view';
 import { computeReadiness, effectivePriority } from '@domain/vault/readiness';
 import { actorId, projectId, vaultItemId } from '@domain/ids';
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
+import type { AcceptanceCriterion } from '@domain/vault/vault-item';
 import { ActivityLogComponent } from './activity-log/activity-log';
 import { formatDatetime } from '@shared/utils/datetime.utils';
 import { UiSection } from '@shared/components/ui-section/ui-section';
@@ -110,6 +111,44 @@ export class VaultItemDetailBody {
     const i = this.item();
     if (!i) return;
     this.vaultItemsService.update(i.id, { body: next });
+  }
+
+  onTagsChange(next: readonly string[]): void {
+    const i = this.item();
+    if (!i) return;
+    this.vaultItemsService.update(i.id, { tags: [...next] });
+  }
+
+  // Caveat: API serializer drops `done` (newline-joined text only); local
+  // optimistic state shows the change but it doesn't survive reload.
+  onCriteriaChange(next: readonly AcceptanceCriterion[]): void {
+    const i = this.item();
+    if (!i) return;
+    this.vaultItemsService.update(i.id, { acceptance_criteria: [...next] });
+  }
+
+  // null clears the parent. number is a seq the operator typed in; we resolve
+  // to a vault-item id, toast on bad input (unknown seq, self-reference) and
+  // persist via update().
+  onParentChange(next: number | null): void {
+    const i = this.item();
+    if (!i) return;
+    if (next === null) {
+      if (i.parent_id === null) return;
+      this.vaultItemsService.update(i.id, { parent_id: null });
+      return;
+    }
+    if (next === i.seq) {
+      this.toast.error("Can't make an item its own parent");
+      return;
+    }
+    const target = this.vaultItemsService.getBySeq(next);
+    if (!target) {
+      this.toast.error(`No item found with seq #${next}`);
+      return;
+    }
+    if (target.id === i.parent_id) return;
+    this.vaultItemsService.update(i.id, { parent_id: target.id });
   }
 
   readonly junctionProjects = computed(() => {
@@ -264,6 +303,12 @@ export class VaultItemDetailBody {
     const i = this.item();
     if (!i?.parent_id) return undefined;
     return this.vaultItemsService.getById(i.parent_id);
+  });
+
+  // Compact ref shape for the links-block parent chip — null when standalone.
+  readonly parentRef = computed<{ seq: number; title: string } | null>(() => {
+    const p = this.parentItem();
+    return p ? { seq: p.seq, title: p.title } : null;
   });
 
   readonly children = computed(() => {

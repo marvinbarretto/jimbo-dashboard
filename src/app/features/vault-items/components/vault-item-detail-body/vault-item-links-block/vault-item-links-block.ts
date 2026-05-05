@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { UiChipList, type UiChipListItem, type UiChipListPickerOption } from '@shared/components/ui-chip-list/ui-chip-list';
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
@@ -11,6 +11,11 @@ export interface VaultItemSubtask {
   readonly seq: number;
   readonly title: string;
   readonly grooming_status: string;
+}
+
+export interface VaultItemParentRef {
+  readonly seq: number;
+  readonly title: string;
 }
 
 @Component({
@@ -33,6 +38,43 @@ export interface VaultItemSubtask {
             </li>
           }
         </ul>
+      }
+
+      @if (parent() || editable()) {
+        <app-ui-subhead label="Parent" [count]="parent() ? 1 : 0" />
+        @if (parent(); as p) {
+          <div class="vault-item-links-block__parent-row">
+            <button type="button"
+              class="detail-link-badge detail-link-badge--subtask"
+              (click)="parentClicked.emit(p.seq)">
+              <span class="detail-link-badge__prefix">#{{ p.seq }}</span>
+              {{ p.title }}
+            </button>
+            @if (editable()) {
+              <button type="button"
+                class="vault-item-links-block__inline-btn"
+                aria-label="Remove parent"
+                (click)="parentChange.emit(null)">× clear</button>
+            }
+          </div>
+        } @else {
+          <div class="vault-item-links-block__parent-add">
+            <label for="parent-seq-input" class="visually-hidden">Set parent by seq number</label>
+            <input id="parent-seq-input"
+              type="number" min="1"
+              placeholder="seq # e.g. 1820"
+              class="vault-item-links-block__blocker-input"
+              [value]="parentSeqDraft()"
+              (input)="onParentSeqInput($event)"
+              (keydown.enter)="commitParent()" />
+            <button type="button"
+              class="vault-item-links-block__inline-btn"
+              [disabled]="!parentSeqDraft()"
+              (click)="commitParent()">
+              + set parent
+            </button>
+          </div>
+        }
       }
 
       <app-ui-subhead label="Projects" [count]="projects().length" />
@@ -72,7 +114,11 @@ export interface VaultItemSubtask {
       </div>
 
       <app-ui-subhead label="Tags" [count]="tags().length" />
-      <app-vault-item-tag-list [tags]="tags()" />
+      <app-vault-item-tag-list
+        [tags]="tags()"
+        [editable]="editable()"
+        (tagsChange)="tagsChange.emit($event)"
+      />
     </app-ui-subsection>
   `,
   styles: [`
@@ -90,11 +136,20 @@ export interface VaultItemSubtask {
       gap: 3px;
     }
 
-    .vault-item-links-block__blocker-add {
+    .vault-item-links-block__blocker-add,
+    .vault-item-links-block__parent-add {
       display: flex;
       gap: 0.4rem;
       align-items: center;
       margin-top: 0.25rem;
+    }
+
+    .vault-item-links-block__parent-row {
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 0.4rem;
     }
 
     .vault-item-links-block__blocker-input {
@@ -148,6 +203,8 @@ export class VaultItemLinksBlock {
   readonly openBlockers = input.required<readonly OpenBlocker[]>();
   readonly tags = input.required<readonly string[]>();
   readonly addBlockerSeqInput = input.required<string>();
+  readonly parent = input<VaultItemParentRef | null>(null);
+  readonly editable = input<boolean>(false);
 
   readonly subtaskClicked = output<number>();
   readonly projectClicked = output<string>();
@@ -157,6 +214,13 @@ export class VaultItemLinksBlock {
   readonly blockerRemoved = output<string>();
   readonly blockerAddBySeq = output<void>();
   readonly blockerSeqInputChange = output<string>();
+  readonly tagsChange = output<readonly string[]>();
+  readonly parentClicked = output<number>();
+  // null clears the parent. number is the seq the operator typed in; the parent
+  // (detail-body) translates seq → vault-item id and persists.
+  readonly parentChange = output<number | null>();
+
+  readonly parentSeqDraft = signal('');
 
   readonly projectChips = computed<readonly UiChipListItem[]>(() =>
     this.projects().map(p => ({ id: p.id, label: p.display_name, entityType: 'project' as const }))
@@ -186,5 +250,18 @@ export class VaultItemLinksBlock {
 
   onBlockerSeqInput(event: Event): void {
     this.blockerSeqInputChange.emit((event.target as HTMLInputElement).value);
+  }
+
+  onParentSeqInput(event: Event): void {
+    this.parentSeqDraft.set((event.target as HTMLInputElement).value);
+  }
+
+  commitParent(): void {
+    const raw = this.parentSeqDraft().trim();
+    if (!raw) return;
+    const seq = Number(raw);
+    if (!Number.isFinite(seq) || seq <= 0) return;
+    this.parentChange.emit(seq);
+    this.parentSeqDraft.set('');
   }
 }

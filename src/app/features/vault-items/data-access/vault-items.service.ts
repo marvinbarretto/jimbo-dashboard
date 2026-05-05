@@ -774,11 +774,16 @@ function toVaultItem(a: ApiVaultItem): VaultItem {
     category,
     assigned_to: a.assigned_to === 'unassigned' ? null : actorId(a.assigned_to),
     tags: a.tags,
-    // Production stores acceptance_criteria as free text; the dashboard expects
-    // a parsed array. Until we have a parser, surface as a single unchecked item
-    // when text is present, [] otherwise.
+    // Production stores acceptance_criteria as free text. Round-trip with the
+    // outbound serializer (toApiUpdateBody) which joins with '\n' — split here
+    // so multi-criterion edits survive reload. `done` state is still lost
+    // until the API gains structured AC.
     acceptance_criteria: a.acceptance_criteria
-      ? [{ text: a.acceptance_criteria, done: false }]
+      ? a.acceptance_criteria
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => line.length > 0)
+          .map(text => ({ text, done: false }))
       : [],
     grooming_status: narrowGroomingStatus(a.grooming_status),
     ai_priority: narrowPriority(a.ai_priority),
