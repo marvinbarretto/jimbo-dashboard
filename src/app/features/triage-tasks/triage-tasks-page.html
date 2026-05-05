@@ -104,49 +104,33 @@
 
               @if (proposal(); as p) {
                 <div class="proposal">
-                  <div class="proposal-row">
-                    <span class="proposal-label">Type</span>
-                    <span class="tag tag-type tag-{{ p.type }}">{{ p.type }}</span>
-                    @if (p.category) {
-                      <span class="tag tag-category">{{ p.category }}</span>
-                    }
-                  </div>
-
-                  @if (p.ai_priority !== null) {
-                    <div class="proposal-row">
-                      <span class="proposal-label">Priority</span>
-                      <span class="tag tag-priority">P{{ p.ai_priority }}</span>
-                      @if (p.priority_confidence !== null) {
-                        <span class="proposal-confidence">conf {{ p.priority_confidence }}</span>
+                  <!-- Preview: what this would become in the vault -->
+                  <article class="vault-preview" [attr.data-type]="p.type">
+                    <header class="vault-preview__header">
+                      <span class="vault-preview__type">
+                        {{ p.type }}@if (p.category) { · {{ p.category }} }
+                      </span>
+                      @if (p.suggested_parent_id) {
+                        <span class="vault-preview__parent">project:{{ p.suggested_parent_id }}</span>
                       }
-                    </div>
-                  }
+                    </header>
 
-                  @if (p.suggested_parent_id) {
-                    <div class="proposal-row">
-                      <span class="proposal-label">Parent</span>
-                      <span class="tag tag-parent">project:{{ p.suggested_parent_id }}</span>
-                    </div>
-                  }
+                    <div class="vault-preview__title">{{ task.title }}</div>
 
-                  @if (p.suggested_agent_type) {
-                    <div class="proposal-row">
-                      <span class="proposal-label">Agent</span>
-                      <span class="tag tag-agent">{{ p.suggested_agent_type }}</span>
-                    </div>
-                  }
+                    @if (task.notes) {
+                      <div class="vault-preview__body">{{ task.notes }}</div>
+                    }
 
-                  @if (p.tags.length) {
-                    <div class="proposal-row">
-                      <span class="proposal-label">Tags</span>
-                      <span class="tag-list">
+                    @if (p.tags.length) {
+                      <div class="vault-preview__tags">
                         @for (t of p.tags; track t) {
                           <span class="tag tag-soft">{{ t }}</span>
                         }
-                      </span>
-                    </div>
-                  }
+                      </div>
+                    }
+                  </article>
 
+                  <!-- Jimbo's reasoning + any clarifying questions -->
                   <div class="proposal-rationale">{{ p.ai_rationale }}</div>
 
                   @if (p.questions.length) {
@@ -163,13 +147,68 @@
                     </div>
                   }
 
+                  <!-- Meta line -->
+                  @if (proposalDebug(); as d) {
+                    <div class="proposal-meta">
+                      <span>{{ d.model }}</span>
+                      <span>·</span>
+                      <span>{{ d.latency_ms }}ms</span>
+                      @if (d.usage.total_tokens !== null) {
+                        <span>·</span>
+                        <span>{{ d.usage.prompt_tokens }}+{{ d.usage.completion_tokens }} tok</span>
+                      }
+                      @if (d.skill_version) {
+                        <span>·</span>
+                        <span>v{{ d.skill_version }}</span>
+                      }
+                    </div>
+                  }
+
+                  <!-- Action row -->
                   <div class="proposal-actions">
                     <app-ui-button variant="secondary" (pressed)="askJimbo()">↻ Re-ask</app-ui-button>
+                    <button type="button" class="debug-toggle" (click)="toggleDetails()">
+                      {{ detailsOpen() ? '▾' : '▸' }} details
+                    </button>
                     <button type="button" class="debug-toggle" (click)="toggleDebug()">
                       {{ debugOpen() ? '▾' : '▸' }} debug
                     </button>
                   </div>
 
+                  <!-- Schema details (collapsed by default) -->
+                  @if (detailsOpen()) {
+                    <div class="proposal-details">
+                      <div class="proposal-row">
+                        <span class="proposal-label">Type</span>
+                        <span class="tag tag-type tag-{{ p.type }}">{{ p.type }}</span>
+                        @if (p.category) {
+                          <span class="tag tag-category">{{ p.category }}</span>
+                        }
+                      </div>
+                      @if (p.suggested_parent_id) {
+                        <div class="proposal-row">
+                          <span class="proposal-label">Parent</span>
+                          <span class="tag tag-parent">project:{{ p.suggested_parent_id }}</span>
+                        </div>
+                      }
+                      @if (p.suggested_agent_type) {
+                        <div class="proposal-row">
+                          <span class="proposal-label">Agent</span>
+                          <span class="tag tag-agent">{{ p.suggested_agent_type }}</span>
+                        </div>
+                      }
+                      <div class="proposal-row">
+                        <span class="proposal-label">Tags</span>
+                        <span class="tag-list">
+                          @for (t of p.tags; track t) {
+                            <span class="tag tag-soft">{{ t }}</span>
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Raw debug JSON -->
                   @if (debugOpen() && proposalDebug(); as d) {
                     <pre class="proposal-debug">{{ d | json }}</pre>
                   }

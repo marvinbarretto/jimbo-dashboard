@@ -38,6 +38,11 @@ export interface TriageDebug {
   parse_ok: boolean;
   latency_ms: number;
   raw_response: string;
+  usage: {
+    prompt_tokens: number | null;
+    completion_tokens: number | null;
+    total_tokens: number | null;
+  };
 }
 
 export interface TriageNowResult {

@@ -47,6 +47,7 @@ export class TriageTasksPage {
   protected readonly proposalLoading = signal(false);
   protected readonly proposalError = signal<string | null>(null);
   protected readonly debugOpen = signal(false);
+  protected readonly detailsOpen = signal(false);
 
   protected readonly rows = computed<TaskRow[] | undefined>(() => {
     const tasks = this.service.tasks();
@@ -131,6 +132,9 @@ export class TriageTasksPage {
 
   protected toggleDebug(): void {
     this.debugOpen.update(v => !v);
+  }
+  protected toggleDetails(): void {
+    this.detailsOpen.update(v => !v);
   }
 
   protected onContextInput(value: string): void {

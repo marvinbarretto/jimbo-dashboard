@@ -257,8 +257,77 @@
 .proposal {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.625rem;
   padding-top: 0.5rem;
+}
+
+.vault-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0.875rem;
+  background: var(--color-panel-2, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 0.625rem;
+  border-left-width: 3px;
+}
+
+.vault-preview[data-type='task']  { border-left-color: #60a5fa; }
+.vault-preview[data-type='note']  { border-left-color: #a78bfa; }
+.vault-preview[data-type='idea']  { border-left-color: #fbbf24; }
+
+.vault-preview__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  gap: 0.5rem;
+}
+
+.vault-preview__type {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.vault-preview__parent {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.7rem;
+  color: #34d399;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.vault-preview__title {
+  font-size: 0.95rem;
+  line-height: 1.35;
+  word-break: break-word;
+  color: var(--color-text);
+}
+
+.vault-preview__body {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.vault-preview__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.proposal-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-panel-2, transparent);
+  border: 1px dashed var(--color-border);
+  border-radius: 0.5rem;
 }
 
 .proposal-row {
@@ -355,6 +424,17 @@
 
   .q-text { font-weight: 500; }
   .q-why { font-size: 0.7rem; color: var(--color-text-muted); margin-top: 0.15rem; }
+}
+
+.proposal-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono, monospace);
+  padding-top: 0.25rem;
+  border-top: 1px dashed var(--color-border);
 }
 
 .proposal-actions {
