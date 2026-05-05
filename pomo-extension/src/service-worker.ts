@@ -48,9 +48,6 @@ async function startSession(config: StoredConfig): Promise<ActiveSession> {
     headers: { ...authHeader(config), 'Content-Type': 'application/json' },
     body: JSON.stringify({
       planned_seconds: config.defaultDuration * 60,
-      project_id: null,
-      notes: null,
-      tags: [],
     }),
   });
   if (!res.ok) {
