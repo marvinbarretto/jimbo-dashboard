@@ -69,48 +69,60 @@ async function abandonSession(config: StoredConfig, id: string): Promise<void> {
 
 // ── Icon drawing ──────────────────────────────────────────────────────────────
 
-// Draws a red circle with optional white text — used as the action icon.
 // OffscreenCanvas is available in MV3 service workers (Chrome 109+).
-function makeIcon(label: string): ImageData {
-  const size = 32;
-  const canvas = new OffscreenCanvas(size, size);
-  const ctx = canvas.getContext('2d')!;
+// Wrapped in try/catch — if unavailable we fall back to badge text only.
+function tryMakeIcon(label: string): ImageData | null {
+  try {
+    const size = 32;
+    const canvas = new OffscreenCanvas(size, size);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
 
-  // Tomato red circle
-  ctx.fillStyle = '#c0392b';
-  ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-  ctx.fill();
+    // Tomato red circle
+    ctx.fillStyle = '#c0392b';
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.fill();
 
-  // Tiny green leaf nub at the top
-  ctx.fillStyle = '#27ae60';
-  ctx.beginPath();
-  ctx.ellipse(size / 2, 3, 4, 2.5, 0, 0, Math.PI * 2);
-  ctx.fill();
+    // Tiny green leaf nub at the top
+    ctx.fillStyle = '#27ae60';
+    ctx.beginPath();
+    ctx.ellipse(size / 2, 3, 4, 2.5, 0, 0, Math.PI * 2);
+    ctx.fill();
 
-  if (label) {
-    const fontSize = label.length > 2 ? 10 : 13;
-    ctx.fillStyle = 'white';
-    ctx.font = `bold ${fontSize}px system-ui, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(label, size / 2, size / 2 + 2);
+    if (label) {
+      const fontSize = label.length > 2 ? 10 : 13;
+      ctx.fillStyle = 'white';
+      ctx.font = `bold ${fontSize}px system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, size / 2, size / 2 + 2);
+    }
+
+    return ctx.getImageData(0, 0, size, size);
+  } catch {
+    return null;
   }
-
-  return ctx.getImageData(0, 0, size, size);
 }
 
-async function setIdleIcon(): Promise<void> {
-  chrome.action.setIcon({ imageData: makeIcon('') });
+function setIdleIcon(): void {
+  const imageData = tryMakeIcon('');
+  if (imageData) chrome.action.setIcon({ imageData });
   chrome.action.setTitle({ title: 'Jimbo Pomo — click to start' });
   chrome.action.setBadgeText({ text: '' });
 }
 
-async function setRunningIcon(remainingMins: number, remainingSecs: number): Promise<void> {
-  const label = remainingMins > 0 ? String(remainingMins) : String(remainingSecs) + 's';
-  chrome.action.setIcon({ imageData: makeIcon(label) });
+function setRunningIcon(remainingMins: number, remainingSecs: number): void {
+  const label = remainingMins > 0 ? String(remainingMins) : `${remainingSecs}s`;
+  const imageData = tryMakeIcon(label);
+  if (imageData) {
+    chrome.action.setIcon({ imageData });
+  } else {
+    // OffscreenCanvas unavailable — fall back to badge text
+    chrome.action.setBadgeText({ text: label });
+    chrome.action.setBadgeBackgroundColor({ color: '#c0392b' });
+  }
   chrome.action.setTitle({ title: `Jimbo Pomo — ${remainingMins}m remaining` });
-  chrome.action.setBadgeText({ text: '' });
 }
 
 // ── Tick / badge refresh ──────────────────────────────────────────────────────
@@ -145,30 +157,33 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 // ── Click — start or open pomo ────────────────────────────────────────────────
 
-chrome.action.onClicked.addListener(async () => {
+chrome.action.onClicked.addListener(() => {
+  handleClick().catch((err) => {
+    console.error('[pomo] onClicked error', err);
+    chrome.action.setTitle({ title: `Pomo error: ${String(err)}` });
+  });
+});
+
+async function handleClick(): Promise<void> {
   const config = await getConfig();
   if (!config) {
+    console.log('[pomo] no credentials — opening Options');
     chrome.runtime.openOptionsPage();
     return;
   }
 
   const active = await fetchActive(config);
-
   if (active) {
-    // Session already running — open /pomo to complete or abandon
+    console.log('[pomo] session running — opening /pomo');
     chrome.tabs.create({ url: `${API_BASE}/pomo` });
     return;
   }
 
-  try {
-    await startSession(config);
-    chrome.alarms.create(ALARM_NAME, { periodInMinutes: TICK_INTERVAL_MINUTES });
-    tick();
-  } catch (err) {
-    // Surface the error as the icon title — visible on hover
-    chrome.action.setTitle({ title: `Failed to start: ${String(err)}` });
-  }
-});
+  console.log('[pomo] starting session…');
+  await startSession(config);
+  chrome.alarms.create(ALARM_NAME, { periodInMinutes: TICK_INTERVAL_MINUTES });
+  tick();
+}
 
 // ── Context menu — abandon ────────────────────────────────────────────────────
 
