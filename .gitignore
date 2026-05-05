@@ -11,6 +11,9 @@
 # Node
 /node_modules
 /pomo-app/node_modules
+
+# Local prototypes and scratch files
+/prototypes/
 npm-debug.log
 yarn-error.log
 
