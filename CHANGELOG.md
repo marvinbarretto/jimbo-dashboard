@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.21](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.20...v0.0.21) (2026-05-05)
+
+
+### Features
+
+* **triage-tasks:** add Ask Jimbo button + proposal renderer ([ca6b661](https://github.com/marvinbarretto/jimbo-dashboard/commit/ca6b661333604e3c88708bfff51f55ed96af48b0))
+* **triage-tasks:** add modal triage view (50/50 desktop, tabs on mobile) ([8b23a1b](https://github.com/marvinbarretto/jimbo-dashboard/commit/8b23a1bb136b4f391c478c228ff1bd20139bab0c))
+* **triage-tasks:** add vault item preview card + token usage display ([cac1144](https://github.com/marvinbarretto/jimbo-dashboard/commit/cac1144c0bbcc0c02429ba05a2157330dfa82ee1))
+* **triage-tasks:** cache proposals + log operator decisions ([fce3bc1](https://github.com/marvinbarretto/jimbo-dashboard/commit/fce3bc17408b03ad47236c8220df7eeed1370948))
+* **triage-tasks:** mirror x-fetched url_fetch_status enum from server ([02cf7bc](https://github.com/marvinbarretto/jimbo-dashboard/commit/02cf7bc487a2e46ff8f9cd91fc3faf845aa8fb72))
+* **triage-tasks:** wire Promote / Discard / Skip to real endpoints ([2287cc1](https://github.com/marvinbarretto/jimbo-dashboard/commit/2287cc12ef5f66a40eabf2ed023037f92c5d8f1a))
+
+
+### Code Refactoring
+
+* **triage-tasks:** single-column modal with stacked sections ([31e5de7](https://github.com/marvinbarretto/jimbo-dashboard/commit/31e5de7a70819d536e1722070a20d1f38038a594))
+
 ### [0.0.20](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.19...v0.0.20) (2026-05-05)
 
 
