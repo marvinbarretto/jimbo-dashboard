@@ -82,9 +82,99 @@
                 }
               </div>
 
-              <div class="empty-thinking">
-                Nothing to say yet — I'll learn from this one.
-              </div>
+              @if (!proposal() && !proposalLoading() && !proposalError()) {
+                <div class="ask-jimbo">
+                  <app-ui-button variant="secondary" (pressed)="askJimbo()">Ask Jimbo →</app-ui-button>
+                  <div class="ask-jimbo-hint">
+                    Sync call to OpenRouter. Console logs every step.
+                  </div>
+                </div>
+              }
+
+              @if (proposalLoading()) {
+                <app-ui-loading-state message="Asking Jimbo…" />
+              }
+
+              @if (proposalError()) {
+                <div class="proposal-error">
+                  <strong>Error:</strong> {{ proposalError() }}
+                  <button type="button" class="retry-link" (click)="askJimbo()">Retry</button>
+                </div>
+              }
+
+              @if (proposal(); as p) {
+                <div class="proposal">
+                  <div class="proposal-row">
+                    <span class="proposal-label">Type</span>
+                    <span class="tag tag-type tag-{{ p.type }}">{{ p.type }}</span>
+                    @if (p.category) {
+                      <span class="tag tag-category">{{ p.category }}</span>
+                    }
+                  </div>
+
+                  @if (p.ai_priority !== null) {
+                    <div class="proposal-row">
+                      <span class="proposal-label">Priority</span>
+                      <span class="tag tag-priority">P{{ p.ai_priority }}</span>
+                      @if (p.priority_confidence !== null) {
+                        <span class="proposal-confidence">conf {{ p.priority_confidence }}</span>
+                      }
+                    </div>
+                  }
+
+                  @if (p.suggested_parent_id) {
+                    <div class="proposal-row">
+                      <span class="proposal-label">Parent</span>
+                      <span class="tag tag-parent">project:{{ p.suggested_parent_id }}</span>
+                    </div>
+                  }
+
+                  @if (p.suggested_agent_type) {
+                    <div class="proposal-row">
+                      <span class="proposal-label">Agent</span>
+                      <span class="tag tag-agent">{{ p.suggested_agent_type }}</span>
+                    </div>
+                  }
+
+                  @if (p.tags.length) {
+                    <div class="proposal-row">
+                      <span class="proposal-label">Tags</span>
+                      <span class="tag-list">
+                        @for (t of p.tags; track t) {
+                          <span class="tag tag-soft">{{ t }}</span>
+                        }
+                      </span>
+                    </div>
+                  }
+
+                  <div class="proposal-rationale">{{ p.ai_rationale }}</div>
+
+                  @if (p.questions.length) {
+                    <div class="proposal-questions">
+                      <div class="proposal-label">Jimbo asks</div>
+                      <ul>
+                        @for (q of p.questions; track q.q) {
+                          <li>
+                            <div class="q-text">{{ q.q }}</div>
+                            <div class="q-why">why: {{ q.why }}</div>
+                          </li>
+                        }
+                      </ul>
+                    </div>
+                  }
+
+                  <div class="proposal-actions">
+                    <app-ui-button variant="secondary" (pressed)="askJimbo()">↻ Re-ask</app-ui-button>
+                    <button type="button" class="debug-toggle" (click)="toggleDebug()">
+                      {{ debugOpen() ? '▾' : '▸' }} debug
+                    </button>
+                  </div>
+
+                  @if (debugOpen() && proposalDebug(); as d) {
+                    <pre class="proposal-debug">{{ d | json }}</pre>
+                  }
+                </div>
+              }
             </section>
 
             <section class="pane pane-you" [class.hidden-mobile]="mobileTab() !== 'you'">

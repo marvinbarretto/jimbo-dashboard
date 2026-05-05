@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface InboxTask {
@@ -13,6 +14,37 @@ export interface InboxTask {
   listTitle: string;
 }
 
+export interface TriageProposal {
+  type: 'task' | 'note' | 'idea';
+  category: string | null;
+  ai_priority: number | null;
+  priority_confidence: number | null;
+  tags: string[];
+  suggested_parent_id: string | null;
+  suggested_agent_type: string | null;
+  ai_rationale: string;
+  questions: Array<{ q: string; why: string }>;
+}
+
+export interface TriageDebug {
+  skill_version: string | null;
+  model: string;
+  url_detected: string | null;
+  url_kind: 'x' | 'generic' | 'none';
+  url_fetch_status: 'fetched' | 'skipped-x-no-creds' | 'fetch-failed' | 'no-url';
+  url_fetch_summary: string | null;
+  prompt_chars: number;
+  raw_response_chars: number;
+  parse_ok: boolean;
+  latency_ms: number;
+  raw_response: string;
+}
+
+export interface TriageNowResult {
+  proposal: TriageProposal | null;
+  debug: TriageDebug;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TriageTasksService {
   private readonly http = inject(HttpClient);
@@ -21,6 +53,15 @@ export class TriageTasksService {
   readonly tasks = signal<InboxTask[] | undefined>(undefined);
   readonly error = signal<string | null>(null);
   readonly loading = signal(false);
+
+  triageNow(listId: string, taskId: string, userContext: string): Observable<TriageNowResult> {
+    console.log('[TriageTasks] triageNow ->', { listId, taskId, userContextLen: userContext.length });
+    return this.http.post<TriageNowResult>(`${this.base}/api/google-tasks/triage-now`, {
+      listId,
+      taskId,
+      user_context: userContext,
+    });
+  }
 
   load(): void {
     this.loading.set(true);

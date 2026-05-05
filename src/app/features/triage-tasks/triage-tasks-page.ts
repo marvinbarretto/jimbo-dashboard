@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, HostListener, inject, signal } from '@angular/core';
+import { JsonPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ModalShell } from '@shared/components/modal-shell/modal-shell';
 import { UiButton } from '@shared/components/ui-button/ui-button';
@@ -7,7 +8,7 @@ import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-s
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
-import { TriageTasksService, type InboxTask } from './triage-tasks.service';
+import { TriageTasksService, type InboxTask, type TriageDebug, type TriageProposal } from './triage-tasks.service';
 
 interface TaskRow {
   readonly task: InboxTask;
@@ -19,6 +20,7 @@ type MobileTab = 'jimbo' | 'you';
 @Component({
   selector: 'app-triage-tasks-page',
   imports: [
+    JsonPipe,
     RouterLink,
     ModalShell,
     UiButton,
@@ -38,6 +40,13 @@ export class TriageTasksPage {
   protected readonly selectedTask = signal<InboxTask | null>(null);
   protected readonly mobileTab = signal<MobileTab>('jimbo');
   protected readonly userContext = signal('');
+
+  // Jimbo's view state
+  protected readonly proposal = signal<TriageProposal | null>(null);
+  protected readonly proposalDebug = signal<TriageDebug | null>(null);
+  protected readonly proposalLoading = signal(false);
+  protected readonly proposalError = signal<string | null>(null);
+  protected readonly debugOpen = signal(false);
 
   protected readonly rows = computed<TaskRow[] | undefined>(() => {
     const tasks = this.service.tasks();
@@ -61,13 +70,67 @@ export class TriageTasksPage {
   }
 
   protected openTask(task: InboxTask): void {
+    console.log('[triage] openTask', task.id, task.title);
     this.selectedTask.set(task);
     this.mobileTab.set('jimbo');
     this.userContext.set('');
+    this.resetProposalState();
   }
 
   protected closeModal(): void {
+    console.log('[triage] closeModal');
     this.selectedTask.set(null);
+    this.resetProposalState();
+  }
+
+  private resetProposalState(): void {
+    this.proposal.set(null);
+    this.proposalDebug.set(null);
+    this.proposalError.set(null);
+    this.proposalLoading.set(false);
+    this.debugOpen.set(false);
+  }
+
+  protected askJimbo(): void {
+    const task = this.selectedTask();
+    if (!task) {
+      console.warn('[triage] askJimbo with no selected task');
+      return;
+    }
+    const ctx = this.userContext();
+    console.log('[triage] askJimbo START', { taskId: task.id, listId: task.listId, ctxLen: ctx.length });
+    this.proposalLoading.set(true);
+    this.proposalError.set(null);
+    this.proposal.set(null);
+    this.proposalDebug.set(null);
+
+    const t0 = performance.now();
+    this.service.triageNow(task.listId, task.id, ctx).subscribe({
+      next: result => {
+        const elapsed = Math.round(performance.now() - t0);
+        console.log(`[triage] askJimbo OK in ${elapsed}ms`);
+        console.log('[triage] proposal:', result.proposal);
+        console.log('[triage] debug:', result.debug);
+        this.proposal.set(result.proposal);
+        this.proposalDebug.set(result.debug);
+        this.proposalLoading.set(false);
+        if (!result.proposal) {
+          this.proposalError.set('Model returned text we could not parse as JSON. See debug → raw_response.');
+          this.debugOpen.set(true);
+        }
+      },
+      error: err => {
+        const elapsed = Math.round(performance.now() - t0);
+        console.error(`[triage] askJimbo FAILED in ${elapsed}ms`, err);
+        const msg = err?.error?.error?.message ?? err?.error?.message ?? err?.message ?? 'Request failed';
+        this.proposalError.set(msg);
+        this.proposalLoading.set(false);
+      },
+    });
+  }
+
+  protected toggleDebug(): void {
+    this.debugOpen.update(v => !v);
   }
 
   protected onContextInput(value: string): void {
