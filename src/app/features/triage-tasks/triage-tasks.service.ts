@@ -50,6 +50,20 @@ export interface TriageNowResult {
   debug: TriageDebug;
 }
 
+export type TriageNowCachedResult =
+  | {
+      cached: true;
+      proposal: TriageProposal | null;
+      debug: TriageDebug;
+      skill_version: string | null;
+      created_at: string;
+    }
+  | {
+      cached: false;
+      reason: 'miss' | 'stale';
+      stored_skill_version?: string | null;
+    };
+
 @Injectable({ providedIn: 'root' })
 export class TriageTasksService {
   private readonly http = inject(HttpClient);
@@ -68,9 +82,8 @@ export class TriageTasksService {
     });
   }
 
-  getCachedProposal(listId: string, taskId: string): Observable<TriageNowResult> {
-    console.log('[TriageTasks] getCachedProposal ->', { listId, taskId });
-    return this.http.get<TriageNowResult>(`${this.base}/api/google-tasks/triage-now/cached`, {
+  getCachedProposal(listId: string, taskId: string): Observable<TriageNowCachedResult> {
+    return this.http.get<TriageNowCachedResult>(`${this.base}/api/google-tasks/triage-now/cached`, {
       params: { listId, taskId },
     });
   }

@@ -91,20 +91,21 @@ export class TriageTasksPage {
         const elapsed = Math.round(performance.now() - t0);
         // Bail if the user already moved on to another task or closed the modal.
         if (this.selectedTask()?.id !== task.id) return;
-        console.log(`[triage] cache HIT in ${elapsed}ms`, { skill_version: result.debug.skill_version });
-        this.proposal.set(result.proposal);
-        this.proposalDebug.set(result.debug);
-        this.proposalFromCache.set(true);
+        if (result.cached) {
+          console.info(`%c[triage] cache HIT (${elapsed}ms) — skill v${result.skill_version ?? '?'} · cached ${result.created_at}`, 'color:#6c6');
+          this.proposal.set(result.proposal);
+          this.proposalDebug.set(result.debug);
+          this.proposalFromCache.set(true);
+        } else if (result.reason === 'stale') {
+          console.info(`%c[triage] cache STALE (${elapsed}ms) — stored v${result.stored_skill_version ?? '?'} ≠ current skill; Ask Jimbo to refresh`, 'color:#c96');
+        } else {
+          console.info(`%c[triage] cache MISS (${elapsed}ms) — first time triaging this task`, 'color:#999');
+        }
         this.cacheChecking.set(false);
       },
       error: err => {
         if (this.selectedTask()?.id !== task.id) return;
-        const status = (err as { status?: number })?.status;
-        if (status === 404) {
-          console.log('[triage] cache MISS — Ask Jimbo affordance shown');
-        } else {
-          console.warn('[triage] cache lookup failed (non-fatal)', err);
-        }
+        console.warn('[triage] cache lookup failed (non-fatal — falling back to Ask Jimbo)', err);
         this.cacheChecking.set(false);
       },
     });
