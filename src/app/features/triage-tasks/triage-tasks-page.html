@@ -218,9 +218,20 @@
         </div>
 
         <footer modal-footer class="triage-actions">
-          <app-ui-button variant="secondary" (pressed)="skip()">Skip for now</app-ui-button>
-          <app-ui-button variant="danger" (pressed)="discard()">Discard</app-ui-button>
-          <app-ui-button variant="primary" (pressed)="promote()">Promote to Vault Item →</app-ui-button>
+          @if (actionError()) {
+            <div class="action-error">
+              <strong>Failed:</strong> {{ actionError() }}
+            </div>
+          }
+          <div class="triage-actions-row">
+            <app-ui-button variant="secondary" [disabled]="actionLoading()" (pressed)="skip()">Skip for now</app-ui-button>
+            <app-ui-button variant="danger" [disabled]="actionLoading()" (pressed)="discard()">
+              {{ actionLoading() ? 'Working…' : 'Discard' }}
+            </app-ui-button>
+            <app-ui-button variant="primary" [disabled]="actionLoading()" (pressed)="promote()">
+              {{ actionLoading() ? 'Working…' : 'Promote to Vault Item →' }}
+            </app-ui-button>
+          </div>
         </footer>
       </app-modal-shell>
     </div>

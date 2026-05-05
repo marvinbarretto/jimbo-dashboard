@@ -46,13 +46,19 @@ export class TriageTasksPage {
   protected readonly debugOpen = signal(false);
   protected readonly detailsOpen = signal(false);
 
+  // Action state
+  protected readonly actionLoading = signal(false);
+  protected readonly actionError = signal<string | null>(null);
+  // Tasks the operator has skipped this session (hidden but not deleted)
+  protected readonly skippedIds = signal<ReadonlySet<string>>(new Set());
+
   protected readonly rows = computed<TaskRow[] | undefined>(() => {
     const tasks = this.service.tasks();
     if (tasks === undefined) return undefined;
-    return tasks.map(task => ({
-      task,
-      isUrl: looksLikeUrl(task.title),
-    }));
+    const skipped = this.skippedIds();
+    return tasks
+      .filter(t => !skipped.has(t.id))
+      .map(task => ({ task, isUrl: looksLikeUrl(task.title) }));
   });
 
   constructor() {
@@ -86,6 +92,8 @@ export class TriageTasksPage {
     this.proposalError.set(null);
     this.proposalLoading.set(false);
     this.debugOpen.set(false);
+    this.actionLoading.set(false);
+    this.actionError.set(null);
   }
 
   protected askJimbo(): void {
@@ -137,18 +145,89 @@ export class TriageTasksPage {
     this.userContext.set(value);
   }
 
-  // No-op stubs — wire to real endpoints in the next iteration.
-  protected discard(): void {
-    console.log('[triage] discard', this.selectedTask()?.id, 'context:', this.userContext());
-    this.closeModal();
-  }
   protected skip(): void {
-    console.log('[triage] skip', this.selectedTask()?.id);
+    const task = this.selectedTask();
+    if (!task) return;
+    console.log('[triage] skip', task.id, task.title);
+    this.skippedIds.update(s => {
+      const next = new Set(s);
+      next.add(task.id);
+      return next;
+    });
     this.closeModal();
   }
+
+  protected discard(): void {
+    const task = this.selectedTask();
+    if (!task) return;
+    if (!confirm(`Discard "${task.title.slice(0, 80)}"?\n\nThis will delete the Google Task. Cannot be undone from here.`)) {
+      console.log('[triage] discard cancelled by user');
+      return;
+    }
+    console.log('[triage] discard START', task.id, task.title);
+    this.actionLoading.set(true);
+    this.actionError.set(null);
+
+    const t0 = performance.now();
+    this.service.deleteTask(task.listId, task.id).subscribe({
+      next: r => {
+        console.log(`[triage] discard OK in ${Math.round(performance.now() - t0)}ms`, r);
+        this.service.removeFromCache(task.id);
+        this.actionLoading.set(false);
+        this.closeModal();
+      },
+      error: err => {
+        console.error(`[triage] discard FAILED in ${Math.round(performance.now() - t0)}ms`, err);
+        this.actionError.set(this.formatError(err));
+        this.actionLoading.set(false);
+      },
+    });
+  }
+
   protected promote(): void {
-    console.log('[triage] promote', this.selectedTask()?.id, 'context:', this.userContext());
-    this.closeModal();
+    const task = this.selectedTask();
+    if (!task) return;
+    const ctx = this.userContext().trim();
+    const proposal = this.proposal();
+
+    // Body: combine task notes + operator context if either present.
+    const bodyParts: string[] = [];
+    if (task.notes) bodyParts.push(task.notes);
+    if (ctx) bodyParts.push(`---\nContext: ${ctx}`);
+    const body = bodyParts.join('\n\n');
+
+    const payload = {
+      taskId: task.id,
+      listId: task.listId,
+      title: task.title,
+      ...(body && { body }),
+      ...(proposal?.type && { type: proposal.type }),
+      ...(proposal?.tags.length && { tags: proposal.tags.join(',') }),
+    };
+
+    console.log('[triage] promote START', { taskId: task.id, hasProposal: !!proposal, payload });
+    this.actionLoading.set(true);
+    this.actionError.set(null);
+
+    const t0 = performance.now();
+    this.service.commit(payload).subscribe({
+      next: r => {
+        console.log(`[triage] promote OK in ${Math.round(performance.now() - t0)}ms`, r);
+        this.service.removeFromCache(task.id);
+        this.actionLoading.set(false);
+        this.closeModal();
+      },
+      error: err => {
+        console.error(`[triage] promote FAILED in ${Math.round(performance.now() - t0)}ms`, err);
+        this.actionError.set(this.formatError(err));
+        this.actionLoading.set(false);
+      },
+    });
+  }
+
+  private formatError(err: unknown): string {
+    const e = err as { error?: { error?: { message?: string }; message?: string }; message?: string };
+    return e?.error?.error?.message ?? e?.error?.message ?? e?.message ?? 'Request failed';
   }
 
   @HostListener('document:keydown.escape')

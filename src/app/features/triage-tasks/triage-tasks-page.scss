@@ -458,11 +458,26 @@
 
 .triage-actions {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
   gap: 0.5rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--color-border);
+}
+
+.triage-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+.action-error {
+  font-size: 0.8rem;
+  color: var(--color-danger, #ef4444);
+  padding: 0.4rem 0.6rem;
+  background: color-mix(in srgb, var(--color-danger, #ef4444) 10%, transparent);
+  border: 1px solid var(--color-danger, #ef4444);
+  border-radius: 0.375rem;
 }
 
 .list-tag {
@@ -480,10 +495,10 @@
     border-radius: 0;
     border: none;
   }
-  .triage-actions {
+  .triage-actions-row {
     flex-direction: column;
   }
-  .triage-actions app-ui-button {
+  .triage-actions-row app-ui-button {
     width: 100%;
   }
 }

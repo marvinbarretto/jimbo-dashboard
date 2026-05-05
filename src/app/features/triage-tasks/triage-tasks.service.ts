@@ -68,6 +68,34 @@ export class TriageTasksService {
     });
   }
 
+  commit(payload: {
+    taskId: string;
+    listId: string;
+    title: string;
+    body?: string;
+    type?: string;
+    tags?: string;
+  }): Observable<{ vaultNoteId: string; googleTaskDeleted: boolean }> {
+    console.log('[TriageTasks] commit ->', { taskId: payload.taskId, type: payload.type, tagsLen: payload.tags?.length ?? 0 });
+    return this.http.post<{ vaultNoteId: string; googleTaskDeleted: boolean }>(
+      `${this.base}/api/google-tasks/commit`,
+      payload,
+    );
+  }
+
+  deleteTask(listId: string, taskId: string): Observable<{ googleTaskDeleted: boolean }> {
+    console.log('[TriageTasks] deleteTask ->', { listId, taskId });
+    return this.http.request<{ googleTaskDeleted: boolean }>(
+      'DELETE',
+      `${this.base}/api/google-tasks/tasks`,
+      { body: { listId, taskId } },
+    );
+  }
+
+  removeFromCache(taskId: string): void {
+    this.tasks.update(tasks => tasks?.filter(t => t.id !== taskId));
+  }
+
   load(): void {
     this.loading.set(true);
     this.error.set(null);
