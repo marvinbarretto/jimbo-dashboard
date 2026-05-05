@@ -386,6 +386,7 @@ function renderRetrospective(s: FocusSession): HTMLElement {
       dropdown.replaceChildren(
         ...fresh.map(n => {
           const li = el('li', { class: 'pomo__vault-result' }, [
+            n.seq != null ? el('span', { class: 'pomo__vault-result-seq' }, [`#${n.seq}`]) : '',
             el('span', { class: 'pomo__vault-result-title' }, [n.title]),
             el('span', { class: 'pomo__vault-result-meta' }, [n.type]),
           ]);
