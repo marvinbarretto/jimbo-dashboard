@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.24](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.23...v0.0.24) (2026-05-05)
+
+
+### Features
+
+* **projects:** three-tier portfolio page with major/minor/epics ([abc276e](https://github.com/marvinbarretto/jimbo-dashboard/commit/abc276ef0e9bc2d55d1822283c166a778d1defe3))
+
 ### [0.0.23](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.22...v0.0.23) (2026-05-05)
 
 
