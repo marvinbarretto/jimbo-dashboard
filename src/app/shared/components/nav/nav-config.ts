@@ -12,12 +12,13 @@ export interface NavGroup {
 }
 
 export const primaryNavItems: readonly NavLink[] = [
-  { href: '/ui-lab',                label: 'UI Lab',       accent: '#a78bfa' },
-  { href: '/pomo-reports',          label: 'Pomo reports', accent: '#fb923c' },
-  { href: '/calendar-settings',     label: 'Calendars',    accent: '#34d399' },
-  { href: '/google-tasks-settings', label: 'Tasks',        accent: '#60a5fa' },
-  { href: '/triage-tasks',          label: 'Triage',       accent: '#fbbf24' },
-  { href: '/shopping',              label: 'Shopping',     accent: '#4ade80' },
+  { href: '/ui-lab',                label: 'UI Lab',         accent: '#a78bfa' },
+  { href: '/pomo-reports',          label: 'Pomo reports',   accent: '#fb923c' },
+  { href: '/calendar-settings',     label: 'Calendars',      accent: '#34d399' },
+  { href: '/google-tasks-settings', label: 'Tasks',          accent: '#60a5fa' },
+  { href: '/triage-tasks',          label: 'Triage',         accent: '#fbbf24' },
+  { href: '/shopping',              label: 'Shopping',       accent: '#4ade80' },
+  { href: '/jimbo-workspace',       label: 'Jimbo Workspace', accent: '#f472b6' },
 ];
 
 export const navGroups: readonly NavGroup[] = [
@@ -26,6 +27,7 @@ export const navGroups: readonly NavGroup[] = [
     label: 'Archive',
     paths: [
       'today', 'shopping', 'mail-next', 'briefings', 'calendar-settings', 'google-tasks-settings', 'triage-tasks',
+      'jimbo-workspace',
       'projects', 'grooming', 'execution', 'vault-items', 'questions', 'activity',
       'actors', 'skills', 'models', 'model-stacks', 'context', 'coach', 'interrogate',
       'hermes', 'ops', 'triage', 'stream', 'coverage', 'grooming-admin', 'pomo-reports',

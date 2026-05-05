@@ -100,5 +100,9 @@ export const routes: Routes = [
     title: 'Triage tasks',
     loadComponent: () => import('./features/triage-tasks/triage-tasks-page').then(m => m.TriageTasksPage),
   },
+  {
+    path: 'jimbo-workspace',
+    loadChildren: () => import('./features/jimbo-workspace/jimbo-workspace.routes').then(m => m.jimboWorkspaceRoutes),
+  },
   { path: '', redirectTo: 'today', pathMatch: 'full' },
 ];
