@@ -95,5 +95,10 @@ export const routes: Routes = [
     title: 'Google Tasks settings',
     loadComponent: () => import('./features/google-tasks-settings/google-tasks-settings-page').then(m => m.GoogleTasksSettingsPage),
   },
+  {
+    path: 'triage-tasks',
+    title: 'Triage tasks',
+    loadComponent: () => import('./features/triage-tasks/triage-tasks-page').then(m => m.TriageTasksPage),
+  },
   { path: '', redirectTo: 'today', pathMatch: 'full' },
 ];

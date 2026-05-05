@@ -1,7 +1,4 @@
-// Reads + mutates shopping items via dashboard-api at /dashboard-api/api/shopping
-// (jimbo_pg-backed via Drizzle). The same table is also exposed to the Hermes
-// agent through jimbo-api on port 3100; both APIs are thin wrappers over the
-// shoppingItems Drizzle schema.
+// Reads + mutates shopping items via jimbo-api at /api/shopping (postgres-backed).
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -50,8 +47,8 @@ export class ShoppingService {
 
   load(filter: 'active' | 'bought' | 'all' = 'all'): void {
     this._loading.set(true);
-    this.http.get<{ items: ShoppingItem[] }>(`${this.url}?status=${filter}`).subscribe({
-      next: ({ items }) => { this._items.set(items); this._loading.set(false); },
+    this.http.get<ShoppingItem[]>(`${this.url}?status=${filter}`).subscribe({
+      next: (items) => { this._items.set(items); this._loading.set(false); },
       error: ()         => { this._loading.set(false); this.toast.error('Failed to load shopping list'); },
     });
   }

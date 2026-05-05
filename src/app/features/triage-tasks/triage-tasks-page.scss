@@ -1,0 +1,57 @@
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.task-row {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.task-title {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  word-break: break-word;
+  color: var(--color-text);
+}
+
+.task-row.url .task-title {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.85rem;
+}
+
+.task-meta {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.zero {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--color-text-muted);
+}
+
+.zero h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  color: var(--color-text);
+}
+
+.zero p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.refresh-row {
+  display: flex;
+  justify-content: flex-end;
+}
