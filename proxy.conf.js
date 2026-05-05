@@ -1,31 +1,35 @@
 // Angular dev proxy.
 //
-// All /api/* and /stream/* → LOCAL jimbo-api on :3100. Run `npm run dev:api`
-// in another terminal.
+// Targets production jimbo-api via Caddy (https://jimbo.fourfoldmedia.uk).
+// Run `npm run dev` (not `npm start`) — dev.sh fetches DASHBOARD_BASIC_AUTH
+// from the VPS and exports it before ng serve starts. Caddy validates the
+// basic-auth credential and injects X-API-Key when forwarding to jimbo-api.
 //
-// You ARE talking to prod data when running locally. Same blast radius
-// as the production dashboard. Sole-operator setup.
+// You ARE talking to production data. Same blast radius as the deployed UI.
 
 require('dotenv').config();
 
-const apiKey = process.env.JIMBO_API_KEY;
-if (!apiKey) console.warn('[proxy] JIMBO_API_KEY not set — API requests will fail auth');
+const basicAuth = process.env.DASHBOARD_BASIC_AUTH;
+if (!basicAuth) console.warn('[proxy] DASHBOARD_BASIC_AUTH not set — run via `npm run dev`, not `npm start`');
+
+const authHeader = basicAuth ? 'Basic ' + Buffer.from(basicAuth).toString('base64') : '';
+
+const target = 'https://jimbo.fourfoldmedia.uk';
+const headers = authHeader ? { Authorization: authHeader } : {};
 
 module.exports = [
   {
-    // SSE stream → local jimbo-api.
     context: ['/stream'],
-    target: 'http://localhost:3100',
-    secure: false,
+    target,
+    secure: true,
     changeOrigin: true,
-    headers: { 'X-API-Key': apiKey ?? '' },
+    headers,
   },
   {
-    // All API calls → local jimbo-api.
     context: ['/api'],
-    target: 'http://localhost:3100',
-    secure: false,
+    target,
+    secure: true,
     changeOrigin: true,
-    headers: { 'X-API-Key': apiKey ?? '' },
+    headers,
   },
 ];
