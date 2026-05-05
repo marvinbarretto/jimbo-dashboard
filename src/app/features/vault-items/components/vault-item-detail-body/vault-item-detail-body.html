@@ -1,7 +1,10 @@
 @if (item(); as item) {
   <div class="vault-item-detail">
 
-    <app-vault-item-identity-header [item]="item" />
+    <app-vault-item-identity-header
+      [item]="item"
+      (titleChange)="onTitleChange($event)"
+    />
 
     <div class="vault-item-detail__zone2">
       <app-vault-item-status-chips
@@ -64,6 +67,8 @@
         <app-vault-item-intake-block
           [body]="item.body"
           [createdAt]="item.created_at"
+          [editable]="isManual()"
+          (bodyChange)="onBodyChange($event)"
         />
 
         <app-vault-item-delivery-block

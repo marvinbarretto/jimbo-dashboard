@@ -21,7 +21,7 @@ import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
 import { BoardCreateBar } from '@shared/components/board-create-bar/board-create-bar';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
-import { withVaultDetailModal } from '@shared/kanban/detail-modal';
+import { withVaultDetailModal, swapDetailSeq } from '@shared/kanban/detail-modal';
 import { isActive, type VaultItem } from '@domain/vault';
 
 const SKILL    = 'skill';
@@ -189,13 +189,14 @@ export class ExecutionBoard {
     ).sort((a, b) => b.created_at.localeCompare(a.created_at)),
   );
 
-  onCreateManualItem(title: string): void {
-    this.vaultItemsService.createOnBoard({
-      title,
-      type: 'task',
-      grooming_status: 'ready',
-      manual_priority: 0,
-    });
+  // Placeholder title; operator fills the rest in-place via the detail dialog
+  // that pops open as soon as the server confirms the seq.
+  onCreateManualItem(): void {
+    const title = `Untitled · ${new Date().toLocaleString()}`;
+    this.vaultItemsService.createOnBoard(
+      { title, type: 'task', grooming_status: 'ready', manual_priority: 0 },
+      (item) => swapDetailSeq(this.router, item.seq),
+    );
   }
 
   onCompleteManualItem(item: VaultItem): void {

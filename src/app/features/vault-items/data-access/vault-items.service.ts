@@ -70,7 +70,7 @@ export class VaultItemsService {
     type?: 'task' | 'note' | 'bookmark';
     grooming_status?: GroomingStatus;
     manual_priority?: Priority;
-  }): void {
+  }, onCreated?: (item: VaultItem) => void): void {
     const trimmed = input.title.trim();
     if (!trimmed) return;
     const now = new Date().toISOString();
@@ -113,10 +113,12 @@ export class VaultItemsService {
       next: (note) => {
         const realId = vaultItemId(note.id);
         const realSeq = Number(note.seq);
-        this._items.update(items => items.map(i => i.id === tempId
-          ? { ...optimistic, id: realId, seq: realSeq }
-          : i));
+        const real: VaultItem = { ...optimistic, id: realId, seq: realSeq };
+        this._items.update(items => items.map(i => i.id === tempId ? real : i));
         this.toast.success(`"${trimmed}" created · #${realSeq}`);
+        // Caller (typically a board) gets the real seq so it can deep-link
+        // straight into the detail dialog for in-place editing.
+        onCreated?.(real);
 
         // CreateNoteBody doesn't accept grooming_status or assigned_to overrides
         // for board-driven flows — the server defaults to ungroomed/jimbo. PATCH

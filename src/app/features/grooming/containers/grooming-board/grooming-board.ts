@@ -33,7 +33,7 @@ import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/co
 import { BoardCreateBar } from '@shared/components/board-create-bar/board-create-bar';
 import { createKanbanDragState } from '@shared/kanban/drag-state';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
-import { withVaultDetailModal } from '@shared/kanban/detail-modal';
+import { withVaultDetailModal, swapDetailSeq } from '@shared/kanban/detail-modal';
 import { isSeedMode } from '@shared/seed-mode';
 
 // "Unassigned" is its own filter token alongside actor IDs. Using a sentinel string
@@ -470,9 +470,14 @@ export class GroomingBoard {
     this.vaultItemsService.archive(item.id);
   }
 
-  // New tasks land in the Ungroomed column and follow the standard pipeline.
-  onCreateTask(title: string): void {
-    this.vaultItemsService.createOnBoard({ title, type: 'task', grooming_status: 'ungroomed' });
+  // New tasks land in the Ungroomed column with a placeholder title; the
+  // detail dialog opens so the operator fills in title/body/priority in-place.
+  onCreateTask(): void {
+    const title = `Untitled · ${new Date().toLocaleString()}`;
+    this.vaultItemsService.createOnBoard(
+      { title, type: 'task', grooming_status: 'ungroomed' },
+      (item) => swapDetailSeq(this.router, item.seq),
+    );
   }
 
   onAssignItem(item: VaultItem, actor: ActorId): void {

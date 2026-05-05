@@ -96,6 +96,22 @@ export class VaultItemDetailBody {
 
   readonly isGitHubItem = computed(() => this.item()?.source?.kind === 'github');
 
+  // Manual-source items are operator-tracked; their body is a working scratchpad
+  // the operator should be able to edit. Ingested items keep audit immutability.
+  readonly isManual = computed(() => this.item()?.source?.kind === 'manual');
+
+  onTitleChange(next: string): void {
+    const i = this.item();
+    if (!i) return;
+    this.vaultItemsService.update(i.id, { title: next });
+  }
+
+  onBodyChange(next: string): void {
+    const i = this.item();
+    if (!i) return;
+    this.vaultItemsService.update(i.id, { body: next });
+  }
+
   readonly junctionProjects = computed(() => {
     const i = this.item();
     if (!i) return [];
