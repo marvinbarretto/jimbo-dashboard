@@ -168,7 +168,7 @@
                   @if (p.suggested_parent_id) {
                     <div class="proposal-row">
                       <span class="proposal-label">Parent</span>
-                      <span class="tag tag-parent">project:{{ p.suggested_parent_id }}</span>
+                      <span class="tag tag-parent">project:{{ p.suggested_parent_id | projectLabel:service.activeProjects() }}</span>
                     </div>
                   }
                   @if (p.suggested_agent_type) {
@@ -181,7 +181,7 @@
                     <span class="proposal-label">Tags</span>
                     <span class="tag-list">
                       @for (t of p.tags; track t) {
-                        <span class="tag tag-soft">{{ t }}</span>
+                        <span class="tag tag-soft">{{ t | formatTag:service.activeProjects() }}</span>
                       }
                     </span>
                   </div>
@@ -204,7 +204,7 @@
                     {{ p.type }}@if (p.category) { · {{ p.category }} }
                   </span>
                   @if (p.suggested_parent_id) {
-                    <span class="vault-preview__parent">project:{{ p.suggested_parent_id }}</span>
+                    <span class="vault-preview__parent">project:{{ p.suggested_parent_id | projectLabel:service.activeProjects() }}</span>
                   }
                 </header>
                 <div class="vault-preview__title">{{ task.title }}</div>
@@ -214,7 +214,7 @@
                 @if (p.tags.length) {
                   <div class="vault-preview__tags">
                     @for (t of p.tags; track t) {
-                      <span class="tag tag-soft">{{ t }}</span>
+                      <span class="tag tag-soft">{{ t | formatTag:service.activeProjects() }}</span>
                     }
                   </div>
                 }

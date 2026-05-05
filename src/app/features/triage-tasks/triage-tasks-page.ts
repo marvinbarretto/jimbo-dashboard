@@ -7,6 +7,8 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
+import { FormatTagPipe } from '@shared/pipes/format-tag.pipe';
+import { ProjectLabelPipe } from '@shared/pipes/project-label.pipe';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { TriageTasksService, type InboxTask, type TriageDebug, type TriageProposal } from './triage-tasks.service';
 
@@ -26,6 +28,8 @@ interface TaskRow {
     UiLoadingState,
     UiPageHeader,
     UiStack,
+    FormatTagPipe,
+    ProjectLabelPipe,
     RelativeTimePipe,
   ],
   templateUrl: './triage-tasks-page.html',

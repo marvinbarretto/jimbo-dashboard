@@ -73,6 +73,33 @@ export class TriageTasksService {
   readonly error = signal<string | null>(null);
   readonly loading = signal(false);
 
+  // id (string) → human label, e.g. "4" → "Jimbo/Hermes". Built once from the
+  // priorities context file's "Active Projects" section so the modal can
+  // render `project:Jimbo/Hermes` instead of the raw `project:4` the LLM emits.
+  readonly activeProjects = signal<Map<string, string>>(new Map());
+
+  constructor() {
+    this.loadActiveProjects();
+  }
+
+  private loadActiveProjects(): void {
+    type ContextFile = {
+      sections?: Array<{ name: string; items?: Array<{ id: number; label: string }> }>;
+    };
+    this.http.get<ContextFile>(`${this.base}/api/context/files/priorities`).subscribe({
+      next: file => {
+        const section = file.sections?.find(s => s.name === 'Active Projects');
+        const map = new Map<string, string>();
+        for (const item of section?.items ?? []) {
+          map.set(String(item.id), item.label);
+        }
+        console.log(`[TriageTasks] active projects loaded: ${map.size}`);
+        this.activeProjects.set(map);
+      },
+      error: e => console.warn('[TriageTasks] active projects load failed (non-fatal)', e),
+    });
+  }
+
   triageNow(listId: string, taskId: string, userContext: string): Observable<TriageNowResult> {
     console.log('[TriageTasks] triageNow ->', { listId, taskId, userContextLen: userContext.length });
     return this.http.post<TriageNowResult>(`${this.base}/api/google-tasks/triage-now`, {
