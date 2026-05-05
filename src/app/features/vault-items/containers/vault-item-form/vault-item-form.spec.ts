@@ -15,7 +15,9 @@ describe('VaultItemForm — submit boundary parsing', () => {
       imports: [VaultItemForm],
       providers: [
         provideZonelessChangeDetection(),
-        provideRouter([]),
+        // submit() navigates to /vault-items[/seq]; wildcard route absorbs that
+        // so the navigation promise resolves instead of rejecting with NG04002.
+        provideRouter([{ path: '**', children: [] }]),
         provideHttpClient(),
         provideHttpClientTesting(),
       ],
