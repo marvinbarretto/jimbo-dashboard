@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
@@ -6,16 +7,17 @@ import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-s
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
-import { TriageTasksService, type GoogleTask } from './triage-tasks.service';
+import { TriageTasksService, type InboxTask } from './triage-tasks.service';
 
 interface TaskRow {
-  readonly task: GoogleTask;
+  readonly task: InboxTask;
   readonly isUrl: boolean;
 }
 
 @Component({
   selector: 'app-triage-tasks-page',
   imports: [
+    RouterLink,
     UiBackLink,
     UiButton,
     UiEmptyState,

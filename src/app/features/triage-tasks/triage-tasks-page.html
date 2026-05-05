@@ -3,8 +3,8 @@
     <app-ui-back-link uiPageHeaderLead [to]="['/today']">← Today</app-ui-back-link>
     <h1 uiPageHeaderTitle>Triage tasks</h1>
     <p uiPageHeaderHint>
-      Clear your Google Tasks inbox. Each task gets discarded or promoted to a vault item.
-      Today: just looking at what's there.
+      Clear your Google Tasks inbox. Today: just looking at what's there — across the lists
+      enabled in Tasks settings.
     </p>
   </app-ui-page-header>
 
@@ -15,7 +15,10 @@
   } @else if (rows()?.length === 0) {
     <div class="zero">
       <h2>Inbox zero ✦</h2>
-      <p>Nothing to triage right now.</p>
+      <p>
+        Nothing to triage right now. If you haven't enabled any task lists yet,
+        set them up in <a routerLink="/google-tasks-settings">Tasks settings</a>.
+      </p>
     </div>
   } @else {
     <ul class="task-list">
@@ -23,7 +26,8 @@
         <li class="task-row" [class.url]="row.isUrl">
           <div class="task-title">{{ row.task.title }}</div>
           <div class="task-meta">
-            updated {{ row.task.updated | relativeTime }}
+            <span class="list-tag">{{ row.task.listTitle }}</span>
+            · updated {{ row.task.updated | relativeTime }}
             @if (row.task.due) {
               · due {{ row.task.due | relativeTime }}
             }

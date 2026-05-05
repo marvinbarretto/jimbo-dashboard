@@ -2,13 +2,15 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
-export interface GoogleTask {
+export interface InboxTask {
   id: string;
   title: string;
   notes?: string;
   due?: string;
   updated: string;
   status: string;
+  listId: string;
+  listTitle: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -16,15 +18,16 @@ export class TriageTasksService {
   private readonly http = inject(HttpClient);
   private readonly base = environment.dashboardApiUrl;
 
-  readonly tasks = signal<GoogleTask[] | undefined>(undefined);
+  readonly tasks = signal<InboxTask[] | undefined>(undefined);
   readonly error = signal<string | null>(null);
   readonly loading = signal(false);
 
   load(): void {
     this.loading.set(true);
     this.error.set(null);
+
     this.http
-      .get<{ tasks: GoogleTask[]; count: number }>(`${this.base}/api/google-tasks/tasks`)
+      .get<{ tasks: InboxTask[]; count: number }>(`${this.base}/api/google-tasks/inbox`)
       .subscribe({
         next: r => {
           this.tasks.set(r.tasks);
