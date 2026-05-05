@@ -49,10 +49,12 @@ export class VaultItemProjectsService {
   }
 
   private loadAll(): void {
-    this.http.get<{ items: ApiVaultItemProject[] }>(`${environment.dashboardApiUrl}/api/vault-item-projects`).subscribe({
-      next: ({ items }) => {
+    // Endpoint returns a raw array (VaultItemProjectSchema.array()), not the
+    // {items, total} envelope used by other list endpoints. Don't destructure.
+    this.http.get<ApiVaultItemProject[]>(this.url).subscribe({
+      next: (rows) => {
         const byItem: Record<string, VaultItemProject[]> = {};
-        for (const row of items) {
+        for (const row of rows) {
           const link: VaultItemProject = {
             vault_item_id: toVaultItemId(row.vault_item_id),
             project_id:    toProjectId(row.project_id),
