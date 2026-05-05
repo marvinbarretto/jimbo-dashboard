@@ -21,9 +21,6 @@ jobs:
       - name: Build dashboard
         run: npm run build
 
-      - name: Build dashboard API
-        run: npx tsc -p tsconfig.api.json
-
       - name: Configure SSH
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
@@ -37,13 +34,3 @@ jobs:
         run: |
           rsync -a --delete dist/dashboard/browser/ \
             root@167.99.206.214:/home/jimbo/dashboard/
-
-      - name: Sync dashboard API
-        run: |
-          ssh root@167.99.206.214 "mkdir -p /home/jimbo/dashboard-api/dist-api"
-          rsync -a --delete dist-api/ \
-            root@167.99.206.214:/home/jimbo/dashboard-api/dist-api/
-
-      - name: Restart dashboard-api.service
-        run: |
-          ssh root@167.99.206.214 "systemctl restart dashboard-api.service"
