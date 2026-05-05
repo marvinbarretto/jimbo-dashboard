@@ -1,4 +1,4 @@
-<app-ui-stack class="projects-list" gap="xl">
+<app-ui-stack class="projects-list" gap="lg">
   <app-ui-page-header class="projects-list__header">
     <h1 uiPageHeaderTitle>Projects</h1>
     <a uiPageHeaderActions routerLink="new" class="btn btn--primary">+ New project</a>
@@ -78,7 +78,7 @@
           @if (epic.primary_project_name) {
             <app-ui-badge tone="info">{{ epic.primary_project_name }}</app-ui-badge>
           }
-          @if (epic.children_count > 0) {
+          @if ((epic.children_count ?? 0) > 0) {
             <span class="epic-row__children">{{ epic.children_count }} tasks</span>
           }
         </div>

@@ -607,7 +607,6 @@ interface ApiVaultItem {
   is_epic: boolean;
   parent_id: string | null;
   acceptance_criteria: string | null;              // production stores as text
-  is_epic: boolean;
   blocked_by: string | null;
   blocked_reason: string | null;
   blocked_at: string | null;
