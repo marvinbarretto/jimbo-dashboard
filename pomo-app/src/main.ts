@@ -1,12 +1,7 @@
-// Vanilla TS pomo timer.
+// Vanilla TS pomo timer + retrospective.
 //
-// One screen. Three states (idle / running / expired). Server-side state
-// machine: the row in jimbo_pg is the source of truth. The page renders a
-// wall-clock countdown against (started_at + planned_seconds), so a tab
-// close, device switch, or backgrounded mobile tab doesn't lose the session.
-//
-// Hits jimbo-api directly via same-origin in production, via the Vite proxy
-// in dev. Caddy basic_auth gates everything at the edge.
+// Three states: idle (setup) → running (countdown) → expired (retrospective).
+// Server row is source of truth — wall-clock countdown survives tab close.
 
 interface FocusSession {
   id: string;
@@ -16,6 +11,8 @@ interface FocusSession {
   planned_seconds: number;
   actual_seconds: number | null;
   status: 'running' | 'completed' | 'abandoned';
+  mood: -1 | 0 | 1 | null;
+  interrupted: boolean;
   notes: string | null;
   tags: string[];
   created_at: string;
@@ -27,12 +24,22 @@ interface Project {
   status: string;
 }
 
+interface VaultNote {
+  id: string;
+  seq: number | null;
+  title: string;
+  status: string;
+  type: string;
+}
+
+type Mood = -1 | 0 | 1;
+
 const PRESETS = [15, 25, 45, 90] as const;
-const STORAGE_KEY = 'pomo:setup'; // remember last project + duration choice
+const STORAGE_KEY = 'pomo:setup';
 
 const $app = document.getElementById('app') as HTMLElement;
 
-// ── State ──────────────────────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────────────────
 
 let active: FocusSession | null = null;
 let projects: Project[] = [];
@@ -40,7 +47,7 @@ let tickHandle: number | null = null;
 let wakeLock: WakeLockSentinel | null = null;
 let lastSetup: { project_id: string; minutes: number } = loadSetup();
 
-// ── API ────────────────────────────────────────────────────────────────────
+// ── API ───────────────────────────────────────────────────────────────────
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -49,30 +56,36 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
     credentials: 'include',
   });
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }
 
-const fetchActive = () => api<{ active: FocusSession | null }>('/api/focus-sessions/active');
-// jimbo-api returns a plain array; dashboard-api would wrap as { items }.
-// We hit jimbo-api directly so this is the contract.
-const fetchProjects = () => api<Project[]>('/api/projects');
+const fetchActive    = () => api<{ active: FocusSession | null }>('/api/focus-sessions/active');
+const fetchProjects  = () => api<Project[]>('/api/projects');
+const searchVault    = (q: string) =>
+  api<{ items: VaultNote[] }>(`/api/vault/search?q=${encodeURIComponent(q)}&limit=10`);
 
 const startSession = (body: { project_id: string | null; planned_seconds: number }) =>
   api<FocusSession>('/api/focus-sessions', { method: 'POST', body: JSON.stringify(body) });
 
-const completeSession = (id: string, body: { notes?: string; tags?: string[] }) =>
+const completeSession = (id: string, body: {
+  notes?: string; tags?: string[]; mood?: Mood; interrupted?: boolean;
+}) =>
   api<FocusSession>(`/api/focus-sessions/${encodeURIComponent(id)}/complete`, {
-    method: 'PATCH',
-    body: JSON.stringify(body),
+    method: 'PATCH', body: JSON.stringify(body),
+  });
+
+const linkVaultNote = (sessionId: string, vaultNoteId: string) =>
+  api<void>(`/api/focus-sessions/${encodeURIComponent(sessionId)}/notes`, {
+    method: 'POST', body: JSON.stringify({ vault_note_id: vaultNoteId }),
   });
 
 const abandonSession = (id: string) =>
   api<FocusSession>(`/api/focus-sessions/${encodeURIComponent(id)}/abandon`, {
-    method: 'PATCH',
-    body: '{}',
+    method: 'PATCH', body: '{}',
   });
 
-// ── Local persistence — last-used setup ───────────────────────────────────
+// ── Persistence ───────────────────────────────────────────────────────────
 
 function loadSetup(): { project_id: string; minutes: number } {
   try {
@@ -86,7 +99,7 @@ function saveSetup(s: { project_id: string; minutes: number }): void {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch { /* ignore */ }
 }
 
-// ── Time helpers ───────────────────────────────────────────────────────────
+// ── Time helpers ──────────────────────────────────────────────────────────
 
 function remainingSeconds(s: FocusSession): number {
   const elapsed = (Date.now() - new Date(s.started_at).getTime()) / 1000;
@@ -99,20 +112,30 @@ function formatTime(totalSeconds: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
+function formatMins(seconds: number): string {
+  const m = Math.round(seconds / 60);
+  return `${m}m`;
+}
+
 function projectName(id: string | null): string {
   if (!id) return 'Unassigned';
   return projects.find(p => p.id === id)?.display_name ?? id;
 }
 
 function parseTags(raw: string): string[] | undefined {
-  const parts = raw
-    .split(/[,\s]+/)
-    .map(t => t.replace(/^#/, '').trim())
-    .filter(Boolean);
+  const parts = raw.split(/[,\s]+/).map(t => t.replace(/^#/, '').trim()).filter(Boolean);
   return parts.length ? Array.from(new Set(parts)) : undefined;
 }
 
-// ── DOM helpers ────────────────────────────────────────────────────────────
+function debounce<T extends unknown[]>(fn: (...args: T) => void, ms: number) {
+  let timer: number | null = null;
+  return (...args: T) => {
+    if (timer) clearTimeout(timer);
+    timer = window.setTimeout(() => fn(...args), ms);
+  };
+}
+
+// ── DOM helpers ───────────────────────────────────────────────────────────
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -136,7 +159,7 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-// ── Wake lock — keep phone screen alive during a session ──────────────────
+// ── Wake lock ─────────────────────────────────────────────────────────────
 
 async function requestWakeLock(): Promise<void> {
   if (!('wakeLock' in navigator)) return;
@@ -151,7 +174,7 @@ function releaseWakeLock(): void {
   wakeLock = null;
 }
 
-// ── Render ─────────────────────────────────────────────────────────────────
+// ── Render ────────────────────────────────────────────────────────────────
 
 function render(): void {
   $app.replaceChildren(active ? renderLive(active) : renderSetup());
@@ -167,12 +190,8 @@ function renderSetup(): HTMLElement {
   ]);
 
   const minutesInput = el('input', {
-    id: 'minutes',
-    type: 'number',
-    min: 1,
-    max: 480,
-    class: 'pomo__field',
-    value: String(lastSetup.minutes),
+    id: 'minutes', type: 'number', min: 1, max: 480,
+    class: 'pomo__field', value: String(lastSetup.minutes),
   });
 
   const presetRow = el('div', { class: 'pomo__presets' },
@@ -181,39 +200,32 @@ function renderSetup(): HTMLElement {
       class: `pomo__preset${lastSetup.minutes === m ? ' pomo__preset--active' : ''}`,
       onclick: () => {
         lastSetup.minutes = m;
-        minutesInput.value = String(m);
+        (minutesInput as HTMLInputElement).value = String(m);
         renderPresetState();
       },
     }, [`${m}m`])),
   );
 
   function renderPresetState(): void {
-    const buttons = presetRow.querySelectorAll('button');
-    buttons.forEach((btn, i) => {
+    presetRow.querySelectorAll('button').forEach((btn, i) => {
       btn.classList.toggle('pomo__preset--active', PRESETS[i] === lastSetup.minutes);
     });
   }
 
   minutesInput.addEventListener('input', () => {
-    const v = Number(minutesInput.value);
-    if (Number.isFinite(v)) {
-      lastSetup.minutes = v;
-      renderPresetState();
-    }
+    const v = Number((minutesInput as HTMLInputElement).value);
+    if (Number.isFinite(v)) { lastSetup.minutes = v; renderPresetState(); }
   });
 
-  const startBtn = el('button', {
-    type: 'submit',
-    class: 'pomo__btn pomo__btn--primary',
-  }, ['Start']);
+  const startBtn = el('button', { type: 'submit', class: 'pomo__btn pomo__btn--primary' }, ['Start']);
 
   const form = el('form', {
     class: 'pomo__setup',
     onsubmit: async (e: Event) => {
       e.preventDefault();
-      const minutes = Number(minutesInput.value);
+      const minutes = Number((minutesInput as HTMLInputElement).value);
       if (!Number.isFinite(minutes) || minutes < 1) return;
-      const project_id = projectSelect.value || null;
+      const project_id = (projectSelect as HTMLSelectElement).value || null;
       lastSetup = { project_id: project_id ?? '', minutes };
       saveSetup(lastSetup);
       startBtn.setAttribute('disabled', '');
@@ -228,16 +240,12 @@ function renderSetup(): HTMLElement {
     },
   }, [
     el('h1', { class: 'pomo__title' }, ['Pomo']),
-
     fieldGroup('Project', projectSelect, 'project'),
-
     el('div', { class: 'pomo__field-group' }, [
       el('span', { class: 'pomo__label' }, ['Duration']),
       presetRow,
     ]),
-
     fieldGroup('Minutes', minutesInput, 'minutes'),
-
     startBtn,
   ]);
 
@@ -267,79 +275,27 @@ function renderLive(s: FocusSession): HTMLElement {
   ]);
 
   if (expired) {
-    const notes = el('textarea', {
-      class: 'pomo__field',
-      rows: 3,
-      placeholder: 'A line about the session…',
-    }) as HTMLTextAreaElement;
-    const tags = el('input', {
-      class: 'pomo__field',
-      type: 'text',
-      placeholder: 'tags (space or comma separated)',
-    }) as HTMLInputElement;
-    const saveBtn = el('button', {
-      type: 'submit',
-      class: 'pomo__btn pomo__btn--primary',
-    }, ['Save & finish']);
-
-    const captureForm = el('form', {
-      class: 'pomo__capture',
-      onsubmit: async (e: Event) => {
-        e.preventDefault();
-        if (!active) return;
-        saveBtn.setAttribute('disabled', '');
-        try {
-          await completeSession(active.id, {
-            notes: notes.value.trim() || undefined,
-            tags: parseTags(tags.value),
-          });
-          active = null;
-          releaseWakeLock();
-          render();
-        } catch (err) {
-          alert(`Could not save: ${(err as Error).message}`);
-          saveBtn.removeAttribute('disabled');
-        }
-      },
-    }, [
-      el('p', { class: 'pomo__capture-prompt' }, ['What did you get done?']),
-      notes,
-      tags,
-      saveBtn,
-    ]);
-
-    root.append(captureForm);
+    root.append(renderRetrospective(s));
   } else {
     const finishEarly = el('button', {
-      type: 'button',
-      class: 'pomo__btn pomo__btn--primary',
+      type: 'button', class: 'pomo__btn pomo__btn--primary',
       onclick: async () => {
         if (!active) return;
         try {
           await completeSession(active.id, {});
-          active = null;
-          releaseWakeLock();
-          render();
-        } catch (err) {
-          alert(`Could not finish: ${(err as Error).message}`);
-        }
+          active = null; releaseWakeLock(); render();
+        } catch (err) { alert(`Could not finish: ${(err as Error).message}`); }
       },
     }, ['Finish early']);
 
     const abandon = el('button', {
-      type: 'button',
-      class: 'pomo__btn pomo__btn--ghost',
+      type: 'button', class: 'pomo__btn pomo__btn--ghost',
       onclick: async () => {
-        if (!active) return;
-        if (!confirm('Abandon this session?')) return;
+        if (!active || !confirm('Abandon this session?')) return;
         try {
           await abandonSession(active.id);
-          active = null;
-          releaseWakeLock();
-          render();
-        } catch (err) {
-          alert(`Could not abandon: ${(err as Error).message}`);
-        }
+          active = null; releaseWakeLock(); render();
+        } catch (err) { alert(`Could not abandon: ${(err as Error).message}`); }
       },
     }, ['Abandon']);
 
@@ -349,6 +305,205 @@ function renderLive(s: FocusSession): HTMLElement {
   return root;
 }
 
+// ── Retrospective form ─────────────────────────────────────────────────────
+
+function renderRetrospective(s: FocusSession): HTMLElement {
+  let selectedMood: Mood | null = null;
+  let interrupted = false;
+  const linkedNotes = new Map<string, string>(); // id → title
+
+  // ── Mood ────────────────────────────────────────────────────────────────
+
+  const MOOD_OPTIONS: [Mood, string, string][] = [
+    [-1, '👎', 'Bad'],
+    [ 0, '😐', 'OK'],
+    [ 1, '👍', 'Good'],
+  ];
+
+  const moodBtns = MOOD_OPTIONS.map(([value, icon, label]) => {
+    const btn = el('button', {
+      type: 'button',
+      class: 'pomo__mood-btn',
+      'aria-label': label,
+      'data-mood': value,
+    }, [el('span', { class: 'pomo__mood-icon' }, [icon]), el('span', { class: 'pomo__mood-label' }, [label])]);
+
+    btn.addEventListener('click', () => {
+      selectedMood = selectedMood === value ? null : value;
+      moodBtns.forEach(b => b.classList.toggle(
+        'pomo__mood-btn--active',
+        Number(b.dataset['mood']) === selectedMood,
+      ));
+    });
+    return btn;
+  });
+
+  const moodRow = el('div', { class: 'pomo__mood' }, moodBtns);
+
+  // ── Interrupted ──────────────────────────────────────────────────────────
+
+  const interruptedChk = el('input', { type: 'checkbox', id: 'interrupted-chk' }) as HTMLInputElement;
+  interruptedChk.addEventListener('change', () => { interrupted = interruptedChk.checked; });
+
+  const interruptedRow = el('label', { class: 'pomo__interrupted', for: 'interrupted-chk' }, [
+    interruptedChk,
+    'Session was derailed by distractions',
+  ]);
+
+  // ── Vault note typeahead ──────────────────────────────────────────────────
+
+  const chipsEl = el('div', { class: 'pomo__chips' });
+
+  function renderChips(): void {
+    chipsEl.replaceChildren(
+      ...Array.from(linkedNotes.entries()).map(([id, title]) => {
+        const chip = el('span', { class: 'pomo__chip' }, [
+          title,
+          el('button', { type: 'button', 'aria-label': `Remove ${title}`, class: 'pomo__chip-remove' }, ['×']),
+        ]);
+        chip.querySelector('button')!.addEventListener('click', () => {
+          linkedNotes.delete(id);
+          renderChips();
+        });
+        return chip;
+      }),
+    );
+  }
+
+  const dropdown = el('ul', { class: 'pomo__vault-dropdown' });
+  dropdown.hidden = true;
+
+  const vaultInput = el('input', {
+    type: 'text', class: 'pomo__field', placeholder: 'Search active vault notes…',
+  }) as HTMLInputElement;
+
+  const doSearch = debounce(async (q: string) => {
+    if (!q) { dropdown.hidden = true; return; }
+    try {
+      const { items } = await searchVault(q);
+      const fresh = items.filter(n => !linkedNotes.has(n.id));
+      if (!fresh.length) { dropdown.hidden = true; return; }
+      dropdown.replaceChildren(
+        ...fresh.map(n => {
+          const li = el('li', { class: 'pomo__vault-result' }, [
+            el('span', { class: 'pomo__vault-result-title' }, [n.title]),
+            el('span', { class: 'pomo__vault-result-meta' }, [n.type]),
+          ]);
+          li.addEventListener('mousedown', (e) => {
+            e.preventDefault(); // prevent input blur before click registers
+            linkedNotes.set(n.id, n.title);
+            renderChips();
+            vaultInput.value = '';
+            dropdown.hidden = true;
+          });
+          return li;
+        }),
+      );
+      dropdown.hidden = false;
+    } catch { /* non-fatal */ }
+  }, 280);
+
+  vaultInput.addEventListener('input', () => doSearch(vaultInput.value.trim()));
+  vaultInput.addEventListener('blur', () => { setTimeout(() => { dropdown.hidden = true; }, 150); });
+
+  const vaultWrapper = el('div', { class: 'pomo__vault-wrapper' }, [vaultInput, dropdown]);
+
+  // ── Notes ─────────────────────────────────────────────────────────────────
+
+  const notesField = el('textarea', {
+    class: 'pomo__field', rows: 3, placeholder: 'What did you get done? Reflections…',
+  }) as HTMLTextAreaElement;
+
+  // ── Tags ──────────────────────────────────────────────────────────────────
+
+  const tagsField = el('input', {
+    type: 'text', class: 'pomo__field', placeholder: 'tags, comma or space separated',
+  }) as HTMLInputElement;
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+
+  const saveBtn = el('button', { type: 'submit', class: 'pomo__btn pomo__btn--primary' }, ['Save & finish']);
+
+  const skipBtn = el('button', { type: 'button', class: 'pomo__btn pomo__btn--ghost' }, ['Skip']);
+  skipBtn.addEventListener('click', async () => {
+    if (!active) return;
+    skipBtn.setAttribute('disabled', '');
+    try {
+      await completeSession(active.id, {});
+      active = null; releaseWakeLock(); render();
+    } catch (err) {
+      alert(`Could not save: ${(err as Error).message}`);
+      skipBtn.removeAttribute('disabled');
+    }
+  });
+
+  // ── Form ──────────────────────────────────────────────────────────────────
+
+  const form = el('form', {
+    class: 'pomo__retro',
+    onsubmit: async (e: Event) => {
+      e.preventDefault();
+      if (!active) return;
+      saveBtn.setAttribute('disabled', '');
+      try {
+        const sessionId = active.id;
+        const body: Parameters<typeof completeSession>[1] = {};
+        if (selectedMood !== null)    body.mood        = selectedMood;
+        if (interrupted)              body.interrupted = true;
+        const notesTrimmed = notesField.value.trim();
+        if (notesTrimmed)             body.notes       = notesTrimmed;
+        const tagsParsed = parseTags(tagsField.value);
+        if (tagsParsed)               body.tags        = tagsParsed;
+
+        await completeSession(sessionId, body);
+
+        if (linkedNotes.size > 0) {
+          await Promise.all([...linkedNotes.keys()].map(nid => linkVaultNote(sessionId, nid)));
+        }
+
+        active = null; releaseWakeLock(); render();
+      } catch (err) {
+        alert(`Could not save: ${(err as Error).message}`);
+        saveBtn.removeAttribute('disabled');
+      }
+    },
+  }, [
+    el('div', { class: 'pomo__retro-header' }, [
+      el('p', { class: 'pomo__retro-title' }, ['Session complete']),
+      el('p', { class: 'pomo__retro-meta' }, [
+        `${formatMins(s.planned_seconds)} · ${projectName(s.project_id)}`,
+      ]),
+    ]),
+
+    el('div', { class: 'pomo__field-group' }, [
+      el('span', { class: 'pomo__label' }, ['How was it?']),
+      moodRow,
+    ]),
+
+    interruptedRow,
+
+    el('div', { class: 'pomo__field-group' }, [
+      el('span', { class: 'pomo__label' }, ['What were you working on?']),
+      chipsEl,
+      vaultWrapper,
+    ]),
+
+    el('div', { class: 'pomo__field-group' }, [
+      el('span', { class: 'pomo__label' }, ['Notes']),
+      notesField,
+    ]),
+
+    el('div', { class: 'pomo__field-group' }, [
+      el('span', { class: 'pomo__label' }, ['Tags']),
+      tagsField,
+    ]),
+
+    el('div', { class: 'pomo__retro-actions' }, [saveBtn, skipBtn]),
+  ]);
+
+  return form;
+}
+
 // ── Tick + title ──────────────────────────────────────────────────────────
 
 function syncTitleAndTicker(): void {
@@ -356,10 +511,7 @@ function syncTitleAndTicker(): void {
     if (tickHandle === null) tickHandle = window.setInterval(tick, 1000);
     document.title = `${formatTime(remainingSeconds(active))} — Pomo`;
   } else {
-    if (tickHandle !== null) {
-      clearInterval(tickHandle);
-      tickHandle = null;
-    }
+    if (tickHandle !== null) { clearInterval(tickHandle); tickHandle = null; }
     document.title = 'Pomo';
   }
 }
@@ -373,42 +525,31 @@ function tick(): void {
   const wasExpired = root.classList.contains('pomo__live--expired');
   const isExpiredNow = remaining === 0;
 
-  // Cross over from running → expired: full re-render to swap action set.
-  if (!wasExpired && isExpiredNow) {
-    render();
-    return;
-  }
+  if (!wasExpired && isExpiredNow) { render(); return; }
 
-  const clock = root.querySelector('.pomo__clock');
+  root.querySelector('.pomo__clock')!.textContent = formatTime(remaining);
   const fill = root.querySelector<HTMLElement>('.pomo__progress-fill');
-  if (clock) clock.textContent = formatTime(remaining);
   if (fill) {
-    const progress = ((active.planned_seconds - remaining) / active.planned_seconds) * 100;
-    fill.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+    fill.style.width = `${Math.min(100, Math.max(0, ((active.planned_seconds - remaining) / active.planned_seconds) * 100))}%`;
   }
   document.title = `${formatTime(remaining)} — Pomo`;
 }
 
-// ── Visibility — refetch active state when tab regains focus ──────────────
+// ── Visibility — refetch when tab regains focus ───────────────────────────
 
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState !== 'visible') return;
   try {
     const { active: latest } = await fetchActive();
-    // If the server says it's done (e.g. completed elsewhere), drop the local view.
     if (active && (!latest || latest.id !== active.id)) {
-      active = latest;
-      releaseWakeLock();
-      render();
+      active = latest; releaseWakeLock(); render();
     } else if (!active && latest) {
-      active = latest;
-      await requestWakeLock();
-      render();
+      active = latest; await requestWakeLock(); render();
     }
   } catch { /* offline — keep showing what we had */ }
 });
 
-// ── Boot ───────────────────────────────────────────────────────────────────
+// ── Boot ──────────────────────────────────────────────────────────────────
 
 async function boot(): Promise<void> {
   $app.textContent = 'Loading…';
