@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.19](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.18...v0.0.19) (2026-05-05)
+
+
+### Features
+
+* **pomo-extension:** no-popup redesign with icon countdown ([47f730c](https://github.com/marvinbarretto/jimbo-dashboard/commit/47f730c533a4b618ff87e2f8886326332a321cf7))
+* **pomo:** add Chrome MV3 extension for focus sessions ([b9a7144](https://github.com/marvinbarretto/jimbo-dashboard/commit/b9a71445c37637a3344c2f653c681e2ceb6046e9))
+* **triage-tasks:** add Google Tasks triage page + nav wiring ([0464dea](https://github.com/marvinbarretto/jimbo-dashboard/commit/0464dea2b10e0554d38389e91cb1acefbf1ac23e))
+
+
+### Bug Fixes
+
+* **pomo-extension:** align with actual API schema ([6f0e3cf](https://github.com/marvinbarretto/jimbo-dashboard/commit/6f0e3cf8be085c1e6241d02a4f1c1debe1d447f4))
+* **pomo-extension:** defensive OffscreenCanvas + surfaced click errors ([6250254](https://github.com/marvinbarretto/jimbo-dashboard/commit/6250254d18c32016bb9ba9acb83b0b34a4d21241))
+* **pomo-extension:** display_name field + dedupe options link IDs ([a3657ee](https://github.com/marvinbarretto/jimbo-dashboard/commit/a3657ee255956514ec65f7e024b80815f87890f7))
+* **pomo-extension:** larger icon canvas for readable countdown text ([2a8a3d9](https://github.com/marvinbarretto/jimbo-dashboard/commit/2a8a3d95c5687582f5d7e45c1b3458cd8ac37a23))
+* **pomo-extension:** omit optional fields from start body ([4abcaf1](https://github.com/marvinbarretto/jimbo-dashboard/commit/4abcaf1276ccc9bbf38033c2dde671926a82a204))
+
+
+### Code Refactoring
+
+* **triage-tasks:** swap client-side fan-out for single /inbox call ([2fb5f30](https://github.com/marvinbarretto/jimbo-dashboard/commit/2fb5f3073f0217a3e7ca1e490b76dff099b2f78e))
+
 ### [0.0.18](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.17...v0.0.18) (2026-05-04)
 
 
