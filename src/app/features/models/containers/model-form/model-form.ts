@@ -5,7 +5,7 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { ModelsService } from '../../data-access/models.service';
 import { ToastService } from '@shared/components/toast/toast.service';
-import type { Model, ModelStatus, ModelSource } from '@domain/models';
+import type { Model, ModelStatus, ModelSource, OpenRouterPricing } from '@domain/models';
 import { ALL_CAPABILITIES, CAPABILITY_LABELS, type SkillCapability } from '@domain/capability';
 
 const ID_PATTERN = /^[a-z0-9-]+\/[a-z0-9.-]+$/;
@@ -140,11 +140,11 @@ export class ModelForm {
       return;
     }
     const v = this.form.getRawValue();
-    const pricing: Record<string, string> = {};
-    if (v.prompt_price != null)      pricing['prompt']            = mTokToTokenString(v.prompt_price);
-    if (v.completion_price != null)  pricing['completion']        = mTokToTokenString(v.completion_price);
-    if (v.cache_read_price != null)  pricing['input_cache_read']  = mTokToTokenString(v.cache_read_price);
-    if (v.cache_write_price != null) pricing['input_cache_write'] = mTokToTokenString(v.cache_write_price);
+    const pricing: OpenRouterPricing = {};
+    if (v.prompt_price != null)      pricing.prompt            = mTokToTokenString(v.prompt_price);
+    if (v.completion_price != null)  pricing.completion        = mTokToTokenString(v.completion_price);
+    if (v.cache_read_price != null)  pricing.input_cache_read  = mTokToTokenString(v.cache_read_price);
+    if (v.cache_write_price != null) pricing.input_cache_write = mTokToTokenString(v.cache_write_price);
 
     const inputModalities = parseList(v.input_modalities);
     const outputModalities = parseList(v.output_modalities);

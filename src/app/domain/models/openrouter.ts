@@ -12,10 +12,13 @@ export interface OpenRouterArchitecture {
 }
 
 // All prices are strings expressed as USD per token (OpenRouter convention).
-// Display layers convert to $/MTok at render time.
+// Display layers convert to $/MTok at render time. Fields are optional
+// because storage is broader than upstream's response: rows ingested from
+// OpenRouter always carry prompt + completion, but manual entries may be
+// partial while the operator fills them in.
 export interface OpenRouterPricing {
-  prompt: string;
-  completion: string;
+  prompt?: string;
+  completion?: string;
   web_search?: string;
   input_cache_read?: string;
   input_cache_write?: string;
