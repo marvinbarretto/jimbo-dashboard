@@ -26,3 +26,94 @@
 
 .vault-item-not-found { padding: 2rem; p { color: var(--color-text-muted); } }
 .back-link { font-size: .8rem; color: var(--color-text-muted); text-decoration: none; &:hover { text-decoration: underline; } }
+
+// ── Draft mode ─────────────────────────────────────────────────────────────
+// Minimal "create a new ticket" layout shown when mode.kind === 'draft'.
+// Mirrors the visual rhythm of identity-header + zone2 in Item mode but
+// without the loaded sub-components.
+.vault-item-detail--draft {
+  display: flex;
+  flex-direction: column;
+}
+
+.draft-form__header {
+  display: flex;
+  gap: .55rem;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: .85rem .9rem .7rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 92%, transparent);
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-surface-raised) 55%, transparent),
+      color-mix(in srgb, var(--color-surface) 95%, transparent));
+}
+
+.draft-form__seq {
+  opacity: .72;
+  font-family: var(--font-mono, monospace);
+  font-size: .74rem;
+  color: var(--color-text-soft);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.draft-form__title {
+  flex: 1;
+  min-width: min(24rem, 100%);
+}
+
+.draft-form__body-wrap {
+  padding: .75rem .9rem;
+}
+
+.draft-form__body {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: .9rem;
+  resize: vertical;
+  line-height: 1.5;
+  padding: 0;
+  &::placeholder { color: var(--color-text-muted); }
+}
+
+.draft-form__chips {
+  padding: 0 .9rem .6rem;
+}
+
+.draft-form__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .55rem .9rem;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  gap: 1rem;
+}
+
+.draft-form__hint {
+  font-size: .68rem;
+  color: var(--color-text-muted);
+  display: flex;
+  gap: .4rem;
+  align-items: baseline;
+
+  kbd {
+    font-family: var(--font-mono);
+    font-size: .65rem;
+    background: var(--color-surface-soft, var(--color-surface));
+    border: 1px solid var(--color-border);
+    border-radius: 2px;
+    padding: .02rem .25rem;
+    color: var(--color-text);
+  }
+}
+
+.draft-form__error {
+  font-size: .8rem;
+  color: var(--color-danger, #ef4444);
+}

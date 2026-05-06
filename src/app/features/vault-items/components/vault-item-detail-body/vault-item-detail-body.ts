@@ -5,9 +5,11 @@ import {
   effect,
   inject,
   input,
+  output,
   signal,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { swapDetailSeq, closeDetail } from '@shared/kanban/detail-modal';
 import { VaultItemsService } from '../../data-access/vault-items.service';
 import { ActivityEventsService } from '../../data-access/activity-events.service';
@@ -25,9 +27,19 @@ import type { AcceptanceCriterion } from '@domain/vault/vault-item';
 import { ActivityLogComponent } from './activity-log/activity-log';
 import { formatDatetime } from '@shared/utils/datetime.utils';
 import { UiSection } from '@shared/components/ui-section/ui-section';
+import { UiButton } from '@shared/components/ui-button/ui-button';
+import { UiInlineEdit } from '@shared/components/ui-inline-edit/ui-inline-edit';
+import { UiMentionChipStrip } from '@shared/components/ui-mention-chip-strip/ui-mention-chip-strip';
 import { ToastService } from '@shared/components/toast/toast.service';
+import {
+  MentionDirective,
+  tagTrigger,
+  projectActorTrigger,
+  vaultItemTrigger,
+} from '@shared/mentions';
 import type { ProjectId, ActorId } from '@domain/ids';
 import type { Actor } from '@domain/actors';
+import type { Project } from '@domain/projects';
 import { VaultItemActionBar } from './vault-item-action-bar/vault-item-action-bar';
 import { VaultItemDeliveryBlock } from './vault-item-delivery-block/vault-item-delivery-block';
 import { VaultItemIdentityHeader } from './vault-item-identity-header/vault-item-identity-header';
@@ -37,6 +49,14 @@ import { VaultItemMetaLine } from './vault-item-meta-line/vault-item-meta-line';
 import { VaultItemOverviewCards } from './vault-item-overview-cards/vault-item-overview-cards';
 import { VaultItemQuestions } from './vault-item-questions/vault-item-questions';
 import { VaultItemStatusChips } from './vault-item-status-chips/vault-item-status-chips';
+import {
+  type DialogMode,
+  type DraftPayload,
+  emptyDraft,
+  isDraft,
+  isItem,
+  stageFor,
+} from '../../dialog/vault-item-dialog-mode';
 
 @Component({
   selector: 'app-vault-item-detail-body',
@@ -46,6 +66,10 @@ import { VaultItemStatusChips } from './vault-item-status-chips/vault-item-statu
     RejectFormComponent,
     ActivityLogComponent,
     UiSection,
+    UiButton,
+    UiInlineEdit,
+    UiMentionChipStrip,
+    MentionDirective,
     VaultItemActionBar,
     VaultItemDeliveryBlock,
     VaultItemIdentityHeader,
@@ -61,11 +85,18 @@ import { VaultItemStatusChips } from './vault-item-status-chips/vault-item-statu
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VaultItemDetailBody {
-  readonly seq = input.required<number>();
-  // 'page' shows the in-bar × back-to-vault link; 'modal' hides it because the
-  // dialog shell provides its own close affordance.
-  readonly mode = input<'page' | 'modal'>('page');
+  /** Lifecycle mode driving the render — Draft vs Item (with Fresh/Mature stage). */
+  readonly mode = input.required<DialogMode>();
+  /**
+   * 'page' shows the in-bar × back-to-vault link; 'modal' hides it because
+   * the dialog shell provides its own close affordance. Was the old `mode`
+   * input before the DialogMode discriminated union landed.
+   */
+  readonly surface = input<'page' | 'modal'>('page');
+  /** Emitted after a Draft saves so the host can flip to Item mode. */
+  readonly modeChange = output<DialogMode>();
 
+  private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly vaultItemsService = inject(VaultItemsService);
   private readonly activityService = inject(ActivityEventsService);
@@ -76,9 +107,50 @@ export class VaultItemDetailBody {
   private readonly projectsService = inject(ProjectsService);
   private readonly threadService = inject(ThreadService);
 
-  readonly item = computed(() => this.vaultItemsService.getBySeq(this.seq()));
+  readonly isDraftMode = computed(() => isDraft(this.mode()));
+
+  /** Raw seq when in Item mode; null while in Draft. */
+  readonly seq = computed(() => {
+    const m = this.mode();
+    return isItem(m) ? m.seq : null;
+  });
+
+  readonly item = computed(() => {
+    const s = this.seq();
+    return s == null ? undefined : this.vaultItemsService.getBySeq(s);
+  });
+
+  // ── Draft state ──
+  // Local signal seeded from mode().payload on first Draft entry. Host owns
+  // the canonical mode for transitions; we own keystroke-level edits inside.
+  protected readonly draftPayload = signal<DraftPayload>(emptyDraft);
+  protected readonly draftSubmitting = signal(false);
+  protected readonly draftError = signal<string | null>(null);
+
+  /** Triggers wired into the Draft body textarea (#tag, @actor/project, ~related). */
+  protected readonly draftTriggers = [
+    tagTrigger(signal<readonly string[]>([]), (t) => this.addDraftTag(t)),
+    projectActorTrigger(
+      this.projectsService.activeProjects,
+      this.actorsService.activeActors,
+      (p) => this.addDraftProject(p),
+      (a) => this.draftPayload.update(d => ({ ...d, assignee: a })),
+    ),
+    vaultItemTrigger(this.http, (it) => this.addDraftRelated(it)),
+  ];
 
   constructor() {
+    // Seed/reseed Draft state when mode flips to Draft. Avoids stale typing
+    // surviving a Draft → Item → Draft round-trip on the same dialog instance.
+    effect(() => {
+      const m = this.mode();
+      if (isDraft(m)) {
+        this.draftPayload.set(m.payload);
+        this.draftError.set(null);
+      }
+    });
+
+    // Item mode side-effects — load thread/activity/junctions for the resolved item.
     effect(() => {
       const i = this.item();
       if (!i) return;
@@ -87,7 +159,28 @@ export class VaultItemDetailBody {
       this.vaultItemDepsService.loadFor(i.id);
       this.threadService.loadFor(i.id);
     });
+
+    // Fresh-stage collapse — when an Item resolves with zero thread + activity,
+    // default-collapse Body/Activity/Thread on first render. Only fires once
+    // per item (initial-collapse signal) so re-expanding a section doesn't get
+    // stomped by a later count refresh.
+    effect(() => {
+      const i = this.item();
+      if (!i) return;
+      const itemId = i.id;
+      if (this.collapsedFor() === itemId) return;
+      const stage = stageFor(this.messages().length, this.events().length);
+      if (stage === 'fresh') {
+        this.sectionBody.set(false);
+        this.sectionActivity.set(false);
+        this.sectionThread.set(false);
+      }
+      this.collapsedFor.set(itemId);
+    });
   }
+
+  /** Tracks which item id we've already applied initial-collapse logic for. */
+  private readonly collapsedFor = signal<string | null>(null);
 
   readonly owner = computed<Actor | undefined>(() => {
     const i = this.item();
@@ -284,11 +377,11 @@ export class VaultItemDetailBody {
     return i ? effectivePriority(i) : null;
   });
 
-  // In modal mode, update ?detail= so withVaultDetailModal() swaps the dialog
-  // body without a full navigation. In page mode, navigate normally so the URL
-  // stays meaningful and browser back works as expected.
+  // In modal surface, update ?detail= so withVaultDetailModal() swaps the
+  // dialog body without a full navigation. In page mode, navigate normally so
+  // the URL stays meaningful and browser back works as expected.
   swapToSeq(seq: number): void {
-    if (this.mode() === 'modal') {
+    if (this.surface() === 'modal') {
       swapDetailSeq(this.router, seq);
       return;
     }
@@ -333,7 +426,9 @@ export class VaultItemDetailBody {
   readonly showRejectForm = signal(false);
   readonly rationaleExpanded = signal(false);
 
-  // Stacked section collapse state. Body starts expanded; activity + thread start collapsed.
+  // Stacked section collapse state. Body starts expanded; activity + thread
+  // start collapsed. Refined to all-collapsed for fresh items via the effect
+  // in the constructor.
   readonly sectionBody     = signal(true);
   readonly sectionActivity = signal(false);
   readonly sectionThread   = signal(false);
@@ -392,7 +487,7 @@ export class VaultItemDetailBody {
       // Close the modal entirely so the operator returns to the kanban and
       // sees the card has moved to the needs_rework column. In page mode the
       // item still exists at /vault-items/<seq> so we don't navigate away.
-      if (this.mode() === 'modal') closeDetail(this.router);
+      if (this.surface() === 'modal') closeDetail(this.router);
     } catch (err: unknown) {
       // Service throws synchronously on validation failure — UI already guards,
       // so this should never fire. Log for visibility if it does.
@@ -484,4 +579,74 @@ export class VaultItemDetailBody {
   // Bound arrow functions for passing to <app-activity-log> inputs.
   readonly actorLabelFn = (id: string) => this.actorDisplay(id);
   readonly actorKindFn  = (id: string) => this.actorKind(id);
+
+  // ── Draft handlers ──
+
+  protected onDraftTitleSaved(next: string): void {
+    this.draftPayload.update(d => ({ ...d, title: next }));
+    this.draftError.set(null);
+  }
+
+  protected onDraftBodyInput(e: Event): void {
+    const value = (e.target as HTMLTextAreaElement).value;
+    this.draftPayload.update(d => ({ ...d, body: value }));
+  }
+
+  protected onDraftBodyKey(e: KeyboardEvent): void {
+    if (e.defaultPrevented) return;
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void this.submitDraft(); }
+  }
+
+  protected addDraftTag(tag: string): void {
+    this.draftPayload.update(d => ({ ...d, tags: [...d.tags, tag] }));
+  }
+
+  protected removeDraftTag(idx: number): void {
+    this.draftPayload.update(d => ({ ...d, tags: d.tags.filter((_, i) => i !== idx) }));
+  }
+
+  protected addDraftProject(p: Project): void {
+    this.draftPayload.update(d => ({ ...d, projects: [...d.projects, p] }));
+  }
+
+  protected removeDraftProject(idx: number): void {
+    this.draftPayload.update(d => ({ ...d, projects: d.projects.filter((_, i) => i !== idx) }));
+  }
+
+  protected removeDraftAssignee(): void {
+    this.draftPayload.update(d => ({ ...d, assignee: null }));
+  }
+
+  protected addDraftRelated(item: { id: string; title: string; seq?: number | null }): void {
+    this.draftPayload.update(d => ({
+      ...d,
+      related: [...d.related, { id: vaultItemId(item.id), title: item.title, seq: item.seq ?? null }],
+    }));
+  }
+
+  protected removeDraftRelated(idx: number): void {
+    this.draftPayload.update(d => ({ ...d, related: d.related.filter((_, i) => i !== idx) }));
+  }
+
+  protected canSubmitDraft = computed(() =>
+    this.draftPayload().title.trim().length > 0 && !this.draftSubmitting(),
+  );
+
+  protected async submitDraft(): Promise<void> {
+    if (!this.canSubmitDraft()) return;
+    const draft = this.draftPayload();
+    this.draftSubmitting.set(true);
+    this.draftError.set(null);
+
+    this.vaultItemsService.createWithRelations(draft).subscribe({
+      next: (created) => {
+        this.draftSubmitting.set(false);
+        this.modeChange.emit({ kind: 'item', seq: created.seq, stage: 'fresh' });
+      },
+      error: (err) => {
+        this.draftSubmitting.set(false);
+        this.draftError.set(err?.error?.error?.message ?? err?.message ?? 'Save failed');
+      },
+    });
+  }
 }

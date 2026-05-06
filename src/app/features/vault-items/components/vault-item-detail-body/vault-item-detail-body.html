@@ -1,4 +1,60 @@
-@if (item(); as item) {
+@if (isDraftMode()) {
+  <div class="vault-item-detail vault-item-detail--draft">
+    <header class="draft-form__header">
+      <span class="draft-form__seq">new item</span>
+      <app-ui-inline-edit
+        class="draft-form__title"
+        [value]="draftPayload().title"
+        size="lg"
+        ariaLabel="Title"
+        placeholder="Title — what is this about?"
+        (saved)="onDraftTitleSaved($event)"
+      />
+    </header>
+
+    <div class="draft-form__body-wrap">
+      <textarea
+        class="draft-form__body"
+        [appMention]="draftTriggers"
+        [value]="draftPayload().body"
+        (input)="onDraftBodyInput($event)"
+        (keydown)="onDraftBodyKey($event)"
+        placeholder="Notes — type # @ ~ for inline metadata. Shift+Enter for newline; Enter to save."
+        rows="4"
+        aria-label="Body"
+      ></textarea>
+    </div>
+
+    <app-ui-mention-chip-strip
+      class="draft-form__chips"
+      [tags]="draftPayload().tags"
+      [projects]="draftPayload().projects"
+      [assignee]="draftPayload().assignee"
+      [related]="draftPayload().related"
+      (tagRemoved)="removeDraftTag($event)"
+      (projectRemoved)="removeDraftProject($event)"
+      (assigneeRemoved)="removeDraftAssignee()"
+      (relatedRemoved)="removeDraftRelated($event)"
+    />
+
+    <footer class="draft-form__footer">
+      @if (draftError(); as err) {
+        <span class="draft-form__error">{{ err }}</span>
+      } @else {
+        <span class="draft-form__hint">
+          <kbd>#</kbd>tag · <kbd>{{ '@' }}</kbd>actor/project · <kbd>~</kbd>related · <kbd>↵</kbd> save
+        </span>
+      }
+      <app-ui-button
+        size="sm"
+        variant="primary"
+        [disabled]="!canSubmitDraft()"
+        (pressed)="submitDraft()">
+        {{ draftSubmitting() ? 'Saving…' : 'Save' }}
+      </app-ui-button>
+    </footer>
+  </div>
+} @else if (item(); as item) {
   <div class="vault-item-detail">
 
     <app-vault-item-identity-header

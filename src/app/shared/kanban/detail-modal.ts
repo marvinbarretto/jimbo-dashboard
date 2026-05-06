@@ -3,10 +3,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Dialog, type DialogRef } from '@angular/cdk/dialog';
 import { distinctUntilChanged, map } from 'rxjs';
-import {
-  VaultItemDetailDialog,
-  type VaultItemDetailDialogData,
-} from '@features/vault-items/containers/vault-item-detail-dialog/vault-item-detail-dialog';
+import { VaultItemDetailDialog } from '@features/vault-items/containers/vault-item-detail-dialog/vault-item-detail-dialog';
+import type { VaultItemDialogData } from '@features/vault-items/dialog/vault-item-dialog-mode';
 
 // Swaps the modal contents to a different vault item by updating the
 // `?detail=<seq>` query param. withVaultDetailModal() watches this param and
@@ -91,10 +89,10 @@ export function withVaultDetailModal(): void {
       r.close();
     }
 
-    const opened: DialogRef<unknown> = dialog.open<unknown, VaultItemDetailDialogData>(
+    const opened: DialogRef<unknown> = dialog.open<unknown, VaultItemDialogData>(
       VaultItemDetailDialog,
       {
-        data: { seq },
+        data: { kind: 'item', seq },
         ariaModal: true,
         autoFocus: 'first-tabbable',
         restoreFocus: true,

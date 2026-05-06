@@ -1,12 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { VaultItemsService } from '../../data-access/vault-items.service';
 import { VaultItemDetailBody } from '../../components/vault-item-detail-body/vault-item-detail-body';
 import { ModalShell } from '@shared/components/modal-shell/modal-shell';
-
-export interface VaultItemDetailDialogData {
-  seq: number;
-}
+import {
+  type DialogMode,
+  type VaultItemDialogData,
+  initialMode,
+  isDraft,
+  isItem,
+} from '../../dialog/vault-item-dialog-mode';
 
 @Component({
   selector: 'app-vault-item-detail-dialog',
@@ -16,20 +19,37 @@ export interface VaultItemDetailDialogData {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VaultItemDetailDialog {
-  protected readonly data = inject<VaultItemDetailDialogData>(DIALOG_DATA);
-  private readonly dialogRef = inject<DialogRef<unknown, VaultItemDetailDialogData>>(DialogRef);
+  protected readonly data = inject<VaultItemDialogData>(DIALOG_DATA);
+  private readonly dialogRef = inject<DialogRef<unknown, VaultItemDialogData>>(DialogRef);
   private readonly vaultItemsService = inject(VaultItemsService);
 
-  protected readonly seq = computed(() => this.data.seq);
+  /** Single source of truth for the dialog's lifecycle state. */
+  protected readonly mode = signal<DialogMode>(initialMode(this.data));
 
-  // Stable id for aria-labelledby binding on the dialog host.
-  protected readonly titleId = `vault-detail-dialog-title-${this.data.seq}`;
+  // Stable id for aria-labelledby binding on the dialog host. Computed once
+  // from the initial data; doesn't need to change when Draft → Item morphs.
+  protected readonly titleId = (() => {
+    if (this.data.kind === 'item') return `vault-detail-dialog-title-${this.data.seq}`;
+    return 'vault-detail-dialog-title-draft';
+  })();
 
-  // Headline shown in the modal header — falls back to "#<seq>" while item resolves.
+  // Headline shown in the modal header. For items, falls back to "#<seq>"
+  // while the row resolves; for drafts shows "New item".
   protected readonly headline = computed(() => {
-    const item = this.vaultItemsService.getBySeq(this.data.seq);
-    return item ? `#${item.seq} · ${item.title}` : `#${this.data.seq}`;
+    const m = this.mode();
+    if (isDraft(m)) return 'New item';
+    if (isItem(m)) {
+      const item = this.vaultItemsService.getBySeq(m.seq);
+      return item ? `#${item.seq} · ${item.title}` : `#${m.seq}`;
+    }
+    return '';
   });
 
   onClose(): void { this.dialogRef.close(); }
+
+  onModeChange(next: DialogMode): void {
+    // Draft → Item transition fires when createWithRelations resolves.
+    // Update local mode signal so the layout swaps without unmounting.
+    this.mode.set(next);
+  }
 }
