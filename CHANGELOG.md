@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.28](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.27...v0.0.28) (2026-05-06)
+
+
+### Features
+
+* **mentions:** inline trigger-character completions for textareas ([1a24056](https://github.com/marvinbarretto/jimbo-dashboard/commit/1a24056e17273bc1d3a97c1e9abeb013f9757a50))
+
 ### [0.0.27](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.26...v0.0.27) (2026-05-06)
 
 
