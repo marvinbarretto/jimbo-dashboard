@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.34](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.33...v0.0.34) (2026-05-06)
+
+
+### Features
+
+* **kanban:** show hours/minutes for same-day items instead of 'today' ([3685aa0](https://github.com/marvinbarretto/jimbo-dashboard/commit/3685aa0cc63fd57fc2e5f2960dc1006e5861a8c5))
+
 ### [0.0.33](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.32...v0.0.33) (2026-05-06)
 
 

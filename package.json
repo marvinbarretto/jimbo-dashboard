@@ -1,6 +1,6 @@
 {
   "name": "dashboard",
-  "version": "0.0.33",
+  "version": "0.0.34",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -42,6 +42,7 @@
     "@tanstack/angular-table": "8.21.4",
     "drizzle-orm": "0.45.2",
     "hono": "4.12.15",
+    "lucide-angular": "1.0.0",
     "postgres": "3.4.9",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
