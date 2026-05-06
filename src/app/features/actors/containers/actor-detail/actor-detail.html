@@ -16,7 +16,7 @@
         <dt>Runtime</dt><dd>{{ a.runtime ?? '—' }}</dd>
         <dt>Serves</dt>
         <dd>
-          @if (a.serves?.length) {
+          @if (a.serves.length) {
             @for (cap of a.serves; track cap) {
               <app-ui-badge tone="info" [subtle]="true">{{ cap }}</app-ui-badge>
             }
