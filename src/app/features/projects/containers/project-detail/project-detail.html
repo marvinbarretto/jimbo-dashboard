@@ -1,7 +1,7 @@
 @if (project(); as p) {
   <app-ui-stack class="project-detail" gap="lg">
     <app-ui-page-header class="project-detail__header">
-      <app-ui-back-link uiPageHeaderLead [to]="['/projects']">← Projects</app-ui-back-link>
+      <app-ui-back-link uiPageHeaderLead [to]="['/config/projects']">← Projects</app-ui-back-link>
       <h1 uiPageHeaderTitle>{{ p.display_name }}</h1>
       <a uiPageHeaderActions routerLink="edit" class="btn btn--secondary">Edit</a>
     </app-ui-page-header>
@@ -19,7 +19,7 @@
         <dt>Owner</dt>
         <dd>
           @if (owner(); as o) {
-            <a [routerLink]="['/actors', o.id]">{{ o.display_name }}</a>
+            <a [routerLink]="['/config/actors', o.id]">{{ o.display_name }}</a>
             <span class="hint">({{ o.kind }})</span>
           } @else {
             <code>{{ p.owner_actor_id }}</code>

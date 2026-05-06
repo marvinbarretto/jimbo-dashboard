@@ -66,7 +66,7 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
       }
 
       @if (firstProject(); as p) {
-        <a class="chip-link" [routerLink]="['/projects', p.id]">
+        <a class="chip-link" [routerLink]="['/config/projects', p.id]">
           <app-entity-chip type="project" [id]="p.id" [label]="p.display_name" />
         </a>
       }

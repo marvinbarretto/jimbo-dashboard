@@ -92,6 +92,6 @@ export class ProjectForm {
     } else {
       this.service.create(payload);
     }
-    this.router.navigate(['/projects', v.id]);
+    this.router.navigate(['/config/projects', v.id]);
   }
 }

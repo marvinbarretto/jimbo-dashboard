@@ -1,6 +1,6 @@
 <div class="actor-form">
   <header class="actor-form__header">
-    <a routerLink="/actors" class="back-link">← Actors</a>
+    <a routerLink="/config/actors" class="back-link">← Actors</a>
     <h1>{{ isEdit() ? 'Edit actor' : 'Add actor' }}</h1>
   </header>
 
@@ -58,7 +58,7 @@
       <button type="submit" class="btn btn--primary">
         {{ isEdit() ? 'Save changes' : 'Add actor' }}
       </button>
-      <a routerLink="/actors" class="btn btn--ghost">Cancel</a>
+      <a routerLink="/config/actors" class="btn btn--ghost">Cancel</a>
     </div>
   </form>
 </div>

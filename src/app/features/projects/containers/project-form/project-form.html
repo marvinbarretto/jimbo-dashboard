@@ -1,6 +1,6 @@
 <app-ui-stack class="project-form" gap="lg">
   <app-ui-page-header class="project-form__header">
-    <app-ui-back-link uiPageHeaderLead [to]="['/projects']">← Projects</app-ui-back-link>
+    <app-ui-back-link uiPageHeaderLead [to]="['/config/projects']">← Projects</app-ui-back-link>
     <h1 uiPageHeaderTitle>{{ isEdit() ? 'Edit project' : 'Add project' }}</h1>
   </app-ui-page-header>
 
@@ -92,7 +92,7 @@
       <button type="submit" class="btn btn--primary">
         {{ isEdit() ? 'Save changes' : 'Add project' }}
       </button>
-      <a routerLink="/projects" class="btn btn--ghost">Cancel</a>
+      <a routerLink="/config/projects" class="btn btn--ghost">Cancel</a>
     </app-ui-form-actions>
   </form>
 </app-ui-stack>

@@ -1,7 +1,7 @@
 @if (actor(); as a) {
   <app-ui-stack class="actor-detail" gap="lg">
     <app-ui-page-header class="actor-detail__header">
-      <app-ui-back-link uiPageHeaderLead [to]="['/actors']">← Actors</app-ui-back-link>
+      <app-ui-back-link uiPageHeaderLead [to]="['/config/actors']">← Actors</app-ui-back-link>
       <h1 uiPageHeaderTitle>{{ a.display_name }}</h1>
       <a uiPageHeaderActions routerLink="edit" class="btn btn--secondary">Edit</a>
     </app-ui-page-header>

@@ -25,7 +25,7 @@ type LabField = 'none' | 'title' | 'status';
           <p uiPageHeaderHint>
             Small scalar fields edit in place. Large fields stay read-only here and route to advanced edit.
           </p>
-          <a uiPageHeaderActions routerLink="/projects/hermes/edit" class="btn btn--secondary">Open advanced edit</a>
+          <a uiPageHeaderActions routerLink="/config/projects/hermes/edit" class="btn btn--secondary">Open advanced edit</a>
         </app-ui-page-header>
 
         <app-ui-stack gap="md">
@@ -117,7 +117,7 @@ type LabField = 'none' | 'title' | 'status';
           <pre class="ui-lab__code-block"><code>{{ criteriaPreview() }}</code></pre>
 
           <app-ui-form-actions align="between">
-            <a routerLink="/projects/hermes/edit" class="btn">Advanced edit</a>
+            <a routerLink="/config/projects/hermes/edit" class="btn">Advanced edit</a>
             <app-ui-button variant="ghost" [disabled]="!hasUnsavedChanges()" (pressed)="resetAll()">Reset demo</app-ui-button>
           </app-ui-form-actions>
         </app-ui-stack>

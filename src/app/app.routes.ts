@@ -29,8 +29,8 @@ export const routes: Routes = [
     loadChildren: () => import('./features/vault-items/vault-items.routes').then(m => m.vaultItemsRoutes),
   },
   {
-    path: 'projects',
-    loadChildren: () => import('./features/projects/projects.routes').then(m => m.projectsRoutes),
+    path: 'config',
+    loadChildren: () => import('./features/config/config.routes').then(m => m.configRoutes),
   },
   {
     path: 'grooming',
@@ -39,10 +39,6 @@ export const routes: Routes = [
   {
     path: 'execution',
     loadChildren: () => import('./features/execution/execution.routes').then(m => m.executionRoutes),
-  },
-  {
-    path: 'actors',
-    loadChildren: () => import('./features/actors/actors.routes').then(m => m.actorsRoutes),
   },
   {
     path: 'questions',

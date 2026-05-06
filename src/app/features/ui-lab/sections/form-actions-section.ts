@@ -17,7 +17,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
         <p class="ui-lab__support-copy">Typical bottom-of-form action rows with different emphases.</p>
 
         <app-ui-form-actions>
-          <a routerLink="/projects" class="btn btn--ghost">Cancel</a>
+          <a routerLink="/config/projects" class="btn btn--ghost">Cancel</a>
           <app-ui-button variant="primary">Save changes</app-ui-button>
         </app-ui-form-actions>
 

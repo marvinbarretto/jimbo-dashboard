@@ -296,7 +296,7 @@ export class VaultItemDetailBody {
   }
 
   onProjectClicked(id: string): void {
-    this.router.navigate(['/projects', id]);
+    this.router.navigate(['/config/projects', id]);
   }
 
   readonly parentItem = computed(() => {

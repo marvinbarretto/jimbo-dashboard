@@ -7,6 +7,7 @@ interface RenderRow {
   itemIndex?: number;
   id: string;
   label?: string;
+  prefix?: string;
   color?: string | null;
 }
 
@@ -39,6 +40,9 @@ interface RenderRow {
                 } @else {
                   <span class="mention-dropdown__dot mention-dropdown__dot--empty"></span>
                 }
+                @if (row.prefix) {
+                  <span class="mention-dropdown__prefix">{{ row.prefix }}</span>
+                }
                 <span class="mention-dropdown__label">{{ row.label }}</span>
               </div>
             }
@@ -49,9 +53,10 @@ interface RenderRow {
   `,
   styles: [`
     .mention-dropdown {
-      min-width: 14rem;
-      max-width: 22rem;
-      max-height: 16rem;
+      min-width: 18rem;
+      max-width: 32rem;
+      width: max-content;
+      max-height: 18rem;
       overflow-y: auto;
       background: var(--color-bg);
       border: 1px solid var(--color-border);
@@ -96,10 +101,20 @@ interface RenderRow {
       }
     }
 
+    .mention-dropdown__prefix {
+      font-size: 0.72rem;
+      color: var(--color-text-muted);
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+      letter-spacing: 0.02em;
+    }
+
     .mention-dropdown__label {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
     }
 
     .mention-dropdown__meta {
@@ -137,6 +152,7 @@ export class MentionDropdown {
         itemIndex: idx,
         id: item.id,
         label: item.label,
+        prefix: item.prefix,
         color: item.color,
       });
     });

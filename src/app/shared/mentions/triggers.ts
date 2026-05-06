@@ -106,15 +106,16 @@ export function projectActorTrigger(
 }
 
 interface VaultHitResponse {
-  results: { source_id: string; title: string }[];
+  results: { source_id: string; title: string; seq?: number | null }[];
 }
 
 /**
- * `~` — search vault items for related-link selection.
+ * `~` — search vault items for related-link selection. The seq number is shown
+ * as a muted prefix so the operator can disambiguate identically-titled notes.
  */
 export function vaultItemTrigger(
   http: HttpClient,
-  onPick: (item: { id: string; title: string }) => void,
+  onPick: (item: { id: string; title: string; seq?: number | null }) => void,
 ): MentionTrigger {
   return {
     char: '~',
@@ -124,16 +125,20 @@ export function vaultItemTrigger(
         `${environment.dashboardApiUrl}/api/search`,
         { params: { q, limit: '8', sources: 'vault_notes' } },
       ).pipe(
-        map(res => res.results.map(r => ({
-          id: `vault:${r.source_id}`,
-          label: r.title || '(untitled)',
-          group: 'Vault items',
-          payload: { id: r.source_id, title: r.title || '(untitled)' },
-        } satisfies MentionItem))),
+        map(res => res.results.map(r => {
+          const title = r.title || '(untitled)';
+          return {
+            id: `vault:${r.source_id}`,
+            label: title,
+            prefix: r.seq != null ? `#${r.seq}` : undefined,
+            group: 'Vault items',
+            payload: { id: r.source_id, title, seq: r.seq ?? null },
+          } satisfies MentionItem;
+        })),
       );
     },
     onSelect: (item) => {
-      onPick(item.payload as { id: string; title: string });
+      onPick(item.payload as { id: string; title: string; seq?: number | null });
       return null;
     },
   };

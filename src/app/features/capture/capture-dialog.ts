@@ -89,7 +89,7 @@ interface CaptureResponse { id: string; seq: number; title: string; }
           }
           @for (item of relatedItems(); track $index; let i = $index) {
             <span class="cap__chip cap__chip--related">
-              ~ {{ item.title }}
+              ~@if (item.seq != null) { #{{ item.seq }} } {{ item.title }}
               <button type="button" class="cap__chip-x" (click)="removeRelated(i)" aria-label="Remove">×</button>
             </span>
           }
@@ -274,7 +274,7 @@ export class CaptureDialog {
   protected readonly tagList = signal<string[]>([]);
   protected readonly selectedProjects = signal<Project[]>([]);
   protected readonly assignedActor = signal<Actor | null>(null);
-  protected readonly relatedItems = signal<{ id: string; title: string }[]>([]);
+  protected readonly relatedItems = signal<{ id: string; title: string; seq?: number | null }[]>([]);
 
   // For tag autocomplete: empty for v1 — `Create #foo` row covers all input.
   // TODO: load known tags from `/api/vault/tags` once that's exposed.
@@ -338,7 +338,7 @@ export class CaptureDialog {
     this.selectedProjects.update(ps => ps.filter((_, i) => i !== idx));
   }
 
-  protected addRelated(item: { id: string; title: string }): void {
+  protected addRelated(item: { id: string; title: string; seq?: number | null }): void {
     this.relatedItems.update(items => [...items, item]);
   }
 

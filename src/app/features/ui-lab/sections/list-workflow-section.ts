@@ -29,7 +29,7 @@ interface LabProjectRow {
           <p uiPageHeaderHint>
             Browse rows, scan status quickly, and jump to the entity or advanced edit.
           </p>
-          <a uiPageHeaderActions routerLink="/projects/new" class="btn btn--primary">Add project</a>
+          <a uiPageHeaderActions routerLink="/config/projects/new" class="btn btn--primary">Add project</a>
         </app-ui-page-header>
 
         <app-table-shell>
@@ -58,8 +58,8 @@ interface LabProjectRow {
                   <td>{{ project.createdAt | datetime }}</td>
                   <td class="ui-lab__actions">
                     <app-ui-cluster justify="end" gap="sm">
-                      <a [routerLink]="['/projects', project.id]">View</a>
-                      <a [routerLink]="['/projects', project.id, 'edit']">Advanced edit</a>
+                      <a [routerLink]="['/config/projects', project.id]">View</a>
+                      <a [routerLink]="['/config/projects', project.id, 'edit']">Advanced edit</a>
                     </app-ui-cluster>
                   </td>
                 </tr>

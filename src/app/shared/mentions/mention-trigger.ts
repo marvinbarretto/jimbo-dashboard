@@ -9,6 +9,8 @@ export interface MentionItem {
   id: string;
   /** Primary text shown to the user. */
   label: string;
+  /** Optional muted text rendered before the label (e.g. "#234"). */
+  prefix?: string;
   /** Optional group header label. Consecutive items with the same group are grouped. */
   group?: string;
   /** Optional CSS color (hex/css var) — rendered as a leading dot. */

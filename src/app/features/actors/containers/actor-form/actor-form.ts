@@ -81,6 +81,6 @@ export class ActorForm {
     } else {
       this.service.create(payload);
     }
-    this.router.navigate(['/actors', v.id]);
+    this.router.navigate(['/config/actors', v.id]);
   }
 }
