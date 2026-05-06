@@ -18,6 +18,7 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'list-workflow',           name: 'List Workflow',         description: 'Typical page header + table pattern for browsable lists.' },
   { id: 'detail-workflow',         name: 'Detail Workflow',       description: 'Typical back-link + meta-list pattern for entity detail pages.' },
   { id: 'hybrid-edit',             name: 'Hybrid Edit',           description: 'Inline edit for scalar fields; advanced edit for structured fields.' },
+  { id: 'inline-edit',             name: 'Inline Edit',           selector: 'app-ui-inline-edit',    description: 'Click-to-edit primitive — text/textarea/select with autofocus, save-on-blur, Esc cancel.' },
   { id: 'expandable-rows',         name: 'Expandable Rows',       description: 'Whole-row trigger revealing inline context without leaving the table.' },
   { id: 'side-panel-inspector',    name: 'Side-Panel Inspector',  description: 'Persistent inspector panel for richer detail and actions.' },
   { id: 'loading-states',          name: 'Loading States',        selector: 'app-ui-loading-state',  description: 'Labelled loading spinner for async content.' },
