@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.27](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.26...v0.0.27) (2026-05-06)
+
+
+### Features
+
+* **projects:** project accent colors + ProjectCard component + UI Lab child routes ([0301e0d](https://github.com/marvinbarretto/jimbo-dashboard/commit/0301e0da8f7e5481f972ff813c9971eb06b83867))
+* **search+capture:** replace capture-input with command-palette dialogs ([7bc3be5](https://github.com/marvinbarretto/jimbo-dashboard/commit/7bc3be5c50d9f1bbf08a303ba9af93f8cb36dc62))
+
 ### [0.0.26](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.25...v0.0.26) (2026-05-06)
 
 
