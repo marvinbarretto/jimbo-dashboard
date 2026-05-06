@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.32](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.31...v0.0.32) (2026-05-06)
+
+
+### Features
+
+* **config:** promote models + model-stacks under /config sub-nav ([42a1969](https://github.com/marvinbarretto/jimbo-dashboard/commit/42a1969532ee87db01b3cfe1b2c7743bcfe37655))
+* **config:** promote skills under /config sub-nav ([c0c60b0](https://github.com/marvinbarretto/jimbo-dashboard/commit/c0c60b063eeb5b25883666bd1bcb903b0ce76ad6))
+* **dispatch-schema:** capability-based skill/actor matching ([beac7eb](https://github.com/marvinbarretto/jimbo-dashboard/commit/beac7eb49c43d9eb9c4a8dcefb4fbf357ad8d25a))
+* **models:** align model schema to OpenRouter conventions ([70153a2](https://github.com/marvinbarretto/jimbo-dashboard/commit/70153a2d8a102766b69b9d1800b45407a62c307f))
+* **stream:** add stale cron-job liveness panel, restore Stream nav ([1334d8f](https://github.com/marvinbarretto/jimbo-dashboard/commit/1334d8f5cd48cc81fe162d7930d7772404f36b88))
+* **tasks:** nest settings + triage under /tasks parent ([0b59b48](https://github.com/marvinbarretto/jimbo-dashboard/commit/0b59b489c33a268465e6d63b07dd550c56de8152))
+
+
+### Bug Fixes
+
+* **actors:** drop dead ?. on serves in actor-detail ([1468d0e](https://github.com/marvinbarretto/jimbo-dashboard/commit/1468d0e8bac85d1b2a1b6a6f1a1464db6c7b2926))
+* **models, skills:** tighten template type guards ([826b727](https://github.com/marvinbarretto/jimbo-dashboard/commit/826b727a37ca28f21e3372a2407233043cb6c3fc))
+* **models:** allow partial OpenRouterPricing in storage ([e2042ba](https://github.com/marvinbarretto/jimbo-dashboard/commit/e2042ba34b7ad201ca4a81559a6e31b22a905a53))
+
 ### [0.0.31](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.30...v0.0.31) (2026-05-06)
 
 
