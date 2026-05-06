@@ -1,0 +1,275 @@
+// Mobile-first single-card view. Footer actions are pinned at the
+// bottom on phone. Desktop just renders top-down with comfy gaps.
+:host {
+  display: block;
+  padding: 0.75rem 1rem;
+  max-width: 32rem;       // single-column reading width
+  margin: 0 auto;
+}
+
+.swipe-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 70vh;
+}
+
+.swipe-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.progress {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+}
+
+.progress-label {
+  color: var(--color-text);
+}
+
+.progress-skipped {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.hdr-btn {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem;
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-bg, #fff) 96%, var(--color-text, #000));
+
+  // Type tint on the left edge — quick visual signal during scan.
+  border-left: 5px solid var(--color-border);
+
+  &[data-type='task'] {
+    border-left-color: #fbbf24;
+  }
+
+  &[data-type='note'] {
+    border-left-color: #c084fc;
+  }
+
+  &[data-type='idea'] {
+    border-left-color: #5eead4;
+  }
+}
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+}
+
+.card-list {
+  font-family: var(--font-mono);
+  background: color-mix(in srgb, var(--color-border) 50%, transparent);
+  border-radius: 3px;
+  padding: 0.05rem 0.4rem;
+  color: var(--color-text-muted);
+}
+
+.card-category {
+  color: var(--color-text-muted);
+}
+
+.card-runner {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-border) 40%, transparent);
+
+  &.runner--boris-loop {
+    background: color-mix(in srgb, #5eead4 25%, transparent);
+    color: color-mix(in srgb, #5eead4 90%, var(--color-text));
+  }
+
+  &.runner--triage-now {
+    background: color-mix(in srgb, #a78bfa 25%, transparent);
+    color: color-mix(in srgb, #a78bfa 90%, var(--color-text));
+  }
+}
+
+.card-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.3;
+  word-break: break-word;
+
+  &--url {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+  }
+}
+
+.card-notes {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.card-rationale {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  background: color-mix(in srgb, var(--color-accent) 5%, transparent);
+  border-left: 2px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+  border-radius: 0 4px 4px 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.05rem 0.45rem;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  background: color-mix(in srgb, var(--color-border) 50%, transparent);
+  color: var(--color-text);
+}
+
+.card-questions {
+  border-top: 1px dashed var(--color-border);
+  padding-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  ul {
+    margin: 0;
+    padding-left: 1rem;
+    font-size: 0.82rem;
+  }
+
+  li {
+    margin-bottom: 0.4rem;
+  }
+
+  .q-heading {
+    margin: 0;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    font-weight: 600;
+  }
+
+  .q-text {
+    font-weight: 500;
+  }
+
+  .q-why {
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    margin-top: 0.1rem;
+  }
+}
+
+.action-error {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: color-mix(in srgb, var(--color-error, #b3261e) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-error, #b3261e) 35%, transparent);
+  border-radius: 4px;
+  color: var(--color-error, #b3261e);
+  font-size: 0.85rem;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+  position: sticky;
+  bottom: 0.5rem;
+  // Sticky on mobile so buttons stay reachable while scrolling long
+  // proposals; on desktop the page is short so it just sits where it
+  // ends up.
+}
+
+.btn {
+  padding: 0.85rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg, #fff) 92%, var(--color-text, #000));
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+
+  // Plenty of touch target — primary use case is phone.
+  min-height: 3rem;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &-discard {
+    color: var(--color-error, #b3261e);
+    border-color: color-mix(in srgb, var(--color-error, #b3261e) 50%, var(--color-border));
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--color-error, #b3261e) 10%, transparent);
+    }
+  }
+
+  &-skip {
+    color: var(--color-text-muted);
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+    }
+  }
+
+  &-promote {
+    color: var(--color-success, #22c55e);
+    border-color: color-mix(in srgb, var(--color-success, #22c55e) 60%, var(--color-border));
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--color-success, #22c55e) 12%, transparent);
+    }
+  }
+}

@@ -13,6 +13,14 @@ export const tasksRoutes: Routes = [
           import('../triage-tasks/triage-tasks-page').then(m => m.TriageTasksPage),
       },
       {
+        path: 'swipe',
+        title: 'Triage swipe',
+        loadComponent: () =>
+          import('../triage-swipe/triage-swipe-page').then(
+            m => m.TriageSwipePage,
+          ),
+      },
+      {
         path: 'activity',
         title: 'Triage activity',
         loadComponent: () =>

@@ -91,13 +91,4 @@ export class TriageActivityPage implements OnInit, OnDestroy {
   protected typeOf(item: TriageHistoryItem): string {
     return item.proposal?.type ?? '—';
   }
-
-  protected formatJson(value: unknown): string {
-    if (value === null || value === undefined) return '';
-    try {
-      return JSON.stringify(value, null, 2);
-    } catch {
-      return String(value);
-    }
-  }
 }

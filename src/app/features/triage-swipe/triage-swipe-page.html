@@ -1,0 +1,108 @@
+<div class="swipe-page">
+  <header class="swipe-header">
+    <div class="progress">
+      @if (cards().length > 0) {
+        <span class="progress-label">{{ progress().done }} / {{ progress().total }}</span>
+        @if (progress().skipped > 0) {
+          <span class="progress-skipped">· {{ progress().skipped }} skipped</span>
+        }
+      } @else {
+        <span class="progress-label">—</span>
+      }
+    </div>
+    <button type="button" class="hdr-btn" [disabled]="tasksLoading() || prefetching()" (click)="refresh()">
+      ↻ refresh
+    </button>
+  </header>
+
+  @if (tasksLoading() || prefetching()) {
+    <app-ui-loading-state message="Loading proposals…" />
+  } @else if (cards().length === 0) {
+    <app-ui-empty-state
+      title="Nothing to swipe"
+      message="No inbox tasks have a cached proposal yet. boris-loop pre-warms these — give it a minute, then refresh."
+    />
+  } @else if (inboxZero()) {
+    <app-ui-empty-state
+      title="Inbox zero ✦"
+      message="You've moved through everything in this batch. ↻ refresh to see if anything new arrived."
+    />
+  } @else if (currentCard(); as card) {
+    <article class="card" [attr.data-type]="card.proposal.type">
+      <header class="card-head">
+        <span class="card-list">{{ card.task.listTitle }}</span>
+        <app-ui-badge [tone]="toneFor(card.proposal.type)">{{ card.proposal.type }}</app-ui-badge>
+        @if (card.proposal.category) {
+          <span class="card-category">· {{ card.proposal.category }}</span>
+        }
+        <span class="card-runner runner--{{ card.runner }}">{{ card.runner }}</span>
+      </header>
+
+      <h1 class="card-title" [class.card-title--url]="looksLikeUrl(card.task.title)">
+        {{ card.task.title }}
+      </h1>
+
+      @if (card.task.notes) {
+        <p class="card-notes">{{ card.task.notes }}</p>
+      }
+
+      <p class="card-rationale">{{ card.proposal.ai_rationale }}</p>
+
+      @if (card.proposal.tags.length) {
+        <div class="card-tags">
+          @for (t of card.proposal.tags; track t) {
+            <span class="tag">{{ t }}</span>
+          }
+        </div>
+      }
+
+      @if (card.proposal.questions.length) {
+        <div class="card-questions">
+          <h3 class="q-heading">Jimbo asks</h3>
+          <ul>
+            @for (q of card.proposal.questions; track q.q) {
+              <li>
+                <div class="q-text">{{ q.q }}</div>
+                <div class="q-why">why: {{ q.why }}</div>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </article>
+
+    @if (actionError(); as err) {
+      <p class="action-error">Failed: {{ err }}</p>
+    }
+
+    <footer class="actions">
+      <button
+        type="button"
+        class="btn btn-discard"
+        [disabled]="actionLoading()"
+        (click)="discard()"
+        title="Delete the Google Task — discards the item entirely"
+      >
+        ✕ discard
+      </button>
+      <button
+        type="button"
+        class="btn btn-skip"
+        [disabled]="actionLoading()"
+        (click)="skip()"
+        title="Skip for this session — task stays in inbox, will resurface on refresh"
+      >
+        ↷ skip
+      </button>
+      <button
+        type="button"
+        class="btn btn-promote"
+        [disabled]="actionLoading()"
+        (click)="promote()"
+        title="Promote to vault — uses the proposed type and tags"
+      >
+        ✓ promote
+      </button>
+    </footer>
+  }
+</div>

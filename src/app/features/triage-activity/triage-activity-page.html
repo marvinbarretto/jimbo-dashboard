@@ -71,7 +71,7 @@
 
             <span class="cell cell-tokens">{{ fmtTokens(item) }}</span>
 
-            <span class="cell cell-version">
+            <span class="cell cell-version" title="skill version (cache invalidates when bumped)">
               @if (item.skill_version) {
                 <span class="muted">v{{ item.skill_version }}</span>
               } @else {
@@ -110,18 +110,9 @@
                   }
                 </div>
               } @else {
-                <p class="muted">Proposal didn't parse — see raw_response in debug below.</p>
-              }
-
-              <div class="detail-section">
-                <h3 class="detail-heading">Debug</h3>
-                <pre class="json"><code>{{ formatJson(item.debug) }}</code></pre>
-              </div>
-
-              @if (item.proposal) {
                 <div class="detail-section">
-                  <h3 class="detail-heading">Proposal (raw)</h3>
-                  <pre class="json"><code>{{ formatJson(item.proposal) }}</code></pre>
+                  <h3 class="detail-heading">Raw response (parse failed)</h3>
+                  <pre class="json"><code>{{ item.debug.raw_response }}</code></pre>
                 </div>
               }
             </div>
