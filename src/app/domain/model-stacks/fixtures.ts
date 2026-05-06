@@ -7,7 +7,7 @@ export const MODEL_STACKS = [
     description: 'Try Haiku, fall back to Sonnet, then Opus.',
     metadata: {
       chain: [
-        'anthropic/claude-haiku-4-5-20251001',
+        'anthropic/claude-haiku-4-5',
         'anthropic/claude-sonnet-4-6',
         'anthropic/claude-opus-4-7',
       ],
