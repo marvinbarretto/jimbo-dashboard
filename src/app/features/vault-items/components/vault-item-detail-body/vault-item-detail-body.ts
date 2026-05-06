@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
   effect,
   inject,
@@ -54,6 +55,7 @@ import {
   type DraftPayload,
   emptyDraft,
   isDraft,
+  isDraftDirty,
   isItem,
   stageFor,
 } from '../../dialog/vault-item-dialog-mode';
@@ -139,6 +141,13 @@ export class VaultItemDetailBody {
     vaultItemTrigger(this.http, (it) => this.addDraftRelated(it)),
   ];
 
+  /**
+   * True after a successful Draft → Item morph. Prevents the destroy hook
+   * from toasting "draft discarded" on a normal save flow (mode flips to
+   * Item, then the dialog closes — neither should warn).
+   */
+  private readonly draftSaved = signal(false);
+
   constructor() {
     // Seed/reseed Draft state when mode flips to Draft. Avoids stale typing
     // surviving a Draft → Item → Draft round-trip on the same dialog instance.
@@ -148,6 +157,18 @@ export class VaultItemDetailBody {
         this.draftPayload.set(m.payload);
         this.draftError.set(null);
       }
+    });
+
+    // Esc / backdrop / X close while in dirty Draft mode → toast a warning so
+    // the user knows their typing was discarded. Empty draft closes silently;
+    // saved draft (already morphed to Item) closes silently. Item-mode close
+    // never reaches the warn branch.
+    inject(DestroyRef).onDestroy(() => {
+      const m = this.mode();
+      if (!isDraft(m)) return;
+      if (this.draftSaved()) return;
+      if (!isDraftDirty(this.draftPayload())) return;
+      this.toast.info('Draft discarded');
     });
 
     // Item mode side-effects — load thread/activity/junctions for the resolved item.
@@ -641,6 +662,7 @@ export class VaultItemDetailBody {
     this.vaultItemsService.createWithRelations(draft).subscribe({
       next: (created) => {
         this.draftSubmitting.set(false);
+        this.draftSaved.set(true);
         this.modeChange.emit({ kind: 'item', seq: created.seq, stage: 'fresh' });
       },
       error: (err) => {

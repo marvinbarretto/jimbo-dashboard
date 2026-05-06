@@ -2,7 +2,8 @@ import { DOCUMENT } from '@angular/common';
 import { Injectable, inject } from '@angular/core';
 import { Dialog, type DialogRef } from '@angular/cdk/dialog';
 import { SearchDialog } from '@features/search/search-dialog';
-import { CaptureDialog } from '@features/capture/capture-dialog';
+import { VaultItemDetailDialog } from '@features/vault-items/containers/vault-item-detail-dialog/vault-item-detail-dialog';
+import type { VaultItemDialogData } from '@features/vault-items/dialog/vault-item-dialog-mode';
 
 function isTextTarget(el: Element | null): boolean {
   if (!el) return false;
@@ -48,16 +49,25 @@ export class CommandShortcutsService {
     ref.closed.subscribe(() => { this.searchOpen = false; });
   }
 
+  /**
+   * Opens the unified vault-item dialog in Draft mode. Replaces the old
+   * standalone CaptureDialog — the dialog morphs Draft → Item in-place
+   * after save, letting the operator keep editing without a reopen.
+   */
   openCapture(): void {
     if (this.captureOpen) return;
     this.captureOpen = true;
-    const ref = this.dialog.open(CaptureDialog, {
-      panelClass: 'command-dialog',
-      ariaModal: true,
-      autoFocus: 'first-tabbable',
-      restoreFocus: true,
-      hasBackdrop: true,
-    });
+    const ref: DialogRef<unknown> = this.dialog.open<unknown, VaultItemDialogData>(
+      VaultItemDetailDialog,
+      {
+        data: { kind: 'draft' },
+        panelClass: 'vault-detail-dialog',
+        ariaModal: true,
+        autoFocus: 'first-tabbable',
+        restoreFocus: true,
+        hasBackdrop: true,
+      },
+    );
     ref.closed.subscribe(() => { this.captureOpen = false; });
   }
 }
