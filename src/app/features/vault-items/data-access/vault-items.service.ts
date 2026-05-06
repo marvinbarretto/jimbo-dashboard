@@ -12,9 +12,13 @@ import type { VaultActivityEvent } from '@domain/activity/activity-event';
 import { vaultItemId, actorId, threadMessageId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { ActivityEventsService } from './activity-events.service';
+import { VaultItemProjectsService } from './vault-item-projects.service';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
+import { Observable } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
+import type { DraftPayload } from '../dialog/vault-item-dialog-mode';
 
 // Convenience alias — the union parameter type for post(). Vault-side only.
 // Distributive Omit so each variant loses id/at independently.
@@ -25,6 +29,7 @@ type EventPayload = CreatePayload<VaultActivityEvent>;
 export class VaultItemsService {
   private readonly http = inject(HttpClient);
   private readonly activityService = inject(ActivityEventsService);
+  private readonly projectsJunction = inject(VaultItemProjectsService);
   private readonly toast = inject(ToastService);
   private readonly url = `${environment.dashboardApiUrl}/api/vault/notes`;
 
@@ -507,6 +512,81 @@ export class VaultItemsService {
     });
   }
 
+  /**
+   * Create a vault item from the unified dialog's Draft payload, then attach
+   * project junctions for any selected projects. Returns an Observable that
+   * emits the created VaultItem.
+   *
+   * Why a separate method: the dialog wants the new item back (to morph
+   * Draft → Item mode) AND wants project junctions wired in the same gesture.
+   * `create()` doesn't take projects; `createOnBoard()` doesn't take body /
+   * tags / assignee / related links. This is the unified-dialog shape.
+   *
+   * Partial-failure policy: the note POST is the source of truth. If it
+   * succeeds we resolve with the new item even if a project junction POST
+   * fails — `VaultItemProjectsService.add()` rolls back its own optimistic
+   * state and toasts the failure, so the dialog can stay open in Item mode
+   * and the operator can retry the missing junction inline.
+   */
+  createWithRelations(draft: DraftPayload): Observable<VaultItem> {
+    const body = toApiCreateBodyFromDraft(draft, this.currentActorId);
+
+    return this.http.post<ApiVaultNoteResponse>(this.url, body).pipe(
+      map((res) => this.materialiseFromDraft(draft, res)),
+      tap((item) => {
+        this._items.update(items => [item, ...items]);
+        this.activityService.post({
+          type: 'created',
+          vault_item_id: item.id,
+          actor_id: this.currentActorId,
+        });
+        for (const project of dedupeById(draft.projects)) {
+          this.projectsJunction.add(item.id, project.id);
+        }
+        this.toast.success(`"${item.title}" created · #${item.seq}`);
+      }),
+    );
+  }
+
+  /** Build an in-memory VaultItem from a Draft + the API's notes-POST response. */
+  private materialiseFromDraft(draft: DraftPayload, res: ApiVaultNoteResponse): VaultItem {
+    const realSeq = typeof res.seq === 'string' ? Number(res.seq) : (res.seq ?? -1);
+    return {
+      id: vaultItemId(res.id),
+      seq: realSeq,
+      title: draft.title.trim(),
+      body: draft.body.trim(),
+      type: 'task',
+      category: null,
+      assigned_to: draft.assignee?.id ?? this.currentActorId,
+      tags: dedupeStrings(draft.tags),
+      acceptance_criteria: [],
+      grooming_status: 'ungroomed',
+      ai_priority: null,
+      manual_priority: null,
+      ai_rationale: null,
+      priority_confidence: null,
+      actionability: null,
+      parent_id: null,
+      is_epic: false,
+      archived_at: null,
+      due_at: null,
+      completed_at: null,
+      source: { kind: 'manual', ref: 'dialog', url: null },
+      created_at: res.created_at ?? new Date().toISOString(),
+      // Board-shape derived fields. Junction service refines primary_project_*
+      // once its add() resolves; the rest stay zero/null until next bulk load.
+      primary_project_id: null,
+      primary_project_name: null,
+      open_questions_count: 0,
+      latest_activity_at: null,
+      children_count: 0,
+      latest_event: null,
+      latest_message: null,
+      days_in_column: 0,
+    };
+  }
+
   // Hard delete. Prefer archive() for most use cases.
   remove(id: VaultItemId): void {
     const prior = this.getById(id);
@@ -730,6 +810,44 @@ function toApiCreateBody(p: CreateVaultItemPayload): Record<string, unknown> {
     if ('url' in p.source && p.source.url) body['source_url'] = p.source.url;
   }
   return body;
+}
+
+// Build the CreateNoteBody for the unified-dialog DraftPayload. Mirrors the
+// shape the old CaptureDialog posted: comma-joined tags, `assigned_to` only
+// when set, and `links` as { target_type: 'vault_note', target_id }[].
+function toApiCreateBodyFromDraft(draft: DraftPayload, currentActor: ActorId): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    title: draft.title.trim(),
+    type: 'task',
+    source_kind: 'manual',
+    source_ref: 'dialog',
+  };
+  const trimmedBody = draft.body.trim();
+  if (trimmedBody) body['body'] = trimmedBody;
+
+  const tags = dedupeStrings(draft.tags);
+  if (tags.length) body['tags'] = tags.join(', ');
+
+  const assignee = draft.assignee?.id ?? currentActor;
+  body['assigned_to'] = assignee;
+
+  const related = dedupeRelated(draft.related);
+  if (related.length) {
+    body['links'] = related.map(r => ({ target_type: 'vault_note' as const, target_id: r.id }));
+  }
+  return body;
+}
+
+function dedupeStrings(xs: readonly string[]): string[] {
+  return Array.from(new Set(xs));
+}
+
+function dedupeById<T extends { id: string }>(xs: readonly T[]): T[] {
+  return Array.from(new Map(xs.map(x => [x.id as string, x])).values());
+}
+
+function dedupeRelated(xs: readonly { id: string }[]): { id: string }[] {
+  return Array.from(new Map(xs.map(x => [x.id, x])).values());
 }
 
 // Fields CreateNoteBody doesn't accept but we still want to set on create —
