@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.31](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.30...v0.0.31) (2026-05-06)
+
+
+### Features
+
+* **theming:** cascade primary-nav accent as --section-accent ([e37d8f4](https://github.com/marvinbarretto/jimbo-dashboard/commit/e37d8f4df699122d1b6a58e5593067bf03c5da19))
+
+
+### Bug Fixes
+
+* **ui-tab-bar:** escape backticks in styles comment ([50627b5](https://github.com/marvinbarretto/jimbo-dashboard/commit/50627b58b5c4a32f124459c5d82d603d2b0655e6))
+
 ### [0.0.30](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.29...v0.0.30) (2026-05-06)
 
 
