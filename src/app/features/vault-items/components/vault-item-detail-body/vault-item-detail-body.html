@@ -1,22 +1,21 @@
-@if (isDraftMode()) {
+@if (store.isDraftMode()) {
   <div class="vault-item-detail vault-item-detail--draft">
     <header class="draft-form__header">
-      <span class="draft-form__seq">new item</span>
       <app-ui-inline-edit
         class="draft-form__title"
-        [value]="draftPayload().title"
+        [value]="store.draftPayload().title"
         size="lg"
         ariaLabel="Title"
         placeholder="Title — what is this about?"
-        (saved)="onDraftTitleSaved($event)"
+        (saved)="store.setDraftTitle($event)"
       />
     </header>
 
     <div class="draft-form__body-wrap">
       <textarea
         class="draft-form__body"
-        [appMention]="draftTriggers"
-        [value]="draftPayload().body"
+        [appMention]="store.draftTriggers"
+        [value]="store.draftPayload().body"
         (input)="onDraftBodyInput($event)"
         (keydown)="onDraftBodyKey($event)"
         placeholder="Notes — type # @ ~ for inline metadata. Shift+Enter for newline; Enter to save."
@@ -27,18 +26,18 @@
 
     <app-ui-mention-chip-strip
       class="draft-form__chips"
-      [tags]="draftPayload().tags"
-      [projects]="draftPayload().projects"
-      [assignee]="draftPayload().assignee"
-      [related]="draftPayload().related"
-      (tagRemoved)="removeDraftTag($event)"
-      (projectRemoved)="removeDraftProject($event)"
-      (assigneeRemoved)="removeDraftAssignee()"
-      (relatedRemoved)="removeDraftRelated($event)"
+      [tags]="store.draftPayload().tags"
+      [projects]="store.draftPayload().projects"
+      [assignee]="store.draftPayload().assignee"
+      [related]="store.draftPayload().related"
+      (tagRemoved)="store.removeDraftTag($event)"
+      (projectRemoved)="store.removeDraftProject($event)"
+      (assigneeRemoved)="store.removeDraftAssignee()"
+      (relatedRemoved)="store.removeDraftRelated($event)"
     />
 
     <footer class="draft-form__footer">
-      @if (draftError(); as err) {
+      @if (store.draftError(); as err) {
         <span class="draft-form__error">{{ err }}</span>
       } @else {
         <span class="draft-form__hint">
@@ -48,113 +47,113 @@
       <app-ui-button
         size="sm"
         variant="primary"
-        [disabled]="!canSubmitDraft()"
+        [disabled]="!store.canSubmitDraft()"
         (pressed)="submitDraft()">
-        {{ draftSubmitting() ? 'Saving…' : 'Save' }}
+        {{ store.draftSubmitting() ? 'Saving…' : 'Save' }}
       </app-ui-button>
     </footer>
   </div>
-} @else if (item(); as item) {
+} @else if (store.item(); as item) {
   <div class="vault-item-detail">
 
     <app-vault-item-identity-header
       [item]="item"
-      (titleChange)="onTitleChange($event)"
+      (titleChange)="store.updateTitle($event)"
     />
 
     <div class="vault-item-detail__zone2">
       <app-vault-item-status-chips
         [item]="item"
-        [owner]="owner()"
+        [owner]="store.owner()"
         [lifecycle]="lifecycleOf(item)"
         [isArchived]="isItemArchived(item)"
-        [effectivePriority]="effectivePriority()"
-        [priorityDiverges]="priorityDiverges()"
-        [firstProject]="projects()[0]"
-        [isGitHubItem]="isGitHubItem()"
-        [activeActors]="activeActors()"
-        (statusChange)="onStatusChange($event)"
-        (reassign)="reassign($event)"
-        (epicToggle)="onEpicToggle($event)"
+        [effectivePriority]="store.effectivePriority()"
+        [priorityDiverges]="store.priorityDiverges()"
+        [firstProject]="store.projects()[0]"
+        [isGitHubItem]="store.isGitHubItem()"
+        [activeActors]="store.activeActors()"
+        (statusChange)="store.setStatus($event)"
+        (reassign)="store.reassign($event)"
+        (epicToggle)="store.setEpic($event)"
       />
 
       <app-vault-item-meta-line
         [createdAt]="item.created_at"
-        [lastActivityAt]="lastActivityAt()"
+        [lastActivityAt]="store.lastActivityAt()"
         [completedAt]="item.completed_at"
         [archivedAt]="item.archived_at"
         [dueAt]="item.due_at"
         [rationale]="item.ai_rationale"
-        [rationaleExpanded]="rationaleExpanded()"
-        (toggleRationale)="toggleRationale()"
+        [rationaleExpanded]="store.rationaleExpanded()"
+        (toggleRationale)="store.toggleRationale()"
       />
 
       <app-vault-item-overview-cards
-        [source]="sourceSummary()"
-        [hierarchy]="hierarchySummary()"
-        [timeline]="timelineSummary()"
-        [queue]="queueSummary()"
+        [source]="store.sourceSummary()"
+        [hierarchy]="store.hierarchySummary()"
+        [timeline]="store.timelineSummary()"
+        [queue]="store.queueSummary()"
       />
     </div>
 
-    @if (showRejectForm()) {
+    @if (store.showRejectForm()) {
       <app-reject-form
         [itemId]="item.id"
         [currentOwner]="item.assigned_to"
-        [recentEvents]="events()"
-        [availableActors]="availableActors()"
-        (cancelled)="closeReject()"
+        [recentEvents]="store.events()"
+        [availableActors]="store.availableActors()"
+        (cancelled)="store.closeReject()"
         (submitted)="onRejectSubmitted($event)"
       />
     }
 
     <app-vault-item-questions
-      [questions]="openQuestions()"
+      [questions]="store.openQuestions()"
       [vaultItemId]="item.id"
       [currentActor]="currentActorId"
-      (replyPosted)="onDetailReplyPosted($event)"
+      (replyPosted)="postThreadReply($event)"
     />
 
     <app-ui-section
       title="Body"
-      [expanded]="sectionBody()"
-      [meta]="'intake · delivery · links ' + (sectionBody() ? '▴' : '▾')"
-      (toggled)="toggleSection('body')">
+      [expanded]="store.sectionBody()"
+      [meta]="'intake · delivery · links ' + (store.sectionBody() ? '▴' : '▾')"
+      (toggled)="store.toggleSection('body')">
       <div class="vault-item-detail__body-layout">
         <app-vault-item-intake-block
           [body]="item.body"
           [createdAt]="item.created_at"
-          [editable]="isManual()"
-          (bodyChange)="onBodyChange($event)"
+          [editable]="store.isManual()"
+          (bodyChange)="store.updateBody($event)"
         />
 
         <app-vault-item-delivery-block
-          [readiness]="readiness()"
+          [readiness]="store.readiness()"
           [criteria]="item.acceptance_criteria"
           [editable]="true"
-          (criteriaChange)="onCriteriaChange($event)"
+          (criteriaChange)="store.updateCriteria($event)"
         />
 
         <app-vault-item-links-block
-          [subtasks]="children()"
-          [projects]="projects()"
-          [activeProjects]="activeProjects()"
-          [openBlockers]="openBlockers()"
+          [subtasks]="store.children()"
+          [projects]="store.projects()"
+          [activeProjects]="store.activeProjects()"
+          [openBlockers]="store.openBlockers()"
           [tags]="item.tags"
-          [addBlockerSeqInput]="addBlockerSeqInput()"
-          [parent]="parentRef()"
+          [addBlockerSeqInput]="store.addBlockerSeqInput()"
+          [parent]="store.parentRef()"
           [editable]="true"
           (subtaskClicked)="swapToSeq($event)"
           (projectClicked)="onProjectClicked($event)"
-          (projectAdded)="addProject($event)"
-          (projectRemoved)="removeProject($event)"
+          (projectAdded)="store.addProject($event)"
+          (projectRemoved)="store.removeProject($event)"
           (blockerClicked)="swapToSeq($event)"
-          (blockerRemoved)="removeBlocker($event)"
-          (blockerAddBySeq)="addBlockerBySeq()"
-          (blockerSeqInputChange)="addBlockerSeqInput.set($event)"
-          (tagsChange)="onTagsChange($event)"
+          (blockerRemoved)="store.removeBlocker($event)"
+          (blockerAddBySeq)="store.addBlockerBySeq()"
+          (blockerSeqInputChange)="store.addBlockerSeqInput.set($event)"
+          (tagsChange)="store.updateTags($event)"
           (parentClicked)="swapToSeq($event)"
-          (parentChange)="onParentChange($event)"
+          (parentChange)="store.updateParent($event)"
         />
       </div>
     </app-ui-section>
@@ -162,36 +161,36 @@
     <app-ui-section
       title="Activity"
       tone="subtle"
-      [expanded]="sectionActivity()"
-      [meta]="'timeline · filters · ' + events().length + ' events ' + (sectionActivity() ? '▴' : '▾')"
-      (toggled)="toggleSection('activity')">
+      [expanded]="store.sectionActivity()"
+      [meta]="'timeline · filters · ' + store.events().length + ' events ' + (store.sectionActivity() ? '▴' : '▾')"
+      (toggled)="store.toggleSection('activity')">
       <app-activity-log
-        [events]="events()"
-        [actorLabel]="actorLabelFn"
-        [actorKind]="actorKindFn"
+        [events]="store.events()"
+        [actorLabel]="store.actorLabelFn"
+        [actorKind]="store.actorKindFn"
       />
     </app-ui-section>
 
     <app-ui-section
       title="Thread"
       tone="subtle"
-      [expanded]="sectionThread()"
-      [meta]="'conversation · ' + messages().length + ' messages ' + (sectionThread() ? '▴' : '▾')"
-      (toggled)="toggleSection('thread')">
+      [expanded]="store.sectionThread()"
+      [meta]="'conversation · ' + store.messages().length + ' messages ' + (store.sectionThread() ? '▴' : '▾')"
+      (toggled)="store.toggleSection('thread')">
       <app-thread-view
         [vaultItemId]="item.id"
         [currentActor]="currentActorId"
-        [actorMap]="actorMap()">
+        [actorMap]="store.actorMap()">
       </app-thread-view>
     </app-ui-section>
 
     <app-vault-item-action-bar
       [editRoute]="['/vault-items', item.seq, 'edit']"
-      [canReject]="canReject()"
+      [canReject]="store.canReject()"
       [isArchived]="isItemArchived(item)"
-      (rejected)="openReject()"
-      (archived)="archive()"
-      (deleted)="deleteItem()"
+      (rejected)="store.openReject()"
+      (archived)="store.archive()"
+      (deleted)="onDeleted()"
     />
 
   </div>

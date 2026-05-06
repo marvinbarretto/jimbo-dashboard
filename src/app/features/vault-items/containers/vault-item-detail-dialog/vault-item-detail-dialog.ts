@@ -10,10 +10,14 @@ import {
   isDraft,
   isItem,
 } from '../../dialog/vault-item-dialog-mode';
+import { VaultItemDialogStore } from '../../dialog/vault-item-dialog-store';
 
 @Component({
   selector: 'app-vault-item-detail-dialog',
   imports: [VaultItemDetailBody, ModalShell],
+  // Component-scoped store — one per dialog instance. The body component
+  // injects the same instance via Angular's hierarchical DI.
+  providers: [VaultItemDialogStore],
   templateUrl: './vault-item-detail-dialog.html',
   styleUrl: './vault-item-detail-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

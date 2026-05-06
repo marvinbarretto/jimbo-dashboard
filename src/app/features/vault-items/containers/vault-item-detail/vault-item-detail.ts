@@ -13,10 +13,14 @@ import { formatPageTitle } from '@app/app-title-strategy';
 import { VaultItemsService } from '../../data-access/vault-items.service';
 import { VaultItemDetailBody } from '../../components/vault-item-detail-body/vault-item-detail-body';
 import type { DialogMode } from '../../dialog/vault-item-dialog-mode';
+import { VaultItemDialogStore } from '../../dialog/vault-item-dialog-store';
 
 @Component({
   selector: 'app-vault-item-detail',
   imports: [VaultItemDetailBody, RouterLink],
+  // Component-scoped store, one per page navigation. Body component shares
+  // the instance via hierarchical DI.
+  providers: [VaultItemDialogStore],
   template: `
     @if (mode(); as m) {
       <app-vault-item-detail-body [mode]="m" surface="page" />

@@ -30,21 +30,16 @@
 // ── Draft mode ─────────────────────────────────────────────────────────────
 // Minimal "create a new ticket" layout shown when mode.kind === 'draft'.
 // Mirrors the visual rhythm of identity-header + zone2 in Item mode but
-// without the loaded sub-components. Constrains its inner width so it
-// feels command-palette-sized inside the wider vault-detail-dialog panel.
+// without the loaded sub-components. Fills the wider vault-detail-dialog
+// panel naturally — the title input becomes the focal element.
 .vault-item-detail--draft {
   display: flex;
   flex-direction: column;
-  max-width: 640px;
-  margin: 0 auto;
-  width: 100%;
 }
 
 .draft-form__header {
   display: flex;
-  gap: .55rem;
   align-items: center;
-  flex-wrap: wrap;
   padding: .85rem .9rem .7rem;
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 92%, transparent);
   background:
@@ -53,18 +48,9 @@
       color-mix(in srgb, var(--color-surface) 95%, transparent));
 }
 
-.draft-form__seq {
-  opacity: .72;
-  font-family: var(--font-mono, monospace);
-  font-size: .74rem;
-  color: var(--color-text-soft);
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-
 .draft-form__title {
   flex: 1;
-  min-width: min(24rem, 100%);
+  min-width: 0;
 }
 
 .draft-form__body-wrap {
