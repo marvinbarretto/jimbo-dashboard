@@ -17,6 +17,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/mail/containers/mail-next-page/mail-next-page').then(m => m.MailNextPage),
   },
   {
+    path: 'mail-activity',
+    title: 'Mail activity',
+    loadComponent: () => import('./features/mail-activity/mail-activity-page').then(m => m.MailActivityPage),
+  },
+  {
     path: 'shopping',
     loadChildren: () => import('./features/shopping/shopping.routes').then(m => m.shoppingRoutes),
   },
@@ -86,6 +91,7 @@ export const routes: Routes = [
       { path: 'inline-edit',             loadComponent: () => import('./features/ui-lab/sections/inline-edit-section').then(m => m.InlineEditSection) },
       { path: 'mention-chip-strip',      loadComponent: () => import('./features/ui-lab/sections/mention-chip-strip-section').then(m => m.MentionChipStripSection) },
       { path: 'expandable-rows',         loadComponent: () => import('./features/ui-lab/sections/expandable-rows-section').then(m => m.ExpandableRowsSection) },
+      { path: 'refresh-control',         loadComponent: () => import('./features/ui-lab/sections/refresh-control-section').then(m => m.RefreshControlSection) },
       { path: 'side-panel-inspector',    loadComponent: () => import('./features/ui-lab/sections/side-panel-inspector-section').then(m => m.SidePanelInspectorSection) },
       { path: 'loading-states',          loadComponent: () => import('./features/ui-lab/sections/loading-states-section').then(m => m.LoadingStatesSection) },
       { path: 'datetime-pipes',          loadComponent: () => import('./features/ui-lab/sections/datetime-pipes-section').then(m => m.DatetimePipesSection) },

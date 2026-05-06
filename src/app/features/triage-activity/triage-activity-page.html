@@ -7,15 +7,11 @@
     <div uiPageHeaderActions>
       <app-ui-cluster gap="sm" align="center">
         <app-ui-badge tone="neutral">{{ items().length }} runs</app-ui-badge>
-        @if (lastFetch(); as ts) {
-          <span class="meta-fresh" [title]="ts">updated {{ fmtRelative(ts) }}</span>
-        }
-        <button
-          type="button"
-          class="refresh-btn"
-          [disabled]="loading()"
-          (click)="refresh()"
-        >{{ loading() ? '…' : '↻' }} refresh</button>
+        <app-ui-refresh-control
+          [loading]="loading()"
+          [lastFetch]="lastFetch()"
+          (refresh)="refresh()"
+        />
       </app-ui-cluster>
     </div>
   </app-ui-page-header>

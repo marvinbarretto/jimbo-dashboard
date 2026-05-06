@@ -1,0 +1,95 @@
+import { HttpClient } from '@angular/common/http';
+import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
+
+// Mirrors EmailReportSchema from jimbo-api/schemas/emails.ts. Stage timestamps
+// double as audit log and queue marker — null = stage not yet done. The
+// pipeline progresses: discovered_at → body_fetched_at → gated_at → verdict
+// → vault_note_id (for keeps).
+export type EmailVerdict = 'keep' | 'toss';
+
+export interface EmailReport {
+  gmail_id: string;
+  thread_id: string | null;
+  from_name: string | null;
+  from_email: string;
+  subject: string | null;
+  body_text: string | null;
+  label_ids: string[] | null;
+  discovered_at: string;
+  body_fetched_at: string | null;
+  gated_at: string | null;
+  verdict: EmailVerdict | null;
+  verdict_reason: string | null;
+  verdict_model: string | null;
+  vault_note_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface EmailReportListResponse {
+  items: EmailReport[];
+  total: number;
+}
+
+const REFRESH_INTERVAL_MS = 30_000;
+const DEFAULT_LIMIT = 50;
+
+@Injectable({ providedIn: 'root' })
+export class MailActivityService {
+  private readonly http = inject(HttpClient);
+  private readonly base = environment.dashboardApiUrl;
+
+  private readonly _items = signal<EmailReport[]>([]);
+  private readonly _total = signal(0);
+  private readonly _loading = signal(false);
+  private readonly _lastError = signal<string | null>(null);
+  private readonly _lastFetch = signal<string | null>(null);
+
+  readonly items = this._items.asReadonly();
+  readonly total = this._total.asReadonly();
+  readonly loading = this._loading.asReadonly();
+  readonly lastError = this._lastError.asReadonly();
+  readonly lastFetch = this._lastFetch.asReadonly();
+
+  readonly count = computed(() => this._items().length);
+
+  private timerHandle: ReturnType<typeof setInterval> | null = null;
+  private started = false;
+
+  start(): void {
+    if (this.started) return;
+    this.started = true;
+    void this.refresh();
+    this.timerHandle = setInterval(() => void this.refresh(), REFRESH_INTERVAL_MS);
+    inject(DestroyRef).onDestroy(() => this.stop());
+  }
+
+  stop(): void {
+    if (this.timerHandle !== null) {
+      clearInterval(this.timerHandle);
+      this.timerHandle = null;
+    }
+    this.started = false;
+  }
+
+  async refresh(limit: number = DEFAULT_LIMIT): Promise<void> {
+    this._loading.set(true);
+    this._lastError.set(null);
+    try {
+      const response = await firstValueFrom(this.http.get<EmailReportListResponse>(
+        `${this.base}/api/emails/reports`,
+        { params: { limit: String(limit) } },
+      ));
+      this._items.set(response.items ?? []);
+      this._total.set(response.total ?? 0);
+      this._lastFetch.set(new Date().toISOString());
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'fetch failed';
+      this._lastError.set(msg);
+    } finally {
+      this._loading.set(false);
+    }
+  }
+}

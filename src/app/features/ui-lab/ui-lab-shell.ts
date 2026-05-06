@@ -21,6 +21,7 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'inline-edit',             name: 'Inline Edit',           selector: 'app-ui-inline-edit',    description: 'Click-to-edit primitive — text/textarea/select with autofocus, save-on-blur, Esc cancel.' },
   { id: 'mention-chip-strip',      name: 'Mention Chip Strip',    selector: 'app-ui-mention-chip-strip', description: 'Tags / projects / assignee / related-items chip strip with × remove. Used by the unified vault-item dialog.' },
   { id: 'expandable-rows',         name: 'Expandable Rows',       description: 'Whole-row trigger revealing inline context without leaving the table.' },
+  { id: 'refresh-control',         name: 'Refresh Control',       selector: 'app-ui-refresh-control', description: 'Freshness timestamp + reload button for activity-style polling pages.' },
   { id: 'side-panel-inspector',    name: 'Side-Panel Inspector',  description: 'Persistent inspector panel for richer detail and actions.' },
   { id: 'loading-states',          name: 'Loading States',        selector: 'app-ui-loading-state',  description: 'Labelled loading spinner for async content.' },
   { id: 'datetime-pipes',          name: 'Date & Time Pipes',     description: 'datetime and relativeTime pipes for ISO string formatting.' },

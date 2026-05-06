@@ -1,0 +1,124 @@
+<app-ui-stack gap="lg" class="mail-activity">
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Mail activity</h1>
+    <p uiPageHeaderHint>
+      Recent email triage pipeline rows from <code>email_reports</code>. Each row tracks a Gmail
+      message through discover → body fetch → gate → verdict, optionally landing as a vault note.
+      Click a row to expand. Auto-refreshes every 30s.
+    </p>
+    <div uiPageHeaderActions>
+      <app-ui-cluster gap="sm" align="center">
+        <app-ui-badge tone="neutral">{{ items().length }} of {{ total() }}</app-ui-badge>
+        <app-ui-refresh-control
+          [loading]="loading()"
+          [lastFetch]="lastFetch()"
+          (refresh)="refresh()"
+        />
+      </app-ui-cluster>
+    </div>
+  </app-ui-page-header>
+
+  @if (lastError(); as err) {
+    <p class="error">Failed: {{ err }}</p>
+  }
+
+  @if (items().length === 0 && !loading()) {
+    <app-ui-empty-state
+      title="No email reports"
+      message="Nothing has been ingested yet. Once Jimbo's mail watcher runs, rows will appear here."
+    />
+  }
+
+  @if (items().length > 0) {
+    <ul class="rows">
+      @for (item of items(); track item.gmail_id) {
+        <li
+          class="row"
+          [class.row--keep]="item.verdict === 'keep'"
+          [class.row--toss]="item.verdict === 'toss'"
+          [class.row--pending]="!item.verdict"
+          [class.row--expanded]="isExpanded(item)"
+        >
+          <button type="button" class="row-head" [attr.aria-expanded]="isExpanded(item)" (click)="toggle(item)">
+            <span class="cell cell-time" [title]="item.discovered_at">{{ fmtRelative(item.discovered_at) }}</span>
+
+            <span class="cell cell-from" [title]="item.from_email">{{ fromLabel(item) }}</span>
+
+            <span class="cell cell-subject">{{ subjectLabel(item) }}</span>
+
+            <span class="cell cell-stages" aria-label="Pipeline stages">
+              @for (s of stages(item); track s.key) {
+                <span class="stage" [class.stage--done]="s.done" [title]="s.title">{{ s.label }}</span>
+              }
+            </span>
+
+            <span class="cell cell-verdict">
+              <app-ui-badge [tone]="verdictTone(item)" [subtle]="true">{{ verdictLabel(item) }}</app-ui-badge>
+            </span>
+
+            <span class="cell cell-vault">
+              @if (item.vault_note_id) {
+                @if (vaultNoteSeq(item); as seq) {
+                  <a
+                    class="vault-link"
+                    [routerLink]="['/vault-items', seq]"
+                    title="Open vault note"
+                    (click)="$event.stopPropagation()"
+                  >→ #{{ seq }}</a>
+                } @else {
+                  <span class="vault-link vault-link--unresolved" [title]="item.vault_note_id">→ note</span>
+                }
+              } @else {
+                <span class="muted">—</span>
+              }
+            </span>
+
+            <span class="cell cell-chevron" aria-hidden="true">{{ isExpanded(item) ? '▾' : '▸' }}</span>
+          </button>
+
+          @if (isExpanded(item)) {
+            <div class="detail">
+              @if (item.verdict_reason) {
+                <div class="detail-section">
+                  <h3 class="detail-heading">Verdict reason</h3>
+                  <p class="rationale">{{ item.verdict_reason }}</p>
+                  @if (item.verdict_model) {
+                    <p class="muted detail-meta">model: <code>{{ item.verdict_model }}</code></p>
+                  }
+                </div>
+              }
+
+              @if (bodyPreview(item); as preview) {
+                <div class="detail-section">
+                  <h3 class="detail-heading">Body preview</h3>
+                  <pre class="body"><code>{{ preview }}</code></pre>
+                </div>
+              }
+
+              <div class="detail-section">
+                <h3 class="detail-heading">IDs &amp; labels</h3>
+                <dl class="detail-dl">
+                  <dt>gmail_id</dt><dd><code>{{ item.gmail_id }}</code></dd>
+                  @if (item.thread_id) {
+                    <dt>thread_id</dt><dd><code>{{ item.thread_id }}</code></dd>
+                  }
+                  @if (item.vault_note_id) {
+                    <dt>vault_note_id</dt><dd><code>{{ item.vault_note_id }}</code></dd>
+                  }
+                  @if (item.label_ids?.length) {
+                    <dt>labels</dt>
+                    <dd>
+                      @for (label of item.label_ids; track label) {
+                        <span class="tag tag-soft">{{ label }}</span>
+                      }
+                    </dd>
+                  }
+                </dl>
+              </div>
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+</app-ui-stack>
