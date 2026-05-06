@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { TableShell } from '@shared/components/table-shell/table-shell';
 import { VaultItemsService } from '../../data-access/vault-items.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
+import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { effectivePriority } from '@domain/vault/readiness';
 import type { VaultItem, VaultItemType, Priority } from '@domain/vault/vault-item';
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
@@ -32,6 +33,7 @@ interface CountedOption<T> {
 export class VaultItemsList {
   private readonly vaultItemsService = inject(VaultItemsService);
   private readonly actorsService = inject(ActorsService);
+  private readonly projectsService = inject(ProjectsService);
 
   readonly isLoading = this.vaultItemsService.isLoading;
 
@@ -189,6 +191,11 @@ export class VaultItemsList {
     if (!item.assigned_to) return '';
     const actor = this.actorsService.getById(item.assigned_to);
     return actor?.display_name ?? item.assigned_to;
+  }
+
+  projectColor(id: string | null | undefined): string | null {
+    if (!id) return null;
+    return this.projectsService.getById(id)?.color_token ?? null;
   }
 
   // Use the embedded primary_project_name from the API response — no per-row

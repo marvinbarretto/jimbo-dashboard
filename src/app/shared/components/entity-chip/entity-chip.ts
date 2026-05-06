@@ -12,7 +12,7 @@ const PREFIX: Record<EntityType, string> = {
   selector: 'app-entity-chip',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <span [class]="cls()" [title]="label()">
+    <span [class]="cls()" [title]="label()" [style]="chipStyle()">
       <span class="entity-chip__prefix" aria-hidden="true">{{ prefix() }}</span>
       @if (type() === 'vault-item' && seq() !== null) {
         <span class="entity-chip__seq">{{ seq() }}</span>
@@ -78,11 +78,11 @@ const PREFIX: Record<EntityType, string> = {
     .entity-chip--actor.entity-chip--boris  { color: var(--actor-color-boris);  border-color: color-mix(in srgb, var(--actor-color-boris)  40%, var(--color-border)); }
     .entity-chip--actor.entity-chip--jimbo  { color: var(--actor-color-jimbo);  border-color: color-mix(in srgb, var(--actor-color-jimbo)  40%, var(--color-border)); }
 
-    /* Project tints */
-    .entity-chip--project.entity-chip--hermes     { color: var(--project-color-hermes);     border-color: color-mix(in srgb, var(--project-color-hermes)     40%, var(--color-border)); }
-    .entity-chip--project.entity-chip--localshout { color: var(--project-color-localshout); border-color: color-mix(in srgb, var(--project-color-localshout) 40%, var(--color-border)); }
-    .entity-chip--project.entity-chip--dashboard  { color: var(--project-color-dashboard);  border-color: color-mix(in srgb, var(--project-color-dashboard)  40%, var(--color-border)); }
-    .entity-chip--project.entity-chip--personal   { color: var(--project-color-personal);   border-color: color-mix(in srgb, var(--project-color-personal)   40%, var(--color-border)); }
+    /* Project tints — color set inline via --chip-color when [color] is bound */
+    .entity-chip--project {
+      color: var(--chip-color, var(--color-text-muted));
+      border-color: color-mix(in srgb, var(--chip-color, var(--color-border)) 40%, var(--color-border));
+    }
 
     /* Vault-item uses accent tint */
     .entity-chip--vault-item {
@@ -99,9 +99,11 @@ export class EntityChip {
   readonly count    = input<number | null | undefined>(undefined);
   readonly active   = input(false);
   readonly disabled = input(false);
+  readonly color    = input<string | null>(null);
 
-  readonly prefix = computed(() => PREFIX[this.type()]);
-  readonly cls    = computed(() => {
+  readonly prefix    = computed(() => PREFIX[this.type()]);
+  readonly chipStyle = computed(() => this.color() ? { '--chip-color': this.color() } : null);
+  readonly cls       = computed(() => {
     const parts = [`entity-chip entity-chip--${this.type()} entity-chip--${this.id()}`];
     if (this.active())   parts.push('entity-chip--active');
     if (this.disabled()) parts.push('entity-chip--disabled');

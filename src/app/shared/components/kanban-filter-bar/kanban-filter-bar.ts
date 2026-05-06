@@ -8,6 +8,7 @@ export interface FilterOption<TValue extends string | number> {
   count: number;
   tone?: string;
   entityType?: EntityType;
+  color?: string | null;
 }
 
 // One filter group = one labelled row of chips that share a state Set.

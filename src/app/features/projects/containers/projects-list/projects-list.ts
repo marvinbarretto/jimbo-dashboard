@@ -2,16 +2,17 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink } from '@angular/router';
 import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
-import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import type { Project, ProjectKind } from '@domain/projects';
+import type { ProjectId } from '@domain/ids';
 import { ProjectsService } from '../../data-access/projects.service';
+import { ProjectCard } from '../../components/project-card/project-card';
 import { VaultItemsService } from '../../../vault-items/data-access/vault-items.service';
 
 @Component({
   selector: 'app-projects-list',
-  imports: [RouterLink, CdkDrag, CdkDropList, UiBadge, UiCluster, UiPageHeader, UiStack],
+  imports: [RouterLink, CdkDrag, CdkDropList, UiBadge, UiPageHeader, UiStack, ProjectCard],
   templateUrl: './projects-list.html',
   styleUrl: './projects-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,7 +43,7 @@ export class ProjectsList {
     this.service.update(project.id, { kind: targetKind });
   }
 
-  remove(id: string): void {
+  remove(id: ProjectId): void {
     if (confirm(`Remove project ${id}?`)) {
       this.service.remove(id);
     }

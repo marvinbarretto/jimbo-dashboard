@@ -1,0 +1,203 @@
+/* Shared utility styles for UI Lab section components.
+   Referenced via styleUrls in each section that needs these classes. */
+
+.ui-lab__table {
+  min-width: 760px;
+}
+
+.ui-lab__table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--color-surface-soft);
+  z-index: 1;
+}
+
+.ui-lab__table tbody tr:hover {
+  background: color-mix(in srgb, var(--color-accent) 5%, transparent);
+}
+
+.ui-lab__table tbody tr:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.ui-lab__table-row--muted {
+  opacity: 0.72;
+}
+
+.ui-lab__table-row--active {
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.ui-lab__actions {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.ui-lab__subhead {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+
+.ui-lab__tab-content {
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-top: none;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.ui-lab__support-copy {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.ui-lab__inline-field {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.ui-lab__inline-field:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.ui-lab__inline-copy {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ui-lab__inline-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-soft);
+}
+
+.ui-lab__inline-value {
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.ui-lab__inline-input {
+  max-width: 24rem;
+}
+
+.ui-lab__code-block {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-soft);
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.ui-lab__expanded-row td {
+  background: color-mix(in srgb, var(--color-surface-soft) 92%, var(--color-bg));
+}
+
+.ui-lab__clickable-row {
+  cursor: pointer;
+}
+
+.ui-lab__clickable-row:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.ui-lab__inspector-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(18rem, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.ui-lab__inspector {
+  padding: 1rem;
+  min-width: 0;
+}
+
+.ui-lab__stat-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.ui-lab__subsection-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ui-lab__dropdown-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.ui-lab__dropdown-option {
+  padding: 0.4rem 0.8rem;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-align: left;
+  color: var(--color-text);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--color-surface-soft);
+  }
+
+  &[aria-selected='true'] {
+    font-weight: 600;
+    color: var(--color-accent);
+  }
+}
+
+.ui-lab__sticky-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-soft);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .ui-lab__inline-field {
+    flex-direction: column;
+  }
+
+  .ui-lab__inspector-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-lab__stat-card-grid {
+    grid-template-columns: 1fr;
+  }
+}

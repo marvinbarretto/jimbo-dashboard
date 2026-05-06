@@ -67,6 +67,27 @@
       <input id="repo_url" formControlName="repo_url" type="url" />
     </div>
 
+    <div class="field">
+      <label>Accent color</label>
+      <div class="color-picker">
+        @if (selectedColor(); as color) {
+          <span class="color-picker__preview" [style.background]="color" [title]="color"></span>
+        }
+        <div class="color-swatches">
+          @for (c of palette; track c) {
+            <button type="button" class="color-swatch"
+                    [style.background]="c"
+                    [class.color-swatch--selected]="selectedColor() === c"
+                    (click)="form.controls.color_token.setValue(c)"
+                    [title]="c"
+                    [attr.aria-label]="'Select color ' + c"
+                    [attr.aria-pressed]="selectedColor() === c">
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
     <app-ui-form-actions>
       <button type="submit" class="btn btn--primary">
         {{ isEdit() ? 'Save changes' : 'Add project' }}

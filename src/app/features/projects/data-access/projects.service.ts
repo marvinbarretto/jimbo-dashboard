@@ -3,6 +3,9 @@
 // criteria / repo_url; the API now returns and accepts them, so the synthesis
 // pass that defaulted owner_actor_id to 'marvin' has been replaced with a
 // passthrough adapter.
+//
+// color_token: picked from PROJECT_PALETTE on create, stored in DB, returned
+// here and injected as CSS vars by ProjectColorsService.
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -55,7 +58,11 @@ export class ProjectsService {
 
   create(payload: CreateProjectPayload): void {
     const now = new Date().toISOString();
-    const optimistic: Project = { ...payload, created_at: now };
+    const color_token = payload.color_token ?? pickProjectColor(
+      this._projects().map(p => p.color_token).filter((c): c is string => c !== null)
+    );
+    const withColor = { ...payload, color_token };
+    const optimistic: Project = { ...withColor, created_at: now };
     this._projects.update(ps => [...ps, optimistic]);
 
     if (isSeedMode()) {
@@ -68,7 +75,7 @@ export class ProjectsService {
       return;
     }
 
-    this.http.post<ApiProject>(this.url, payload).subscribe({
+    this.http.post<ApiProject>(this.url, withColor).subscribe({
       next: (created) => {
         const p = toProject(created);
         this._projects.update(ps => ps.map(x => x.id === payload.id ? p : x));
@@ -198,6 +205,26 @@ function narrowStatus(s: string): ProjectStatus {
   return s === 'archived' ? 'archived' : 'active';
 }
 
+// Curated palette — muted, readable on both light and dark surfaces.
+// Order is intentional: adjacent entries are visually distinct.
+export const PROJECT_PALETTE = [
+  '#7a8fc4', // muted blue
+  '#c47a8f', // muted magenta
+  '#7ac4a4', // muted green
+  '#c4a47a', // muted gold
+  '#a47ac4', // muted violet
+  '#7ac4c4', // muted cyan
+  '#c47a7a', // muted red
+  '#a4c47a', // muted lime
+  '#c4b07a', // muted amber
+  '#7a9fc4', // steel blue
+] as const;
+
+export function pickProjectColor(usedColors: string[]): string {
+  const used = new Set(usedColors);
+  return PROJECT_PALETTE.find(c => !used.has(c)) ?? PROJECT_PALETTE[usedColors.length % PROJECT_PALETTE.length];
+}
+
 function toProject(p: ApiProject): Project {
   return {
     id: projectId(p.id),
@@ -208,6 +235,7 @@ function toProject(p: ApiProject): Project {
     owner_actor_id: actorId(p.owner_actor_id ?? 'marvin'),
     criteria: p.criteria,
     repo_url: p.repo_url,
+    color_token: p.color_token,
     created_at: p.created_at,
   };
 }

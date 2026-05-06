@@ -36,6 +36,10 @@ export interface Project {
   // to discover project-scoped skills. Null for lightweight/prototype projects with no repo.
   repo_url:       string | null;
 
+  // CSS color string (hex, hsl, etc.) applied as an accent throughout the UI.
+  // Auto-assigned from PROJECT_PALETTE on create; operator can override via project form.
+  color_token:    string | null;
+
   created_at:     string;
   // `updated_at` omitted — derived from activity events when we model project-level events.
   // Principle P6: no silent field writes.

@@ -17,25 +17,10 @@
          [cdkDropListConnectedTo]="[minorList]"
          (cdkDropListDropped)="onDrop($event, 'major')">
       @for (p of majorProjects(); track p.id) {
-        <div class="project-card project-card--major" cdkDrag [cdkDragData]="p">
-          <div class="project-card__drag-handle" cdkDragHandle>⠿</div>
-          <div class="project-card__header">
-            <a [routerLink]="[p.id]" class="project-card__name">{{ p.display_name }}</a>
-            @if (p.repo_url) {
-              <a [href]="p.repo_url" target="_blank" rel="noopener" class="project-card__repo">repo ↗</a>
-            }
-          </div>
-          @if (p.description) {
-            <p class="project-card__desc">{{ p.description }}</p>
-          }
-          <div class="project-card__footer">
-            <span class="project-card__owner">{{ p.owner_actor_id }}</span>
-            <app-ui-cluster gap="xs">
-              <a [routerLink]="[p.id, 'edit']" class="btn btn--ghost btn--sm">Edit</a>
-              <button type="button" class="btn btn--ghost btn--sm" (click)="remove(p.id)">Remove</button>
-            </app-ui-cluster>
-          </div>
-        </div>
+        <app-project-card cdkDrag [cdkDragData]="p"
+                          [project]="p"
+                          [showDragHandle]="true"
+                          (removed)="remove($event)" />
       }
     </div>
   </section>
@@ -53,25 +38,10 @@
          [cdkDropListConnectedTo]="[majorList]"
          (cdkDropListDropped)="onDrop($event, 'minor')">
       @for (p of minorProjects(); track p.id) {
-        <div class="project-card project-card--minor" cdkDrag [cdkDragData]="p">
-          <div class="project-card__drag-handle" cdkDragHandle>⠿</div>
-          <div class="project-card__header">
-            <a [routerLink]="[p.id]" class="project-card__name">{{ p.display_name }}</a>
-            @if (p.repo_url) {
-              <a [href]="p.repo_url" target="_blank" rel="noopener" class="project-card__repo">repo ↗</a>
-            }
-          </div>
-          @if (p.description) {
-            <p class="project-card__desc">{{ p.description }}</p>
-          }
-          <div class="project-card__footer">
-            <span class="project-card__owner">{{ p.owner_actor_id }}</span>
-            <app-ui-cluster gap="xs">
-              <a [routerLink]="[p.id, 'edit']" class="btn btn--ghost btn--sm">Edit</a>
-              <button type="button" class="btn btn--ghost btn--sm" (click)="remove(p.id)">Remove</button>
-            </app-ui-cluster>
-          </div>
-        </div>
+        <app-project-card cdkDrag [cdkDragData]="p"
+                          [project]="p"
+                          [showDragHandle]="true"
+                          (removed)="remove($event)" />
       }
     </div>
   </section>
@@ -104,21 +74,7 @@
       <h2 class="projects-list__section-title">Archived</h2>
       <div class="projects-list__grid">
         @for (p of archivedProjects(); track p.id) {
-          <div class="project-card project-card--archived">
-            <div class="project-card__header">
-              <a [routerLink]="[p.id]" class="project-card__name">{{ p.display_name }}</a>
-              <app-ui-badge tone="neutral">archived</app-ui-badge>
-            </div>
-            @if (p.description) {
-              <p class="project-card__desc">{{ p.description }}</p>
-            }
-            <div class="project-card__footer">
-              <app-ui-cluster gap="xs">
-                <a [routerLink]="[p.id, 'edit']" class="btn btn--ghost btn--sm">Edit</a>
-                <button type="button" class="btn btn--ghost btn--sm" (click)="remove(p.id)">Remove</button>
-              </app-ui-cluster>
-            </div>
-          </div>
+          <app-project-card [project]="p" (removed)="remove($event)" />
         }
       </div>
     </section>

@@ -24,7 +24,8 @@
               [label]="opt.label"
               [count]="opt.count"
               [active]="group.active.has(opt.value)"
-              [disabled]="opt.count === 0 && !group.active.has(opt.value)" />
+              [disabled]="opt.count === 0 && !group.active.has(opt.value)"
+              [color]="opt.color ?? null" />
           </button>
         } @else {
           <app-chip

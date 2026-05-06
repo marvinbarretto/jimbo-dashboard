@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
-import { filter, map, take } from 'rxjs';
+import { filter, map, startWith, take } from 'rxjs';
 import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
 import { UiFormActions } from '@shared/components/ui-form-actions/ui-form-actions';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
@@ -11,6 +11,7 @@ import { ProjectsService } from '../../data-access/projects.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
 import { projectId, actorId } from '@domain/ids';
 import type { ProjectKind, ProjectStatus } from '@domain/projects';
+import { PROJECT_PALETTE } from '../../data-access/projects.service';
 
 @Component({
   selector: 'app-project-form',
@@ -32,6 +33,7 @@ export class ProjectForm {
 
   readonly statuses: ProjectStatus[] = ['active', 'archived'];
   readonly kinds: ProjectKind[] = ['major', 'minor'];
+  readonly palette = PROJECT_PALETTE;
 
   // Actor dropdown options — only active actors can own new projects.
   // For existing projects owned by a now-inactive actor, the id stays as a
@@ -47,7 +49,13 @@ export class ProjectForm {
     owner_actor_id: ['', Validators.required],
     criteria:       [null as string | null],
     repo_url:       [null as string | null],
+    color_token:    [null as string | null],
   });
+
+  // Must be declared after `form` — reads form.controls at class field init time.
+  readonly selectedColor = toSignal(
+    this.form.controls.color_token.valueChanges.pipe(startWith(this.form.controls.color_token.value))
+  );
 
   constructor() {
     const id = this.id();
@@ -77,6 +85,7 @@ export class ProjectForm {
       owner_actor_id: actorId(v.owner_actor_id),
       criteria:       v.criteria,
       repo_url:       v.repo_url,
+      color_token:    v.color_token,
     };
     if (this.isEdit()) {
       this.service.update(v.id, payload);

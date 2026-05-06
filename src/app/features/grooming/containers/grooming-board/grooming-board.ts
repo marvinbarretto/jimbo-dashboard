@@ -413,6 +413,7 @@ export class GroomingBoard {
       label:      p.display_name,
       count:      counts.get(p.id as string) ?? 0,
       entityType: 'project' as const,
+      color:      p.color_token,
     }));
     return { id: PROJECT, label: 'Project', options, active: this.projectFilter() };
   }

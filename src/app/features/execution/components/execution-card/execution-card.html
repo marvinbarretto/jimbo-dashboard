@@ -9,7 +9,7 @@
     }
 
     @if (project(); as proj) {
-      <app-entity-chip type="project" [id]="proj.id" [label]="proj.display_name" />
+      <app-entity-chip type="project" [id]="proj.id" [label]="proj.display_name" [color]="proj.color_token" />
     }
 
     <app-dispatch-status-badge [status]="dispatch().status" />

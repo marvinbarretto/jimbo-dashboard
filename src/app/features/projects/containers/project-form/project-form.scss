@@ -7,6 +7,45 @@
   }
 }
 
+.color-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  &__preview {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid var(--color-border);
+  }
+}
+
+.color-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.color-swatch {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 100ms, border-color 100ms;
+  outline-offset: 3px;
+
+  &:hover {
+    transform: scale(1.15);
+  }
+
+  &--selected {
+    border-color: var(--color-text, #111);
+    transform: scale(1.15);
+  }
+}
+
 @media (max-width: 768px) {
   .project-form {
     padding: 1rem;

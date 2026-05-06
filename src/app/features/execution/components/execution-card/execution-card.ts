@@ -22,7 +22,7 @@ export class ExecutionCard {
   readonly taskSeq           = input<number | null>(null);
   readonly taskTitle         = input<string | null>(null);
   readonly skillDisplayName  = input<string | null>(null);
-  readonly project           = input<{ id: string; display_name: string } | null>(null);
+  readonly project           = input<{ id: string; display_name: string; color_token: string | null } | null>(null);
   readonly sourceKind        = input<string | null>(null);
 
   readonly retry = output<void>();

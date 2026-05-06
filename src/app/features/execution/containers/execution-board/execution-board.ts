@@ -168,11 +168,11 @@ export class ExecutionBoard {
     return this.skillsService.getById(entry.skill)?.name ?? null;
   }
 
-  primaryProject(entry: DispatchQueueEntry): { id: string; display_name: string } | null {
+  primaryProject(entry: DispatchQueueEntry): { id: string; display_name: string; color_token: string | null } | null {
     const links = this.vaultItemProjectsService.projectsFor(entry.task_id)();
     if (!links.length) return null;
     const project = this.projectsService.getById(links[0].project_id);
-    return project ? { id: project.id as string, display_name: project.display_name } : null;
+    return project ? { id: project.id as string, display_name: project.display_name, color_token: project.color_token } : null;
   }
 
   // --- manual track ------------------------------------------------------
@@ -265,6 +265,7 @@ export class ExecutionBoard {
       label:      p.display_name,
       count:      counts.get(p.id as string) ?? 0,
       entityType: 'project' as const,
+      color:      p.color_token,
     }));
     return { id: PROJECT, label: 'Project', options, active: this.projectFilter() };
   }

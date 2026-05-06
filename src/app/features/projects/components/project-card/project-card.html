@@ -1,0 +1,25 @@
+@if (showDragHandle()) {
+  <div class="project-card__drag-handle" cdkDragHandle>⠿</div>
+}
+
+<div class="project-card__header">
+  @if (project().color_token) {
+    <span class="project-card__color-dot" [style.background]="project().color_token"></span>
+  }
+  <a [routerLink]="['/projects', project().id]" class="project-card__name">{{ project().display_name }}</a>
+  @if (project().repo_url) {
+    <a [href]="project().repo_url" target="_blank" rel="noopener" class="project-card__repo">repo ↗</a>
+  }
+</div>
+
+@if (project().description) {
+  <p class="project-card__desc">{{ project().description }}</p>
+}
+
+<div class="project-card__footer">
+  <span class="project-card__owner">{{ project().owner_actor_id }}</span>
+  <app-ui-cluster gap="xs">
+    <a [routerLink]="['/projects', project().id, 'edit']" class="btn btn--ghost btn--sm">Edit</a>
+    <button type="button" class="btn btn--ghost btn--sm" (click)="removed.emit(project().id)">Remove</button>
+  </app-ui-cluster>
+</div>
