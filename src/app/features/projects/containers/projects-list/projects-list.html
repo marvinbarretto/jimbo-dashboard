@@ -8,11 +8,17 @@
   <section class="projects-list__section">
     <h2 class="projects-list__section-title">Major projects</h2>
     @if (majorProjects().length === 0) {
-      <p class="projects-list__empty">No major projects yet.</p>
+      <p class="projects-list__empty">No major projects — drop a mini-project here to promote it.</p>
     }
-    <div class="projects-list__grid">
+    <div class="projects-list__grid"
+         cdkDropList
+         #majorList="cdkDropList"
+         [cdkDropListData]="majorProjects()"
+         [cdkDropListConnectedTo]="[minorList]"
+         (cdkDropListDropped)="onDrop($event, 'major')">
       @for (p of majorProjects(); track p.id) {
-        <div class="project-card project-card--major">
+        <div class="project-card project-card--major" cdkDrag [cdkDragData]="p">
+          <div class="project-card__drag-handle" cdkDragHandle>⠿</div>
           <div class="project-card__header">
             <a [routerLink]="[p.id]" class="project-card__name">{{ p.display_name }}</a>
             @if (p.repo_url) {
@@ -38,11 +44,17 @@
   <section class="projects-list__section">
     <h2 class="projects-list__section-title">Mini projects</h2>
     @if (minorProjects().length === 0) {
-      <p class="projects-list__empty">No mini projects yet.</p>
+      <p class="projects-list__empty">No mini projects — drop a major project here to demote it.</p>
     }
-    <div class="projects-list__grid">
+    <div class="projects-list__grid"
+         cdkDropList
+         #minorList="cdkDropList"
+         [cdkDropListData]="minorProjects()"
+         [cdkDropListConnectedTo]="[majorList]"
+         (cdkDropListDropped)="onDrop($event, 'minor')">
       @for (p of minorProjects(); track p.id) {
-        <div class="project-card project-card--minor">
+        <div class="project-card project-card--minor" cdkDrag [cdkDragData]="p">
+          <div class="project-card__drag-handle" cdkDragHandle>⠿</div>
           <div class="project-card__header">
             <a [routerLink]="[p.id]" class="project-card__name">{{ p.display_name }}</a>
             @if (p.repo_url) {

@@ -45,6 +45,37 @@
   }
 }
 
+// ── CDK drag-drop states ──────────────────────────────────────────
+
+.cdk-drop-list-dragging .project-card:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cdk-drag-preview {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  border-radius: 0.5rem;
+  opacity: 0.95;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.3;
+  border: 2px dashed var(--color-border, #e5e7eb);
+  background: transparent;
+  border-radius: 0.5rem;
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+// Highlight the receiving drop-list when dragging over it
+.cdk-drop-list-receiving {
+  background: color-mix(in oklab, var(--color-accent, #818cf8) 6%, transparent);
+  border-radius: 0.5rem;
+}
+
+// ── Project cards ─────────────────────────────────────────────────
+
 .project-card {
   display: flex;
   flex-direction: column;
@@ -53,6 +84,7 @@
   border: 1px solid var(--color-border, #e5e7eb);
   border-radius: 0.5rem;
   background: var(--color-surface, #fff);
+  cursor: default;
 
   &--major {
     border-left: 3px solid var(--color-accent, #818cf8);
@@ -60,6 +92,18 @@
 
   &--minor {
     border-left: 3px solid var(--color-text-muted, #9ca3af);
+  }
+
+  &__drag-handle {
+    font-size: 1rem;
+    color: var(--color-text-muted, #9ca3af);
+    cursor: grab;
+    line-height: 1;
+    width: fit-content;
+
+    &:active {
+      cursor: grabbing;
+    }
   }
 
   &__header {

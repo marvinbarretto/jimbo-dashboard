@@ -1,15 +1,17 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
+import type { Project, ProjectKind } from '@domain/projects';
 import { ProjectsService } from '../../data-access/projects.service';
 import { VaultItemsService } from '../../../vault-items/data-access/vault-items.service';
 
 @Component({
   selector: 'app-projects-list',
-  imports: [RouterLink, UiBadge, UiCluster, UiPageHeader, UiStack],
+  imports: [RouterLink, CdkDrag, CdkDropList, UiBadge, UiCluster, UiPageHeader, UiStack],
   templateUrl: './projects-list.html',
   styleUrl: './projects-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,6 +35,12 @@ export class ProjectsList {
   readonly epics = computed(() =>
     this.vaultItems.items().filter(i => i.is_epic)
   );
+
+  onDrop(event: CdkDragDrop<Project[]>, targetKind: ProjectKind): void {
+    if (event.previousContainer === event.container) return;
+    const project: Project = event.item.data;
+    this.service.update(project.id, { kind: targetKind });
+  }
 
   remove(id: string): void {
     if (confirm(`Remove project ${id}?`)) {
