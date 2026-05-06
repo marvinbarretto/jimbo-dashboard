@@ -8,7 +8,7 @@ import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { VaultItemsService } from '../../vault-items/data-access/vault-items.service';
 import { CronJobNamePipe } from '../cron-job-name.pipe';
-import { CronJobsService } from '../cron-jobs.service';
+import { CronJobsService, type StaleJob } from '../cron-jobs.service';
 import { ErrorAggregationService, type ErrorClass } from '../error-aggregation.service';
 import { EventDetailService } from '../event-detail.service';
 import { StreamService, type SystemEventSummary } from '../stream.service';
@@ -111,6 +111,12 @@ export class StreamPage implements OnInit, OnDestroy {
   readonly errorLastFetch = this.errorAgg.lastFetch;
   readonly errorLastError = this.errorAgg.lastError;
   protected readonly errorPanelOpen = signal(true);
+
+  readonly staleJobs = this.cronJobs.staleJobs;
+  protected readonly stalePanelOpen = signal(true);
+  // Per-job trigger state: 'idle' | 'triggering' | 'sent' | 'failed'.
+  // Resets when the job's last_run_at advances past trigger time.
+  private readonly triggerStateMap = signal<ReadonlyMap<string, 'triggering' | 'sent' | 'failed'>>(new Map());
 
   // Filters — null (or empty) = no constraint.
   protected readonly sourceFilter = signal<string | null>(null);
@@ -260,13 +266,11 @@ export class StreamPage implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.service.connect();
     this.errorAgg.start();
-    this.cronJobs.start();
   }
 
   ngOnDestroy(): void {
     this.service.disconnect();
     this.errorAgg.stop();
-    this.cronJobs.stop();
   }
 
   protected refreshErrors(): void {
@@ -275,6 +279,49 @@ export class StreamPage implements OnInit, OnDestroy {
 
   protected toggleErrorPanel(): void {
     this.errorPanelOpen.update((v) => !v);
+  }
+
+  protected toggleStalePanel(): void {
+    this.stalePanelOpen.update((v) => !v);
+  }
+
+  protected triggerStateFor(jobId: string): 'triggering' | 'sent' | 'failed' | 'idle' {
+    return this.triggerStateMap().get(jobId) ?? 'idle';
+  }
+
+  // Manually fire a stale job. Useful diagnostic: if the job runs fine
+  // when triggered by hand, the issue is the scheduler, not the job.
+  // The next /api/hermes/jobs poll (~10s) will reflect new last_run_at
+  // and the row will drop out of the stale list automatically.
+  protected async runStale(stale: StaleJob): Promise<void> {
+    const id = stale.job.id;
+    if (this.triggerStateFor(id) === 'triggering') return;
+    this.triggerStateMap.update((prev) => new Map(prev).set(id, 'triggering'));
+    try {
+      await this.cronJobs.triggerJob(id);
+      this.triggerStateMap.update((prev) => new Map(prev).set(id, 'sent'));
+    } catch {
+      this.triggerStateMap.update((prev) => new Map(prev).set(id, 'failed'));
+    }
+  }
+
+  // Format overdue duration for display: "5m", "2h 14m", "1d 3h".
+  protected fmtOverdue(ms: number): string {
+    const totalMin = Math.floor(ms / 60_000);
+    if (totalMin < 60) return `${totalMin}m`;
+    const hours = Math.floor(totalMin / 60);
+    const mins = totalMin % 60;
+    if (hours < 24) return mins ? `${hours}h ${mins}m` : `${hours}h`;
+    const days = Math.floor(hours / 24);
+    const remHours = hours % 24;
+    return remHours ? `${days}d ${remHours}h` : `${days}d`;
+  }
+
+  // Period summary for the row meta — hides the math when last_run_at
+  // is null (we used flat tolerance).
+  protected fmtPeriod(periodMs: number | null): string {
+    if (periodMs === null) return 'first run';
+    return `every ${this.fmtOverdue(periodMs)}`;
   }
 
   // Filter the stream to a failing thread by clicking an error class row.

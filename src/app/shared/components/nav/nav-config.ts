@@ -23,6 +23,7 @@ export const primaryNavItems: readonly NavLink[] = [
   { href: '/execution',             label: 'Execution',      accent: '#f87171' },
   { href: '/shopping',              label: 'Shopping',       accent: '#4ade80' },
   { href: '/jimbo-workspace',       label: 'Jimbo Workspace', accent: '#f472b6' },
+  { href: '/stream',                label: 'Stream',         accent: '#5eead4' },
 ];
 
 export const navGroups: readonly NavGroup[] = [

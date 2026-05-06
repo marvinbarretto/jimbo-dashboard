@@ -14,6 +14,67 @@
     <p class="stream-page__error">{{ err }}</p>
   }
 
+  @if (staleJobs().length > 0) {
+    <section
+      class="stream-page__stale"
+      [class.stream-page__stale--collapsed]="!stalePanelOpen()"
+    >
+      <header class="stream-page__stale-head">
+        <button
+          type="button"
+          class="stream-page__stale-toggle"
+          [attr.aria-expanded]="stalePanelOpen()"
+          (click)="toggleStalePanel()"
+        >
+          <span class="stream-page__chevron" aria-hidden="true">{{ stalePanelOpen() ? '▾' : '▸' }}</span>
+          <span class="stream-page__stale-title">Stale cron jobs</span>
+          <app-ui-badge tone="warning">{{ staleJobs().length }}</app-ui-badge>
+          <span class="stream-page__stale-hint">scheduler hasn't ticked these on time</span>
+        </button>
+      </header>
+
+      @if (stalePanelOpen()) {
+        <ul class="stream-page__stale-list">
+          @for (stale of staleJobs(); track stale.job.id) {
+            <li class="stream-page__stale-row">
+              <div class="stream-page__stale-row-main">
+                <span class="stream-page__stale-overdue" [title]="'next_run_at: ' + (stale.job.next_run_at ?? '?')">
+                  {{ fmtOverdue(stale.overdueMs) }} late
+                </span>
+                <span class="stream-page__stale-name">{{ stale.job.name }}</span>
+                <span class="stream-page__stale-meta">
+                  <span>{{ fmtPeriod(stale.periodMs) }}</span>
+                  @if (stale.job.last_run_at; as lr) {
+                    <span [title]="lr">last ran {{ fmtRelative(lr) }}</span>
+                  }
+                  @if (stale.job.last_status; as st) {
+                    <span [class.stream-page__stale-bad-status]="st !== 'ok'">status: {{ st }}</span>
+                  }
+                </span>
+                @if (stale.job.last_error; as le) {
+                  <code class="stream-page__stale-err" [title]="le">{{ le }}</code>
+                }
+              </div>
+              <button
+                type="button"
+                class="stream-page__stale-trigger"
+                [disabled]="triggerStateFor(stale.job.id) === 'triggering'"
+                (click)="runStale(stale)"
+              >
+                @switch (triggerStateFor(stale.job.id)) {
+                  @case ('triggering') { … triggering }
+                  @case ('sent') { ✓ triggered }
+                  @case ('failed') { ✗ retry }
+                  @default { ▸ run now }
+                }
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
   <section
     class="stream-page__errors"
     [class.stream-page__errors--collapsed]="!errorPanelOpen()"
