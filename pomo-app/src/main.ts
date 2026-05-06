@@ -11,6 +11,7 @@ interface ActivitySummary {
   focus_ratio: number;
   idle_seconds: number;
   unfocused_seconds: number;
+  unaccounted_seconds: number;
   domain_breakdown: Array<{ domain: string; seconds: number }>;
 }
 
@@ -235,8 +236,9 @@ function renderActivity(a: ActivitySummary, plannedSeconds: number): HTMLElement
   const headlines: string[] = [];
   if (a.top_domain) headlines.push(`${focusPct}% on ${a.top_domain}`);
   headlines.push(`${a.tab_switches} switch${a.tab_switches === 1 ? '' : 'es'}`);
-  if (a.unfocused_seconds > 0) headlines.push(`${formatMins(a.unfocused_seconds)} unfocused`);
-  if (a.idle_seconds > 0)      headlines.push(`${formatMins(a.idle_seconds)} idle`);
+  if (a.unfocused_seconds > 0)   headlines.push(`${formatMins(a.unfocused_seconds)} unfocused`);
+  if (a.idle_seconds > 0)        headlines.push(`${formatMins(a.idle_seconds)} idle`);
+  if (a.unaccounted_seconds > 0) headlines.push(`${formatMins(a.unaccounted_seconds)} other`);
 
   const headlineRow = el('p', { class: 'pomo__activity-headline' }, [headlines.join(' · ')]);
 
