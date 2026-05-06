@@ -383,8 +383,8 @@ h2 { font-size: 1.25rem; font-weight: 600; }
 
   &.active,
   &[aria-current="page"] {
-    color: var(--color-accent);
-    border-bottom-color: var(--color-accent);
+    color: var(--section-accent, var(--color-accent));
+    border-bottom-color: var(--section-accent, var(--color-accent));
   }
 }
 

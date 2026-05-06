@@ -11,9 +11,14 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   styles: [`
     :host { display: block; }
 
+    // Background hue picks up `--section-accent` set on the app shell. The
+    // border-bottom switches to the accent at full strength so the active tab
+    // underline reads as part of the same tinted strip.
     .ui-tab-bar {
       display: flex;
-      border-bottom: 1px solid var(--color-border);
+      padding: 0 1.5rem;
+      background: color-mix(in oklch, var(--section-accent, var(--color-border)) 8%, transparent);
+      border-bottom: 1px solid color-mix(in oklch, var(--section-accent, var(--color-border)) 35%, var(--color-border));
     }
   `],
 })
