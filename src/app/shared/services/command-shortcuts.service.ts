@@ -24,7 +24,7 @@ export class CommandShortcutsService {
   }
 
   private onKey(e: KeyboardEvent): void {
-    if (e.key === 'c' && !isTextTarget(e.target as Element)) {
+    if (e.shiftKey && e.key === 'N' && !isTextTarget(e.target as Element)) {
       e.preventDefault();
       this.openCapture();
       return;
