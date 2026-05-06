@@ -1,4 +1,10 @@
 .pomo {
+  // Amber = pomo mode. Dashboard nav stays electric blue; the timer page
+  // matches the extension popup so both surfaces feel like one product.
+  --color-accent: #ffd86b;
+  --color-accent-glow: color-mix(in srgb, #ffd86b 30%, transparent);
+  --color-accent-soft: color-mix(in srgb, #ffd86b 16%, transparent);
+
   max-width: 28rem;
   margin: 0 auto;
   padding: 1rem;
