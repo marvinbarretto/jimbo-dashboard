@@ -407,15 +407,14 @@ export class VaultItemDetailBody {
   archive(): void {
     const i = this.item();
     if (!i) return;
-    if (!confirm(`Archive #${i.seq} — ${i.title}?`)) return;
     this.vaultItemsService.archive(i.id);
   }
 
   deleteItem(): void {
     const i = this.item();
     if (!i) return;
-    if (!confirm(`Permanently delete #${i.seq} — ${i.title}? This cannot be undone.`)) return;
     this.vaultItemsService.remove(i.id);
+    this.router.navigate(['/vault-items']);
   }
 
   onStatusChange(next: 'active' | 'done'): void {
