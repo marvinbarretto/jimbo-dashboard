@@ -38,37 +38,80 @@
       </label>
 
       <label class="field">
+        <span class="field__label">Source <small>(openrouter rows are sync-targets)</small></span>
+        <select formControlName="source">
+          @for (s of sources; track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field">
         <span class="field__label">Provider</span>
         <input type="text" formControlName="provider" placeholder="anthropic" />
       </label>
 
       <label class="field">
-        <span class="field__label">Context window <small>(tokens)</small></span>
-        <input type="number" formControlName="context_window" min="1" />
+        <span class="field__label">Canonical slug <small>(OpenRouter id)</small></span>
+        <input type="text" formControlName="canonical_slug" placeholder="anthropic/claude-haiku-4-5" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Context length <small>(tokens)</small></span>
+        <input type="number" formControlName="context_length" min="1" />
       </label>
     </fieldset>
 
     <fieldset class="field-group">
-      <legend>Prices ($/MTok)</legend>
+      <legend>Architecture</legend>
 
       <label class="field">
-        <span class="field__label">Input</span>
-        <input type="number" formControlName="input_price" step="0.01" min="0" />
+        <span class="field__label">Input modalities <small>(comma-separated, e.g. text, image)</small></span>
+        <input type="text" formControlName="input_modalities" placeholder="text, image" />
       </label>
 
       <label class="field">
-        <span class="field__label">Output</span>
-        <input type="number" formControlName="output_price" step="0.01" min="0" />
+        <span class="field__label">Output modalities <small>(comma-separated)</small></span>
+        <input type="text" formControlName="output_modalities" placeholder="text" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Tokenizer</span>
+        <input type="text" formControlName="tokenizer" placeholder="Claude" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Supported parameters <small>(comma-separated, e.g. tools, reasoning)</small></span>
+        <input type="text" formControlName="supported_parameters" placeholder="max_tokens, tools, reasoning" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Knowledge cutoff <small>(ISO date)</small></span>
+        <input type="text" formControlName="knowledge_cutoff" placeholder="" />
+      </label>
+    </fieldset>
+
+    <fieldset class="field-group">
+      <legend>Pricing <small>(entered $/MTok, stored $/token)</small></legend>
+
+      <label class="field">
+        <span class="field__label">Prompt</span>
+        <input type="number" formControlName="prompt_price" step="0.01" min="0" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Completion</span>
+        <input type="number" formControlName="completion_price" step="0.01" min="0" />
       </label>
 
       <label class="field">
         <span class="field__label">Cache read</span>
-        <input type="number" formControlName="cache_read" step="0.001" min="0" />
+        <input type="number" formControlName="cache_read_price" step="0.001" min="0" />
       </label>
 
       <label class="field">
         <span class="field__label">Cache write</span>
-        <input type="number" formControlName="cache_write" step="0.01" min="0" />
+        <input type="number" formControlName="cache_write_price" step="0.01" min="0" />
       </label>
     </fieldset>
 

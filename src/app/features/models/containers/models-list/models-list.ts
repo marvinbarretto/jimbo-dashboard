@@ -10,6 +10,13 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { ModelsService } from '../../data-access/models.service';
 import { modelProvider, modelLocalName, type Model, type ModelStatus } from '@domain/models';
 
+// OpenRouter prices are USD-per-token strings; the table displays $/MTok.
+function priceToMTok(s: string | undefined): number | null {
+  if (!s) return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? Number((n * 1_000_000).toFixed(2)) : null;
+}
+
 @Component({
   selector: 'app-models-list',
   imports: [
@@ -58,17 +65,17 @@ export class ModelsList {
       cell: () => this.statusCell(),
       sortingFn: 'alphanumeric',
     }),
-    this.columnHelper.accessor(row => row.metadata.context_window ?? null, {
+    this.columnHelper.accessor(row => row.metadata.context_length ?? null, {
       id: 'context',
       header: 'Context',
     }),
-    this.columnHelper.accessor(row => row.metadata.prices_usd_per_million?.input ?? null, {
-      id: 'input_price',
-      header: 'Input $/MTok',
+    this.columnHelper.accessor(row => priceToMTok(row.metadata.pricing?.prompt), {
+      id: 'prompt_price',
+      header: 'Prompt $/MTok',
     }),
-    this.columnHelper.accessor(row => row.metadata.prices_usd_per_million?.output ?? null, {
-      id: 'output_price',
-      header: 'Output $/MTok',
+    this.columnHelper.accessor(row => priceToMTok(row.metadata.pricing?.completion), {
+      id: 'completion_price',
+      header: 'Completion $/MTok',
     }),
   ];
 

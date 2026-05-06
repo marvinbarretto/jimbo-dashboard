@@ -43,4 +43,13 @@ export class ModelDetail {
     const id = this.id();
     return id ? modelLocalName(id) : '';
   });
+
+  // OpenRouter pricing arrives as USD-per-token strings ("0.000003"). Convert
+  // to $/MTok for display so the catalogue stays human-readable.
+  priceMTok(usdPerToken: string | undefined): string {
+    if (!usdPerToken) return '—';
+    const n = Number(usdPerToken);
+    if (!Number.isFinite(n)) return usdPerToken;
+    return (n * 1_000_000).toFixed(2);
+  }
 }

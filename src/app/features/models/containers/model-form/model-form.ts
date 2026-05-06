@@ -5,10 +5,30 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { ModelsService } from '../../data-access/models.service';
 import { ToastService } from '@shared/components/toast/toast.service';
-import type { Model, ModelStatus } from '@domain/models';
+import type { Model, ModelStatus, ModelSource } from '@domain/models';
 import { ALL_CAPABILITIES, CAPABILITY_LABELS, type SkillCapability } from '@domain/capability';
 
 const ID_PATTERN = /^[a-z0-9-]+\/[a-z0-9.-]+$/;
+
+// OpenRouter stores prices as USD-per-token strings ("0.000003" = $3/MTok).
+// The form takes $/MTok numbers for human-friendly entry — convert at boundary.
+function mTokToTokenString(mtok: number): string {
+  return (mtok / 1_000_000).toString();
+}
+
+function tokenStringToMTok(s: string | undefined): number | null {
+  if (!s) return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n * 1_000_000 : null;
+}
+
+function parseList(s: string): string[] {
+  return s.split(',').map(x => x.trim()).filter(Boolean);
+}
+
+function joinList(arr: readonly string[] | undefined): string {
+  return arr?.join(', ') ?? '';
+}
 
 @Component({
   selector: 'app-model-form',
@@ -35,25 +55,38 @@ export class ModelForm {
   readonly modelId = this.id;
 
   readonly statuses: ModelStatus[] = ['candidate', 'preferred', 'deprecated'];
+  readonly sources: ModelSource[] = ['openrouter', 'manual'];
 
   readonly capabilityOptions = ALL_CAPABILITIES;
   readonly capabilityLabel = (c: SkillCapability) => CAPABILITY_LABELS[c];
 
+  // Pricing inputs are stored as OpenRouter-shaped strings ($/token) at the
+  // boundary, but exposed here as $/MTok numbers for human-friendly entry.
+  // Convert in submit() / patchValue().
   readonly form = this.fb.nonNullable.group({
-    id:               ['', [Validators.required, Validators.pattern(ID_PATTERN)]],
-    name:             ['', Validators.required],
-    description:      [''],
-    status:           ['candidate' as ModelStatus, Validators.required],
-    provider:         ['', Validators.required],
-    context_window:   [null as number | null],
-    input_price:      [null as number | null],
-    output_price:     [null as number | null],
-    cache_read:       [null as number | null],
-    cache_write:      [null as number | null],
-    considered_at:    [''],
-    deprecated_at:    [''],
-    classes:          new FormArray(ALL_CAPABILITIES.map(() => new FormControl(false, { nonNullable: true }))),
-    body:             [''],
+    id:                  ['', [Validators.required, Validators.pattern(ID_PATTERN)]],
+    name:                ['', Validators.required],
+    description:         [''],
+    status:              ['candidate' as ModelStatus, Validators.required],
+    source:              ['openrouter' as ModelSource, Validators.required],
+    provider:            ['', Validators.required],
+    canonical_slug:      [''],
+    context_length:      [null as number | null],
+    // Pricing — entered in $/MTok for readability, converted to $/token strings on submit.
+    prompt_price:        [null as number | null],
+    completion_price:    [null as number | null],
+    cache_read_price:    [null as number | null],
+    cache_write_price:   [null as number | null],
+    // Architecture — comma-separated for inputs.
+    input_modalities:    [''],
+    output_modalities:   [''],
+    tokenizer:           [''],
+    supported_parameters: [''],
+    knowledge_cutoff:    [''],
+    considered_at:       [''],
+    deprecated_at:       [''],
+    classes:             new FormArray(ALL_CAPABILITIES.map(() => new FormControl(false, { nonNullable: true }))),
+    body:                [''],
   });
 
   get classesArray(): FormArray<FormControl<boolean>> {
@@ -70,21 +103,28 @@ export class ModelForm {
       this.models$.pipe(filter(ms => ms.length > 0), take(1)).subscribe(models => {
         const m = models.find(x => x.id === id);
         if (!m) return;
-        const p = m.metadata.prices_usd_per_million ?? {};
+        const p = m.metadata.pricing;
         this.form.patchValue({
-          id:             m.id,
-          name:           m.name,
-          description:    m.description,
-          status:         m.metadata.status,
-          provider:       m.metadata.provider,
-          context_window: m.metadata.context_window ?? null,
-          input_price:    p.input ?? null,
-          output_price:   p.output ?? null,
-          cache_read:     p.cache_read ?? null,
-          cache_write:    p.cache_write ?? null,
-          considered_at:  m.metadata.considered_at ?? '',
-          deprecated_at:  m.metadata.deprecated_at ?? '',
-          body:           m.body,
+          id:                   m.id,
+          name:                 m.name,
+          description:          m.description,
+          status:               m.metadata.status,
+          source:               m.metadata.source,
+          provider:             m.metadata.provider,
+          canonical_slug:       m.metadata.canonical_slug ?? '',
+          context_length:       m.metadata.context_length ?? null,
+          prompt_price:         tokenStringToMTok(p?.prompt),
+          completion_price:     tokenStringToMTok(p?.completion),
+          cache_read_price:     tokenStringToMTok(p?.input_cache_read),
+          cache_write_price:    tokenStringToMTok(p?.input_cache_write),
+          input_modalities:     joinList(m.metadata.architecture?.input_modalities),
+          output_modalities:    joinList(m.metadata.architecture?.output_modalities),
+          tokenizer:            m.metadata.architecture?.tokenizer ?? '',
+          supported_parameters: joinList(m.metadata.supported_parameters),
+          knowledge_cutoff:     m.metadata.knowledge_cutoff ?? '',
+          considered_at:        m.metadata.considered_at ?? '',
+          deprecated_at:        m.metadata.deprecated_at ?? '',
+          body:                 m.body,
         });
         const classes = m.metadata.classes ?? [];
         ALL_CAPABILITIES.forEach((cap, i) => {
@@ -100,21 +140,42 @@ export class ModelForm {
       return;
     }
     const v = this.form.getRawValue();
-    const prices: Record<string, number> = {};
-    if (v.input_price != null) prices['input'] = v.input_price;
-    if (v.output_price != null) prices['output'] = v.output_price;
-    if (v.cache_read != null) prices['cache_read'] = v.cache_read;
-    if (v.cache_write != null) prices['cache_write'] = v.cache_write;
+    const pricing: Record<string, string> = {};
+    if (v.prompt_price != null)      pricing['prompt']            = mTokToTokenString(v.prompt_price);
+    if (v.completion_price != null)  pricing['completion']        = mTokToTokenString(v.completion_price);
+    if (v.cache_read_price != null)  pricing['input_cache_read']  = mTokToTokenString(v.cache_read_price);
+    if (v.cache_write_price != null) pricing['input_cache_write'] = mTokToTokenString(v.cache_write_price);
 
+    const inputModalities = parseList(v.input_modalities);
+    const outputModalities = parseList(v.output_modalities);
+    const supportedParameters = parseList(v.supported_parameters);
     const classes = ALL_CAPABILITIES.filter((_, i) => v.classes[i]);
+
+    const architecture = (inputModalities.length || outputModalities.length || v.tokenizer)
+      ? {
+          modality: inputModalities.length && outputModalities.length
+            ? `${inputModalities.join('+')}->${outputModalities.join('+')}`
+            : '',
+          input_modalities: inputModalities,
+          output_modalities: outputModalities,
+          tokenizer: v.tokenizer,
+          instruct_type: null,
+        }
+      : undefined;
+
     const metadata = {
       status: v.status,
+      source: v.source,
       provider: v.provider,
-      context_window: v.context_window ?? undefined,
-      prices_usd_per_million: Object.keys(prices).length > 0 ? prices : undefined,
+      classes: classes.length > 0 ? classes : undefined,
+      canonical_slug: v.canonical_slug || undefined,
+      context_length: v.context_length ?? undefined,
+      architecture,
+      pricing: Object.keys(pricing).length > 0 ? pricing : undefined,
+      supported_parameters: supportedParameters.length > 0 ? supportedParameters : undefined,
+      knowledge_cutoff: v.knowledge_cutoff || undefined,
       considered_at: v.considered_at || undefined,
       deprecated_at: v.deprecated_at || null,
-      classes: classes.length > 0 ? classes : undefined,
     };
 
     this.saving.set(true);

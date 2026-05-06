@@ -6,6 +6,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import type { Actor, ActorKind, ActorRuntime, CreateActorPayload, UpdateActorPayload } from '@domain/actors';
+import { ALL_CAPABILITIES, type SkillCapability } from '@domain/capability';
 import { actorId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { ToastService } from '@shared/components/toast/toast.service';
@@ -91,8 +92,17 @@ interface ApiActor {
   description: string | null;
   is_active: boolean;
   color_token: string | null;
+  // API may not yet return `serves` — treat as optional and default to [] so
+  // the dashboard build stays green ahead of the backend rollout.
+  serves?: string[] | null;
   created_at: string;
   updated_at: string;
+}
+
+function narrowServes(raw: string[] | null | undefined): SkillCapability[] {
+  if (!raw) return [];
+  const known = new Set<string>(ALL_CAPABILITIES);
+  return raw.filter((s): s is SkillCapability => known.has(s));
 }
 
 function narrowKind(k: string): ActorKind {
@@ -112,6 +122,7 @@ function toActor(a: ApiActor): Actor {
     runtime: narrowRuntime(a.runtime),
     description: a.description,
     is_active: a.is_active,
+    serves: narrowServes(a.serves),
     created_at: a.created_at,
     updated_at: a.updated_at,
   };

@@ -1,31 +1,52 @@
 // A model is a tracked LLM the operator is considering, using, or has retired.
 // The canonical source is `hub/models/<provider>/<name>.md` — a personal
-// catalogue committed to git. Today the registry is documentation only;
-// runtime pricing lives in jimbo-api's hardcoded RATES table. When agents
-// grow native fallback support, runners will read these files at dispatch.
+// catalogue committed to git. Most rows are synced from OpenRouter, with a
+// thin layer of operator annotations on top.
+//
+// Schema strategy: fields prefixed by their OpenRouter origin keep upstream
+// names + units verbatim so a sync job can replace those slices wholesale
+// without translation. Operator annotations (status, classes, etc.) live
+// alongside but are owned by the operator, not overwritten on sync.
 
 import type { SkillCapability } from '../capability';
+import type {
+  OpenRouterArchitecture,
+  OpenRouterPricing,
+  OpenRouterTopProvider,
+} from './openrouter';
 
 export type ModelStatus = 'candidate' | 'preferred' | 'deprecated';
 
-export interface ModelPrices {
-  input?: number | null;
-  output?: number | null;
-  cache_read?: number | null;
-  cache_write?: number | null;
-}
+// Provenance — does this row sync from OpenRouter, or is it a manual entry
+// (e.g. local Ollama models, internal endpoints)? Sync jobs only refresh
+// 'openrouter' rows.
+export type ModelSource = 'openrouter' | 'manual';
 
 export interface ModelMetadata {
+  // ── Operator annotations (your own — never overwritten on sync) ──
   status: ModelStatus;
-  provider: string;
-  context_window?: number;
-  prices_usd_per_million?: ModelPrices;
+  source: ModelSource;
   considered_at?: string;
   deprecated_at?: string | null;
-  // Soft tag — which capability classes this model satisfies. Lets the model
-  // catalogue be filtered by capability and gives the operator a sanity-check
-  // when assigning capabilities to actors. Not consumed by the dispatcher.
+  // Capability classes this model satisfies. Operator-overridable; some
+  // values (vision, long-context) can be derived from upstream fields.
   classes?: SkillCapability[];
+  // Free-text grouping for the catalogue — typically the OpenRouter author.
+  provider: string;
+
+  // ── Mirrored from OpenRouter (verbatim names + units) ──
+  // Populated on sync for source='openrouter'; can be filled manually
+  // for source='manual' rows where the field is meaningful.
+  canonical_slug?: string;
+  hugging_face_id?: string | null;
+  context_length?: number;
+  architecture?: OpenRouterArchitecture;
+  pricing?: OpenRouterPricing;
+  top_provider?: OpenRouterTopProvider;
+  supported_parameters?: string[];
+  knowledge_cutoff?: string | null;
+  expiration_date?: string | null;
+  created?: number;                 // Unix timestamp from OpenRouter
 }
 
 export interface Model {

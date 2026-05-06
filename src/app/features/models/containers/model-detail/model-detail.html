@@ -30,9 +30,17 @@
         <dt>Provider</dt>
         <dd>{{ model.metadata.provider }}</dd>
 
-        @if (model.metadata.context_window) {
-          <dt>Context window</dt>
-          <dd>{{ model.metadata.context_window }} tokens</dd>
+        <dt>Source</dt>
+        <dd>{{ model.metadata.source }}</dd>
+
+        @if (model.metadata.canonical_slug) {
+          <dt>Canonical slug</dt>
+          <dd><code>{{ model.metadata.canonical_slug }}</code></dd>
+        }
+
+        @if (model.metadata.context_length) {
+          <dt>Context length</dt>
+          <dd>{{ model.metadata.context_length }} tokens</dd>
         }
 
         @if (model.metadata.classes?.length) {
@@ -44,23 +52,50 @@
           </dd>
         }
 
-        @if (model.metadata.prices_usd_per_million; as p) {
-          @if (p.input != null) {
-            <dt>Input price</dt>
-            <dd>${{ p.input }} / MTok</dd>
+        @if (model.metadata.architecture; as a) {
+          <dt>Modality</dt>
+          <dd>{{ a.modality || '—' }}</dd>
+          @if (a.input_modalities?.length) {
+            <dt>Input modalities</dt>
+            <dd>{{ a.input_modalities.join(', ') }}</dd>
           }
-          @if (p.output != null) {
-            <dt>Output price</dt>
-            <dd>${{ p.output }} / MTok</dd>
+          @if (a.output_modalities?.length) {
+            <dt>Output modalities</dt>
+            <dd>{{ a.output_modalities.join(', ') }}</dd>
           }
-          @if (p.cache_read != null) {
+          @if (a.tokenizer) {
+            <dt>Tokenizer</dt>
+            <dd>{{ a.tokenizer }}</dd>
+          }
+        }
+
+        @if (model.metadata.supported_parameters?.length) {
+          <dt>Supported parameters</dt>
+          <dd>{{ model.metadata.supported_parameters.join(', ') }}</dd>
+        }
+
+        @if (model.metadata.pricing; as p) {
+          @if (p.prompt) {
+            <dt>Prompt price</dt>
+            <dd>${{ priceMTok(p.prompt) }} / MTok</dd>
+          }
+          @if (p.completion) {
+            <dt>Completion price</dt>
+            <dd>${{ priceMTok(p.completion) }} / MTok</dd>
+          }
+          @if (p.input_cache_read) {
             <dt>Cache read</dt>
-            <dd>${{ p.cache_read }} / MTok</dd>
+            <dd>${{ priceMTok(p.input_cache_read) }} / MTok</dd>
           }
-          @if (p.cache_write != null) {
+          @if (p.input_cache_write) {
             <dt>Cache write</dt>
-            <dd>${{ p.cache_write }} / MTok</dd>
+            <dd>${{ priceMTok(p.input_cache_write) }} / MTok</dd>
           }
+        }
+
+        @if (model.metadata.knowledge_cutoff) {
+          <dt>Knowledge cutoff</dt>
+          <dd>{{ model.metadata.knowledge_cutoff }}</dd>
         }
 
         @if (model.metadata.considered_at) {
