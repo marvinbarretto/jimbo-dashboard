@@ -120,7 +120,9 @@
       </thead>
       <tbody>
         @for (item of displayedItems(); track item.id) {
-          <tr [class.archived]="isItemArchived(item)">
+          <tr
+            [class.archived]="isItemArchived(item)"
+            (click)="onRowClick(item.seq, $event)">
             <td class="vault-items-table__seq">
               <a [routerLink]="[item.seq]">#{{ item.seq }}</a>
             </td>

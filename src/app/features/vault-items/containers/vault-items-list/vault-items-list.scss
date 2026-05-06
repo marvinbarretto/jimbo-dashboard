@@ -171,6 +171,12 @@
     vertical-align: middle;
   }
 
+  tbody tr {
+    cursor: pointer;
+    transition: background 0.08s;
+    &:hover { background: color-mix(in oklch, var(--color-accent) 6%, transparent); }
+  }
+
   tr.archived td { opacity: 0.5; }
 
   &__seq { white-space: nowrap; font-variant-numeric: tabular-nums; }

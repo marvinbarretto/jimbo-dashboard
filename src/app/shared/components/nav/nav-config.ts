@@ -18,6 +18,7 @@ export const primaryNavItems: readonly NavLink[] = [
   { href: '/google-tasks-settings', label: 'Tasks',          accent: '#60a5fa' },
   { href: '/triage-tasks',          label: 'Triage',         accent: '#fbbf24' },
   { href: '/projects',              label: 'Projects',       accent: '#818cf8' },
+  { href: '/vault-items',           label: 'Vault',          accent: '#c084fc' },
   { href: '/grooming',              label: 'Grooming',       accent: '#22d3ee' },
   { href: '/execution',             label: 'Execution',      accent: '#f87171' },
   { href: '/shopping',              label: 'Shopping',       accent: '#4ade80' },

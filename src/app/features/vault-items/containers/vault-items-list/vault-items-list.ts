@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TableShell } from '@shared/components/table-shell/table-shell';
 import { VaultItemsService } from '../../data-access/vault-items.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
@@ -34,6 +35,8 @@ export class VaultItemsList {
   private readonly vaultItemsService = inject(VaultItemsService);
   private readonly actorsService = inject(ActorsService);
   private readonly projectsService = inject(ProjectsService);
+  private readonly router = inject(Router);
+  private readonly doc = inject(DOCUMENT);
 
   readonly isLoading = this.vaultItemsService.isLoading;
 
@@ -182,6 +185,18 @@ export class VaultItemsList {
   }
 
   toggleShowAll(): void { this._showAll.update(v => !v); }
+
+  // Whole-row click navigates to the detail page. Inner anchors keep their
+  // own semantics (cmd/ctrl/middle-click → new tab) — bail when the click
+  // already landed on one. Skip when the user is mid-text-selection so
+  // highlighting doesn't accidentally navigate away.
+  onRowClick(seq: number, event: MouseEvent): void {
+    if (event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if ((event.target as HTMLElement).closest('a, button')) return;
+    if (this.doc.defaultView?.getSelection()?.toString()) return;
+    this.router.navigate(['/vault-items', seq]);
+  }
 
   // ── Per-row template helpers ───────────────────────────────────────────
   lifecycleOf = lifecycleState;
