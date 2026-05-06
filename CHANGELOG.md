@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.33](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.32...v0.0.33) (2026-05-06)
+
+
+### Features
+
+* **mail-activity:** surface email triage pipeline + promote ui-refresh-control ([3b30d0f](https://github.com/marvinbarretto/jimbo-dashboard/commit/3b30d0f5b9bb8341fecb2e88a8c93a9a21824451))
+* **stream:** tool-name prefixes on error classes, cascade panel for tool-call threads ([b170b5e](https://github.com/marvinbarretto/jimbo-dashboard/commit/b170b5e0f7bfcb078c0b835c7be84452c6da11df))
+* **swipe:** feedback / re-triage path for cards with questions ([d96d098](https://github.com/marvinbarretto/jimbo-dashboard/commit/d96d098c29e826fcf17195ff7b18e0e2bac593d6))
+* **tasks:** activity sub-nav showing recent triage runs ([01e6409](https://github.com/marvinbarretto/jimbo-dashboard/commit/01e640964e2128407d0dc756c3c236852dd49b69))
+* **tasks:** add Swipe sub-nav, drop redundant JSON in Activity ([40e5ff6](https://github.com/marvinbarretto/jimbo-dashboard/commit/40e5ff62b0666ae2eaa63423d4838e72863a1ec6))
+* **theme:** add light theme + topbar toggle with sun/moon icon ([6946d48](https://github.com/marvinbarretto/jimbo-dashboard/commit/6946d4814e1b3601e07d2c3f0cc1040362cfc0c7))
+* **ui-lab:** promote ui-inline-edit shared primitive ([a59de13](https://github.com/marvinbarretto/jimbo-dashboard/commit/a59de130739d98d1353a773a6331d88a3cca06a5))
+* **ui-lab:** promote ui-mention-chip-strip shared primitive ([73eebb8](https://github.com/marvinbarretto/jimbo-dashboard/commit/73eebb87aa48e07ebcc742613c542493133135e0))
+* **ui-tab-bar:** stick to top below header so sub-nav stays reachable on long pages ([3e6ca20](https://github.com/marvinbarretto/jimbo-dashboard/commit/3e6ca20c62e41e0909fe2d8aa0725d1aa7fb0e1c))
+* **vault-dialog:** introduce DialogMode discriminated union for unified dialog ([b641b1b](https://github.com/marvinbarretto/jimbo-dashboard/commit/b641b1bb41a9b97e0d04e661edb004ea541fbf27))
+* **vault-dialog:** unify Draft + Item rendering behind DialogMode ([c081f3b](https://github.com/marvinbarretto/jimbo-dashboard/commit/c081f3b18a7f43dce5e717561990d8ae738f8358))
+* **vault-dialog:** wire Shift+N to unified dialog, retire CaptureDialog ([08c940a](https://github.com/marvinbarretto/jimbo-dashboard/commit/08c940a902765a276577139a44014b13eb910ba7))
+* **vault:** add createWithRelations for unified-dialog draft creation ([2e0af21](https://github.com/marvinbarretto/jimbo-dashboard/commit/2e0af21417a476e63e53b021e3e0ddc9940137a2))
+
+
+### Bug Fixes
+
+* **seed:** align model-stack chain with OpenRouter unsuffixed model id ([42c6526](https://github.com/marvinbarretto/jimbo-dashboard/commit/42c6526161b091f73e282e64d32ffa0aae3c72ce))
+* **shortcuts:** rename capture shortcut from C to Shift+N, label to 'New item' ([57edb3e](https://github.com/marvinbarretto/jimbo-dashboard/commit/57edb3e8f43e14d6e21476653b2b6c4ded2ab1fd))
+* **tests:** unblock test runner — backfill is_epic, brand projectId in spec ([9afe1d5](https://github.com/marvinbarretto/jimbo-dashboard/commit/9afe1d566ab895a18c35d62739034bc973b60ee7))
+
+
+### Code Refactoring
+
+* **vault-dialog:** extract VaultItemDialogStore for focused-item state ([8df9d24](https://github.com/marvinbarretto/jimbo-dashboard/commit/8df9d2452bc513ce31fd19a91758d31168406bf6))
+
 ### [0.0.32](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.31...v0.0.32) (2026-05-06)
 
 
