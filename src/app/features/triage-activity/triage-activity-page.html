@@ -1,0 +1,133 @@
+<app-ui-stack gap="lg" class="triage-activity">
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Triage activity</h1>
+    <p uiPageHeaderHint>
+      Recent triage proposals across all sources — boris-loop on the M2 and server-side <code>/triage-now</code>. Click a row to expand. Auto-refreshes every 30s.
+    </p>
+    <div uiPageHeaderActions>
+      <app-ui-cluster gap="sm" align="center">
+        <app-ui-badge tone="neutral">{{ items().length }} runs</app-ui-badge>
+        @if (lastFetch(); as ts) {
+          <span class="meta-fresh" [title]="ts">updated {{ fmtRelative(ts) }}</span>
+        }
+        <button
+          type="button"
+          class="refresh-btn"
+          [disabled]="loading()"
+          (click)="refresh()"
+        >{{ loading() ? '…' : '↻' }} refresh</button>
+      </app-ui-cluster>
+    </div>
+  </app-ui-page-header>
+
+  @if (lastError(); as err) {
+    <p class="error">Failed: {{ err }}</p>
+  }
+
+  @if (items().length === 0 && !loading()) {
+    <app-ui-empty-state
+      title="No runs yet"
+      message="Nothing has been triaged. Once boris-loop or /triage-now produce a proposal it'll show here."
+    />
+  }
+
+  @if (items().length > 0) {
+    <ul class="rows">
+      @for (item of items(); track rowKey(item)) {
+        <li
+          class="row"
+          [class.row--ok]="item.debug.parse_ok"
+          [class.row--err]="!item.debug.parse_ok"
+          [class.row--expanded]="isExpanded(item)"
+        >
+          <button type="button" class="row-head" [attr.aria-expanded]="isExpanded(item)" (click)="toggle(item)">
+            <span class="cell cell-time" [title]="item.created_at">{{ fmtRelative(item.created_at) }}</span>
+
+            <span class="cell cell-title" [class.cell-title--gone]="!isInInbox(item)">{{ taskTitle(item) }}</span>
+
+            <span class="cell cell-type">
+              @if (typeOf(item) !== '—') {
+                <span class="tag tag-type tag-{{ typeOf(item) }}">{{ typeOf(item) }}</span>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </span>
+
+            <span class="cell cell-parse">
+              @if (item.debug.parse_ok) {
+                <span class="tick" title="parse_ok">✓</span>
+              } @else {
+                <span class="cross" title="parse failed">✗</span>
+              }
+            </span>
+
+            <span class="cell cell-runner">
+              <span class="runner runner--{{ runnerLabel(item) }}">{{ runnerLabel(item) }}</span>
+            </span>
+
+            <span class="cell cell-model">{{ item.debug.model || item.model }}</span>
+
+            <span class="cell cell-latency">{{ fmtLatency(item.debug.latency_ms) }}</span>
+
+            <span class="cell cell-tokens">{{ fmtTokens(item) }}</span>
+
+            <span class="cell cell-version">
+              @if (item.skill_version) {
+                <span class="muted">v{{ item.skill_version }}</span>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </span>
+
+            <span class="cell cell-chevron" aria-hidden="true">{{ isExpanded(item) ? '▾' : '▸' }}</span>
+          </button>
+
+          @if (isExpanded(item)) {
+            <div class="detail">
+              @if (item.proposal; as p) {
+                <div class="detail-section">
+                  <h3 class="detail-heading">Rationale</h3>
+                  <p class="rationale">{{ p.ai_rationale }}</p>
+
+                  @if (p.tags.length) {
+                    <div class="tag-list">
+                      @for (t of p.tags; track t) {
+                        <span class="tag tag-soft">{{ t }}</span>
+                      }
+                    </div>
+                  }
+
+                  @if (p.questions.length) {
+                    <h4 class="detail-subheading">Questions</h4>
+                    <ul class="questions">
+                      @for (q of p.questions; track q.q) {
+                        <li>
+                          <div class="q-text">{{ q.q }}</div>
+                          <div class="q-why">why: {{ q.why }}</div>
+                        </li>
+                      }
+                    </ul>
+                  }
+                </div>
+              } @else {
+                <p class="muted">Proposal didn't parse — see raw_response in debug below.</p>
+              }
+
+              <div class="detail-section">
+                <h3 class="detail-heading">Debug</h3>
+                <pre class="json"><code>{{ formatJson(item.debug) }}</code></pre>
+              </div>
+
+              @if (item.proposal) {
+                <div class="detail-section">
+                  <h3 class="detail-heading">Proposal (raw)</h3>
+                  <pre class="json"><code>{{ formatJson(item.proposal) }}</code></pre>
+                </div>
+              }
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+</app-ui-stack>

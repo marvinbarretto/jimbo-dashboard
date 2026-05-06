@@ -404,6 +404,24 @@
   border-top: 1px dashed var(--color-border);
 }
 
+// Provenance chip — only present in the meta line when the proposal
+// was produced by an external runner (boris-loop). Server-side
+// /triage-now writes don't set debug.runner, so the chip is absent.
+.runner-tag {
+  display: inline-block;
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  background: color-mix(in srgb, var(--color-border) 40%, transparent);
+  color: var(--color-text);
+
+  &.runner-boris-loop {
+    background: color-mix(in srgb, #5eead4 25%, transparent);
+    color: color-mix(in srgb, #5eead4 90%, var(--color-text));
+  }
+}
+
 .proposal-actions {
   display: flex;
   gap: 0.5rem;

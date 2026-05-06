@@ -43,6 +43,10 @@ export interface TriageDebug {
     completion_tokens: number | null;
     total_tokens: number | null;
   };
+  // Provenance — only present when produced by an external runner
+  // (boris-loop on M2). Server-side /triage-now writes leave these unset.
+  runner?: 'boris-loop';
+  runner_version?: string;
 }
 
 export interface TriageNowResult {
