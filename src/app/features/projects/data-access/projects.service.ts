@@ -40,9 +40,12 @@ export class ProjectsService {
       this._loading.set(false);
       return;
     }
-    this.http.get<{ items: ApiProject[] }>(this.url).subscribe({
-      next: ({ items }) => { this._projects.set(items.map(toProject)); this._loading.set(false); },
-      error: ()         => this._loading.set(false),
+    // GET /api/projects returns a raw Project[] (per the OpenAPI schema —
+    // type: array, not the {items} envelope used by some other endpoints).
+    // Don't destructure; it leaves items=undefined and the page renders empty.
+    this.http.get<ApiProject[]>(this.url).subscribe({
+      next: (items) => { this._projects.set(items.map(toProject)); this._loading.set(false); },
+      error: ()     => this._loading.set(false),
     });
   }
 
