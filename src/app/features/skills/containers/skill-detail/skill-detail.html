@@ -32,7 +32,7 @@
 
         <dt>Requires</dt>
         <dd>
-          @if (skill.metadata.requires?.length) {
+          @if (skill.metadata.requires.length) {
             <app-ui-cluster gap="xs">
               @for (c of skill.metadata.requires; track c) {
                 <app-ui-badge tone="info" [subtle]="true">{{ c }}</app-ui-badge>

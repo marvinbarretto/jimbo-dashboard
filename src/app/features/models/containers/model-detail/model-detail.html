@@ -55,11 +55,11 @@
         @if (model.metadata.architecture; as a) {
           <dt>Modality</dt>
           <dd>{{ a.modality || '—' }}</dd>
-          @if (a.input_modalities?.length) {
+          @if (a.input_modalities.length) {
             <dt>Input modalities</dt>
             <dd>{{ a.input_modalities.join(', ') }}</dd>
           }
-          @if (a.output_modalities?.length) {
+          @if (a.output_modalities.length) {
             <dt>Output modalities</dt>
             <dd>{{ a.output_modalities.join(', ') }}</dd>
           }
@@ -69,9 +69,11 @@
           }
         }
 
-        @if (model.metadata.supported_parameters?.length) {
-          <dt>Supported parameters</dt>
-          <dd>{{ model.metadata.supported_parameters.join(', ') }}</dd>
+        @if (model.metadata.supported_parameters; as sp) {
+          @if (sp.length) {
+            <dt>Supported parameters</dt>
+            <dd>{{ sp.join(', ') }}</dd>
+          }
         }
 
         @if (model.metadata.pricing; as p) {
