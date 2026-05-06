@@ -67,17 +67,17 @@ interface CaptureResponse { id: string; seq: number; title: string; }
 
       @if (hasAnyMeta()) {
         <div class="cap__chips">
-          @for (t of tagList(); track t) {
+          @for (t of tagList(); track $index; let i = $index) {
             <span class="cap__chip cap__chip--tag">
               #{{ t }}
-              <button type="button" class="cap__chip-x" (click)="removeTag(t)" aria-label="Remove tag">×</button>
+              <button type="button" class="cap__chip-x" (click)="removeTag(i)" aria-label="Remove tag">×</button>
             </span>
           }
-          @if (selectedProject(); as p) {
+          @for (p of selectedProjects(); track $index; let i = $index) {
             <span class="cap__chip" [style.--chip-color]="p.color_token ?? 'var(--color-border)'">
               <span class="cap__chip-dot" [style.background]="p.color_token ?? 'var(--color-border)'"></span>
               {{ p.display_name }}
-              <button type="button" class="cap__chip-x" (click)="selectedProject.set(null)" aria-label="Remove project">×</button>
+              <button type="button" class="cap__chip-x" (click)="removeProject(i)" aria-label="Remove project">×</button>
             </span>
           }
           @if (assignedActor(); as a) {
@@ -87,10 +87,10 @@ interface CaptureResponse { id: string; seq: number; title: string; }
               <button type="button" class="cap__chip-x" (click)="assignedActor.set(null)" aria-label="Remove assignee">×</button>
             </span>
           }
-          @for (item of relatedItems(); track item.id) {
+          @for (item of relatedItems(); track $index; let i = $index) {
             <span class="cap__chip cap__chip--related">
               ~ {{ item.title }}
-              <button type="button" class="cap__chip-x" (click)="removeRelated(item.id)" aria-label="Remove">×</button>
+              <button type="button" class="cap__chip-x" (click)="removeRelated(i)" aria-label="Remove">×</button>
             </span>
           }
         </div>
@@ -272,7 +272,7 @@ export class CaptureDialog {
 
   // metadata
   protected readonly tagList = signal<string[]>([]);
-  protected readonly selectedProject = signal<Project | null>(null);
+  protected readonly selectedProjects = signal<Project[]>([]);
   protected readonly assignedActor = signal<Actor | null>(null);
   protected readonly relatedItems = signal<{ id: string; title: string }[]>([]);
 
@@ -282,7 +282,7 @@ export class CaptureDialog {
 
   protected readonly hasAnyMeta = computed(() =>
     this.tagList().length > 0
-    || this.selectedProject() !== null
+    || this.selectedProjects().length > 0
     || this.assignedActor() !== null
     || this.relatedItems().length > 0
   );
@@ -293,7 +293,7 @@ export class CaptureDialog {
     projectActorTrigger(
       this.projectsService.activeProjects,
       this.actorsService.activeActors,
-      (p) => this.selectedProject.set(p),
+      (p) => this.addProject(p),
       (a) => this.assignedActor.set(a),
     ),
     vaultItemTrigger(this.http, (item) => this.addRelated(item)),
@@ -323,19 +323,27 @@ export class CaptureDialog {
   }
 
   protected addTag(tag: string): void {
-    this.tagList.update(tags => tags.includes(tag) ? tags : [...tags, tag]);
+    this.tagList.update(tags => [...tags, tag]);
   }
 
-  protected removeTag(tag: string): void {
-    this.tagList.update(tags => tags.filter(t => t !== tag));
+  protected removeTag(idx: number): void {
+    this.tagList.update(tags => tags.filter((_, i) => i !== idx));
+  }
+
+  protected addProject(p: Project): void {
+    this.selectedProjects.update(ps => [...ps, p]);
+  }
+
+  protected removeProject(idx: number): void {
+    this.selectedProjects.update(ps => ps.filter((_, i) => i !== idx));
   }
 
   protected addRelated(item: { id: string; title: string }): void {
-    this.relatedItems.update(items => items.some(i => i.id === item.id) ? items : [...items, item]);
+    this.relatedItems.update(items => [...items, item]);
   }
 
-  protected removeRelated(id: string): void {
-    this.relatedItems.update(items => items.filter(i => i.id !== id));
+  protected removeRelated(idx: number): void {
+    this.relatedItems.update(items => items.filter((_, i) => i !== idx));
   }
 
   protected async submit(): Promise<void> {
@@ -348,21 +356,28 @@ export class CaptureDialog {
     const payload: Record<string, unknown> = { title };
     const body = this.body().trim();
     if (body) payload['body'] = body;
-    if (this.tagList().length) payload['tags'] = this.tagList().join(', ');
+    // Dedupe tags at submit; the user is allowed to pick the same one twice
+    // for fast-feedback chips, but the DB stores one value.
+    const uniqueTags = Array.from(new Set(this.tagList()));
+    if (uniqueTags.length) payload['tags'] = uniqueTags.join(', ');
     const actor = this.assignedActor();
     if (actor) payload['assigned_to'] = actor.id;
-    const links = this.relatedItems().map(i => ({
+    const uniqueLinks = Array.from(
+      new Map(this.relatedItems().map(i => [i.id, i])).values()
+    );
+    if (uniqueLinks.length) payload['links'] = uniqueLinks.map(i => ({
       target_type: 'vault_note' as const,
       target_id: i.id,
     }));
-    if (links.length) payload['links'] = links;
 
     this.http
       .post<CaptureResponse>(`${environment.dashboardApiUrl}/api/vault/notes`, payload)
       .subscribe({
         next: async (note) => {
-          const project = this.selectedProject();
-          if (project) {
+          const uniqueProjects = Array.from(
+            new Map(this.selectedProjects().map(p => [p.id, p])).values()
+          );
+          for (const project of uniqueProjects) {
             await lastValueFrom(
               this.http.post(`${environment.dashboardApiUrl}/api/vault-item-projects`, {
                 vault_item_id: note.id,
@@ -374,7 +389,7 @@ export class CaptureDialog {
           this.title.set('');
           this.body.set('');
           this.tagList.set([]);
-          this.selectedProject.set(null);
+          this.selectedProjects.set([]);
           this.assignedActor.set(null);
           this.relatedItems.set([]);
           this.submitting.set(false);

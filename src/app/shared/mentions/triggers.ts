@@ -1,6 +1,7 @@
-import { Observable, of, map } from 'rxjs';
+import { Observable, combineLatest, of, map } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import type { Signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import type { Project } from '@domain/projects';
 import type { Actor } from '@domain/actors';
 import { environment } from '../../../environments/environment';
@@ -49,6 +50,10 @@ export function tagTrigger(
  * `@` — combined actor + project picker. Actors first (small fixed set, most
  * common), then projects. Each item carries its kind so the use-site dispatches
  * to the right metadata field (assigned_to vs project link).
+ *
+ * Must be called from an injection context (uses `toObservable`). The dropdown
+ * refreshes if the underlying signals emit later — handles the race where a
+ * service is still loading when the user opens the trigger.
  */
 export function projectActorTrigger(
   projects: Signal<readonly Project[]>,
@@ -56,31 +61,38 @@ export function projectActorTrigger(
   onPickProject: (p: Project) => void,
   onPickActor: (a: Actor) => void,
 ): MentionTrigger {
+  const projects$ = toObservable(projects);
+  const actors$ = toObservable(actors);
+
   return {
     char: '@',
     search: (q) => {
       const ql = q.toLowerCase();
-      const actorItems: MentionItem[] = actors()
-        .filter(a => a.id.toLowerCase().includes(ql) || a.display_name.toLowerCase().includes(ql))
-        .slice(0, 5)
-        .map(a => ({
-          id: `actor:${a.id}`,
-          label: a.display_name,
-          group: 'Actors',
-          color: `var(--actor-color-${a.id})`,
-          payload: { kind: 'actor' as const, actor: a },
-        }));
-      const projectItems: MentionItem[] = projects()
-        .filter(p => p.id.toLowerCase().includes(ql) || p.display_name.toLowerCase().includes(ql))
-        .slice(0, 8)
-        .map(p => ({
-          id: `project:${p.id}`,
-          label: p.display_name,
-          group: 'Projects',
-          color: p.color_token,
-          payload: { kind: 'project' as const, project: p },
-        }));
-      return of([...actorItems, ...projectItems]);
+      return combineLatest([actors$, projects$]).pipe(
+        map(([acts, projs]) => {
+          const actorItems: MentionItem[] = acts
+            .filter(a => a.id.toLowerCase().includes(ql) || a.display_name.toLowerCase().includes(ql))
+            .slice(0, 5)
+            .map(a => ({
+              id: `actor:${a.id}`,
+              label: a.display_name,
+              group: 'Actors',
+              color: `var(--actor-color-${a.id})`,
+              payload: { kind: 'actor' as const, actor: a },
+            }));
+          const projectItems: MentionItem[] = projs
+            .filter(p => p.id.toLowerCase().includes(ql) || p.display_name.toLowerCase().includes(ql))
+            .slice(0, 8)
+            .map(p => ({
+              id: `project:${p.id}`,
+              label: p.display_name,
+              group: 'Projects',
+              color: p.color_token,
+              payload: { kind: 'project' as const, project: p },
+            }));
+          return [...actorItems, ...projectItems];
+        }),
+      );
     },
     onSelect: (item) => {
       const p = item.payload as
