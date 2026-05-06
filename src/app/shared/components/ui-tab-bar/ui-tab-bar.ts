@@ -11,9 +11,9 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   styles: [`
     :host { display: block; }
 
-    // Background hue picks up `--section-accent` set on the app shell. The
-    // border-bottom switches to the accent at full strength so the active tab
-    // underline reads as part of the same tinted strip.
+    // Background hue picks up the --section-accent var set on the app shell.
+    // The border-bottom switches to the accent at full strength so the active
+    // tab underline reads as part of the same tinted strip.
     .ui-tab-bar {
       display: flex;
       padding: 0 1.5rem;
