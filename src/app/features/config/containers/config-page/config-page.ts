@@ -11,6 +11,7 @@ import { UiTabBar } from '@shared/components/ui-tab-bar/ui-tab-bar';
       <app-ui-tab-bar label="Config sections">
         <a routerLink="projects" routerLinkActive="active" class="ui-tab">Projects</a>
         <a routerLink="actors" routerLinkActive="active" class="ui-tab">Actors</a>
+        <a routerLink="skills" routerLinkActive="active" class="ui-tab">Skills</a>
       </app-ui-tab-bar>
 
       <div class="config__body">

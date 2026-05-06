@@ -3,7 +3,7 @@
 } @else if (skill(); as skill) {
   <app-ui-stack class="skill-detail" gap="lg">
     <app-ui-page-header class="skill-detail__header">
-      <app-ui-back-link uiPageHeaderLead [to]="['/skills']">← Skills</app-ui-back-link>
+      <app-ui-back-link uiPageHeaderLead [to]="['/config/skills']">← Skills</app-ui-back-link>
       <div uiPageHeaderTitle class="skill-detail__title">
         <span class="ns-tag">{{ namespace() }}</span>
         <h1>{{ localName() }}</h1>
@@ -82,6 +82,6 @@
   </app-ui-stack>
 } @else {
   <app-ui-empty-state title="Skill not found" message="The requested skill is not present in the registry.">
-    <app-ui-back-link [to]="['/skills']">← Back to skills</app-ui-back-link>
+    <app-ui-back-link [to]="['/config/skills']">← Back to skills</app-ui-back-link>
   </app-ui-empty-state>
 }

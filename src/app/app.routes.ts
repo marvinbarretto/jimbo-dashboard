@@ -53,10 +53,6 @@ export const routes: Routes = [
     loadChildren: () => import('./features/model-stacks/model-stacks.routes').then(m => m.modelStacksRoutes),
   },
   {
-    path: 'skills',
-    loadChildren: () => import('./features/skills/skills.routes').then(m => m.skillsRoutes),
-  },
-  {
     path: 'coverage',
     title: 'Coverage',
     loadComponent: () => import('./features/coverage/coverage-page/coverage-page').then(m => m.CoveragePage),

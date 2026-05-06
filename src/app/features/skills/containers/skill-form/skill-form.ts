@@ -148,7 +148,7 @@ export class SkillForm {
       next: () => {
         this.saving.set(false);
         this.toast.success(`Skill "${id}" deleted`);
-        this.router.navigate(['/skills']);
+        this.router.navigate(['/config/skills']);
       },
       error: err => this.handleError(err),
     });
@@ -172,7 +172,7 @@ export class SkillForm {
       next: skill => {
         this.saving.set(false);
         this.toast.success(`Skill renamed: ${oldId} → ${skill.id}`);
-        this.router.navigate(['/skills', ...skill.id.split('/')]);
+        this.router.navigate(['/config/skills', ...skill.id.split('/')]);
       },
       error: err => this.handleError(err),
     });
@@ -180,7 +180,7 @@ export class SkillForm {
 
   private afterSave(skill: Skill): void {
     this.saving.set(false);
-    this.router.navigate(['/skills', ...skill.id.split('/')]);
+    this.router.navigate(['/config/skills', ...skill.id.split('/')]);
   }
 
   private handleError(err: unknown): void {

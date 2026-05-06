@@ -24,7 +24,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
         <app-ui-form-actions align="between">
           <app-ui-button variant="danger">Delete</app-ui-button>
           <app-ui-cluster gap="sm">
-            <a routerLink="/skills" class="btn btn--ghost">Cancel</a>
+            <a routerLink="/config/skills" class="btn btn--ghost">Cancel</a>
             <app-ui-button variant="primary">Create</app-ui-button>
           </app-ui-cluster>
         </app-ui-form-actions>

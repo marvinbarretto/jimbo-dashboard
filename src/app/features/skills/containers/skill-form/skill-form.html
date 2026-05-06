@@ -1,6 +1,6 @@
 <div class="skill-form">
   <header class="skill-form__header">
-    <a routerLink="/skills" class="back-link">← Skills</a>
+    <a routerLink="/config/skills" class="back-link">← Skills</a>
     <h1>{{ isEdit() ? 'Edit skill' : 'New skill' }}</h1>
     @if (skillId(); as id) {
       <p class="skill-form__id"><code>{{ id }}</code></p>
@@ -72,9 +72,9 @@
       @if (isEdit()) {
         <button type="button" class="btn btn--danger" (click)="delete()" [disabled]="saving()">Delete</button>
         <button type="button" class="btn" (click)="rename()" [disabled]="saving()">Rename…</button>
-        <a [routerLink]="['/skills', ...(skillId()?.split('/') ?? [])]" class="btn">Cancel</a>
+        <a [routerLink]="['/config/skills', ...(skillId()?.split('/') ?? [])]" class="btn">Cancel</a>
       } @else {
-        <a routerLink="/skills" class="btn">Cancel</a>
+        <a routerLink="/config/skills" class="btn">Cancel</a>
       }
       <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">
         {{ saving() ? 'Saving…' : (isEdit() ? 'Save' : 'Create') }}

@@ -47,7 +47,7 @@ export const navGroups: readonly NavGroup[] = [
       { href: '/vault-items', label: 'Vault' },
       { href: '/questions', label: 'Questions' },
       { href: '/activity', label: 'Activity' },
-      { href: '/skills', label: 'Skills' },
+      { href: '/config/skills', label: 'Skills' },
       { href: '/models', label: 'Models' },
       { href: '/model-stacks', label: 'Stacks' },
       { href: '/context', label: 'Context' },
