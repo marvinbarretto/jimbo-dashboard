@@ -21,6 +21,11 @@ export const routes: Routes = [
     loadChildren: () => import('./features/shopping/shopping.routes').then(m => m.shoppingRoutes),
   },
   {
+    path: 'tasks',
+    title: 'Tasks',
+    loadChildren: () => import('./features/tasks/tasks.routes').then(m => m.tasksRoutes),
+  },
+  {
     path: '',
     loadChildren: () => import('./features/api-data/api-data.routes').then(m => m.apiDataRoutes),
   },
@@ -90,16 +95,6 @@ export const routes: Routes = [
     path: 'calendar-settings',
     title: 'Calendar settings',
     loadComponent: () => import('./features/calendar-settings/calendar-settings-page').then(m => m.CalendarSettingsPage),
-  },
-  {
-    path: 'google-tasks-settings',
-    title: 'Google Tasks settings',
-    loadComponent: () => import('./features/google-tasks-settings/google-tasks-settings-page').then(m => m.GoogleTasksSettingsPage),
-  },
-  {
-    path: 'triage-tasks',
-    title: 'Triage tasks',
-    loadComponent: () => import('./features/triage-tasks/triage-tasks-page').then(m => m.TriageTasksPage),
   },
   {
     path: 'jimbo-workspace',

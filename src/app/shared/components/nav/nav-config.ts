@@ -15,8 +15,7 @@ export const primaryNavItems: readonly NavLink[] = [
   { href: '/ui-lab',                label: 'UI Lab',         accent: '#a78bfa' },
   { href: '/pomo-reports',          label: 'Pomo reports',   accent: '#fb923c' },
   { href: '/calendar-settings',     label: 'Calendars',      accent: '#34d399' },
-  { href: '/google-tasks-settings', label: 'Tasks',          accent: '#60a5fa' },
-  { href: '/triage-tasks',          label: 'Triage',         accent: '#fbbf24' },
+  { href: '/tasks',                 label: 'Tasks',          accent: '#60a5fa' },
   { href: '/config',                label: 'Config',         accent: '#818cf8' },
   { href: '/vault-items',           label: 'Vault',          accent: '#c084fc' },
   { href: '/grooming',              label: 'Grooming',       accent: '#22d3ee' },
@@ -31,7 +30,7 @@ export const navGroups: readonly NavGroup[] = [
     id: 'archive',
     label: 'Archive',
     paths: [
-      'today', 'shopping', 'mail-next', 'briefings', 'calendar-settings', 'google-tasks-settings', 'triage-tasks',
+      'today', 'shopping', 'mail-next', 'briefings', 'calendar-settings', 'tasks',
       'jimbo-workspace',
       'config', 'grooming', 'execution', 'vault-items', 'questions', 'activity',
       'skills', 'models', 'model-stacks', 'context', 'coach', 'interrogate',
