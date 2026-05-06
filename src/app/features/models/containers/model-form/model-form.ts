@@ -132,7 +132,7 @@ export class ModelForm {
       next: () => {
         this.saving.set(false);
         this.toast.success(`Model "${id}" deleted`);
-        this.router.navigate(['/models']);
+        this.router.navigate(['/config/models']);
       },
       error: err => this.handleError(err),
     });
@@ -140,7 +140,7 @@ export class ModelForm {
 
   private afterSave(m: Model): void {
     this.saving.set(false);
-    this.router.navigate(['/models', ...m.id.split('/')]);
+    this.router.navigate(['/config/models', ...m.id.split('/')]);
   }
 
   private handleError(err: unknown): void {

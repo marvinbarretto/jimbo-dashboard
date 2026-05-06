@@ -12,6 +12,8 @@ import { UiTabBar } from '@shared/components/ui-tab-bar/ui-tab-bar';
         <a routerLink="projects" routerLinkActive="active" class="ui-tab">Projects</a>
         <a routerLink="actors" routerLinkActive="active" class="ui-tab">Actors</a>
         <a routerLink="skills" routerLinkActive="active" class="ui-tab">Skills</a>
+        <a routerLink="models" routerLinkActive="active" class="ui-tab">Models</a>
+        <a routerLink="model-stacks" routerLinkActive="active" class="ui-tab">Stacks</a>
       </app-ui-tab-bar>
 
       <div class="config__body">

@@ -18,6 +18,14 @@ export const configRoutes: Routes = [
         path: 'skills',
         loadChildren: () => import('../skills/skills.routes').then(m => m.skillsRoutes),
       },
+      {
+        path: 'models',
+        loadChildren: () => import('../models/models.routes').then(m => m.modelsRoutes),
+      },
+      {
+        path: 'model-stacks',
+        loadChildren: () => import('../model-stacks/model-stacks.routes').then(m => m.modelStacksRoutes),
+      },
     ],
   },
 ];

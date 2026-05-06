@@ -1,6 +1,6 @@
 <div class="stack-form">
   <header class="stack-form__header">
-    <a routerLink="/model-stacks" class="back-link">← Stacks</a>
+    <a routerLink="/config/model-stacks" class="back-link">← Stacks</a>
     <h1>{{ isEdit() ? 'Edit stack' : 'New stack' }}</h1>
     @if (stackId(); as id) {
       <p class="stack-form__id"><code>{{ id }}</code></p>
@@ -47,9 +47,9 @@
     <div class="stack-form__actions">
       @if (isEdit()) {
         <button type="button" class="btn btn--danger" (click)="delete()" [disabled]="saving()">Delete</button>
-        <a [routerLink]="['/model-stacks', stackId()]" class="btn">Cancel</a>
+        <a [routerLink]="['/config/model-stacks', stackId()]" class="btn">Cancel</a>
       } @else {
-        <a routerLink="/model-stacks" class="btn">Cancel</a>
+        <a routerLink="/config/model-stacks" class="btn">Cancel</a>
       }
       <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">
         {{ saving() ? 'Saving…' : (isEdit() ? 'Save' : 'Create') }}

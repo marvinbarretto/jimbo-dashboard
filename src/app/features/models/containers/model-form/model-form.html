@@ -1,6 +1,6 @@
 <div class="model-form">
   <header class="model-form__header">
-    <a routerLink="/models" class="back-link">← Models</a>
+    <a routerLink="/config/models" class="back-link">← Models</a>
     <h1>{{ isEdit() ? 'Edit model' : 'New model' }}</h1>
     @if (modelId(); as id) {
       <p class="model-form__id"><code>{{ id }}</code></p>
@@ -98,9 +98,9 @@
     <div class="model-form__actions">
       @if (isEdit()) {
         <button type="button" class="btn btn--danger" (click)="delete()" [disabled]="saving()">Delete</button>
-        <a [routerLink]="['/models', ...(modelId()?.split('/') ?? [])]" class="btn">Cancel</a>
+        <a [routerLink]="['/config/models', ...(modelId()?.split('/') ?? [])]" class="btn">Cancel</a>
       } @else {
-        <a routerLink="/models" class="btn">Cancel</a>
+        <a routerLink="/config/models" class="btn">Cancel</a>
       }
       <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">
         {{ saving() ? 'Saving…' : (isEdit() ? 'Save' : 'Create') }}

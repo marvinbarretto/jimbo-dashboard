@@ -108,7 +108,7 @@ export class ModelStackForm {
       next: () => {
         this.saving.set(false);
         this.toast.success(`Model stack "${id}" deleted`);
-        this.router.navigate(['/model-stacks']);
+        this.router.navigate(['/config/model-stacks']);
       },
       error: err => this.handleError(err),
     });
@@ -116,7 +116,7 @@ export class ModelStackForm {
 
   private afterSave(s: ModelStack): void {
     this.saving.set(false);
-    this.router.navigate(['/model-stacks', s.id]);
+    this.router.navigate(['/config/model-stacks', s.id]);
   }
 
   private handleError(err: unknown): void {

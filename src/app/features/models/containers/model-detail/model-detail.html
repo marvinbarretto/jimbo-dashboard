@@ -3,7 +3,7 @@
 } @else if (model(); as model) {
   <div class="model-detail">
     <header class="model-detail__header">
-      <a routerLink="/models" class="back-link">← Models</a>
+      <a routerLink="/config/models" class="back-link">← Models</a>
       <div class="model-detail__title">
         <span class="provider-tag">{{ provider() }}</span>
         <h1>{{ localName() }}</h1>
@@ -76,6 +76,6 @@
 } @else {
   <div class="model-detail model-detail--not-found">
     <p>Model not found.</p>
-    <a routerLink="/models" class="back-link">← Back to models</a>
+    <a routerLink="/config/models" class="back-link">← Back to models</a>
   </div>
 }

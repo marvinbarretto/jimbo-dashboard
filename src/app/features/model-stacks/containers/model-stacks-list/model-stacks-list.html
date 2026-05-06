@@ -25,7 +25,7 @@
       <tbody>
         @for (stack of stacks(); track stack.id) {
           <tr [class.inactive]="!isActive(stack)">
-            <td><a [routerLink]="['/model-stacks', stack.id]">{{ stack.id }}</a></td>
+            <td><a [routerLink]="['/config/model-stacks', stack.id]">{{ stack.id }}</a></td>
             <td>{{ stack.description }}</td>
             <td>{{ stack.metadata.chain.length }}</td>
             <td>

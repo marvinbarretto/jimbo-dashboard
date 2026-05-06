@@ -3,7 +3,7 @@
 } @else if (stack(); as stack) {
   <div class="stack-detail">
     <header class="stack-detail__header">
-      <a routerLink="/model-stacks" class="back-link">← Stacks</a>
+      <a routerLink="/config/model-stacks" class="back-link">← Stacks</a>
       <h1>{{ stack.name }}</h1>
       <div class="stack-detail__badges">
         <span [class]="isActive() ? 'status status--active' : 'status status--inactive'">
@@ -44,6 +44,6 @@
 } @else {
   <div class="stack-detail stack-detail--not-found">
     <p>Model stack not found.</p>
-    <a routerLink="/model-stacks" class="back-link">← Back to stacks</a>
+    <a routerLink="/config/model-stacks" class="back-link">← Back to stacks</a>
   </div>
 }
