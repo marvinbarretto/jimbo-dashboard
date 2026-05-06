@@ -3,6 +3,7 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { ProjectsList } from './projects-list';
 import { ProjectsService } from '../../data-access/projects.service';
+import { projectId } from '@domain/ids';
 
 describe('ProjectsList', () => {
   let component: ProjectsList;
@@ -39,14 +40,14 @@ describe('ProjectsList', () => {
   it('calls service.remove when confirm accepted', () => {
     const spy = vi.spyOn(service, 'remove');
     vi.spyOn(window, 'confirm').mockReturnValue(true);
-    component.remove('localshout');
-    expect(spy).toHaveBeenCalledWith('localshout');
+    component.remove(projectId('localshout'));
+    expect(spy).toHaveBeenCalledWith(projectId('localshout'));
   });
 
   it('does not call service.remove when confirm cancelled — British conflict avoidance', () => {
     const spy = vi.spyOn(service, 'remove');
     vi.spyOn(window, 'confirm').mockReturnValue(false);
-    component.remove('localshout');
+    component.remove(projectId('localshout'));
     expect(spy).not.toHaveBeenCalled();
   });
 });

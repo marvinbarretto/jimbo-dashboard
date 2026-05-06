@@ -85,6 +85,7 @@ export function buildVaultItem(overrides: VaultItemOverrides = {}): VaultItem {
     archived_at:         null,
     due_at:              null,
     completed_at:        null,
+    is_epic:             false,
     source:              { kind: 'manual', ref: 'test', url: null },
     created_at:          new Date().toISOString(),
     ...overrides,
