@@ -172,8 +172,16 @@ export class GroomingCard {
 
   readonly ageTooltip = computed(() => {
     const days = this.ageDaysRounded();
-    if (days <= 0) return 'today';
-    return `${days} day${days === 1 ? '' : 's'} since last activity`;
+    if (days > 0) return `${days} day${days === 1 ? '' : 's'} since last activity`;
+    const iso = this.lastActivityAt() ?? this.item().created_at;
+    if (!iso) return 'today';
+    const ms = Date.now() - new Date(iso).getTime();
+    if (ms < 3_600_000) {
+      const m = Math.max(1, Math.round(ms / 60_000));
+      return `${m} minute${m === 1 ? '' : 's'} since last activity`;
+    }
+    const h = Math.round(ms / 3_600_000);
+    return `${h} hour${h === 1 ? '' : 's'} since last activity`;
   });
 
   // Intake rejection callout — prefer the actual open question body so the
@@ -213,11 +221,16 @@ export class GroomingCard {
     return null;
   });
 
-  // Compact label shown on the card itself ("4d", "today"). The gradient conveys
+  // Compact label shown on the card itself ("4d", "3h", "15m"). The gradient conveys
   // urgency at a glance; this gives precision for the operator's eye.
   readonly ageLabel = computed(() => {
     const days = this.ageDaysRounded();
-    return days <= 0 ? 'today' : `${days}d`;
+    if (days > 0) return `${days}d`;
+    const iso = this.lastActivityAt() ?? this.item().created_at;
+    if (!iso) return '—';
+    const ms = Date.now() - new Date(iso).getTime();
+    if (ms < 3_600_000) return `${Math.max(1, Math.round(ms / 60_000))}m`;
+    return `${Math.round(ms / 3_600_000)}h`;
   });
 
   readonly pulseIntensityVal = computed(() => pulseIntensity(this.lastActivityAt()));

@@ -52,12 +52,7 @@ export class QuestionCard {
     created_at: this.question().created_at,
   }));
 
-  readonly ageLabel = computed(() => {
-    const d = Math.floor(this.question().age_days);
-    if (d <= 0) return 'today';
-    if (d === 1) return '1d ago';
-    return `${d}d ago`;
-  });
+  readonly ageLabel = computed(() => relativeTime(this.question().created_at));
 
   readonly itemSourceLabel = computed(() => {
     const source = this.item()?.source;
