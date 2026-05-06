@@ -58,6 +58,29 @@ interface DayGroup {
   threads: Thread[];
 }
 
+// One step in the tool-call cascade summary inside an expanded thread.
+// Built from `tool.post` rows by parsing the canonical title format
+// `tool_name [status] — message`. We can't pull duration here because
+// the live summary stream omits payload — fetched detail still wins
+// inside the per-row drawer.
+interface ToolCallStep {
+  eventId: number;
+  time: string;
+  toolName: string;
+  // 'ok' | 'error' | 'approval_required' | string — string-typed because
+  // hermes occasionally invents new values (e.g. 'timeout') and we
+  // don't want to silently drop them.
+  status: string;
+  message: string;
+  // Title parser couldn't extract structure — caller may still want
+  // to show the raw row, but with this flag we know to render it
+  // differently (no icon, dimmed).
+  unparsed: boolean;
+}
+
+// Title format hermes emits for tool.post events. Em-dash is U+2014.
+const TOOL_TITLE_RE = /^(\S+)\s\[([^\]]+)\]\s—\s(.+)$/;
+
 // Default-hidden levels. `debug` is the high-volume noise tier
 // (heartbeats, tool.pre/post). User toggles to see them.
 const DEFAULT_HIDDEN_LEVELS = new Set(['debug']);
@@ -517,4 +540,49 @@ export class StreamPage implements OnInit, OnDestroy {
   }
 
   protected fmtDuration = fmtDuration;
+
+  // Cascade view: every tool.post row in the thread, parsed into a
+  // step. Returns null when there are fewer than 2 tool calls — for a
+  // single call the existing row already tells the whole story.
+  protected toolCallSequence(thread: Thread): ToolCallStep[] | null {
+    const steps: ToolCallStep[] = [];
+    for (const row of thread.rows) {
+      if (row.event.kind !== 'tool.post') continue;
+      const parsed = this.parseToolTitle(row.event.title);
+      // Approval gates carry `[error]` in the title but their actual
+      // result is approval_required; the warning-emoji prefix is the
+      // only signal at the summary layer (detail.result.status would
+      // tell us cleanly but isn't streamed).
+      const isApproval = parsed?.message.startsWith('⚠️') ?? false;
+      steps.push({
+        eventId: row.event.id,
+        time: row.time,
+        toolName: parsed?.toolName ?? row.event.kind,
+        status: isApproval ? 'approval_required' : parsed?.status ?? row.event.level,
+        message: parsed?.message ?? row.event.title,
+        unparsed: parsed === null,
+      });
+    }
+    return steps.length >= 2 ? steps : null;
+  }
+
+  // Glyph for the cascade row's status icon. Kept narrow + monochrome
+  // so it sits in the row meta without dominating it.
+  protected toolStepIcon(status: string): string {
+    if (status === 'ok') return '✓';
+    if (status === 'approval_required') return '⚠';
+    return '✗';
+  }
+
+  protected toolStepTone(status: string): LevelTone {
+    if (status === 'ok') return 'info';
+    if (status === 'approval_required') return 'warning';
+    return 'danger';
+  }
+
+  private parseToolTitle(title: string): { toolName: string; status: string; message: string } | null {
+    const m = TOOL_TITLE_RE.exec(title);
+    if (!m) return null;
+    return { toolName: m[1]!, status: m[2]!, message: m[3]! };
+  }
 }

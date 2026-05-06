@@ -627,3 +627,92 @@
     cursor: default;
   }
 }
+
+.stream-page__cascade {
+  margin: 0;
+  padding: 0.5rem 0.75rem 0.6rem 5rem;
+  border-top: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg, #fff) 95%, var(--color-text, #000));
+}
+
+.stream-page__cascade-heading {
+  margin: 0 0 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.stream-page__cascade-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.stream-page__cascade-step {
+  display: grid;
+  grid-template-columns: 1rem 4rem auto auto 1fr auto;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.2rem 0.25rem;
+  font-size: 0.85rem;
+  border-radius: 3px;
+
+  &--info    .stream-page__cascade-icon { color: var(--color-success, #2e7d32); }
+  &--warning .stream-page__cascade-icon { color: var(--color-warning, #c08b00); }
+  &--danger  .stream-page__cascade-icon { color: var(--color-error, #b3261e); }
+}
+
+.stream-page__cascade-icon {
+  font-weight: 700;
+  text-align: center;
+}
+
+.stream-page__cascade-time {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.stream-page__cascade-tool {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  background: color-mix(in srgb, var(--color-bg, #fff) 80%, var(--color-text, #000));
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+}
+
+.stream-page__cascade-status {
+  font-size: 0.72rem;
+  text-transform: lowercase;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.stream-page__cascade-msg {
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stream-page__cascade-jump {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  padding: 0.05rem 0.35rem;
+  font: inherit;
+  font-size: 0.72rem;
+  font-family: var(--font-mono, monospace);
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}

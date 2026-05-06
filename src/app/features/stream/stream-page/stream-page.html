@@ -253,6 +253,31 @@
             </button>
 
             @if (thread.rows.length > 1 && isThreadExpanded(thread.key)) {
+              @if (toolCallSequence(thread); as steps) {
+                <section class="stream-page__cascade" aria-label="tool call sequence">
+                  <h4 class="stream-page__cascade-heading">tool calls in this thread</h4>
+                  <ol class="stream-page__cascade-list">
+                    @for (step of steps; track step.eventId) {
+                      <li
+                        class="stream-page__cascade-step"
+                        [class]="'stream-page__cascade-step--' + toolStepTone(step.status)"
+                      >
+                        <span class="stream-page__cascade-icon" aria-hidden="true">{{ toolStepIcon(step.status) }}</span>
+                        <span class="stream-page__cascade-time" [title]="step.time">{{ step.time }}</span>
+                        <code class="stream-page__cascade-tool">{{ step.toolName }}</code>
+                        <span class="stream-page__cascade-status">{{ step.status }}</span>
+                        <span class="stream-page__cascade-msg" [title]="step.message">{{ step.message }}</span>
+                        <button
+                          type="button"
+                          class="stream-page__cascade-jump"
+                          [title]="'Open event #' + step.eventId"
+                          (click)="toggleEvent(step.eventId)"
+                        >#{{ step.eventId }}</button>
+                      </li>
+                    }
+                  </ol>
+                </section>
+              }
               <ol class="stream-page__timeline">
                 @for (row of thread.rows; track row.event.id) {
                   <li

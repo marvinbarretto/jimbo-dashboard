@@ -113,10 +113,20 @@ export class ErrorAggregationService {
   private aggregate(events: SystemEventFull[]): ErrorClass[] {
     const groups = new Map<string, ErrorClass>();
     for (const ev of events) {
+      // Approval gates ride the same level=warn channel as real errors but
+      // they're permission prompts, not failures. Filter them out so the
+      // panel stays a list of things that need fixing.
+      if (this.isApprovalRequired(ev)) continue;
+
       const rawErr = this.extractErrorString(ev.payload);
       if (!rawErr) continue;
       const errStr = compactError(rawErr);
-      const key = errStr.slice(0, CLASS_KEY_LIMIT);
+      const toolName = this.extractToolName(ev.payload);
+      // Prefix with tool name when available — turns a vague "No code
+      // provided." into "execute_code: No code provided." so a glance
+      // at the panel tells you which tool is misbehaving.
+      const label = toolName ? `${toolName}: ${errStr}` : errStr;
+      const key = label.slice(0, CLASS_KEY_LIMIT);
       const existing = groups.get(key);
       if (existing) {
         existing.count++;
@@ -131,7 +141,7 @@ export class ErrorAggregationService {
       } else {
         groups.set(key, {
           key,
-          label: errStr,
+          label,
           count: 1,
           lastTs: ev.ts,
           sampleEventId: ev.id,
@@ -152,5 +162,23 @@ export class ErrorAggregationService {
     const err = p['error'];
     if (typeof err === 'string' && err.length > 0) return err;
     return null;
+  }
+
+  private extractToolName(payload: unknown): string | null {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+    const t = (payload as Record<string, unknown>)['tool_name'];
+    return typeof t === 'string' && t.length > 0 ? t : null;
+  }
+
+  // Hermes wraps approval prompts in tool.post events with level=warn and
+  // a payload.error of "⚠️ ...". The structured signal is in
+  // detail.result.status === 'approval_required' — prefer that over the
+  // emoji prefix so we don't depend on label formatting.
+  private isApprovalRequired(ev: SystemEventFull): boolean {
+    const detail = ev.detail;
+    if (!detail || typeof detail !== 'object' || Array.isArray(detail)) return false;
+    const result = (detail as Record<string, unknown>)['result'];
+    if (!result || typeof result !== 'object' || Array.isArray(result)) return false;
+    return (result as Record<string, unknown>)['status'] === 'approval_required';
   }
 }
