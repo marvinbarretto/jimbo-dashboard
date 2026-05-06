@@ -30,13 +30,17 @@
           <dd>{{ skill.description }}</dd>
         }
 
-        <dt>Executors</dt>
+        <dt>Requires</dt>
         <dd>
-          <app-ui-cluster gap="xs">
-            @for (e of skill.metadata.executors; track e) {
-              <app-ui-badge tone="info" [subtle]="true">{{ e }}</app-ui-badge>
-            }
-          </app-ui-cluster>
+          @if (skill.metadata.requires?.length) {
+            <app-ui-cluster gap="xs">
+              @for (c of skill.metadata.requires; track c) {
+                <app-ui-badge tone="info" [subtle]="true">{{ c }}</app-ui-badge>
+              }
+            </app-ui-cluster>
+          } @else {
+            <span class="hint">no constraints — runnable on any actor</span>
+          }
         </dd>
 
         @if (skill.metadata.timeout_minutes != null) {

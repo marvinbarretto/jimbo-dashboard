@@ -72,6 +72,16 @@
       </label>
     </fieldset>
 
+    <fieldset class="field" formArrayName="classes">
+      <legend>Capability classes <small>(soft tag — which classes this model satisfies)</small></legend>
+      @for (cap of capabilityOptions; track cap; let i = $index) {
+        <label class="field field--inline">
+          <input type="checkbox" [formControlName]="i" />
+          <span>{{ capabilityLabel(cap) }} <small>{{ cap }}</small></span>
+        </label>
+      }
+    </fieldset>
+
     <fieldset class="field-group">
       <legend>Lifecycle</legend>
 

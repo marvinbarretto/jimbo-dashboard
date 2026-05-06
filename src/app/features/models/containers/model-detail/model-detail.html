@@ -35,6 +35,15 @@
           <dd>{{ model.metadata.context_window }} tokens</dd>
         }
 
+        @if (model.metadata.classes?.length) {
+          <dt>Classes</dt>
+          <dd>
+            @for (cap of model.metadata.classes; track cap) {
+              <span class="capability-tag">{{ cap }}</span>
+            }
+          </dd>
+        }
+
         @if (model.metadata.prices_usd_per_million; as p) {
           @if (p.input != null) {
             <dt>Input price</dt>

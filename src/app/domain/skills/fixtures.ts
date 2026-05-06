@@ -10,7 +10,7 @@ export const SKILLS = [
     name: 'vault-grooming-analyse',
     description: 'Analyse a single vault note and populate grooming metadata.',
     metadata: {
-      executors: ['boris', 'ralph'],
+      requires: ['fast'],
       timeout_minutes: 5,
       required_context: ['note_id'],
       produces: ['tags', 'ai_priority', 'actionability'],
@@ -23,7 +23,7 @@ export const SKILLS = [
     name: 'vault-grooming-decompose',
     description: 'Break a multi-skill vault note into single-skill subtasks.',
     metadata: {
-      executors: ['boris', 'ralph'],
+      requires: ['frontier'],
       timeout_minutes: 8,
       required_context: ['note_id'],
       produces: ['subtasks', 'rationale'],
@@ -36,7 +36,7 @@ export const SKILLS = [
     name: 'code-pr-from-issue',
     description: 'Coding agent — implement a task end-to-end and open a PR.',
     metadata: {
-      executors: ['boris'],
+      requires: ['frontier', 'long-context'],
       timeout_minutes: 60,
       required_context: ['task_id'],
       produces: ['pr_url', 'branch'],

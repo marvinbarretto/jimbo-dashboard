@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, FormArray, FormControl } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { ActorsService } from '../../data-access/actors.service';
 import { actorId } from '@domain/ids';
 import type { ActorKind, ActorRuntime } from '@domain/actors';
+import { ALL_CAPABILITIES, CAPABILITY_LABELS, type SkillCapability } from '@domain/capability';
 
 @Component({
   selector: 'app-actor-form',
@@ -34,6 +35,9 @@ export class ActorForm {
     { label: 'hermes', value: 'hermes' },
   ];
 
+  readonly capabilityOptions = ALL_CAPABILITIES;
+  readonly capabilityLabel = (c: SkillCapability) => CAPABILITY_LABELS[c];
+
   readonly form = this.fb.nonNullable.group({
     id:           ['', [Validators.required, Validators.pattern(/^[a-z][a-z0-9-]*$/)]],
     display_name: ['', Validators.required],
@@ -41,7 +45,12 @@ export class ActorForm {
     runtime:      ['' as string],   // empty string represents null at submit
     description:  [null as string | null],
     is_active:    [true],
+    serves:       new FormArray(ALL_CAPABILITIES.map(() => new FormControl(false, { nonNullable: true }))),
   });
+
+  get servesArray(): FormArray<FormControl<boolean>> {
+    return this.form.controls.serves;
+  }
 
   constructor() {
     const id = this.id();
@@ -50,9 +59,15 @@ export class ActorForm {
         const actor = actors.find(a => a.id === id);
         if (!actor) return;
         this.form.patchValue({
-          ...actor,
-          // Coerce null runtime to empty string for the select control.
-          runtime: actor.runtime ?? '',
+          id:           actor.id,
+          display_name: actor.display_name,
+          kind:         actor.kind,
+          runtime:      actor.runtime ?? '',
+          description:  actor.description,
+          is_active:    actor.is_active,
+        });
+        ALL_CAPABILITIES.forEach((cap, i) => {
+          this.servesArray.at(i).setValue((actor.serves ?? []).includes(cap));
         });
         this.form.controls.id.disable();
       });
@@ -66,6 +81,7 @@ export class ActorForm {
       return;
     }
     const v = this.form.getRawValue();
+    const serves = ALL_CAPABILITIES.filter((_, i) => v.serves[i]);
     const payload = {
       // Cast at the API boundary: branded IDs are phantom types at runtime.
       id:           actorId(v.id),
@@ -75,6 +91,7 @@ export class ActorForm {
       runtime:      (v.runtime || null) as ActorRuntime,
       description:  v.description,
       is_active:    v.is_active,
+      serves,
     };
     if (this.isEdit()) {
       this.service.update(v.id, payload);

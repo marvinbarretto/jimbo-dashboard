@@ -9,12 +9,13 @@
 
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, FormArray, FormControl } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { SkillsService } from '../../data-access/skills.service';
 import { ToastService } from '@shared/components/toast/toast.service';
 import type { Skill } from '@domain/skills';
+import { ALL_CAPABILITIES, CAPABILITY_LABELS, type SkillCapability } from '@domain/capability';
 
 const ID_PATTERN = /^[a-z0-9-]+\/[a-z0-9-]+$/;
 
@@ -52,11 +53,16 @@ export class SkillForm {
   readonly isEdit = computed(() => !!this.id());
   readonly skillId = this.id;
 
+  // One checkbox per capability — keep parallel arrays so the template
+  // iterates ALL_CAPABILITIES and binds [formControlName] by index.
+  readonly capabilityOptions = ALL_CAPABILITIES;
+  readonly capabilityLabel = (c: SkillCapability) => CAPABILITY_LABELS[c];
+
   readonly form = this.fb.nonNullable.group({
     id:                  ['', [Validators.required, Validators.pattern(ID_PATTERN)]],
     name:                ['', Validators.required],
     description:         ['', Validators.required],
-    executors:           ['', Validators.required],
+    requires:            new FormArray(ALL_CAPABILITIES.map(() => new FormControl(false, { nonNullable: true }))),
     timeout_minutes:     [null as number | null],
     required_context:    [''],
     produces:            [''],
@@ -64,6 +70,11 @@ export class SkillForm {
     is_active:           [true],
     body:                ['', Validators.required],
   });
+
+  // Type-safe accessor for the requires FormArray — needed for template binding.
+  get requiresArray(): FormArray<FormControl<boolean>> {
+    return this.form.controls.requires;
+  }
 
   readonly saving = signal(false);
   readonly saveError = signal<string | null>(null);
@@ -80,13 +91,17 @@ export class SkillForm {
           id:                 skill.id,
           name:               skill.name,
           description:        skill.description,
-          executors:          joinList(skill.metadata.executors),
           timeout_minutes:    skill.metadata.timeout_minutes ?? null,
           required_context:   joinList(skill.metadata.required_context),
           produces:           joinList(skill.metadata.produces),
           completes_dispatch: skill.metadata.completes_dispatch ?? false,
           is_active:          skill.metadata.is_active ?? true,
           body:               skill.body,
+        });
+        // FormArray controls are positional — set each by index.
+        const requires = skill.metadata.requires ?? [];
+        ALL_CAPABILITIES.forEach((cap, i) => {
+          this.requiresArray.at(i).setValue(requires.includes(cap));
         });
       });
     }
@@ -98,8 +113,9 @@ export class SkillForm {
       return;
     }
     const v = this.form.getRawValue();
+    const requires = ALL_CAPABILITIES.filter((_, i) => v.requires[i]);
     const metadata = {
-      executors: parseList(v.executors),
+      requires,
       timeout_minutes: v.timeout_minutes ?? undefined,
       required_context: parseList(v.required_context),
       produces: parseList(v.produces),

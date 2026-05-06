@@ -13,6 +13,7 @@ export const ACTORS = [
     runtime: null,
     description: 'The operator. Final say on priority, acceptance, and direction.',
     is_active: true,
+    serves: [],
     created_at: '2026-04-24T00:00:00Z',
     updated_at: '2026-04-24T00:00:00Z',
   },
@@ -23,6 +24,7 @@ export const ACTORS = [
     runtime: 'ollama',
     description: 'Local 7B-class model on 24GB RAM. Junior tasks: classification, reassigns, acceptance-criteria drafts, subticket spawning.',
     is_active: true,
+    serves: ['fast', 'local-only'],
     created_at: '2026-04-24T00:00:00Z',
     updated_at: '2026-04-24T00:00:00Z',
   },
@@ -33,6 +35,7 @@ export const ACTORS = [
     runtime: 'anthropic',
     description: 'VPS-hosted loop. Polls every 5 minutes for dispatched work. Selects its own Sonnet-class model per run.',
     is_active: true,
+    serves: ['frontier', 'fast', 'vision', 'long-context', 'cloud-only'],
     created_at: '2026-04-24T00:00:00Z',
     updated_at: '2026-04-24T00:00:00Z',
   },
@@ -43,14 +46,16 @@ export const ACTORS = [
     runtime: 'hermes',
     description: 'Hermes orchestrator. Telegram-facing. Coordinates the ceremony: routes work, reviews output, escalates to marvin.',
     is_active: true,
+    serves: ['frontier', 'fast', 'long-context', 'cloud-only'],
     created_at: '2026-04-24T00:00:00Z',
     updated_at: '2026-04-24T00:00:00Z',
   },
 ] as const satisfies readonly Actor[];
 
-// Mirror the executors[] arrays in hub/skills/<id>/SKILL.md frontmatter. The
-// real allowlist lives there — this fixture exists for seed-mode integrity
-// only. Update both whenever the canonical SKILL.md changes.
+// Per-skill proficiency hints layered on top of capability matching. Capability
+// (skill.requires ↔ actor.serves) tells you who CAN. This table tells you who's
+// PREFERRED, CAPABLE, or EXPERIMENTAL among them. Optional — dispatch works
+// without it; this is a routing weight, not a hard gate.
 export const ACTOR_SKILLS = [
   { actor_id: actorId('ralph'), skill_id: skillId('vault-grooming/analyse'),   proficiency: 'capable',      created_at: '2026-04-24T00:00:00Z' },
   { actor_id: actorId('ralph'), skill_id: skillId('vault-grooming/decompose'), proficiency: 'capable',      created_at: '2026-04-24T00:00:00Z' },

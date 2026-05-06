@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, FormArray, FormControl } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { ModelsService } from '../../data-access/models.service';
 import { ToastService } from '@shared/components/toast/toast.service';
 import type { Model, ModelStatus } from '@domain/models';
+import { ALL_CAPABILITIES, CAPABILITY_LABELS, type SkillCapability } from '@domain/capability';
 
 const ID_PATTERN = /^[a-z0-9-]+\/[a-z0-9.-]+$/;
 
@@ -35,6 +36,9 @@ export class ModelForm {
 
   readonly statuses: ModelStatus[] = ['candidate', 'preferred', 'deprecated'];
 
+  readonly capabilityOptions = ALL_CAPABILITIES;
+  readonly capabilityLabel = (c: SkillCapability) => CAPABILITY_LABELS[c];
+
   readonly form = this.fb.nonNullable.group({
     id:               ['', [Validators.required, Validators.pattern(ID_PATTERN)]],
     name:             ['', Validators.required],
@@ -48,8 +52,13 @@ export class ModelForm {
     cache_write:      [null as number | null],
     considered_at:    [''],
     deprecated_at:    [''],
+    classes:          new FormArray(ALL_CAPABILITIES.map(() => new FormControl(false, { nonNullable: true }))),
     body:             [''],
   });
+
+  get classesArray(): FormArray<FormControl<boolean>> {
+    return this.form.controls.classes;
+  }
 
   readonly saving = signal(false);
   readonly saveError = signal<string | null>(null);
@@ -77,6 +86,10 @@ export class ModelForm {
           deprecated_at:  m.metadata.deprecated_at ?? '',
           body:           m.body,
         });
+        const classes = m.metadata.classes ?? [];
+        ALL_CAPABILITIES.forEach((cap, i) => {
+          this.classesArray.at(i).setValue(classes.includes(cap));
+        });
       });
     }
   }
@@ -93,6 +106,7 @@ export class ModelForm {
     if (v.cache_read != null) prices['cache_read'] = v.cache_read;
     if (v.cache_write != null) prices['cache_write'] = v.cache_write;
 
+    const classes = ALL_CAPABILITIES.filter((_, i) => v.classes[i]);
     const metadata = {
       status: v.status,
       provider: v.provider,
@@ -100,6 +114,7 @@ export class ModelForm {
       prices_usd_per_million: Object.keys(prices).length > 0 ? prices : undefined,
       considered_at: v.considered_at || undefined,
       deprecated_at: v.deprecated_at || null,
+      classes: classes.length > 0 ? classes : undefined,
     };
 
     this.saving.set(true);

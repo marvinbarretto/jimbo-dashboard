@@ -1,4 +1,5 @@
 import type { ActorId } from '../ids';
+import type { SkillCapability } from '../capability';
 
 // An actor is anyone or anything that can take an action on a vault item.
 // Today that's marvin (human), ralph (local llm), boris (hosted llm), jimbo (orchestrator).
@@ -26,6 +27,11 @@ export interface Actor {
   runtime: ActorRuntime;
   description: string | null;   // free text: what this actor does, constraints, quirks
   is_active: boolean;
+  // High-level capability declaration. Dispatch is allowed when
+  // serves ⊇ skill.requires. A claim, not a derivation — operator-maintained,
+  // stable across specific model upgrades as long as the actor still reaches
+  // some model in each capability class.
+  serves: SkillCapability[];
   created_at: string;
   updated_at: string;
 }

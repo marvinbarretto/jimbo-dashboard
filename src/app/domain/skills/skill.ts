@@ -8,9 +8,18 @@
 // prompt_id, source_repo, last_indexed_at, etc.) — those fields disappeared
 // when the wrong-turn skills/prompts/tools/models tables were removed.
 
+import type { ActorId } from '../ids';
+import type { SkillCapability } from '../capability';
+
 export interface SkillMetadata {
-  // Actor IDs allowed to dispatch this skill. Enforced by jimbo-api's gate.
-  executors: string[];
+  // Capabilities the skill needs from whichever actor runs it. Empty = no
+  // constraint (runnable anywhere). Dispatcher matches skill.requires
+  // against actor.serves as a set-superset check.
+  requires: SkillCapability[];
+  // Optional policy override. Hard-gates dispatch to a specific actor set
+  // even when capability matching would allow more (e.g. production-touching
+  // skills only Jimbo is permitted to run).
+  allowlist?: ActorId[];
   timeout_minutes?: number;
   required_context?: string[];
   produces?: string[];

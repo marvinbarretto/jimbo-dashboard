@@ -40,12 +40,16 @@
     }
   </ng-template>
 
-  <ng-template #executorsCell let-context>
-    <app-ui-cluster gap="xs">
-      @for (executor of context.getValue(); track executor) {
-        <app-ui-badge tone="neutral" [subtle]="true">{{ executor }}</app-ui-badge>
-      }
-    </app-ui-cluster>
+  <ng-template #requiresCell let-context>
+    @if (context.getValue()?.length) {
+      <app-ui-cluster gap="xs">
+        @for (cap of context.getValue(); track cap) {
+          <app-ui-badge tone="info" [subtle]="true">{{ cap }}</app-ui-badge>
+        }
+      </app-ui-cluster>
+    } @else {
+      <span class="hint">any</span>
+    }
   </ng-template>
 
   <ng-template #lastUsedCell let-context>

@@ -53,8 +53,8 @@ export class SkillsList {
     viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, string> }>>('nameCell');
   private readonly typeCell =
     viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, Skill['type']> }>>('typeCell');
-  private readonly executorsCell =
-    viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, string[]> }>>('executorsCell');
+  private readonly requiresCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, string[]> }>>('requiresCell');
   private readonly lastUsedCell =
     viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, string | undefined> }>>('lastUsedCell');
   private readonly activeCell =
@@ -81,10 +81,10 @@ export class SkillsList {
     this.columnHelper.accessor('description', {
       header: 'Description',
     }),
-    this.columnHelper.accessor(row => row.metadata.executors, {
-      id: 'executors',
-      header: 'Executors',
-      cell: () => this.executorsCell(),
+    this.columnHelper.accessor(row => row.metadata.requires, {
+      id: 'requires',
+      header: 'Requires',
+      cell: () => this.requiresCell(),
       enableSorting: false,
     }),
     this.columnHelper.accessor('last_used', {

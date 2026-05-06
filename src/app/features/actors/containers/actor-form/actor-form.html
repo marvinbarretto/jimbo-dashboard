@@ -54,6 +54,16 @@
       </label>
     </div>
 
+    <fieldset class="field" formArrayName="serves">
+      <legend>Serves <small>(capabilities this actor can run)</small></legend>
+      @for (cap of capabilityOptions; track cap; let i = $index) {
+        <label class="field field--checkbox">
+          <input type="checkbox" [formControlName]="i" />
+          <span>{{ capabilityLabel(cap) }} <small>{{ cap }}</small></span>
+        </label>
+      }
+    </fieldset>
+
     <div class="form-actions">
       <button type="submit" class="btn btn--primary">
         {{ isEdit() ? 'Save changes' : 'Add actor' }}

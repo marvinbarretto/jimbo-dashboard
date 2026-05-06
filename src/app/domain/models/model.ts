@@ -4,6 +4,8 @@
 // runtime pricing lives in jimbo-api's hardcoded RATES table. When agents
 // grow native fallback support, runners will read these files at dispatch.
 
+import type { SkillCapability } from '../capability';
+
 export type ModelStatus = 'candidate' | 'preferred' | 'deprecated';
 
 export interface ModelPrices {
@@ -20,6 +22,10 @@ export interface ModelMetadata {
   prices_usd_per_million?: ModelPrices;
   considered_at?: string;
   deprecated_at?: string | null;
+  // Soft tag — which capability classes this model satisfies. Lets the model
+  // catalogue be filtered by capability and gives the operator a sanity-check
+  // when assigning capabilities to actors. Not consumed by the dispatcher.
+  classes?: SkillCapability[];
 }
 
 export interface Model {

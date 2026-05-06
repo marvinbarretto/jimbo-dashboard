@@ -14,6 +14,16 @@
           <app-ui-badge [tone]="kindTone(a.kind)">{{ a.kind }}</app-ui-badge>
         </dd>
         <dt>Runtime</dt><dd>{{ a.runtime ?? '—' }}</dd>
+        <dt>Serves</dt>
+        <dd>
+          @if (a.serves?.length) {
+            @for (cap of a.serves; track cap) {
+              <app-ui-badge tone="info" [subtle]="true">{{ cap }}</app-ui-badge>
+            }
+          } @else {
+            <span class="hint">no capabilities — this actor cannot run skills</span>
+          }
+        </dd>
         <dt>Active</dt>
         <dd>
           <app-ui-badge [tone]="activeTone(a.is_active)">{{ activeLabel(a.is_active) }}</app-ui-badge>

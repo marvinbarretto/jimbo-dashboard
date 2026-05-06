@@ -28,10 +28,15 @@
     <fieldset class="field-group">
       <legend>Metadata</legend>
 
-      <label class="field">
-        <span class="field__label">Executors <small>(comma-separated)</small></span>
-        <input type="text" formControlName="executors" placeholder="boris, ralph" />
-      </label>
+      <fieldset class="field" formArrayName="requires">
+        <legend class="field__label">Requires <small>(capabilities the skill needs from any actor that runs it)</small></legend>
+        @for (cap of capabilityOptions; track cap; let i = $index) {
+          <label class="field field--inline">
+            <input type="checkbox" [formControlName]="i" />
+            <span>{{ capabilityLabel(cap) }} <small>{{ cap }}</small></span>
+          </label>
+        }
+      </fieldset>
 
       <label class="field">
         <span class="field__label">Timeout minutes</span>
