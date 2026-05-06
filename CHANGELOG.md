@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.30](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.29...v0.0.30) (2026-05-06)
+
+
+### Features
+
+* **mentions:** show vault item seq in ~ dropdown; widen panel ([8985014](https://github.com/marvinbarretto/jimbo-dashboard/commit/8985014d46b8f3477cb9a506ba1031a1c324aec2)), closes [#234](https://github.com/marvinbarretto/jimbo-dashboard/issues/234)
+
 ### [0.0.29](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.28...v0.0.29) (2026-05-06)
 
 
