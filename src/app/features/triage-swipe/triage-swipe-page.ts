@@ -33,6 +33,13 @@ export class TriageSwipePage implements OnInit, OnDestroy {
   // until next refresh. Persisted skips would need /triage-log.
   private readonly _skippedIndices = signal<ReadonlySet<number>>(new Set());
 
+  // Feedback / re-triage UI state. Re-triage hits /triage-now with
+  // user_context — server re-runs the model and overwrites the cache
+  // row. The card mutates in place with the refined proposal.
+  protected readonly feedbackText = signal('');
+  protected readonly feedbackOpen = signal(false);
+  protected readonly retriaging = signal(false);
+
   readonly cards = this._cards.asReadonly();
   readonly currentIndex = this._currentIndex.asReadonly();
   readonly prefetching = this._prefetching.asReadonly();
@@ -77,6 +84,15 @@ export class TriageSwipePage implements OnInit, OnDestroy {
       const tasks = this.service.tasks();
       if (tasks === undefined) return;
       void this.prefetchProposals(tasks);
+    });
+
+    // Auto-open the feedback panel on cards that asked questions, and
+    // reset the input as the user advances. Without this, the operator
+    // would have to manually expand to even see a question prompt.
+    effect(() => {
+      const card = this.currentCard();
+      this.feedbackText.set('');
+      this.feedbackOpen.set((card?.proposal.questions.length ?? 0) > 0);
     });
   }
 
@@ -216,6 +232,55 @@ export class TriageSwipePage implements OnInit, OnDestroy {
 
   protected refresh(): void {
     this.service.load();
+  }
+
+  protected toggleFeedback(): void {
+    this.feedbackOpen.update((v) => !v);
+  }
+
+  protected onFeedbackInput(value: string): void {
+    this.feedbackText.set(value);
+  }
+
+  // Re-runs /triage-now with user context, replaces the current card's
+  // proposal in-place. The server-side path also upserts the cache so
+  // future visits to this task see the refined version.
+  protected async retriage(): Promise<void> {
+    const card = this.currentCard();
+    const ctx = this.feedbackText().trim();
+    if (!card || !ctx || this.retriaging() || this._actionLoading()) return;
+    this.retriaging.set(true);
+    this._actionError.set(null);
+    try {
+      const result = await firstValueFrom(
+        this.service.triageNow(card.task.listId, card.task.id, ctx),
+      );
+      if (!result.proposal) {
+        this._actionError.set('Re-triage returned no parseable proposal.');
+        return;
+      }
+      const refined: CardItem = {
+        task: card.task,
+        proposal: result.proposal,
+        cachedAt: new Date().toISOString(),
+        // /triage-now is server-side — runner reverts to triage-now
+        // because boris-loop didn't produce this run.
+        runner: 'triage-now',
+      };
+      const idx = this._currentIndex();
+      this._cards.update((cards) => {
+        const next = [...cards];
+        if (idx < next.length) next[idx] = refined;
+        return next;
+      });
+      this.feedbackText.set('');
+      // Keep the panel open if the refined proposal still has questions.
+      this.feedbackOpen.set(refined.proposal.questions.length > 0);
+    } catch (e) {
+      this._actionError.set(this.errMsg(e));
+    } finally {
+      this.retriaging.set(false);
+    }
   }
 
   private advance(): void {

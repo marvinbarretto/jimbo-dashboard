@@ -69,6 +69,42 @@
           </ul>
         </div>
       }
+
+      <div class="feedback">
+        <button
+          type="button"
+          class="feedback-toggle"
+          [attr.aria-expanded]="feedbackOpen()"
+          (click)="toggleFeedback()"
+        >
+          {{ feedbackOpen() ? '▾' : '▸' }}
+          @if (card.proposal.questions.length) {
+            answer / refine
+          } @else {
+            add context to refine
+          }
+        </button>
+
+        @if (feedbackOpen()) {
+          <textarea
+            class="feedback-input"
+            rows="3"
+            placeholder="Answer the question or add context. Re-runs the model with this as user_context and overwrites the cached proposal."
+            [value]="feedbackText()"
+            (input)="onFeedbackInput($any($event.target).value)"
+          ></textarea>
+          <div class="feedback-actions">
+            <button
+              type="button"
+              class="btn btn-retriage"
+              [disabled]="retriaging() || !feedbackText().trim()"
+              (click)="retriage()"
+            >
+              {{ retriaging() ? '…' : '↻ re-triage' }}
+            </button>
+          </div>
+        }
+      </div>
     </article>
 
     @if (actionError(); as err) {
