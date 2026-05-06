@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.29](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.28...v0.0.29) (2026-05-06)
+
+
+### Features
+
+* **capture:** allow multiple projects, restore Actors to primary nav ([b8c6061](https://github.com/marvinbarretto/jimbo-dashboard/commit/b8c6061444390ef010b21721158a8b1bc5a0227c))
+* **vault-items:** drop confirms on archive/delete, redirect after delete ([c121255](https://github.com/marvinbarretto/jimbo-dashboard/commit/c121255c25f939846943636ef1825851791742f9))
+* **vault-items:** restore primary nav entry + row-level click navigation ([737035e](https://github.com/marvinbarretto/jimbo-dashboard/commit/737035e26a6bc92b561eb2a9c46558864994b49d))
+
 ### [0.0.28](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.27...v0.0.28) (2026-05-06)
 
 
