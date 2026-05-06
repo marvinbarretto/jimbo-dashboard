@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.26](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.25...v0.0.26) (2026-05-06)
+
+
+### Features
+
+* **projects:** drag-and-drop between major and mini project sections ([b9ba1bf](https://github.com/marvinbarretto/jimbo-dashboard/commit/b9ba1bfe8c63e27526ea48f9ed074be482f8d984))
+
+
+### Bug Fixes
+
+* **projects:** unwrap raw-array response on GET /api/projects ([efd497a](https://github.com/marvinbarretto/jimbo-dashboard/commit/efd497a8c6c45fa0b43efa029a23451fd1f2e1e0))
+
 ### [0.0.25](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.24...v0.0.25) (2026-05-05)
 
 
