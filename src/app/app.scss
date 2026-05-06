@@ -6,6 +6,10 @@
 .app-shell {
   min-height: 100vh;
   background: var(--color-bg);
+  // Measured combined height of .app-topbar + .app-header__inner (incl.
+  // borders). Used by sticky descendants (e.g. <app-ui-tab-bar>) to offset
+  // below the header. Update if the header's vertical metrics change.
+  --app-header-height: 88px;
 }
 
 .app-header {
