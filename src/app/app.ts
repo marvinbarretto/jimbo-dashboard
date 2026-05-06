@@ -6,6 +6,7 @@ import { Nav } from './shared/components/nav/nav';
 import { primaryNavItems } from './shared/components/nav/nav-config';
 import { ToastStack } from './shared/components/toast/toast-stack';
 import { CommandShortcutsService } from './shared/services/command-shortcuts.service';
+import { ThemeService } from './shared/services/theme.service';
 import { ActorsService } from './features/actors/data-access/actors.service';
 import { ProjectsService } from './features/projects/data-access/projects.service';
 
@@ -17,6 +18,7 @@ import { ProjectsService } from './features/projects/data-access/projects.servic
 })
 export class App {
   protected readonly shortcuts = inject(CommandShortcutsService);
+  protected readonly theme = inject(ThemeService);
   private readonly router = inject(Router);
 
   // Eager-load shared lookup data so reference dropdowns (capture's @ trigger,

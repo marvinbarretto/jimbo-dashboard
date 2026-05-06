@@ -59,6 +59,32 @@
 
 }
 
+// Light theme — same accent palette (cyan / warm orange / etc.) but dark
+// text on a near-white surface so the dashboard stays legible outdoors.
+// Activated by ThemeService toggling [data-theme="light"] on <html>.
+[data-theme="light"] {
+  --color-bg: #f4f7fa;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-surface-soft: #eaf0f5;
+  --color-border: #c7d3dd;
+  --color-border-strong: #0a8db1;
+  --color-text: #0a141c;
+  --color-text-muted: #4a6172;
+  --color-text-soft: #2c3e4d;
+  // Darkened accents — same hue family, contrast-bumped for white surfaces.
+  --color-accent: #0a8db1;
+  --color-danger: #c2304a;
+  --color-success: #1f8c5a;
+  --color-warning: #a06a00;
+  --color-info: #1c6cc4;
+  --color-accent-glow: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  --color-danger-glow: color-mix(in srgb, var(--color-danger) 22%, transparent);
+  --shadow-soft: 0 1px 2px color-mix(in srgb, #0a141c 8%, transparent),
+                 0 0 0 1px color-mix(in srgb, var(--color-accent) 14%, transparent);
+  --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
+}
+
 html {
   font-family: var(--font-mono);
   font-size: 16px;
@@ -67,6 +93,8 @@ html {
   background: var(--color-bg);
   -webkit-font-smoothing: antialiased;
   color-scheme: dark;
+
+  &[data-theme="light"] { color-scheme: light; }
 }
 
 body {

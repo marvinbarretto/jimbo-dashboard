@@ -65,6 +65,11 @@
     border-radius: 3px;
     padding: 0.05rem 0.25rem;
   }
+
+  &--icon {
+    padding: 0.2rem 0.4rem;
+    line-height: 0;
+  }
 }
 
 .app-header__inner {
