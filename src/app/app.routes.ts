@@ -70,6 +70,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/stream/stream-page/stream-page').then(m => m.StreamPage),
   },
   {
+    path: 'pomo',
+    loadChildren: () => import('./features/pomo/pomo.routes').then(m => m.pomoRoutes),
+  },
+  {
     path: 'pomo-reports',
     title: 'Pomo reports',
     loadComponent: () => import('./features/pomo/containers/pomo-page/pomo-page').then(m => m.PomoPage),

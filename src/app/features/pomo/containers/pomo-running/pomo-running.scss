@@ -1,0 +1,46 @@
+.running {
+  max-width: 24rem;
+  margin: 4rem auto;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.running__project {
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-soft);
+}
+
+.running__clock {
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(4rem, 22vw, 7rem);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.02em;
+
+  &--expired {
+    color: var(--color-accent);
+  }
+}
+
+.running__progress {
+  width: 100%;
+  height: 0.4rem;
+  background: var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.running__progress-fill {
+  height: 100%;
+  background: var(--color-accent);
+  transition: width 1s linear;
+}
+
+.running__expired-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-soft);
+}

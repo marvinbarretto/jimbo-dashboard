@@ -1,0 +1,98 @@
+<app-ui-stack class="pre-session" gap="lg">
+
+  <header class="pre-session__header">
+    <h1 class="pre-session__title">What are you working on?</h1>
+    <p class="pre-session__hint">Define your intention before you commit.</p>
+  </header>
+
+  <app-ui-card>
+    <app-ui-stack gap="md">
+
+      <!-- Intention -->
+      <div class="pre-session__field-group">
+        <label class="pre-session__label" for="intention">Intention</label>
+        <input
+          id="intention"
+          type="text"
+          class="pre-session__field"
+          placeholder="What specifically will you get done?"
+          [ngModel]="intention()"
+          (ngModelChange)="intention.set($event)" />
+      </div>
+
+      <!-- Project -->
+      <div class="pre-session__field-group">
+        <span class="pre-session__label">Project</span>
+
+        @if (majorProjects().length) {
+          <p class="pre-session__group-label">Major</p>
+          <div class="pre-session__project-list">
+            @for (p of majorProjects(); track p.id) {
+              <button
+                type="button"
+                class="pre-session__project-tile"
+                [class.pre-session__project-tile--selected]="isSelected(p.id)"
+                [style.--tile-color]="projectColor(p)"
+                (click)="selectProject(p.id)">
+                {{ p.display_name }}
+                @if (isSelected(p.id)) { <span class="pre-session__check">✓</span> }
+              </button>
+            }
+          </div>
+        }
+
+        @if (minorProjects().length) {
+          <p class="pre-session__group-label">Minor</p>
+          <div class="pre-session__project-list">
+            @for (p of minorProjects(); track p.id) {
+              <button
+                type="button"
+                class="pre-session__project-tile"
+                [class.pre-session__project-tile--selected]="isSelected(p.id)"
+                [style.--tile-color]="projectColor(p)"
+                (click)="selectProject(p.id)">
+                {{ p.display_name }}
+                @if (isSelected(p.id)) { <span class="pre-session__check">✓</span> }
+              </button>
+            }
+          </div>
+        }
+
+        <button
+          type="button"
+          class="pre-session__project-tile pre-session__project-tile--none"
+          [class.pre-session__project-tile--selected]="isSelected(null)"
+          (click)="selectProject(null)">
+          No project
+          @if (isSelected(null)) { <span class="pre-session__check">✓</span> }
+        </button>
+      </div>
+
+      <!-- Duration -->
+      <div class="pre-session__field-group">
+        <span class="pre-session__label">Duration</span>
+        <app-ui-cluster gap="sm">
+          @for (m of presets; track m) {
+            <button
+              type="button"
+              class="pre-session__preset"
+              [class.pre-session__preset--active]="minutes() === m"
+              (click)="minutes.set(m)">
+              {{ m }}m
+            </button>
+          }
+        </app-ui-cluster>
+      </div>
+
+    </app-ui-stack>
+  </app-ui-card>
+
+  <app-ui-button
+    variant="primary"
+    size="md"
+    [disabled]="starting()"
+    (pressed)="start()">
+    {{ starting() ? 'Starting…' : 'Start pomo' }}
+  </app-ui-button>
+
+</app-ui-stack>

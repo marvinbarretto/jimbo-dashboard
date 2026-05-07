@@ -1,0 +1,132 @@
+.pre-session {
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.pre-session__header {
+  text-align: center;
+}
+
+.pre-session__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.pre-session__hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-soft);
+}
+
+.pre-session__field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pre-session__label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-soft);
+}
+
+.pre-session__group-label {
+  margin: 0.25rem 0 0.25rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-soft);
+  opacity: 0.6;
+}
+
+.pre-session__field {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-family: inherit;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-color: var(--color-accent);
+  }
+}
+
+.pre-session__project-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.pre-session__project-tile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.75rem 0.6rem 1rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--tile-color, var(--color-border));
+  border-radius: var(--radius);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background 80ms ease, border-color 80ms ease;
+
+  &:hover {
+    background: var(--color-surface-raised, color-mix(in srgb, var(--tile-color, var(--color-accent)) 6%, var(--color-surface)));
+  }
+
+  &--selected {
+    background: color-mix(in srgb, var(--tile-color, var(--color-accent)) 14%, transparent);
+    border-color: var(--tile-color, var(--color-accent));
+    border-left-color: var(--tile-color, var(--color-accent));
+    font-weight: 700;
+  }
+
+  &--none {
+    font-style: italic;
+    color: var(--color-text-soft);
+    border-left-color: var(--color-border);
+
+    &.pre-session__project-tile--selected {
+      color: var(--color-text);
+      border-color: var(--color-border-strong);
+    }
+  }
+}
+
+.pre-session__check {
+  font-style: normal;
+  font-size: 0.8rem;
+  color: var(--tile-color, var(--color-accent));
+}
+
+.pre-session__preset {
+  flex: 1;
+  padding: 0.75rem 0;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+
+  &--active {
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  }
+}

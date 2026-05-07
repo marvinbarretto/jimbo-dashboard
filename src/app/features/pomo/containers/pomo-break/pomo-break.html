@@ -1,0 +1,18 @@
+<app-ui-card class="break">
+  <app-ui-stack gap="lg" align="center">
+
+    <div class="break__header">
+      <h1 class="break__title">Take a break</h1>
+      <p class="break__hint">Step away from the screen.</p>
+    </div>
+
+    <div class="break__clock" [class.break__clock--over]="isOver()">
+      {{ isOver() ? 'Break over' : displayTime() }}
+    </div>
+
+    <app-ui-button variant="primary" routerLink="/pomo">
+      Start next pomo
+    </app-ui-button>
+
+  </app-ui-stack>
+</app-ui-card>

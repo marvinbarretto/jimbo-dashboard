@@ -1,0 +1,46 @@
+<app-ui-stack class="retro" gap="lg">
+
+  <header class="retro__header">
+    <h1 class="retro__title">Session complete</h1>
+    @if (session()) {
+      <p class="retro__meta">{{ plannedMins() }}m · {{ projectName() }}</p>
+    }
+  </header>
+
+  <app-ui-card>
+    <app-ui-stack gap="md">
+
+      <div class="retro__field-group">
+        <label class="retro__label" for="notes">What did you get done?</label>
+        <textarea
+          id="notes"
+          class="retro__field"
+          rows="4"
+          placeholder="Reflections on the session…"
+          [ngModel]="notes()"
+          (ngModelChange)="notes.set($event)">
+        </textarea>
+      </div>
+
+      <div class="retro__field-group">
+        <label class="retro__label" for="tags">Tags</label>
+        <input
+          id="tags"
+          type="text"
+          class="retro__field"
+          placeholder="tag1, tag2 …"
+          [ngModel]="tags()"
+          (ngModelChange)="tags.set($event)" />
+      </div>
+
+    </app-ui-stack>
+  </app-ui-card>
+
+  <app-ui-cluster gap="sm">
+    <app-ui-button variant="primary" [disabled]="saving()" (pressed)="save()">
+      {{ saving() ? 'Saving…' : 'Save & finish' }}
+    </app-ui-button>
+    <app-ui-button variant="ghost" (pressed)="skip()">Skip</app-ui-button>
+  </app-ui-cluster>
+
+</app-ui-stack>

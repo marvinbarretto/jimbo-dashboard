@@ -1,0 +1,27 @@
+<app-ui-card class="running">
+  <app-ui-stack gap="md" align="center">
+
+    @if (projectName()) {
+      <p class="running__project">{{ projectName() }}</p>
+    }
+
+    <div class="running__clock" [class.running__clock--expired]="isExpired()">
+      {{ displayTime() }}
+    </div>
+
+    <div class="running__progress" role="progressbar" [attr.aria-valuenow]="progressPct()">
+      <div class="running__progress-fill" [style.width.%]="progressPct()"></div>
+    </div>
+
+    @if (isExpired()) {
+      <p class="running__expired-hint">Session complete — head to retro</p>
+      <app-ui-button variant="primary" (pressed)="finishEarly()">Save & finish</app-ui-button>
+    } @else {
+      <app-ui-cluster gap="sm" justify="center">
+        <app-ui-button variant="primary" (pressed)="finishEarly()">Finish early</app-ui-button>
+        <app-ui-button variant="ghost" (pressed)="abandon()">Abandon</app-ui-button>
+      </app-ui-cluster>
+    }
+
+  </app-ui-stack>
+</app-ui-card>
