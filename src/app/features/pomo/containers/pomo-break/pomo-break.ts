@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiButton } from '@shared/components/ui-button/ui-button';
@@ -7,9 +7,7 @@ import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { FocusSessionsService } from '../../data-access/focus-sessions.service';
 import { VaultItemsService } from '../../../vault-items/data-access/vault-items.service';
 
-// Default break duration in minutes — will become server-driven once
-// the extension passes break length in the navigation state.
-const BREAK_MINUTES = 5;
+const DEFAULT_BREAK_MINUTES = 5;
 
 @Component({
   selector: 'app-pomo-break',
@@ -19,10 +17,12 @@ const BREAK_MINUTES = 5;
   styleUrl: './pomo-break.scss',
 })
 export class PomoBreak implements OnInit, OnDestroy {
+  private readonly route = inject(ActivatedRoute);
   private readonly sessions = inject(FocusSessionsService);
   private readonly vaultItems = inject(VaultItemsService);
 
-  private readonly endTime = Date.now() + BREAK_MINUTES * 60 * 1000;
+  private readonly breakMins = Number(this.route.snapshot.queryParamMap.get('mins')) || DEFAULT_BREAK_MINUTES;
+  private readonly endTime = Date.now() + this.breakMins * 60 * 1000;
   private readonly now = signal(Date.now());
   private readonly handle = setInterval(() => this.now.set(Date.now()), 1000);
 
