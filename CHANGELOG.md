@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.41](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.40...v0.0.41) (2026-05-07)
+
+
+### Features
+
+* **journal:** replace native date inputs with Flatpickr picker ([fc87cb0](https://github.com/marvinbarretto/jimbo-dashboard/commit/fc87cb06d95ae1bf7ebc500ed546cb5098d19d9c))
+* **projects:** add per-project landing page ([b9ea3a1](https://github.com/marvinbarretto/jimbo-dashboard/commit/b9ea3a10ee513eeb6aa27490f31c40bdcb8d6918))
+* **projects:** inline-edit name, description, status, repo_url on landing page ([1ac5105](https://github.com/marvinbarretto/jimbo-dashboard/commit/1ac510573db53883fab02b4e6259116df4910b91))
+
+
+### Bug Fixes
+
+* **journal:** install ng2-charts types, patch loadDay lookback, add date-keys tests ([ec0b4e9](https://github.com/marvinbarretto/jimbo-dashboard/commit/ec0b4e97da4aab3a1fea9dd1344ef281bfa9ffbe))
+* **pomo:** remove redundant ?. and ! operators in pomo-retro template ([0a37ed0](https://github.com/marvinbarretto/jimbo-dashboard/commit/0a37ed01c461a6cf7434c8e421e31fc508d2ec8d))
+* **ui-lab:** move status cast out of template into onStatusSaved() ([a102e95](https://github.com/marvinbarretto/jimbo-dashboard/commit/a102e95e357aa35a3f32478136d7243beb4ada5c))
+
+
+### Code Refactoring
+
+* **projects:** consolidate detail into landing page ([7fb13fc](https://github.com/marvinbarretto/jimbo-dashboard/commit/7fb13fc1fd6940abd9c25673658e34b92dd2e9ff))
+* **ui-lab:** rewrite hybrid-edit-section using UiInlineEdit ([fb88262](https://github.com/marvinbarretto/jimbo-dashboard/commit/fb882622e5ec65b5ad1a10a7e86e2ca7b6e16755))
+
 ### [0.0.40](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.39...v0.0.40) (2026-05-07)
 
 
