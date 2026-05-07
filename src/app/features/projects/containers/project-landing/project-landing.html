@@ -1,0 +1,123 @@
+@if (project(); as p) {
+  <app-ui-stack class="project-landing" gap="lg">
+    <app-ui-page-header class="project-landing__header">
+      <app-ui-back-link uiPageHeaderLead [to]="['/config/projects']">← Projects</app-ui-back-link>
+
+      <h1 uiPageHeaderTitle class="project-landing__title">
+        @if (p.color_token) {
+          <span class="project-landing__dot" [style.background]="p.color_token"></span>
+        }
+        <span>{{ p.display_name }}</span>
+        <app-ui-badge [tone]="statusTone(p.status)">{{ p.status }}</app-ui-badge>
+        <app-ui-badge tone="neutral">{{ p.kind }}</app-ui-badge>
+      </h1>
+
+      <app-ui-cluster uiPageHeaderActions gap="xs">
+        <a [routerLink]="['/config/projects', p.id]" class="btn btn--ghost">Config</a>
+        <a [routerLink]="['/config/projects', p.id, 'edit']" class="btn btn--secondary">Edit</a>
+      </app-ui-cluster>
+    </app-ui-page-header>
+
+    <header class="project-landing__summary">
+      @if (p.description) {
+        <p class="project-landing__desc">{{ p.description }}</p>
+      }
+      <ul class="project-landing__facts">
+        <li>
+          Owner:
+          @if (owner(); as o) {
+            <a [routerLink]="['/config/actors', o.id]">{{ o.display_name }}</a>
+          } @else if (p.owner_actor_id) {
+            <code>{{ p.owner_actor_id }}</code>
+          } @else {
+            <span class="hint">unowned</span>
+          }
+        </li>
+        @if (p.repo_url) {
+          <li>
+            Repo:
+            <a [href]="p.repo_url" target="_blank" rel="noopener noreferrer">{{ p.repo_url }}</a>
+          </li>
+        }
+        <li>Created: {{ p.created_at | relativeTime }}</li>
+      </ul>
+    </header>
+
+    <app-ui-section title="At a glance" [collapsible]="false">
+      <div class="project-landing__stats">
+        <app-project-stat-tile label="Items" [value]="items().length" />
+        <app-project-stat-tile label="Active" [value]="activeItems().length" />
+        <app-project-stat-tile label="Done" [value]="doneItems().length" />
+        <app-project-stat-tile label="Epics" [value]="epicItems().length" />
+        <app-project-stat-tile
+          label="Focus"
+          [value]="focusMinutes() + 'm'"
+          hint="last 30 days" />
+        <app-project-stat-tile
+          label="Sessions"
+          [value]="sessionsForProject().length"
+          hint="last 30 days" />
+      </div>
+    </app-ui-section>
+
+    <app-ui-section title="Recent items" [collapsible]="false">
+      @if (recentItems().length === 0) {
+        <app-ui-empty-state message="No vault items linked to this project yet." />
+      } @else {
+        <app-ui-card tone="soft" [compact]="true">
+          <ul class="project-landing__list">
+            @for (item of recentItems(); track item.id) {
+              <li>
+                <app-project-vault-item-row [item]="item" />
+              </li>
+            }
+          </ul>
+        </app-ui-card>
+      }
+    </app-ui-section>
+
+    <app-ui-section title="Recent focus sessions" [collapsible]="false">
+      @if (sessionsForProject().length === 0) {
+        <app-ui-empty-state message="No focus sessions in the last 30 days." />
+      } @else {
+        <app-ui-card tone="soft" [compact]="true">
+          <ul class="project-landing__list">
+            @for (s of sessionsForProject(); track s.id) {
+              <li>
+                <app-project-focus-session-row [session]="s" />
+              </li>
+            }
+          </ul>
+        </app-ui-card>
+      }
+    </app-ui-section>
+
+    <app-ui-section title="Project activity" [collapsible]="false">
+      @if (recentEvents().length === 0) {
+        <app-ui-empty-state message="No project-level activity recorded." />
+      } @else {
+        <app-ui-card tone="soft" [compact]="true">
+          <ul class="project-landing__activity">
+            @for (event of recentEvents(); track event.id) {
+              <li class="project-landing__activity-row">
+                <span class="project-landing__activity-actor">{{ actorDisplay(event.actor_id) }}</span>
+                <span class="project-landing__activity-desc">{{ eventDescription(event) }}</span>
+                <span class="project-landing__activity-when">· {{ event.at | relativeTime }}</span>
+              </li>
+            }
+          </ul>
+        </app-ui-card>
+      }
+    </app-ui-section>
+
+    @if (p.criteria) {
+      <app-ui-section title="Criteria" [collapsible]="true">
+        <app-ui-card tone="soft" [compact]="true">
+          <pre class="project-landing__criteria">{{ p.criteria }}</pre>
+        </app-ui-card>
+      </app-ui-section>
+    }
+  </app-ui-stack>
+} @else {
+  <app-ui-empty-state title="Project not found" message="The requested project could not be found." />
+}

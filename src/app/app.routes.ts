@@ -48,6 +48,12 @@ export const routes: Routes = [
     loadChildren: () => import('./features/config/config.routes').then(m => m.configRoutes),
   },
   {
+    path: 'projects/:id',
+    title: 'Project',
+    loadComponent: () => import('./features/projects/containers/project-landing/project-landing').then(m => m.ProjectLanding),
+  },
+  { path: 'projects', redirectTo: 'config/projects', pathMatch: 'full' },
+  {
     path: 'grooming',
     loadChildren: () => import('./features/grooming/grooming.routes').then(m => m.groomingRoutes),
   },
