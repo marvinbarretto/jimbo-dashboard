@@ -155,7 +155,7 @@ export class VaultItemDetailBody {
   }
 
   onProjectClicked(id: string): void {
-    this.router.navigate(['/config/projects', id]);
+    this.router.navigate(['/projects', id]);
   }
 
   onDeleted(): void {

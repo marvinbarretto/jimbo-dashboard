@@ -6,7 +6,7 @@
   @if (project().color_token) {
     <span class="project-card__color-dot" [style.background]="project().color_token"></span>
   }
-  <a [routerLink]="['/config/projects', project().id]" class="project-card__name">{{ project().display_name }}</a>
+  <a [routerLink]="['/projects', project().id]" class="project-card__name">{{ project().display_name }}</a>
   @if (project().repo_url) {
     <a [href]="project().repo_url" target="_blank" rel="noopener" class="project-card__repo">repo ↗</a>
   }

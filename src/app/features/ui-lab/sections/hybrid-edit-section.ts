@@ -1,105 +1,75 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
-import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
-import { UiFormActions } from '@shared/components/ui-form-actions/ui-form-actions';
+import { UiInlineEdit, type UiInlineEditOption } from '@shared/components/ui-inline-edit/ui-inline-edit';
 import { UiMetaList } from '@shared/components/ui-meta-list/ui-meta-list';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 
 type LabProjectStatus = 'active' | 'archived';
-type LabField = 'none' | 'title' | 'status';
 
+// Canonical reference for the hybrid edit pattern:
+// scalar fields (name, description, status) edit in place; complex/validated
+// fields (criteria, color, URLs) route to the advanced edit form.
 @Component({
   selector: 'app-hybrid-edit-section',
-  imports: [RouterLink, UiBadge, UiButton, UiCluster, UiFormActions, UiMetaList, UiPageHeader, UiSection, UiStack],
+  imports: [RouterLink, UiBadge, UiCluster, UiInlineEdit, UiMetaList, UiPageHeader, UiSection, UiStack],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../lab-utils.scss'],
   template: `
-    <app-ui-section title="Hybrid Edit Demo" [collapsible]="false">
+    <app-ui-section title="Hybrid Edit — project detail pattern" [collapsible]="false">
       <app-ui-stack gap="lg">
+        <p class="ui-lab__copy">
+          Scalar fields edit in place via <code>UiInlineEdit</code> — no save/cancel buttons,
+          no separate edit route. Complex or validation-heavy fields stay in the advanced edit form.
+          This mirrors how the project landing page works in production.
+        </p>
+
         <app-ui-page-header>
-          <h2 uiPageHeaderTitle>Project Detail With Inline Edit</h2>
-          <p uiPageHeaderHint>
-            Small scalar fields edit in place. Large fields stay read-only here and route to advanced edit.
-          </p>
-          <a uiPageHeaderActions routerLink="/config/projects/hermes/edit" class="btn btn--secondary">Open advanced edit</a>
+          <div uiPageHeaderTitle class="ui-lab__hybrid-title">
+            <app-ui-badge [tone]="projectStatus() === 'active' ? 'success' : 'neutral'">
+              {{ projectStatus() }}
+            </app-ui-badge>
+            <app-ui-inline-edit
+              class="ui-lab__inline-grow"
+              [value]="projectTitle()"
+              size="lg"
+              ariaLabel="Edit project name"
+              (saved)="onNameSaved($event)"
+            />
+          </div>
+          <a uiPageHeaderActions routerLink="/config/projects/hermes/edit" class="btn btn--secondary">
+            Advanced edit
+          </a>
         </app-ui-page-header>
 
-        <app-ui-stack gap="md">
-          <app-ui-cluster justify="between" align="baseline" gap="sm">
-            <h3 class="ui-lab__subhead">Inline-editable summary</h3>
-            <app-ui-cluster gap="sm">
-              <app-ui-badge [tone]="projectStatus() === 'active' ? 'success' : 'neutral'">
-                {{ projectStatus() }}
-              </app-ui-badge>
-              @if (hasUnsavedChanges()) {
-                <app-ui-badge tone="warning">unsaved</app-ui-badge>
-              }
-            </app-ui-cluster>
-          </app-ui-cluster>
-
+        <app-ui-stack gap="sm">
           <div class="ui-lab__inline-field">
-            <div class="ui-lab__inline-copy">
-              <span class="ui-lab__inline-label">Display name</span>
-              @if (editingField() === 'title') {
-                <label class="visually-hidden" for="ui-lab-project-title">Project display name</label>
-                <input
-                  id="ui-lab-project-title"
-                  class="ui-lab__inline-input"
-                  [value]="draftTitle()"
-                  (input)="onDraftTitleInput($event)" />
-              } @else {
-                <strong class="ui-lab__inline-value">{{ projectTitle() }}</strong>
-              }
-            </div>
-            <app-ui-cluster gap="sm">
-              @if (editingField() === 'title') {
-                <app-ui-button size="sm" variant="primary" (pressed)="saveTitle()">Save</app-ui-button>
-                <app-ui-button size="sm" variant="ghost" (pressed)="cancelEdit()">Cancel</app-ui-button>
-              } @else {
-                <app-ui-button size="sm" variant="secondary" (pressed)="startEditing('title')">Edit</app-ui-button>
-              }
-            </app-ui-cluster>
+            <span class="ui-lab__inline-label">Description</span>
+            <app-ui-inline-edit
+              class="ui-lab__inline-grow"
+              [value]="projectDescription()"
+              kind="textarea"
+              placeholder="Add a description…"
+              ariaLabel="Edit description"
+              [rows]="3"
+              (saved)="projectDescription.set($event)"
+            />
           </div>
 
           <div class="ui-lab__inline-field">
-            <div class="ui-lab__inline-copy">
-              <span class="ui-lab__inline-label">Status</span>
-              @if (editingField() === 'status') {
-                <label class="visually-hidden" for="ui-lab-project-status">Project status</label>
-                <select
-                  id="ui-lab-project-status"
-                  class="ui-lab__inline-input"
-                  [value]="draftStatus()"
-                  (change)="onDraftStatusChange($event)">
-                  <option value="active">active</option>
-                  <option value="archived">archived</option>
-                </select>
-              } @else {
-                <app-ui-badge [tone]="projectStatus() === 'active' ? 'success' : 'neutral'">
-                  {{ projectStatus() }}
-                </app-ui-badge>
-              }
-            </div>
-            <app-ui-cluster gap="sm">
-              @if (editingField() === 'status') {
-                <app-ui-button size="sm" variant="primary" (pressed)="saveStatus()">Save</app-ui-button>
-                <app-ui-button size="sm" variant="ghost" (pressed)="cancelEdit()">Cancel</app-ui-button>
-              } @else {
-                <app-ui-button size="sm" variant="secondary" (pressed)="startEditing('status')">Edit</app-ui-button>
-              }
-            </app-ui-cluster>
-          </div>
-
-          <div class="ui-lab__inline-field">
-            <div class="ui-lab__inline-copy">
-              <span class="ui-lab__inline-label">Owner</span>
-              <strong class="ui-lab__inline-value">@marvin</strong>
-            </div>
-            <app-ui-button size="sm" variant="secondary">Edit</app-ui-button>
+            <span class="ui-lab__inline-label">Status</span>
+            <app-ui-inline-edit
+              class="ui-lab__inline-grow"
+              [value]="projectStatus()"
+              kind="select"
+              [options]="statusOptions"
+              [displayFor]="statusLabel"
+              ariaLabel="Edit status"
+              (saved)="onStatusSaved($event)"
+            />
           </div>
         </app-ui-stack>
 
@@ -107,20 +77,23 @@ type LabField = 'none' | 'title' | 'status';
           <h3 class="ui-lab__subhead">Fields that stay in advanced edit</h3>
           <app-ui-meta-list>
             <dt>Criteria</dt>
-            <dd>Long markdown, validation-heavy text, better handled in a form screen.</dd>
+            <dd>Long markdown — validation-heavy, better handled on a full form screen.</dd>
             <dt>Repo URL</dt>
             <dd>Editable, but often paired with validation and related metadata.</dd>
             <dt>Compound settings</dt>
-            <dd>Pricing groups, multi-line chains, and structured workflow rules belong in a full form.</dd>
+            <dd>Color token, pricing groups, structured workflow rules.</dd>
           </app-ui-meta-list>
 
           <pre class="ui-lab__code-block"><code>{{ criteriaPreview() }}</code></pre>
 
-          <app-ui-form-actions align="between">
-            <a routerLink="/config/projects/hermes/edit" class="btn">Advanced edit</a>
-            <app-ui-button variant="ghost" [disabled]="!hasUnsavedChanges()" (pressed)="resetAll()">Reset demo</app-ui-button>
-          </app-ui-form-actions>
+          <a routerLink="/config/projects/hermes/edit" class="btn">Advanced edit</a>
         </app-ui-stack>
+
+        <app-ui-cluster gap="sm">
+          <span class="ui-lab__inline-label">Live values:</span>
+          <code>title="{{ projectTitle() }}"</code>
+          <code>status="{{ projectStatus() }}"</code>
+        </app-ui-cluster>
       </app-ui-stack>
     </app-ui-section>
   `,
@@ -128,13 +101,15 @@ type LabField = 'none' | 'title' | 'status';
 export class HybridEditSection {
   protected readonly projectTitle = signal('Hermes');
   protected readonly projectStatus = signal<LabProjectStatus>('active');
-  protected readonly draftTitle = signal(this.projectTitle());
-  protected readonly draftStatus = signal<LabProjectStatus>(this.projectStatus());
-  protected readonly editingField = signal<LabField>('none');
+  protected readonly projectDescription = signal('');
 
-  protected readonly hasUnsavedChanges = computed(() =>
-    this.projectTitle() !== 'Hermes' || this.projectStatus() !== 'active'
-  );
+  protected readonly statusOptions: UiInlineEditOption[] = [
+    { value: 'active',   label: 'Active' },
+    { value: 'archived', label: 'Archived' },
+  ];
+
+  protected readonly statusLabel = (v: string): string =>
+    this.statusOptions.find(o => o.value === v)?.label ?? v;
 
   protected readonly criteriaPreview = computed(() => [
     '# Hermes criteria',
@@ -144,41 +119,12 @@ export class HybridEditSection {
     '- Preserve escape hatches for advanced edits.',
   ].join('\n'));
 
-  startEditing(field: Exclude<LabField, 'none'>): void {
-    this.editingField.set(field);
-    if (field === 'title') this.draftTitle.set(this.projectTitle());
-    if (field === 'status') this.draftStatus.set(this.projectStatus());
+  onNameSaved(value: string): void {
+    const trimmed = value.trim();
+    if (trimmed) this.projectTitle.set(trimmed);
   }
 
-  cancelEdit(): void {
-    this.editingField.set('none');
-    this.draftTitle.set(this.projectTitle());
-    this.draftStatus.set(this.projectStatus());
-  }
-
-  saveTitle(): void {
-    const next = this.draftTitle().trim();
-    if (!next) return;
-    this.projectTitle.set(next);
-    this.editingField.set('none');
-  }
-
-  saveStatus(): void {
-    this.projectStatus.set(this.draftStatus());
-    this.editingField.set('none');
-  }
-
-  resetAll(): void {
-    this.projectTitle.set('Hermes');
-    this.projectStatus.set('active');
-    this.cancelEdit();
-  }
-
-  onDraftTitleInput(event: Event): void {
-    this.draftTitle.set((event.target as HTMLInputElement).value);
-  }
-
-  onDraftStatusChange(event: Event): void {
-    this.draftStatus.set((event.target as HTMLSelectElement).value as LabProjectStatus);
+  onStatusSaved(value: string): void {
+    this.projectStatus.set(value as LabProjectStatus);
   }
 }

@@ -13,8 +13,7 @@ export const projectsRoutes: Routes = [
   },
   {
     path: ':id',
-    title: 'Project',
-    loadComponent: () => import('./containers/project-detail/project-detail').then(m => m.ProjectDetail),
+    redirectTo: '/projects/:id',
   },
   {
     path: ':id/edit',

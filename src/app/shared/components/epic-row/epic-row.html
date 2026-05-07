@@ -5,7 +5,7 @@
     <div class="epic-row__head">
       <time class="epic-row__time" [attr.datetime]="epic().createdAt">{{ epic().createdAt | relativeTime }}</time>
 
-      <a [routerLink]="['/config/projects', epic().project.slug]"
+      <a [routerLink]="['/projects', epic().project.slug]"
          class="epic-row__chip-link"
          [attr.aria-label]="'Project: ' + epic().project.displayName">
         <app-chip variant="project" prefix="/">{{ epic().project.displayName }}</app-chip>
@@ -70,7 +70,7 @@
     <div class="epic-row__top">
       <time class="epic-row__time" [attr.datetime]="epic().createdAt">{{ epic().createdAt | relativeTime }}</time>
 
-      <a [routerLink]="['/config/projects', epic().project.slug]"
+      <a [routerLink]="['/projects', epic().project.slug]"
          class="epic-row__chip-link"
          [attr.aria-label]="'Project: ' + epic().project.displayName">
         <app-chip variant="project" prefix="/">{{ epic().project.displayName }}</app-chip>
@@ -134,7 +134,7 @@
     <!-- compact: 1-line, all chips inline. Default. -->
     <time class="epic-row__time" [attr.datetime]="epic().createdAt">{{ epic().createdAt | relativeTime }}</time>
 
-    <a [routerLink]="['/config/projects', epic().project.slug]"
+    <a [routerLink]="['/projects', epic().project.slug]"
        class="epic-row__chip-link"
        [attr.aria-label]="'Project: ' + epic().project.displayName">
       <app-chip variant="project" prefix="/">{{ epic().project.displayName }}</app-chip>
