@@ -15,7 +15,7 @@ import type { VaultItemDependency } from './vault-item-dependency';
 import type { VaultItemProject } from './vault-item-project';
 import type { Source } from './source';
 import type { ActorId, ProjectId, VaultItemId } from '../ids';
-import { vaultItemId, projectId, actorId } from '../ids';
+import { vaultItemId, projectId, actorId , wellKnownActorId} from '../ids';
 
 // Monotonic id counter — every builder call gets a unique id without test-side effort.
 let _itemCounter = 0;
@@ -104,7 +104,7 @@ export const buildEpic = (children: VaultItem[], overrides: VaultItemOverrides =
 export const buildReady = (overrides: VaultItemOverrides = {}): VaultItem =>
   buildVaultItem({
     grooming_status:     'ready',
-    assigned_to:         actorId('marvin'),
+    assigned_to:         wellKnownActorId('marvin'),
     ai_priority:         2,
     actionability:       'clear',
     acceptance_criteria: [{ text: 'something testable', done: false }],

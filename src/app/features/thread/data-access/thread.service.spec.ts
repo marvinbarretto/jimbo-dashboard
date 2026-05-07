@@ -3,7 +3,7 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { ThreadService } from './thread.service';
-import { vaultItemId, threadMessageId, actorId } from '@domain/ids';
+import { vaultItemId, threadMessageId, actorId , wellKnownActorId} from '@domain/ids';
 import type { ThreadMessage } from '@domain/thread';
 import { environment } from '../../../../environments/environment';
 
@@ -13,7 +13,7 @@ function makeMessage(overrides: Partial<ThreadMessage> = {}): ThreadMessage {
   return {
     id: threadMessageId('m-1'),
     vault_item_id: VAULT_ID,
-    author_actor_id: actorId('marvin'),
+    author_actor_id: wellKnownActorId('marvin'),
     kind: 'comment',
     body: 'hello world',
     in_reply_to: null,

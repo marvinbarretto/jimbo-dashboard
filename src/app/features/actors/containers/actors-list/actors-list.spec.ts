@@ -3,6 +3,7 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { ActorsList } from './actors-list';
 import { ActorsService } from '../../data-access/actors.service';
+import { wellKnownActorId } from '@domain/ids';
 
 describe('ActorsList', () => {
   let component: ActorsList;
@@ -27,14 +28,14 @@ describe('ActorsList', () => {
   it('calls service.remove when confirm accepted', () => {
     const spy = vi.spyOn(service, 'remove');
     vi.spyOn(window, 'confirm').mockReturnValue(true);
-    component.remove('marvin');
+    component.remove(wellKnownActorId('marvin'));
     expect(spy).toHaveBeenCalledWith('marvin');
   });
 
   it('does not call service.remove when confirm cancelled — polite to the end', () => {
     const spy = vi.spyOn(service, 'remove');
     vi.spyOn(window, 'confirm').mockReturnValue(false);
-    component.remove('marvin');
+    component.remove(wellKnownActorId('marvin'));
     expect(spy).not.toHaveBeenCalled();
   });
 });

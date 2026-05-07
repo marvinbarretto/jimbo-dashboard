@@ -1,5 +1,5 @@
 import type { Project } from './project';
-import { actorId, projectId } from '../ids';
+import { actorId, projectId , wellKnownActorId} from '../ids';
 
 // Two projects exercise the cross-project case (Item C below) and the "hermes is a project"
 // principle (P13 / row 17). LocalShout owns its event-qualifier skill; hermes owns the
@@ -12,7 +12,7 @@ export const PROJECTS = [
     description: 'Hyperlocal events aggregator. Pulls events from multiple sources, qualifies them.',
     status: 'active',
     kind: 'major',
-    owner_actor_id: actorId('marvin'),
+    owner_actor_id: wellKnownActorId('marvin'),
     criteria:
       '## Event qualification\n\n' +
       'A LocalShout event must have:\n' +
@@ -30,7 +30,7 @@ export const PROJECTS = [
     description: 'The orchestrator itself. Hosts universal skills used across every project.',
     status: 'active',
     kind: 'major',
-    owner_actor_id: actorId('marvin'),
+    owner_actor_id: wellKnownActorId('marvin'),
     criteria: null,
     repo_url: 'https://github.com/marvinbarretto/hermes',
     color_token: '#7a8fc4',
@@ -42,7 +42,7 @@ export const PROJECTS = [
     description: 'This Angular control plane. UI, kanban, vault-item screens.',
     status: 'active',
     kind: 'major',
-    owner_actor_id: actorId('marvin'),
+    owner_actor_id: wellKnownActorId('marvin'),
     criteria: null,
     repo_url: 'https://github.com/marvinbarretto/jimbo-dashboard',
     color_token: '#7ac4a4',
@@ -56,7 +56,7 @@ export const PROJECTS = [
       'follow-ups with people outside work. Operator-owned by default.',
     status: 'active',
     kind: 'major',
-    owner_actor_id: actorId('marvin'),
+    owner_actor_id: wellKnownActorId('marvin'),
     criteria: null,
     repo_url: null,
     color_token: '#c4a47a',

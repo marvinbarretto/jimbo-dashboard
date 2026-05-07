@@ -1,5 +1,5 @@
 import type { ThreadMessage } from './thread-message';
-import { actorId, threadMessageId } from '../ids';
+import { actorId, threadMessageId , wellKnownActorId} from '../ids';
 import { VAULT_ITEM_IDS } from '../vault/fixtures';
 
 // Messages exercise every kind:
@@ -46,7 +46,7 @@ export const THREAD_MESSAGES = [
   {
     id: MSG_A_Q1,
     vault_item_id: VAULT_ITEM_IDS.A,
-    author_actor_id: actorId('boris'),
+    author_actor_id: wellKnownActorId('boris'),
     kind: 'question',
     body:
       "I can't tell what action this needs. What did Sam mention specifically — a venue " +
@@ -59,7 +59,7 @@ export const THREAD_MESSAGES = [
   {
     id: MSG_B_C1,
     vault_item_id: VAULT_ITEM_IDS.B,
-    author_actor_id: actorId('marvin'),
+    author_actor_id: wellKnownActorId('marvin'),
     kind: 'comment',
     body: 'Postcode regex lives in `lib/validators/uk-postcode.ts` — reuse that, do not redefine.',
     in_reply_to: null,
@@ -69,7 +69,7 @@ export const THREAD_MESSAGES = [
   {
     id: MSG_C_Q1,
     vault_item_id: VAULT_ITEM_IDS.C,
-    author_actor_id: actorId('ralph'),
+    author_actor_id: wellKnownActorId('ralph'),
     kind: 'question',
     body: 'Should this also gate the manual override path, or only the automatic chain?',
     in_reply_to: null,
@@ -79,7 +79,7 @@ export const THREAD_MESSAGES = [
   {
     id: MSG_C_A1,
     vault_item_id: VAULT_ITEM_IDS.C,
-    author_actor_id: actorId('marvin'),
+    author_actor_id: wellKnownActorId('marvin'),
     kind: 'answer',
     body: 'Automatic only. Manual override is intentional bypass.',
     in_reply_to: MSG_C_Q1,
@@ -89,21 +89,21 @@ export const THREAD_MESSAGES = [
 
   // L: 3 open questions on a vague brain dump
   {
-    id: MSG_L_Q1, vault_item_id: VAULT_ITEM_IDS.L, author_actor_id: actorId('boris'),
+    id: MSG_L_Q1, vault_item_id: VAULT_ITEM_IDS.L, author_actor_id: wellKnownActorId('boris'),
     kind: 'question',
     body: 'What "thing" are you referring to? Can you name a person, project, or system?',
     in_reply_to: null, answered_by: null,
     created_at: '2026-04-25T02:16:00Z',
   },
   {
-    id: MSG_L_Q2, vault_item_id: VAULT_ITEM_IDS.L, author_actor_id: actorId('boris'),
+    id: MSG_L_Q2, vault_item_id: VAULT_ITEM_IDS.L, author_actor_id: wellKnownActorId('boris'),
     kind: 'question',
     body: 'What action would resolve this — a decision, a code change, a message to send?',
     in_reply_to: null, answered_by: null,
     created_at: '2026-04-25T02:16:30Z',
   },
   {
-    id: MSG_L_Q3, vault_item_id: VAULT_ITEM_IDS.L, author_actor_id: actorId('boris'),
+    id: MSG_L_Q3, vault_item_id: VAULT_ITEM_IDS.L, author_actor_id: wellKnownActorId('boris'),
     kind: 'question',
     body: 'Is there a deadline, or can this go to the someday pile?',
     in_reply_to: null, answered_by: null,
@@ -112,7 +112,7 @@ export const THREAD_MESSAGES = [
 
   // M: 9-day-old unanswered question (stuck signal)
   {
-    id: MSG_M_Q1, vault_item_id: VAULT_ITEM_IDS.M, author_actor_id: actorId('boris'),
+    id: MSG_M_Q1, vault_item_id: VAULT_ITEM_IDS.M, author_actor_id: wellKnownActorId('boris'),
     kind: 'question',
     body: 'Which Helen, and what was her request? Need at least one of those to act.',
     in_reply_to: null, answered_by: null,
@@ -121,21 +121,21 @@ export const THREAD_MESSAGES = [
 
   // N: partial answer state — Q1 answered, Q2 still open
   {
-    id: MSG_N_Q1, vault_item_id: VAULT_ITEM_IDS.N, author_actor_id: actorId('boris'),
+    id: MSG_N_Q1, vault_item_id: VAULT_ITEM_IDS.N, author_actor_id: wellKnownActorId('boris'),
     kind: 'question',
     body: 'Hero copy specifically, or full landing page? Is the existing brand voice still right?',
     in_reply_to: null, answered_by: MSG_N_A1,
     created_at: '2026-04-22T15:08:00Z',
   },
   {
-    id: MSG_N_A1, vault_item_id: VAULT_ITEM_IDS.N, author_actor_id: actorId('marvin'),
+    id: MSG_N_A1, vault_item_id: VAULT_ITEM_IDS.N, author_actor_id: wellKnownActorId('marvin'),
     kind: 'answer',
     body: 'Hero + features. Existing voice is fine, just punchier.',
     in_reply_to: MSG_N_Q1, answered_by: null,
     created_at: '2026-04-22T16:00:00Z',
   },
   {
-    id: MSG_N_Q2, vault_item_id: VAULT_ITEM_IDS.N, author_actor_id: actorId('boris'),
+    id: MSG_N_Q2, vault_item_id: VAULT_ITEM_IDS.N, author_actor_id: wellKnownActorId('boris'),
     kind: 'question',
     body: 'Got it. Approx word count for hero — one sentence, a paragraph, or longer?',
     in_reply_to: null, answered_by: null,
@@ -144,14 +144,14 @@ export const THREAD_MESSAGES = [
 
   // S: 2 open questions on a classified item — questions block readiness regardless of column
   {
-    id: MSG_S_Q1, vault_item_id: VAULT_ITEM_IDS.S, author_actor_id: actorId('ralph'),
+    id: MSG_S_Q1, vault_item_id: VAULT_ITEM_IDS.S, author_actor_id: wellKnownActorId('ralph'),
     kind: 'question',
     body: 'Are EH8 the only suburb postcodes failing, or is this systematic for outer suburbs?',
     in_reply_to: null, answered_by: null,
     created_at: '2026-04-23T13:30:00Z',
   },
   {
-    id: MSG_S_Q2, vault_item_id: VAULT_ITEM_IDS.S, author_actor_id: actorId('ralph'),
+    id: MSG_S_Q2, vault_item_id: VAULT_ITEM_IDS.S, author_actor_id: wellKnownActorId('ralph'),
     kind: 'question',
     body: 'Should the fallback try a partial-postcode lookup, or fall back to a manual override?',
     in_reply_to: null, answered_by: null,

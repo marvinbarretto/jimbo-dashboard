@@ -28,6 +28,7 @@ import {
 } from '@shared/mentions';
 import type { ActorId, ProjectId, VaultItemId } from '@domain/ids';
 import type { Actor } from '@domain/actors';
+import { CURRENT_ACTOR_ID } from '@domain/actors';
 import type { Project } from '@domain/projects';
 import type { VaultItem, AcceptanceCriterion } from '@domain/vault/vault-item';
 import type { CreateThreadMessagePayload } from '@domain/thread';
@@ -77,9 +78,7 @@ export class VaultItemDialogStore {
   private readonly threadService = inject(ThreadService);
   private readonly toast = inject(ToastService);
 
-  // Hardcoded operator; mirrors the value in VaultItemsService until session
-  // context is real.
-  private readonly currentActor: ActorId = actorId('marvin');
+  private readonly currentActor: ActorId = CURRENT_ACTOR_ID;
 
   // ── Mode ──────────────────────────────────────────────────────────────────
 

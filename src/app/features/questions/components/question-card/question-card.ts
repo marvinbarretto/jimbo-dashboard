@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { OpenQuestionView, CreateThreadMessagePayload } from '@domain/thread';
-import { actorId } from '@domain/ids';
+import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { ActorsService } from '@features/actors/data-access/actors.service';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
 import { QuestionReplyComposer } from '@shared/components/question-reply-composer/question-reply-composer';
@@ -23,7 +23,7 @@ export class QuestionCard {
   private readonly vaultItemsService = inject(VaultItemsService);
 
   readonly showReply = signal(false);
-  readonly currentActorId = actorId('marvin');
+  readonly currentActorId = CURRENT_ACTOR_ID;
 
   readonly item = computed(() => this.vaultItemsService.getById(this.question().vault_item_id));
   readonly parentItem = computed(() => {

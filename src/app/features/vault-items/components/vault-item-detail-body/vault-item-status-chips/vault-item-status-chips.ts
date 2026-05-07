@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { RouterLink } from '@angular/router';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiDropdown } from '@shared/components/ui-dropdown/ui-dropdown';
 import type { Actor } from '@domain/actors';
 import type { Project } from '@domain/projects/project';
@@ -9,80 +10,95 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
 
 @Component({
   selector: 'app-vault-item-status-chips',
-  imports: [RouterLink, EntityChip, UiBadge, UiDropdown],
+  imports: [RouterLink, EntityChip, UiBadge, UiCluster, UiDropdown],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="vault-item-status-chips">
 
-      <app-ui-dropdown
-        #statusDrop
-        ariaHaspopup="listbox"
-        ariaLabel="Change status"
-        [disabled]="isArchived()">
-        <app-ui-badge trigger [tone]="statusTone()">
-          {{ isArchived() ? 'archived' : lifecycle() }}
-        </app-ui-badge>
-        <div panel role="listbox" class="vault-item-status-chips__panel">
-          @for (s of statuses; track s) {
-            <button
-              class="vault-item-status-chips__option"
-              role="option"
-              [attr.aria-selected]="lifecycle() === s"
-              (click)="statusChange.emit(s); statusDrop.close()">
-              {{ s }}
-            </button>
+      <!-- Primary tier: the three operational decisions -->
+      <app-ui-cluster gap="xs" align="center">
+        <app-ui-dropdown
+          #statusDrop
+          ariaHaspopup="listbox"
+          ariaLabel="Change status"
+          [disabled]="isArchived()">
+          <app-ui-badge trigger [tone]="statusTone()">
+            {{ isArchived() ? 'archived' : lifecycle() }}
+          </app-ui-badge>
+          <div panel role="listbox" class="vault-item-status-chips__panel">
+            @for (s of statuses; track s) {
+              <button
+                class="vault-item-status-chips__option"
+                role="option"
+                [attr.aria-selected]="lifecycle() === s"
+                (click)="statusChange.emit(s); statusDrop.close()">
+                {{ s }}
+              </button>
+            }
+          </div>
+        </app-ui-dropdown>
+
+        <app-ui-dropdown
+          #ownerDrop
+          ariaHaspopup="listbox"
+          ariaLabel="Reassign owner">
+          <app-entity-chip trigger type="actor" [id]="ownerChip().id" [label]="ownerChip().label" />
+          <div panel role="listbox" class="vault-item-status-chips__panel">
+            @for (a of activeActors(); track a.id) {
+              <button
+                class="vault-item-status-chips__option"
+                role="option"
+                [attr.aria-selected]="item().assigned_to === a.id"
+                (click)="reassign.emit(a.id); ownerDrop.close()">
+                &#64;{{ a.id }}
+              </button>
+            }
+          </div>
+        </app-ui-dropdown>
+
+        @if (effectivePriority(); as p) {
+          <app-ui-badge [tone]="priorityTone(p)" [title]="priorityTitle()">
+            {{ priorityLabel(p) }}{{ priorityDiverges() ? ' *' : '' }}
+          </app-ui-badge>
+        }
+
+        @if (firstProject(); as p) {
+          <a class="chip-link" [routerLink]="['/config/projects', p.id]">
+            <app-entity-chip type="project" [id]="p.id" [label]="p.display_name" />
+          </a>
+          @if (extraProjectCount() > 0) {
+            <span class="vault-item-status-chips__extra-projects" [title]="extraProjectsTitle()">
+              +{{ extraProjectCount() }}
+            </span>
           }
-        </div>
-      </app-ui-dropdown>
+        } @else {
+          <app-ui-badge tone="neutral" [subtle]="true" title="Not linked to any project">
+            standalone
+          </app-ui-badge>
+        }
+      </app-ui-cluster>
 
-      <app-ui-badge [tone]="groomingTone()">{{ groomingLabel() }}</app-ui-badge>
+      <!-- Secondary tier: classification metadata -->
+      <app-ui-cluster gap="xs" align="center" class="vault-item-status-chips__secondary">
+        <app-ui-badge [tone]="groomingTone()">{{ groomingLabel() }}</app-ui-badge>
 
-      <app-ui-dropdown
-        #ownerDrop
-        ariaHaspopup="listbox"
-        ariaLabel="Reassign owner">
-        <app-entity-chip trigger type="actor" [id]="ownerChip().id" [label]="ownerChip().label" />
-        <div panel role="listbox" class="vault-item-status-chips__panel">
-          @for (a of activeActors(); track a.id) {
-            <button
-              class="vault-item-status-chips__option"
-              role="option"
-              [attr.aria-selected]="item().assigned_to === a.id"
-              (click)="reassign.emit(a.id); ownerDrop.close()">
-              &#64;{{ a.id }}
-            </button>
-          }
-        </div>
-      </app-ui-dropdown>
+        @if (item().actionability !== null) {
+          <app-ui-badge [tone]="actionabilityTone()">{{ item().actionability }}</app-ui-badge>
+        }
 
-      @if (effectivePriority(); as p) {
-        <app-ui-badge [tone]="priorityTone(p)" [title]="priorityTitle()">
-          {{ priorityLabel(p) }}{{ priorityDiverges() ? ' *' : '' }}
-        </app-ui-badge>
-      }
+        @if (isGitHubItem()) {
+          <app-ui-badge tone="info" [subtle]="true">github</app-ui-badge>
+        }
 
-      @if (item().actionability !== null) {
-        <app-ui-badge [tone]="actionabilityTone()">{{ item().actionability }}</app-ui-badge>
-      }
-
-      @if (firstProject(); as p) {
-        <a class="chip-link" [routerLink]="['/config/projects', p.id]">
-          <app-entity-chip type="project" [id]="p.id" [label]="p.display_name" />
-        </a>
-      }
-
-      @if (isGitHubItem()) {
-        <app-ui-badge tone="info" [subtle]="true">github</app-ui-badge>
-      }
-
-      <button
-        type="button"
-        class="vault-item-status-chips__epic-toggle"
-        [class.vault-item-status-chips__epic-toggle--active]="item().is_epic"
-        (click)="epicToggle.emit(!item().is_epic)"
-        [title]="item().is_epic ? 'Remove epic flag' : 'Mark as epic'">
-        {{ item().is_epic ? 'EPIC ×' : '+ epic' }}
-      </button>
+        <button
+          type="button"
+          class="vault-item-status-chips__epic-toggle"
+          [class.vault-item-status-chips__epic-toggle--active]="item().is_epic"
+          (click)="epicToggle.emit(!item().is_epic)"
+          [title]="item().is_epic ? 'Remove epic flag' : 'Mark as epic'">
+          {{ item().is_epic ? 'EPIC ×' : '+ epic' }}
+        </button>
+      </app-ui-cluster>
 
     </div>
   `,
@@ -94,9 +110,13 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
 
     .vault-item-status-chips {
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.45rem;
-      align-items: center;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .vault-item-status-chips__secondary {
+      opacity: 0.8;
+      font-size: 0.8em;
     }
 
     .vault-item-status-chips__panel {
@@ -129,6 +149,12 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
     .chip-link {
       display: inline-flex;
       text-decoration: none;
+    }
+
+    .vault-item-status-chips__extra-projects {
+      font-size: 0.7rem;
+      color: var(--color-text-muted);
+      cursor: default;
     }
 
     .vault-item-status-chips__epic-toggle {
@@ -164,6 +190,7 @@ export class VaultItemStatusChips {
   readonly effectivePriority = input<Priority | null>(null);
   readonly priorityDiverges = input(false);
   readonly firstProject = input<Project | undefined>(undefined);
+  readonly allProjects = input<readonly Project[]>([]);
   readonly isGitHubItem = input(false);
   readonly activeActors = input.required<readonly Actor[]>();
 
@@ -173,6 +200,12 @@ export class VaultItemStatusChips {
 
   readonly statuses: readonly ('active' | 'done')[] = ['active', 'done'];
 
+  readonly extraProjectCount = computed(() => Math.max(0, this.allProjects().length - 1));
+  readonly extraProjectsTitle = computed(() => {
+    const extras = this.allProjects().slice(1);
+    return extras.map(p => p.display_name).join(', ');
+  });
+
   readonly statusTone = computed(() =>
     this.lifecycle() === 'active' ? 'success' as const : 'neutral' as const
   );
@@ -180,6 +213,12 @@ export class VaultItemStatusChips {
   readonly ownerChip = computed(() => {
     const o = this.owner();
     if (o) return { id: o.id as string, label: o.id as string };
+    // Owner row hasn't resolved yet (actors not loaded, or stale lookup).
+    // Falling back to "unassigned" here would lie about an item that DOES
+    // have an assignee — render the raw id instead so the user sees truth.
+    // Only treat null assigned_to as genuinely unassigned.
+    const raw = this.item().assigned_to;
+    if (raw) return { id: raw as string, label: raw as string };
     return { id: 'unassigned', label: 'unassigned' };
   });
 

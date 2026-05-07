@@ -13,6 +13,7 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { ActorsService } from '../../data-access/actors.service';
 import { DatetimePipe } from '@shared/pipes/datetime.pipe';
+import { actorId } from '@domain/ids';
 
 @Component({
   selector: 'app-actor-detail',
@@ -28,7 +29,10 @@ export class ActorDetail {
 
   private readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id') ?? '')));
 
-  readonly actor = computed(() => this.service.getById(this.id() ?? ''));
+  readonly actor = computed(() => {
+    const id = this.id();
+    return id ? this.service.getById(actorId(id)) : undefined;
+  });
 
   constructor() {
     effect(() => {

@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   Signal,
+  computed,
   effect,
   inject,
   input,
@@ -12,6 +13,7 @@ import { swapDetailSeq, closeDetail } from '@shared/kanban/detail-modal';
 import { RejectFormComponent, type RejectSubmission } from './reject-form/reject-form';
 import { ThreadView } from '../../../thread/components/thread-view/thread-view';
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
+import { staleNorm, ancientNorm } from '@domain/vault';
 import { ActivityLogComponent } from './activity-log/activity-log';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiButton } from '@shared/components/ui-button/ui-button';
@@ -19,6 +21,7 @@ import { UiInlineEdit } from '@shared/components/ui-inline-edit/ui-inline-edit';
 import { UiMentionChipStrip } from '@shared/components/ui-mention-chip-strip/ui-mention-chip-strip';
 import { MentionDirective } from '@shared/mentions';
 import { actorId } from '@domain/ids';
+import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { VaultItemActionBar } from './vault-item-action-bar/vault-item-action-bar';
 import { VaultItemDeliveryBlock } from './vault-item-delivery-block/vault-item-delivery-block';
 import { VaultItemIdentityHeader } from './vault-item-identity-header/vault-item-identity-header';
@@ -63,6 +66,12 @@ import type { CreateThreadMessagePayload } from '@domain/thread';
   templateUrl: './vault-item-detail-body.html',
   styleUrl: './vault-item-detail-body.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    // GH items age from off-white → pale yellow using the existing staleness
+    // CSS var contract. Non-GH items bind 0 so the modifier has no effect.
+    '[style.--stale-norm]':   'ghStaleNorm()',
+    '[style.--ancient-norm]': 'ghAncientNorm()',
+  },
 })
 export class VaultItemDetailBody {
   readonly mode = input.required<DialogMode>();
@@ -75,12 +84,28 @@ export class VaultItemDetailBody {
   protected readonly store = inject(VaultItemDialogStore);
   private readonly router = inject(Router);
 
+  // Staleness norms are non-zero only for GH items — drives the yellow-aging
+  // background modifier without affecting manually-created items.
+  protected readonly ghStaleNorm = computed(() => {
+    if (!this.store.isGitHubItem()) return 0;
+    const item = this.store.item();
+    if (!item) return 0;
+    return staleNorm(item, this.store.lastActivityAt() ?? null);
+  });
+
+  protected readonly ghAncientNorm = computed(() => {
+    if (!this.store.isGitHubItem()) return 0;
+    const item = this.store.item();
+    if (!item) return 0;
+    return ancientNorm(item, this.store.lastActivityAt() ?? null);
+  });
+
   // Template helpers — pure functions, kept here because the template
   // references them by reference (passing to <app-activity-log> inputs etc.)
   // and the store already exports actorLabelFn / actorKindFn for the same.
   protected readonly lifecycleOf = lifecycleState;
   protected readonly isItemArchived = isArchived;
-  protected readonly currentActorId = actorId('marvin');
+  protected readonly currentActorId = CURRENT_ACTOR_ID;
 
   constructor() {
     // Sync the store's mode to the host's input. The store is the source of

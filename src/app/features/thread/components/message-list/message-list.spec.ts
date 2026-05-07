@@ -1,7 +1,7 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { MessageList } from './message-list';
-import { vaultItemId, threadMessageId, actorId } from '@domain/ids';
+import { vaultItemId, threadMessageId, actorId , wellKnownActorId} from '@domain/ids';
 import type { ThreadMessage } from '@domain/thread';
 
 const VAULT_ID = vaultItemId('vault-1');
@@ -10,7 +10,7 @@ function makeMsg(overrides: Partial<ThreadMessage> = {}): ThreadMessage {
   return {
     id: threadMessageId('m-1'),
     vault_item_id: VAULT_ID,
-    author_actor_id: actorId('marvin'),
+    author_actor_id: wellKnownActorId('marvin'),
     kind: 'comment',
     body: 'a message body',
     in_reply_to: null,

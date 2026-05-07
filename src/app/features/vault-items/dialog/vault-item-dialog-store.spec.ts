@@ -14,7 +14,7 @@ import { ActorsService } from '../../actors/data-access/actors.service';
 import { ProjectsService } from '../../projects/data-access/projects.service';
 import { ThreadService } from '../../thread/data-access/thread.service';
 import { ToastService } from '@shared/components/toast/toast.service';
-import { actorId, projectId, vaultItemId } from '@domain/ids';
+import { actorId, projectId, vaultItemId , wellKnownActorId} from '@domain/ids';
 import type { Project } from '@domain/projects/project';
 import type { Actor } from '@domain/actors/actor';
 import type { VaultItem } from '@domain/vault/vault-item';
@@ -26,7 +26,7 @@ const fakeProject = (id: string): Project => ({
   description: null,
   status: 'active',
   kind: 'minor',
-  owner_actor_id: actorId('marvin'),
+  owner_actor_id: wellKnownActorId('marvin'),
   criteria: null,
   repo_url: null,
   color_token: null,
@@ -52,7 +52,7 @@ const fakeItem = (overrides: Partial<VaultItem> = {}): VaultItem => ({
   body: '',
   type: 'task',
   category: null,
-  assigned_to: actorId('marvin'),
+  assigned_to: wellKnownActorId('marvin'),
   tags: [],
   acceptance_criteria: [],
   grooming_status: 'ungroomed',

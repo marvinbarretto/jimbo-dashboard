@@ -9,7 +9,7 @@ import { VaultItemsService } from './vault-items.service';
 import { ActivityEventsService } from './activity-events.service';
 import { VaultItemProjectsService } from './vault-item-projects.service';
 import { ToastService } from '@shared/components/toast/toast.service';
-import { actorId, projectId, vaultItemId } from '@domain/ids';
+import { actorId, projectId, vaultItemId , wellKnownActorId} from '@domain/ids';
 import type { Project } from '@domain/projects/project';
 import type { Actor } from '@domain/actors/actor';
 import type { DraftPayload } from '../dialog/vault-item-dialog-mode';
@@ -75,13 +75,13 @@ describe('VaultItemsService.rejectItem (seed mode)', () => {
   it('refuses to reject when reason is empty', () => {
     const item = service.items().find(i => i.grooming_status === 'decomposed');
     if (!item) throw new Error('no decomposed seed item');
-    expect(() => service.rejectItem(item.id, '', actorId('boris'))).toThrow(/reason required/i);
+    expect(() => service.rejectItem(item.id, '', wellKnownActorId('boris'))).toThrow(/reason required/i);
   });
 
   it('refuses to reject when reason is below minimum length', () => {
     const item = service.items().find(i => i.grooming_status === 'decomposed');
     if (!item) throw new Error('no decomposed seed item');
-    expect(() => service.rejectItem(item.id, 'short', actorId('boris'))).toThrow(/12 chars/i);
+    expect(() => service.rejectItem(item.id, 'short', wellKnownActorId('boris'))).toThrow(/12 chars/i);
   });
 
   it('is a no-op when item is already in needs_rework', () => {
@@ -90,7 +90,7 @@ describe('VaultItemsService.rejectItem (seed mode)', () => {
     service.setGroomingStatus(item.id, 'needs_rework');
     activityPosts.length = 0;
 
-    service.rejectItem(item.id, 'should not fire — already in rework', actorId('boris'));
+    service.rejectItem(item.id, 'should not fire — already in rework', wellKnownActorId('boris'));
     expect(activityPosts).toHaveLength(0);
   });
 });
@@ -107,7 +107,7 @@ describe('VaultItemsService.createWithRelations (HTTP mode)', () => {
     description: null,
     status: 'active',
     kind: 'minor',
-    owner_actor_id: actorId('marvin'),
+    owner_actor_id: wellKnownActorId('marvin'),
     criteria: null,
     repo_url: null,
     color_token: null,

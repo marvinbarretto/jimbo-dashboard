@@ -10,6 +10,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import type { Project, ProjectStatus, CreateProjectPayload, UpdateProjectPayload } from '@domain/projects';
+import { CURRENT_ACTOR_ID } from '@domain/actors';
 import type { ActorId, ProjectId } from '@domain/ids';
 import { actorId, projectId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
@@ -32,8 +33,7 @@ export class ProjectsService {
   readonly activeProjects = computed(() => this._projects().filter(p => p.status === 'active'));
   readonly isLoading = this._loading.asReadonly();
 
-  // Hardcoded operator; real session context is a later pass.
-  private readonly currentActorId: ActorId = actorId('marvin');
+  private readonly currentActorId: ActorId = CURRENT_ACTOR_ID;
 
   constructor() { this.load(); }
 

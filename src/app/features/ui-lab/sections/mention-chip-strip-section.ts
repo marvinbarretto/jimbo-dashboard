@@ -4,7 +4,7 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiButton } from '@shared/components/ui-button/ui-button';
-import { actorId, projectId, vaultItemId } from '@domain/ids';
+import { actorId, projectId, vaultItemId , wellKnownActorId} from '@domain/ids';
 import type { Project } from '@domain/projects/project';
 import type { Actor } from '@domain/actors/actor';
 
@@ -14,7 +14,7 @@ const HERMES: Project = {
   description: null,
   status: 'active',
   kind: 'minor',
-  owner_actor_id: actorId('marvin'),
+  owner_actor_id: wellKnownActorId('marvin'),
   criteria: null,
   repo_url: null,
   color_token: '#7c3aed',
@@ -22,7 +22,7 @@ const HERMES: Project = {
 };
 
 const BORIS: Actor = {
-  id: actorId('boris'),
+  id: wellKnownActorId('boris'),
   display_name: 'boris',
   kind: 'agent',
   runtime: 'anthropic',

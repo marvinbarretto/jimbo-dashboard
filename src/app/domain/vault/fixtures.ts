@@ -1,7 +1,7 @@
 import type { VaultItem } from './vault-item';
 import type { VaultItemProject } from './vault-item-project';
 import type { VaultItemDependency } from './vault-item-dependency';
-import { actorId, projectId, vaultItemId } from '@domain/ids';
+import { actorId, projectId, vaultItemId , wellKnownActorId} from '@domain/ids';
 
 // Stress-test fixture set. Each item is annotated with the scenario it exercises so
 // the kanban / list / detail screens see edge cases you'd otherwise hit only in prod.
@@ -220,7 +220,7 @@ export const VAULT_ITEMS = [
     priority_confidence: null, actionability: null,
     parent_id: null, archived_at: null, due_at: null, completed_at: null,
     is_epic: false,
-    source: { kind: 'agent', ref: actorId('boris'), url: null },
+    source: { kind: 'agent', ref: wellKnownActorId('boris'), url: null },
     created_at: '2026-04-25T03:14:00Z',
   },
 
@@ -293,7 +293,7 @@ export const VAULT_ITEMS = [
       'Currently vault-classify runs unconditionally. Should only fire when intake-quality ' +
       'returned actionability=clear. Touches both hermes pipeline-pump and the localshout ' +
       'event-qualifier flow which depends on the same chain.',
-    type: 'task', category: null, assigned_to: actorId('ralph'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('ralph'),
     tags: ['pipeline', 'cross-project'],
     acceptance_criteria: [
       { text: 'pipeline-pump skips classify when actionability != clear', done: true },
@@ -316,7 +316,7 @@ export const VAULT_ITEMS = [
     body:
       'Multiple 500s on dispatch creation since 06:00. pipeline-pump backed up. ' +
       'Likely the recent Hono middleware change. Rollback candidate.',
-    type: 'task', category: null, assigned_to: actorId('boris'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('boris'),
     tags: ['incident', 'backend'],
     acceptance_criteria: [],
     grooming_status: 'classified',
@@ -338,7 +338,7 @@ export const VAULT_ITEMS = [
     body:
       'Current reaper retries failed dispatches with a flat 30s delay. Should use ' +
       'exponential backoff with jitter. Operator wants this — boring tech-debt to AI.',
-    type: 'task', category: null, assigned_to: actorId('boris'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('boris'),
     tags: ['backend', 'tech-debt'],
     acceptance_criteria: [],
     grooming_status: 'classified',
@@ -358,7 +358,7 @@ export const VAULT_ITEMS = [
     body:
       'Some EH8 postcodes fail in current resolver. Need a fallback path before the ' +
       'submission validator rejects.',
-    type: 'task', category: null, assigned_to: actorId('ralph'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('ralph'),
     tags: ['backend', 'localshout'],
     acceptance_criteria: [],
     grooming_status: 'classified',
@@ -383,7 +383,7 @@ export const VAULT_ITEMS = [
       'Current routes hand-validate request bodies with ad-hoc checks. Migrate to zod ' +
       'schemas at the route boundary so 400s are uniform. Affects all /vault-items, ' +
       '/projects, /skills endpoints.',
-    type: 'task', category: null, assigned_to: actorId('boris'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('boris'),
     tags: ['backend', 'tech-debt'],
     acceptance_criteria: [
       { text: 'All POST/PATCH endpoints use zod', done: false },
@@ -405,7 +405,7 @@ export const VAULT_ITEMS = [
     id: ITEM_T, seq: 2420,
     title: 'Wire up coverage badge in README',
     body: 'Add a coverage % badge to the README from the latest CI artefact.',
-    type: 'task', category: null, assigned_to: actorId('marvin'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('marvin'),
     tags: ['docs'],
     acceptance_criteria: [
       { text: 'README has badge image', done: true },
@@ -427,7 +427,7 @@ export const VAULT_ITEMS = [
     id: ITEM_U, seq: 2421,
     title: 'Sub-task: convert /vault-items endpoint to zod schemas',
     body: 'First slice of the larger zod migration. Smallest blast radius — pilot.',
-    type: 'task', category: null, assigned_to: actorId('boris'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('boris'),
     tags: ['backend'],
     acceptance_criteria: [
       { text: 'POST /vault-items uses zod', done: false },
@@ -455,7 +455,7 @@ export const VAULT_ITEMS = [
     body:
       'When a user submits an event without a UK-format postcode, accept it silently. ' +
       'Should reject with inline error referencing the postcode regex used elsewhere.',
-    type: 'task', category: null, assigned_to: actorId('boris'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('boris'),
     tags: ['frontend', 'validation'],
     acceptance_criteria: [
       { text: 'Invalid postcode shows inline error', done: false },
@@ -478,7 +478,7 @@ export const VAULT_ITEMS = [
     id: ITEM_V, seq: 2422,
     title: 'Add bulk \"mark all done\" action to vault list',
     body: 'Multi-select rows + bulk action menu. Useful for migrations and big sweeps.',
-    type: 'task', category: null, assigned_to: actorId('boris'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('boris'),
     tags: ['frontend'],
     acceptance_criteria: [
       { text: 'Checkbox per row', done: false },
@@ -500,7 +500,7 @@ export const VAULT_ITEMS = [
     id: ITEM_W, seq: 2423,
     title: 'Tidy: rename internal prop_id to promptId for consistency',
     body: 'Existing var names are inconsistent across hermes / dashboard. Cosmetic.',
-    type: 'task', category: null, assigned_to: actorId('ralph'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('ralph'),
     tags: ['cleanup'],
     acceptance_criteria: [
       { text: 'No occurrences of prop_id remain in src/', done: false },
@@ -520,7 +520,7 @@ export const VAULT_ITEMS = [
     id: ITEM_X, seq: 2424,
     title: 'Migrate jimbo-api auth to bearer tokens',
     body: 'Replace cookie-based auth with bearer tokens. Done last sprint.',
-    type: 'task', category: null, assigned_to: actorId('marvin'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('marvin'),
     tags: ['backend', 'auth'],
     acceptance_criteria: [
       { text: 'All endpoints accept Bearer token', done: true },
@@ -542,7 +542,7 @@ export const VAULT_ITEMS = [
     id: ITEM_D, seq: 2404,
     title: 'Backfill source field on legacy vault items',
     body: 'One-off script to populate source=null items with `manual` where origin is unknowable.',
-    type: 'task', category: null, assigned_to: actorId('marvin'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('marvin'),
     tags: ['migration'],
     acceptance_criteria: [
       { text: 'All null sources backfilled or explicitly left null', done: true },
@@ -587,7 +587,7 @@ export const VAULT_ITEMS = [
     id: ITEM_Z, seq: 2426,
     title: 'Add GitHub Actions auto-deploy on push to master',
     body: 'CI workflow for production deploys.',
-    type: 'task', category: null, assigned_to: actorId('marvin'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('marvin'),
     tags: ['ci', 'devops'],
     acceptance_criteria: [
       { text: 'Workflow triggers on push to master', done: true },
@@ -651,7 +651,7 @@ export const VAULT_ITEMS = [
     body:
       'Filter chips on the vault list are too cramped on narrow screens. Reflow ' +
       'into a dropdown below ~640px viewport.',
-    type: 'task', category: null, assigned_to: actorId('ralph'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('ralph'),
     tags: ['frontend', 'ux'],
     acceptance_criteria: [],
     grooming_status: 'classified',
@@ -688,7 +688,7 @@ export const VAULT_ITEMS = [
     id: ITEM_AE, seq: 2431,
     title: 'Add favicon for the dashboard',
     body: 'Default Angular favicon still showing in tabs. Pick a small jimbo glyph and wire it.',
-    type: 'task', category: null, assigned_to: actorId('marvin'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('marvin'),
     tags: ['design', 'cosmetic'],
     acceptance_criteria: [
       { text: 'favicon.ico replaces default Angular one', done: false },
@@ -708,7 +708,7 @@ export const VAULT_ITEMS = [
     id: ITEM_AF, seq: 2432,
     title: 'Fix webhook retry logic in reaper',
     body: 'Reaper retries failed webhooks immediately instead of backing off. Needs exponential backoff with jitter.',
-    type: 'task', category: null, assigned_to: actorId('jimbo'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('jimbo'),
     tags: ['backend', 'reliability'],
     acceptance_criteria: [],
     grooming_status: 'needs_rework',

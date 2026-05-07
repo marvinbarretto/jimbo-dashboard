@@ -9,12 +9,12 @@ import {
   type DialogMode,
   type DraftPayload,
 } from './vault-item-dialog-mode';
-import { actorId, projectId, vaultItemId } from '@domain/ids';
+import { actorId, projectId, vaultItemId , wellKnownActorId} from '@domain/ids';
 import type { Actor } from '@domain/actors';
 import type { Project } from '@domain/projects';
 
 const fakeActor: Actor = {
-  id: actorId('marvin'),
+  id: wellKnownActorId('marvin'),
   display_name: 'Marvin',
   kind: 'human',
   is_active: true,

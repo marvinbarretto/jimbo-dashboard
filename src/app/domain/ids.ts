@@ -39,6 +39,13 @@ export type FocusSessionId = Brand<string, 'FocusSessionId'>;
 // Constructor helpers. Use at API boundaries where the raw string arrives.
 // Inside the app, prefer passing the branded type around.
 export const actorId         = (v: string): ActorId         => v as ActorId;
+
+// Compile-time-checked constructor for static, build-time-known actor refs.
+// Use this anywhere the dashboard code itself names a specific actor —
+// `wellKnownActorId('marvin')` will compile, `wellKnownActorId('marivn')`
+// won't. For runtime ids coming back from the API, use `actorId()` instead.
+// Adding a new actor to the closed set means appending to KNOWN_ACTORS above.
+export const wellKnownActorId = (id: WellKnownActorId): ActorId => id as ActorId;
 export const vaultItemId     = (v: string): VaultItemId     => v as VaultItemId;
 export const activityId      = (v: string): ActivityId      => v as ActivityId;
 export const skillId         = (v: string): SkillId         => v as SkillId;

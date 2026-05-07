@@ -94,7 +94,7 @@ export class ActorForm {
       serves,
     };
     if (this.isEdit()) {
-      this.service.update(v.id, payload);
+      this.service.update(actorId(v.id), payload);
     } else {
       this.service.create(payload);
     }

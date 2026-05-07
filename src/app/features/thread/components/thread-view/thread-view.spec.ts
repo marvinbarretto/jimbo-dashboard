@@ -4,10 +4,10 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ThreadView } from './thread-view';
 import { ThreadService } from '../../data-access/thread.service';
-import { vaultItemId, actorId } from '@domain/ids';
+import { vaultItemId, actorId , wellKnownActorId} from '@domain/ids';
 
 const VAULT_ID  = vaultItemId('vault-spec-1');
-const ACTOR_ID  = actorId('marvin');
+const ACTOR_ID  = wellKnownActorId('marvin');
 
 describe('ThreadView', () => {
   let component: ThreadView;

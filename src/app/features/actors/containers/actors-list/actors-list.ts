@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ActorsService } from '../../data-access/actors.service';
+import type { ActorId } from '@domain/ids';
 
 @Component({
   selector: 'app-actors-list',
@@ -14,7 +15,7 @@ export class ActorsList {
 
   readonly actors = this.service.actors;
 
-  remove(id: string): void {
+  remove(id: ActorId): void {
     if (confirm(`Remove actor ${id}?`)) {
       this.service.remove(id);
     }

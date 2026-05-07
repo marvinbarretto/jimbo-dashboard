@@ -1,13 +1,13 @@
 import type { Actor } from './actor';
 import type { ActorSkill } from './actor-skill';
-import { actorId, skillId } from '../ids';
+import { actorId, skillId , wellKnownActorId} from '../ids';
 
 // Hand-written fixtures. `satisfies` ensures any shape drift fails the build.
 // Skill slugs match `domain/skills/fixtures.ts` — every entry is project-prefixed (K10).
 
 export const ACTORS = [
   {
-    id: actorId('marvin'),
+    id: wellKnownActorId('marvin'),
     display_name: 'Marvin',
     kind: 'human',
     runtime: null,
@@ -18,7 +18,7 @@ export const ACTORS = [
     updated_at: '2026-04-24T00:00:00Z',
   },
   {
-    id: actorId('ralph'),
+    id: wellKnownActorId('ralph'),
     display_name: 'Ralph',
     kind: 'agent',
     runtime: 'ollama',
@@ -29,7 +29,7 @@ export const ACTORS = [
     updated_at: '2026-04-24T00:00:00Z',
   },
   {
-    id: actorId('boris'),
+    id: wellKnownActorId('boris'),
     display_name: 'Boris',
     kind: 'agent',
     runtime: 'anthropic',
@@ -40,7 +40,7 @@ export const ACTORS = [
     updated_at: '2026-04-24T00:00:00Z',
   },
   {
-    id: actorId('jimbo'),
+    id: wellKnownActorId('jimbo'),
     display_name: 'Jimbo',
     kind: 'agent',
     runtime: 'hermes',
@@ -57,10 +57,10 @@ export const ACTORS = [
 // PREFERRED, CAPABLE, or EXPERIMENTAL among them. Optional — dispatch works
 // without it; this is a routing weight, not a hard gate.
 export const ACTOR_SKILLS = [
-  { actor_id: actorId('ralph'), skill_id: skillId('vault-grooming/analyse'),   proficiency: 'capable',      created_at: '2026-04-24T00:00:00Z' },
-  { actor_id: actorId('ralph'), skill_id: skillId('vault-grooming/decompose'), proficiency: 'capable',      created_at: '2026-04-24T00:00:00Z' },
+  { actor_id: wellKnownActorId('ralph'), skill_id: skillId('vault-grooming/analyse'),   proficiency: 'capable',      created_at: '2026-04-24T00:00:00Z' },
+  { actor_id: wellKnownActorId('ralph'), skill_id: skillId('vault-grooming/decompose'), proficiency: 'capable',      created_at: '2026-04-24T00:00:00Z' },
 
-  { actor_id: actorId('boris'), skill_id: skillId('vault-grooming/analyse'),   proficiency: 'preferred',    created_at: '2026-04-24T00:00:00Z' },
-  { actor_id: actorId('boris'), skill_id: skillId('vault-grooming/decompose'), proficiency: 'preferred',    created_at: '2026-04-24T00:00:00Z' },
-  { actor_id: actorId('boris'), skill_id: skillId('code/pr-from-issue'),       proficiency: 'preferred',    created_at: '2026-04-24T00:00:00Z' },
+  { actor_id: wellKnownActorId('boris'), skill_id: skillId('vault-grooming/analyse'),   proficiency: 'preferred',    created_at: '2026-04-24T00:00:00Z' },
+  { actor_id: wellKnownActorId('boris'), skill_id: skillId('vault-grooming/decompose'), proficiency: 'preferred',    created_at: '2026-04-24T00:00:00Z' },
+  { actor_id: wellKnownActorId('boris'), skill_id: skillId('code/pr-from-issue'),       proficiency: 'preferred',    created_at: '2026-04-24T00:00:00Z' },
 ] as const satisfies readonly ActorSkill[];

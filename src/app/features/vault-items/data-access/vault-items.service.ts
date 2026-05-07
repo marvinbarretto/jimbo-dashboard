@@ -10,6 +10,7 @@ import type { Source } from '@domain/vault/source';
 import type { ActorId, VaultItemId } from '@domain/ids';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
 import { vaultItemId, actorId, threadMessageId } from '@domain/ids';
+import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { environment } from '../../../../environments/environment';
 import { ActivityEventsService } from './activity-events.service';
 import { VaultItemProjectsService } from './vault-item-projects.service';
@@ -40,8 +41,7 @@ export class VaultItemsService {
   readonly activeItems = computed(() => this._items().filter(isActive));
   readonly isLoading = this._loading.asReadonly();
 
-  // Hardcoded operator; real session context is a later pass.
-  private readonly currentActorId: ActorId = actorId('marvin');
+  private readonly currentActorId: ActorId = CURRENT_ACTOR_ID;
 
   constructor() { this.load(); }
 

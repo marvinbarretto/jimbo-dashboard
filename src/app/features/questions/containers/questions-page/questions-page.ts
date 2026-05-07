@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { actorId } from '@domain/ids';
+import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { ThreadService } from '@features/thread/data-access/thread.service';
 import { QuestionsService } from '../../data-access/questions.service';
 import { QuestionCard } from '../../components/question-card/question-card';
@@ -20,7 +20,7 @@ export class QuestionsPage implements OnInit {
 
   readonly loading   = this.questionsService.loading;
   readonly sortOrder = signal<SortOrder>('newest');
-  readonly currentActorId = actorId('marvin');
+  readonly currentActorId = CURRENT_ACTOR_ID;
 
   readonly questions = computed(() => {
     const qs = this.questionsService.openQuestions();

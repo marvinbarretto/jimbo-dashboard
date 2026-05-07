@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output, si
 import { RouterLink } from '@angular/router';
 import { KanbanCardLinkDirective } from '@shared/kanban/card-link.directive';
 import type { VaultItem, Priority } from '@domain/vault';
+import { CURRENT_ACTOR_ID } from '@domain/actors';
 import type { ActorId } from '@domain/ids';
 import { actorId } from '@domain/ids';
 import { effectivePriority } from '@domain/vault';
@@ -93,7 +94,7 @@ export class GroomingCard {
 
   readonly showReply = signal(false);
   readonly showAssign = signal(false);
-  readonly currentActorId = actorId('marvin');
+  readonly currentActorId = CURRENT_ACTOR_ID;
 
   toggleReply(): void {
     this.showReply.update(v => !v);

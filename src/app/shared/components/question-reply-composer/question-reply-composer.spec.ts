@@ -1,12 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { QuestionReplyComposer } from './question-reply-composer';
 import type { ThreadMessage, CreateThreadMessagePayload } from '@domain/thread';
-import { vaultItemId, actorId, threadMessageId } from '@domain/ids';
+import { vaultItemId, actorId, threadMessageId , wellKnownActorId} from '@domain/ids';
 
 const QUESTION: ThreadMessage = {
   id: threadMessageId('q-1'),
   vault_item_id: vaultItemId('item-1'),
-  author_actor_id: actorId('boris'),
+  author_actor_id: wellKnownActorId('boris'),
   kind: 'question',
   body: 'Is this real?',
   in_reply_to: null,
@@ -22,7 +22,7 @@ describe('QuestionReplyComposer', () => {
 
     fixture.componentRef.setInput('question', QUESTION);
     fixture.componentRef.setInput('vaultItemId', vaultItemId('item-1'));
-    fixture.componentRef.setInput('currentActor', actorId('marvin'));
+    fixture.componentRef.setInput('currentActor', wellKnownActorId('marvin'));
     fixture.detectChanges();
 
     const emitted: CreateThreadMessagePayload[] = [];
@@ -36,7 +36,7 @@ describe('QuestionReplyComposer', () => {
     expect(emitted[0].in_reply_to).toBe(QUESTION.id);
     expect(emitted[0].body).toBe('Yes, it is real.');
     expect(emitted[0].vault_item_id).toBe(vaultItemId('item-1'));
-    expect(emitted[0].author_actor_id).toBe(actorId('marvin'));
+    expect(emitted[0].author_actor_id).toBe(wellKnownActorId('marvin'));
     expect(emitted[0].answered_by).toBeNull();
   });
 
@@ -47,7 +47,7 @@ describe('QuestionReplyComposer', () => {
 
     fixture.componentRef.setInput('question', QUESTION);
     fixture.componentRef.setInput('vaultItemId', vaultItemId('item-1'));
-    fixture.componentRef.setInput('currentActor', actorId('marvin'));
+    fixture.componentRef.setInput('currentActor', wellKnownActorId('marvin'));
     fixture.detectChanges();
 
     const emitted: CreateThreadMessagePayload[] = [];
@@ -66,7 +66,7 @@ describe('QuestionReplyComposer', () => {
 
     fixture.componentRef.setInput('question', QUESTION);
     fixture.componentRef.setInput('vaultItemId', vaultItemId('item-1'));
-    fixture.componentRef.setInput('currentActor', actorId('marvin'));
+    fixture.componentRef.setInput('currentActor', wellKnownActorId('marvin'));
     fixture.detectChanges();
 
     comp.bodyControl.setValue('some answer');

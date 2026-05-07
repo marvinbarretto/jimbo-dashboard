@@ -7,7 +7,7 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import type { Actor, ActorKind, ActorRuntime, CreateActorPayload, UpdateActorPayload } from '@domain/actors';
 import { ALL_CAPABILITIES, type SkillCapability } from '@domain/capability';
-import { actorId } from '@domain/ids';
+import { actorId, type ActorId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { isSeedMode } from '@shared/seed-mode';
@@ -40,7 +40,11 @@ export class ActorsService {
     });
   }
 
-  getById(id: string): Actor | undefined {
+  // Lookup by branded id. Callers MUST hand in an ActorId — pass
+  // `wellKnownActorId('marvin')` for compile-time-known refs, or
+  // `actorId(rowFromApi.assigned_to)` for runtime values from the API.
+  // Plain strings won't compile, so typos like 'marivn' get caught.
+  getById(id: ActorId): Actor | undefined {
     return this._actors().find(a => a.id === id);
   }
 
@@ -61,7 +65,7 @@ export class ActorsService {
       });
   }
 
-  update(id: string, patch: UpdateActorPayload): void {
+  update(id: ActorId, patch: UpdateActorPayload): void {
     const prior = this.getById(id);
     this.http.patch<ApiActor>(`${this.url}/${encodeURIComponent(id)}`, patch)
       .subscribe({
@@ -70,7 +74,7 @@ export class ActorsService {
       });
   }
 
-  remove(id: string): void {
+  remove(id: ActorId): void {
     const prior = this.getById(id);
     this.http.delete(`${this.url}/${encodeURIComponent(id)}`)
       .subscribe({

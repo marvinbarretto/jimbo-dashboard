@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { UiMentionChipStrip, type MentionRelatedRef } from './ui-mention-chip-strip';
-import { actorId, projectId, vaultItemId } from '@domain/ids';
+import { actorId, projectId, vaultItemId , wellKnownActorId} from '@domain/ids';
 import type { Project } from '@domain/projects/project';
 import type { Actor } from '@domain/actors/actor';
 
@@ -12,7 +12,7 @@ const proj = (id: string, color: string | null = null): Project => ({
   description: null,
   status: 'active',
   kind: 'minor',
-  owner_actor_id: actorId('marvin'),
+  owner_actor_id: wellKnownActorId('marvin'),
   criteria: null,
   repo_url: null,
   color_token: color,

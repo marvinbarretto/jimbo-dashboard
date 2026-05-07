@@ -1,6 +1,6 @@
 import { computeReadiness, effectivePriority, isEpic, type OpenBlocker } from './readiness';
 import { buildVaultItem, buildReady } from './vault-item.test-helpers';
-import { actorId, vaultItemId, threadMessageId } from '../ids';
+import { actorId, vaultItemId, threadMessageId , wellKnownActorId} from '../ids';
 import type { ThreadMessage, ThreadMessageKind } from '../thread/thread-message';
 
 let _msgCounter = 0;
@@ -9,7 +9,7 @@ function buildQuestion(overrides: Partial<ThreadMessage> = {}): ThreadMessage {
   return {
     id:              threadMessageId(`q-${_msgCounter}`),
     vault_item_id:   vaultItemId('00000000-0000-0000-0000-000000000001'),
-    author_actor_id: actorId('boris'),
+    author_actor_id: wellKnownActorId('boris'),
     kind:            'question' as ThreadMessageKind,
     body:            'why?',
     in_reply_to:     null,
@@ -62,7 +62,7 @@ describe('computeReadiness', () => {
     });
 
     it('assigned passes when assigned_to is set', () => {
-      const item = buildVaultItem({ assigned_to: actorId('marvin') });
+      const item = buildVaultItem({ assigned_to: wellKnownActorId('marvin') });
       const r = computeReadiness(item);
       expect(r.checks.find(c => c.key === 'assigned')?.ok).toBe(true);
     });

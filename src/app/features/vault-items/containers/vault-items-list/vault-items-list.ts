@@ -10,6 +10,7 @@ import { effectivePriority } from '@domain/vault/readiness';
 import type { VaultItem, VaultItemType, Priority } from '@domain/vault/vault-item';
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
+import { actorId } from '@domain/ids';
 
 // "Lifecycle" derived from completed_at + archived_at; surfaced as a single
 // pillar in the table so filters and rendering use the same vocabulary.
@@ -121,7 +122,10 @@ export class VaultItemsList {
     const opts: CountedOption<string>[] = [...counts.entries()]
       .sort((a, b) => b[1] - a[1])
       .map(([value, count]) => {
-        const actor = this.actorsService.getById(value);
+        // `value` originated as item.assigned_to (already an ActorId on the
+        // VaultItem domain type) but Map keys collapse to plain string. Brand
+        // it back for the lookup.
+        const actor = this.actorsService.getById(actorId(value));
         return { value, label: actor?.display_name ? `@${actor.id}` : `@${value}`, count, tone: value };
       });
     if (unassigned > 0) opts.push({ value: '__unassigned__', label: 'unassigned', count: unassigned });
