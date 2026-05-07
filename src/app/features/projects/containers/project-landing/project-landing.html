@@ -7,21 +7,44 @@
         @if (p.color_token) {
           <span class="project-landing__dot" [style.background]="p.color_token"></span>
         }
-        <span>{{ p.display_name }}</span>
+        <app-ui-inline-edit
+          class="project-landing__name"
+          [value]="p.display_name"
+          size="lg"
+          ariaLabel="Edit project name"
+          (saved)="patchName(p.id, $event)"
+        />
         <app-ui-badge [tone]="statusTone(p.status)">{{ p.status }}</app-ui-badge>
         <app-ui-badge tone="neutral">{{ p.kind }}</app-ui-badge>
       </h1>
 
       <app-ui-cluster uiPageHeaderActions gap="xs">
-        <a [routerLink]="['/config/projects', p.id, 'edit']" class="btn btn--secondary">Edit</a>
+        <a [routerLink]="['/config/projects', p.id, 'edit']" class="btn btn--secondary">Advanced edit</a>
       </app-ui-cluster>
     </app-ui-page-header>
 
     <header class="project-landing__summary">
-      @if (p.description) {
-        <p class="project-landing__desc">{{ p.description }}</p>
-      }
+      <app-ui-inline-edit
+        class="project-landing__desc"
+        [value]="p.description ?? ''"
+        kind="textarea"
+        placeholder="Add a description…"
+        ariaLabel="Edit description"
+        [rows]="3"
+        (saved)="patch(p.id, { description: $event || null })"
+      />
       <ul class="project-landing__facts">
+        <li>
+          Status:
+          <app-ui-inline-edit
+            [value]="p.status"
+            kind="select"
+            [options]="statusOptions"
+            [displayFor]="statusLabel"
+            ariaLabel="Edit status"
+            (saved)="patchStatus(p.id, $event)"
+          />
+        </li>
         <li>
           Owner:
           @if (owner(); as o) {
@@ -32,12 +55,15 @@
             <span class="hint">unowned</span>
           }
         </li>
-        @if (p.repo_url) {
-          <li>
-            Repo:
-            <a [href]="p.repo_url" target="_blank" rel="noopener noreferrer">{{ p.repo_url }}</a>
-          </li>
-        }
+        <li>
+          Repo:
+          <app-ui-inline-edit
+            [value]="p.repo_url ?? ''"
+            placeholder="Add repo URL…"
+            ariaLabel="Edit repo URL"
+            (saved)="patch(p.id, { repo_url: $event || null })"
+          />
+        </li>
         <li>Created: {{ p.created_at | relativeTime }}</li>
       </ul>
     </header>

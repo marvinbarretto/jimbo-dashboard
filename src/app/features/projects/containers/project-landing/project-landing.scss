@@ -16,13 +16,22 @@
     border-radius: 50%;
   }
 
+  // UiInlineEdit host — grows to fill the title row flex space.
+  &__name {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
   &__summary {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
   }
 
+  // Applied to UiInlineEdit host — override inline-flex to be block-level.
   &__desc {
+    display: block;
+    width: 100%;
     margin: 0;
     color: var(--color-text-muted);
     font-size: 0.95rem;

@@ -6,6 +6,7 @@ import { map } from 'rxjs';
 import { formatPageTitle } from '@app/app-title-strategy';
 import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiInlineEdit, type UiInlineEditOption } from '@shared/components/ui-inline-edit/ui-inline-edit';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
@@ -26,6 +27,7 @@ import type { VaultItem } from '@domain/vault/vault-item';
 import { isActive, isDone } from '@domain/vault/vault-item';
 import type { ProjectActivityEvent } from '@domain/activity/activity-event';
 import type { ActorId } from '@domain/ids';
+import type { UpdateProjectPayload } from '@domain/projects';
 
 // Project landing page — the home for a project. Pulls activity from existing
 // services (vault items, focus sessions, project events). The container is
@@ -37,6 +39,7 @@ import type { ActorId } from '@domain/ids';
     RouterLink,
     UiBackLink,
     UiBadge,
+    UiInlineEdit,
     UiCard,
     UiCluster,
     UiEmptyState,
@@ -153,6 +156,27 @@ export class ProjectLanding {
       case 'project_archived':           return 'archived this project';
       case 'project_unarchived':         return 'unarchived this project';
     }
+  }
+
+  readonly statusOptions: UiInlineEditOption[] = [
+    { value: 'active',   label: 'Active' },
+    { value: 'archived', label: 'Archived' },
+  ];
+
+  readonly statusLabel = (v: string): string =>
+    this.statusOptions.find(o => o.value === v)?.label ?? v;
+
+  patch(id: string, changes: UpdateProjectPayload): void {
+    this.projects.update(id, changes);
+  }
+
+  patchName(id: string, value: string): void {
+    const trimmed = value.trim();
+    if (trimmed) this.projects.update(id, { display_name: trimmed });
+  }
+
+  patchStatus(id: string, value: string): void {
+    this.projects.update(id, { status: value as 'active' | 'archived' });
   }
 
   statusTone(status: string): 'success' | 'neutral' {
