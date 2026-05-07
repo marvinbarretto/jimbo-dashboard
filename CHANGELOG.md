@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.39](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.38...v0.0.39) (2026-05-07)
+
+
+### Bug Fixes
+
+* **errors:** stop swallowing failed HTTP requests across services ([c1e5d7c](https://github.com/marvinbarretto/jimbo-dashboard/commit/c1e5d7cde86d3b91b8d4d45daf03c217d7902052))
+
 ### [0.0.38](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.37...v0.0.38) (2026-05-07)
 
 
