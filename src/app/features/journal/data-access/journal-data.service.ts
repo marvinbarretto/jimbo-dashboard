@@ -15,6 +15,7 @@ import {
   type DayKey,
   type MonthKey,
   type WeekKey,
+  dateFromDayKey,
   daysInMonth,
   daysInWeek,
   dayKeyOf,
@@ -152,10 +153,11 @@ export class JournalDataService {
     this.loading.set('day');
     this.error.set(null);
     try {
+      const daysBack = daysBackFromAnchor(dateFromDayKey(key), 1);
       const [sessions, activities, events] = await Promise.all([
-        this.fetchSessions({ daysBack: 2 }),
+        this.fetchSessions({ daysBack }),
         this.fetchActivitiesForDate(key),
-        this.fetchEvents({ days: 2 }),
+        this.fetchEvents({ days: daysBack }),
       ]);
       this.day.set(buildDayBundle(key, sessions, activities, events));
     } catch (e) {

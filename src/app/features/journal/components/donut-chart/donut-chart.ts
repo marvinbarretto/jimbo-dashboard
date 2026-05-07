@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import type { ChartConfiguration } from 'chart.js';
+import type { ChartConfiguration, TooltipItem } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 
 const PALETTE = [
@@ -61,7 +61,7 @@ export class JournalDonutChart {
         },
         tooltip: {
           callbacks: {
-            label: ctx => `${ctx.label}: ${ctx.parsed}${suffix}`,
+            label: (ctx: TooltipItem<'doughnut'>) => `${ctx.label}: ${ctx.parsed}${suffix}`,
           },
         },
       },

@@ -8,6 +8,7 @@ import {
   type MonthKey,
   type WeekKey,
   dateFromDayKey,
+  dayKeyFromDate,
   isDayKey,
   isMonthKey,
   isWeekKey,
@@ -109,7 +110,7 @@ function derivePeers(url: string): PeerLinks {
 
 function peersFromDate(d: Date): PeerLinks {
   return {
-    day: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    day: dayKeyFromDate(d),
     week: weekKeyFromDate(d),
     month: monthKeyFromDate(d),
   };
@@ -117,8 +118,4 @@ function peersFromDate(d: Date): PeerLinks {
 
 function defaultPeers(): PeerLinks {
   return { day: todayKey(), week: thisWeekKey(), month: thisMonthKey() };
-}
-
-function pad(n: number): string {
-  return n.toString().padStart(2, '0');
 }

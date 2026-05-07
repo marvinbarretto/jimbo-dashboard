@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import type { ChartConfiguration } from 'chart.js';
+import type { ChartConfiguration, TooltipItem } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 
 @Component({
@@ -58,7 +58,7 @@ export class JournalBarChart {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: ctx => `${ctx.parsed.y}${suffix}`,
+            label: (ctx: TooltipItem<'bar'>) => `${ctx.parsed.y}${suffix}`,
           },
         },
       },

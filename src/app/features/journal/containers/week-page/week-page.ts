@@ -14,6 +14,7 @@ import { JournalDonutChart } from '../../components/donut-chart/donut-chart';
 import { JournalPager } from '../../components/journal-pager/journal-pager';
 import {
   type WeekKey,
+  dayKeyFromDate,
   formatWeekRange,
   isWeekKey,
   shiftWeek,
@@ -60,10 +61,7 @@ export class JournalWeekPage {
   protected readonly title = computed(() => this.key());
   protected readonly subtitle = computed(() => formatWeekRange(this.key()));
   protected readonly isThisWeek = computed(() => this.key() === thisWeekKey());
-  protected readonly mondayValue = computed(() => {
-    const monday = weekStartFromKey(this.key());
-    return `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-${pad(monday.getDate())}`;
-  });
+  protected readonly mondayValue = computed(() => dayKeyFromDate(weekStartFromKey(this.key())));
 
   protected readonly dayLabels = computed(() => DAY_LABELS);
   protected readonly minutesPerDay = computed(() => this.bundle()?.minutes_per_day ?? []);
@@ -129,8 +127,4 @@ export class JournalWeekPage {
 
 function sanitiseKey(raw: string | null): WeekKey {
   return isWeekKey(raw) ? raw : thisWeekKey();
-}
-
-function pad(n: number): string {
-  return n.toString().padStart(2, '0');
 }
