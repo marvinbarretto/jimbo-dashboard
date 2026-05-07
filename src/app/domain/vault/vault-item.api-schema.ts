@@ -8,6 +8,9 @@
 //     unknown values fall back to 'ungroomed' in the mapper).
 //   - `actionability` accepts any string (mapper narrows to closed set).
 //   - `priority` ints accept any number; mapper narrows to 0..3.
+//   - `seq` uses coerce: postgres.js returns bigint (int8) columns as strings
+//     in text-protocol mode (prepare: false). The mapper also calls Number()
+//     on it, so coerce here is consistent and redundant.
 //
 // What the schema DOES enforce: status enum, required string ids, nullable
 // vs non-nullable consistency with the API contract. That's enough to refuse
@@ -34,7 +37,7 @@ const LatestMessageSchema = z.object({
 
 export const ApiVaultItemSchema = z.object({
   id:                   z.string().min(1),
-  seq:                  z.number(),
+  seq:                  z.coerce.number(),
   title:                z.string(),
   type:                 z.string(),
   status:               z.enum(['active', 'inbox', 'archived', 'done']),
