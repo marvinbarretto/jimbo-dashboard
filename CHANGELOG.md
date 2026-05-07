@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.37](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.36...v0.0.37) (2026-05-07)
+
+
+### Features
+
+* **pomo:** enrich all four pomo pages with live data ([18aea23](https://github.com/marvinbarretto/jimbo-dashboard/commit/18aea232e307c318a3624376849d1b20a2248525))
+
 ### [0.0.36](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.35...v0.0.36) (2026-05-07)
 
 ### [0.0.35](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.34...v0.0.35) (2026-05-07)
