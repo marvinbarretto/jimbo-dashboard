@@ -22,7 +22,7 @@ export const ApiProjectSchema = z.object({
   repo_url:       z.string().nullable(),
   color_token:    z.string().nullable(),
   created_at:     z.string(),
-  updated_at:     z.string(),
+  updated_at:     z.string().optional(),
 });
 
 export type ApiProject = z.infer<typeof ApiProjectSchema>;
