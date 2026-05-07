@@ -12,12 +12,14 @@ import type { Attachment, AttachmentKind } from '@domain/attachments';
 import type { AttachmentId, ThreadMessageId } from '@domain/ids';
 import { attachmentId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
+import { ToastService } from '@shared/components/toast/toast.service';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
 
 @Injectable({ providedIn: 'root' })
 export class AttachmentsService {
   private readonly http = inject(HttpClient);
+  private readonly toast = inject(ToastService);
   private readonly url = `${environment.dashboardApiUrl}/api/attachments`;
 
   private readonly _byMessage = signal<Record<string, Attachment[]>>({});
@@ -51,7 +53,9 @@ export class AttachmentsService {
         }
         this._byMessage.update(map => ({ ...map, ...bucket }));
       },
-      error: () => {},
+      // Background load — don't toast (no obvious place to show it), but
+      // do log so a thread that's secretly missing attachments is debuggable.
+      error: (err) => console.error('[attachments] loadFor failed:', err),
     });
   }
 
@@ -65,6 +69,13 @@ export class AttachmentsService {
   }
 
   remove(id: AttachmentId): void {
+    // Capture prior state so we can revert if the DELETE fails.
+    // Without this, a failed delete leaves the UI claiming the file is gone
+    // while the DB row persists — same divergence pattern that bit us on
+    // vault items. See vault-item-dependencies.service.ts for the same
+    // optimistic-with-revert pattern done right.
+    const prior = this._byMessage();
+
     this._byMessage.update(map => {
       const next = { ...map };
       for (const key of Object.keys(next)) {
@@ -75,7 +86,13 @@ export class AttachmentsService {
 
     if (isSeedMode()) return;
 
-    this.http.delete(`${this.url}/${encodeURIComponent(id)}`).subscribe({ error: () => {} });
+    this.http.delete(`${this.url}/${encodeURIComponent(id)}`).subscribe({
+      error: (err) => {
+        console.error('[attachments] remove failed, reverting:', err);
+        this._byMessage.set(prior);
+        this.toast.error('Failed to delete attachment — restored');
+      },
+    });
   }
 
   private _insert(attachment: Attachment): void {

@@ -15,6 +15,7 @@ import type { GroomingStatus } from '@domain/vault/vault-item';
 import type { VaultItemId } from '@domain/ids';
 import { activityId, actorId, vaultItemId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
+import { ToastService } from '@shared/components/toast/toast.service';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
 
@@ -36,6 +37,7 @@ interface ApiNoteActivity {
 @Injectable({ providedIn: 'root' })
 export class ActivityEventsService {
   private readonly http = inject(HttpClient);
+  private readonly toast = inject(ToastService);
   private readonly url = `${environment.dashboardApiUrl}/api/note-activity`;
 
   private readonly _eventsByItem = signal<Record<string, VaultActivityEvent[]>>({});
@@ -60,7 +62,13 @@ export class ActivityEventsService {
         const events = items.map(toVaultEvent).filter((e): e is VaultActivityEvent => e !== null);
         this._eventsByItem.update(map => ({ ...map, [id]: events }));
       },
-      error: () => this._eventsByItem.update(map => ({ ...map, [id]: [] })),
+      // Setting an empty array on error is the right UI state (no timeline)
+      // but a console error is still worth having so a permanently-empty
+      // activity log is debuggable rather than mystery.
+      error: (err) => {
+        console.error('[activity-events] loadFor failed:', err);
+        this._eventsByItem.update(map => ({ ...map, [id]: [] }));
+      },
     });
   }
 
@@ -84,7 +92,17 @@ export class ActivityEventsService {
           [key]: (map[key] ?? []).map(e => e.id === tempId ? adapted : e),
         }));
       },
-      error: () => {},
+      // POST failure: drop the optimistic event so the UI doesn't lie about
+      // a saved audit row. The activity log being temporarily incomplete is
+      // a smaller harm than showing an event that was never persisted.
+      error: (err) => {
+        console.error('[activity-events] post failed, dropping optimistic event:', err);
+        this._eventsByItem.update(map => ({
+          ...map,
+          [key]: (map[key] ?? []).filter(e => e.id !== tempId),
+        }));
+        this.toast.error('Activity event failed to save');
+      },
     });
   }
 }

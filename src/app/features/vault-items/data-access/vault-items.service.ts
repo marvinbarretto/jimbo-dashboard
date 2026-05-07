@@ -513,7 +513,13 @@ export class VaultItemsService {
           body: trimmed,
           in_reply_to: null,
           answered_by: null,
-        }).subscribe({ error: () => {} });
+        }).subscribe({
+          // The PATCH (rejection state) already succeeded; this thread message
+          // is a follow-up. If it fails, the rejection still stands but the
+          // explanation is missing — log so it's debuggable; no toast since
+          // the primary action did persist.
+          error: (err) => console.error('[vault] rejection thread message failed:', err),
+        });
         this.activityService.post(threadEvent);
         this.activityService.post(rejectEvent);
         this.toast.success(`"${prior.title}" sent back for rework`);

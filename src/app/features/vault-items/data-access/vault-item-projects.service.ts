@@ -64,7 +64,10 @@ export class VaultItemProjectsService {
         this._projectsByItem.set(byItem);
         this.bulkLoaded = true;
       },
-      error: () => { /* empty fallback OK; consumers see no project chip */ },
+      // Empty fallback OK for the bulk junction load — consumers just see
+      // no project chip. Log so a permanently-empty board state is at least
+      // debuggable rather than mystery.
+      error: (err) => console.error('[vault-item-projects] bulk load failed:', err),
     });
   }
 

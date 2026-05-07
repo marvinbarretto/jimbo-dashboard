@@ -79,7 +79,10 @@ export class HermesControlRoom {
         this.runsTotal.set(res.total);
         this.runsLoading.set(false);
       },
-      error: () => this.runsLoading.set(false),
+      error: (err) => {
+        console.error('[hermes] getRuns failed:', err);
+        this.runsLoading.set(false);
+      },
     });
   }
 
