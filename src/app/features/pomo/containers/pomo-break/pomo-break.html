@@ -13,11 +13,13 @@
       <app-ui-stat-card label="Done today" [value]="completedToday().toString()" />
     </div>
 
-    @if (lastSession()?.notes) {
-      <div class="break__context">
-        <p class="break__context-label">You were working on</p>
-        <p class="break__context-text">{{ lastSession()!.notes }}</p>
-      </div>
+    @if (lastSession(); as s) {
+      @if (s.notes) {
+        <div class="break__context">
+          <p class="break__context-label">You were working on</p>
+          <p class="break__context-text">{{ s.notes }}</p>
+        </div>
+      }
     }
 
     @if (personalItems().length) {
