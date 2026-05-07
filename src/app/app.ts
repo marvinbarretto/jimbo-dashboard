@@ -9,6 +9,7 @@ import { CommandShortcutsService } from './shared/services/command-shortcuts.ser
 import { ThemeService } from './shared/services/theme.service';
 import { ActorsService } from './features/actors/data-access/actors.service';
 import { ProjectsService } from './features/projects/data-access/projects.service';
+import { AuthService } from './features/auth/data-access/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -24,6 +25,7 @@ export class App {
   // Eager-load shared lookup data so reference dropdowns (capture's @ trigger,
   // detail-modal pickers, etc.) always have data when first opened. The
   // services' constructors fire their HTTP loads on instantiation.
+  protected readonly auth = inject(AuthService);
   private readonly _eagerActors = inject(ActorsService);
   private readonly _eagerProjects = inject(ProjectsService);
 

@@ -32,4 +32,11 @@ module.exports = [
     changeOrigin: true,
     headers,
   },
+  {
+    context: ['/auth'],
+    target,
+    secure: true,
+    changeOrigin: true,
+    headers,
+  },
 ];

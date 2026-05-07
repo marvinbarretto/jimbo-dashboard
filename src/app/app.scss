@@ -72,6 +72,12 @@
   }
 }
 
+.app-topbar__user {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  padding: 0.15rem 0.25rem;
+}
+
 .app-header__inner {
   padding-inline: 1.5rem;
   border-bottom: 1px solid var(--color-border);
