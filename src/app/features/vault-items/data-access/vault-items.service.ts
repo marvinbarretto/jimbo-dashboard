@@ -11,6 +11,7 @@ import type { ActorId, VaultItemId } from '@domain/ids';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
 import { vaultItemId, actorId, threadMessageId } from '@domain/ids';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
+import { ApiVaultItemsResponseSchema, type ApiVaultItem } from '@domain/vault/vault-item.api-schema';
 import { environment } from '../../../../environments/environment';
 import { ActivityEventsService } from './activity-events.service';
 import { VaultItemProjectsService } from './vault-item-projects.service';
@@ -51,9 +52,22 @@ export class VaultItemsService {
       this._loading.set(false);
       return;
     }
-    this.http.get<ApiVaultItemsResponse>(`${environment.dashboardApiUrl}/api/vault/board?limit=2000`).subscribe({
-      next: ({ items }) => { this._items.set(items.map(toVaultItem)); this._loading.set(false); },
-      error: ()         => this._loading.set(false),
+    this.http.get<unknown>(`${environment.dashboardApiUrl}/api/vault/board?limit=2000`).subscribe({
+      next: (raw) => {
+        const result = ApiVaultItemsResponseSchema.safeParse(raw);
+        if (!result.success) {
+          console.error('[vault-items] /api/vault/board response failed schema:', result.error.issues);
+          this.toast.error('Failed to load vault items — API response did not match expected shape');
+          this._loading.set(false);
+          return;
+        }
+        this._items.set(result.data.items.map(toVaultItem));
+        this._loading.set(false);
+      },
+      error: () => {
+        this.toast.error('Failed to load vault items — network or server error');
+        this._loading.set(false);
+      },
     });
   }
 
@@ -668,69 +682,10 @@ interface ApiVaultNoteResponse {
   ai_rationale_model: string | null;
 }
 
-interface ApiVaultItem {
-  id: string;
-  seq: number;
-  title: string;
-  type: string;                                    // 16+ values in production
-  status: 'active' | 'inbox' | 'archived' | 'done';
-  body: string | null;
-  ai_priority: number | null;
-  manual_priority: number | null;
-  priority_confidence: number | null;
-  ai_rationale: string | null;
-  actionability: string | null;
-  assigned_to: string;
-  route: string;
-  tags: string[];
-  ready: boolean;
-  is_epic: boolean;
-  parent_id: string | null;
-  acceptance_criteria: string | null;              // production stores as text
-  blocked_by: string | null;
-  blocked_reason: string | null;
-  blocked_at: string | null;
-  due_at: string | null;
-  created_at: string;
-  updated_at: string;
-  completed_at: string | null;
-  grooming_status: string;
-  grooming_started_at: string | null;
-  source_kind: string | null;
-  source_ref: string | null;
-  source_url: string | null;
-  source_signal: string | null;
-
-  // Embedded — used by the board directly, not by the VaultItem shape.
-  primary_project_id: string | null;
-  primary_project_name: string | null;
-  open_questions_count: number;
-  latest_activity_at: string | null;
-  children_count: number;
-  latest_event: {
-    ts: string;
-    actor_id: string;
-    actor_display_name: string | null;
-    action: string;
-    from_value: string | null;
-    to_value: string | null;
-    reason: string | null;
-  } | null;
-  latest_message: {
-    created_at: string;
-    author_actor_id: string;
-    author_display_name: string | null;
-    kind: string;
-    body_excerpt: string;
-  } | null;
-  days_in_column: number;
-}
-
-interface ApiVaultItemsResponse {
-  items: ApiVaultItem[];
-  total: number;
-  limit: number;
-}
+// ApiVaultItem (list shape) is now defined as a Zod schema in
+// @domain/vault/vault-item.api-schema. The single-note shape returned by
+// POST/PATCH endpoints is the wider ApiVaultNoteResponse below — TODO:
+// migrate that to a schema too in a follow-up pass.
 
 // Production has 16+ type values (task, idea, bookmark, travel, recipe,
 // journal, health, quote, ...). The dashboard splits these onto two axes:

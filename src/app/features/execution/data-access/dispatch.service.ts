@@ -4,6 +4,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import type { DispatchQueueEntry, DispatchStatus } from '@domain/dispatch';
+import { ApiDispatchEntrySchema, ApiDispatchesResponseSchema, type ApiDispatchEntry } from '@domain/dispatch/dispatch.api-schema';
 import type { DispatchId, VaultItemId } from '@domain/ids';
 import { dispatchId, vaultItemId, actorId, skillId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
@@ -35,9 +36,22 @@ export class DispatchService {
     // columns). Map at the service boundary to the dashboard's narrower
     // DispatchQueueEntry shape.
     // jimbo-api caps `limit` at 100 — sending more gets a 400 from zod validation.
-    this.http.get<ApiDispatchesResponse>(`${this.url}?limit=100`).subscribe({
-      next: ({ items }) => { this._entries.set(items.map(toDispatchEntry)); this._loading.set(false); },
-      error: ()         => this._loading.set(false),
+    this.http.get<unknown>(`${this.url}?limit=100`).subscribe({
+      next: (raw) => {
+        const result = ApiDispatchesResponseSchema.safeParse(raw);
+        if (!result.success) {
+          console.error('[dispatch] /api/dispatch/queue response failed schema:', result.error.issues);
+          this.toast.error('Failed to load dispatch queue — API response did not match expected shape');
+          this._loading.set(false);
+          return;
+        }
+        this._entries.set(result.data.items.map(toDispatchEntry));
+        this._loading.set(false);
+      },
+      error: () => {
+        this.toast.error('Failed to load dispatch queue — network or server error');
+        this._loading.set(false);
+      },
     });
   }
 
@@ -83,9 +97,15 @@ export class DispatchService {
       completed_at:  null,
       retry_count:   prior.retry_count + 1,
     };
-    this.http.patch<ApiDispatchEntry>(`${environment.dashboardApiUrl}/api/dispatch/${encodeURIComponent(id)}`, patch).subscribe({
-      next: (updated) => {
-        this._entries.update(es => es.map(e => e.id === id ? toDispatchEntry(updated) : e));
+    this.http.patch<unknown>(`${environment.dashboardApiUrl}/api/dispatch/${encodeURIComponent(id)}`, patch).subscribe({
+      next: (raw) => {
+        const result = ApiDispatchEntrySchema.safeParse(raw);
+        if (!result.success) {
+          console.error('[dispatch] PATCH retry response failed schema:', result.error.issues);
+          this.toast.error('Retry queued but response was malformed — refresh to confirm');
+          return;
+        }
+        this._entries.update(es => es.map(e => e.id === id ? toDispatchEntry(result.data) : e));
         this.toast.success('Dispatch queued for retry');
       },
       error: () => {
@@ -97,39 +117,8 @@ export class DispatchService {
 }
 
 // ── API response adaptation ────────────────────────────────────────────────
-// Production has six status values (proposed, approved, rejected, completed,
-// failed, removed) plus more columns; dashboard's DispatchStatus is five
-// (approved, dispatching, running, completed, failed). Map at the boundary.
-
-interface ApiDispatchEntry {
-  id: number | string;
-  task_id: string;
-  task_source: string;
-  flow: string;
-  agent_type: string;
-  executor: string | null;
-  skill: string | null;
-  skill_context: unknown;
-  status: 'proposed' | 'approved' | 'dispatching' | 'running' | 'rejected' | 'completed' | 'failed' | 'removed';
-  result_summary: string | null;
-  error_message: string | null;
-  retry_count: number;
-  proposed_at: string | null;
-  approved_at: string | null;
-  started_at: string | null;
-  completed_at: string | null;
-  created_at: string;
-  // Joined from vault_notes by the API. Postgres returns int8 columns as strings,
-  // so coerce on the dashboard side.
-  task_title: string | null;
-  task_seq: number | string | null;
-}
-
-interface ApiDispatchesResponse {
-  items: ApiDispatchEntry[];
-  total: number;
-  limit: number;
-}
+// Shape comes from ApiDispatchEntrySchema (Zod). The mapper still narrows
+// the wider DB status enum into the dashboard's DispatchStatus union.
 
 // Production statuses → dashboard DispatchStatus union.
 //   proposed  → approved   (queued, awaiting work — same UI semantics)

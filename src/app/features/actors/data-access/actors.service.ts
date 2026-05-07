@@ -5,8 +5,8 @@
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import type { Actor, ActorKind, ActorRuntime, CreateActorPayload, UpdateActorPayload } from '@domain/actors';
-import { ALL_CAPABILITIES, type SkillCapability } from '@domain/capability';
+import type { Actor, CreateActorPayload, UpdateActorPayload } from '@domain/actors';
+import { ApiActorSchema, ApiActorListSchema, type ApiActor } from '@domain/actors/actor.api-schema';
 import { actorId, type ActorId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { ToastService } from '@shared/components/toast/toast.service';
@@ -34,9 +34,25 @@ export class ActorsService {
       this._loading.set(false);
       return;
     }
-    this.http.get<{ items: ApiActor[] }>(this.url).subscribe({
-      next: ({ items }) => { this._actors.set(items.map(toActor)); this._loading.set(false); },
-      error: ()         => this._loading.set(false),
+    this.http.get<unknown>(this.url).subscribe({
+      next: (raw) => {
+        const result = ApiActorListSchema.safeParse(raw);
+        if (!result.success) {
+          // Schema mismatch: surface immediately rather than letting bad
+          // data flow through and bite us later. The first failure with
+          // best-effort path information is enough to start debugging.
+          console.error('[actors] /api/actors response failed schema:', result.error.issues);
+          this.toast.error('Failed to load actors — API response did not match expected shape');
+          this._loading.set(false);
+          return;
+        }
+        this._actors.set(result.data.items.map(toActor));
+        this._loading.set(false);
+      },
+      error: () => {
+        this.toast.error('Failed to load actors — network or server error');
+        this._loading.set(false);
+      },
     });
   }
 
@@ -52,10 +68,16 @@ export class ActorsService {
     const now = new Date().toISOString();
     const optimistic: Actor = { ...payload, created_at: now, updated_at: now };
     this._actors.update(as => [...as, optimistic]);
-    this.http.post<ApiActor>(this.url, payload)
+    this.http.post<unknown>(this.url, payload)
       .subscribe({
-        next: (created) => {
-          this._actors.update(as => as.map(a => a.id === payload.id ? toActor(created) : a));
+        next: (raw) => {
+          const result = ApiActorSchema.safeParse(raw);
+          if (!result.success) {
+            console.error('[actors] POST response failed schema:', result.error.issues);
+            this.toast.error(`Created "${payload.display_name}" but response was malformed — refresh to confirm`);
+            return;
+          }
+          this._actors.update(as => as.map(a => a.id === payload.id ? toActor(result.data) : a));
           this.toast.success(`Actor "${payload.display_name}" created`);
         },
         error: () => {
@@ -67,9 +89,17 @@ export class ActorsService {
 
   update(id: ActorId, patch: UpdateActorPayload): void {
     const prior = this.getById(id);
-    this.http.patch<ApiActor>(`${this.url}/${encodeURIComponent(id)}`, patch)
+    this.http.patch<unknown>(`${this.url}/${encodeURIComponent(id)}`, patch)
       .subscribe({
-        next: (updated) => this._actors.update(as => as.map(a => a.id === id ? toActor(updated) : a)),
+        next: (raw) => {
+          const result = ApiActorSchema.safeParse(raw);
+          if (!result.success) {
+            console.error('[actors] PATCH response failed schema:', result.error.issues);
+            this.toast.error(`Updated "${prior?.display_name ?? id}" but response was malformed — refresh to confirm`);
+            return;
+          }
+          this._actors.update(as => as.map(a => a.id === id ? toActor(result.data) : a));
+        },
         error: () => this.toast.error(`Failed to update actor "${prior?.display_name ?? id}"`),
       });
   }
@@ -85,48 +115,20 @@ export class ActorsService {
 }
 
 // ── API response adaptation ────────────────────────────────────────────────
-// Schema now includes runtime/description/is_active (migration 0003), so the
-// adapter is a thin shape-coercion rather than the old synthesis pass.
-
-interface ApiActor {
-  id: string;
-  display_name: string;
-  kind: string;
-  runtime: string | null;
-  description: string | null;
-  is_active: boolean;
-  color_token: string | null;
-  // API may not yet return `serves` — treat as optional and default to [] so
-  // the dashboard build stays green ahead of the backend rollout.
-  serves?: string[] | null;
-  created_at: string;
-  updated_at: string;
-}
-
-function narrowServes(raw: string[] | null | undefined): SkillCapability[] {
-  if (!raw) return [];
-  const known = new Set<string>(ALL_CAPABILITIES);
-  return raw.filter((s): s is SkillCapability => known.has(s));
-}
-
-function narrowKind(k: string): ActorKind {
-  return k === 'human' || k === 'agent' || k === 'system' ? k : 'agent';
-}
-
-function narrowRuntime(r: string | null): ActorRuntime {
-  if (r === 'ollama' || r === 'anthropic' || r === 'openrouter' || r === 'hermes') return r;
-  return null;
-}
+// Shape comes from ApiActorSchema (Zod). The old narrowKind / narrowRuntime /
+// narrowServes helpers were silent coercers — they accepted bad data and
+// substituted defaults. The schema now refuses to parse bad enums, so this
+// adapter is a thin brand-and-pass.
 
 function toActor(a: ApiActor): Actor {
   return {
     id: actorId(a.id),
     display_name: a.display_name,
-    kind: narrowKind(a.kind),
-    runtime: narrowRuntime(a.runtime),
+    kind: a.kind,
+    runtime: a.runtime,
     description: a.description,
     is_active: a.is_active,
-    serves: narrowServes(a.serves),
+    serves: a.serves,
     created_at: a.created_at,
     updated_at: a.updated_at,
   };

@@ -9,8 +9,10 @@
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import type { Project, ProjectStatus, CreateProjectPayload, UpdateProjectPayload } from '@domain/projects';
+import type { Project, CreateProjectPayload, UpdateProjectPayload } from '@domain/projects';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
+import { ApiProjectSchema, type ApiProject } from '@domain/projects/project.api-schema';
+import { z } from 'zod';
 import type { ActorId, ProjectId } from '@domain/ids';
 import { actorId, projectId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
@@ -46,9 +48,22 @@ export class ProjectsService {
     // GET /api/projects returns a raw Project[] (per the OpenAPI schema —
     // type: array, not the {items} envelope used by some other endpoints).
     // Don't destructure; it leaves items=undefined and the page renders empty.
-    this.http.get<ApiProject[]>(this.url).subscribe({
-      next: (items) => { this._projects.set(items.map(toProject)); this._loading.set(false); },
-      error: ()     => this._loading.set(false),
+    this.http.get<unknown>(this.url).subscribe({
+      next: (raw) => {
+        const result = z.array(ApiProjectSchema).safeParse(raw);
+        if (!result.success) {
+          console.error('[projects] /api/projects response failed schema:', result.error.issues);
+          this.toast.error('Failed to load projects — API response did not match expected shape');
+          this._loading.set(false);
+          return;
+        }
+        this._projects.set(result.data.map(toProject));
+        this._loading.set(false);
+      },
+      error: () => {
+        this.toast.error('Failed to load projects — network or server error');
+        this._loading.set(false);
+      },
     });
   }
 
@@ -75,9 +90,15 @@ export class ProjectsService {
       return;
     }
 
-    this.http.post<ApiProject>(this.url, withColor).subscribe({
-      next: (created) => {
-        const p = toProject(created);
+    this.http.post<unknown>(this.url, withColor).subscribe({
+      next: (raw) => {
+        const result = ApiProjectSchema.safeParse(raw);
+        if (!result.success) {
+          console.error('[projects] POST response failed schema:', result.error.issues);
+          this.toast.error(`Created "${payload.display_name}" but response was malformed — refresh to confirm`);
+          return;
+        }
+        const p = toProject(result.data);
         this._projects.update(ps => ps.map(x => x.id === payload.id ? p : x));
         this.activityService.post({
           type: 'project_created',
@@ -107,9 +128,15 @@ export class ProjectsService {
       return;
     }
 
-    this.http.patch<ApiProject>(`${this.url}/${encodeURIComponent(id)}`, patch).subscribe({
-      next: (updated) => {
-        const p = toProject(updated);
+    this.http.patch<unknown>(`${this.url}/${encodeURIComponent(id)}`, patch).subscribe({
+      next: (raw) => {
+        const result = ApiProjectSchema.safeParse(raw);
+        if (!result.success) {
+          console.error('[projects] PATCH response failed schema:', result.error.issues);
+          this.toast.error(`Saved "${prior.display_name}" but response was malformed — refresh to confirm`);
+          return;
+        }
+        const p = toProject(result.data);
         this._projects.update(ps => ps.map(x => x.id === id ? p : x));
         this.emitDiffEvents(projectIdTyped, prior, p);
         this.toast.success(`Project "${prior.display_name}" saved`);
@@ -180,30 +207,9 @@ export class ProjectsService {
 }
 
 // ── API response adaptation ────────────────────────────────────────────────
-// Schema now includes description / owner_actor_id / criteria / repo_url
-// (migration 0003), so this is a passthrough rather than the synthesis pass
-// it used to be. owner_actor_id is intentionally nullable in the migration
-// (some pre-cutover ETL rows have no owner); falls back to 'marvin' as a
-// display default when the column is null.
-
-interface ApiProject {
-  id: string;
-  display_name: string;
-  description: string | null;
-  status: string;                 // 'active' | 'paused' | 'archived' (CHECK-bound)
-  kind: string;                   // 'major' | 'minor'
-  owner_actor_id: string | null;
-  criteria: string | null;
-  repo_url: string | null;
-  color_token: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-function narrowStatus(s: string): ProjectStatus {
-  // Dashboard collapses 'paused' into 'active' — see project.ts comment.
-  return s === 'archived' ? 'archived' : 'active';
-}
+// Shape comes from ApiProjectSchema (Zod). Status normalisation
+// (paused→active) lives in the schema's transform so the parsed value is
+// already domain-correct.
 
 // Curated palette — muted, readable on both light and dark surfaces.
 // Order is intentional: adjacent entries are visually distinct.
@@ -230,8 +236,8 @@ function toProject(p: ApiProject): Project {
     id: projectId(p.id),
     display_name: p.display_name,
     description: p.description,
-    status: narrowStatus(p.status),
-    kind: p.kind === 'minor' ? 'minor' : 'major',
+    status: p.status,
+    kind: p.kind,
     owner_actor_id: p.owner_actor_id ? actorId(p.owner_actor_id) : null,
     criteria: p.criteria,
     repo_url: p.repo_url,
