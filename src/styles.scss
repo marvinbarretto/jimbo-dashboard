@@ -1,6 +1,8 @@
 // CDK overlay prebuilt — required for Dialog backdrop, panel positioning,
 // scroll lock. Without this the modal renders with no styles applied.
 @use '@angular/cdk/overlay-prebuilt.css';
+@use 'flatpickr/dist/flatpickr.min.css';
+@use 'flatpickr/dist/plugins/monthSelect/style.css';
 @use 'breakpoints' as bp;
 @use 'utilities';
 
@@ -413,6 +415,121 @@ h2 { font-size: 1.25rem; font-weight: 600; }
   &[aria-current="page"] {
     color: var(--section-accent, var(--color-accent));
     border-bottom-color: var(--section-accent, var(--color-accent));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Flatpickr theme — overrides applied over flatpickr.min.css base.
+// Calendar renders at body level so these must live in global styles.
+// ---------------------------------------------------------------------------
+
+.flatpickr-calendar {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+
+  &.arrowTop::before { border-bottom-color: var(--color-border); }
+  &.arrowTop::after  { border-bottom-color: var(--color-surface-raised); }
+  &.arrowBottom::before { border-top-color: var(--color-border); }
+  &.arrowBottom::after  { border-top-color: var(--color-surface-raised); }
+
+  .flatpickr-months {
+    .flatpickr-month { color: var(--color-text); background: transparent; }
+    .flatpickr-prev-month,
+    .flatpickr-next-month {
+      color: var(--color-text-muted);
+      fill: var(--color-text-muted);
+      &:hover { color: var(--color-accent); fill: var(--color-accent); }
+    }
+  }
+
+  .flatpickr-current-month {
+    color: var(--color-text);
+    .flatpickr-monthDropdown-months {
+      background: var(--color-surface-raised);
+      color: var(--color-text);
+    }
+    input.cur-year { color: var(--color-text); }
+  }
+
+  .flatpickr-weekdays { background: transparent; }
+  .flatpickr-weekday {
+    color: var(--color-text-muted);
+    background: transparent;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+  }
+
+  .flatpickr-days { border-color: var(--color-border); }
+
+  .flatpickr-day {
+    color: var(--color-text);
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+
+    &:hover, &:focus {
+      background: var(--color-surface);
+      border-color: var(--color-border);
+      color: var(--color-text);
+    }
+
+    &.today {
+      border-color: var(--color-accent);
+      &:hover { background: color-mix(in srgb, var(--color-accent) 12%, transparent); }
+    }
+
+    &.selected, &.week.selected {
+      background: var(--color-accent);
+      border-color: var(--color-accent);
+      color: var(--color-bg);
+      font-weight: 600;
+      &:hover { background: var(--color-accent); }
+    }
+
+    &.inRange {
+      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+      border-color: transparent;
+      box-shadow: none;
+    }
+
+    &.prevMonthDay, &.nextMonthDay {
+      color: var(--color-text-muted);
+      &.selected { background: var(--color-accent); color: var(--color-bg); }
+    }
+  }
+
+  // Week numbers column
+  .flatpickr-weekwrapper {
+    .flatpickr-weekday { color: var(--color-text-muted); }
+    .flatpickr-weeks span {
+      color: var(--color-text-muted);
+      font-size: 0.7rem;
+    }
+  }
+}
+
+// Month-select plugin cells
+.flatpickr-monthSelect-month {
+  color: var(--color-text);
+  border-radius: var(--radius);
+
+  &:hover, &:focus {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text);
+  }
+
+  &.today { border-color: var(--color-accent); }
+
+  &.selected {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-bg);
+    font-weight: 600;
   }
 }
 

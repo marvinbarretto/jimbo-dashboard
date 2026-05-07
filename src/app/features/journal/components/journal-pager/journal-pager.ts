@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { UiButton } from '@shared/components/ui-button/ui-button';
+import { JournalDatePicker } from '../journal-date-picker/journal-date-picker';
 
 @Component({
   selector: 'app-journal-pager',
-  imports: [UiButton],
+  imports: [UiButton, JournalDatePicker],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="journal-pager">
@@ -21,23 +22,11 @@ import { UiButton } from '@shared/components/ui-button/ui-button';
           <app-ui-button variant="ghost" size="sm" (pressed)="today.emit()">Today</app-ui-button>
         }
         <app-ui-button variant="ghost" size="sm" [disabled]="!canGoNext()" ariaLabel="Next" (pressed)="next.emit()">›</app-ui-button>
-        @if (showDateInput()) {
-          <input
-            type="date"
-            class="journal-pager__date"
-            [value]="dateValue()"
-            (change)="onDateInput($event)"
-            [attr.aria-label]="'Pick a ' + granularity()"
-          />
-        } @else if (granularity() === 'month') {
-          <input
-            type="month"
-            class="journal-pager__date"
-            [value]="monthValue()"
-            (change)="onMonthInput($event)"
-            aria-label="Pick a month"
-          />
-        }
+        <app-journal-date-picker
+          [granularity]="granularity()"
+          [value]="value()"
+          (dateChange)="dateChange.emit($event)"
+        />
       </div>
     </header>
   `,
@@ -80,18 +69,6 @@ import { UiButton } from '@shared/components/ui-button/ui-button';
       gap: 0.4rem;
       flex-wrap: wrap;
     }
-
-    .journal-pager__date {
-      height: 2rem;
-      padding: 0 0.5rem;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      background: var(--color-surface);
-      color: var(--color-text);
-      font: inherit;
-      font-size: 0.85rem;
-      color-scheme: light dark;
-    }
   `],
 })
 export class JournalPager {
@@ -101,23 +78,10 @@ export class JournalPager {
   readonly eyebrow = input<string>('Journal');
   readonly isAtToday = input<boolean>(false);
   readonly canGoNext = input<boolean>(true);
-  readonly dateValue = input<string>(''); // YYYY-MM-DD for date input
-  readonly monthValue = input<string>(''); // YYYY-MM for month input
+  readonly value = input<string>('');
 
   readonly previous = output<void>();
   readonly next = output<void>();
   readonly today = output<void>();
   readonly dateChange = output<string>();
-
-  readonly showDateInput = computed(() => this.granularity() === 'day' || this.granularity() === 'week');
-
-  onDateInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    if (value) this.dateChange.emit(value);
-  }
-
-  onMonthInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    if (value) this.dateChange.emit(value);
-  }
 }

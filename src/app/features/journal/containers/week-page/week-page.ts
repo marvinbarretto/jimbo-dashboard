@@ -14,15 +14,10 @@ import { JournalDonutChart } from '../../components/donut-chart/donut-chart';
 import { JournalPager } from '../../components/journal-pager/journal-pager';
 import {
   type WeekKey,
-  dayKeyFromDate,
   formatWeekRange,
   isWeekKey,
   shiftWeek,
   thisWeekKey,
-  weekStartFromKey,
-  weekKeyFromDate,
-  dateFromDayKey,
-  isDayKey,
 } from '../../utils/date-keys';
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -61,7 +56,6 @@ export class JournalWeekPage {
   protected readonly title = computed(() => this.key());
   protected readonly subtitle = computed(() => formatWeekRange(this.key()));
   protected readonly isThisWeek = computed(() => this.key() === thisWeekKey());
-  protected readonly mondayValue = computed(() => dayKeyFromDate(weekStartFromKey(this.key())));
 
   protected readonly dayLabels = computed(() => DAY_LABELS);
   protected readonly minutesPerDay = computed(() => this.bundle()?.minutes_per_day ?? []);
@@ -110,9 +104,7 @@ export class JournalWeekPage {
   }
 
   protected onDateChange(value: string): void {
-    if (isDayKey(value)) {
-      this.navigateTo(weekKeyFromDate(dateFromDayKey(value)));
-    }
+    if (isWeekKey(value)) this.navigateTo(value);
   }
 
   private navigateTo(key: WeekKey): void {
