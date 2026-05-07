@@ -46,7 +46,7 @@ export class ActorsService {
           this._loading.set(false);
           return;
         }
-        this._actors.set(result.data.items.map(toActor));
+        this._actors.set(result.data.map(toActor));
         this._loading.set(false);
       },
       error: () => {

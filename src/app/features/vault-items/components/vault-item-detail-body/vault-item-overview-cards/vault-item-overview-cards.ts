@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 
 export interface VaultItemSummary {
   readonly label: string;
@@ -9,54 +8,68 @@ export interface VaultItemSummary {
 
 @Component({
   selector: 'app-vault-item-overview-cards',
-  imports: [UiStatCard],
+  imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="vault-item-overview-cards" aria-label="Item overview">
-      <app-ui-stat-card
-        [label]="source().label"
-        [value]="source().value"
-        [detail]="source().detail"
-      />
-      <app-ui-stat-card
-        [label]="hierarchy().label"
-        [value]="hierarchy().value"
-        [detail]="hierarchy().detail"
-      />
-      <app-ui-stat-card
-        [label]="timeline().label"
-        [value]="timeline().value"
-        [detail]="timeline().detail"
-      />
-      <app-ui-stat-card
-        [label]="queue().label"
-        [value]="queue().value"
-        [detail]="queue().detail"
-      />
-    </div>
+    <dl class="vault-item-meta-strip" aria-label="Item overview">
+      <span class="vault-item-meta-strip__pair">
+        <dt>{{ source().label }}</dt>
+        <dd>{{ source().value }}</dd>
+      </span>
+      <span class="vault-item-meta-strip__sep" aria-hidden="true">·</span>
+      <span class="vault-item-meta-strip__pair">
+        <dt>{{ hierarchy().label }}</dt>
+        <dd>{{ hierarchy().value }}</dd>
+      </span>
+      <span class="vault-item-meta-strip__sep" aria-hidden="true">·</span>
+      <span class="vault-item-meta-strip__pair">
+        <dt>{{ queue().label }}</dt>
+        <dd>{{ queue().detail }}</dd>
+      </span>
+    </dl>
   `,
   styles: [`
-    :host {
-      display: block;
+    :host { display: block; }
+
+    .vault-item-meta-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.25rem 0.4rem;
+      margin: 0.4rem 0 0;
+      padding: 0;
+      font-size: 0.68rem;
+      color: var(--color-text-muted);
+      line-height: 1.4;
     }
 
-    .vault-item-overview-cards {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.6rem;
-      margin-top: 0.8rem;
-    }
+    .vault-item-meta-strip__pair {
+      display: inline-flex;
+      gap: 0.25rem;
 
-    @media (max-width: 768px) {
-      .vault-item-overview-cards {
-        grid-template-columns: 1fr;
+      dt {
+        font-weight: 600;
+        color: var(--color-text-soft, var(--color-text-muted));
+        text-transform: uppercase;
+        font-size: 0.6rem;
+        letter-spacing: 0.06em;
       }
+
+      dd {
+        margin: 0;
+        color: var(--color-text);
+      }
+    }
+
+    .vault-item-meta-strip__sep {
+      color: var(--color-border);
+      user-select: none;
     }
   `],
 })
 export class VaultItemOverviewCards {
   readonly source = input.required<VaultItemSummary>();
   readonly hierarchy = input.required<VaultItemSummary>();
-  readonly timeline = input.required<VaultItemSummary>();
+  // timeline omitted — already shown by vault-item-meta-line
   readonly queue = input.required<VaultItemSummary>();
 }

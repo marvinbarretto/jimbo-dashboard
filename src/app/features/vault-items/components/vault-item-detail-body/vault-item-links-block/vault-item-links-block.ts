@@ -142,6 +142,7 @@ export interface VaultItemParentRef {
       gap: 0.4rem;
       align-items: center;
       margin-top: 0.25rem;
+      min-width: 0;
     }
 
     .vault-item-links-block__parent-row {
@@ -153,45 +154,34 @@ export interface VaultItemParentRef {
     }
 
     .vault-item-links-block__blocker-input {
-      width: 120px;
-      padding: 2px 6px;
+      flex: 1;
+      min-width: 0;
+      padding: 0.2rem 0.45rem;
       font: inherit;
       font-size: 0.72rem;
-      background: var(--color-bg);
+      background: var(--color-surface);
       border: 1px solid var(--color-border);
       color: var(--color-text);
-      border-radius: 3px;
-    }
+      border-radius: var(--radius, 4px);
 
-    .vault-item-links-block__blocker-input::placeholder {
-      color: var(--color-text-muted);
-      opacity: 0.6;
-    }
-
-    .vault-item-links-block__blocker-input:focus {
-      outline: none;
-      border-color: var(--color-accent);
+      &::placeholder { color: var(--color-text-muted); opacity: 0.6; }
+      &:focus { outline: none; border-color: var(--color-accent); }
     }
 
     .vault-item-links-block__inline-btn {
-      padding: 2px 8px;
+      padding: 0.2rem 0.55rem;
       background: transparent;
       border: 1px solid var(--color-border);
-      border-radius: 3px;
+      border-radius: var(--radius, 4px);
       font: inherit;
       font-size: 0.7rem;
       cursor: pointer;
       color: var(--color-text-muted);
-    }
+      white-space: nowrap;
+      flex-shrink: 0;
 
-    .vault-item-links-block__inline-btn:hover {
-      border-color: var(--color-text);
-      color: var(--color-text);
-    }
-
-    .vault-item-links-block__inline-btn:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
+      &:hover { border-color: var(--color-text-muted); color: var(--color-text); }
+      &:disabled { opacity: 0.35; cursor: not-allowed; }
     }
 
   `],

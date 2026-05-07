@@ -56,6 +56,7 @@
 } @else if (store.item(); as item) {
   <div class="vault-item-detail">
 
+    <div class="vault-item-detail__sticky-header" #stickyHeader>
     <app-vault-item-identity-header
       [item]="item"
       (titleChange)="store.updateTitle($event)"
@@ -70,6 +71,7 @@
         [effectivePriority]="store.effectivePriority()"
         [priorityDiverges]="store.priorityDiverges()"
         [firstProject]="store.projects()[0]"
+        [allProjects]="store.projects()"
         [isGitHubItem]="store.isGitHubItem()"
         [activeActors]="store.activeActors()"
         (statusChange)="store.setStatus($event)"
@@ -91,10 +93,10 @@
       <app-vault-item-overview-cards
         [source]="store.sourceSummary()"
         [hierarchy]="store.hierarchySummary()"
-        [timeline]="store.timelineSummary()"
         [queue]="store.queueSummary()"
       />
     </div>
+    </div><!-- /.vault-item-detail__sticky-header -->
 
     @if (store.showRejectForm()) {
       <app-reject-form
@@ -114,78 +116,84 @@
       (replyPosted)="postThreadReply($event)"
     />
 
-    <app-ui-section
-      title="Body"
-      [expanded]="store.sectionBody()"
-      [meta]="'intake · delivery · links ' + (store.sectionBody() ? '▴' : '▾')"
-      (toggled)="store.toggleSection('body')">
-      <div class="vault-item-detail__body-layout">
-        <app-vault-item-intake-block
-          [body]="item.body"
-          [createdAt]="item.created_at"
-          [editable]="store.isManual()"
-          (bodyChange)="store.updateBody($event)"
+    <div class="vault-item-detail__columns">
+
+      <app-ui-section
+        title="Body"
+        [collapsible]="false"
+        [stickyHeader]="true"
+        stickyTop="var(--sticky-header-height)"
+        meta="intake · delivery · links">
+        <div class="vault-item-detail__body-layout">
+          <app-vault-item-intake-block
+            [body]="item.body"
+            [createdAt]="item.created_at"
+            [editable]="store.isManual()"
+            (bodyChange)="store.updateBody($event)"
+          />
+
+          <app-vault-item-delivery-block
+            [readiness]="store.readiness()"
+            [criteria]="item.acceptance_criteria"
+            [editable]="true"
+            (criteriaChange)="store.updateCriteria($event)"
+          />
+
+          <app-vault-item-links-block
+            [subtasks]="store.children()"
+            [projects]="store.projects()"
+            [activeProjects]="store.activeProjects()"
+            [openBlockers]="store.openBlockers()"
+            [tags]="item.tags"
+            [addBlockerSeqInput]="store.addBlockerSeqInput()"
+            [parent]="store.parentRef()"
+            [editable]="true"
+            (subtaskClicked)="swapToSeq($event)"
+            (projectClicked)="onProjectClicked($event)"
+            (projectAdded)="store.addProject($event)"
+            (projectRemoved)="store.removeProject($event)"
+            (blockerClicked)="swapToSeq($event)"
+            (blockerRemoved)="store.removeBlocker($event)"
+            (blockerAddBySeq)="store.addBlockerBySeq()"
+            (blockerSeqInputChange)="store.addBlockerSeqInput.set($event)"
+            (tagsChange)="store.updateTags($event)"
+            (parentClicked)="swapToSeq($event)"
+            (parentChange)="store.updateParent($event)"
+          />
+        </div>
+      </app-ui-section>
+
+      <app-ui-section
+        title="Activity"
+        tone="subtle"
+        [collapsible]="false"
+        [stickyHeader]="true"
+        stickyTop="var(--sticky-header-height)"
+        [meta]="store.events().length + ' events'">
+        <app-activity-log
+          [events]="store.events()"
+          [actorLabel]="store.actorLabelFn"
+          [actorKind]="store.actorKindFn"
         />
+      </app-ui-section>
 
-        <app-vault-item-delivery-block
-          [readiness]="store.readiness()"
-          [criteria]="item.acceptance_criteria"
-          [editable]="true"
-          (criteriaChange)="store.updateCriteria($event)"
-        />
+      <app-ui-section
+        title="Thread"
+        tone="subtle"
+        [collapsible]="false"
+        [stickyHeader]="true"
+        stickyTop="var(--sticky-header-height)"
+        [meta]="store.messages().length + ' messages'">
+        <app-thread-view
+          [vaultItemId]="item.id"
+          [currentActor]="currentActorId"
+          [actorMap]="store.actorMap()">
+        </app-thread-view>
+      </app-ui-section>
 
-        <app-vault-item-links-block
-          [subtasks]="store.children()"
-          [projects]="store.projects()"
-          [activeProjects]="store.activeProjects()"
-          [openBlockers]="store.openBlockers()"
-          [tags]="item.tags"
-          [addBlockerSeqInput]="store.addBlockerSeqInput()"
-          [parent]="store.parentRef()"
-          [editable]="true"
-          (subtaskClicked)="swapToSeq($event)"
-          (projectClicked)="onProjectClicked($event)"
-          (projectAdded)="store.addProject($event)"
-          (projectRemoved)="store.removeProject($event)"
-          (blockerClicked)="swapToSeq($event)"
-          (blockerRemoved)="store.removeBlocker($event)"
-          (blockerAddBySeq)="store.addBlockerBySeq()"
-          (blockerSeqInputChange)="store.addBlockerSeqInput.set($event)"
-          (tagsChange)="store.updateTags($event)"
-          (parentClicked)="swapToSeq($event)"
-          (parentChange)="store.updateParent($event)"
-        />
-      </div>
-    </app-ui-section>
-
-    <app-ui-section
-      title="Activity"
-      tone="subtle"
-      [expanded]="store.sectionActivity()"
-      [meta]="'timeline · filters · ' + store.events().length + ' events ' + (store.sectionActivity() ? '▴' : '▾')"
-      (toggled)="store.toggleSection('activity')">
-      <app-activity-log
-        [events]="store.events()"
-        [actorLabel]="store.actorLabelFn"
-        [actorKind]="store.actorKindFn"
-      />
-    </app-ui-section>
-
-    <app-ui-section
-      title="Thread"
-      tone="subtle"
-      [expanded]="store.sectionThread()"
-      [meta]="'conversation · ' + store.messages().length + ' messages ' + (store.sectionThread() ? '▴' : '▾')"
-      (toggled)="store.toggleSection('thread')">
-      <app-thread-view
-        [vaultItemId]="item.id"
-        [currentActor]="currentActorId"
-        [actorMap]="store.actorMap()">
-      </app-thread-view>
-    </app-ui-section>
+    </div>
 
     <app-vault-item-action-bar
-      [editRoute]="['/vault-items', item.seq, 'edit']"
       [canReject]="store.canReject()"
       [isArchived]="isItemArchived(item)"
       (rejected)="store.openReject()"

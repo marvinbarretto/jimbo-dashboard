@@ -38,6 +38,9 @@ export const ApiActorSchema = z.object({
 
 export type ApiActor = z.infer<typeof ApiActorSchema>;
 
-export const ApiActorListSchema = z.object({
-  items: z.array(ApiActorSchema),
-});
+// /api/actors returns a raw array, not an {items} envelope. The OpenAPI route
+// declares `schema: ActorSchema.array()` (jimbo-api/src/routes/actors.ts).
+// The old dashboard code destructured `{items}` from this and got undefined,
+// silently rendering an empty actors page — which was the actual root cause
+// of the "@unassigned" chip bug (actorsService never had any rows to look up).
+export const ApiActorListSchema = z.array(ApiActorSchema);

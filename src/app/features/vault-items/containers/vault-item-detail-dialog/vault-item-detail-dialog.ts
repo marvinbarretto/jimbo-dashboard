@@ -39,13 +39,11 @@ export class VaultItemDetailDialog {
 
   // Headline shown in the modal header. For items, falls back to "#<seq>"
   // while the row resolves; for drafts shows "New item".
+  // Chrome shows only the seq — the full title is inline-editable in the body.
   protected readonly headline = computed(() => {
     const m = this.mode();
     if (isDraft(m)) return 'New item';
-    if (isItem(m)) {
-      const item = this.vaultItemsService.getBySeq(m.seq);
-      return item ? `#${item.seq} · ${item.title}` : `#${m.seq}`;
-    }
+    if (isItem(m)) return `#${m.seq}`;
     return '';
   });
 

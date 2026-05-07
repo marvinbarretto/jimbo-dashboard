@@ -1,12 +1,15 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
+  ElementRef,
   Signal,
   computed,
   effect,
   inject,
   input,
   output,
+  viewChild,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { swapDetailSeq, closeDetail } from '@shared/kanban/detail-modal';
@@ -83,6 +86,10 @@ export class VaultItemDetailBody {
 
   protected readonly store = inject(VaultItemDialogStore);
   private readonly router = inject(Router);
+  private readonly el = inject(ElementRef<HTMLElement>);
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly stickyHeaderRef = viewChild<ElementRef<HTMLDivElement>>('stickyHeader');
 
   // Staleness norms are non-zero only for GH items — drives the yellow-aging
   // background modifier without affecting manually-created items.
@@ -116,6 +123,22 @@ export class VaultItemDetailBody {
       if (incoming !== this.store.mode()) {
         this.store.setMode(incoming);
       }
+    });
+
+    // Measure the rendered sticky-header zone and write the real pixel height
+    // into --sticky-header-height so column section headers always clear it
+    // exactly, even when chips wrap or rationale expands.
+    effect(() => {
+      const el = this.stickyHeaderRef()?.nativeElement;
+      if (!el) return;
+      const ro = new ResizeObserver(entries => {
+        const height = entries[0]?.borderBoxSize[0]?.blockSize
+          ?? entries[0]?.contentRect.height
+          ?? 0;
+        this.el.nativeElement.style.setProperty('--sticky-header-height', `${Math.ceil(height)}px`);
+      });
+      ro.observe(el, { box: 'border-box' });
+      this.destroyRef.onDestroy(() => ro.disconnect());
     });
   }
 

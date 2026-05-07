@@ -1,12 +1,26 @@
-<header class="modal-shell__header">
-  <ng-content select="[modal-header]"></ng-content>
+@if (showHeader()) {
+  <header class="modal-shell__header">
+    <ng-content select="[modal-header]"></ng-content>
+    <button
+      type="button"
+      class="modal-shell__close"
+      [attr.aria-label]="closeLabel()"
+      (click)="onClose()"
+    >×</button>
+  </header>
+} @else {
+  <!-- Title kept in DOM but invisible so aria-labelledby still resolves.
+       Button is absolute so it doesn't consume flex space. -->
+  <span class="visually-hidden">
+    <ng-content select="[modal-header]"></ng-content>
+  </span>
   <button
     type="button"
-    class="modal-shell__close"
+    class="modal-shell__close modal-shell__close--floating"
     [attr.aria-label]="closeLabel()"
     (click)="onClose()"
   >×</button>
-</header>
+}
 
 <div class="modal-shell__body">
   <ng-content select="[modal-body]"></ng-content>

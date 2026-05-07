@@ -21,6 +21,10 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       align-items: center;
       gap: 0.5rem;
       margin: 0.85rem 0 0.35rem;
+
+      // No top margin when it's the first element in a container — prevents the
+      // subsection label and first subhead from having a double-gap.
+      &:first-child { margin-top: 0; }
     }
 
     .ui-subhead__label {

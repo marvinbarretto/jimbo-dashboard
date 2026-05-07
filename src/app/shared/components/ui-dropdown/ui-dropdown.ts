@@ -63,17 +63,21 @@ let nextId = 0;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 0.25rem;
+      gap: 0.3rem;
+      border-radius: 3px;
+      transition: opacity 0.1s;
+
+      &:hover { opacity: 0.8; }
     }
 
     .ui-dropdown__chevron {
       width: 0;
       height: 0;
-      border-left: 3px solid transparent;
-      border-right: 3px solid transparent;
-      border-top: 4px solid currentColor;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid currentColor;
       flex-shrink: 0;
-      opacity: 0.65;
+      opacity: 0.85;
       transition: transform 0.12s ease;
     }
 
@@ -83,7 +87,7 @@ let nextId = 0;
 
     .ui-dropdown__trigger:disabled {
       cursor: default;
-      opacity: 0.6;
+      opacity: 0.5;
     }
 
     .ui-dropdown__trigger:focus-visible {

@@ -96,6 +96,29 @@ import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
         </div>
 
         <div>
+          <p class="ui-lab__subhead">tiered chip strip (pattern)</p>
+          <p class="ui-lab__support-copy">
+            Two <code>ui-cluster</code> rows inside a column flex wrapper. Primary tier holds
+            operational controls (status, owner, priority, project). Secondary tier holds
+            classification metadata (grooming, actionability, source flags) at reduced opacity.
+            Use this layout on any detail view that has more than ~4 status chips.
+          </p>
+          <div style="display:flex;flex-direction:column;gap:0.35rem">
+            <app-ui-cluster gap="xs" align="center">
+              <app-ui-badge tone="success">active</app-ui-badge>
+              <app-ui-badge tone="info">&#64;boris</app-ui-badge>
+              <app-ui-badge tone="warning">P2</app-ui-badge>
+              <app-ui-badge tone="info" [subtle]="true">Localshout</app-ui-badge>
+            </app-ui-cluster>
+            <app-ui-cluster gap="xs" align="center" style="opacity:0.8;font-size:0.8em">
+              <app-ui-badge tone="neutral">classified</app-ui-badge>
+              <app-ui-badge tone="warning">needs-breakdown</app-ui-badge>
+              <app-ui-badge tone="info" [subtle]="true">github</app-ui-badge>
+            </app-ui-cluster>
+          </div>
+        </div>
+
+        <div>
           <p class="ui-lab__subhead">ui-dropdown</p>
           <p class="ui-lab__support-copy">
             Slot-based dropdown with full a11y: <code>aria-expanded</code>,

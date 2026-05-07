@@ -24,7 +24,9 @@ type UiSectionTone = 'default' | 'subtle' | 'alert';
           </button>
         </h2>
       } @else {
-        <header class="ui-section__header">
+        <header class="ui-section__header"
+          [class.ui-section__header--sticky]="stickyHeader()"
+          [style.top]="stickyHeader() ? stickyTop() : null">
           <h2 class="ui-section__title">{{ title() }}</h2>
           @if (meta(); as detail) {
             <p class="ui-section__meta">{{ detail }}</p>
@@ -103,6 +105,13 @@ type UiSectionTone = 'default' | 'subtle' | 'alert';
       text-transform: none;
     }
 
+    .ui-section__header--sticky {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: var(--color-surface-soft);
+    }
+
     .ui-section__content {
       padding: 0.8rem 1rem 1rem;
       border-top: 1px solid var(--color-border);
@@ -125,6 +134,9 @@ export class UiSection {
   readonly expanded = input(true);
   readonly collapsible = input(true);
   readonly tone = input<UiSectionTone>('default');
+  readonly stickyHeader = input(false);
+  /** When stickyHeader is true, sets the top offset (e.g. 'var(--sticky-header-height)'). */
+  readonly stickyTop = input<string>('0');
 
   readonly toggled = output<void>();
 
