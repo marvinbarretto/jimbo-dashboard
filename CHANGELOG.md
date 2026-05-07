@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.35](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.34...v0.0.35) (2026-05-07)
+
+
+### Features
+
+* **auth:** add auth status chip to app-topbar ([f46c491](https://github.com/marvinbarretto/jimbo-dashboard/commit/f46c491045ff31ea676ffad5d45ff022fb4aed7e))
+* **epics:** add epic-row, epic-card, and app-chip primitives ([9c75908](https://github.com/marvinbarretto/jimbo-dashboard/commit/9c7590895cad65bcd0fafc33ae7db097466e4b46))
+* **pomo:** scaffold Angular pomo flow — shell, pre-session, running, break, retro ([0256513](https://github.com/marvinbarretto/jimbo-dashboard/commit/02565136cbd4a363916a6cc279c15951aac5568f))
+
 ### [0.0.34](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.33...v0.0.34) (2026-05-06)
 
 
