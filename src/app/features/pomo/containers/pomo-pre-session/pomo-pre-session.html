@@ -1,24 +1,11 @@
 <app-ui-stack class="pre-session" gap="lg">
 
   <header class="pre-session__header">
-    <h1 class="pre-session__title">What are you working on?</h1>
-    <p class="pre-session__hint">Define your intention before you commit.</p>
+    <h1 class="pre-session__title">Start a pomo</h1>
   </header>
 
   <app-ui-card>
     <app-ui-stack gap="md">
-
-      <!-- Intention -->
-      <div class="pre-session__field-group">
-        <label class="pre-session__label" for="intention">Intention</label>
-        <input
-          id="intention"
-          type="text"
-          class="pre-session__field"
-          placeholder="What specifically will you get done?"
-          [ngModel]="intention()"
-          (ngModelChange)="intention.set($event)" />
-      </div>
 
       <!-- Project -->
       <div class="pre-session__field-group">
@@ -68,14 +55,14 @@
         </button>
       </div>
 
-      <!-- Scope -->
+      <!-- Task scope — clickable to auto-fill intention -->
       @if (selectedProjectId() !== null && (projectEpics().length || projectItems().length)) {
         <div class="pre-session__scope">
           @if (projectEpics().length) {
             <span class="pre-session__label">Epics in scope</span>
             <ul class="pre-session__scope-list">
               @for (item of projectEpics(); track item.id) {
-                <li class="pre-session__scope-item pre-session__scope-epic">
+                <li class="pre-session__scope-epic-item">
                   <span class="pre-session__scope-seq">#{{ item.seq }}</span>
                   <span class="pre-session__scope-title">{{ item.title }}</span>
                 </li>
@@ -83,18 +70,39 @@
             </ul>
           }
           @if (projectItems().length) {
-            <span class="pre-session__label">Tasks in scope</span>
+            <span class="pre-session__label">Pick a task</span>
             <ul class="pre-session__scope-list">
               @for (item of projectItems(); track item.id) {
-                <li class="pre-session__scope-item">
-                  <span class="pre-session__scope-seq">#{{ item.seq }}</span>
-                  <span class="pre-session__scope-title">{{ item.title }}</span>
+                <li>
+                  <button
+                    type="button"
+                    class="pre-session__task-btn"
+                    [class.pre-session__task-btn--selected]="isVaultItemSelected(item.id)"
+                    (click)="selectVaultItem(item)">
+                    <span class="pre-session__scope-seq">#{{ item.seq }}</span>
+                    <span class="pre-session__task-title">{{ item.title }}</span>
+                    @if (isVaultItemSelected(item.id)) {
+                      <span class="pre-session__task-check">→</span>
+                    }
+                  </button>
                 </li>
               }
             </ul>
           }
         </div>
       }
+
+      <!-- Intention -->
+      <div class="pre-session__field-group">
+        <label class="pre-session__label" for="intention">Intention</label>
+        <input
+          id="intention"
+          type="text"
+          class="pre-session__field"
+          placeholder="What will you get done?"
+          [ngModel]="intention()"
+          (ngModelChange)="intention.set($event)" />
+      </div>
 
       <!-- Duration -->
       <div class="pre-session__field-group">

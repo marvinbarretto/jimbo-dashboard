@@ -20,6 +20,14 @@
   color: var(--color-text-soft);
 }
 
+.retro__intention {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  font-style: italic;
+  color: var(--color-accent);
+  opacity: 0.8;
+}
+
 /* ── Activity summary ────────────────────────────────────────────────────── */
 
 .retro__activity {
@@ -77,6 +85,72 @@
   text-align: right;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-soft);
+}
+
+/* ── Vault item completion ───────────────────────────────────────────────── */
+
+.retro__task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.retro__task-btn {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--color-text-soft);
+  cursor: pointer;
+  transition: background 80ms ease, color 80ms ease;
+
+  &:hover {
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+  }
+
+  &--done {
+    color: var(--color-success);
+
+    .retro__task-title {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+  }
+}
+
+.retro__task-check {
+  flex-shrink: 0;
+  width: 1.1rem;
+  font-size: 0.85rem;
+  color: var(--color-success);
+}
+
+.retro__task-seq {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  min-width: 2.5rem;
+  flex-shrink: 0;
+}
+
+.retro__task-title {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+  transition: opacity 150ms ease;
 }
 
 /* ── Form ────────────────────────────────────────────────────────────────── */

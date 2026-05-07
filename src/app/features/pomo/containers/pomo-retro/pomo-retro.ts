@@ -10,11 +10,13 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { FocusSessionsService } from '../../data-access/focus-sessions.service';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
+import { VaultItemsService } from '../../../vault-items/data-access/vault-items.service';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import type { SessionMood } from '@domain/focus-sessions';
+import { vaultItemId } from '@domain/ids';
 
 const MOOD_OPTIONS: { value: SessionMood; icon: string; label: string }[] = [
   { value: -1, icon: '👎', label: 'Bad' },
@@ -32,6 +34,7 @@ const MOOD_OPTIONS: { value: SessionMood; icon: string; label: string }[] = [
 export class PomoRetro implements OnInit {
   private readonly sessions = inject(FocusSessionsService);
   private readonly projects = inject(ProjectsService);
+  private readonly vaultItems = inject(VaultItemsService);
   private readonly router = inject(Router);
 
   readonly moodOptions = MOOD_OPTIONS;
@@ -54,6 +57,16 @@ export class PomoRetro implements OnInit {
     Math.round((this.activity()?.focus_ratio ?? 0) * 100),
   );
 
+  readonly projectItems = computed(() => {
+    const id = this.session()?.project_id;
+    if (!id) return [];
+    return this.vaultItems.activeItems()
+      .filter(i => i.primary_project_id === id && !i.is_epic)
+      .slice(0, 10);
+  });
+
+  readonly completedItemIds = signal<Set<string>>(new Set());
+
   readonly notes = signal('');
   readonly tags = signal('');
   readonly mood = signal<SessionMood | null>(null);
@@ -73,10 +86,32 @@ export class PomoRetro implements OnInit {
     this.mood.set(this.mood() === value ? null : value);
   }
 
+  toggleItemDone(id: string): void {
+    this.completedItemIds.update(set => {
+      const next = new Set(set);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  isItemDone(id: string): boolean {
+    return this.completedItemIds().has(id);
+  }
+
   async save(): Promise<void> {
     const s = this.session();
     if (!s) return void this.router.navigate(['/pomo/pre-session']);
     this.saving.set(true);
+
+    // Mark selected vault items as completed.
+    for (const id of this.completedItemIds()) {
+      this.vaultItems.setCompleted(vaultItemId(id), true, 'Completed during pomo session');
+    }
+
     const tagList = this.tags()
       .split(/[,\s]+/)
       .map(t => t.replace(/^#/, '').trim())

@@ -1,32 +1,48 @@
 <div class="running">
-  <app-ui-card>
-    <app-ui-stack gap="md" align="center">
 
-      @if (projectName()) {
-        <p class="running__project">{{ projectName() }}</p>
-      }
+  <div class="running__core">
+    @if (projectName()) {
+      <p class="running__project" [style.--project-color]="projectColor()">
+        {{ projectName() }}
+      </p>
+    }
 
-      <div class="running__clock" [class.running__clock--expired]="isExpired()">
-        {{ displayTime() }}
-      </div>
+    <div class="running__clock" [class.running__clock--expired]="isExpired()">
+      {{ displayTime() }}
+    </div>
 
-      <div class="running__progress" role="progressbar" [attr.aria-valuenow]="progressPct()">
-        <div class="running__progress-fill" [style.width.%]="progressPct()"></div>
-      </div>
+    <div class="running__progress" role="progressbar" [attr.aria-valuenow]="progressPct()">
+      <div class="running__progress-fill" [style.width.%]="progressPct()"></div>
+    </div>
 
-      @if (session()?.notes) {
-        <p class="running__intention">{{ session()!.notes }}</p>
-      }
+    @if (session()?.notes) {
+      <p class="running__intention">{{ session()!.notes }}</p>
+    }
 
+    <div class="running__actions">
       @if (isExpired()) {
-        <app-ui-button variant="primary" (pressed)="finishEarly()">Save & finish</app-ui-button>
+        <app-ui-button variant="primary" (pressed)="finishEarly()">Save &amp; finish</app-ui-button>
       } @else {
         <app-ui-cluster gap="sm" justify="center">
           <app-ui-button variant="primary" (pressed)="finishEarly()">Finish early</app-ui-button>
           <app-ui-button variant="ghost" (pressed)="abandon()">Abandon</app-ui-button>
         </app-ui-cluster>
       }
+    </div>
+  </div>
 
-    </app-ui-stack>
-  </app-ui-card>
+  @if (projectItems().length) {
+    <div class="running__scope">
+      <p class="running__scope-label">In scope</p>
+      <ul class="running__scope-list">
+        @for (item of projectItems(); track item.id) {
+          <li class="running__scope-item">
+            <span class="running__scope-seq">#{{ item.seq }}</span>
+            <span class="running__scope-title">{{ item.title }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+
 </div>

@@ -11,21 +11,21 @@ import {
 import { Router } from '@angular/router';
 import { FocusSessionsService } from '../../data-access/focus-sessions.service';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
-import { UiStack } from '@shared/components/ui-stack/ui-stack';
-import { UiCard } from '@shared/components/ui-card/ui-card';
+import { VaultItemsService } from '../../../vault-items/data-access/vault-items.service';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 
 @Component({
   selector: 'app-pomo-running',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [UiStack, UiCard, UiButton, UiCluster],
+  imports: [UiButton, UiCluster],
   templateUrl: './pomo-running.html',
   styleUrl: './pomo-running.scss',
 })
 export class PomoRunning implements OnInit {
   private readonly sessions = inject(FocusSessionsService);
   private readonly projects = inject(ProjectsService);
+  private readonly vaultItems = inject(VaultItemsService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -54,6 +54,20 @@ export class PomoRunning implements OnInit {
     const s = this.session();
     if (!s?.project_id) return null;
     return this.projects.getById(s.project_id)?.display_name ?? null;
+  });
+
+  readonly projectColor = computed(() => {
+    const s = this.session();
+    if (!s?.project_id) return null;
+    return this.projects.getById(s.project_id)?.color_token ?? null;
+  });
+
+  readonly projectItems = computed(() => {
+    const s = this.session();
+    if (!s?.project_id) return [];
+    return this.vaultItems.activeItems()
+      .filter(i => i.primary_project_id === s.project_id && !i.is_epic)
+      .slice(0, 5);
   });
 
   constructor() {

@@ -1,9 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { UiStack } from '@shared/components/ui-stack/ui-stack';
-import { UiCard } from '@shared/components/ui-card/ui-card';
-import { UiButton } from '@shared/components/ui-button/ui-button';
-import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { FocusSessionsService } from '../../data-access/focus-sessions.service';
 import { VaultItemsService } from '../../../vault-items/data-access/vault-items.service';
 
@@ -12,7 +8,7 @@ const DEFAULT_BREAK_MINUTES = 5;
 @Component({
   selector: 'app-pomo-break',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, UiStack, UiCard, UiButton, UiStatCard],
+  imports: [RouterLink],
   templateUrl: './pomo-break.html',
   styleUrl: './pomo-break.scss',
 })

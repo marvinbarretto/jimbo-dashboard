@@ -5,6 +5,9 @@
     @if (session()) {
       <p class="retro__meta">{{ plannedMins() }}m · {{ projectName() }}</p>
     }
+    @if (session()?.notes) {
+      <p class="retro__intention">"{{ session()!.notes }}"</p>
+    }
   </header>
 
   <!-- Activity summary -->
@@ -31,6 +34,30 @@
             }
           </ul>
         }
+      </div>
+    </app-ui-card>
+  }
+
+  <!-- Vault item completion -->
+  @if (projectItems().length) {
+    <app-ui-card>
+      <div class="retro__field-group">
+        <span class="retro__label">What got done?</span>
+        <ul class="retro__task-list">
+          @for (item of projectItems(); track item.id) {
+            <li>
+              <button
+                type="button"
+                class="retro__task-btn"
+                [class.retro__task-btn--done]="isItemDone(item.id)"
+                (click)="toggleItemDone(item.id)">
+                <span class="retro__task-check">{{ isItemDone(item.id) ? '✓' : '○' }}</span>
+                <span class="retro__task-seq">#{{ item.seq }}</span>
+                <span class="retro__task-title">{{ item.title }}</span>
+              </button>
+            </li>
+          }
+        </ul>
       </div>
     </app-ui-card>
   }
@@ -64,27 +91,15 @@
 
       <!-- Notes -->
       <div class="retro__field-group">
-        <label class="retro__label" for="notes">What did you get done?</label>
+        <label class="retro__label" for="notes">Anything else?</label>
         <textarea
           id="notes"
           class="retro__field"
-          rows="4"
-          placeholder="Reflections on the session…"
+          rows="3"
+          placeholder="Reflections, blockers, next steps…"
           [ngModel]="notes()"
           (ngModelChange)="notes.set($event)">
         </textarea>
-      </div>
-
-      <!-- Tags -->
-      <div class="retro__field-group">
-        <label class="retro__label" for="tags">Tags</label>
-        <input
-          id="tags"
-          type="text"
-          class="retro__field"
-          placeholder="tag1, tag2 …"
-          [ngModel]="tags()"
-          (ngModelChange)="tags.set($event)" />
       </div>
 
     </app-ui-stack>

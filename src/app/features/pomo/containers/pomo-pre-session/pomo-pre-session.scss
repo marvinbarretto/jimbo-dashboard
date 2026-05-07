@@ -130,12 +130,67 @@
   gap: 6px;
 }
 
+.pre-session__task-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--color-text-soft);
+  cursor: pointer;
+  transition: background 80ms ease, color 80ms ease, border-color 80ms ease;
+
+  &:hover {
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    border-color: var(--color-border);
+  }
+
+  &--selected {
+    background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+    border-color: var(--color-accent);
+    color: var(--color-text);
+  }
+}
+
+.pre-session__task-title {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.pre-session__task-check {
+  font-style: normal;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
 .pre-session__scope-item {
   display: flex;
   flex-direction: row;
   align-items: baseline;
   gap: 8px;
   font-size: 0.85rem;
+}
+
+.pre-session__scope-epic-item {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-left: 2px solid var(--color-accent);
 }
 
 .pre-session__scope-seq {

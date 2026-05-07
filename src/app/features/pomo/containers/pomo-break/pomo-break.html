@@ -1,46 +1,47 @@
-<app-ui-card class="break">
-  <app-ui-stack gap="lg" align="center">
+<div class="break">
 
-    <div class="break__header">
-      <h1 class="break__title">Take a break</h1>
-    </div>
+  <div class="break__core">
+    <p class="break__label">{{ isOver() ? 'Break over' : 'Break' }}</p>
 
     <div class="break__clock" [class.break__clock--over]="isOver()">
-      {{ isOver() ? 'Break over' : displayTime() }}
+      {{ isOver() ? '—' : displayTime() }}
     </div>
 
     <div class="break__stats">
-      <app-ui-stat-card label="Done today" [value]="completedToday().toString()" />
-    </div>
-
-    @if (lastSession(); as s) {
-      @if (s.notes) {
-        <div class="break__context">
-          <p class="break__context-label">You were working on</p>
-          <p class="break__context-text">{{ s.notes }}</p>
-        </div>
-      }
-    }
-
-    @if (personalItems().length) {
-      <div class="break__personal">
-        <p class="break__context-label">While you're away</p>
-        <ul class="break__personal-list">
-          @for (item of personalItems(); track item.id) {
-            <li class="break__personal-item">
-              <span class="break__personal-seq">#{{ item.seq }}</span>
-              <span>{{ item.title }}</span>
-            </li>
-          }
-        </ul>
+      <div class="break__stat">
+        <span class="break__stat-value">{{ completedToday() }}</span>
+        <span class="break__stat-label">done today</span>
       </div>
-    } @else {
-      <p class="break__hint">Step away from the screen.</p>
+    </div>
+  </div>
+
+  @if (lastSession(); as s) {
+    @if (s.notes) {
+      <div class="break__context">
+        <p class="break__context-label">You were working on</p>
+        <p class="break__context-text">"{{ s.notes }}"</p>
+      </div>
     }
+  }
 
-    <app-ui-button variant="primary" routerLink="/pomo">
-      Start next pomo
-    </app-ui-button>
+  @if (personalItems().length) {
+    <div class="break__personal">
+      <p class="break__personal-label">While you're away</p>
+      <ul class="break__personal-list">
+        @for (item of personalItems(); track item.id) {
+          <li class="break__personal-item">
+            <span class="break__personal-seq">#{{ item.seq }}</span>
+            <span>{{ item.title }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  } @else {
+    <p class="break__hint">Step away from the screen.</p>
+  }
 
-  </app-ui-stack>
-</app-ui-card>
+  <a class="btn btn--primary break__next" routerLink="/pomo">
+    Start next pomo
+  </a>
+
+</div>

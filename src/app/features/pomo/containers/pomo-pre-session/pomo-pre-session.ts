@@ -15,6 +15,7 @@ import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import type { Project } from '@domain/projects';
+import type { VaultItem } from '@domain/vault';
 
 const PRESETS = [15, 25, 45, 90] as const;
 
@@ -36,11 +37,12 @@ export class PomoPreSession {
   readonly minorProjects = computed(() => this.projects.activeProjects().filter(p => p.kind === 'minor'));
 
   readonly selectedProjectId = signal<string | null>(null);
+  readonly selectedVaultItemId = signal<string | null>(null);
 
   readonly projectItems = computed(() =>
     this.vaultItems.activeItems()
       .filter(i => i.primary_project_id === this.selectedProjectId() && !i.is_epic)
-      .slice(0, 6),
+      .slice(0, 8),
   );
 
   readonly projectEpics = computed(() =>
@@ -55,6 +57,7 @@ export class PomoPreSession {
 
   selectProject(id: string | null): void {
     this.selectedProjectId.set(id);
+    this.selectedVaultItemId.set(null);
   }
 
   isSelected(id: string | null): boolean {
@@ -63,6 +66,20 @@ export class PomoPreSession {
 
   projectColor(p: Project): string {
     return p.color_token ?? 'var(--color-accent)';
+  }
+
+  selectVaultItem(item: VaultItem): void {
+    if (this.selectedVaultItemId() === item.id) {
+      this.selectedVaultItemId.set(null);
+      this.intention.set('');
+    } else {
+      this.selectedVaultItemId.set(item.id);
+      this.intention.set(item.title);
+    }
+  }
+
+  isVaultItemSelected(id: string): boolean {
+    return this.selectedVaultItemId() === id;
   }
 
   async start(): Promise<void> {
