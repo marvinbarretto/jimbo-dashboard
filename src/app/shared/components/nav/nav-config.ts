@@ -12,18 +12,18 @@ export interface NavGroup {
 }
 
 export const primaryNavItems: readonly NavLink[] = [
-  { href: '/ui-lab',                label: 'UI Lab',         accent: '#a78bfa' },
+  { href: '/config',                label: 'Config',         accent: '#818cf8' },
   { href: '/pomo-reports',          label: 'Pomo reports',   accent: '#fb923c' },
   { href: '/calendar-settings',     label: 'Calendars',      accent: '#34d399' },
   { href: '/tasks',                 label: 'Tasks',          accent: '#60a5fa' },
   { href: '/mail-activity',         label: 'Mail',           accent: '#facc15' },
-  { href: '/config',                label: 'Config',         accent: '#818cf8' },
   { href: '/vault-items',           label: 'Vault',          accent: '#c084fc' },
   { href: '/grooming',              label: 'Grooming',       accent: '#22d3ee' },
   { href: '/execution',             label: 'Execution',      accent: '#f87171' },
   { href: '/shopping',              label: 'Shopping',       accent: '#4ade80' },
   { href: '/jimbo-workspace',       label: 'Jimbo Workspace', accent: '#f472b6' },
   { href: '/stream',                label: 'Stream',         accent: '#5eead4' },
+  { href: '/ui-lab',                label: 'UI Lab',         accent: '#a78bfa' },
 ];
 
 export const navGroups: readonly NavGroup[] = [
