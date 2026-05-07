@@ -5,8 +5,8 @@
     @if (session()) {
       <p class="retro__meta">{{ plannedMins() }}m · {{ projectName() }}</p>
     }
-    @if (session()?.notes) {
-      <p class="retro__intention">"{{ session()!.notes }}"</p>
+    @if (session().notes) {
+      <p class="retro__intention">"{{ session().notes }}"</p>
     }
   </header>
 
@@ -26,7 +26,7 @@
                 <span class="retro__breakdown-domain">{{ d.domain }}</span>
                 <span class="retro__breakdown-bar">
                   <span class="retro__breakdown-fill"
-                    [style.width.%]="session()!.planned_seconds > 0 ? (d.seconds / session()!.planned_seconds) * 100 : 0">
+                    [style.width.%]="session().planned_seconds > 0 ? (d.seconds / session().planned_seconds) * 100 : 0">
                   </span>
                 </span>
                 <span class="retro__breakdown-time">{{ formatMins(d.seconds) }}</span>
