@@ -68,7 +68,7 @@ type LabProjectStatus = 'active' | 'archived';
               [options]="statusOptions"
               [displayFor]="statusLabel"
               ariaLabel="Edit status"
-              (saved)="projectStatus.set($event as LabProjectStatus)"
+              (saved)="onStatusSaved($event)"
             />
           </div>
         </app-ui-stack>
@@ -122,5 +122,9 @@ export class HybridEditSection {
   onNameSaved(value: string): void {
     const trimmed = value.trim();
     if (trimmed) this.projectTitle.set(trimmed);
+  }
+
+  onStatusSaved(value: string): void {
+    this.projectStatus.set(value as LabProjectStatus);
   }
 }
