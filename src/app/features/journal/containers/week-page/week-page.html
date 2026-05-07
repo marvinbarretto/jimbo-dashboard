@@ -1,0 +1,98 @@
+<app-journal-pager
+  granularity="week"
+  [title]="title()"
+  [subtitle]="subtitle()"
+  [isAtToday]="isThisWeek()"
+  [dateValue]="mondayValue()"
+  (previous)="previous()"
+  (next)="next()"
+  (today)="today()"
+  (dateChange)="onDateChange($event)"
+/>
+
+@if (loading()) {
+  <app-ui-loading-state message="Pulling the week's data…" />
+} @else if (bundle(); as b) {
+  <app-ui-stack gap="lg">
+    <div class="journal-week__stats">
+      <app-ui-stat-card label="Pomodoros" [value]="b.totals.pomos_completed.toString()" />
+      <app-ui-stat-card label="Focus minutes" [value]="b.totals.focus_minutes.toString()" />
+      <app-ui-stat-card label="Activities" [value]="b.totals.activity_count.toString()" />
+    </div>
+
+    <app-ui-section title="Focus minutes per day" meta="Mon → Sun">
+      @if (b.totals.focus_minutes > 0) {
+        <app-journal-bar-chart
+          [labels]="dayLabels()"
+          [values]="minutesPerDay()"
+          label="Minutes"
+          suffix=" min"
+          accent="rgba(251, 146, 60, 0.7)"
+        />
+      } @else {
+        <app-ui-empty-state title="Quiet week" message="No focus sessions recorded." />
+      }
+    </app-ui-section>
+
+    <app-ui-section title="Pomodoros per day" meta="Completed sessions">
+      @if (b.totals.pomos_completed > 0) {
+        <app-journal-bar-chart
+          [labels]="dayLabels()"
+          [values]="pomosPerDay()"
+          label="Pomodoros"
+          accent="rgba(96, 165, 250, 0.7)"
+          [height]="180"
+        />
+      } @else {
+        <app-ui-empty-state message="No completed pomodoros this week." />
+      }
+    </app-ui-section>
+
+    <div class="journal-week__split">
+      <app-ui-section title="By project" meta="Minutes per project">
+        @if (b.by_project.length) {
+          <app-journal-donut-chart
+            [labels]="projectLabels()"
+            [values]="projectValues()"
+            suffix=" min"
+          />
+        } @else {
+          <app-ui-empty-state message="No project activity this week." />
+        }
+      </app-ui-section>
+
+      <app-ui-section title="Activity types" meta="What Jimbo logged">
+        @if (taskTypeRows().length) {
+          <ul class="journal-week__list">
+            @for (row of taskTypeRows(); track row[0]) {
+              <li class="journal-week__row">
+                <span class="journal-week__row-label">{{ row[0] }}</span>
+                <span class="journal-week__row-value">{{ row[1] }}</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <app-ui-empty-state message="No activity entries this week." />
+        }
+      </app-ui-section>
+    </div>
+
+    <app-ui-section title="Day breakdown" meta="Click a day to drill in">
+      <ul class="journal-week__days">
+        @for (d of dayLinks(); track d.key) {
+          <li class="journal-week__day">
+            <a class="journal-week__day-link" [routerLink]="['/journal/day', d.key]" routerLinkActive>
+              <span class="journal-week__day-label">{{ d.label }}</span>
+              <span class="journal-week__day-date">{{ d.key }}</span>
+              <span class="journal-week__day-meta">
+                {{ d.minutes }} min · {{ d.pomos }} pomo · {{ d.activities }} act
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    </app-ui-section>
+  </app-ui-stack>
+} @else {
+  <app-ui-empty-state title="No data" message="Couldn't load this week." />
+}

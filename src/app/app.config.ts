@@ -1,6 +1,7 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { TitleStrategy, provideRouter, withInMemoryScrolling } from '@angular/router';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 import { AppTitleStrategy } from './app-title-strategy';
 import { routes } from './app.routes';
@@ -15,5 +16,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'top' })),
     { provide: TitleStrategy, useClass: AppTitleStrategy },
+    provideCharts(withDefaultRegisterables()),
   ],
 };

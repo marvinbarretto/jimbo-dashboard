@@ -12,6 +12,7 @@ export interface NavGroup {
 }
 
 export const primaryNavItems: readonly NavLink[] = [
+  { href: '/journal',               label: 'Journal',        accent: '#fde68a' },
   { href: '/ui-lab',                label: 'UI Lab',         accent: '#a78bfa' },
   { href: '/pomo-reports',          label: 'Pomo reports',   accent: '#fb923c' },
   { href: '/calendar-settings',     label: 'Calendars',      accent: '#34d399' },

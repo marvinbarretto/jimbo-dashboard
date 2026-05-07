@@ -1,0 +1,144 @@
+<app-journal-pager
+  granularity="day"
+  [title]="title()"
+  [subtitle]="subtitle()"
+  [isAtToday]="isToday()"
+  [dateValue]="key()"
+  (previous)="previous()"
+  (next)="next()"
+  (today)="today()"
+  (dateChange)="onDateChange($event)"
+/>
+
+@if (loading()) {
+  <app-ui-loading-state message="Pulling the day's data…" />
+} @else if (bundle(); as b) {
+  <app-ui-stack gap="lg">
+    <div class="journal-day__stats">
+      <app-ui-stat-card label="Pomodoros" [value]="b.totals.pomos_completed.toString()" [detail]="b.totals.pomos_abandoned ? b.totals.pomos_abandoned + ' abandoned' : null" />
+      <app-ui-stat-card label="Focus minutes" [value]="b.totals.focus_minutes.toString()" />
+      <app-ui-stat-card label="Activities" [value]="b.totals.activity_count.toString()" />
+      <app-ui-stat-card label="Calendar events" [value]="b.totals.events_count.toString()" />
+    </div>
+
+    <app-ui-section title="Focus by hour" meta="Minutes of focus per hour of day">
+      @if (b.totals.focus_minutes > 0) {
+        <app-journal-bar-chart
+          [labels]="hourlyLabels()"
+          [values]="hourlyValues()"
+          label="Minutes"
+          suffix=" min"
+          accent="rgba(251, 146, 60, 0.7)"
+        />
+      } @else {
+        <app-ui-empty-state title="No focus sessions" message="Once you log a pomodoro for this day it'll show up here." />
+      }
+    </app-ui-section>
+
+    <div class="journal-day__split">
+      <app-ui-section title="Project minutes" meta="Where focus went">
+        @if (b.by_project.length) {
+          <app-journal-donut-chart
+            [labels]="projectLabels()"
+            [values]="projectValues()"
+            suffix=" min"
+          />
+        } @else {
+          <app-ui-empty-state message="No project activity for this day." />
+        }
+      </app-ui-section>
+
+      <app-ui-section title="Activity types" meta="What Jimbo logged today">
+        @if (taskTypeRows().length) {
+          <ul class="journal-day__list">
+            @for (row of taskTypeRows(); track row[0]) {
+              <li class="journal-day__row">
+                <span class="journal-day__row-label">{{ row[0] }}</span>
+                <span class="journal-day__row-value">{{ row[1] }}</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <app-ui-empty-state message="No activity entries for this day." />
+        }
+      </app-ui-section>
+    </div>
+
+    <app-ui-section title="Pomodoros" [meta]="b.sessions.length + ' session' + (b.sessions.length === 1 ? '' : 's')">
+      @if (b.sessions.length) {
+        <ul class="journal-day__sessions">
+          @for (s of b.sessions; track s.id) {
+            <li class="journal-day__session">
+              <div class="journal-day__session-time">{{ formatTime(s.started_at) }}</div>
+              <div class="journal-day__session-body">
+                <div class="journal-day__session-head">
+                  <span class="journal-day__session-project">{{ projectName(s.project_id) }}</span>
+                  <span class="journal-day__session-meta">
+                    {{ s.status }} · {{ ((s.actual_seconds ?? s.planned_seconds) / 60) | number:'1.0-0' }} min
+                  </span>
+                </div>
+                @if (s.notes) {
+                  <p class="journal-day__session-notes">{{ s.notes }}</p>
+                }
+                @if (s.tags.length) {
+                  <div class="journal-day__session-tags">
+                    @for (tag of s.tags; track tag) {
+                      <span class="journal-day__tag">#{{ tag }}</span>
+                    }
+                  </div>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <app-ui-empty-state title="No pomodoros yet" message="Start one from the Pomo page." />
+      }
+    </app-ui-section>
+
+    <app-ui-section title="Calendar" meta="Events on this day">
+      @if (b.events.length) {
+        <ul class="journal-day__events">
+          @for (e of b.events; track e.id) {
+            <li class="journal-day__event">
+              <span class="journal-day__event-time">
+                @if (e.all_day) {
+                  All day
+                } @else {
+                  {{ formatTime(e.start) }}
+                }
+              </span>
+              <span class="journal-day__event-title">{{ e.summary }}</span>
+              @if (e.calendar) {
+                <span class="journal-day__event-cal">{{ e.calendar }}</span>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <app-ui-empty-state message="No calendar events on this day." />
+      }
+    </app-ui-section>
+
+    <app-ui-section title="Activity log" meta="Raw activity entries">
+      @if (b.activities.length) {
+        <ul class="journal-day__activities">
+          @for (a of b.activities; track a.id) {
+            <li class="journal-day__activity">
+              <span class="journal-day__activity-time">{{ formatTime(a.timestamp) }}</span>
+              <span class="journal-day__activity-type">{{ a.task_type }}</span>
+              <span class="journal-day__activity-desc">{{ a.description }}</span>
+              @if (a.outcome) {
+                <span class="journal-day__activity-outcome">→ {{ a.outcome }}</span>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <app-ui-empty-state message="No activity logged for this day." />
+      }
+    </app-ui-section>
+  </app-ui-stack>
+} @else {
+  <app-ui-empty-state title="No data" message="Couldn't load this day." />
+}

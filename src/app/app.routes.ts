@@ -118,5 +118,9 @@ export const routes: Routes = [
     path: 'jimbo-workspace',
     loadChildren: () => import('./features/jimbo-workspace/jimbo-workspace.routes').then(m => m.jimboWorkspaceRoutes),
   },
+  {
+    path: 'journal',
+    loadChildren: () => import('./features/journal/journal.routes').then(m => m.journalRoutes),
+  },
   { path: '', redirectTo: 'today', pathMatch: 'full' },
 ];
