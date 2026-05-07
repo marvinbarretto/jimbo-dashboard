@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.42](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.41...v0.0.42) (2026-05-07)
+
+
+### Bug Fixes
+
+* **vault:** coerce seq to number — postgres.js returns bigint as string ([534c144](https://github.com/marvinbarretto/jimbo-dashboard/commit/534c14469b425dbafd83719e6594c0924aa206e3))
+
 ### [0.0.41](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.40...v0.0.41) (2026-05-07)
 
 
