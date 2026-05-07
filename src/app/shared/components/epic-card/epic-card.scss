@@ -1,0 +1,393 @@
+// Epic-card visualisation. Four variants share the underlying <app-chip> primitive — this
+// file only owns card-specific layout, progress bars, the per-thread mini-bar widget, and
+// the variant-specific typographic treatment of titles and excerpts.
+
+:host {
+  display: block;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--project-color, var(--color-border));
+  border-radius: 6px;
+  background: var(--color-surface);
+  overflow: hidden;
+  transition: background 120ms ease, border-color 120ms ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--project-color, var(--color-accent)) 4%, var(--color-surface));
+    border-color: color-mix(in srgb, var(--project-color, var(--color-accent)) 40%, var(--color-border));
+  }
+}
+
+.epic-card__inner {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  font-family: var(--font-mono);
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+  }
+}
+
+// ── Variant: compact ─────────────────────────────────────────────────────
+
+:host(.epic-card--compact) .epic-card__inner {
+  padding: 0.7rem 0.85rem;
+  gap: 0.55rem;
+  min-height: 7.5rem;
+}
+
+:host(.epic-card--compact) .epic-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+:host(.epic-card--compact) .epic-card__title {
+  font-family: var(--font-sans, inherit);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+:host(.epic-card--compact) .epic-card__foot {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: auto;
+}
+
+// ── Variant: detail (default) ────────────────────────────────────────────
+
+:host(.epic-card--detail) .epic-card__inner {
+  padding: 0.95rem 1.1rem;
+  gap: 0.7rem;
+}
+
+.epic-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.epic-card__head-left,
+.epic-card__head-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+:host(.epic-card--detail) .epic-card__title {
+  font-family: var(--font-sans, inherit);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.epic-card__excerpt {
+  margin: 0;
+  font-family: var(--font-sans, inherit);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Detail variant: per-thread mini progress
+.epic-card__threads {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.epic-card__thread {
+  display: grid;
+  grid-template-columns: 7rem 1fr 3.5rem;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.7rem;
+}
+
+.epic-card__thread-name {
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.epic-card__thread-bar {
+  display: block;
+  height: 0.3rem;
+  background: color-mix(in srgb, var(--color-border) 50%, transparent);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.epic-card__thread-fill {
+  display: block;
+  height: 100%;
+  background: var(--project-color, var(--color-accent));
+  border-radius: inherit;
+  transition: width 200ms ease;
+}
+
+.epic-card__thread-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.epic-card__principles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+:host(.epic-card--detail) .epic-card__foot {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  padding-top: 0.4rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+// ── Variant: narrative ───────────────────────────────────────────────────
+
+:host(.epic-card--narrative) .epic-card__inner {
+  padding: 1.1rem 1.35rem 1rem;
+  gap: 0.8rem;
+}
+
+.epic-card__top-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  flex-wrap: wrap;
+}
+
+:host(.epic-card--narrative) .epic-card__title--display {
+  font-family: var(--font-sans, inherit);
+  font-size: 1.4rem;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  margin: 0;
+  color: var(--color-text);
+}
+
+:host(.epic-card--narrative) .epic-card__excerpt {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  -webkit-line-clamp: 5;
+}
+
+.epic-card__thread-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+}
+
+.epic-card__bottom-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.2rem;
+}
+
+.epic-card__bottom-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+// ── Variant: status ──────────────────────────────────────────────────────
+
+:host(.epic-card--status) .epic-card__inner {
+  padding: 0.85rem 1rem 0.95rem;
+  gap: 0.65rem;
+}
+
+.epic-card__progress--featured {
+  margin-bottom: 0.2rem;
+}
+
+.epic-card__progress-bar--tall {
+  height: 0.55rem;
+}
+
+.epic-card__numbers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+.epic-card__number {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
+}
+
+.epic-card__number-value {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--color-text);
+}
+
+.epic-card__number-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.epic-card__number--blocked .epic-card__number-value {
+  color: var(--color-warning, #d4a14b);
+}
+
+:host(.epic-card--status) .epic-card__title {
+  font-family: var(--font-sans, inherit);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.epic-card__id-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.epic-card__breakdown {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem 0.8rem;
+  flex-wrap: wrap;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}
+
+.epic-card__breakdown-item {
+  white-space: nowrap;
+
+  &::before {
+    content: '·';
+    margin-right: 0.5rem;
+    opacity: 0.4;
+  }
+
+  &:first-child::before {
+    content: none;
+  }
+}
+
+:host(.epic-card--status) .epic-card__foot {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+// ── Shared: progress bars ────────────────────────────────────────────────
+
+.epic-card__progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.epic-card__progress--inline {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+.epic-card__progress-bar {
+  flex: 1;
+  height: 0.35rem;
+  background: color-mix(in srgb, var(--color-border) 50%, transparent);
+  border-radius: 999px;
+  overflow: hidden;
+  min-width: 4rem;
+}
+
+.epic-card__progress-bar--thin {
+  height: 0.2rem;
+}
+
+.epic-card__progress-fill {
+  height: 100%;
+  background: var(--project-color, var(--color-accent));
+  border-radius: inherit;
+  transition: width 200ms ease;
+}
+
+.epic-card__progress-text {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+// ── Shared: small elements ───────────────────────────────────────────────
+
+.epic-card__seq {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.epic-card__time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.epic-card__time-icon {
+  opacity: 0.6;
+}

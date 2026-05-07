@@ -1,0 +1,140 @@
+// Truly primitive chip. All visual variants live here so they stay consistent across
+// every caller. Differentiation strategy beyond color:
+//   shape   — pill-rounded vs rectangular (origin) vs outline-dashed (principle)
+//   case    — UPPERCASE (type-epic), lowercase (actor / origin / threads), capitalised (project)
+//   weight  — type-epic 700, blocked 600, others 400-500
+//   posture — italic (principle), upright (others)
+//   size    — sm modifier scales font + padding
+//
+// `--chip-color` drives border/fill tint via `color-mix()`. Pass `[color]` on the chip
+// to override; otherwise inherits `--project-color` from a parent context, then a muted default.
+
+:host {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: color-mix(in srgb, var(--color-border) 35%, transparent);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-decoration: none;
+  flex-shrink: 0;
+  vertical-align: baseline;
+}
+
+// Size modifier — used in dense rows / compact cards.
+:host(.chip--sm) {
+  font-size: 0.65rem;
+  padding: 0.05rem 0.4rem;
+}
+
+// ── Internal elements ─────────────────────────────────────────────────────
+
+.chip__prefix {
+  // Sigil — visually subordinate (smaller, dim) so the name reads first.
+  opacity: 0.55;
+  font-size: 0.85em;
+  font-weight: 500;
+  margin-right: 0.05em;
+}
+
+.chip__icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 0.05em;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.chip__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+// ── Variants ──────────────────────────────────────────────────────────────
+
+// project — `/slug`, dot, color-tinted. Title Case.
+:host(.chip--project) {
+  border-color: color-mix(in srgb, var(--chip-color) 50%, transparent);
+  background: color-mix(in srgb, var(--chip-color) 12%, transparent);
+  color: var(--color-text);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+// actor — `@slug`, no fill, plain border. The deliberate inverse of project so
+// `jimbo` (project) and `jimbo` (actor) are distinguishable even in monochrome.
+:host(.chip--actor) {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--color-text-muted) 35%, transparent);
+  color: var(--color-text-muted);
+  font-weight: 400;
+  text-transform: lowercase;
+}
+
+// type-epic — UPPERCASE + letter-spacing. Accent fill. Stands out from any other chip.
+:host(.chip--type-epic) {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  font-size: 0.65rem;
+  padding: 0.1rem 0.45rem;
+}
+
+// origin — RECTANGULAR corners (different shape from any other chip).
+// Signals "machine identifier — paper trail handle". Color via [data-kind].
+:host(.chip--origin) {
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-info, #4ea0c1) 12%, transparent);
+  color: color-mix(in srgb, var(--color-info, #4ea0c1) 95%, var(--color-text));
+}
+
+:host(.chip--origin[data-kind="synthesize"]) {
+  background: color-mix(in srgb, #4eb3a4 14%, transparent);
+  color: color-mix(in srgb, #4eb3a4 95%, var(--color-text));
+}
+:host(.chip--origin[data-kind="deep-dive"]) {
+  background: color-mix(in srgb, #6488c4 14%, transparent);
+  color: color-mix(in srgb, #6488c4 95%, var(--color-text));
+}
+:host(.chip--origin[data-kind="jimbo-autonomous"]) {
+  // Orange — flags "Jimbo did this alone, give me a glance" without alarming.
+  background: color-mix(in srgb, #d18a4a 18%, transparent);
+  color: color-mix(in srgb, #d18a4a 95%, var(--color-text));
+}
+:host(.chip--origin[data-kind="manual"]) {
+  background: color-mix(in srgb, var(--color-text-muted) 18%, transparent);
+  color: var(--color-text-muted);
+}
+
+// thread — small, low-contrast, descriptive (not categorical).
+:host(.chip--thread) {
+  font-size: 0.65rem;
+  padding: 0.05rem 0.4rem;
+  background: color-mix(in srgb, var(--color-border) 25%, transparent);
+  color: var(--color-text-muted);
+}
+
+// principle — outline-dashed, italic. Signals "different kind of thing" via shape.
+:host(.chip--principle) {
+  background: transparent;
+  border: 1px dashed color-mix(in srgb, var(--color-text-muted) 60%, transparent);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+// blocked — amber. Render only when count > 0; emergent presence draws the eye.
+:host(.chip--blocked) {
+  background: color-mix(in srgb, var(--color-warning, #d4a14b) 18%, transparent);
+  color: color-mix(in srgb, var(--color-warning, #d4a14b) 95%, var(--color-text));
+  font-weight: 600;
+}

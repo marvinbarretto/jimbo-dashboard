@@ -7,6 +7,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/api-data/containers/today-page/today-page').then(m => m.TodayPage),
   },
   {
+    path: 'test/epic-cards',
+    title: 'Epic Cards — test',
+    loadComponent: () => import('./features/test/epic-cards-test').then(m => m.EpicCardsTest),
+  },
+  {
     path: 'hermes',
     title: 'Hermes',
     loadChildren: () => import('./features/hermes/hermes.routes').then(m => m.hermesRoutes),
@@ -97,6 +102,7 @@ export const routes: Routes = [
       { path: 'datetime-pipes',          loadComponent: () => import('./features/ui-lab/sections/datetime-pipes-section').then(m => m.DatetimePipesSection) },
       { path: 'form-actions',            loadComponent: () => import('./features/ui-lab/sections/form-actions-section').then(m => m.FormActionsSection) },
       { path: 'project-card',            loadComponent: () => import('./features/ui-lab/sections/project-card-section').then(m => m.ProjectCardSection) },
+      { path: 'epic-row',                loadComponent: () => import('./features/ui-lab/sections/epic-row-section').then(m => m.EpicRowSection) },
     ],
   },
   {

@@ -1,0 +1,171 @@
+// Epic-row visualisation. Three layouts: compact (1-line), standard (2-line), spacious
+// (3-line). All chip primitives now live in <app-chip> — this file only owns row-specific
+// layout, plain-text styling (time, seq, title, progress), and the .epic-row__chip-link
+// utility for clickable chip wrappers.
+
+:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  border-left: 3px solid var(--project-color, var(--color-border));
+  background: var(--color-surface);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.4;
+
+  &:hover {
+    background: color-mix(in srgb, var(--project-color, var(--color-accent)) 4%, var(--color-surface));
+  }
+}
+
+// ── Layout: compact (1-line) ─────────────────────────────────────────────
+
+:host(.epic-row--compact) {
+  gap: 0.5rem 0.6rem;
+  padding: 0.55rem 0.75rem;
+}
+
+// ── Layout: standard (2-line) ────────────────────────────────────────────
+// Head row + indented meta strip. Title gets full row width.
+
+:host(.epic-row--standard) {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.3rem;
+  padding: 0.7rem 0.85rem;
+}
+
+.epic-row__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.6rem;
+}
+
+.epic-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  // Indent under the title so the meta strip reads as belonging to it.
+  padding-left: 5.5rem;
+  font-size: 0.7rem;
+  opacity: 0.85;
+}
+
+// ── Layout: spacious (3-line) ────────────────────────────────────────────
+
+:host(.epic-row--spacious) {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+  padding: 0.85rem 1rem 0.95rem;
+}
+
+.epic-row__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.6rem;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.epic-row__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.6rem;
+}
+
+.epic-row__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+}
+
+// ── Plain-text elements (no chip) ────────────────────────────────────────
+
+.epic-row__time {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 4rem;
+}
+
+.epic-row__seq {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.epic-row__title {
+  margin: 0;
+  font-family: var(--font-sans, inherit);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
+  flex: 1 1 14rem;
+  min-width: 8rem;
+}
+
+// In compact mode, the title shares its row with everything else, so it must truncate.
+:host(.epic-row--compact) .epic-row__title {
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:host(.epic-row--standard) .epic-row__title,
+:host(.epic-row--spacious) .epic-row__title {
+  white-space: normal;
+}
+
+.epic-row__progress {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.epic-row__progress-num {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.epic-row__progress-sep,
+.epic-row__progress-den {
+  color: var(--color-text-muted);
+}
+
+.epic-row__expand {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.95rem;
+  padding: 0 0.25rem;
+  margin-left: auto;
+
+  &:hover { color: var(--color-text); }
+}
+
+// ── Threads list — semantic <ul> rendered inline ─────────────────────────
+
+.epic-row__threads {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Wrapper anchor for clickable chips. Strips link styling so the <app-chip> visual is
+// unmodified; the <a> exists purely for routing + accessibility.
+.epic-row__chip-link {
+  display: inline-flex;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}

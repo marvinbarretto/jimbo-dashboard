@@ -1,0 +1,193 @@
+@switch (layout()) {
+
+  @case ('standard') {
+    <!-- 2-line: head row + indented meta strip. Title gets visual weight on its own line. -->
+    <div class="epic-row__head">
+      <time class="epic-row__time" [attr.datetime]="epic().createdAt">{{ epic().createdAt | relativeTime }}</time>
+
+      <a [routerLink]="['/config/projects', epic().project.slug]"
+         class="epic-row__chip-link"
+         [attr.aria-label]="'Project: ' + epic().project.displayName">
+        <app-chip variant="project" prefix="/">{{ epic().project.displayName }}</app-chip>
+      </a>
+
+      <span class="epic-row__seq">#{{ epic().seq }}</span>
+
+      <h3 class="epic-row__title">{{ epic().title }}</h3>
+
+      <app-chip variant="type-epic" [icon]="Layers" aria-label="Type: Epic">EPIC</app-chip>
+
+      <span class="epic-row__progress" [attr.aria-label]="progressLabel()">
+        <span class="epic-row__progress-num">{{ epic().childrenDone }}</span><span class="epic-row__progress-sep">/</span><span class="epic-row__progress-den">{{ epic().childrenTotal }}</span>
+      </span>
+
+      @if (epic().childrenBlocked > 0) {
+        <app-chip variant="blocked" [icon]="Ban"
+                  [attr.aria-label]="epic().childrenBlocked + ' blocked'">
+          {{ epic().childrenBlocked }} blocked
+        </app-chip>
+      }
+
+      <a class="epic-row__expand"
+         [routerLink]="['/vault/notes', epic().id]"
+         aria-label="View constellation">→</a>
+    </div>
+
+    <div class="epic-row__meta">
+      @if (originLabel()) {
+        <app-chip variant="origin" [icon]="originIcon()" [dataKind]="epic().origin?.kind ?? null"
+                  [attr.aria-label]="'Origin: ' + originLabel()">
+          {{ originLabel() }}
+        </app-chip>
+      }
+
+      @if (epic().threads.length) {
+        <ul class="epic-row__threads" role="list" aria-label="Threads">
+          @for (thread of epic().threads; track thread) {
+            <li><app-chip variant="thread">{{ thread }}</app-chip></li>
+          }
+        </ul>
+      }
+
+      @for (principle of epic().crossCuttingPrinciples; track principle) {
+        <app-chip variant="principle"
+                  [attr.aria-label]="'Cross-cutting principle: ' + principle">
+          {{ principle }}
+        </app-chip>
+      }
+
+      @if (epic().owner) {
+        <app-chip variant="actor" prefix="&#64;"
+                  [attr.aria-label]="'Owner: ' + epic().owner!.displayName">
+          {{ epic().owner!.id }}
+        </app-chip>
+      }
+    </div>
+  }
+
+  @case ('spacious') {
+    <!-- 3-line: top context strip / title / bottom provenance strip. Maximum breathing room. -->
+    <div class="epic-row__top">
+      <time class="epic-row__time" [attr.datetime]="epic().createdAt">{{ epic().createdAt | relativeTime }}</time>
+
+      <a [routerLink]="['/config/projects', epic().project.slug]"
+         class="epic-row__chip-link"
+         [attr.aria-label]="'Project: ' + epic().project.displayName">
+        <app-chip variant="project" prefix="/">{{ epic().project.displayName }}</app-chip>
+      </a>
+
+      <span class="epic-row__seq">#{{ epic().seq }}</span>
+
+      @if (epic().owner) {
+        <app-chip variant="actor" prefix="&#64;"
+                  [attr.aria-label]="'Owner: ' + epic().owner!.displayName">
+          {{ epic().owner!.id }}
+        </app-chip>
+      }
+    </div>
+
+    <div class="epic-row__title-row">
+      <h3 class="epic-row__title">{{ epic().title }}</h3>
+      <app-chip variant="type-epic" [icon]="Layers" aria-label="Type: Epic">EPIC</app-chip>
+      <a class="epic-row__expand"
+         [routerLink]="['/vault/notes', epic().id]"
+         aria-label="View constellation">→</a>
+    </div>
+
+    <div class="epic-row__bottom">
+      @if (originLabel()) {
+        <app-chip variant="origin" [icon]="originIcon()" [dataKind]="epic().origin?.kind ?? null"
+                  [attr.aria-label]="'Origin: ' + originLabel()">
+          {{ originLabel() }}
+        </app-chip>
+      }
+
+      @if (epic().threads.length) {
+        <ul class="epic-row__threads" role="list" aria-label="Threads">
+          @for (thread of epic().threads; track thread) {
+            <li><app-chip variant="thread">{{ thread }}</app-chip></li>
+          }
+        </ul>
+      }
+
+      @for (principle of epic().crossCuttingPrinciples; track principle) {
+        <app-chip variant="principle"
+                  [attr.aria-label]="'Cross-cutting principle: ' + principle">
+          {{ principle }}
+        </app-chip>
+      }
+
+      <span class="epic-row__progress" [attr.aria-label]="progressLabel()">
+        <span class="epic-row__progress-num">{{ epic().childrenDone }}</span><span class="epic-row__progress-sep">/</span><span class="epic-row__progress-den">{{ epic().childrenTotal }}</span>
+      </span>
+
+      @if (epic().childrenBlocked > 0) {
+        <app-chip variant="blocked" [icon]="Ban"
+                  [attr.aria-label]="epic().childrenBlocked + ' blocked'">
+          {{ epic().childrenBlocked }} blocked
+        </app-chip>
+      }
+    </div>
+  }
+
+  @default {
+    <!-- compact: 1-line, all chips inline. Default. -->
+    <time class="epic-row__time" [attr.datetime]="epic().createdAt">{{ epic().createdAt | relativeTime }}</time>
+
+    <a [routerLink]="['/config/projects', epic().project.slug]"
+       class="epic-row__chip-link"
+       [attr.aria-label]="'Project: ' + epic().project.displayName">
+      <app-chip variant="project" prefix="/">{{ epic().project.displayName }}</app-chip>
+    </a>
+
+    <span class="epic-row__seq" aria-label="Sequence number">#{{ epic().seq }}</span>
+
+    <h3 class="epic-row__title">{{ epic().title }}</h3>
+
+    <app-chip variant="type-epic" [icon]="Layers" aria-label="Type: Epic">EPIC</app-chip>
+
+    @if (originLabel()) {
+      <app-chip variant="origin" [icon]="originIcon()" [dataKind]="epic().origin?.kind ?? null"
+                [attr.aria-label]="'Origin: ' + originLabel()">
+        {{ originLabel() }}
+      </app-chip>
+    }
+
+    @if (epic().threads.length) {
+      <ul class="epic-row__threads" role="list" aria-label="Threads">
+        @for (thread of epic().threads; track thread) {
+          <li><app-chip variant="thread">{{ thread }}</app-chip></li>
+        }
+      </ul>
+    }
+
+    @for (principle of epic().crossCuttingPrinciples; track principle) {
+      <app-chip variant="principle"
+                [attr.aria-label]="'Cross-cutting principle: ' + principle">
+        {{ principle }}
+      </app-chip>
+    }
+
+    @if (epic().owner) {
+      <app-chip variant="actor" prefix="&#64;"
+                [attr.aria-label]="'Owner: ' + epic().owner!.displayName">
+        {{ epic().owner!.id }}
+      </app-chip>
+    }
+
+    <span class="epic-row__progress" [attr.aria-label]="progressLabel()">
+      <span class="epic-row__progress-num">{{ epic().childrenDone }}</span><span class="epic-row__progress-sep">/</span><span class="epic-row__progress-den">{{ epic().childrenTotal }}</span>
+    </span>
+
+    @if (epic().childrenBlocked > 0) {
+      <app-chip variant="blocked" [icon]="Ban"
+                [attr.aria-label]="epic().childrenBlocked + ' blocked'">
+        {{ epic().childrenBlocked }} blocked
+      </app-chip>
+    }
+
+    <a class="epic-row__expand"
+       [routerLink]="['/vault/notes', epic().id]"
+       aria-label="View constellation">→</a>
+  }
+}

@@ -27,6 +27,7 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'datetime-pipes',          name: 'Date & Time Pipes',     description: 'datetime and relativeTime pipes for ISO string formatting.' },
   { id: 'form-actions',            name: 'Form Actions',          selector: 'app-ui-form-actions',   description: 'Standardised bottom-of-form action row layout.' },
   { id: 'project-card',            name: 'Project Card',          selector: 'app-project-card',      description: 'Project card with color accent, drag handle, repo link, and actions.' },
+  { id: 'epic-row',                name: 'Epic Row',              selector: 'app-epic-row',          description: 'Single-row epic with project, origin, threads, principles, progress, blocked count. All metadata visible.' },
 ];
 
 @Component({

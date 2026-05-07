@@ -1,0 +1,220 @@
+@switch (variant()) {
+
+  @case ('compact') {
+    <a class="epic-card__inner" [routerLink]="['/vault/notes', epic().id]" [attr.aria-label]="'Open epic ' + epic().title">
+      <header class="epic-card__head">
+        <app-chip variant="project" prefix="/">{{ epic().project.displayName }}</app-chip>
+        <span class="epic-card__seq">#{{ epic().seq }}</span>
+      </header>
+
+      <h3 class="epic-card__title">{{ epic().title }}</h3>
+
+      <div class="epic-card__progress" [attr.aria-label]="epic().childrenDone + ' of ' + epic().childrenTotal + ' done'">
+        <div class="epic-card__progress-bar">
+          <div class="epic-card__progress-fill" [style.width.%]="progressPct()"></div>
+        </div>
+        <span class="epic-card__progress-text">{{ epic().childrenDone }}/{{ epic().childrenTotal }}</span>
+      </div>
+
+      <footer class="epic-card__foot">
+        @if (originLabel()) {
+          <app-chip variant="origin" size="sm" [icon]="originIcon()" [iconPx]="10"
+                    [dataKind]="epic().origin?.kind ?? null">
+            {{ epic().origin?.kind }}
+          </app-chip>
+        }
+        @if (epic().childrenBlocked > 0) {
+          <app-chip variant="blocked" size="sm" [icon]="Ban" [iconPx]="10">
+            {{ epic().childrenBlocked }}
+          </app-chip>
+        }
+      </footer>
+    </a>
+  }
+
+  @case ('narrative') {
+    <a class="epic-card__inner" [routerLink]="['/vault/notes', epic().id]">
+      <div class="epic-card__top-strip">
+        <app-chip variant="project" prefix="/">{{ epic().project.displayName }}</app-chip>
+        <span class="epic-card__seq">#{{ epic().seq }}</span>
+        <app-chip variant="type-epic" [icon]="Layers" [iconPx]="10">EPIC</app-chip>
+      </div>
+
+      <h3 class="epic-card__title epic-card__title--display">{{ epic().title }}</h3>
+
+      <p class="epic-card__excerpt">{{ epic().bodyExcerpt }}</p>
+
+      @if (epic().threads.length) {
+        <div class="epic-card__thread-chips">
+          @for (t of epic().threads; track t.name) {
+            <app-chip variant="thread">{{ t.name }}</app-chip>
+          }
+          @for (p of epic().crossCuttingPrinciples; track p) {
+            <app-chip variant="principle">{{ p }}</app-chip>
+          }
+        </div>
+      }
+
+      <footer class="epic-card__bottom-strip">
+        <div class="epic-card__progress">
+          <div class="epic-card__progress-bar epic-card__progress-bar--thin">
+            <div class="epic-card__progress-fill" [style.width.%]="progressPct()"></div>
+          </div>
+          <span class="epic-card__progress-text">{{ epic().childrenDone }}/{{ epic().childrenTotal }}</span>
+        </div>
+        <span class="epic-card__bottom-meta">
+          @if (originLabel()) {
+            <app-chip variant="origin" size="sm" [icon]="originIcon()" [iconPx]="10"
+                      [dataKind]="epic().origin?.kind ?? null">
+              {{ originLabel() }}
+            </app-chip>
+          }
+          @if (epic().lastTouchedAt) {
+            <time class="epic-card__time" [attr.datetime]="epic().lastTouchedAt">
+              <lucide-icon [img]="Clock" [size]="10" class="epic-card__time-icon" />
+              {{ epic().lastTouchedAt | relativeTime }}
+            </time>
+          }
+          @if (epic().owner) {
+            <app-chip variant="actor" size="sm" prefix="&#64;">{{ epic().owner!.id }}</app-chip>
+          }
+        </span>
+      </footer>
+    </a>
+  }
+
+  @case ('status') {
+    <a class="epic-card__inner" [routerLink]="['/vault/notes', epic().id]">
+      <div class="epic-card__progress epic-card__progress--featured" [attr.aria-label]="progressPct() + '% complete'">
+        <div class="epic-card__progress-bar epic-card__progress-bar--tall">
+          <div class="epic-card__progress-fill" [style.width.%]="progressPct()"></div>
+        </div>
+      </div>
+
+      <div class="epic-card__numbers">
+        <div class="epic-card__number">
+          <span class="epic-card__number-value">{{ epic().childrenDone }}</span>
+          <span class="epic-card__number-label">done</span>
+        </div>
+        <div class="epic-card__number">
+          <span class="epic-card__number-value">{{ todoCount() }}</span>
+          <span class="epic-card__number-label">todo</span>
+        </div>
+        <div class="epic-card__number" [class.epic-card__number--blocked]="epic().childrenBlocked > 0">
+          <span class="epic-card__number-value">{{ epic().childrenBlocked }}</span>
+          <span class="epic-card__number-label">blocked</span>
+        </div>
+      </div>
+
+      <h3 class="epic-card__title">{{ epic().title }}</h3>
+
+      <div class="epic-card__id-row">
+        <span class="epic-card__seq">#{{ epic().seq }}</span>
+        <app-chip variant="project" size="sm" prefix="/">{{ epic().project.displayName }}</app-chip>
+        @if (epic().owner) {
+          <app-chip variant="actor" size="sm" prefix="&#64;">{{ epic().owner!.id }}</app-chip>
+        }
+      </div>
+
+      <div class="epic-card__breakdown">
+        @if (epic().childrenByType.research > 0) {
+          <span class="epic-card__breakdown-item">{{ epic().childrenByType.research }} research</span>
+        }
+        @if (epic().childrenByType.task > 0) {
+          <span class="epic-card__breakdown-item">{{ epic().childrenByType.task }} task</span>
+        }
+        @if (epic().childrenByType.idea > 0) {
+          <span class="epic-card__breakdown-item">{{ epic().childrenByType.idea }} idea</span>
+        }
+        @if (epic().childrenByType.reference > 0) {
+          <span class="epic-card__breakdown-item">{{ epic().childrenByType.reference }} ref</span>
+        }
+      </div>
+
+      <footer class="epic-card__foot">
+        @if (originLabel()) {
+          <app-chip variant="origin" size="sm" [icon]="originIcon()" [iconPx]="10"
+                    [dataKind]="epic().origin?.kind ?? null">
+            {{ originLabel() }}
+          </app-chip>
+        }
+        @if (epic().lastTouchedAt) {
+          <time class="epic-card__time" [attr.datetime]="epic().lastTouchedAt">
+            <lucide-icon [img]="Clock" [size]="10" class="epic-card__time-icon" />
+            {{ epic().lastTouchedAt | relativeTime }}
+          </time>
+        }
+      </footer>
+    </a>
+  }
+
+  @default {
+    <!-- detail -->
+    <a class="epic-card__inner" [routerLink]="['/vault/notes', epic().id]">
+      <header class="epic-card__head">
+        <div class="epic-card__head-left">
+          <app-chip variant="project" prefix="/">{{ epic().project.displayName }}</app-chip>
+          <app-chip variant="type-epic" [icon]="Layers">EPIC</app-chip>
+          @if (epic().owner) {
+            <app-chip variant="actor" size="sm" prefix="&#64;">{{ epic().owner!.id }}</app-chip>
+          }
+        </div>
+        <div class="epic-card__head-right">
+          <span class="epic-card__seq">#{{ epic().seq }}</span>
+          @if (epic().lastTouchedAt) {
+            <time class="epic-card__time" [attr.datetime]="epic().lastTouchedAt">
+              <lucide-icon [img]="Clock" [size]="10" class="epic-card__time-icon" />
+              {{ epic().lastTouchedAt | relativeTime }}
+            </time>
+          }
+        </div>
+      </header>
+
+      <h3 class="epic-card__title">{{ epic().title }}</h3>
+
+      <p class="epic-card__excerpt">{{ epic().bodyExcerpt }}</p>
+
+      @if (epic().threads.length) {
+        <ul class="epic-card__threads" role="list">
+          @for (t of epic().threads; track t.name) {
+            <li class="epic-card__thread">
+              <span class="epic-card__thread-name">{{ t.name }}</span>
+              <span class="epic-card__thread-bar" [attr.aria-label]="t.doneCount + ' of ' + t.itemCount + ' done'">
+                <span class="epic-card__thread-fill" [style.width.%]="t.itemCount > 0 ? (t.doneCount / t.itemCount) * 100 : 0"></span>
+              </span>
+              <span class="epic-card__thread-count">{{ t.doneCount }}/{{ t.itemCount }}</span>
+            </li>
+          }
+        </ul>
+      }
+
+      @if (epic().crossCuttingPrinciples.length) {
+        <div class="epic-card__principles">
+          @for (p of epic().crossCuttingPrinciples; track p) {
+            <app-chip variant="principle">{{ p }}</app-chip>
+          }
+        </div>
+      }
+
+      <footer class="epic-card__foot">
+        <div class="epic-card__progress epic-card__progress--inline">
+          <div class="epic-card__progress-bar">
+            <div class="epic-card__progress-fill" [style.width.%]="progressPct()"></div>
+          </div>
+          <span class="epic-card__progress-text">{{ epic().childrenDone }}/{{ epic().childrenTotal }}</span>
+        </div>
+        @if (epic().childrenBlocked > 0) {
+          <app-chip variant="blocked" size="sm" [icon]="Ban" [iconPx]="10">
+            {{ epic().childrenBlocked }} blocked
+          </app-chip>
+        }
+        @if (originLabel()) {
+          <app-chip variant="origin" size="sm" [icon]="originIcon()" [iconPx]="10"
+                    [dataKind]="epic().origin?.kind ?? null">
+            {{ originLabel() }}
+          </app-chip>
+        }
+      </footer>
+    </a>
+  }
+}
