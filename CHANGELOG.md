@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.38](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.37...v0.0.38) (2026-05-07)
+
+
+### Features
+
+* **pomo-break:** read break duration from ?mins query param ([6b1b0f7](https://github.com/marvinbarretto/jimbo-dashboard/commit/6b1b0f77b0cccfcd098b5e64d2cb2360f3d59731))
+* **pomo:** integrated vault items across all four pomo pages ([960cedb](https://github.com/marvinbarretto/jimbo-dashboard/commit/960cedb48c101433220fb2a45cd1a10b79d4c4f3))
+* **types:** zod schemas at the API boundary for actors/projects/dispatch/vault ([736b39b](https://github.com/marvinbarretto/jimbo-dashboard/commit/736b39b27dcf0a0708ad2c5185d7709f198b6ecc))
+* **vault-item-detail:** redesign modal layout and fix actor resolution ([2aac6ae](https://github.com/marvinbarretto/jimbo-dashboard/commit/2aac6ae7d23e15876b7f92fb37dadbc417363cb1))
+
+
+### Bug Fixes
+
+* **actors:** tighten ActorId contracts; stop chip lying about unresolved owners ([77a804d](https://github.com/marvinbarretto/jimbo-dashboard/commit/77a804d21a5dc4645a4c082ee90c52a2080e7feb))
+* **types:** make executor and owner_actor_id honestly nullable ([a066d04](https://github.com/marvinbarretto/jimbo-dashboard/commit/a066d04aac42a3269f4c785473e722b93c958af0))
+
 ### [0.0.37](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.36...v0.0.37) (2026-05-07)
 
 
