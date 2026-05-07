@@ -5,17 +5,33 @@ import type { FocusSessionId, ProjectId } from '../ids';
 // against `started_at + planned_seconds`. That way the same row can be
 // observed from multiple devices, and a tab close doesn't lose the session.
 export type FocusSessionStatus = 'running' | 'completed' | 'abandoned';
+export type SessionMood = -1 | 0 | 1;
+
+export interface ActivitySummary {
+  tab_switches:        number;
+  distinct_domains:    number;
+  top_domain:          string | null;
+  top_domain_seconds:  number;
+  focus_ratio:         number;
+  idle_seconds:        number;
+  unfocused_seconds:   number;
+  unaccounted_seconds: number;
+  domain_breakdown:    Array<{ domain: string; seconds: number }>;
+}
 
 export interface FocusSession {
   id:              FocusSessionId;
-  project_id:      ProjectId | null;     // null = unassigned focus
-  started_at:      string;                // ISO
+  project_id:      ProjectId | null;
+  started_at:      string;
   ended_at:        string | null;
   planned_seconds: number;
-  actual_seconds:  number | null;        // filled on complete/abandon
+  actual_seconds:  number | null;
   status:          FocusSessionStatus;
+  mood:            SessionMood | null;
+  interrupted:     boolean;
   notes:           string | null;
   tags:            string[];
+  activity:        ActivitySummary | null;
   created_at:      string;
 }
 
@@ -27,6 +43,15 @@ export interface StartFocusSessionPayload {
 }
 
 export interface CompleteFocusSessionPayload {
-  notes?: string;
-  tags?:  string[];
+  notes?:       string;
+  tags?:        string[];
+  mood?:        SessionMood;
+  interrupted?: boolean;
+}
+
+export interface UpdateFocusSessionPayload {
+  notes?:       string | null;
+  tags?:        string[];
+  mood?:        SessionMood | null;
+  interrupted?: boolean;
 }

@@ -3,12 +3,38 @@
 
     <div class="break__header">
       <h1 class="break__title">Take a break</h1>
-      <p class="break__hint">Step away from the screen.</p>
     </div>
 
     <div class="break__clock" [class.break__clock--over]="isOver()">
       {{ isOver() ? 'Break over' : displayTime() }}
     </div>
+
+    <div class="break__stats">
+      <app-ui-stat-card label="Done today" [value]="completedToday().toString()" />
+    </div>
+
+    @if (lastSession()?.notes) {
+      <div class="break__context">
+        <p class="break__context-label">You were working on</p>
+        <p class="break__context-text">{{ lastSession()!.notes }}</p>
+      </div>
+    }
+
+    @if (personalItems().length) {
+      <div class="break__personal">
+        <p class="break__context-label">While you're away</p>
+        <ul class="break__personal-list">
+          @for (item of personalItems(); track item.id) {
+            <li class="break__personal-item">
+              <span class="break__personal-seq">#{{ item.seq }}</span>
+              <span>{{ item.title }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+    } @else {
+      <p class="break__hint">Step away from the screen.</p>
+    }
 
     <app-ui-button variant="primary" routerLink="/pomo">
       Start next pomo

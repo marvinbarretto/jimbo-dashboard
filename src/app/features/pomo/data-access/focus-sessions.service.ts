@@ -10,10 +10,13 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import type {
+  ActivitySummary,
   FocusSession,
   FocusSessionStatus,
+  SessionMood,
   StartFocusSessionPayload,
   CompleteFocusSessionPayload,
+  UpdateFocusSessionPayload,
 } from '@domain/focus-sessions';
 import { focusSessionId, projectId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
@@ -27,8 +30,11 @@ interface ApiFocusSession {
   planned_seconds: number;
   actual_seconds: number | null;
   status: string;
+  mood: SessionMood | null;
+  interrupted: boolean;
   notes: string | null;
   tags: string[];
+  activity: ActivitySummary | null;
   created_at: string;
 }
 
@@ -45,8 +51,11 @@ function toSession(s: ApiFocusSession): FocusSession {
     planned_seconds: s.planned_seconds,
     actual_seconds: s.actual_seconds,
     status: narrowStatus(s.status),
+    mood: s.mood ?? null,
+    interrupted: s.interrupted ?? false,
     notes: s.notes,
     tags: s.tags ?? [],
+    activity: s.activity ?? null,
     created_at: s.created_at,
   };
 }
@@ -112,6 +121,19 @@ export class FocusSessionsService {
       this.toast.success('Session complete');
     } catch {
       this.toast.error('Could not complete session');
+    }
+  }
+
+  // For sessions already completed by the extension — patches reflection metadata.
+  async update(id: string, payload: UpdateFocusSessionPayload): Promise<void> {
+    try {
+      const updated = await firstValueFrom(
+        this.http.patch<ApiFocusSession>(`${this.url}/${encodeURIComponent(id)}`, payload),
+      );
+      this._recent.update(rs => rs.map(s => s.id === id ? toSession(updated) : s));
+      this.toast.success('Session saved');
+    } catch {
+      this.toast.error('Could not save session');
     }
   }
 

@@ -7,9 +7,62 @@
     }
   </header>
 
+  <!-- Activity summary -->
+  @if (activity(); as a) {
+    <app-ui-card>
+      <div class="retro__activity">
+        <p class="retro__activity-headline">
+          @if (a.top_domain) { <strong>{{ focusPct() }}%</strong> on {{ a.top_domain }} · }
+          {{ a.tab_switches }} switch{{ a.tab_switches === 1 ? '' : 'es' }}
+          @if (a.idle_seconds > 60) { · {{ formatMins(a.idle_seconds) }} idle }
+        </p>
+        @if (a.domain_breakdown.length) {
+          <ul class="retro__breakdown">
+            @for (d of a.domain_breakdown.slice(0, 5); track d.domain) {
+              <li class="retro__breakdown-row">
+                <span class="retro__breakdown-domain">{{ d.domain }}</span>
+                <span class="retro__breakdown-bar">
+                  <span class="retro__breakdown-fill"
+                    [style.width.%]="session()!.planned_seconds > 0 ? (d.seconds / session()!.planned_seconds) * 100 : 0">
+                  </span>
+                </span>
+                <span class="retro__breakdown-time">{{ formatMins(d.seconds) }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </app-ui-card>
+  }
+
   <app-ui-card>
     <app-ui-stack gap="md">
 
+      <!-- Mood -->
+      <div class="retro__field-group">
+        <span class="retro__label">How was it?</span>
+        <div class="retro__mood">
+          @for (opt of moodOptions; track opt.value) {
+            <button
+              type="button"
+              class="retro__mood-btn"
+              [class.retro__mood-btn--active]="mood() === opt.value"
+              [attr.aria-label]="opt.label"
+              (click)="toggleMood(opt.value)">
+              <span class="retro__mood-icon">{{ opt.icon }}</span>
+              <span class="retro__mood-label">{{ opt.label }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Interrupted -->
+      <label class="retro__interrupted">
+        <input type="checkbox" [checked]="interrupted()" (change)="interrupted.set(!interrupted())" />
+        Session was derailed by distractions
+      </label>
+
+      <!-- Notes -->
       <div class="retro__field-group">
         <label class="retro__label" for="notes">What did you get done?</label>
         <textarea
@@ -22,6 +75,7 @@
         </textarea>
       </div>
 
+      <!-- Tags -->
       <div class="retro__field-group">
         <label class="retro__label" for="tags">Tags</label>
         <input

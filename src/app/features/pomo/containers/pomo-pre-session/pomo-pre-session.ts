@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { FocusSessionsService } from '../../data-access/focus-sessions.service';
+import { VaultItemsService } from '../../../vault-items/data-access/vault-items.service';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiButton } from '@shared/components/ui-button/ui-button';
@@ -27,6 +28,7 @@ const PRESETS = [15, 25, 45, 90] as const;
 export class PomoPreSession {
   private readonly projects = inject(ProjectsService);
   private readonly sessions = inject(FocusSessionsService);
+  private readonly vaultItems = inject(VaultItemsService);
   private readonly router = inject(Router);
 
   readonly presets = PRESETS;
@@ -34,6 +36,19 @@ export class PomoPreSession {
   readonly minorProjects = computed(() => this.projects.activeProjects().filter(p => p.kind === 'minor'));
 
   readonly selectedProjectId = signal<string | null>(null);
+
+  readonly projectItems = computed(() =>
+    this.vaultItems.activeItems()
+      .filter(i => i.primary_project_id === this.selectedProjectId() && !i.is_epic)
+      .slice(0, 6),
+  );
+
+  readonly projectEpics = computed(() =>
+    this.vaultItems.activeItems()
+      .filter(i => i.primary_project_id === this.selectedProjectId() && i.is_epic)
+      .slice(0, 3),
+  );
+
   readonly minutes = signal(25);
   readonly intention = signal('');
   readonly starting = signal(false);

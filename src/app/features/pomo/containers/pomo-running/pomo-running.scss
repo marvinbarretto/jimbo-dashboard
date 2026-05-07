@@ -39,8 +39,14 @@
   transition: width 1s linear;
 }
 
-.running__expired-hint {
+.running__intention {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  font-style: italic;
   color: var(--color-text-soft);
+  text-align: center;
+  padding: 0 0.5rem;
+  border-left: 2px solid var(--color-accent);
+  text-align: left;
+  width: 100%;
 }
