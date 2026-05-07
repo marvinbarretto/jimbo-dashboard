@@ -46,7 +46,11 @@
   }
 
   <footer class="card__footer">
-    <app-entity-chip type="actor" [id]="dispatch().executor" [label]="dispatch().executor" />
+    @if (dispatch().executor; as ex) {
+      <app-entity-chip type="actor" [id]="ex" [label]="ex" />
+    } @else {
+      <span class="card__no-executor">no executor</span>
+    }
     <span class="card__runtime">{{ runtimeLabel() }}</span>
 
     @if (canRetry()) {

@@ -63,7 +63,13 @@ export class ProjectForm {
       this.projects$.pipe(filter(ps => ps.length > 0), take(1)).subscribe(projects => {
         const project = projects.find(p => p.id === id);
         if (!project) return;
-        this.form.patchValue(project);
+        // owner_actor_id is now Project['owner_actor_id'] = ActorId | null. The
+        // form control is `Validators.required`, so leave it empty when null —
+        // the operator must explicitly pick an owner to save.
+        this.form.patchValue({
+          ...project,
+          owner_actor_id: project.owner_actor_id ?? '',
+        });
       });
     }
   }

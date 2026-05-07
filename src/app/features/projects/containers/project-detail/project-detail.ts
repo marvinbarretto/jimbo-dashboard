@@ -39,10 +39,12 @@ export class ProjectDetail {
   readonly project = computed(() => this.service.getById(this.id() ?? ''));
 
   // Resolve owner details for display. Falls back to the raw id string if the
-  // actor row is unknown (actor deleted, data drift, etc.).
+  // actor row is unknown (actor deleted, data drift, etc.). Returns undefined
+  // when the project is genuinely unowned (owner_actor_id === null).
   readonly owner = computed(() => {
     const p = this.project();
-    return p ? this.actorsService.getById(p.owner_actor_id) : undefined;
+    if (!p?.owner_actor_id) return undefined;
+    return this.actorsService.getById(p.owner_actor_id);
   });
 
   // Project activity timeline — re-fetches when the route id changes.
@@ -63,7 +65,8 @@ export class ProjectDetail {
     });
   }
 
-  actorDisplay(actorIdStr: ActorId): string {
+  actorDisplay(actorIdStr: ActorId | null): string {
+    if (!actorIdStr) return '—';
     const actor = this.actorsService.getById(actorIdStr);
     return actor ? `@${actor.id}` : `@${actorIdStr}`;
   }

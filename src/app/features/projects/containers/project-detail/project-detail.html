@@ -21,9 +21,11 @@
           @if (owner(); as o) {
             <a [routerLink]="['/config/actors', o.id]">{{ o.display_name }}</a>
             <span class="hint">({{ o.kind }})</span>
-          } @else {
+          } @else if (p.owner_actor_id) {
             <code>{{ p.owner_actor_id }}</code>
             <span class="hint">(actor not found)</span>
+          } @else {
+            <span class="hint">— unowned —</span>
           }
         </dd>
         @if (p.description) {

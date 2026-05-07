@@ -23,9 +23,10 @@ export interface Project {
   kind:           ProjectKind;
 
   // The actor who initiated the project and carries responsibility.
-  // Most projects today are owned by marvin; future: jimbo can own prototypes it spawns.
-  // Ownership is an identity, not a role — keeps the Actor abstraction honest.
-  owner_actor_id: ActorId;
+  // Nullable to mirror the API contract (`z.string().nullable()`); the
+  // service used to silently relabel null as 'marvin', which masqueraded
+  // as a real owner. Consumers should handle null explicitly.
+  owner_actor_id: ActorId | null;
 
   // Freeform markdown: goals, domain rules, what qualifies, stakeholders, anything an
   // agent working on this project's items needs to know. Structured breakdown deferred

@@ -175,8 +175,10 @@ export interface ProjectCriteriaChangedEvent extends ProjectEventBase {
 
 export interface ProjectOwnerChangedEvent extends ProjectEventBase {
   type: 'project_owner_changed';
-  from_actor_id: ActorId;
-  to_actor_id:   ActorId;
+  // Either side may be null: an unowned project may be claimed (null → actor),
+  // or an owned one may be released back to the pool (actor → null).
+  from_actor_id: ActorId | null;
+  to_actor_id:   ActorId | null;
   reason:        string | null;
 }
 

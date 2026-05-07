@@ -232,7 +232,7 @@ function toProject(p: ApiProject): Project {
     description: p.description,
     status: narrowStatus(p.status),
     kind: p.kind === 'minor' ? 'minor' : 'major',
-    owner_actor_id: actorId(p.owner_actor_id ?? 'marvin'),
+    owner_actor_id: p.owner_actor_id ? actorId(p.owner_actor_id) : null,
     criteria: p.criteria,
     repo_url: p.repo_url,
     color_token: p.color_token,

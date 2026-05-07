@@ -158,7 +158,7 @@ function toDispatchEntry(a: ApiDispatchEntry): DispatchQueueEntry {
     task_id: vaultItemId(a.task_id),
     skill: skillId(a.skill ?? a.agent_type),       // fall back to agent_type when skill not set
     status: narrowStatus(a.status),
-    executor: actorId(a.executor ?? 'unassigned'),
+    executor: a.executor ? actorId(a.executor) : null,
     started_at: a.started_at,
     completed_at: a.completed_at,
     retry_count: a.retry_count,

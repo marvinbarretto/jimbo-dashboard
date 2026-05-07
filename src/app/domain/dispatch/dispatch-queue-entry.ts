@@ -64,7 +64,12 @@ export interface DispatchQueueEntry {
   task_id:        VaultItemId;          // the vault item being worked on
   skill:          SkillId;              // fully-qualified skill slug, e.g. 'hermes/vault-classify'
   status:         DispatchStatus;
-  executor:       ActorId;              // who was selected to run it
+  // Null on legacy rows pre-migration, and (defensively) on any future row
+  // where the API returns a missing executor. The API contract is
+  // `ExecutorSchema.nullable()` — pretending this is non-null bit us before
+  // (the chip showed "@unassigned" for a real owner because we'd substituted
+  // a sentinel string for null). Consumers must handle null.
+  executor:       ActorId | null;
 
   started_at:     string | null;
   completed_at:   string | null;
