@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.45](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.44...v0.0.45) (2026-05-08)
+
+
+### Features
+
+* **execution:** cut over execution board to app-vault-card ([2f4c75e](https://github.com/marvinbarretto/jimbo-dashboard/commit/2f4c75e546f8b759f6a988480b3bfcd095b3080e))
+* **journal:** add Health Connect section to day page ([67ee876](https://github.com/marvinbarretto/jimbo-dashboard/commit/67ee876d925a9991ba62282c7cc99d495be920a2))
+* **kanban:** unify card components into app-vault-card with monochrome identity ([9ba8172](https://github.com/marvinbarretto/jimbo-dashboard/commit/9ba817283294f7a850a356e12e27a58e83d1f5eb))
+* **vault-card:** action registry, staleness gradient, fix activity 404 ([dc40f2e](https://github.com/marvinbarretto/jimbo-dashboard/commit/dc40f2eb4d88b907788bf12813b65d86aca0ec2a))
+
+
+### Bug Fixes
+
+* **journal:** null-coalesce number pipe output for stat card values ([59e3e8a](https://github.com/marvinbarretto/jimbo-dashboard/commit/59e3e8abd520e6ef6a48863d8e4d1f8cc734c0a5))
+
 ### [0.0.44](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.43...v0.0.44) (2026-05-08)
 
 
