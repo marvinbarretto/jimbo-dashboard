@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { VaultItemDetailBody } from '../../components/vault-item-detail-body/vault-item-detail-body';
 import { ModalShell } from '@shared/components/modal-shell/modal-shell';
@@ -34,6 +34,22 @@ export class VaultItemDetailDialog {
     if (this.data.kind === 'draft' && this.data.destination) {
       this.store.setDraftDestination(this.data.destination);
     }
+
+    // Auto-close when the bound item is archived or hard-deleted from inside the
+    // modal. Store stays surface-agnostic (the same store powers the
+    // /vault-items/<seq> page route, which navigates instead of closing); the
+    // dialog owns its own dismissal. `everResolved` lets us tell "row not loaded
+    // yet" from "row was deleted out from under us" without a separate signal.
+    let everResolved = false;
+    effect(() => {
+      const i = this.store.item();
+      if (i) {
+        everResolved = true;
+        if (i.archived_at) this.dialogRef.close();
+        return;
+      }
+      if (everResolved) this.dialogRef.close();
+    });
   }
 
   // Stable id for aria-labelledby binding on the dialog host. Computed once
