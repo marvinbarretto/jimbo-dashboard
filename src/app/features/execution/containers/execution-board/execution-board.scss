@@ -1,41 +1,12 @@
-@use 'breakpoints' as bp;
+@use 'board-layout';
 
-// Mirrors grooming-board layout — same shell, just different content.
 .board {
-  padding: 1.25rem 1.5rem;
   height: 100vh;
-  display: flex;
-  flex-direction: column;
-
-  &__header {
-    margin-bottom: 1rem;
-    flex-shrink: 0;
-
-    h1 {
-      font-size: 1.4rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-    }
-  }
-
-  &__hint {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-    strong { color: var(--color-text); font-weight: 500; }
-  }
-
-  &__columns {
-    display: flex;
-    gap: 0.75rem;
-    flex: 1;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 0.5rem;
-  }
 }
 
-.board__filter-toggle { display: none; }
-.board__mobile-switcher { display: none; }
+.board__hint {
+  strong { color: var(--color-text); font-weight: 500; }
+}
 
 .manual-card {
   display: flex;
@@ -82,98 +53,5 @@
     color: var(--color-text);
     margin: 0;
     line-height: 1.35;
-  }
-}
-
-@include bp.mobile {
-  .board {
-    padding: 0.75rem;
-
-    &__header h1 { font-size: 1.1rem; }
-    &__hint { display: none; }
-  }
-
-  .board__filter-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.3rem 0.65rem;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    color: var(--color-text-muted);
-    font: inherit;
-    font-size: 0.7rem;
-    cursor: pointer;
-    margin-bottom: 0.5rem;
-    border-radius: var(--radius);
-
-    &--active {
-      border-color: var(--color-accent);
-      color: var(--color-accent);
-    }
-  }
-
-  .board__filter-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--color-accent);
-  }
-
-  .board__filter-caret {
-    font-size: 0.6rem;
-    opacity: 0.6;
-  }
-
-  app-kanban-filter-bar.board__filters--collapsed {
-    display: none;
-  }
-
-  .board__mobile-switcher {
-    display: flex;
-    gap: 0.4rem;
-    padding: 0.5rem 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-    flex-shrink: 0;
-
-    &::-webkit-scrollbar { display: none; }
-  }
-
-  .board__col-chip {
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.3rem 0.65rem;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    color: var(--color-text-muted);
-    font: inherit;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    cursor: pointer;
-    white-space: nowrap;
-    border-radius: var(--radius);
-
-    &--active {
-      background: var(--color-text);
-      color: var(--color-bg);
-      border-color: var(--color-text);
-    }
-  }
-
-  .board__col-count {
-    font-size: 0.65rem;
-    opacity: 0.7;
-  }
-
-  .board__col-wrap {
-    display: none;
-
-    &--active {
-      display: contents;
-    }
   }
 }
