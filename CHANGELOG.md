@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.44](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.43...v0.0.44) (2026-05-08)
+
+
+### Features
+
+* **actors:** promote actors to top-level route with rich profile pages ([e578ddb](https://github.com/marvinbarretto/jimbo-dashboard/commit/e578ddbc64a769e9411f808a0a099aeb6a152a28))
+* **journal:** add phone telemetry section to day page ([846aa4b](https://github.com/marvinbarretto/jimbo-dashboard/commit/846aa4bd7b259b26436e6214560a8ca12e3306bd))
+* **journal:** expand phone signals section with rich telemetry breakdown ([f477425](https://github.com/marvinbarretto/jimbo-dashboard/commit/f477425ce48ed1fa98d94f880237d8fc3f6407a0))
+* **ui:** add UiBreadcrumb component; wire into actor, project, skill detail pages ([f657d3b](https://github.com/marvinbarretto/jimbo-dashboard/commit/f657d3ba7b80947e58a2694ad513c946b1342cc2))
+* **vault:** rework manual task creation UX ([07a31b0](https://github.com/marvinbarretto/jimbo-dashboard/commit/07a31b0b5cbfb4b9c559f25a285a132c0f4332d1))
+
+
+### Bug Fixes
+
+* **journal:** set dynamic browser tab title from date key on day/week/month pages ([8f2d528](https://github.com/marvinbarretto/jimbo-dashboard/commit/8f2d528c2def030f50dee96f7a4a2eadbc50530a))
+* **journal:** use local-time day boundaries for telemetry query ([1a019b0](https://github.com/marvinbarretto/jimbo-dashboard/commit/1a019b0243c9bf2fb4ef94664f3bf0ce19ec4ecc))
+* **skills:** replace stray app-ui-back-link in skill-detail not-found state ([370c3c0](https://github.com/marvinbarretto/jimbo-dashboard/commit/370c3c07aaddbebd2b4042aa5b46273fed425da3))
+
+
+### Code Refactoring
+
+* **kanban:** extract shared board layout into _board-layout.scss ([d26c5b5](https://github.com/marvinbarretto/jimbo-dashboard/commit/d26c5b5cb1ce63835e29e45b14fd9b287fb87db1))
+
 ### [0.0.43](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.42...v0.0.43) (2026-05-08)
 
 
