@@ -3,7 +3,7 @@
 } @else if (skill(); as skill) {
   <app-ui-stack class="skill-detail" gap="lg">
     <app-ui-page-header class="skill-detail__header">
-      <app-ui-back-link uiPageHeaderLead [to]="['/config/skills']">← Skills</app-ui-back-link>
+      <app-ui-breadcrumb uiPageHeaderLead [crumbs]="crumbs()" />
       <div uiPageHeaderTitle class="skill-detail__title">
         <span class="ns-tag">{{ namespace() }}</span>
         <h1>{{ localName() }}</h1>

@@ -1,7 +1,7 @@
 @if (actor(); as a) {
   <app-ui-stack class="actor-page" gap="lg">
     <app-ui-page-header class="actor-page__header">
-      <app-ui-back-link uiPageHeaderLead [to]="['/actors']">← Actors</app-ui-back-link>
+      <app-ui-breadcrumb uiPageHeaderLead [crumbs]="crumbs()" />
 
       <h1 uiPageHeaderTitle>
         {{ a.display_name }}

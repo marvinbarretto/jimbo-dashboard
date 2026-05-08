@@ -5,7 +5,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { formatPageTitle } from '@app/app-title-strategy';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
-import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
+import { UiBreadcrumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
@@ -25,12 +25,13 @@ import { ActorProjectRow } from '../../components/actor-project-row/actor-projec
 import { isActive } from '@domain/vault/vault-item';
 import { actorId } from '@domain/ids';
 import type { ActorId } from '@domain/ids';
+import type { Crumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
 
 @Component({
   selector: 'app-actor-page',
   imports: [
     RouterLink,
-    UiBackLink,
+    UiBreadcrumb,
     UiBadge,
     UiCard,
     UiCluster,
@@ -66,6 +67,14 @@ export class ActorPage {
   readonly actor = computed(() => {
     const id = this.id();
     return id ? this.actors.getById(id) : undefined;
+  });
+
+  readonly crumbs = computed<readonly Crumb[]>(() => {
+    const a = this.actor();
+    return [
+      { label: 'Actors', link: ['/actors'] },
+      { label: a?.display_name ?? '…' },
+    ];
   });
 
   readonly assignedItems = computed(() => {

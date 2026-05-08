@@ -4,7 +4,8 @@ import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { formatPageTitle } from '@app/app-title-strategy';
-import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
+import { UiBreadcrumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
+import type { Crumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiInlineEdit, type UiInlineEditOption } from '@shared/components/ui-inline-edit/ui-inline-edit';
 import { UiCard } from '@shared/components/ui-card/ui-card';
@@ -37,7 +38,7 @@ import type { UpdateProjectPayload } from '@domain/projects';
   selector: 'app-project-landing',
   imports: [
     RouterLink,
-    UiBackLink,
+    UiBreadcrumb,
     UiBadge,
     UiInlineEdit,
     UiCard,
@@ -68,6 +69,14 @@ export class ProjectLanding {
   private readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id') ?? '')));
 
   readonly project = computed(() => this.projects.getById(this.id() ?? ''));
+
+  readonly crumbs = computed<readonly Crumb[]>(() => {
+    const p = this.project();
+    return [
+      { label: 'Projects', link: ['/config/projects'] },
+      { label: p?.display_name ?? '…' },
+    ];
+  });
 
   readonly owner = computed(() => {
     const p = this.project();

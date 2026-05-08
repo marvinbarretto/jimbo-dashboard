@@ -5,7 +5,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { formatPageTitle } from '@app/app-title-strategy';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
-import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
+import { UiBreadcrumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
+import type { Crumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
@@ -19,7 +20,7 @@ import { skillNamespace, skillLocalName } from '@domain/skills';
 
 @Component({
   selector: 'app-skill-detail',
-  imports: [RouterLink, UiBackLink, UiBadge, UiCard, UiCluster, UiEmptyState, UiLoadingState, UiMetaList, UiPageHeader, UiSection, UiStack],
+  imports: [RouterLink, UiBreadcrumb, UiBadge, UiCard, UiCluster, UiEmptyState, UiLoadingState, UiMetaList, UiPageHeader, UiSection, UiStack],
   templateUrl: './skill-detail.html',
   styleUrl: './skill-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,6 +43,14 @@ export class SkillDetail {
 
   readonly skill = computed(() => this.service.getById(this.id() ?? ''));
   readonly isLoading = this.service.isLoading;
+
+  readonly crumbs = computed<readonly Crumb[]>(() => {
+    const s = this.skill();
+    return [
+      { label: 'Skills', link: ['/config/skills'] },
+      { label: s?.name ?? '…' },
+    ];
+  });
 
   readonly namespace = computed(() => {
     const id = this.id();

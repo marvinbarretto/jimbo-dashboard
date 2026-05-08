@@ -1,7 +1,7 @@
 @if (project(); as p) {
   <app-ui-stack class="project-landing" gap="lg">
     <app-ui-page-header class="project-landing__header">
-      <app-ui-back-link uiPageHeaderLead [to]="['/config/projects']">← Projects</app-ui-back-link>
+      <app-ui-breadcrumb uiPageHeaderLead [crumbs]="crumbs()" />
 
       <h1 uiPageHeaderTitle class="project-landing__title">
         @if (p.color_token) {
