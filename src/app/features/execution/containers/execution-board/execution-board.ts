@@ -15,7 +15,16 @@ import {
   type DispatchQueueEntry,
 } from '@domain/dispatch';
 import type { DispatchId, SkillId, ActorId, ProjectId } from '@domain/ids';
-import { ExecutionCard } from '../../components/execution-card/execution-card';
+import { VaultCard } from '@shared/components/vault-card/vault-card';
+import type {
+  CardContext,
+  DispatchCardContext,
+  ManualCardContext,
+  ProjectRef,
+  ParentEpicRef,
+  SourceLabel,
+} from '@shared/components/vault-card/card-context';
+import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
 import { BoardCreateBar } from '@shared/components/board-create-bar/board-create-bar';
@@ -58,7 +67,7 @@ interface ColumnView {
 
 @Component({
   selector: 'app-execution-board',
-  imports: [ExecutionCard, KanbanColumn, KanbanFilterBar, BoardCreateBar],
+  imports: [VaultCard, KanbanColumn, KanbanFilterBar, BoardCreateBar],
   templateUrl: './execution-board.html',
   styleUrl: './execution-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -199,11 +208,66 @@ export class ExecutionBoard {
     return this.skillsService.getById(entry.skill)?.name ?? null;
   }
 
-  primaryProject(entry: DispatchQueueEntry): { id: string; display_name: string; color_token: string | null } | null {
+  primaryProject(entry: DispatchQueueEntry): ProjectRef | null {
     const links = this.vaultItemProjectsService.projectsFor(entry.task_id)();
     if (!links.length) return null;
     const project = this.projectsService.getById(links[0].project_id);
     return project ? { id: project.id as string, display_name: project.display_name, color_token: project.color_token } : null;
+  }
+
+  // Resolve project for a manual item — same junction lookup, just keyed by item id.
+  private projectForItem(item: VaultItem): ProjectRef | null {
+    const links = this.vaultItemProjectsService.projectsFor(item.id)();
+    if (!links.length) return null;
+    const project = this.projectsService.getById(links[0].project_id);
+    return project ? { id: project.id as string, display_name: project.display_name, color_token: project.color_token } : null;
+  }
+
+  // Parent epic ref for a vault item — null when no parent or parent isn't loaded.
+  private parentEpicFor(taskId: string): ParentEpicRef | null {
+    const item = this.vaultItemsService.getById(taskId as never);
+    if (!item?.parent_id) return null;
+    const parent = this.vaultItemsService.getById(item.parent_id);
+    return parent ? { seq: parent.seq, title: parent.title } : null;
+  }
+
+  // Single helper that produces the discriminated CardContext for the unified
+  // <app-vault-card>. Dispatch entries get owner from entry.executor; manual
+  // items resolve owner from item.assigned_to with a fallback to the current
+  // actor so the card never has to render an empty owner slot.
+  cardContextFor(card: ColumnCard): CardContext {
+    if (card.kind === 'dispatch') {
+      const ctx: DispatchCardContext = {
+        kind: 'dispatch',
+        entry: card.entry,
+        item: this.vaultItemsService.getById(card.entry.task_id) ?? null,
+        project: this.primaryProject(card.entry),
+        owner: card.entry.executor,
+        skillDisplayName: this.skillDisplayName(card.entry),
+        parentEpic: this.parentEpicFor(card.entry.task_id as string),
+      };
+      return ctx;
+    }
+    const item = card.item;
+    const ctx: ManualCardContext = {
+      kind: 'manual',
+      item,
+      project: this.projectForItem(item),
+      owner: item.assigned_to ?? CURRENT_ACTOR_ID,
+      parentEpic: item.parent_id ? this.parentEpicFor(item.id as string) : null,
+      source: this.sourceLabelFor(item),
+      lastActivityAt: item.latest_activity_at ?? item.created_at,
+    };
+    return ctx;
+  }
+
+  private sourceLabelFor(item: VaultItem): SourceLabel | null {
+    const src = item.source;
+    if (!src) return null;
+    if (src.kind === 'agent')      return { text: `by @${src.ref}`, actorId: src.ref };
+    if (src.kind === 'manual')     return { text: 'manual', actorId: null };
+    if (src.kind === 'pr-comment') return { text: 'via PR comment', actorId: null };
+    return { text: `via ${src.kind}`, actorId: null };
   }
 
   // --- manual track ------------------------------------------------------
