@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { formatPageTitle } from '@app/app-title-strategy';
 import { map } from 'rxjs';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiSection } from '@shared/components/ui-section/ui-section';
@@ -40,6 +42,7 @@ import {
 export class JournalMonthPage {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly titleService = inject(Title);
   private readonly journal = inject(JournalDataService);
   private readonly projects = inject(ProjectsService);
 
@@ -93,10 +96,8 @@ export class JournalMonthPage {
   });
 
   constructor() {
-    effect(() => {
-      const k = this.key();
-      this.journal.loadMonth(k);
-    });
+    effect(() => this.titleService.setTitle(formatPageTitle(formatMonthLong(this.key()))));
+    effect(() => this.journal.loadMonth(this.key()));
   }
 
   protected previous(): void {
