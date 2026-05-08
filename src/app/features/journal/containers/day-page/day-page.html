@@ -124,10 +124,10 @@
       <app-ui-section title="Health" meta="From Health Connect">
         <div class="journal-day__stats">
           @if (h.steps) {
-            <app-ui-stat-card label="Steps" [value]="h.steps | number:'1.0-0'" />
+            <app-ui-stat-card label="Steps" [value]="(h.steps | number:'1.0-0') ?? ''" />
           }
           @if (h.distanceKm) {
-            <app-ui-stat-card label="Distance" [value]="(h.distanceKm | number:'1.1-1') + ' km'" />
+            <app-ui-stat-card label="Distance" [value]="((h.distanceKm | number:'1.1-1') ?? '0') + ' km'" />
           }
           @if (h.caloriesActive) {
             <app-ui-stat-card label="Active cal" [value]="h.caloriesActive.toString()" detail="kcal" />
