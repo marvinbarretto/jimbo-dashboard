@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, KeyValuePipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs';
@@ -26,6 +26,7 @@ import {
   selector: 'app-journal-day-page',
   imports: [
     DecimalPipe,
+    KeyValuePipe,
     UiStack,
     UiSection,
     UiStatCard,
@@ -68,6 +69,25 @@ export class JournalDayPage {
     const map = this.bundle()?.by_task_type;
     if (!map) return [];
     return [...map.entries()].sort((a, b) => b[1] - a[1]);
+  });
+
+  protected readonly telemetryEvents = computed(() => this.bundle()?.telemetry ?? []);
+
+  protected readonly telemetrySummary = computed(() => {
+    const events = this.telemetryEvents();
+    const notifCount = events.filter(e => e.collector === 'notifications').length;
+    const activityEvents = events.filter(e => e.collector === 'activity');
+    const mediaStarts = events.filter(e => e.collector === 'media' && e.type === 'media.session_started').length;
+    const locationPoints = events.filter(e => e.collector === 'location').length;
+    const byActivityType = new Map<string, number>();
+    for (const e of activityEvents) {
+      const activity = (e.payload?.['activity_type'] as string | undefined) ?? 'unknown';
+      const transition = (e.payload?.['transition'] as string | undefined) ?? '';
+      if (transition === 'enter') {
+        byActivityType.set(activity, (byActivityType.get(activity) ?? 0) + 1);
+      }
+    }
+    return { notifCount, mediaStarts, locationPoints, byActivityType };
   });
 
   constructor() {

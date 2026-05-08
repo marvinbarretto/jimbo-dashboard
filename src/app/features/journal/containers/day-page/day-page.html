@@ -120,6 +120,28 @@
       }
     </app-ui-section>
 
+    <app-ui-section title="Phone signals" meta="Telemetry from the Android app">
+      @if (telemetryEvents().length) {
+        <div class="journal-day__stats">
+          <app-ui-stat-card label="Notifications" [value]="telemetrySummary().notifCount.toString()" />
+          <app-ui-stat-card label="Media sessions" [value]="telemetrySummary().mediaStarts.toString()" />
+          <app-ui-stat-card label="Location fixes" [value]="telemetrySummary().locationPoints.toString()" />
+        </div>
+        @if (telemetrySummary().byActivityType.size) {
+          <ul class="journal-day__list" style="margin-top: 0.75rem;">
+            @for (entry of telemetrySummary().byActivityType | keyvalue; track entry.key) {
+              <li class="journal-day__row">
+                <span class="journal-day__row-label">{{ entry.key }}</span>
+                <span class="journal-day__row-value">{{ entry.value }}×</span>
+              </li>
+            }
+          </ul>
+        }
+      } @else {
+        <app-ui-empty-state message="No phone telemetry for this day. Install jimbo-app and enable collectors." />
+      }
+    </app-ui-section>
+
     <app-ui-section title="Activity log" meta="Raw activity entries">
       @if (b.activities.length) {
         <ul class="journal-day__activities">

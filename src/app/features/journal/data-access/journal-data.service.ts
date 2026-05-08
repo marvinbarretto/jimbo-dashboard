@@ -59,11 +59,22 @@ export interface ProjectMinutes {
   readonly sessions: number;
 }
 
+export interface TelemetryEventLite {
+  readonly id: string;
+  readonly collector: string;
+  readonly type: string;
+  readonly ts: string;
+  readonly value: number | null;
+  readonly unit: string | null;
+  readonly payload: Record<string, unknown> | null;
+}
+
 export interface DayBundle {
   readonly date: DayKey;
   readonly sessions: readonly FocusSessionLite[];
   readonly activities: readonly ActivityLite[];
   readonly events: readonly CalendarEventLite[];
+  readonly telemetry: readonly TelemetryEventLite[];
   readonly totals: {
     readonly pomos_completed: number;
     readonly pomos_abandoned: number;
@@ -136,6 +147,16 @@ interface ApiCalendarEvent {
   calendar?: string;
 }
 
+interface ApiTelemetryEvent {
+  id: string;
+  collector: string;
+  type: string;
+  ts: string;
+  value: number | null;
+  unit: string | null;
+  payload: Record<string, unknown> | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class JournalDataService {
   private readonly http = inject(HttpClient);
@@ -154,12 +175,13 @@ export class JournalDataService {
     this.error.set(null);
     try {
       const daysBack = daysBackFromAnchor(dateFromDayKey(key), 1);
-      const [sessions, activities, events] = await Promise.all([
+      const [sessions, activities, events, telemetry] = await Promise.all([
         this.fetchSessions({ daysBack }),
         this.fetchActivitiesForDate(key),
         this.fetchEvents({ days: daysBack }),
+        this.fetchTelemetryForDate(key),
       ]);
-      this.day.set(buildDayBundle(key, sessions, activities, events));
+      this.day.set(buildDayBundle(key, sessions, activities, events, telemetry));
     } catch (e) {
       this.error.set(messageOf(e));
     } finally {
@@ -254,6 +276,21 @@ export class JournalDataService {
       return [];
     }
   }
+
+  private async fetchTelemetryForDate(date: DayKey): Promise<TelemetryEventLite[]> {
+    try {
+      const since = `${date}T00:00:00Z`;
+      const until = `${date}T23:59:59Z`;
+      const res = await firstValueFrom(
+        this.http.get<{ events: ApiTelemetryEvent[] }>(
+          `${this.base}/api/telemetry/events?since=${since}&until=${until}&limit=500`,
+        ),
+      );
+      return (res.events ?? []).map(toTelemetryEventLite);
+    } catch {
+      return [];
+    }
+  }
 }
 
 function toSessionLite(s: ApiFocusSession): FocusSessionLite {
@@ -282,6 +319,18 @@ function toActivityLite(a: ApiActivity): ActivityLite {
   };
 }
 
+function toTelemetryEventLite(e: ApiTelemetryEvent): TelemetryEventLite {
+  return {
+    id: e.id,
+    collector: e.collector,
+    type: e.type,
+    ts: e.ts,
+    value: e.value,
+    unit: e.unit,
+    payload: e.payload,
+  };
+}
+
 function toEventLite(e: ApiCalendarEvent): CalendarEventLite {
   const start = typeof e.start === 'string' ? e.start : (e.start.dateTime ?? e.start.date ?? '');
   const end = typeof e.end === 'string' ? e.end : (e.end.dateTime ?? e.end.date ?? '');
@@ -301,6 +350,7 @@ function buildDayBundle(
   sessions: readonly FocusSessionLite[],
   activities: readonly ActivityLite[],
   events: readonly CalendarEventLite[],
+  telemetry: readonly TelemetryEventLite[],
 ): DayBundle {
   const daySessions = sessions.filter(s => dayKeyOf(s.started_at) === key);
   const dayEvents = events.filter(e => dayKeyOf(e.start) === key);
@@ -329,6 +379,7 @@ function buildDayBundle(
     sessions: daySessions,
     activities,
     events: dayEvents,
+    telemetry,
     totals: {
       pomos_completed: pomosCompleted,
       pomos_abandoned: pomosAbandoned,
