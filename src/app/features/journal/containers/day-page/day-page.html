@@ -14,41 +14,77 @@
   <app-ui-loading-state message="Pulling the day's data…" />
 } @else if (bundle(); as b) {
   <app-ui-stack gap="lg">
-    <div class="journal-day__stats">
-      <app-ui-stat-card label="Pomodoros" [value]="b.totals.pomos_completed.toString()" [detail]="b.totals.pomos_abandoned ? b.totals.pomos_abandoned + ' abandoned' : null" />
-      <app-ui-stat-card label="Focus minutes" [value]="b.totals.focus_minutes.toString()" />
-      <app-ui-stat-card label="Activities" [value]="b.totals.activity_count.toString()" />
-      <app-ui-stat-card label="Calendar events" [value]="b.totals.events_count.toString()" />
-    </div>
 
-    <app-ui-section title="Focus by hour" meta="Minutes of focus per hour of day">
-      @if (b.totals.focus_minutes > 0) {
-        <app-journal-bar-chart
-          [labels]="hourlyLabels()"
-          [values]="hourlyValues()"
-          label="Minutes"
-          suffix=" min"
-          accent="rgba(251, 146, 60, 0.7)"
-        />
-      } @else {
-        <app-ui-empty-state title="No focus sessions" message="Once you log a pomodoro for this day it'll show up here." />
-      }
-    </app-ui-section>
+    <!-- ── WORK ─────────────────────────────────────────────── -->
+    <app-ui-section title="Work" [meta]="workMeta()">
+      <app-ui-stack gap="lg">
+        <div class="journal-day__stats">
+          <app-ui-stat-card label="Pomodoros" [value]="b.totals.pomos_completed.toString()" [detail]="b.totals.pomos_abandoned ? b.totals.pomos_abandoned + ' abandoned' : null" />
+          <app-ui-stat-card label="Focus" [value]="b.totals.focus_minutes.toString()" detail="minutes" />
+          <app-ui-stat-card label="Activities" [value]="b.totals.activity_count.toString()" />
+          <app-ui-stat-card label="Calendar" [value]="b.totals.events_count.toString()" detail="events" />
+        </div>
 
-    <div class="journal-day__split">
-      <app-ui-section title="Project minutes" meta="Where focus went">
-        @if (b.by_project.length) {
-          <app-journal-donut-chart
-            [labels]="projectLabels()"
-            [values]="projectValues()"
-            suffix=" min"
-          />
+        <div class="journal-day__split">
+          <app-ui-subsection label="Focus by hour">
+            @if (b.totals.focus_minutes > 0) {
+              <app-journal-bar-chart
+                [labels]="hourlyLabels()"
+                [values]="hourlyValues()"
+                label="Minutes"
+                suffix=" min"
+                accent="rgba(251, 146, 60, 0.7)"
+              />
+            } @else {
+              <app-ui-empty-state message="No focus sessions logged." />
+            }
+          </app-ui-subsection>
+
+          <app-ui-subsection label="Project time">
+            @if (b.by_project.length) {
+              <app-journal-donut-chart
+                [labels]="projectLabels()"
+                [values]="projectValues()"
+                suffix=" min"
+              />
+            } @else {
+              <app-ui-empty-state message="No project sessions." />
+            }
+          </app-ui-subsection>
+        </div>
+
+        <app-ui-subhead label="Sessions" [count]="b.sessions.length" />
+        @if (b.sessions.length) {
+          <ul class="journal-day__sessions">
+            @for (s of b.sessions; track s.id) {
+              <li class="journal-day__session">
+                <div class="journal-day__session-time">{{ formatTime(s.started_at) }}</div>
+                <div class="journal-day__session-body">
+                  <div class="journal-day__session-head">
+                    <span class="journal-day__session-project">{{ projectName(s.project_id) }}</span>
+                    <span class="journal-day__session-meta">
+                      {{ s.status }} · {{ ((s.actual_seconds ?? s.planned_seconds) / 60) | number:'1.0-0' }} min
+                    </span>
+                  </div>
+                  @if (s.notes) {
+                    <p class="journal-day__session-notes">{{ s.notes }}</p>
+                  }
+                  @if (s.tags.length) {
+                    <div class="journal-day__session-tags">
+                      @for (tag of s.tags; track tag) {
+                        <span class="journal-day__tag">#{{ tag }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
         } @else {
-          <app-ui-empty-state message="No project activity for this day." />
+          <app-ui-empty-state message="No pomodoros. Start one from the Pomo page." />
         }
-      </app-ui-section>
 
-      <app-ui-section title="Activity types" meta="What Jimbo logged today">
+        <app-ui-subhead label="Activity types" [count]="taskTypeRows().length" />
         @if (taskTypeRows().length) {
           <ul class="journal-day__list">
             @for (row of taskTypeRows(); track row[0]) {
@@ -61,129 +97,130 @@
         } @else {
           <app-ui-empty-state message="No activity entries for this day." />
         }
-      </app-ui-section>
-    </div>
 
-    <app-ui-section title="Pomodoros" [meta]="b.sessions.length + ' session' + (b.sessions.length === 1 ? '' : 's')">
-      @if (b.sessions.length) {
-        <ul class="journal-day__sessions">
-          @for (s of b.sessions; track s.id) {
-            <li class="journal-day__session">
-              <div class="journal-day__session-time">{{ formatTime(s.started_at) }}</div>
-              <div class="journal-day__session-body">
-                <div class="journal-day__session-head">
-                  <span class="journal-day__session-project">{{ projectName(s.project_id) }}</span>
-                  <span class="journal-day__session-meta">
-                    {{ s.status }} · {{ ((s.actual_seconds ?? s.planned_seconds) / 60) | number:'1.0-0' }} min
-                  </span>
-                </div>
-                @if (s.notes) {
-                  <p class="journal-day__session-notes">{{ s.notes }}</p>
+        <app-ui-subhead label="Activity log" [count]="b.activities.length" />
+        @if (b.activities.length) {
+          <ul class="journal-day__activities">
+            @for (a of b.activities; track a.id) {
+              <li class="journal-day__activity">
+                <span class="journal-day__activity-time">{{ formatTime(a.timestamp) }}</span>
+                <span class="journal-day__activity-type">{{ a.task_type }}</span>
+                <span class="journal-day__activity-desc">{{ a.description }}</span>
+                @if (a.outcome) {
+                  <span class="journal-day__activity-outcome">→ {{ a.outcome }}</span>
                 }
-                @if (s.tags.length) {
-                  <div class="journal-day__session-tags">
-                    @for (tag of s.tags; track tag) {
-                      <span class="journal-day__tag">#{{ tag }}</span>
-                    }
-                  </div>
-                }
-              </div>
-            </li>
-          }
-        </ul>
-      } @else {
-        <app-ui-empty-state title="No pomodoros yet" message="Start one from the Pomo page." />
-      }
-    </app-ui-section>
-
-    <app-ui-section title="Calendar" meta="Events on this day">
-      @if (b.events.length) {
-        <ul class="journal-day__events">
-          @for (e of b.events; track e.id) {
-            <li class="journal-day__event">
-              <span class="journal-day__event-time">
-                @if (e.all_day) {
-                  All day
-                } @else {
-                  {{ formatTime(e.start) }}
-                }
-              </span>
-              <span class="journal-day__event-title">{{ e.summary }}</span>
-              @if (e.calendar) {
-                <span class="journal-day__event-cal">{{ e.calendar }}</span>
-              }
-            </li>
-          }
-        </ul>
-      } @else {
-        <app-ui-empty-state message="No calendar events on this day." />
-      }
-    </app-ui-section>
-
-    @if (healthSummary(); as h) {
-      <app-ui-section title="Health" meta="From Health Connect">
-        <div class="journal-day__stats">
-          @if (h.steps) {
-            <app-ui-stat-card label="Steps" [value]="(h.steps | number:'1.0-0') ?? ''" />
-          }
-          @if (h.distanceKm) {
-            <app-ui-stat-card label="Distance" [value]="((h.distanceKm | number:'1.1-1') ?? '0') + ' km'" />
-          }
-          @if (h.caloriesActive) {
-            <app-ui-stat-card label="Active cal" [value]="h.caloriesActive.toString()" detail="kcal" />
-          }
-          @if (h.sleepMin) {
-            <app-ui-stat-card label="Sleep" [value]="formatMinutes(h.sleepMin)"
-              [detail]="(h.deepMin ? formatMinutes(h.deepMin) + ' deep' : '') + (h.remMin ? ' · ' + formatMinutes(h.remMin) + ' REM' : '') || null" />
-          }
-          @if (h.floors) {
-            <app-ui-stat-card label="Floors" [value]="h.floors.toString()" />
-          }
-        </div>
-
-        @if (h.hr) {
-          <p class="journal-day__phone-detail" style="margin-top: 0.5rem;">
-            Heart rate: {{ h.hr.avg }} bpm avg · {{ h.hr.min }}–{{ h.hr.max }} range
-          </p>
-        }
-
-        @if (h.exercises.length) {
-          <ul class="journal-day__list" style="margin-top: 0.75rem;">
-            @for (ex of h.exercises; track ex.ts) {
-              <li class="journal-day__row">
-                <span class="journal-day__row-label">{{ ex.type }}</span>
-                <span class="journal-day__row-value">{{ formatMinutes(ex.durationMin) }}</span>
               </li>
             }
           </ul>
+        } @else {
+          <app-ui-empty-state message="No activity logged for this day." />
         }
-      </app-ui-section>
-    }
 
-    <app-ui-section title="Phone signals" [meta]="telemetryEvents().length + ' events'">
-      @if (telemetryEvents().length; as _) {
+        <app-ui-subhead label="Calendar" [count]="b.events.length" />
+        @if (b.events.length) {
+          <ul class="journal-day__events">
+            @for (e of b.events; track e.id) {
+              <li class="journal-day__event">
+                <span class="journal-day__event-time">
+                  @if (e.all_day) { All day } @else { {{ formatTime(e.start) }} }
+                </span>
+                <span class="journal-day__event-title">{{ e.summary }}</span>
+                @if (e.calendar) {
+                  <span class="journal-day__event-cal">{{ e.calendar }}</span>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <app-ui-empty-state message="No calendar events on this day." />
+        }
+      </app-ui-stack>
+    </app-ui-section>
+
+    <!-- ── HEALTH ──────────────────────────────────────────── -->
+    <app-ui-section title="Health" meta="From Health Connect">
+      @if (healthSummary(); as h) {
+        <app-ui-stack gap="lg">
+          <div class="journal-day__stats">
+            @if (h.steps) {
+              <app-ui-stat-card label="Steps" [value]="(h.steps | number:'1.0-0') ?? ''" />
+            }
+            @if (h.distanceKm) {
+              <app-ui-stat-card label="Distance" [value]="((h.distanceKm | number:'1.1-1') ?? '0') + ' km'" />
+            }
+            @if (h.caloriesActive) {
+              <app-ui-stat-card label="Active cal" [value]="h.caloriesActive.toString()" detail="kcal" />
+            }
+            @if (h.sleepMin) {
+              <app-ui-stat-card label="Sleep" [value]="formatMinutes(h.sleepMin)"
+                [detail]="(h.deepMin ? formatMinutes(h.deepMin) + ' deep' : '') + (h.remMin ? ' · ' + formatMinutes(h.remMin) + ' REM' : '') || null" />
+            }
+            @if (h.floors) {
+              <app-ui-stat-card label="Floors" [value]="h.floors.toString()" />
+            }
+          </div>
+
+          @if (h.hr) {
+            <p class="journal-day__phone-detail">
+              Heart rate: {{ h.hr.avg }} bpm avg · {{ h.hr.min }}–{{ h.hr.max }} range
+            </p>
+          }
+
+          <app-ui-subhead label="Exercise" [count]="h.exercises.length" />
+          @if (h.exercises.length) {
+            <ul class="journal-day__list">
+              @for (ex of h.exercises; track ex.ts) {
+                <li class="journal-day__row">
+                  <span class="journal-day__row-label">{{ ex.type }}</span>
+                  <span class="journal-day__row-value">{{ formatMinutes(ex.durationMin) }}</span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <app-ui-empty-state message="No exercise sessions recorded." />
+          }
+
+          <app-ui-subhead label="Movement" [count]="phoneSummary().movementRows.length" />
+          @if (phoneSummary().movementRows.length) {
+            <ul class="journal-day__list">
+              @for (row of phoneSummary().movementRows; track row[0]) {
+                <li class="journal-day__row">
+                  <span class="journal-day__row-label">{{ row[0] }}</span>
+                  <span class="journal-day__row-value">{{ row[1] }}×</span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <app-ui-empty-state message="No movement transitions detected. Enable Activity collector in the jimbo app." />
+          }
+        </app-ui-stack>
+      } @else {
+        <app-ui-empty-state message="No Health Connect data. Grant permissions and ensure a data source is writing steps." />
+      }
+    </app-ui-section>
+
+    <!-- ── PHONE ───────────────────────────────────────────── -->
+    <app-ui-section title="Phone" [meta]="telemetryEvents().length + ' events today'">
+      @if (telemetryEvents().length) {
         @let s = phoneSummary();
         <app-ui-stack gap="lg">
-
           <div class="journal-day__stats">
             @if (s.screenOnMinutes > 0) {
               <app-ui-stat-card label="Screen time" [value]="formatMinutes(s.screenOnMinutes)" [detail]="s.unlocks ? s.unlocks + ' unlocks' : null" />
-            }
-            @if (s.unlocks > 0 && s.screenOnMinutes === 0) {
+            } @else if (s.unlocks > 0) {
               <app-ui-stat-card label="Unlocks" [value]="s.unlocks.toString()" />
             }
             <app-ui-stat-card label="Notifications" [value]="s.notifCount.toString()" />
             @if (s.mediaSessions.length) {
-              <app-ui-stat-card label="Media sessions" [value]="s.mediaSessions.length.toString()" />
+              <app-ui-stat-card label="Media" [value]="s.mediaSessions.length.toString()" detail="sessions" />
             }
             @if (s.locationPoints) {
-              <app-ui-stat-card label="Location fixes" [value]="s.locationPoints.toString()" />
+              <app-ui-stat-card label="Location" [value]="s.locationPoints.toString()" detail="fixes" />
             }
           </div>
 
           @if (s.notifCount > 0) {
-            <div class="journal-day__phone-group">
-              <p class="journal-day__phone-label">Notification timeline</p>
+            <app-ui-subsection label="Notification timeline">
               <app-journal-bar-chart
                 [labels]="hourlyLabels()"
                 [values]="phoneNotifsByHour()"
@@ -191,105 +228,73 @@
                 suffix=""
                 accent="rgba(99, 179, 237, 0.7)"
               />
-            </div>
+            </app-ui-subsection>
           }
 
-          @if (s.notifsByApp.length || s.movementRows.length) {
-            <div class="journal-day__split">
+          <div class="journal-day__split">
+            <app-ui-subsection label="Top senders">
               @if (s.notifsByApp.length) {
-                <div>
-                  <p class="journal-day__phone-label">Top senders</p>
-                  <ul class="journal-day__list">
-                    @for (row of s.notifsByApp; track row[0]) {
-                      <li class="journal-day__row">
-                        <span class="journal-day__row-label">{{ row[0] }}</span>
-                        <span class="journal-day__row-value">{{ row[1] }}</span>
-                      </li>
-                    }
-                  </ul>
-                </div>
+                <ul class="journal-day__list">
+                  @for (row of s.notifsByApp; track row[0]) {
+                    <li class="journal-day__row">
+                      <span class="journal-day__row-label">{{ row[0] }}</span>
+                      <span class="journal-day__row-value">{{ row[1] }}</span>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <app-ui-empty-state message="No notifications." />
               }
-              @if (s.movementRows.length) {
-                <div>
-                  <p class="journal-day__phone-label">Movement</p>
-                  <ul class="journal-day__list">
-                    @for (row of s.movementRows; track row[0]) {
-                      <li class="journal-day__row">
-                        <span class="journal-day__row-label">{{ row[0] }}</span>
-                        <span class="journal-day__row-value">{{ row[1] }}×</span>
-                      </li>
-                    }
-                  </ul>
-                </div>
+            </app-ui-subsection>
+
+            <app-ui-subsection label="Battery">
+              @if (s.batteryMin !== null) {
+                <p class="journal-day__phone-detail">
+                  Low {{ s.batteryMin }}% → High {{ s.batteryMax }}%, ended {{ s.batteryEnd }}%
+                  @if (s.chargeSessions) { · charged {{ s.chargeSessions }}× }
+                  @if (s.networkSwitches) { · {{ s.networkSwitches }} network switch{{ s.networkSwitches === 1 ? '' : 'es' }} }
+                </p>
+              } @else {
+                <app-ui-empty-state message="No battery data yet." />
               }
-            </div>
-          }
+            </app-ui-subsection>
+          </div>
 
-          @if (s.batteryMin !== null) {
-            <div class="journal-day__phone-group">
-              <p class="journal-day__phone-label">Battery</p>
-              <p class="journal-day__phone-detail">
-                Low {{ s.batteryMin }}% → High {{ s.batteryMax }}%, ended at {{ s.batteryEnd }}%
-                @if (s.chargeSessions) { · charged {{ s.chargeSessions }}× }
-                @if (s.networkSwitches) { · {{ s.networkSwitches }} network switch{{ s.networkSwitches === 1 ? '' : 'es' }} }
-              </p>
-            </div>
-          }
-
+          <app-ui-subhead label="Media" [count]="s.mediaSessions.length" />
           @if (s.mediaSessions.length) {
-            <div class="journal-day__phone-group">
-              <p class="journal-day__phone-label">Media</p>
-              <ul class="journal-day__list">
-                @for (m of s.mediaSessions; track m.ts) {
-                  <li class="journal-day__row">
-                    <span class="journal-day__row-label">
-                      {{ m.title ? m.title + (m.artist ? ' — ' + m.artist : '') : m.app }}
-                    </span>
-                    <span class="journal-day__row-value">{{ m.app }}</span>
-                  </li>
-                }
-              </ul>
-            </div>
+            <ul class="journal-day__list">
+              @for (m of s.mediaSessions; track m.ts) {
+                <li class="journal-day__row">
+                  <span class="journal-day__row-label">
+                    {{ m.title ? m.title + (m.artist ? ' — ' + m.artist : '') : m.app }}
+                  </span>
+                  <span class="journal-day__row-value">{{ m.app }}</span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <app-ui-empty-state message="No media sessions detected." />
           }
 
+          <app-ui-subhead label="App usage" [count]="s.appUsage.length" />
           @if (s.appUsage.length) {
-            <div class="journal-day__phone-group">
-              <p class="journal-day__phone-label">App usage (yesterday)</p>
-              <ul class="journal-day__list">
-                @for (a of s.appUsage.slice(0, 10); track a.label) {
-                  <li class="journal-day__row">
-                    <span class="journal-day__row-label">{{ a.label }}</span>
-                    <span class="journal-day__row-value">{{ formatMinutes(Math.round(a.foreground_seconds / 60)) }}</span>
-                  </li>
-                }
-              </ul>
-            </div>
+            <ul class="journal-day__list">
+              @for (a of s.appUsage.slice(0, 10); track a.label) {
+                <li class="journal-day__row">
+                  <span class="journal-day__row-label">{{ a.label }}</span>
+                  <span class="journal-day__row-value">{{ formatMinutes(Math.round(a.foreground_seconds / 60)) }}</span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <app-ui-empty-state message="App usage appears the following day. Enable Usage Stats in the jimbo app." />
           }
-
         </app-ui-stack>
       } @else {
         <app-ui-empty-state message="No phone telemetry for this day. Install jimbo-app and enable collectors." />
       }
     </app-ui-section>
 
-    <app-ui-section title="Activity log" meta="Raw activity entries">
-      @if (b.activities.length) {
-        <ul class="journal-day__activities">
-          @for (a of b.activities; track a.id) {
-            <li class="journal-day__activity">
-              <span class="journal-day__activity-time">{{ formatTime(a.timestamp) }}</span>
-              <span class="journal-day__activity-type">{{ a.task_type }}</span>
-              <span class="journal-day__activity-desc">{{ a.description }}</span>
-              @if (a.outcome) {
-                <span class="journal-day__activity-outcome">→ {{ a.outcome }}</span>
-              }
-            </li>
-          }
-        </ul>
-      } @else {
-        <app-ui-empty-state message="No activity logged for this day." />
-      }
-    </app-ui-section>
   </app-ui-stack>
 } @else {
   <app-ui-empty-state title="No data" message="Couldn't load this day." />

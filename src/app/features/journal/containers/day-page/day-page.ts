@@ -7,10 +7,12 @@ import { formatPageTitle } from '@app/app-title-strategy';
 import { map } from 'rxjs';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiSection } from '@shared/components/ui-section/ui-section';
+import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
+import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
-import { absoluteTime } from '@shared/utils/datetime.utils';
+import { absoluteTime, formatMinutes, pluralise } from '@shared/utils/datetime.utils';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { JournalDataService } from '../../data-access/journal-data.service';
 import { JournalBarChart } from '../../components/bar-chart/bar-chart';
@@ -30,6 +32,8 @@ import {
     DecimalPipe,
     UiStack,
     UiSection,
+    UiSubsection,
+    UiSubhead,
     UiStatCard,
     UiEmptyState,
     UiLoadingState,
@@ -58,6 +62,16 @@ export class JournalDayPage {
   protected readonly title = computed(() => formatDayLong(this.key()));
   protected readonly subtitle = computed(() => relativeDayLabel(this.key()));
   protected readonly isToday = computed(() => this.key() === todayKey());
+
+  protected readonly workMeta = computed(() => {
+    const t = this.bundle()?.totals;
+    if (!t) return '';
+    const parts: string[] = [];
+    if (t.pomos_completed) parts.push(pluralise(t.pomos_completed, 'pomo'));
+    if (t.focus_minutes) parts.push(formatMinutes(t.focus_minutes) + ' focus');
+    if (t.activity_count) parts.push(pluralise(t.activity_count, 'activity', 'activities'));
+    return parts.join(' · ') || 'Nothing logged yet';
+  });
 
   protected readonly hourlyLabels = computed(() => HOUR_LABELS);
   protected readonly hourlyValues = computed(() => this.bundle()?.hourly_minutes ?? []);
@@ -195,13 +209,7 @@ export class JournalDayPage {
   });
 
   protected readonly Math = Math;
-
-  protected formatMinutes(m: number): string {
-    if (m < 60) return `${m}m`;
-    const h = Math.floor(m / 60);
-    const rem = m % 60;
-    return rem > 0 ? `${h}h ${rem}m` : `${h}h`;
-  }
+  protected readonly formatMinutes = formatMinutes;
 
   constructor() {
     effect(() => this.titleService.setTitle(formatPageTitle(formatDayLong(this.key()))));

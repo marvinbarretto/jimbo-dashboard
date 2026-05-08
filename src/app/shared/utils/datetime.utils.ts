@@ -128,3 +128,28 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+/**
+ * Formats a minute count as hours and minutes.
+ *
+ * @param minutes - Duration in minutes
+ * @returns e.g. "45m", "2h", "2h 15m"
+ */
+export function formatMinutes(minutes: number): string {
+  if (minutes < 60) return `${minutes}m`;
+  const h = Math.floor(minutes / 60);
+  const rem = minutes % 60;
+  return rem > 0 ? `${h}h ${rem}m` : `${h}h`;
+}
+
+/**
+ * Returns the singular or plural form of a word based on count.
+ *
+ * @param count - The quantity
+ * @param singular - Singular form
+ * @param plural - Plural form (defaults to singular + "s")
+ * @returns e.g. pluralise(1, "pomo") → "1 pomo", pluralise(3, "pomo") → "3 pomos"
+ */
+export function pluralise(count: number, singular: string, plural = `${singular}s`): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
