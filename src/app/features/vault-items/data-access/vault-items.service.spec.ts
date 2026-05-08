@@ -177,6 +177,8 @@ describe('VaultItemsService.createWithRelations (HTTP mode)', () => {
       projects: [],
       assignee: null,
       related: [],
+      is_epic: false,
+      github_url: null,
     };
 
     service.createWithRelations(draft).subscribe();
@@ -200,6 +202,8 @@ describe('VaultItemsService.createWithRelations (HTTP mode)', () => {
       projects: [],
       assignee: null,
       related: [],
+      is_epic: false,
+      github_url: null,
     };
     service.createWithRelations(draft).subscribe();
     const req = http.expectOne(r => r.url.endsWith('/api/vault/notes'));
@@ -212,6 +216,8 @@ describe('VaultItemsService.createWithRelations (HTTP mode)', () => {
       title: 'x', body: '', tags: [], projects: [],
       assignee: fakeActor('boris'),
       related: [],
+      is_epic: false,
+      github_url: null,
     };
     service.createWithRelations(draft).subscribe();
     const req = http.expectOne(r => r.url.endsWith('/api/vault/notes'));
@@ -227,6 +233,7 @@ describe('VaultItemsService.createWithRelations (HTTP mode)', () => {
         { id: vaultItemId('b'), title: 'b', seq: 2 },
         { id: vaultItemId('a'), title: 'a-dup', seq: 1 },
       ],
+      is_epic: false, github_url: null,
     };
     service.createWithRelations(draft).subscribe();
     const req = http.expectOne(r => r.url.endsWith('/api/vault/notes'));
@@ -240,6 +247,7 @@ describe('VaultItemsService.createWithRelations (HTTP mode)', () => {
   it('omits empty body, tags, and links from the body', () => {
     const draft: DraftPayload = {
       title: 'x', body: '   ', tags: [], projects: [], assignee: null, related: [],
+      is_epic: false, github_url: null,
     };
     service.createWithRelations(draft).subscribe();
     const req = http.expectOne(r => r.url.endsWith('/api/vault/notes'));
@@ -253,6 +261,7 @@ describe('VaultItemsService.createWithRelations (HTTP mode)', () => {
     const draft: DraftPayload = {
       title: 'x', body: '', tags: [], assignee: null, related: [],
       projects: [fakeProject('hermes'), fakeProject('localshout'), fakeProject('hermes')],
+      is_epic: false, github_url: null,
     };
 
     let emitted: { id: string; seq: number; title: string } | undefined;

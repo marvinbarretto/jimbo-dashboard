@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { take } from 'rxjs';
 import { DispatchService } from '@features/execution/data-access/dispatch.service';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
+import { VaultItemCommands } from '@features/vault-items/commands/vault-item-commands';
 import { VaultItemProjectsService } from '@features/vault-items/data-access/vault-item-projects.service';
 import { ProjectsService } from '@features/projects/data-access/projects.service';
 import { ActorsService } from '@features/actors/data-access/actors.service';
@@ -75,6 +76,7 @@ interface ColumnView {
 export class ExecutionBoard {
   private readonly dispatchService = inject(DispatchService);
   private readonly vaultItemsService = inject(VaultItemsService);
+  private readonly commands = inject(VaultItemCommands);
   private readonly vaultItemProjectsService = inject(VaultItemProjectsService);
   private readonly projectsService = inject(ProjectsService);
   private readonly actorsService = inject(ActorsService);
@@ -293,7 +295,7 @@ export class ExecutionBoard {
   }
 
   onCompleteManualItem(item: VaultItem): void {
-    this.vaultItemsService.setCompleted(item.id, true);
+    this.commands.complete(item.id);
   }
 
   // --- mutations ---------------------------------------------------------

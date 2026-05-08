@@ -35,3 +35,20 @@ Commands: `ng test --no-watch`, `npx playwright test`.
 ## Comments
 
 Comment the WHY. Capture design decisions and rejected alternatives. Skip anything the code already says.
+
+## Vault item mutations go through the command layer
+
+`VaultItemsService` is the data-access layer — HTTP, optimistic state, low-level mutations. **Components, dialogs, and kanban boards do not call mutation methods on it directly.** They go through `VaultItemCommands` (`features/vault-items/commands/`).
+
+Why: a vault item's lifecycle is a funnel. Each stage has preconditions (readiness, allowed transitions) and side-effects (audit events, thread messages, ownership changes). When that logic is scattered across UI callers, it drifts — the screenshot of dispatches failing with `expected ungroomed, got intake_rejected` is the symptom of a missing precondition gate. The command layer is where the funnel is enforced and read top-to-bottom.
+
+Allowed in callers:
+- `vaultItemsService.items()`, `getById`, `getBySeq` — read-only signals
+- `commands.archive(id)`, `commands.complete(id)`, `commands.approveForDispatch(id)` etc. — gated mutations
+
+Not allowed in callers:
+- `vaultItemsService.archive`, `setCompleted`, `setGroomingStatus`, `rejectItem`, `reassign`, `update` — direct mutation methods. Use the command equivalent.
+
+The transition allowlist (`domain/vault/transitions.ts`) is **advisory** at the operator boundary — kanban drag-drop passes `{ force: true }` so Marvin can shove items around during exploration. It is **strict** at programmatic boundaries — `approveForDispatch` refuses to advance an item that doesn't satisfy `computeReadiness`.
+
+Optimistic-update boilerplate lives in `shared/data-access/with-optimistic.ts`. Three helpers — `withOptimisticUpdate`, `withOptimisticCreate`, `withOptimisticRemove` — own the rollback policy. Don't roll your own.

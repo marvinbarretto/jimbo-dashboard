@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { ActivatedRoute, Router } from '@angular/router';
 import { take } from 'rxjs';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
+import { VaultItemCommands } from '@features/vault-items/commands/vault-item-commands';
 import { ActorsService } from '@features/actors/data-access/actors.service';
 import { ProjectsService } from '@features/projects/data-access/projects.service';
 import { VaultItemProjectsService } from '@features/vault-items/data-access/vault-item-projects.service';
@@ -77,6 +78,7 @@ interface ColumnView {
 })
 export class GroomingBoard {
   private readonly vaultItemsService = inject(VaultItemsService);
+  private readonly commands = inject(VaultItemCommands);
   private readonly actorsService = inject(ActorsService);
   private readonly projectsService = inject(ProjectsService);
   private readonly vaultItemProjectsService = inject(VaultItemProjectsService);
@@ -435,8 +437,10 @@ export class GroomingBoard {
   onColumnDrop(event: DragEvent, status: GroomingStatus): void {
     const id = this.drag.onDrop(event, status);
     if (!id) return;
-    // Single write path — emits grooming_status_changed event for audit.
-    this.vaultItemsService.setGroomingStatus(id, status, null);
+    // Operator drag-drop bypasses the transition allowlist — Marvin shoves
+    // items around freely during exploration. The strict gate is reserved
+    // for `approveForDispatch`. Audit event still fires inside the command.
+    this.commands.setStatus(id, status, { force: true });
   }
 
   // --- filter groups ------------------------------------------------------
@@ -525,7 +529,7 @@ export class GroomingBoard {
   onSortChange(mode: string): void { this._sortMode.set(mode as SortMode); }
 
   onArchiveItem(item: VaultItem): void {
-    this.vaultItemsService.archive(item.id);
+    this.commands.archive(item.id);
   }
 
   onCreateTask(): void {
@@ -548,15 +552,19 @@ export class GroomingBoard {
     });
   }
 
-  // Approve = move from decomposed to ready. Existing setGroomingStatus
-  // single-write path emits the audit event.
+  // Approve = move from decomposed to ready, but only when readiness passes.
+  // The command refuses (with toast) when AC / owner / priority / questions /
+  // blockers aren't satisfied — this is what stops bad-state dispatches from
+  // landing in the executor.
   onApproveItem(item: VaultItem): void {
-    this.vaultItemsService.setGroomingStatus(item.id, 'ready', null);
+    this.commands.approveForDispatch(item.id);
   }
 
-  // Reject takes a reason from the prompt and routes the item to needs_rework.
+  // Card-level reject is a quick status-change with a reason note. The full
+  // rejectWithReason composition (reassign + thread message + 2 events) is
+  // reserved for the dialog's reject form, which collects a new owner.
   onRejectItem(item: VaultItem, reason: string): void {
-    this.vaultItemsService.setGroomingStatus(item.id, 'needs_rework', reason);
+    this.commands.setStatus(item.id, 'needs_rework', { reason, force: true });
   }
 
   // Manual decompose nudge — for now, just open the detail page so the

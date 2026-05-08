@@ -11,6 +11,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { VaultItemsService } from '../data-access/vault-items.service';
+import { VaultItemCommands } from '../commands/vault-item-commands';
 import { ActivityEventsService } from '../data-access/activity-events.service';
 import { VaultItemProjectsService } from '../data-access/vault-item-projects.service';
 import { VaultItemDependenciesService } from '../data-access/vault-item-dependencies.service';
@@ -70,6 +71,7 @@ import type { RejectSubmission } from '../components/vault-item-detail-body/reje
 export class VaultItemDialogStore {
   private readonly http = inject(HttpClient);
   private readonly vaultItemsService = inject(VaultItemsService);
+  private readonly commands = inject(VaultItemCommands);
   private readonly activityService = inject(ActivityEventsService);
   private readonly projectsJunction = inject(VaultItemProjectsService);
   private readonly depsService = inject(VaultItemDependenciesService);
@@ -335,9 +337,10 @@ export class VaultItemDialogStore {
   private readonly _draftSaved = signal(false);
   readonly draftSaved = this._draftSaved.asReadonly();
 
-  readonly canSubmitDraft = computed(() =>
-    this._draftPayload().title.trim().length > 0 && !this._draftSubmitting(),
-  );
+  /** Only blocks during in-flight submission. Title-required is surfaced as
+   *  an inline error on submit attempt — see `docs/conventions.md` §UX
+   *  ("errors over disabled states"). */
+  readonly canSubmitDraft = computed(() => !this._draftSubmitting());
 
   /** Triggers wired into the Draft body textarea (#tag, @actor/project, ~related). */
   readonly draftTriggers = [
@@ -404,6 +407,11 @@ export class VaultItemDialogStore {
     }));
   }
 
+  removeDraftProjectById(id: string): void {
+    const idx = this._draftPayload().projects.findIndex(p => p.id === id);
+    if (idx >= 0) this.removeDraftProject(idx);
+  }
+
   removeDraftAssignee(): void {
     this._draftPayload.update(d => ({ ...d, assignee: null }));
   }
@@ -424,7 +432,11 @@ export class VaultItemDialogStore {
    * that emits the new mode (so the host can re-emit as a component output).
    */
   submitDraft(): Observable<DialogMode> {
-    if (!this.canSubmitDraft()) return new Observable<DialogMode>();
+    if (this._draftSubmitting()) return new Observable<DialogMode>();
+    if (this._draftPayload().title.trim().length === 0) {
+      this._draftError.set('Title is required');
+      return new Observable<DialogMode>();
+    }
     const payload = this._draftPayload();
     const destination = this._draftDestination() ?? undefined;
     this._draftSubmitting.set(true);
@@ -498,7 +510,7 @@ export class VaultItemDialogStore {
 
   archive(): void {
     const i = this.item(); if (!i) return;
-    this.vaultItemsService.archive(i.id);
+    this.commands.archive(i.id);
   }
 
   remove(): void {
@@ -511,7 +523,14 @@ export class VaultItemDialogStore {
     const isCurrentlyDone = i.completed_at !== null;
     const wantDone = next === 'done';
     if (isCurrentlyDone === wantDone) return;
-    this.vaultItemsService.setCompleted(i.id, wantDone, null);
+    if (wantDone) {
+      this.commands.complete(i.id);
+    } else {
+      // Un-completing — no command yet (no readiness/composition concern);
+      // service is the right level for now. Add `commands.uncomplete` when
+      // un-mark grows audit-trail or compensating actions.
+      this.vaultItemsService.setCompleted(i.id, false, null);
+    }
   }
 
   reassign(toActorIdStr: string): void {
