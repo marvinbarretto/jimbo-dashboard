@@ -48,6 +48,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/config/config.routes').then(m => m.configRoutes),
   },
   {
+    path: 'actors',
+    loadChildren: () => import('./features/actors/actors.routes').then(m => m.actorsRoutes),
+  },
+  {
     path: 'projects/:id',
     title: 'Project',
     loadComponent: () => import('./features/projects/containers/project-landing/project-landing').then(m => m.ProjectLanding),

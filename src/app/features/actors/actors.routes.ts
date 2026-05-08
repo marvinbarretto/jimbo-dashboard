@@ -14,7 +14,7 @@ export const actorsRoutes: Routes = [
   {
     path: ':id',
     title: 'Actor',
-    loadComponent: () => import('./containers/actor-detail/actor-detail').then(m => m.ActorDetail),
+    loadComponent: () => import('./containers/actor-page/actor-page').then(m => m.ActorPage),
   },
   {
     path: ':id/edit',

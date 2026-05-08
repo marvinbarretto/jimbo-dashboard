@@ -1,0 +1,104 @@
+@if (actor(); as a) {
+  <app-ui-stack class="actor-page" gap="lg">
+    <app-ui-page-header class="actor-page__header">
+      <app-ui-back-link uiPageHeaderLead [to]="['/actors']">← Actors</app-ui-back-link>
+
+      <h1 uiPageHeaderTitle>
+        {{ a.display_name }}
+        <app-ui-badge [tone]="activeTone(a.is_active)">{{ activeLabel(a.is_active) }}</app-ui-badge>
+        <app-ui-badge [tone]="kindTone(a.kind)">{{ a.kind }}</app-ui-badge>
+        @if (a.runtime) {
+          <app-ui-badge tone="neutral" [subtle]="true">{{ a.runtime }}</app-ui-badge>
+        }
+      </h1>
+
+      <app-ui-cluster uiPageHeaderActions gap="xs">
+        <a [routerLink]="['/actors', a.id, 'edit']" class="btn btn--secondary">Edit</a>
+      </app-ui-cluster>
+    </app-ui-page-header>
+
+    @if (a.description) {
+      <p class="actor-page__desc">{{ a.description }}</p>
+    }
+
+    <app-ui-section title="At a glance" [collapsible]="false">
+      <div class="actor-page__stats">
+        <app-actor-stat-tile label="Assigned" [value]="assignedItems().length" />
+        <app-actor-stat-tile label="Active" [value]="activeAssignedItems().length" />
+        <app-actor-stat-tile label="Dispatches" [value]="dispatches().length" hint="last 20" />
+        <app-actor-stat-tile label="Failed" [value]="failedDispatches().length" />
+        <app-actor-stat-tile
+          label="Success rate"
+          [value]="successRate() !== null ? (successRate() + '%') : '—'"
+        />
+        <app-actor-stat-tile label="Projects" [value]="ownedProjects().length" />
+      </div>
+    </app-ui-section>
+
+    <app-ui-section title="Assigned vault items" [collapsible]="false">
+      @if (assignedItems().length === 0) {
+        <app-ui-empty-state message="No vault items assigned to this actor." />
+      } @else {
+        <app-ui-card tone="soft" [compact]="true">
+          <ul class="actor-page__list">
+            @for (item of assignedItems(); track item.id) {
+              <li><app-actor-vault-item-row [item]="item" /></li>
+            }
+          </ul>
+        </app-ui-card>
+      }
+    </app-ui-section>
+
+    <app-ui-section title="Recent dispatches" [collapsible]="false">
+      @if (recentDispatches().length === 0) {
+        <app-ui-empty-state message="No dispatches found for this actor." />
+      } @else {
+        <app-ui-card tone="soft" [compact]="true">
+          <ul class="actor-page__list">
+            @for (d of recentDispatches(); track d.id) {
+              <li><app-actor-dispatch-row [dispatch]="d" /></li>
+            }
+          </ul>
+        </app-ui-card>
+      }
+    </app-ui-section>
+
+    <app-ui-section title="Owned projects" [collapsible]="false">
+      @if (ownedProjects().length === 0) {
+        <app-ui-empty-state message="No projects owned by this actor." />
+      } @else {
+        <app-ui-card tone="soft" [compact]="true">
+          <ul class="actor-page__list">
+            @for (p of ownedProjects(); track p.id) {
+              <li><app-actor-project-row [project]="p" /></li>
+            }
+          </ul>
+        </app-ui-card>
+      }
+    </app-ui-section>
+
+    <app-ui-section title="Capabilities" [collapsible]="true">
+      @if (a.serves.length) {
+        <app-ui-cluster gap="xs">
+          @for (cap of a.serves; track cap) {
+            <app-ui-badge tone="info" [subtle]="true">{{ cap }}</app-ui-badge>
+          }
+        </app-ui-cluster>
+      } @else {
+        <app-ui-empty-state message="No capabilities declared — this actor cannot be dispatched to." />
+      }
+    </app-ui-section>
+
+    <app-ui-section title="Metadata" [collapsible]="true">
+      <app-ui-meta-list>
+        <dt>ID</dt><dd><code>{{ a.id }}</code></dd>
+        <dt>Kind</dt><dd>{{ a.kind }}</dd>
+        <dt>Runtime</dt><dd>{{ a.runtime ?? '—' }}</dd>
+        <dt>Created</dt><dd>{{ a.created_at | datetime }}</dd>
+        <dt>Updated</dt><dd>{{ a.updated_at | datetime }}</dd>
+      </app-ui-meta-list>
+    </app-ui-section>
+  </app-ui-stack>
+} @else {
+  <app-ui-empty-state title="Actor not found" message="The requested actor could not be found." />
+}

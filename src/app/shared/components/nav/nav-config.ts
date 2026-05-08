@@ -13,6 +13,7 @@ export interface NavGroup {
 
 export const primaryNavItems: readonly NavLink[] = [
   { href: '/config',                label: 'Config',         accent: '#818cf8' },
+  { href: '/actors',                 label: 'Actors',         accent: '#f9a8d4' },
   { href: '/journal',               label: 'Journal',        accent: '#fde68a' },
   { href: '/pomo-reports',          label: 'Pomo reports',   accent: '#fb923c' },
   { href: '/calendar-settings',     label: 'Calendars',      accent: '#34d399' },
@@ -34,7 +35,7 @@ export const navGroups: readonly NavGroup[] = [
     paths: [
       'today', 'shopping', 'mail-next', 'mail-activity', 'briefings', 'calendar-settings', 'tasks',
       'jimbo-workspace',
-      'config', 'grooming', 'execution', 'vault-items', 'questions', 'activity',
+      'config', 'actors', 'grooming', 'execution', 'vault-items', 'questions', 'activity',
       'skills', 'models', 'model-stacks', 'context', 'coach', 'interrogate',
       'hermes', 'ops', 'triage', 'stream', 'coverage', 'grooming-admin', 'pomo-reports',
     ],

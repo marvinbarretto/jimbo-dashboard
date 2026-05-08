@@ -11,10 +11,6 @@ export const configRoutes: Routes = [
         loadChildren: () => import('../projects/projects.routes').then(m => m.projectsRoutes),
       },
       {
-        path: 'actors',
-        loadChildren: () => import('../actors/actors.routes').then(m => m.actorsRoutes),
-      },
-      {
         path: 'skills',
         loadChildren: () => import('../skills/skills.routes').then(m => m.skillsRoutes),
       },

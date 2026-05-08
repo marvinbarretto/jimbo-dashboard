@@ -19,7 +19,7 @@
       @for (actor of actors(); track actor.id) {
         <tr [class.inactive]="!actor.is_active">
           <td class="actor-id">
-            <a [routerLink]="[actor.id]">{{ actor.id }}</a>
+            <a [routerLink]="['/actors', actor.id]">{{ actor.id }}</a>
           </td>
           <td>{{ actor.display_name }}</td>
           <td>

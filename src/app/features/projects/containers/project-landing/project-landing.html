@@ -48,7 +48,7 @@
         <li>
           Owner:
           @if (owner(); as o) {
-            <a [routerLink]="['/config/actors', o.id]">{{ o.display_name }}</a>
+            <a [routerLink]="['/actors', o.id]">{{ o.display_name }}</a>
           } @else if (p.owner_actor_id) {
             <code>{{ p.owner_actor_id }}</code>
           } @else {
