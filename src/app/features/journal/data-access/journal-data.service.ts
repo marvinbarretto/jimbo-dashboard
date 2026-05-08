@@ -20,6 +20,7 @@ import {
   daysInWeek,
   dayKeyOf,
   monthRange,
+  shiftDay,
   weekStartFromKey,
 } from '../utils/date-keys';
 
@@ -279,14 +280,35 @@ export class JournalDataService {
 
   private async fetchTelemetryForDate(date: DayKey): Promise<TelemetryEventLite[]> {
     try {
-      const since = `${date}T00:00:00Z`;
-      const until = `${date}T23:59:59Z`;
-      const res = await firstValueFrom(
-        this.http.get<{ events: ApiTelemetryEvent[] }>(
-          `${this.base}/api/telemetry/events?since=${since}&until=${until}&limit=500`,
+      // Use local-time midnight boundaries so screen_session events (whose ts is
+      // a UTC Instant from the device) correctly align with the user's calendar day.
+      const dayStart = dateFromDayKey(date);
+      const dayEnd = dateFromDayKey(shiftDay(date, 1));
+      const since = dayStart.toISOString();
+      const until = dayEnd.toISOString();
+
+      // app_usage_daily has ts = previous local-day midnight (start of the covered
+      // period). For a UTC+N user that timestamp is N hours before local midnight,
+      // falling outside the main window. Fetch it separately from the prior day.
+      const prevSince = dateFromDayKey(shiftDay(date, -1)).toISOString();
+
+      const [dayRes, usageRes] = await Promise.all([
+        firstValueFrom(
+          this.http.get<{ events: ApiTelemetryEvent[] }>(
+            `${this.base}/api/telemetry/events?since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}&limit=500`,
+          ),
         ),
-      );
-      return (res.events ?? []).map(toTelemetryEventLite);
+        firstValueFrom(
+          this.http.get<{ events: ApiTelemetryEvent[] }>(
+            `${this.base}/api/telemetry/events?collector=usage&type=app_usage_daily&since=${encodeURIComponent(prevSince)}&until=${encodeURIComponent(since)}&limit=5`,
+          ),
+        ),
+      ]);
+
+      const dayEvents = (dayRes.events ?? []).map(toTelemetryEventLite);
+      const usageEvents = (usageRes.events ?? []).map(toTelemetryEventLite);
+      const dayIds = new Set(dayEvents.map(e => e.id));
+      return [...dayEvents, ...usageEvents.filter(e => !dayIds.has(e.id))];
     } catch {
       return [];
     }
