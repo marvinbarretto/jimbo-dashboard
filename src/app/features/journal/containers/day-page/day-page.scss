@@ -146,3 +146,24 @@
   color: var(--color-text-soft);
   font-size: 0.78rem;
 }
+
+.journal-day__phone-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.journal-day__phone-label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+}
+
+.journal-day__phone-detail {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-soft);
+}

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
-import { DecimalPipe, KeyValuePipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs';
@@ -26,7 +26,6 @@ import {
   selector: 'app-journal-day-page',
   imports: [
     DecimalPipe,
-    KeyValuePipe,
     UiStack,
     UiSection,
     UiStatCard,
@@ -73,22 +72,89 @@ export class JournalDayPage {
 
   protected readonly telemetryEvents = computed(() => this.bundle()?.telemetry ?? []);
 
-  protected readonly telemetrySummary = computed(() => {
+  protected readonly phoneSummary = computed(() => {
     const events = this.telemetryEvents();
-    const notifCount = events.filter(e => e.collector === 'notifications').length;
-    const activityEvents = events.filter(e => e.collector === 'activity');
-    const mediaStarts = events.filter(e => e.collector === 'media' && e.type === 'media.session_started').length;
-    const locationPoints = events.filter(e => e.collector === 'location').length;
-    const byActivityType = new Map<string, number>();
-    for (const e of activityEvents) {
-      const activity = (e.payload?.['activity_type'] as string | undefined) ?? 'unknown';
-      const transition = (e.payload?.['transition'] as string | undefined) ?? '';
-      if (transition === 'enter') {
-        byActivityType.set(activity, (byActivityType.get(activity) ?? 0) + 1);
+
+    // Screen & usage — UsageCollector emits hourly screen_session events
+    const screenSessions = events.filter(e => e.collector === 'usage' && e.type === 'screen_session');
+    const screenOnMinutes = Math.round(screenSessions.reduce((s, e) => s + (e.value ?? 0), 0) / 60);
+    const unlocks = screenSessions.reduce((s, e) => s + ((e.payload?.['unlock_count'] as number) ?? 0), 0);
+    const firstUnlockAt = screenSessions
+      .flatMap(e => { const t = e.payload?.['first_unlock_ts'] as string | undefined; return t ? [t] : []; })
+      .sort()[0] ?? null;
+    const appUsage = ((events.find(e => e.collector === 'usage' && e.type === 'app_usage_daily')
+      ?.payload?.['top_apps']) as Array<{ label: string; foreground_seconds: number }> | undefined) ?? [];
+
+    // Notifications — group by short package name and bucket by hour
+    const posted = events.filter(e => e.collector === 'notifications' && e.type === 'notifications.posted');
+    const notifsByHour = new Array<number>(24).fill(0);
+    const appMap = new Map<string, number>();
+    for (const e of posted) {
+      notifsByHour[new Date(e.ts).getHours()]++;
+      const name = shortPkg(e.payload?.['pkg'] as string ?? '');
+      appMap.set(name, (appMap.get(name) ?? 0) + 1);
+    }
+    const notifsByApp = [...appMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
+
+    // Battery — min/max/end from battery_level events, charge session count from charge_state_changed
+    const batteryEvents = events.filter(e => e.collector === 'device' && e.type === 'battery_level');
+    const levels = batteryEvents.map(e => Math.round(e.value ?? 0)).filter(v => v > 0);
+    const chargeSessions = events.filter(
+      e => e.collector === 'device' && e.type === 'charge_state_changed' && e.payload?.['plugged_in'] === true
+    ).length;
+
+    // Network — count kind transitions (wifi↔cellular = leaving/arriving at a known location)
+    const netEvents = events
+      .filter(e => e.collector === 'device' && e.type === 'network_state')
+      .sort((a, b) => a.ts.localeCompare(b.ts));
+    const networkSwitches = netEvents.filter(
+      (e, i) => i > 0 && e.payload?.['kind'] !== netEvents[i - 1]?.payload?.['kind']
+    ).length;
+
+    // Movement — enter transitions only, skip 'still' (it's the baseline, not an event worth counting)
+    const movementRows: Array<[string, number]> = [];
+    const movMap = new Map<string, number>();
+    for (const e of events.filter(e => e.collector === 'activity')) {
+      if ((e.payload?.['transition'] as string) === 'enter') {
+        const t = e.payload?.['activity_type'] as string ?? 'unknown';
+        if (t !== 'still') movMap.set(t, (movMap.get(t) ?? 0) + 1);
       }
     }
-    return { notifCount, mediaStarts, locationPoints, byActivityType };
+    movMap.forEach((v, k) => movementRows.push([k, v]));
+    movementRows.sort((a, b) => b[1] - a[1]);
+
+    // Media sessions
+    const mediaSessions = events
+      .filter(e => e.collector === 'media' && e.type === 'media.session_started')
+      .map(e => ({
+        app: shortPkg(e.payload?.['pkg'] as string ?? ''),
+        title: e.payload?.['title'] as string | null ?? null,
+        artist: e.payload?.['artist'] as string | null ?? null,
+        ts: e.ts,
+      }));
+
+    return {
+      screenOnMinutes, unlocks, firstUnlockAt, appUsage,
+      notifCount: posted.length, notifsByHour, notifsByApp,
+      batteryMin: levels.length ? Math.min(...levels) : null,
+      batteryMax: levels.length ? Math.max(...levels) : null,
+      batteryEnd: levels.length ? levels[levels.length - 1] : null,
+      chargeSessions, networkSwitches,
+      movementRows, mediaSessions,
+      locationPoints: events.filter(e => e.collector === 'location').length,
+    };
   });
+
+  protected readonly phoneNotifsByHour = computed(() => this.phoneSummary().notifsByHour);
+
+  protected readonly Math = Math;
+
+  protected formatMinutes(m: number): string {
+    if (m < 60) return `${m}m`;
+    const h = Math.floor(m / 60);
+    const rem = m % 60;
+    return rem > 0 ? `${h}h ${rem}m` : `${h}h`;
+  }
 
   constructor() {
     effect(() => {
@@ -128,6 +194,10 @@ export class JournalDayPage {
 }
 
 const HOUR_LABELS = Array.from({ length: 24 }, (_, h) => `${h.toString().padStart(2, '0')}:00`);
+
+function shortPkg(pkg: string): string {
+  return pkg.split('.').at(-1) ?? pkg;
+}
 
 function sanitiseKey(raw: string | null): DayKey {
   return isDayKey(raw) ? raw : todayKey();

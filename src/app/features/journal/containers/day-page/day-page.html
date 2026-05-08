@@ -120,23 +120,113 @@
       }
     </app-ui-section>
 
-    <app-ui-section title="Phone signals" meta="Telemetry from the Android app">
-      @if (telemetryEvents().length) {
-        <div class="journal-day__stats">
-          <app-ui-stat-card label="Notifications" [value]="telemetrySummary().notifCount.toString()" />
-          <app-ui-stat-card label="Media sessions" [value]="telemetrySummary().mediaStarts.toString()" />
-          <app-ui-stat-card label="Location fixes" [value]="telemetrySummary().locationPoints.toString()" />
-        </div>
-        @if (telemetrySummary().byActivityType.size) {
-          <ul class="journal-day__list" style="margin-top: 0.75rem;">
-            @for (entry of telemetrySummary().byActivityType | keyvalue; track entry.key) {
-              <li class="journal-day__row">
-                <span class="journal-day__row-label">{{ entry.key }}</span>
-                <span class="journal-day__row-value">{{ entry.value }}×</span>
-              </li>
+    <app-ui-section title="Phone signals" [meta]="telemetryEvents().length + ' events'">
+      @if (telemetryEvents().length; as _) {
+        @let s = phoneSummary();
+        <app-ui-stack gap="lg">
+
+          <div class="journal-day__stats">
+            @if (s.screenOnMinutes > 0) {
+              <app-ui-stat-card label="Screen time" [value]="formatMinutes(s.screenOnMinutes)" [detail]="s.unlocks ? s.unlocks + ' unlocks' : null" />
             }
-          </ul>
-        }
+            @if (s.unlocks > 0 && s.screenOnMinutes === 0) {
+              <app-ui-stat-card label="Unlocks" [value]="s.unlocks.toString()" />
+            }
+            <app-ui-stat-card label="Notifications" [value]="s.notifCount.toString()" />
+            @if (s.mediaSessions.length) {
+              <app-ui-stat-card label="Media sessions" [value]="s.mediaSessions.length.toString()" />
+            }
+            @if (s.locationPoints) {
+              <app-ui-stat-card label="Location fixes" [value]="s.locationPoints.toString()" />
+            }
+          </div>
+
+          @if (s.notifCount > 0) {
+            <div class="journal-day__phone-group">
+              <p class="journal-day__phone-label">Notification timeline</p>
+              <app-journal-bar-chart
+                [labels]="hourlyLabels()"
+                [values]="phoneNotifsByHour()"
+                label="Notifications"
+                suffix=""
+                accent="rgba(99, 179, 237, 0.7)"
+              />
+            </div>
+          }
+
+          @if (s.notifsByApp.length || s.movementRows.length) {
+            <div class="journal-day__split">
+              @if (s.notifsByApp.length) {
+                <div>
+                  <p class="journal-day__phone-label">Top senders</p>
+                  <ul class="journal-day__list">
+                    @for (row of s.notifsByApp; track row[0]) {
+                      <li class="journal-day__row">
+                        <span class="journal-day__row-label">{{ row[0] }}</span>
+                        <span class="journal-day__row-value">{{ row[1] }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+              @if (s.movementRows.length) {
+                <div>
+                  <p class="journal-day__phone-label">Movement</p>
+                  <ul class="journal-day__list">
+                    @for (row of s.movementRows; track row[0]) {
+                      <li class="journal-day__row">
+                        <span class="journal-day__row-label">{{ row[0] }}</span>
+                        <span class="journal-day__row-value">{{ row[1] }}×</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+            </div>
+          }
+
+          @if (s.batteryMin !== null) {
+            <div class="journal-day__phone-group">
+              <p class="journal-day__phone-label">Battery</p>
+              <p class="journal-day__phone-detail">
+                Low {{ s.batteryMin }}% → High {{ s.batteryMax }}%, ended at {{ s.batteryEnd }}%
+                @if (s.chargeSessions) { · charged {{ s.chargeSessions }}× }
+                @if (s.networkSwitches) { · {{ s.networkSwitches }} network switch{{ s.networkSwitches === 1 ? '' : 'es' }} }
+              </p>
+            </div>
+          }
+
+          @if (s.mediaSessions.length) {
+            <div class="journal-day__phone-group">
+              <p class="journal-day__phone-label">Media</p>
+              <ul class="journal-day__list">
+                @for (m of s.mediaSessions; track m.ts) {
+                  <li class="journal-day__row">
+                    <span class="journal-day__row-label">
+                      {{ m.title ? m.title + (m.artist ? ' — ' + m.artist : '') : m.app }}
+                    </span>
+                    <span class="journal-day__row-value">{{ m.app }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
+          @if (s.appUsage.length) {
+            <div class="journal-day__phone-group">
+              <p class="journal-day__phone-label">App usage (yesterday)</p>
+              <ul class="journal-day__list">
+                @for (a of s.appUsage.slice(0, 10); track a.label) {
+                  <li class="journal-day__row">
+                    <span class="journal-day__row-label">{{ a.label }}</span>
+                    <span class="journal-day__row-value">{{ formatMinutes(Math.round(a.foreground_seconds / 60)) }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
+        </app-ui-stack>
       } @else {
         <app-ui-empty-state message="No phone telemetry for this day. Install jimbo-app and enable collectors." />
       }
