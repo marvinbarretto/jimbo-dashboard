@@ -86,6 +86,6 @@
   </app-ui-stack>
 } @else {
   <app-ui-empty-state title="Skill not found" message="The requested skill is not present in the registry.">
-    <app-ui-back-link [to]="['/config/skills']">← Back to skills</app-ui-back-link>
+    <a routerLink="/config/skills">← Back to skills</a>
   </app-ui-empty-state>
 }
