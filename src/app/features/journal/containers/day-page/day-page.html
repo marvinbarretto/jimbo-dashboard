@@ -120,6 +120,46 @@
       }
     </app-ui-section>
 
+    @if (healthSummary(); as h) {
+      <app-ui-section title="Health" meta="From Health Connect">
+        <div class="journal-day__stats">
+          @if (h.steps) {
+            <app-ui-stat-card label="Steps" [value]="h.steps | number:'1.0-0'" />
+          }
+          @if (h.distanceKm) {
+            <app-ui-stat-card label="Distance" [value]="(h.distanceKm | number:'1.1-1') + ' km'" />
+          }
+          @if (h.caloriesActive) {
+            <app-ui-stat-card label="Active cal" [value]="h.caloriesActive.toString()" detail="kcal" />
+          }
+          @if (h.sleepMin) {
+            <app-ui-stat-card label="Sleep" [value]="formatMinutes(h.sleepMin)"
+              [detail]="(h.deepMin ? formatMinutes(h.deepMin) + ' deep' : '') + (h.remMin ? ' · ' + formatMinutes(h.remMin) + ' REM' : '') || null" />
+          }
+          @if (h.floors) {
+            <app-ui-stat-card label="Floors" [value]="h.floors.toString()" />
+          }
+        </div>
+
+        @if (h.hr) {
+          <p class="journal-day__phone-detail" style="margin-top: 0.5rem;">
+            Heart rate: {{ h.hr.avg }} bpm avg · {{ h.hr.min }}–{{ h.hr.max }} range
+          </p>
+        }
+
+        @if (h.exercises.length) {
+          <ul class="journal-day__list" style="margin-top: 0.75rem;">
+            @for (ex of h.exercises; track ex.ts) {
+              <li class="journal-day__row">
+                <span class="journal-day__row-label">{{ ex.type }}</span>
+                <span class="journal-day__row-value">{{ formatMinutes(ex.durationMin) }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </app-ui-section>
+    }
+
     <app-ui-section title="Phone signals" [meta]="telemetryEvents().length + ' events'">
       @if (telemetryEvents().length; as _) {
         @let s = phoneSummary();

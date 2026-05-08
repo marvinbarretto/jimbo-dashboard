@@ -150,6 +150,50 @@ export class JournalDayPage {
 
   protected readonly phoneNotifsByHour = computed(() => this.phoneSummary().notifsByHour);
 
+  protected readonly healthSummary = computed(() => {
+    const events = this.telemetryEvents().filter(e => e.collector === 'health_connect');
+    if (!events.length) return null;
+
+    const sum = (type: string) => events.filter(e => e.type === type).reduce((s, e) => s + (e.value ?? 0), 0);
+
+    const steps = Math.round(sum('steps'));
+    const distanceKm = sum('distance') / 1000;
+    const caloriesActive = Math.round(sum('calories_active'));
+    const floors = Math.round(sum('floors'));
+
+    // Heart rate — aggregate across all hourly summary events
+    const hrEvents = events.filter(e => e.type === 'heart_rate_summary');
+    const hrAvgs = hrEvents.map(e => e.payload?.['avg'] as number | undefined).filter((v): v is number => v != null);
+    const hrMaxes = hrEvents.map(e => e.payload?.['max'] as number | undefined).filter((v): v is number => v != null);
+    const hrMins = hrEvents.map(e => e.payload?.['min'] as number | undefined).filter((v): v is number => v != null);
+    const hr = hrAvgs.length ? {
+      avg: Math.round(hrAvgs.reduce((a, b) => a + b, 0) / hrAvgs.length),
+      max: Math.max(...hrMaxes),
+      min: Math.min(...hrMins),
+    } : null;
+
+    // Exercise sessions — one event per session
+    const exercises = events
+      .filter(e => e.type === 'exercise_session')
+      .map(e => ({
+        type: e.payload?.['exercise_type'] as string ?? 'exercise',
+        durationMin: Math.round(e.value ?? 0),
+        ts: e.ts,
+      }))
+      .sort((a, b) => a.ts.localeCompare(b.ts));
+
+    // Sleep — sessions whose ts falls in the fetch window (overnight sleep may span midnight)
+    const sleepEvents = events.filter(e => e.type === 'sleep_session');
+    const sleepMin = Math.round(sleepEvents.reduce((s, e) => s + (e.value ?? 0), 0));
+    const sleepStages = sleepEvents.flatMap(e =>
+      (e.payload?.['stages'] as Array<{ stage_type: string; duration_min: number }> | undefined) ?? []
+    );
+    const deepMin = Math.round(sleepStages.filter(s => s.stage_type === 'deep').reduce((a, s) => a + s.duration_min, 0));
+    const remMin = Math.round(sleepStages.filter(s => s.stage_type === 'rem').reduce((a, s) => a + s.duration_min, 0));
+
+    return { steps, distanceKm, caloriesActive, floors, hr, exercises, sleepMin, deepMin, remMin };
+  });
+
   protected readonly Math = Math;
 
   protected formatMinutes(m: number): string {

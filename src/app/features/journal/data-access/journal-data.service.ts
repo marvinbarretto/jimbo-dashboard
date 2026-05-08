@@ -292,7 +292,11 @@ export class JournalDataService {
       // falling outside the main window. Fetch it separately from the prior day.
       const prevSince = dateFromDayKey(shiftDay(date, -1)).toISOString();
 
-      const [dayRes, usageRes] = await Promise.all([
+      // Sleep sessions start the night before (e.g. 23:00 local), so their ts
+      // falls before local midnight. Fetch health_connect from the prior evening.
+      const eveningSince = dateFromDayKey(shiftDay(date, -1)).toISOString();
+
+      const [dayRes, usageRes, sleepRes] = await Promise.all([
         firstValueFrom(
           this.http.get<{ events: ApiTelemetryEvent[] }>(
             `${this.base}/api/telemetry/events?since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}&limit=500`,
@@ -303,12 +307,20 @@ export class JournalDataService {
             `${this.base}/api/telemetry/events?collector=usage&type=app_usage_daily&since=${encodeURIComponent(prevSince)}&until=${encodeURIComponent(since)}&limit=5`,
           ),
         ),
+        firstValueFrom(
+          this.http.get<{ events: ApiTelemetryEvent[] }>(
+            `${this.base}/api/telemetry/events?collector=health_connect&type=sleep_session&since=${encodeURIComponent(eveningSince)}&until=${encodeURIComponent(since)}&limit=10`,
+          ),
+        ),
       ]);
 
       const dayEvents = (dayRes.events ?? []).map(toTelemetryEventLite);
-      const usageEvents = (usageRes.events ?? []).map(toTelemetryEventLite);
+      const extraEvents = [
+        ...(usageRes.events ?? []).map(toTelemetryEventLite),
+        ...(sleepRes.events ?? []).map(toTelemetryEventLite),
+      ];
       const dayIds = new Set(dayEvents.map(e => e.id));
-      return [...dayEvents, ...usageEvents.filter(e => !dayIds.has(e.id))];
+      return [...dayEvents, ...extraEvents.filter(e => !dayIds.has(e.id))];
     } catch {
       return [];
     }
