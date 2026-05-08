@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.43](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.42...v0.0.43) (2026-05-08)
+
+
+### Bug Fixes
+
+* **dispatch:** drop limit from ApiDispatchesResponseSchema — paginatedResponse never returns it ([8605710](https://github.com/marvinbarretto/jimbo-dashboard/commit/860571014e986699e4c5a61397ec211c1422f1ca))
+
 ### [0.0.42](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.41...v0.0.42) (2026-05-07)
 
 
