@@ -94,8 +94,6 @@
 }
 
 .draft-form__header {
-  display: flex;
-  align-items: center;
   padding: .85rem .9rem .7rem;
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 92%, transparent);
   background:
@@ -104,13 +102,100 @@
       color-mix(in srgb, var(--color-surface) 95%, transparent));
 }
 
-.draft-form__title {
-  flex: 1;
-  min-width: 0;
+.draft-form__title-input {
+  display: block;
+  width: 100%;
+  font: inherit;
+  font-size: 1.02rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+
+  &::placeholder { color: var(--color-text-muted); font-weight: 400; }
+
+  &:focus { outline: none; }
+}
+
+// Project selector + epic toggle row
+.draft-form__meta {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+  padding: .55rem .9rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+.draft-form__project-select {
+  font: inherit;
+  font-size: .75rem;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  padding: .2rem .5rem;
+  cursor: pointer;
+
+  &:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+
+  &--add { border-style: dashed; }
+}
+
+.draft-form__project-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem;
+}
+
+.draft-form__project-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  font-size: .72rem;
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+  border-radius: var(--radius);
+  padding: .15rem .45rem;
+  color: var(--color-text);
+}
+
+.draft-form__project-chip-remove {
+  font: inherit;
+  font-size: .8rem;
+  line-height: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 0 .1rem;
+
+  &:hover { color: var(--color-danger, #ef4444); }
+}
+
+.draft-form__epic-label {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .72rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover { color: var(--color-text); }
+}
+
+.draft-form__epic-check {
+  accent-color: var(--color-accent);
+  cursor: pointer;
 }
 
 .draft-form__body-wrap {
-  padding: .75rem .9rem;
+  padding: .65rem .9rem;
 }
 
 .draft-form__body {
@@ -120,15 +205,34 @@
   background: transparent;
   color: var(--color-text);
   font: inherit;
-  font-size: .9rem;
+  font-size: .85rem;
   resize: vertical;
   line-height: 1.5;
   padding: 0;
   &::placeholder { color: var(--color-text-muted); }
 }
 
+.draft-form__github-wrap {
+  padding: 0 .9rem .55rem;
+}
+
+.draft-form__github-input {
+  width: 100%;
+  font: inherit;
+  font-size: .75rem;
+  color: var(--color-text);
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--color-border);
+  outline: none;
+  padding: .15rem 0;
+
+  &::placeholder { color: var(--color-text-muted); }
+  &:focus { border-bottom-color: var(--color-accent); }
+}
+
 .draft-form__chips {
-  padding: 0 .9rem .6rem;
+  padding: 0 .9rem .4rem;
 }
 
 .draft-form__footer {

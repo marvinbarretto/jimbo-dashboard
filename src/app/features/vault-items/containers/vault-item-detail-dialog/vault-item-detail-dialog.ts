@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
-import { VaultItemsService } from '../../data-access/vault-items.service';
 import { VaultItemDetailBody } from '../../components/vault-item-detail-body/vault-item-detail-body';
 import { ModalShell } from '@shared/components/modal-shell/modal-shell';
 import {
@@ -25,10 +24,17 @@ import { VaultItemDialogStore } from '../../dialog/vault-item-dialog-store';
 export class VaultItemDetailDialog {
   protected readonly data = inject<VaultItemDialogData>(DIALOG_DATA);
   private readonly dialogRef = inject<DialogRef<unknown, VaultItemDialogData>>(DialogRef);
-  private readonly vaultItemsService = inject(VaultItemsService);
+  private readonly store = inject(VaultItemDialogStore);
 
   /** Single source of truth for the dialog's lifecycle state. */
   protected readonly mode = signal<DialogMode>(initialMode(this.data));
+
+  constructor() {
+    // Seed the destination once — drives grooming_status on draft submit.
+    if (this.data.kind === 'draft' && this.data.destination) {
+      this.store.setDraftDestination(this.data.destination);
+    }
+  }
 
   // Stable id for aria-labelledby binding on the dialog host. Computed once
   // from the initial data; doesn't need to change when Draft → Item morphs.

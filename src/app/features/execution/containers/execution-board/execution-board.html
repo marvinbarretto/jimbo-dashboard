@@ -54,29 +54,6 @@
   </div>
 
   <div class="board__columns">
-    <div class="board__col-wrap board__col-wrap--manual board__col-wrap--active">
-      <app-kanban-column
-        label="Manual"
-        [count]="manualItems().length"
-        emptyLabel="No manual items"
-        [loading]="false"
-      >
-        @for (item of manualItems(); track item.id) {
-          <article class="manual-card">
-            <header class="manual-card__head">
-              <span class="manual-card__seq">#{{ item.seq }}</span>
-              <button
-                type="button"
-                class="manual-card__done"
-                (click)="onCompleteManualItem(item)"
-                title="Mark complete"
-              >done</button>
-            </header>
-            <p class="manual-card__title">{{ item.title }}</p>
-          </article>
-        }
-      </app-kanban-column>
-    </div>
     @for (col of columns(); track col.status) {
       <div class="board__col-wrap" [class.board__col-wrap--active]="mobileColumn() === col.status">
         <app-kanban-column
@@ -86,16 +63,38 @@
           [loading]="isLoading()"
           [dropDisabled]="col.systemManaged"
         >
-          @for (entry of col.cards; track entry.id) {
-            <app-execution-card
-              [dispatch]="entry"
-              [taskSeq]="taskSeq(entry)"
-              [taskTitle]="taskTitle(entry)"
-              [skillDisplayName]="skillDisplayName(entry)"
-              [project]="primaryProject(entry)"
-              [sourceKind]="taskSourceKind(entry)"
-              (retry)="onRetry(entry.id)"
-            />
+          @for (card of col.cards; track card.kind === 'dispatch' ? card.entry.id : card.item.id) {
+            @if (card.kind === 'dispatch') {
+              <app-execution-card
+                [dispatch]="card.entry"
+                [taskSeq]="taskSeq(card.entry)"
+                [taskTitle]="taskTitle(card.entry)"
+                [skillDisplayName]="skillDisplayName(card.entry)"
+                [project]="primaryProject(card.entry)"
+                [sourceKind]="taskSourceKind(card.entry)"
+                (retry)="onRetry(card.entry.id)"
+              />
+            } @else {
+              <article
+                class="manual-card"
+                role="button"
+                tabindex="0"
+                (click)="onOpenManualItem(card.item)"
+                (keydown.enter)="onOpenManualItem(card.item)"
+                (keydown.space)="onOpenManualItem(card.item)"
+              >
+                <header class="manual-card__head">
+                  <span class="manual-card__seq">#{{ card.item.seq }}</span>
+                  <button
+                    type="button"
+                    class="manual-card__done"
+                    (click)="$event.stopPropagation(); onCompleteManualItem(card.item)"
+                    title="Mark complete"
+                  >done</button>
+                </header>
+                <p class="manual-card__title">{{ card.item.title }}</p>
+              </article>
+            }
           }
         </app-kanban-column>
       </div>

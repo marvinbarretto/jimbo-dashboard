@@ -20,7 +20,6 @@ import { staleNorm, ancientNorm } from '@domain/vault';
 import { ActivityLogComponent } from './activity-log/activity-log';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiButton } from '@shared/components/ui-button/ui-button';
-import { UiInlineEdit } from '@shared/components/ui-inline-edit/ui-inline-edit';
 import { UiMentionChipStrip } from '@shared/components/ui-mention-chip-strip/ui-mention-chip-strip';
 import { MentionDirective } from '@shared/mentions';
 import { actorId } from '@domain/ids';
@@ -53,7 +52,6 @@ import type { CreateThreadMessagePayload } from '@domain/thread';
     ActivityLogComponent,
     UiSection,
     UiButton,
-    UiInlineEdit,
     UiMentionChipStrip,
     MentionDirective,
     VaultItemActionBar,
@@ -181,8 +179,6 @@ export class VaultItemDetailBody {
   }
 
   // ── Draft DOM event glue ──────────────────────────────────────────────────
-  // The mention textarea is a plain <textarea> so we wrap (input) keystrokes
-  // before passing the value to the store. Everything else binds directly.
 
   onDraftBodyInput(e: Event): void {
     this.store.setDraftBody((e.target as HTMLTextAreaElement).value);
@@ -194,6 +190,12 @@ export class VaultItemDetailBody {
       e.preventDefault();
       this.submitDraft();
     }
+  }
+
+  onDraftProjectSelect(e: Event): void {
+    const id = (e.target as HTMLSelectElement).value;
+    if (id) this.store.addDraftProjectById(id);
+    (e.target as HTMLSelectElement).value = '';
   }
 
   // ── Thread reply (template passes the payload up) ─────────────────────────

@@ -33,7 +33,7 @@ export const DISPATCH_STATUS_ORDER = [
 // Display labels for column headers. Kept here so the kanban and any other
 // projection share one vocabulary.
 export const DISPATCH_STATUS_LABELS: Record<DispatchStatus, string> = {
-  approved:    'Approved',
+  approved:    'Ready',
   dispatching: 'Dispatching',
   running:     'Running',
   completed:   'Completed',
@@ -44,7 +44,7 @@ export const DISPATCH_STATUS_LABELS: Record<DispatchStatus, string> = {
 // is the "everything is fine" signal — worth saying explicitly rather than a
 // flat "empty".
 export const DISPATCH_EMPTY_LABELS: Record<DispatchStatus, string> = {
-  approved:    'No approved dispatches',
+  approved:    'Nothing queued',
   dispatching: 'Nothing dispatching',
   running:     'Nothing running',
   completed:   'No completed runs yet',

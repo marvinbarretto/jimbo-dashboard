@@ -6,7 +6,7 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import type { VaultItem, CreateVaultItemPayload, UpdateVaultItemPayload, GroomingStatus, VaultItemType, VaultItemCategory, Priority, Actionability } from '@domain/vault/vault-item';
 import { isActive } from '@domain/vault/vault-item';
-import type { Source } from '@domain/vault/source';
+import type { Source, ManualSource, GitHubSource } from '@domain/vault/source';
 import type { ActorId, VaultItemId } from '@domain/ids';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
 import { vaultItemId, actorId, threadMessageId } from '@domain/ids';
@@ -548,11 +548,11 @@ export class VaultItemsService {
    * state and toasts the failure, so the dialog can stay open in Item mode
    * and the operator can retry the missing junction inline.
    */
-  createWithRelations(draft: DraftPayload): Observable<VaultItem> {
-    const body = toApiCreateBodyFromDraft(draft, this.currentActorId);
+  createWithRelations(draft: DraftPayload, opts?: { destination?: 'manual' }): Observable<VaultItem> {
+    const body = toApiCreateBodyFromDraft(draft, this.currentActorId, opts);
 
     return this.http.post<ApiVaultNoteResponse>(this.url, body).pipe(
-      map((res) => this.materialiseFromDraft(draft, res)),
+      map((res) => this.materialiseFromDraft(draft, res, opts)),
       tap((item) => {
         this._items.update(items => [item, ...items]);
         this.activityService.post({
@@ -563,14 +563,28 @@ export class VaultItemsService {
         for (const project of dedupeById(draft.projects)) {
           this.projectsJunction.add(item.id, project.id);
         }
+        // Follow-up PATCH: API create endpoint doesn't accept is_epic or
+        // grooming_status directly — mirror createOnBoard's deferred-patch pattern.
+        const followUp: Record<string, unknown> = {};
+        if (draft.is_epic) followUp['is_epic'] = true;
+        if (opts?.destination === 'manual') followUp['grooming_status'] = 'ready';
+        if (Object.keys(followUp).length) {
+          this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${item.seq}`, followUp).subscribe();
+        }
         this.toast.success(`"${item.title}" created · #${item.seq}`);
       }),
     );
   }
 
   /** Build an in-memory VaultItem from a Draft + the API's notes-POST response. */
-  private materialiseFromDraft(draft: DraftPayload, res: ApiVaultNoteResponse): VaultItem {
+  private materialiseFromDraft(
+    draft: DraftPayload,
+    res: ApiVaultNoteResponse,
+    opts?: { destination?: 'manual' },
+  ): VaultItem {
     const realSeq = typeof res.seq === 'string' ? Number(res.seq) : (res.seq ?? -1);
+    const isManual = opts?.destination === 'manual';
+    const source = buildSourceFromDraft(draft, isManual);
     return {
       id: vaultItemId(res.id),
       seq: realSeq,
@@ -581,18 +595,18 @@ export class VaultItemsService {
       assigned_to: draft.assignee?.id ?? this.currentActorId,
       tags: dedupeStrings(draft.tags),
       acceptance_criteria: [],
-      grooming_status: 'ungroomed',
+      grooming_status: isManual ? 'ready' : 'ungroomed',
       ai_priority: null,
       manual_priority: null,
       ai_rationale: null,
       priority_confidence: null,
       actionability: null,
       parent_id: null,
-      is_epic: false,
+      is_epic: draft.is_epic,
       archived_at: null,
       due_at: null,
       completed_at: null,
-      source: { kind: 'manual', ref: 'dialog', url: null },
+      source,
       created_at: res.created_at ?? new Date().toISOString(),
       // Board-shape derived fields. Junction service refines primary_project_*
       // once its add() resolves; the rest stay zero/null until next bulk load.
@@ -773,16 +787,49 @@ function toApiCreateBody(p: CreateVaultItemPayload): Record<string, unknown> {
   return body;
 }
 
+// Extracts `owner/repo#N` from a GitHub issue URL, satisfying GitHubSource.ref's
+// template literal constraint. Falls back to a best-effort string if the URL
+// doesn't match the expected pattern (shouldn't happen with the UI validator).
+function parseGithubRef(url: string): `${string}#${number}` {
+  const m = url.match(/github\.com\/([^/]+\/[^/]+)\/issues\/(\d+)/);
+  if (m) return `${m[1]}#${Number(m[2])}` as `${string}#${number}`;
+  // Fallback: treat url itself as ref (won't be type-safe, but beats crashing)
+  return url as `${string}#${number}`;
+}
+
+// Derives the VaultItem source from a DraftPayload.
+function buildSourceFromDraft(draft: DraftPayload, isManual: boolean): ManualSource | GitHubSource {
+  if (draft.github_url) {
+    const githubSource: GitHubSource = {
+      kind: 'github',
+      ref: parseGithubRef(draft.github_url),
+      url: draft.github_url,
+    };
+    return githubSource;
+  }
+  const manualSource: ManualSource = { kind: 'manual', ref: isManual ? 'board' : 'dialog', url: null };
+  return manualSource;
+}
+
 // Build the CreateNoteBody for the unified-dialog DraftPayload. Mirrors the
 // shape the old CaptureDialog posted: comma-joined tags, `assigned_to` only
 // when set, and `links` as { target_type: 'vault_note', target_id }[].
-function toApiCreateBodyFromDraft(draft: DraftPayload, currentActor: ActorId): Record<string, unknown> {
+function toApiCreateBodyFromDraft(
+  draft: DraftPayload,
+  currentActor: ActorId,
+  opts?: { destination?: 'manual' },
+): Record<string, unknown> {
+  const isManual = opts?.destination === 'manual';
   const body: Record<string, unknown> = {
     title: draft.title.trim(),
     type: 'task',
-    source_kind: 'manual',
-    source_ref: 'dialog',
+    source_kind: draft.github_url ? 'github' : 'manual',
+    source_ref: draft.github_url
+      ? parseGithubRef(draft.github_url)
+      : (isManual ? 'board' : 'dialog'),
   };
+  if (draft.github_url) body['source_url'] = draft.github_url;
+
   const trimmedBody = draft.body.trim();
   if (trimmedBody) body['body'] = trimmedBody;
 

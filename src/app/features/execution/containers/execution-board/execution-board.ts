@@ -8,7 +8,6 @@ import { ProjectsService } from '@features/projects/data-access/projects.service
 import { ActorsService } from '@features/actors/data-access/actors.service';
 import { SkillsService } from '@features/skills/data-access/skills.service';
 import {
-  DISPATCH_STATUS_ORDER,
   DISPATCH_STATUS_LABELS,
   DISPATCH_EMPTY_LABELS,
   DISPATCH_STATUS_SYSTEM_MANAGED,
@@ -22,17 +21,38 @@ import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/co
 import { BoardCreateBar } from '@shared/components/board-create-bar/board-create-bar';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
 import { withVaultDetailModal, swapDetailSeq } from '@shared/kanban/detail-modal';
+import { CommandShortcutsService } from '@shared/services/command-shortcuts.service';
 import { isActive, type VaultItem } from '@domain/vault';
 
 const SKILL    = 'skill';
 const EXECUTOR = 'executor';
 const PROJECT  = 'project';
 
+// 'dispatching' is a sub-second claim state — useful to see on a card but not
+// worth a dedicated column. It folds into Running, which is system-managed.
+const BOARD_COLUMN_ORDER = ['approved', 'running', 'completed', 'failed'] as const;
+type BoardColumn = typeof BOARD_COLUMN_ORDER[number];
+
+const DISPATCH_TO_COLUMN: Record<DispatchStatus, BoardColumn> = {
+  approved:    'approved',
+  dispatching: 'running',
+  running:     'running',
+  completed:   'completed',
+  failed:      'failed',
+};
+
+// Cards in a column are either agent-dispatched entries or operator-owned manual
+// items. Both flow through the same columns; manual items sit in Ready (approved)
+// until the operator marks them complete.
+type ColumnCard =
+  | { readonly kind: 'dispatch'; readonly entry: DispatchQueueEntry }
+  | { readonly kind: 'manual';   readonly item: VaultItem };
+
 interface ColumnView {
-  status:        DispatchStatus;
+  status:        BoardColumn;
   label:         string;
   emptyLabel:    string;
-  cards:         DispatchQueueEntry[];
+  cards:         ColumnCard[];
   systemManaged: boolean;
 }
 
@@ -50,6 +70,7 @@ export class ExecutionBoard {
   private readonly projectsService = inject(ProjectsService);
   private readonly actorsService = inject(ActorsService);
   private readonly skillsService = inject(SkillsService);
+  private readonly shortcuts = inject(CommandShortcutsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -70,11 +91,11 @@ export class ExecutionBoard {
 
   // --- mobile state -------------------------------------------------------
   readonly showMobileFilters = signal(false);
-  private readonly _mobileColumn = signal<DispatchStatus>('approved');
+  private readonly _mobileColumn = signal<BoardColumn>('approved');
   readonly mobileColumn = this._mobileColumn.asReadonly();
   protected readonly hasActiveFilters = this.filter.hasActive;
 
-  setMobileColumn(status: DispatchStatus): void {
+  setMobileColumn(status: BoardColumn): void {
     this._mobileColumn.set(status);
   }
 
@@ -84,16 +105,26 @@ export class ExecutionBoard {
 
   readonly columns = computed<ColumnView[]>(() => {
     const entries = this.visibleEntries();
-    return DISPATCH_STATUS_ORDER.map(status => ({
-      status,
-      label:         DISPATCH_STATUS_LABELS[status],
-      emptyLabel:    DISPATCH_EMPTY_LABELS[status],
-      systemManaged: DISPATCH_STATUS_SYSTEM_MANAGED.includes(status),
-      cards: entries
-        .filter(e => e.status === status)
-        // Within a column: most recent first by created_at.
-        .sort((a, b) => b.created_at.localeCompare(a.created_at)),
-    }));
+    const manuals = this.manualItems();
+    return BOARD_COLUMN_ORDER.map(colStatus => {
+      const dispatchCards: ColumnCard[] = entries
+        .filter(e => DISPATCH_TO_COLUMN[e.status] === colStatus)
+        .sort((a, b) => b.created_at.localeCompare(a.created_at))
+        .map(entry => ({ kind: 'dispatch', entry }));
+
+      // Manual items sit in Ready (approved) until the operator marks them done.
+      const manualCards: ColumnCard[] = colStatus === 'approved'
+        ? manuals.map(item => ({ kind: 'manual', item }))
+        : [];
+
+      return {
+        status:        colStatus,
+        label:         DISPATCH_STATUS_LABELS[colStatus],
+        emptyLabel:    DISPATCH_EMPTY_LABELS[colStatus],
+        systemManaged: DISPATCH_STATUS_SYSTEM_MANAGED.includes(colStatus),
+        cards: [...manualCards, ...dispatchCards],
+      };
+    });
   });
 
   // Surfaces DispatchService.isLoading to the template so each column can
@@ -189,14 +220,12 @@ export class ExecutionBoard {
     ).sort((a, b) => b.created_at.localeCompare(a.created_at)),
   );
 
-  // Placeholder title; operator fills the rest in-place via the detail dialog
-  // that pops open as soon as the server confirms the seq.
   onCreateManualItem(): void {
-    const title = `Untitled · ${new Date().toLocaleString()}`;
-    this.vaultItemsService.createOnBoard(
-      { title, type: 'task', grooming_status: 'ready', manual_priority: 0 },
-      (item) => swapDetailSeq(this.router, item.seq),
-    );
+    this.shortcuts.openManualCapture();
+  }
+
+  onOpenManualItem(item: VaultItem): void {
+    swapDetailSeq(this.router, item.seq);
   }
 
   onCompleteManualItem(item: VaultItem): void {

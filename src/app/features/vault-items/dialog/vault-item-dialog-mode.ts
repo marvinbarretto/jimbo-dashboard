@@ -14,6 +14,8 @@ export interface DraftPayload {
   readonly projects: readonly Project[];
   readonly assignee: Actor | null;
   readonly related: readonly RelatedRef[];
+  readonly is_epic: boolean;
+  readonly github_url: string | null;
 }
 
 export interface RelatedRef {
@@ -29,6 +31,8 @@ export const emptyDraft: DraftPayload = {
   projects: [],
   assignee: null,
   related: [],
+  is_epic: false,
+  github_url: null,
 };
 
 /**
@@ -63,9 +67,13 @@ export const isItem = (m: DialogMode): m is Extract<DialogMode, { kind: 'item' }
 /**
  * What gets passed via DIALOG_DATA when the dialog opens. The internal
  * DialogMode adds the resolved stage + draft payload after construction.
+ *
+ * `destination: 'manual'` signals that the created item should land in the
+ * execution board's manual track (grooming_status='ready', source='board')
+ * rather than the default grooming inbox (grooming_status='ungroomed').
  */
 export type VaultItemDialogData =
-  | { readonly kind: 'draft' }
+  | { readonly kind: 'draft'; readonly destination?: 'manual' }
   | { readonly kind: 'item'; readonly seq: number };
 
 export function initialMode(data: VaultItemDialogData): DialogMode {

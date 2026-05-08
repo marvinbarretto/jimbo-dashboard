@@ -34,6 +34,7 @@ import { BoardCreateBar } from '@shared/components/board-create-bar/board-create
 import { createKanbanDragState } from '@shared/kanban/drag-state';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
 import { withVaultDetailModal, swapDetailSeq } from '@shared/kanban/detail-modal';
+import { CommandShortcutsService } from '@shared/services/command-shortcuts.service';
 import { isSeedMode } from '@shared/seed-mode';
 
 // "Unassigned" is its own filter token alongside actor IDs. Using a sentinel string
@@ -69,6 +70,7 @@ export class GroomingBoard {
   private readonly vaultItemProjectsService = inject(VaultItemProjectsService);
   private readonly activityEventsService = inject(ActivityEventsService);
   private readonly threadService = inject(ThreadService);
+  private readonly shortcuts = inject(CommandShortcutsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -471,14 +473,8 @@ export class GroomingBoard {
     this.vaultItemsService.archive(item.id);
   }
 
-  // New tasks land in the Ungroomed column with a placeholder title; the
-  // detail dialog opens so the operator fills in title/body/priority in-place.
   onCreateTask(): void {
-    const title = `Untitled · ${new Date().toLocaleString()}`;
-    this.vaultItemsService.createOnBoard(
-      { title, type: 'task', grooming_status: 'ungroomed' },
-      (item) => swapDetailSeq(this.router, item.seq),
-    );
+    this.shortcuts.openCapture();
   }
 
   onAssignItem(item: VaultItem, actor: ActorId): void {

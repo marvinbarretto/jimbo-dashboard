@@ -19,6 +19,7 @@ export class CommandShortcutsService {
 
   private searchOpen = false;
   private captureOpen = false;
+  private manualCaptureOpen = false;
 
   constructor() {
     this.doc.addEventListener('keydown', (e: KeyboardEvent) => this.onKey(e));
@@ -69,5 +70,24 @@ export class CommandShortcutsService {
       },
     );
     ref.closed.subscribe(() => { this.captureOpen = false; });
+  }
+
+  /** Opens the draft dialog pre-configured for the execution board's manual
+   *  track — submitted item lands with grooming_status='ready', source='board'. */
+  openManualCapture(): void {
+    if (this.manualCaptureOpen) return;
+    this.manualCaptureOpen = true;
+    const ref: DialogRef<unknown> = this.dialog.open<unknown, VaultItemDialogData>(
+      VaultItemDetailDialog,
+      {
+        data: { kind: 'draft', destination: 'manual' },
+        panelClass: 'vault-detail-dialog',
+        ariaModal: true,
+        autoFocus: 'first-tabbable',
+        restoreFocus: true,
+        hasBackdrop: true,
+      },
+    );
+    ref.closed.subscribe(() => { this.manualCaptureOpen = false; });
   }
 }

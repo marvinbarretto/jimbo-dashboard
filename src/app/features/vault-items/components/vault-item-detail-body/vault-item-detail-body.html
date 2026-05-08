@@ -1,16 +1,74 @@
 @if (store.isDraftMode()) {
   <div class="vault-item-detail vault-item-detail--draft">
+
     <header class="draft-form__header">
-      <app-ui-inline-edit
-        class="draft-form__title"
+      <input
+        class="draft-form__title-input"
+        type="text"
         [value]="store.draftPayload().title"
-        size="lg"
-        ariaLabel="Title"
-        placeholder="Title — what is this about?"
-        (saved)="store.setDraftTitle($event)"
+        placeholder="Title — what is this?"
+        aria-label="Title"
+        (input)="store.setDraftTitle($any($event.target).value)"
+        (keydown.enter)="submitDraft()"
       />
     </header>
 
+    <!-- Project selector — required before epic can be set -->
+    <div class="draft-form__meta">
+      @if (store.draftPayload().projects.length === 0) {
+        <select
+          class="draft-form__project-select"
+          aria-label="Assign to project"
+          (change)="onDraftProjectSelect($event)"
+        >
+          <option value="">— assign to project —</option>
+          @for (p of store.activeProjects(); track p.id) {
+            <option [value]="p.id">{{ p.display_name }}</option>
+          }
+        </select>
+      } @else {
+        <div class="draft-form__project-chips">
+          @for (p of store.draftPayload().projects; track p.id; let i = $index) {
+            <span class="draft-form__project-chip">
+              {{ p.display_name }}
+              <button
+                type="button"
+                class="draft-form__project-chip-remove"
+                aria-label="Remove project"
+                (click)="store.removeDraftProject(i)"
+              >×</button>
+            </span>
+          }
+          @if (store.draftPayload().projects.length < store.activeProjects().length) {
+            <select
+              class="draft-form__project-select draft-form__project-select--add"
+              aria-label="Add another project"
+              (change)="onDraftProjectSelect($event)"
+            >
+              <option value="">+ project</option>
+              @for (p of store.activeProjects(); track p.id) {
+                <option [value]="p.id">{{ p.display_name }}</option>
+              }
+            </select>
+          }
+        </div>
+      }
+
+      <!-- Epic toggle: only available once a project is assigned -->
+      @if (store.draftPayload().projects.length > 0) {
+        <label class="draft-form__epic-label">
+          <input
+            type="checkbox"
+            class="draft-form__epic-check"
+            [checked]="store.draftPayload().is_epic"
+            (change)="store.setDraftEpic($any($event.target).checked)"
+          />
+          epic
+        </label>
+      }
+    </div>
+
+    <!-- Notes / context (optional) -->
     <div class="draft-form__body-wrap">
       <textarea
         class="draft-form__body"
@@ -18,16 +76,28 @@
         [value]="store.draftPayload().body"
         (input)="onDraftBodyInput($event)"
         (keydown)="onDraftBodyKey($event)"
-        placeholder="Notes — type # @ ~ for inline metadata. Shift+Enter for newline; Enter to save."
-        rows="4"
-        aria-label="Body"
+        placeholder="Notes (optional) — type # @ ~ for tags / actors / related"
+        rows="3"
+        aria-label="Notes"
       ></textarea>
+    </div>
+
+    <!-- Optional GitHub issue URL -->
+    <div class="draft-form__github-wrap">
+      <input
+        class="draft-form__github-input"
+        type="url"
+        [value]="store.draftPayload().github_url ?? ''"
+        placeholder="GitHub issue URL (optional)"
+        aria-label="GitHub issue URL"
+        (input)="store.setDraftGithubUrl($any($event.target).value)"
+      />
     </div>
 
     <app-ui-mention-chip-strip
       class="draft-form__chips"
       [tags]="store.draftPayload().tags"
-      [projects]="store.draftPayload().projects"
+      [projects]="[]"
       [assignee]="store.draftPayload().assignee"
       [related]="store.draftPayload().related"
       (tagRemoved)="store.removeDraftTag($event)"
@@ -41,7 +111,7 @@
         <span class="draft-form__error">{{ err }}</span>
       } @else {
         <span class="draft-form__hint">
-          <kbd>#</kbd>tag · <kbd>{{ '@' }}</kbd>actor/project · <kbd>~</kbd>related · <kbd>↵</kbd> save
+          <kbd>#</kbd>tag · <kbd>{{ '@' }}</kbd>actor · <kbd>~</kbd>related · <kbd>↵</kbd> create
         </span>
       }
       <app-ui-button
@@ -49,7 +119,7 @@
         variant="primary"
         [disabled]="!store.canSubmitDraft()"
         (pressed)="submitDraft()">
-        {{ store.draftSubmitting() ? 'Saving…' : 'Save' }}
+        {{ store.draftSubmitting() ? 'Saving…' : 'Create' }}
       </app-ui-button>
     </footer>
   </div>

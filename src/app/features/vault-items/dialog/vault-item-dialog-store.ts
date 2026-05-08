@@ -351,6 +351,13 @@ export class VaultItemDialogStore {
     vaultItemTrigger(this.http, (it) => this.addDraftRelated(it)),
   ];
 
+  // One-shot destination seed — set once by the dialog host when opening with
+  // { kind: 'draft', destination: 'manual' }. Drives grooming_status on submit.
+  private readonly _draftDestination = signal<'manual' | null>(null);
+  readonly draftDestination = this._draftDestination.asReadonly();
+
+  setDraftDestination(d: 'manual'): void { this._draftDestination.set(d); }
+
   setDraftTitle(t: string): void {
     this._draftPayload.update(d => ({ ...d, title: t }));
     this._draftError.set(null);
@@ -358,6 +365,14 @@ export class VaultItemDialogStore {
 
   setDraftBody(b: string): void {
     this._draftPayload.update(d => ({ ...d, body: b }));
+  }
+
+  setDraftEpic(v: boolean): void {
+    this._draftPayload.update(d => ({ ...d, is_epic: v }));
+  }
+
+  setDraftGithubUrl(url: string): void {
+    this._draftPayload.update(d => ({ ...d, github_url: url.trim() || null }));
   }
 
   addDraftTag(tag: string): void {
@@ -372,8 +387,21 @@ export class VaultItemDialogStore {
     this._draftPayload.update(d => ({ ...d, projects: [...d.projects, p] }));
   }
 
+  addDraftProjectById(id: string): void {
+    const project = this.projectsService.getById(id);
+    if (!project) return;
+    const already = this._draftPayload().projects.some(p => p.id === project.id);
+    if (!already) this.addDraftProject(project);
+  }
+
   removeDraftProject(idx: number): void {
-    this._draftPayload.update(d => ({ ...d, projects: d.projects.filter((_, i) => i !== idx) }));
+    this._draftPayload.update(d => ({
+      ...d,
+      projects: d.projects.filter((_, i) => i !== idx),
+      // Clearing the last project also clears the epic flag — you can't have
+      // an epic without a project.
+      is_epic: d.projects.length === 1 ? false : d.is_epic,
+    }));
   }
 
   removeDraftAssignee(): void {
@@ -398,10 +426,11 @@ export class VaultItemDialogStore {
   submitDraft(): Observable<DialogMode> {
     if (!this.canSubmitDraft()) return new Observable<DialogMode>();
     const payload = this._draftPayload();
+    const destination = this._draftDestination() ?? undefined;
     this._draftSubmitting.set(true);
     this._draftError.set(null);
 
-    return this.vaultItemsService.createWithRelations(payload).pipe(
+    return this.vaultItemsService.createWithRelations(payload, { destination }).pipe(
       tap({
         next: (created) => {
           this._draftSubmitting.set(false);
