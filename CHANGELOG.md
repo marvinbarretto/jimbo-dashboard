@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.47](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.46...v0.0.47) (2026-05-08)
+
+
+### Features
+
+* **shared:** add withOptimistic helpers for entity stores ([afff306](https://github.com/marvinbarretto/jimbo-dashboard/commit/afff306edee371047c51c0795e94e00ae259acc8))
+* **vault:** add command layer with readiness gate for dispatch approval ([56a3a4b](https://github.com/marvinbarretto/jimbo-dashboard/commit/56a3a4b402703d7bb8d4816c5c64e4093f39d422))
+
+
+### Bug Fixes
+
+* **vault:** auto-close detail modal when item is archived or deleted ([15a1702](https://github.com/marvinbarretto/jimbo-dashboard/commit/15a1702f14ce9f6fb1056c4f79bd047e2b93d256))
+
 ### [0.0.46](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.45...v0.0.46) (2026-05-08)
 
 
