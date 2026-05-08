@@ -25,8 +25,20 @@ import {
 } from '@domain/vault';
 import type { ActorId } from '@domain/ids';
 import type { VaultItemId } from '@domain/ids';
-import { GroomingCard, type LiveSnapshot } from '../../components/grooming-card/grooming-card';
-import { GroomingNest } from '../../components/grooming-nest/grooming-nest';
+import type { LiveSnapshot } from '../../components/grooming-card/grooming-card';
+import { VaultCard } from '@shared/components/vault-card/vault-card';
+import type { GroomingCardContext, ProjectRef, ChildStatus } from '@shared/components/vault-card/card-context';
+import type { ChildState } from '@shared/components/epic-rollup/epic-rollup';
+import { CURRENT_ACTOR_ID } from '@domain/actors';
+
+// Map a child item's grooming_status into the coarse rollup bucket. Pre-dispatch
+// states collapse to 'grooming'; ready passes through. Per-item dispatch result
+// (running / completed / failed) wiring is a follow-up.
+function groomingToRollup(item: VaultItem): ChildState {
+  if (item.completed_at) return 'completed';
+  if (item.grooming_status === 'ready') return 'ready';
+  return 'grooming';
+}
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
@@ -58,7 +70,7 @@ interface ColumnView {
 
 @Component({
   selector: 'app-grooming-board',
-  imports: [GroomingCard, GroomingNest, KanbanColumn, KanbanFilterBar, BoardCreateBar],
+  imports: [VaultCard, KanbanColumn, KanbanFilterBar, BoardCreateBar],
   templateUrl: './grooming-board.html',
   styleUrl: './grooming-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -198,21 +210,31 @@ export class GroomingBoard {
     });
   }
 
-  // --- per-card derived data passed to <app-grooming-card> ---------------
+  // --- per-card derived data — composed into CardContext for <app-vault-card> ---
 
   // Per-card derived data — first preference is the embed packaged onto the
   // item by the /api/vault-items response (avoids N+1 against parallel
   // services). Falls back to seed-mode service lookups for legacy / offline use.
 
-  primaryProject(item: VaultItem): { id: string; display_name: string } | null {
+  primaryProject(item: VaultItem): ProjectRef | null {
+    // Item embed gives us id + name but no color — look up the project for
+    // color_token. Falls back to seed-mode junction when the embed is absent.
     if (item.primary_project_id && item.primary_project_name) {
-      return { id: item.primary_project_id, display_name: item.primary_project_name };
+      const proj = this.projectsService.getById(item.primary_project_id as never);
+      return {
+        id: item.primary_project_id,
+        display_name: item.primary_project_name,
+        color_token: proj?.color_token ?? null,
+      };
     }
-    // Seed-mode fallback — legacy junction lookup.
     const links = this.vaultItemProjectsService.projectsFor(item.id)();
     if (!links.length) return null;
     const project = this.projectsService.getById(links[0].project_id);
-    return project ? { id: project.id as string, display_name: project.display_name } : null;
+    return project ? {
+      id: project.id as string,
+      display_name: project.display_name,
+      color_token: project.color_token,
+    } : null;
   }
 
   openQuestionsCount(item: VaultItem): number {
@@ -349,6 +371,39 @@ export class GroomingBoard {
   }
 
 
+  // Per-child status for the rollup strip on epic cards. Maps a child's
+  // grooming_status into the rollup's coarser bucket — anything pre-dispatch
+  // collapses to 'grooming'; ready/running/completed/failed pass through.
+  // Returns null when the item isn't an epic.
+  childRollup(item: VaultItem): readonly ChildStatus[] | null {
+    if (!item.is_epic) return null;
+    const children = this.vaultItemsService.items().filter(i => i.parent_id === item.id);
+    return children.map((c): ChildStatus => ({
+      seq:   c.seq,
+      state: groomingToRollup(c),
+    }));
+  }
+
+  // Single helper that builds the discriminated CardContext for the unified
+  // <app-vault-card>. The board still owns all the upstream lookups; the card
+  // is purely presentational. Owner falls back to the current actor when an
+  // item is unassigned — the card never has to render an empty owner slot.
+  cardContextFor(item: VaultItem): GroomingCardContext {
+    return {
+      kind: 'grooming',
+      item,
+      project: this.primaryProject(item),
+      owner: item.assigned_to ?? CURRENT_ACTOR_ID,
+      openQuestion: this.firstOpenQuestion(item),
+      childRollup: this.childRollup(item),
+      parentEpic: this.parentRef(item),
+      lastActivityAt: this.lastActivityAt(item),
+      daysInColumn: this.daysInColumn(item),
+      source: this.sourceSummary(item),
+      openQuestionsCount: this.openQuestionsCount(item),
+    };
+  }
+
   // Rolled-up priority for epic cards: the most-urgent (lowest integer) priority
   // among unfinished children. Returns null if the item isn't an epic OR no
   // unfinished child has a priority set. Per Agile orthodoxy: an epic's urgency
@@ -480,6 +535,38 @@ export class GroomingBoard {
   onAssignItem(item: VaultItem, actor: ActorId): void {
     if (item.assigned_to === actor) return;
     this.vaultItemsService.reassign(item.id, actor, null);
+  }
+
+  // Open the detail dialog so the operator can use the existing question
+  // composer there. Once the inline composer moves into the new card we'll
+  // wire (answer) directly to threadService.post.
+  onAnswerItem(item: VaultItem): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { detail: item.seq },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  // Approve = move from decomposed to ready. Existing setGroomingStatus
+  // single-write path emits the audit event.
+  onApproveItem(item: VaultItem): void {
+    this.vaultItemsService.setGroomingStatus(item.id, 'ready', null);
+  }
+
+  // Reject takes a reason from the prompt and routes the item to needs_rework.
+  onRejectItem(item: VaultItem, reason: string): void {
+    this.vaultItemsService.setGroomingStatus(item.id, 'needs_rework', reason);
+  }
+
+  // Manual decompose nudge — for now, just open the detail page so the
+  // operator can trigger the decompose skill from there. Inline action follow-up.
+  onDecomposeItem(item: VaultItem): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { detail: item.seq },
+      queryParamsHandling: 'merge',
+    });
   }
 
   resetFilters(): void {

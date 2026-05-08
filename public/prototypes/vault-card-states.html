@@ -1,0 +1,2161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Prototype · Unified vault card — kanban view</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --ink:     #1c1c1c;
+    --dim:     #555;
+    --faint:   #888;
+    --bg:      #fff;
+    --panel:   #fafafa;
+    --line:    #d4d4d4;
+    --line-2:  #ececec;
+
+    --hot:     #d96520;
+    --ok:      #3b7a3b;
+    --bad:     #a33;
+    --maybe:   #8a6d00;
+    --info:    #1d4ed8;
+
+    /* actor tokens — DROPPED. Actors are monochrome. Tokens kept here
+       only as a legacy reference; nothing in the system reads them. */
+    --actor-color-marvin: var(--ink);
+    --actor-color-ralph:  var(--ink);
+    --actor-color-boris:  var(--ink);
+    --actor-color-jimbo:  var(--ink);
+
+    /* project tokens — DEEPER muted hues. Stronger presence than pastel
+       so they read at scan distance, but still distinct from the pure
+       semantic primaries (#a33 fail, #3b7a3b ok, #d96520 hot, #1d4ed8 info)
+       — deliberately picked off-axis hues / lower saturation. */
+    --proj-localshout: #6b96c4;  /* mid denim blue */
+    --proj-jimbo:      #6ea888;  /* mid sage    */
+    --proj-hermes:     #c47e94;  /* mid dusty pink */
+    --proj-pomo:       #9082b8;  /* mid muted purple */
+
+    /* priority */
+    --p0: #a33;
+    --p1: #d96520;
+    --p2: #6b6b6b;
+    --p3: #aaa;
+
+    /* dispatch status */
+    --d-approved:    #6b6b6b;
+    --d-dispatching: #8a6d00;
+    --d-running:     #1d4ed8;
+    --d-completed:   #3b7a3b;
+    --d-failed:      #a33;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--ink);
+    background: var(--bg);
+  }
+  .nav { font-size: 11px; color: var(--faint); padding: 10px 18px; border-bottom: 1px solid var(--line-2); }
+  .nav a { color: #06c; text-decoration: none; margin-right: 12px; }
+
+  .page-title { padding: 14px 18px 6px; font-size: 14px; }
+  .page-title .sub { color: var(--faint); font-size: 11px; margin-left: 8px; }
+  .lead {
+    font-size: 12px; color: var(--dim);
+    max-width: 820px;
+    padding: 0 18px 14px;
+  }
+
+  .section {
+    padding: 10px 18px 28px;
+    border-top: 1px solid var(--line-2);
+  }
+  .section h2 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    font-weight: 500;
+    margin: 14px 0 4px;
+  }
+  .section h2 .ord { color: var(--faint); margin-right: 8px; }
+  .section .lead-inline {
+    font-size: 12px; color: var(--dim); max-width: 760px; margin: 0 0 14px;
+  }
+  .section h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+    font-weight: 500;
+    margin: 22px 0 10px;
+  }
+
+  code, kbd {
+    background: var(--line-2);
+    padding: 0 4px;
+    border-radius: 2px;
+    font-size: 11px;
+  }
+
+  /* ──────────────────────────────────────────────────────────────────
+     PRIMITIVES — propose strengthening EntityChip + adding EpicRollup
+     ────────────────────────────────────────────────────────────────── */
+
+  /* Generic identity pill — soft-filled, scoped to a CSS var --pill-color.
+     Two variants: 'soft' (default, 16% bg) and 'solid' (full color, white text).
+     Used for both project and actor on every card. */
+  .pill {
+    --pill-color: var(--faint);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10.5px;
+    line-height: 1.5;
+    padding: 1px 7px 1px 6px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--pill-color) 45%, var(--line));
+    background: color-mix(in srgb, var(--pill-color) 14%, var(--bg));
+    color: var(--pill-color);
+    white-space: nowrap;
+    font-variant: tabular-nums;
+  }
+  .pill .pill-prefix {
+    opacity: 0.55;
+    font-size: 9.5px;
+    margin-right: -1px;
+  }
+  .pill.solid {
+    background: var(--pill-color);
+    color: #fff;
+    border-color: var(--pill-color);
+  }
+  .pill.solid .pill-prefix { opacity: 0.7; color: #fff; }
+
+  .pill.proj-localshout { --pill-color: var(--proj-localshout); }
+  .pill.proj-jimbo      { --pill-color: var(--proj-jimbo); }
+  .pill.proj-hermes     { --pill-color: var(--proj-hermes); }
+  .pill.proj-pomo       { --pill-color: var(--proj-pomo); }
+  .pill.actor-marvin    { --pill-color: var(--actor-color-marvin); }
+  .pill.actor-ralph     { --pill-color: var(--actor-color-ralph); }
+  .pill.actor-boris     { --pill-color: var(--actor-color-boris); }
+  .pill.actor-jimbo     { --pill-color: var(--actor-color-jimbo); }
+
+  /* Projects use pastel + dark text — DEFAULT IS SOLID FILL.
+     Pastels are quiet enough that solid-as-default doesn't shout.
+     Soft variant kept for low-emphasis contexts (menus, hover lists). */
+  .pill.proj-localshout, .pill.proj-jimbo,
+  .pill.proj-hermes, .pill.proj-pomo {
+    background: var(--pill-color);
+    color: var(--ink);
+    border-color: color-mix(in srgb, var(--pill-color) 70%, var(--ink));
+  }
+  .pill.proj-localshout .pill-prefix, .pill.proj-jimbo .pill-prefix,
+  .pill.proj-hermes .pill-prefix, .pill.proj-pomo .pill-prefix {
+    color: color-mix(in srgb, var(--pill-color) 60%, var(--ink));
+    opacity: 0.7;
+  }
+  .pill.soft.proj-localshout, .pill.soft.proj-jimbo,
+  .pill.soft.proj-hermes, .pill.soft.proj-pomo {
+    background: color-mix(in srgb, var(--pill-color) 25%, var(--bg));
+    border-color: color-mix(in srgb, var(--pill-color) 55%, var(--line));
+  }
+
+  /* ── Actor avatar — monochrome OUTLINED ring, owner-as-mark ─────
+     Default is an outlined ring (no fill) with the monogram inside.
+     Solid ring = agent. Dashed ring = human (Marvin). Filled is the
+     "high emphasis" alternative for headers / focused surfaces. */
+  .actor-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    flex-shrink: 0;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+  }
+  .actor-avatar.sm { width: 16px; height: 16px; font-size: 9px; border-width: 1.25px; }
+  .actor-avatar.md { width: 22px; height: 22px; font-size: 11px; border-width: 1.5px; }
+  .actor-avatar.lg { width: 32px; height: 32px; font-size: 14px; border-width: 2px; }
+
+  /* HUMAN — Marvin only. Dashed ring marks him as the human in the set. */
+  .actor-avatar.human { border-style: dashed; }
+
+  /* FILLED — high-emphasis variant. Use sparingly (header focus, "you"). */
+  .actor-avatar.filled {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .actor-avatar.filled.human { background: var(--bg); color: var(--ink); border-style: dashed; }
+
+  /* legacy alias — outlined was the modifier, now it's the default */
+  .actor-avatar.outlined { /* no-op; kept for any stray usages */ }
+
+  /* ── Actor chip = avatar + name (or handle, or initial when compact)
+     Always carries the project stripe when --proj-tint is in scope.
+     The stripe is the canonical "project context" cue across chip types. */
+  .actor-chip-mono {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--ink);
+    line-height: 1;
+    padding: 2px 6px 2px 5px;
+    border-left: 3px solid var(--proj-tint, transparent);
+    border-radius: 0 2px 2px 0;
+  }
+  .actor-chip-mono.no-stripe { border-left: 0; padding-left: 0; }
+  .actor-chip-mono .handle { color: var(--dim); font-size: 10.5px; }
+  .actor-chip-mono .name   { color: var(--ink); font-size: 11px; }
+  .actor-chip-mono .role { color: var(--faint); font-size: 9.5px; margin-left: 4px; }
+
+  /* glyph rendering — unicode marks render at slightly different metrics
+     than alpha letters; nudge the size to match optical weight */
+  .actor-avatar.glyph    { font-size: 12px; font-weight: 500; }
+  .actor-avatar.glyph.sm { font-size: 10px; }
+  .actor-avatar.glyph.lg { font-size: 18px; }
+
+  /* ── Vault-item chip (task / subtask / epic) ─────────────────────
+     Square-cornered to differentiate from actor/project (rounded).
+     Three kinds, all share the same shell — just prefix glyph and
+     subtle treatment differ. */
+  .vault-chip {
+    --proj-tint: var(--line);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10.5px;
+    line-height: 1.5;
+    padding: 1px 8px 1px 4px;
+    border-radius: 3px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--proj-tint);
+    background: var(--bg);
+    color: var(--ink);
+    white-space: nowrap;
+    text-decoration: none;
+    font-variant-numeric: tabular-nums;
+    max-width: 100%;
+  }
+  .vault-chip:hover { border-color: var(--ink); border-left-color: var(--proj-tint); }
+  .vault-chip .vc-prefix { color: var(--faint); font-size: 11px; margin-right: 1px; margin-left: 3px; }
+  .vault-chip .vc-seq    { color: var(--dim); font-weight: 500; margin-right: 4px; }
+  .vault-chip .vc-text   { color: var(--ink); overflow: hidden; text-overflow: ellipsis; }
+  .vault-chip .vc-epic-marker {
+    color: color-mix(in srgb, var(--proj-tint) 70%, var(--ink));
+    font-size: 9.5px;
+    margin-left: 4px;
+    padding-left: 5px;
+    border-left: 1px dotted var(--line);
+  }
+
+  /* project-stripe — vault-chip carries its project as a left border
+     accent in the project's pastel. Subtle, scannable, no extra ink. */
+  .vault-chip.proj-localshout { --proj-tint: var(--proj-localshout); }
+  .vault-chip.proj-jimbo      { --proj-tint: var(--proj-jimbo); }
+  .vault-chip.proj-hermes     { --proj-tint: var(--proj-hermes); }
+  .vault-chip.proj-pomo       { --proj-tint: var(--proj-pomo); }
+
+  .vault-chip.subtask .vc-prefix { color: var(--faint); }
+  .vault-chip.subtask .vc-seq    { color: var(--faint); }
+
+  /* Epic chip — fills with a wash of the project tint at 45%. The epic
+     IS the project's headline initiative, so deriving its colour from
+     the project is structural, not decorative. */
+  .vault-chip.epic {
+    border-color: color-mix(in srgb, var(--proj-tint) 70%, var(--line));
+    background: color-mix(in srgb, var(--proj-tint) 45%, var(--bg));
+  }
+  .vault-chip.epic .vc-prefix { color: color-mix(in srgb, var(--proj-tint) 70%, var(--ink)); font-size: 11.5px; }
+
+  /* creator-type — agent-decomposed is solid (default); human-conceived is dashed */
+  .vault-chip.epic.human-created {
+    border-style: dashed;
+    border-left-style: solid;  /* keep stripe solid even when border is dashed */
+    background: color-mix(in srgb, var(--proj-tint) 25%, var(--bg));
+  }
+
+  /* appended creator marker — separate compartment in the chip */
+  .vault-chip .creator-marker {
+    margin-left: 6px;
+    padding-left: 6px;
+    border-left: 1px dotted color-mix(in srgb, var(--info) 40%, var(--line));
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--faint);
+    font-size: 10px;
+  }
+  .vault-chip .creator-marker .actor-avatar.sm { width: 14px; height: 14px; font-size: 9px; }
+
+  /* ── Card · parent-link bar ──────────────────────────────────────
+     For tasks whose parent is an epic. Sits BELOW the header, ABOVE
+     the title — so the operator clocks "where am I" before reading
+     the title itself. Picks up project tint from the card. */
+  .vc-parent-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10.5px;
+    color: var(--dim);
+    padding: 3px 6px;
+    background: color-mix(in srgb, var(--proj-tint, var(--info)) 25%, var(--bg));
+    border-left: 2px solid color-mix(in srgb, var(--proj-tint, var(--info)) 60%, var(--line));
+    border-radius: 0 2px 2px 0;
+  }
+  /* card-level project classes — cascade --proj-tint to inner elements */
+  .vc.proj-localshout { --proj-tint: var(--proj-localshout); }
+  .vc.proj-jimbo      { --proj-tint: var(--proj-jimbo); }
+  .vc.proj-hermes     { --proj-tint: var(--proj-hermes); }
+  .vc.proj-pomo       { --proj-tint: var(--proj-pomo); }
+
+  /* Auto-detect: if a card contains a project pill, derive --proj-tint
+     from it. This means actor / skill / parent-link chips inside the
+     card automatically get the project stripe with zero per-card markup. */
+  .vc:has(.pill.proj-localshout) { --proj-tint: var(--proj-localshout); }
+  .vc:has(.pill.proj-jimbo)      { --proj-tint: var(--proj-jimbo); }
+  .vc:has(.pill.proj-hermes)     { --proj-tint: var(--proj-hermes); }
+  .vc:has(.pill.proj-pomo)       { --proj-tint: var(--proj-pomo); }
+  .vc-parent-link .arrow { color: var(--faint); font-size: 11px; }
+  .vc-parent-link .epic-text {
+    color: var(--ink);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .vc-parent-link .epic-seq { color: var(--dim); font-weight: 500; margin-right: 4px; }
+
+  /* ── Card · breadcrumb (alternative hierarchy treatment) ────────── */
+  .vc-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--faint);
+    padding: 1px 0 4px;
+    border-bottom: 1px dotted var(--line-2);
+    margin-bottom: 0;
+  }
+  .vc-breadcrumb .crumb-sep { color: var(--line); }
+  .vc-breadcrumb .crumb-link { color: var(--dim); text-decoration: none; }
+  .vc-breadcrumb .crumb-link:hover { color: var(--ink); }
+
+  /* Epic rollup — strip of dots, one per child, coloured by status.
+     Dispatchable states (ready/running/completed/failed) use dispatch palette;
+     pre-dispatch grooming states share a neutral "in-grooming" tone. */
+  .rollup {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 10px;
+    color: var(--dim);
+  }
+  .rollup-label {
+    color: var(--faint);
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-right: 4px;
+  }
+  .rollup-dot {
+    width: 9px; height: 9px;
+    border-radius: 2px;
+    background: var(--line);
+    border: 1px solid color-mix(in srgb, var(--line) 60%, var(--ink));
+  }
+  .rollup-dot.grooming  { background: #efe6c8; border-color: #c8a85f; }
+  .rollup-dot.ready     { background: #e2e2e2; border-color: var(--d-approved); }
+  .rollup-dot.running   { background: #cfdcf7; border-color: var(--d-running); }
+  .rollup-dot.completed { background: #d1ecd1; border-color: var(--d-completed); }
+  .rollup-dot.failed    { background: #f6d4d4; border-color: var(--d-failed); }
+  .rollup-summary {
+    margin-left: 6px;
+    color: var(--dim);
+    font-size: 10px;
+  }
+  .rollup-summary .count { color: var(--ink); }
+
+  /* Status badges (priority + dispatch). Kept tight; sit in header row. */
+  .badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 9.5px;
+    padding: 0 5px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    line-height: 1.5;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .badge.p0 { color: var(--p0); background: #fdf0f0; }
+  .badge.p1 { color: var(--p1); background: #fdf3eb; }
+  .badge.p2 { color: var(--p2); background: var(--panel); }
+  .badge.p3 { color: var(--p3); background: var(--bg); }
+  .badge.epic    { color: var(--info); background: #eef2fc; }
+  .badge.blocker { color: var(--bad); background: #fdf0f0; }
+  .badge.draft   { color: var(--maybe); background: #fff8e0; }
+  .badge.retry   { color: var(--bad); background: var(--bg); }
+
+  .dbadge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 9.5px;
+    padding: 1px 6px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .dbadge.approved    { background: #f1f1f1; color: var(--d-approved); }
+  .dbadge.dispatching { background: #fff8e0; color: var(--d-dispatching); border: 1px solid #e0c97a; }
+  .dbadge.running     { background: #eef2fc; color: var(--d-running); }
+  .dbadge.completed   { background: #ecf6ec; color: var(--d-completed); }
+  .dbadge.failed      { background: #fdf0f0; color: var(--d-failed); }
+  .dbadge .pulse-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: currentColor;
+    animation: cardpulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes cardpulse {
+    0%,100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  /* ──────────────────────────────────────────────────────────────────
+     CARD SHELL
+     ────────────────────────────────────────────────────────────────── */
+  .vc {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--proj-tint, var(--faint));
+    padding: 8px 10px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    cursor: pointer;
+    position: relative;
+  }
+  .vc:hover { border-color: var(--ink); border-left-color: var(--proj-tint, var(--faint)); }
+  /* legacy actor-* classes kept for any stray usages — but they no
+     longer drive border colour. Owner is shown via the avatar+name in
+     the identity strip. Card colour is the project's job now. */
+  .vc.actor-marvin, .vc.actor-ralph, .vc.actor-boris, .vc.actor-jimbo { /* no-op */ }
+  .vc.failed     { border-color: #e0b0b0; }
+  .vc.completed  { opacity: 0.85; }
+  .vc.epic-card  {
+    border-top: 2px solid var(--info);
+    background: linear-gradient(180deg, #f6f8fd 0%, var(--bg) 30%);
+  }
+
+  /* layer 1: header — seq + project ref + status badges + age */
+  .vc-head {
+    display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+    font-size: 10.5px;
+    color: var(--faint);
+  }
+  .vc-seq {
+    color: var(--dim);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .vc-seq:hover { text-decoration: underline; }
+  .vc-subitem { color: var(--faint); font-size: 10px; }
+
+  /* Inline project reference — small explicit "/localshout" right after
+     the seq. The wash + stripe carry the colour; this carries the NAME.
+     Reads on every card in the same scan zone as the seq. */
+  .vc-proj-ref {
+    font-size: 10px;
+    color: color-mix(in srgb, var(--proj-tint, var(--faint)) 65%, var(--ink));
+    font-weight: 500;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+  }
+  .vc-proj-ref:hover { text-decoration: underline; }
+
+  .vc-head .right { margin-left: auto; display: inline-flex; gap: 6px; align-items: center; }
+  .vc-age { font-size: 10px; color: var(--faint); }
+  .vc-stuck {
+    font-size: 9.5px;
+    padding: 0 4px;
+    background: #fff3cd;
+    border: 1px solid #e0c97a;
+    color: var(--maybe);
+    border-radius: 2px;
+  }
+
+  /* layer 2: title */
+  .vc-title {
+    font-size: 12.5px;
+    color: var(--ink);
+    line-height: 1.4;
+    text-decoration: none;
+    display: block;
+    word-wrap: break-word;
+  }
+  .vc-title:hover { color: var(--info); }
+
+  /* layer 3: identity strip — owner pill + project pill (always present) */
+  .vc-identity {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+  }
+  .vc-identity .sep {
+    color: var(--line);
+    font-size: 10px;
+  }
+  .vc-identity .source-text {
+    font-size: 10px;
+    color: var(--faint);
+    margin-left: 2px;
+  }
+
+  /* layer 4: dispatch meta — skill name (mono, dim) for dispatch contexts.
+     Carries the project stripe like every non-project chip. */
+  .vc-skill {
+    font-size: 10.5px;
+    color: var(--dim);
+    background: var(--panel);
+    padding: 2px 6px;
+    border-radius: 2px;
+    align-self: flex-start;
+    border-left: 3px solid var(--proj-tint, var(--line));
+  }
+
+  /* layer 5: callout — variant body */
+  .vc-callout {
+    border-left: 2px solid var(--line);
+    padding: 5px 8px;
+    background: var(--panel);
+    font-size: 11px;
+    color: var(--dim);
+    line-height: 1.45;
+  }
+  .vc-callout .label {
+    display: block;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--faint);
+    margin-bottom: 2px;
+  }
+  .vc-callout.question  { border-color: var(--hot);   background: #fff7f0; }
+  .vc-callout.question .label { color: var(--hot); }
+  .vc-callout.rework    { border-color: var(--maybe); background: #fffaeb; }
+  .vc-callout.rework .label { color: var(--maybe); }
+  .vc-callout.draft     { border-color: var(--maybe); background: #fff8e0; }
+  .vc-callout.draft .label { color: var(--maybe); }
+  .vc-callout.rationale { border-color: var(--info);  background: #f6f8fd; }
+  .vc-callout.rationale .label { color: var(--info); }
+  .vc-callout.result    { border-color: var(--ok);    background: #f5fbf5; }
+  .vc-callout.result .label { color: var(--ok); }
+  .vc-callout.error     { border-color: var(--bad);   background: #fdf0f0; color: var(--bad); }
+  .vc-callout.error .label { color: var(--bad); }
+
+  /* layer 6: epic rollup row (only when epic) */
+  .vc-rollup-row {
+    padding: 4px 0 2px;
+    border-top: 1px dashed var(--line-2);
+    border-bottom: 1px dashed var(--line-2);
+    margin: 2px 0 0;
+  }
+
+  /* layer 7: footer actions */
+  .vc-actions {
+    display: flex; gap: 4px; flex-wrap: wrap;
+    padding-top: 5px;
+    border-top: 1px dashed var(--line-2);
+    margin-top: 1px;
+  }
+  .vc-action {
+    font: inherit;
+    font-size: 10.5px;
+    padding: 2px 8px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--dim);
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  .vc-action:hover { border-color: var(--ink); color: var(--ink); }
+  .vc-action.primary {
+    background: var(--ok); border-color: var(--ok); color: #fff;
+  }
+  .vc-action.danger { color: var(--bad); border-color: #d4a8a8; }
+  .vc-action.warn   { color: var(--maybe); border-color: #e0c97a; background: #fff8e0; }
+
+  /* ──────────────────────────────────────────────────────────────────
+     PRIMITIVES SHOWCASE — section 01
+     ────────────────────────────────────────────────────────────────── */
+  .primitives-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 18px 24px;
+    align-items: start;
+  }
+  .primitives-grid .label-col {
+    padding-top: 4px;
+    border-right: 1px dashed var(--line-2);
+    padding-right: 14px;
+  }
+  .primitives-grid .label-col .name { font-size: 11.5px; color: var(--ink); margin-bottom: 4px; }
+  .primitives-grid .label-col .desc { font-size: 11px; color: var(--dim); line-height: 1.55; }
+  .primitives-grid .label-col code { font-size: 10.5px; }
+  .primitives-grid .show {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+
+  /* ──────────────────────────────────────────────────────────────────
+     ANATOMY — section 02
+     ────────────────────────────────────────────────────────────────── */
+  .anatomy {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  .anatomy .vc { width: 320px; }
+  .anatomy-legend ol {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 11.5px;
+    color: var(--dim);
+    line-height: 1.7;
+  }
+  .anatomy-legend ol li strong { color: var(--ink); font-weight: 500; }
+  .anatomy-arrow {
+    font-size: 10.5px; color: var(--faint); display: block; margin-top: 1px;
+  }
+
+  /* ──────────────────────────────────────────────────────────────────
+     KANBAN — sections 03 + 04
+     ────────────────────────────────────────────────────────────────── */
+  .kanban {
+    display: grid;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .kanban.grooming {
+    grid-template-columns: repeat(7, minmax(220px, 1fr));
+  }
+  .kanban.execution {
+    grid-template-columns: repeat(5, minmax(240px, 1fr));
+  }
+  .col {
+    background: var(--panel);
+    border: 1px solid var(--line-2);
+    border-radius: 4px;
+    padding: 8px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .col-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+    padding: 2px 4px 6px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .col-head .count { color: var(--faint); }
+  .col-head.system::after {
+    content: 'system-managed';
+    display: block;
+    font-size: 8.5px;
+    color: var(--faint);
+    text-transform: none;
+    letter-spacing: 0;
+    margin-left: 6px;
+  }
+
+  .note {
+    font-size: 11px;
+    color: var(--dim);
+    padding: 8px 12px;
+    border-left: 2px solid var(--line);
+    background: var(--panel);
+    margin: 14px 0 0;
+  }
+  .note strong { color: var(--ink); }
+
+  pre.codeblock {
+    background: var(--panel);
+    padding: 12px;
+    border: 1px solid var(--line-2);
+    font-size: 11px;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin: 12px 0 0;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="./index.html">prototypes</a>
+  <a href="./kanban-actor-approval.html">kanban-actor-approval</a>
+  <a href="./vault-item.html">vault-item</a>
+  <span style="color: var(--faint);">·</span>
+  <span>vault-card-states (this page)</span>
+</nav>
+
+<header class="page-title">
+  Unified vault card — kanban view
+  <span class="sub">draft · prototype only · one card component, every state</span>
+</header>
+
+<p class="lead">
+  The kanban currently uses three different card components: <code>app-grooming-card</code>,
+  <code>app-execution-card</code>, and an inline manual card. This prototype proposes a single
+  <code>app-vault-card</code> driven by a discriminated <code>CardContext</code> union.
+  Two structural changes from the current design: <strong>owner and project are always-on</strong>
+  (rendered on every card via strengthened pills) and <strong>epic cards roll up child state</strong>
+  via a per-child status strip so progress is visible without a click-in.
+</p>
+
+<!-- ─── 01 primitives ──────────────────────────────────────────────── -->
+<section class="section">
+  <h2><span class="ord">01</span> Primitives — propose for ui-lab before card work begins</h2>
+  <p class="lead-inline">
+    Three pieces. Two are reinforcements of the existing <code>app-entity-chip</code>
+    (it already accepts type/colour) — we want a stronger always-on treatment and a
+    <code>solid</code> variant for high-contrast surfaces. One is genuinely new.
+  </p>
+
+  <div class="primitives-grid">
+
+    <!-- Project pill -->
+    <div class="label-col">
+      <div class="name">Project pill — <code>EntityChip type=project</code></div>
+      <div class="desc">
+        Always rendered. Soft fill in the project's <code>color_token</code>; border at 45%;
+        text in full colour. The eye locks onto project at column-scan distance. Replaces the
+        current weak project chip used today.
+      </div>
+    </div>
+    <div class="show">
+      <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+      <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+      <span class="pill proj-hermes"><span class="pill-prefix">/</span>hermes</span>
+      <span class="pill proj-pomo"><span class="pill-prefix">/</span>pomo</span>
+      <span style="color: var(--faint); font-size: 11px;">— solid variant —</span>
+      <span class="pill solid proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+      <span class="pill solid proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+    </div>
+
+    <!-- Actor avatar — monochrome outlined ring (default) -->
+    <div class="label-col">
+      <div class="name">Actor avatar — monochrome outlined ring</div>
+      <div class="desc">
+        Default is an outlined ring with the monogram inside. <strong>Solid ring</strong> = agent.
+        <strong>Dashed ring</strong> = human (Marvin only). Same encoding as the epic chip's
+        creator-class rule — solid is agent-made, dashed is human-made — so there's <em>one</em>
+        visual rule across the whole system.
+      </div>
+    </div>
+    <div class="show" style="flex-direction: column; align-items: flex-start; gap: 14px;">
+
+      <div style="display: flex; align-items: center; gap: 18px;">
+        <span style="color: var(--faint); font-size: 10px; min-width: 80px;">default · md</span>
+        <span class="actor-avatar md human" title="Marvin">M</span>
+        <span class="actor-avatar md" title="Ralph">R</span>
+        <span class="actor-avatar md" title="Boris">B</span>
+        <span class="actor-avatar md" title="Jimbo">J</span>
+        <span style="color: var(--faint); font-size: 10.5px;">— Marvin dashed (human); agents solid</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 18px;">
+        <span style="color: var(--faint); font-size: 10px; min-width: 80px;">filled · high-emphasis only</span>
+        <span class="actor-avatar md human filled">M</span>
+        <span class="actor-avatar md filled">R</span>
+        <span class="actor-avatar md filled">B</span>
+        <span class="actor-avatar md filled">J</span>
+        <span style="color: var(--faint); font-size: 10.5px;">— focus, "you", header treatments</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 18px; padding-top: 6px; border-top: 1px dashed var(--line-2); width: 100%;">
+        <span style="color: var(--faint); font-size: 10px; min-width: 80px;">sizes</span>
+        <span class="actor-avatar sm">M</span>
+        <span style="color: var(--faint); font-size: 10px;">sm 16px · density / mention rows</span>
+        <span class="actor-avatar md" style="margin-left: 12px;">M</span>
+        <span style="color: var(--faint); font-size: 10px;">md 22px · default on cards</span>
+        <span class="actor-avatar lg" style="margin-left: 12px;">M</span>
+        <span style="color: var(--faint); font-size: 10px;">lg 32px · headers / focus</span>
+      </div>
+    </div>
+
+    <!-- Actor chip — full name primary, initial fallback -->
+    <div class="label-col">
+      <div class="name">Actor chip · name primary, initial when connected</div>
+      <div class="desc">
+        Whenever the actor is the <em>primary content</em> (owner of an item, mention, message
+        author): show the full name. Initial-only is for places where the actor is
+        <em>connected but not primary</em> — source attribution, breadcrumbs, dense lists.
+        Project stripe (left border) ties every actor reference back to the item's project.
+      </div>
+    </div>
+    <div class="show" style="flex-direction: column; align-items: flex-start; gap: 14px;">
+
+      <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
+        <span style="color: var(--faint); font-size: 10px; min-width: 80px;">primary · full name</span>
+        <span style="--proj-tint: var(--proj-localshout);" class="actor-chip-mono"><span class="actor-avatar sm human">M</span><span class="name">Marvin</span></span>
+        <span style="--proj-tint: var(--proj-localshout);" class="actor-chip-mono"><span class="actor-avatar sm">R</span><span class="name">Ralph</span></span>
+        <span style="--proj-tint: var(--proj-jimbo);" class="actor-chip-mono"><span class="actor-avatar sm">B</span><span class="name">Boris</span></span>
+        <span style="--proj-tint: var(--proj-hermes);" class="actor-chip-mono"><span class="actor-avatar sm">J</span><span class="name">Jimbo</span></span>
+        <span style="color: var(--faint); font-size: 10.5px; width: 100%;">— left stripe is the project of the item the actor is acting on</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+        <span style="color: var(--faint); font-size: 10px; min-width: 80px;">connected · initial</span>
+        <span class="actor-chip-mono no-stripe"><span class="actor-avatar sm human">M</span></span>
+        <span class="actor-chip-mono no-stripe"><span class="actor-avatar sm">R</span></span>
+        <span class="actor-chip-mono no-stripe"><span class="actor-avatar sm">B</span></span>
+        <span class="actor-chip-mono no-stripe"><span class="actor-avatar sm">J</span></span>
+        <span style="color: var(--faint); font-size: 10.5px;">— source attribution, mention dots, notification badges</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+        <span style="color: var(--faint); font-size: 10px; min-width: 80px;">in prose</span>
+        <span style="font-size: 11.5px; color: var(--dim);">
+          decomposed by <span class="actor-chip-mono no-stripe" style="display: inline-flex; vertical-align: -3px;"><span class="actor-avatar sm">J</span></span> Jimbo · reviewed by <span class="actor-chip-mono no-stripe" style="display: inline-flex; vertical-align: -3px;"><span class="actor-avatar sm">R</span></span> Ralph
+        </span>
+      </div>
+    </div>
+
+    <!-- Bespoke marks · honest note -->
+    <div class="label-col">
+      <div class="name">Bespoke marks — parked</div>
+      <div class="desc">
+        Tried geometric and narrative unicode placeholders (◆ ▣ ⬢ ✦ / ◉ ⊞ ▲ ★).
+        At chip size they don't read distinctly enough — the silhouettes blur. Real bespoke
+        marks would need designed SVG (~200 lines per actor including hover/focus states),
+        and that's premature. Two clearer options below.
+      </div>
+    </div>
+    <div class="show">
+      <span style="color: var(--faint); font-size: 10.5px;">
+        Once the rest of the system is settled and we know the marks are worth investing in,
+        commission proper SVG glyphs at 32px+ with simplified silhouettes.
+      </span>
+    </div>
+
+    <!-- Epic rollup -->
+    <div class="label-col">
+      <div class="name">Epic rollup strip — NEW · <code>app-epic-rollup</code></div>
+      <div class="desc">
+        For epics. One block per child, coloured by lifecycle position. Operator sees at a
+        glance: 4 children, 1 still in grooming, 1 ready, 1 running, 1 done. Replaces the
+        current bare child-count number.
+      </div>
+    </div>
+    <div class="show" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+      <span class="rollup">
+        <span class="rollup-label">children</span>
+        <span class="rollup-dot grooming"  title="#2410 · classified"></span>
+        <span class="rollup-dot ready"     title="#2411 · ready"></span>
+        <span class="rollup-dot running"   title="#2412 · running"></span>
+        <span class="rollup-dot completed" title="#2413 · completed"></span>
+        <span class="rollup-summary"><span class="count">1/4</span> done · <span class="count">1</span> running</span>
+      </span>
+      <span class="rollup">
+        <span class="rollup-label">children</span>
+        <span class="rollup-dot completed"></span>
+        <span class="rollup-dot completed"></span>
+        <span class="rollup-dot completed"></span>
+        <span class="rollup-dot failed" title="#2429 · failed"></span>
+        <span class="rollup-summary"><span class="count">3/4</span> done · <span style="color: var(--bad);">1 failed</span></span>
+      </span>
+      <span class="rollup">
+        <span class="rollup-label">children</span>
+        <span class="rollup-dot grooming"></span>
+        <span class="rollup-dot grooming"></span>
+        <span class="rollup-summary"><span class="count">0/2</span> done · still grooming</span>
+      </span>
+      <div style="font-size: 10.5px; color: var(--faint);">
+        legend:
+        <span class="rollup-dot grooming" style="margin: 0 4px 0 8px;"></span>grooming
+        <span class="rollup-dot ready" style="margin: 0 4px 0 12px;"></span>ready
+        <span class="rollup-dot running" style="margin: 0 4px 0 12px;"></span>running
+        <span class="rollup-dot completed" style="margin: 0 4px 0 12px;"></span>done
+        <span class="rollup-dot failed" style="margin: 0 4px 0 12px;"></span>failed
+      </div>
+    </div>
+
+  </div>
+
+  <div class="note">
+    <strong>ui-lab task before card work:</strong> add the <code>solid</code> variant + a
+    "prominent" mode to <code>EntityChip</code>, build <code>app-actor-avatar</code> as a new
+    shared component (replaces the colour-only actor chip in dense surfaces), and create
+    <code>app-epic-rollup</code> as a new shared component (input:
+    <code>readonly children: ChildStatus[]</code>).
+  </div>
+
+  <!-- ── Same-card comparison: colored pill vs monochrome avatar ── -->
+  <h3 style="margin-top: 28px;">Same card · two treatments</h3>
+  <p class="lead-inline">
+    The decisive test: which one reads <em>faster</em> when you're scanning seven columns?
+    Card border colour is identical in both; only the actor chip differs.
+  </p>
+
+  <div style="display: grid; grid-template-columns: repeat(2, 300px); gap: 18px 18px; margin-top: 6px;">
+
+    <div>
+      <div style="font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">A · coloured pill <em style="color: var(--bad); font-style: normal;">(deprecated)</em></div>
+      <article class="vc actor-boris">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2401</a>
+          <span class="badge p2">P2</span>
+          <span class="right"><span class="vc-age">2d</span></span>
+        </header>
+        <a class="vc-title" href="#">backfill activity_events for items pre-2026-04-01</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">B</span><span class="name">Boris</span></span>
+          <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+        </div>
+      </article>
+    </div>
+
+    <div>
+      <div style="font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">B · letter monogram + handle</div>
+      <article class="vc actor-boris">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2401</a>
+          <span class="badge p2">P2</span>
+          <span class="right"><span class="vc-age">2d</span></span>
+        </header>
+        <a class="vc-title" href="#">backfill activity_events for items pre-2026-04-01</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">B</span><span class="handle">@boris</span></span>
+          <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+        </div>
+      </article>
+    </div>
+
+    <div>
+      <div style="font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">C · monogram + full name <strong style="color: var(--ink);">(recommended default)</strong></div>
+      <article class="vc actor-boris">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2401</a>
+          <span class="badge p2">P2</span>
+          <span class="right"><span class="vc-age">2d</span></span>
+        </header>
+        <a class="vc-title" href="#">backfill activity_events for items pre-2026-04-01</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">B</span><span class="name">Boris</span></span>
+          <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+        </div>
+      </article>
+    </div>
+
+    <div>
+      <div style="font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">D · initial-only in header — icon shorthand</div>
+      <article class="vc actor-boris">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2401</a>
+          <span class="actor-avatar sm" style="margin-left: 2px;" title="Boris">B</span>
+          <span class="badge p2">P2</span>
+          <span class="right"><span class="vc-age">2d</span></span>
+        </header>
+        <a class="vc-title" href="#">backfill activity_events for items pre-2026-04-01</a>
+        <div class="vc-identity">
+          <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+        </div>
+      </article>
+    </div>
+
+  </div>
+
+  <div class="note">
+    <strong>C is the recommended default.</strong> Monogram + full name in the identity strip
+    is the most legible. <strong>D</strong> (initial-only in header) is the
+    "connected but not primary" treatment — use in mention rows, notification dots, anywhere the
+    actor is referenced but isn't the focus. Card border colour carries the actor's colour as
+    a peripheral cue.
+  </div>
+
+  <h3 style="margin-top: 28px;">Density test · all four actors, monogram + full name</h3>
+  <p class="lead-inline">
+    Four cards in a row using monogram + full name. Marvin's avatar is dashed (human); agents
+    are solid (Boris/Ralph/Jimbo). Project stripe on each actor chip ties them back to the
+    item's project — every non-project chip references the project.
+  </p>
+  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 6px;">
+    <article class="vc actor-marvin">
+      <header class="vc-head">
+        <a class="vc-seq" href="#">#2502</a>
+        <span class="right"><span class="vc-age">just now</span></span>
+      </header>
+      <a class="vc-title" href="#">consolidate kanban card components</a>
+      <div class="vc-identity">
+        <span class="actor-chip-mono"><span class="actor-avatar sm human">M</span><span class="name">Marvin</span></span>
+        <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+      </div>
+    </article>
+    <article class="vc actor-ralph">
+      <header class="vc-head">
+        <a class="vc-seq" href="#">#2483</a>
+        <span class="badge p1">P1</span>
+        <span class="right"><span class="vc-age">1h</span></span>
+      </header>
+      <a class="vc-title" href="#">add /dispatches detail page for hermes</a>
+      <div class="vc-identity">
+        <span class="actor-chip-mono"><span class="actor-avatar sm">R</span><span class="name">Ralph</span></span>
+        <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+      </div>
+    </article>
+    <article class="vc actor-boris">
+      <header class="vc-head">
+        <a class="vc-seq" href="#">#2401</a>
+        <span class="badge p2">P2</span>
+        <span class="right"><span class="vc-age">2d</span></span>
+      </header>
+      <a class="vc-title" href="#">backfill activity_events</a>
+      <div class="vc-identity">
+        <span class="actor-chip-mono"><span class="actor-avatar sm">B</span><span class="name">Boris</span></span>
+        <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+      </div>
+    </article>
+    <article class="vc actor-jimbo">
+      <header class="vc-head">
+        <a class="vc-seq" href="#">#2495</a>
+        <span class="right"><span class="vc-age">14m</span></span>
+      </header>
+      <a class="vc-title" href="#">curate this week's reading list</a>
+      <div class="vc-identity">
+        <span class="actor-chip-mono"><span class="actor-avatar sm">J</span><span class="name">Jimbo</span></span>
+        <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ─── 02 anatomy ─────────────────────────────────────────────────── -->
+<section class="section">
+  <h2><span class="ord">02</span> Anatomy — six stacked slots, owner + project always-on</h2>
+
+  <div class="anatomy">
+    <div>
+      <article class="vc actor-marvin">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2417</a>
+          <a class="vc-proj-ref" href="#">/localshout</a>
+          <span class="badge p1">P1</span>
+          <span class="badge blocker">⚑ 1</span>
+          <span class="right">
+            <span class="vc-stuck" title="3 days in this column">3d</span>
+            <span class="vc-age" title="2 hours since last activity">2h</span>
+          </span>
+        </header>
+
+        <a class="vc-title" href="#">wire up dispatch retry button on failed cards</a>
+
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm human">M</span><span class="name">Marvin</span></span>
+          <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+          <span class="source-text">via <span class="actor-avatar sm" style="vertical-align: -3px;">R</span> Ralph</span>
+        </div>
+
+        <div class="vc-callout question">
+          <span class="label">open question · @ralph · 2h ago</span>
+          should retry preserve the original executor or pick whoever's free?
+        </div>
+
+        <div class="vc-actions">
+          <button class="vc-action primary">answer</button>
+          <button class="vc-action">archive</button>
+          <button class="vc-action">assign</button>
+        </div>
+      </article>
+    </div>
+
+    <div class="anatomy-legend">
+      <ol>
+        <li>
+          <strong>Header</strong> — seq, <em>inline project ref</em> (<code>/localshout</code>), priority/dispatch-status, blocker / epic / stuck flags, age.
+          <span class="anatomy-arrow">always present · project NAME in the scan zone, project COLOUR in the wash + stripe</span>
+        </li>
+        <li>
+          <strong>Title</strong> — single line, click-in to detail.
+          <span class="anatomy-arrow">always present · primary tap target</span>
+        </li>
+        <li>
+          <strong>Identity strip</strong> — owner chip (avatar + full name; carries project stripe) + project pill (solid colour) + source attribution.
+          <span class="anatomy-arrow">always present · who, what, who-from — full names</span>
+        </li>
+        <li>
+          <strong>Skill chip</strong> — only in dispatch contexts. Renders the fully-qualified skill (<code>hermes/vault-classify</code>) below identity.
+          <span class="anatomy-arrow">dispatch only</span>
+        </li>
+        <li>
+          <strong>Callout</strong> — variant body: question · rework · rationale · draft AC · result · error.
+          <span class="anatomy-arrow">rendered when state demands it</span>
+        </li>
+        <li>
+          <strong>Epic rollup</strong> — for <code>is_epic=true</code>. Per-child status strip + summary.
+          <span class="anatomy-arrow">epics only</span>
+        </li>
+        <li>
+          <strong>Action footer</strong> — 1–3 buttons. Primary highlighted.
+          <span class="anatomy-arrow">always at bottom · predictable hit zone</span>
+        </li>
+      </ol>
+      <div class="footnote" style="font-size: 10.5px; color: var(--faint); margin-top: 14px;">
+        Card border-left, every chip stripe, the wash on epic cards — all derive from one
+        place: the card's project. Owner is monochrome (no actor colour anywhere). The
+        project does the colour work; everything else is structural.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 03 grooming kanban ─────────────────────────────────────────── -->
+<section class="section">
+  <h2><span class="ord">03</span> Grooming kanban — every column, real card</h2>
+  <p class="lead-inline">
+    Each column shows the card variant for that state. Owner pill + project pill on every card.
+    The right-most card (<code>#2401</code>, in <em>Ready</em>) is an epic — note the rollup strip.
+  </p>
+
+  <div class="kanban grooming">
+
+    <!-- Needs rework -->
+    <div class="col">
+      <div class="col-head">Needs rework <span class="count">1</span></div>
+      <article class="vc actor-ralph">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2389</a>
+          <span class="badge p1">P1</span>
+          <span class="right"><span class="vc-age">5h</span></span>
+        </header>
+        <a class="vc-title" href="#">migrate dispatches feed to paginated response shape</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">R</span><span class="name">Ralph</span></span>
+          <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+        </div>
+        <div class="vc-callout rework">
+          <span class="label">rework · @marvin · 5h ago</span>
+          AC missed the offset/limit case — please redo with cursor pagination semantics.
+        </div>
+        <div class="vc-actions">
+          <button class="vc-action">archive</button>
+        </div>
+      </article>
+    </div>
+
+    <!-- Ungroomed -->
+    <div class="col">
+      <div class="col-head">Ungroomed <span class="count">1</span></div>
+      <article class="vc actor-marvin">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2502</a>
+          <span class="right"><span class="vc-age">just now</span></span>
+        </header>
+        <a class="vc-title" href="#">consolidate kanban card components into one</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm human">M</span><span class="name">Marvin</span></span>
+          <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+          <span class="source-text">via manual</span>
+        </div>
+        <div class="vc-actions">
+          <button class="vc-action">archive</button>
+          <button class="vc-action">assign</button>
+        </div>
+      </article>
+    </div>
+
+    <!-- Intake rejected -->
+    <div class="col">
+      <div class="col-head">Intake rejected <span class="count">1</span></div>
+      <article class="vc actor-marvin">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2417</a>
+          <span class="badge blocker">⚑ 1</span>
+          <span class="right"><span class="vc-age">2h</span></span>
+        </header>
+        <a class="vc-title" href="#">wire up dispatch retry button on failed cards</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm human">M</span><span class="name">Marvin</span></span>
+          <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+          <span class="source-text">via @ralph</span>
+        </div>
+        <div class="vc-callout question">
+          <span class="label">open question · @ralph · 2h</span>
+          should retry preserve the original executor?
+        </div>
+        <div class="vc-actions">
+          <button class="vc-action primary">answer</button>
+          <button class="vc-action">archive</button>
+        </div>
+      </article>
+    </div>
+
+    <!-- Intake complete -->
+    <div class="col">
+      <div class="col-head">Intake complete <span class="count">1</span></div>
+      <article class="vc actor-marvin">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2498</a>
+          <span class="right"><span class="vc-age">14m</span></span>
+        </header>
+        <a class="vc-title" href="#">add tooltip on dispatch badge explaining each state</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm human">M</span><span class="name">Marvin</span></span>
+          <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+          <span class="source-text">via manual</span>
+        </div>
+        <div class="vc-actions">
+          <button class="vc-action">archive</button>
+          <button class="vc-action">assign</button>
+        </div>
+      </article>
+    </div>
+
+    <!-- Classified -->
+    <div class="col">
+      <div class="col-head">Classified <span class="count">1</span></div>
+      <article class="vc actor-ralph">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2483</a>
+          <span class="badge p1">P1</span>
+          <span class="right"><span class="vc-age">1h</span></span>
+        </header>
+        <a class="vc-title" href="#">add /dispatches detail page for hermes runs</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">R</span><span class="name">Ralph</span></span>
+          <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+          <span class="source-text">via vault-classify</span>
+        </div>
+        <div class="vc-callout rationale">
+          <span class="label">rationale · 0.82 conf</span>
+          unblocks operator visibility into hermes pipeline; matches Phase C item.
+        </div>
+        <div class="vc-actions">
+          <button class="vc-action">archive</button>
+          <button class="vc-action">decompose</button>
+        </div>
+      </article>
+    </div>
+
+    <!-- Decomposed -->
+    <div class="col">
+      <div class="col-head">Decomposed <span class="count">1</span></div>
+      <article class="vc actor-marvin">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2456</a>
+          <span class="badge p0">P0</span>
+          <span class="badge draft">5 AC</span>
+          <span class="right"><span class="vc-age">3h</span></span>
+        </header>
+        <a class="vc-title" href="#">extract shared kanban board layout into _board-layout.scss</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm human">M</span><span class="name">Marvin</span></span>
+          <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+          <span class="source-text">via vault-decompose</span>
+        </div>
+        <div class="vc-callout draft">
+          <span class="label">5 acceptance criteria drafted</span>
+          approve to dispatch · click to review.
+        </div>
+        <div class="vc-actions">
+          <button class="vc-action primary">approve</button>
+          <button class="vc-action danger">reject</button>
+        </div>
+      </article>
+    </div>
+
+    <!-- Ready (epic example) -->
+    <div class="col">
+      <div class="col-head">Ready <span class="count">1</span></div>
+      <article class="vc actor-boris epic-card">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2401</a>
+          <a class="vc-proj-ref" href="#">/jimbo-core</a>
+          <span class="badge p2">P2</span>
+          <span class="badge epic">⊞ epic</span>
+          <span class="right"><span class="vc-age">2d</span></span>
+        </header>
+        <a class="vc-title" href="#">backfill activity_events for items pre-2026-04-01</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">B</span><span class="name">Boris</span></span>
+          <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+        </div>
+        <div class="vc-rollup-row">
+          <span class="rollup">
+            <span class="rollup-label">children</span>
+            <span class="rollup-dot completed" title="#2410 done"></span>
+            <span class="rollup-dot completed" title="#2411 done"></span>
+            <span class="rollup-dot running"   title="#2412 running"></span>
+            <span class="rollup-dot ready"     title="#2413 ready"></span>
+            <span class="rollup-summary"><span class="count">2/4</span> · 1 running</span>
+          </span>
+        </div>
+      </article>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── 04 execution kanban ────────────────────────────────────────── -->
+<section class="section">
+  <h2><span class="ord">04</span> Execution kanban — every column, real card</h2>
+  <p class="lead-inline">
+    Same card component, dispatch context. Skill name renders as a dim mono chip below the
+    identity strip. <em>Ready</em> mixes approved-for-dispatch entries with manual items
+    (<code>#2391</code>, no dispatch).
+  </p>
+
+  <div class="kanban execution">
+
+    <!-- Ready (mix: dispatch + manual) -->
+    <div class="col">
+      <div class="col-head">Ready <span class="count">2</span></div>
+      <article class="vc actor-boris">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2401</a>
+          <span class="dbadge approved">queued</span>
+          <span class="badge p2">P2</span>
+          <span class="right"><span class="vc-age">3m</span></span>
+        </header>
+        <a class="vc-title" href="#">backfill activity_events for items pre-2026-04-01</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">B</span><span class="name">Boris</span></span>
+          <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+        </div>
+        <div class="vc-skill">hermes/vault-classify</div>
+      </article>
+      <article class="vc actor-marvin">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2391</a>
+          <span class="badge p2">P2</span>
+          <span class="right"><span class="vc-age">1d</span></span>
+        </header>
+        <a class="vc-title" href="#">review onboarding doc with new contractor on monday</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm human">M</span><span class="name">Marvin</span></span>
+          <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+          <span class="source-text">manual</span>
+        </div>
+        <div class="vc-actions">
+          <button class="vc-action primary">mark done</button>
+        </div>
+      </article>
+    </div>
+
+    <!-- Dispatching (system-managed; usually empty / folds into running) -->
+    <div class="col">
+      <div class="col-head system">Dispatching <span class="count">1</span></div>
+      <article class="vc actor-boris">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2412</a>
+          <span class="dbadge dispatching"><span class="pulse-dot"></span>claiming</span>
+          <span class="right"><span class="vc-age">1s</span></span>
+        </header>
+        <a class="vc-title" href="#">flag stale dispatches over 30 minutes elapsed</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">B</span><span class="name">Boris</span></span>
+          <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+        </div>
+        <div class="vc-skill">boris/run-tests</div>
+      </article>
+    </div>
+
+    <!-- Running -->
+    <div class="col">
+      <div class="col-head system">Running <span class="count">1</span></div>
+      <article class="vc actor-ralph">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2456</a>
+          <span class="dbadge running"><span class="pulse-dot"></span>running</span>
+          <span class="right"><span class="vc-age">5m elapsed</span></span>
+        </header>
+        <a class="vc-title" href="#">extract shared kanban board layout into _board-layout.scss</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">R</span><span class="name">Ralph</span></span>
+          <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+        </div>
+        <div class="vc-skill">ralph/refactor-css</div>
+      </article>
+    </div>
+
+    <!-- Completed -->
+    <div class="col">
+      <div class="col-head">Completed <span class="count">1</span></div>
+      <article class="vc actor-boris completed">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2378</a>
+          <span class="dbadge completed">done</span>
+          <span class="right"><span class="vc-age">ran 47s</span></span>
+        </header>
+        <a class="vc-title" href="#">add jsdoc to ThreadService.post overloads</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">B</span><span class="name">Boris</span></span>
+          <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+        </div>
+        <div class="vc-skill">hermes/vault-classify</div>
+        <div class="vc-callout result">
+          <span class="label">result · 23m ago</span>
+          classified P2 · localshout · 0.78 confidence; no questions raised.
+        </div>
+        <div class="vc-actions">
+          <button class="vc-action">dismiss</button>
+        </div>
+      </article>
+    </div>
+
+    <!-- Failed -->
+    <div class="col">
+      <div class="col-head">Failed <span class="count">1</span></div>
+      <article class="vc actor-ralph failed">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2333</a>
+          <span class="dbadge failed">failed</span>
+          <span class="badge retry" title="Attempt 2">↻1</span>
+          <span class="right"><span class="vc-age">23s</span></span>
+        </header>
+        <a class="vc-title" href="#">port dispatch retry mutation to use new pg client</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">R</span><span class="name">Ralph</span></span>
+          <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+        </div>
+        <div class="vc-skill">ralph/run-typecheck</div>
+        <div class="vc-callout error">
+          <span class="label">error · 8m ago</span>
+          ts(2304) · Cannot find name 'DispatchRetryPayload'.<br/>
+          <code style="background: transparent; color: inherit; padding: 0;">src/dispatch/retry.ts:14</code>
+        </div>
+        <div class="vc-actions">
+          <button class="vc-action warn">↻ retry</button>
+          <button class="vc-action">view logs</button>
+          <button class="vc-action">archive</button>
+        </div>
+      </article>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── 05 epic-only board snapshot ────────────────────────────────── -->
+<section class="section">
+  <h2><span class="ord">05</span> Epics view — rollup tells the story</h2>
+  <p class="lead-inline">
+    Three epics from the production fixtures, each in a different state of progress. The
+    <code>app-epic-rollup</code> strip is the only thing the operator needs to know whether to
+    open the epic.
+  </p>
+
+  <div style="display: grid; grid-template-columns: repeat(3, 320px); gap: 14px; margin-top: 10px;">
+    <article class="vc actor-boris epic-card">
+      <header class="vc-head">
+        <a class="vc-seq" href="#">#2300</a>
+        <a class="vc-proj-ref" href="#">/jimbo-core</a>
+        <span class="badge p1">P1</span>
+        <span class="badge epic">⊞ epic</span>
+        <span class="right"><span class="vc-age">12d</span></span>
+      </header>
+      <a class="vc-title" href="#">phase b: complete jimbo-api postgres cutover</a>
+      <div class="vc-identity">
+        <span class="actor-chip-mono"><span class="actor-avatar sm">B</span><span class="name">Boris</span></span>
+        <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+      </div>
+      <div class="vc-rollup-row">
+        <span class="rollup">
+          <span class="rollup-label">children</span>
+          <span class="rollup-dot completed"></span>
+          <span class="rollup-dot completed"></span>
+          <span class="rollup-dot completed"></span>
+          <span class="rollup-dot completed"></span>
+          <span class="rollup-dot completed"></span>
+          <span class="rollup-dot completed"></span>
+          <span class="rollup-summary"><span class="count">6/6</span> · ready to close</span>
+        </span>
+      </div>
+    </article>
+
+    <article class="vc actor-marvin epic-card">
+      <header class="vc-head">
+        <a class="vc-seq" href="#">#2350</a>
+        <a class="vc-proj-ref" href="#">/localshout</a>
+        <span class="badge p0">P0</span>
+        <span class="badge epic">⊞ epic</span>
+        <span class="right"><span class="vc-age">3d</span></span>
+      </header>
+      <a class="vc-title" href="#">unify kanban card components</a>
+      <div class="vc-identity">
+        <span class="actor-chip-mono"><span class="actor-avatar sm human">M</span><span class="name">Marvin</span></span>
+        <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+      </div>
+      <div class="vc-rollup-row">
+        <span class="rollup">
+          <span class="rollup-label">children</span>
+          <span class="rollup-dot grooming"></span>
+          <span class="rollup-dot grooming"></span>
+          <span class="rollup-dot ready"></span>
+          <span class="rollup-dot running"></span>
+          <span class="rollup-dot completed"></span>
+          <span class="rollup-summary"><span class="count">1/5</span> · 1 running</span>
+        </span>
+      </div>
+    </article>
+
+    <article class="vc actor-ralph epic-card">
+      <header class="vc-head">
+        <a class="vc-seq" href="#">#2280</a>
+        <a class="vc-proj-ref" href="#">/jimbo-core</a>
+        <span class="badge p1">P1</span>
+        <span class="badge epic">⊞ epic</span>
+        <span class="right"><span class="vc-age">21d</span></span>
+      </header>
+      <a class="vc-title" href="#">phase c: turn boris/ralph dispatch on</a>
+      <div class="vc-identity">
+        <span class="actor-chip-mono"><span class="actor-avatar sm">R</span><span class="name">Ralph</span></span>
+        <span class="pill proj-jimbo"><span class="pill-prefix">/</span>jimbo-core</span>
+      </div>
+      <div class="vc-rollup-row">
+        <span class="rollup">
+          <span class="rollup-label">children</span>
+          <span class="rollup-dot completed"></span>
+          <span class="rollup-dot completed"></span>
+          <span class="rollup-dot running"></span>
+          <span class="rollup-dot failed"></span>
+          <span class="rollup-dot grooming"></span>
+          <span class="rollup-dot grooming"></span>
+          <span class="rollup-summary"><span class="count">2/6</span> · <span style="color: var(--bad);">1 failed</span></span>
+        </span>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ─── 06 epic + task chips ──────────────────────────────────────── -->
+<section class="section">
+  <h2><span class="ord">06</span> Epic + task chips — identity in the pill, hierarchy on the card</h2>
+  <p class="lead-inline">
+    A chip is the entity's <em>identity card</em> — used in mentions, lists, threads, anywhere
+    the item is referenced away from the kanban. The kanban card itself shows hierarchy and state
+    on top. The principle: <strong>chip = identity + class</strong>; <strong>card = relationships
+    + state</strong>. Don't try to encode hierarchy into the chip — it can't render reliably at
+    the sizes a chip lives in.
+  </p>
+
+  <h3 style="margin-top: 24px;">Vault-item chips · three kinds, one shell</h3>
+  <div class="primitives-grid">
+
+    <div class="label-col">
+      <div class="name">Task chip <code>kind: 'task'</code></div>
+      <div class="desc">
+        Plain. Square corners distinguish it from actor/project pills (rounded). Prefix is
+        always <code>#</code>. Title truncates with ellipsis.
+      </div>
+    </div>
+    <div class="show">
+      <a href="#" class="vault-chip proj-localshout"><span class="vc-prefix">#</span><span class="vc-seq">2417</span><span class="vc-text">wire up dispatch retry button</span></a>
+      <a href="#" class="vault-chip proj-jimbo"><span class="vc-prefix">#</span><span class="vc-seq">2483</span><span class="vc-text">add /dispatches detail page</span></a>
+    </div>
+
+    <div class="label-col">
+      <div class="name">Subtask chip <code>kind: 'subtask'</code></div>
+      <div class="desc">
+        Same shell, prefix changes to <code>↳</code> and seq dimmed. Tells you at a glance the
+        item is part of something larger; a hover or click reveals which.
+      </div>
+    </div>
+    <div class="show">
+      <a href="#" class="vault-chip subtask proj-localshout"><span class="vc-prefix">↳</span><span class="vc-seq">2417</span><span class="vc-text">wire up dispatch retry button</span><span class="vc-epic-marker">⊞ #2350</span></a>
+      <a href="#" class="vault-chip subtask proj-jimbo"><span class="vc-prefix">↳</span><span class="vc-seq">2412</span><span class="vc-text">flag stale dispatches over 30m</span><span class="vc-epic-marker">⊞ #2300</span></a>
+      <span style="color: var(--faint); font-size: 10.5px;">— project = left stripe pastel; epic = small marker after title</span>
+    </div>
+
+    <div class="label-col">
+      <div class="name">Epic chip <code>kind: 'epic'</code></div>
+      <div class="desc">
+        Same shell, info-blue tint, <code>⊞</code> prefix. Border style encodes
+        <em>creator-type</em>: <strong>solid</strong> = agent-decomposed, <strong>dashed</strong>
+        = human-conceived. Optional appended creator-marker shows the specific actor without
+        bloating the chip.
+      </div>
+    </div>
+    <div class="show" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <a href="#" class="vault-chip epic proj-jimbo">
+          <span class="vc-prefix">⊞</span><span class="vc-seq">2300</span><span class="vc-text">Phase B Postgres cutover</span>
+        </a>
+        <a href="#" class="vault-chip epic proj-localshout">
+          <span class="vc-prefix">⊞</span><span class="vc-seq">2356</span><span class="vc-text">Audience targeting v2</span>
+        </a>
+        <a href="#" class="vault-chip epic proj-hermes">
+          <span class="vc-prefix">⊞</span><span class="vc-seq">2280</span><span class="vc-text">Phase C agents on</span>
+        </a>
+        <span style="color: var(--faint); font-size: 10.5px; width: 100%;">— solid pastel wash = agent-decomposed · colour <em>derived</em> from project</span>
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <a href="#" class="vault-chip epic human-created proj-localshout">
+          <span class="vc-prefix">⊞</span><span class="vc-seq">2350</span><span class="vc-text">Unify kanban card components</span>
+        </a>
+        <a href="#" class="vault-chip epic human-created proj-jimbo">
+          <span class="vc-prefix">⊞</span><span class="vc-seq">2399</span><span class="vc-text">Q3 strategy review</span>
+        </a>
+        <span style="color: var(--faint); font-size: 10.5px; width: 100%;">— dashed = human-conceived (Marvin drew them on the whiteboard)</span>
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding-top: 8px; border-top: 1px dashed var(--line-2); width: 100%;">
+        <span style="color: var(--faint); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 6px;">+ creator marker</span>
+        <a href="#" class="vault-chip epic proj-jimbo">
+          <span class="vc-prefix">⊞</span><span class="vc-seq">2300</span><span class="vc-text">Phase B Postgres cutover</span>
+          <span class="creator-marker"><span class="actor-avatar sm">J</span>Jimbo</span>
+        </a>
+        <a href="#" class="vault-chip epic human-created proj-localshout">
+          <span class="vc-prefix">⊞</span><span class="vc-seq">2350</span><span class="vc-text">Unify kanban cards</span>
+          <span class="creator-marker"><span class="actor-avatar sm human">M</span>Marvin</span>
+        </a>
+        <a href="#" class="vault-chip epic proj-hermes">
+          <span class="vc-prefix">⊞</span><span class="vc-seq">2280</span><span class="vc-text">Phase C agents on</span>
+          <span class="creator-marker"><span class="actor-avatar sm">R</span>Ralph</span>
+        </a>
+      </div>
+
+      <div style="font-size: 10.5px; color: var(--faint); width: 100%;">
+        Two-axis encoding: <strong>border style</strong> = creator class (agent vs human, glanceable
+        in dense lists); <strong>creator marker</strong> = specific actor (precise when there's room).
+        Drop the marker in dense surfaces; keep the border style. The two are independent.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── How it lands on a card ──────────────────────────────────── -->
+  <h3 style="margin-top: 32px;">On the kanban card · where does epic membership live?</h3>
+  <p class="lead-inline">
+    Same task (<code>#2417</code>, child of epic <code>#2350</code>), three layouts. We need to
+    pick one and use it everywhere — mixing patterns across columns is worse than picking the
+    wrong one.
+  </p>
+
+  <div style="display: grid; grid-template-columns: repeat(3, 300px); gap: 18px; margin-top: 8px;">
+
+    <!-- V1: epic chip in identity strip -->
+    <div>
+      <div style="font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">V1 · epic chip beside project pill</div>
+      <article class="vc actor-marvin">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2417</a>
+          <span class="badge p1">P1</span>
+          <span class="right"><span class="vc-age">2h</span></span>
+        </header>
+        <a class="vc-title" href="#">wire up dispatch retry button on failed cards</a>
+        <div class="vc-identity" style="gap: 5px;">
+          <span class="actor-chip-mono"><span class="actor-avatar sm human">M</span><span class="name">Marvin</span></span>
+          <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+          <a href="#" class="vault-chip epic human-created proj-localshout" style="font-size: 9.5px; padding: 0 5px 0 3px;">
+            <span class="vc-prefix">⊞</span><span class="vc-seq">2350</span>
+          </a>
+        </div>
+      </article>
+      <div style="font-size: 10.5px; color: var(--faint); margin-top: 6px;">
+        compact · three chips compete for attention · epic title truncated to seq
+      </div>
+    </div>
+
+    <!-- V2: breadcrumb at top -->
+    <div>
+      <div style="font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">V2 · breadcrumb above the header</div>
+      <article class="vc actor-marvin">
+        <div class="vc-breadcrumb">
+          <a href="#" class="crumb-link">/localshout</a>
+          <span class="crumb-sep">▸</span>
+          <a href="#" class="crumb-link">⊞ #2350 Unify kanban cards</a>
+        </div>
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2417</a>
+          <span class="badge p1">P1</span>
+          <span class="right"><span class="vc-age">2h</span></span>
+        </header>
+        <a class="vc-title" href="#">wire up dispatch retry button on failed cards</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm human">M</span><span class="name">Marvin</span></span>
+        </div>
+      </article>
+      <div style="font-size: 10.5px; color: var(--faint); margin-top: 6px;">
+        full hierarchy at the top · project pill becomes redundant (it's in the crumb)
+      </div>
+    </div>
+
+    <!-- V3: parent-link bar -->
+    <div>
+      <div style="font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">V3 · parent-link bar <strong style="color: var(--ink);">(recommended)</strong></div>
+      <article class="vc actor-marvin">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2417</a>
+          <span class="badge p1">P1</span>
+          <span class="right"><span class="vc-age">2h</span></span>
+        </header>
+        <div class="vc-parent-link">
+          <span class="arrow">↳</span>
+          <span class="epic-seq">⊞ #2350</span>
+          <span class="epic-text">Unify kanban cards</span>
+        </div>
+        <a class="vc-title" href="#">wire up dispatch retry button on failed cards</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm human">M</span><span class="name">Marvin</span></span>
+          <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+        </div>
+      </article>
+      <div style="font-size: 10.5px; color: var(--faint); margin-top: 6px;">
+        epic gets its own row · full title visible · identity strip stays clean
+      </div>
+    </div>
+
+  </div>
+
+  <div class="note">
+    <strong>Recommendation: V3.</strong> The epic context is structurally different from
+    "project + owner" — it's a containment relationship, not an attribute. Giving it its own
+    row reinforces that. The bar uses the info-blue tint to match the epic chip language so
+    operators learn the visual = "you're inside an epic". Tasks with no parent simply omit
+    the row — most tasks won't have one.
+  </div>
+
+  <h3 style="margin-top: 28px;">Putting it all together · subtask card with full provenance</h3>
+  <div style="display: grid; grid-template-columns: 320px 1fr; gap: 32px; margin-top: 6px; align-items: start;">
+
+    <article class="vc actor-ralph">
+      <header class="vc-head">
+        <a class="vc-seq" href="#">#2412</a>
+        <span class="dbadge running"><span class="pulse-dot"></span>running</span>
+        <span class="right"><span class="vc-age">5m elapsed</span></span>
+      </header>
+      <div class="vc-parent-link">
+        <span class="arrow">↳</span>
+        <span class="epic-seq">⊞ #2350</span>
+        <span class="epic-text">Unify kanban cards</span>
+      </div>
+      <a class="vc-title" href="#">extract shared kanban board layout into _board-layout.scss</a>
+      <div class="vc-identity">
+        <span class="actor-chip-mono"><span class="actor-avatar sm">R</span><span class="name">Ralph</span></span>
+        <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+        <span class="source-text">decomposed by <span class="actor-avatar sm" style="vertical-align: -3px;">J</span> Jimbo</span>
+      </div>
+      <div class="vc-skill">ralph/refactor-css</div>
+    </article>
+
+    <div style="padding-top: 4px;">
+      <ol style="font-size: 11.5px; color: var(--dim); line-height: 1.8; margin: 0; padding-left: 20px;">
+        <li>
+          <strong>Header</strong> — seq + dispatch state. No actor here in this version (it's in
+          the identity strip below); avatar-in-header is an alternative for very dense surfaces.
+        </li>
+        <li>
+          <strong>Parent-link bar</strong> — info-blue, tells you instantly this task is inside
+          epic <code>#2350</code>. Click goes to the epic.
+        </li>
+        <li>
+          <strong>Title</strong> — single line, the task itself.
+        </li>
+        <li>
+          <strong>Identity strip</strong> — owner (Ralph, agent), project (localshout). Source
+          attribution as faint trailing text reveals that <em>Jimbo decomposed this</em> from the
+          parent epic — the chain is: human conceived epic → Jimbo decomposed → Ralph executes.
+        </li>
+        <li>
+          <strong>Skill chip</strong> — what's actually running.
+        </li>
+      </ol>
+      <div class="footnote" style="margin-top: 14px;">
+        Five distinct actors / artifacts referenced on this card (Marvin's epic intent · Jimbo's
+        decomposition · Ralph executing · localshout project · ralph/refactor-css skill). Each
+        has its own canonical visual: epic chip · actor avatar · project pill · skill chip. None
+        compete; each carries one job.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 06b nested cards ───────────────────────────────────────────── -->
+<section class="section">
+  <h2><span class="ord">06b</span> Nested cards — epic + children together</h2>
+  <p class="lead-inline">
+    Three nesting flavours. The colour rules are doing real work here: project pastel ties
+    parent + children together, the epic-chip's wash matches the project, and the parent-link
+    bar on each child keeps the relationship visible without colour-shouting.
+  </p>
+
+  <style>
+    .nest-tree {
+      display: flex; flex-direction: column; gap: 0;
+      max-width: 480px;
+    }
+    .nest-tree .nest-parent { width: 100%; }
+    .nest-tree .nest-children {
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 10px 0 0 28px;
+      position: relative;
+    }
+    .nest-tree .nest-children::before {
+      content: '';
+      position: absolute;
+      left: 14px; top: 0; bottom: 18px;
+      border-left: 1px dashed color-mix(in srgb, var(--proj-tint, var(--line)) 70%, var(--line));
+    }
+    .nest-tree .nest-child {
+      position: relative;
+    }
+    .nest-tree .nest-child::before {
+      content: '';
+      position: absolute;
+      left: -14px; top: 18px;
+      width: 12px;
+      border-top: 1px dashed color-mix(in srgb, var(--proj-tint, var(--line)) 70%, var(--line));
+    }
+  </style>
+
+  <h3 style="margin-top: 24px;">A · Hub view — epic on top, children indented below</h3>
+  <p class="lead-inline">
+    Single epic with its 4 children. The dashed tree line picks up the project's pastel.
+    Parent-link bar on each child references back to the epic.
+  </p>
+
+  <div class="nest-tree" style="--proj-tint: var(--proj-localshout);">
+    <article class="vc actor-marvin nest-parent epic-card">
+      <header class="vc-head">
+        <a class="vc-seq" href="#">#2350</a>
+        <a class="vc-proj-ref" href="#">/localshout</a>
+        <span class="badge p0">P0</span>
+        <span class="badge epic">⊞ epic</span>
+        <span class="right"><span class="vc-age">3d</span></span>
+      </header>
+      <a class="vc-title" href="#">Unify kanban card components</a>
+      <div class="vc-identity">
+        <span class="actor-chip-mono"><span class="actor-avatar sm human">M</span><span class="name">Marvin</span></span>
+        <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+        <span class="source-text">human-conceived</span>
+      </div>
+      <div class="vc-rollup-row">
+        <span class="rollup">
+          <span class="rollup-label">children</span>
+          <span class="rollup-dot completed"></span>
+          <span class="rollup-dot running"></span>
+          <span class="rollup-dot ready"></span>
+          <span class="rollup-dot grooming"></span>
+          <span class="rollup-summary"><span class="count">1/4</span> · 1 running</span>
+        </span>
+      </div>
+    </article>
+
+    <div class="nest-children">
+
+      <article class="vc actor-boris completed nest-child">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2378</a>
+          <span class="dbadge completed">done</span>
+          <span class="right"><span class="vc-age">ran 47s</span></span>
+        </header>
+        <div class="vc-parent-link" style="--proj-tint: var(--proj-localshout); border-left-color: color-mix(in srgb, var(--proj-localshout) 60%, var(--line)); background: color-mix(in srgb, var(--proj-localshout) 20%, var(--bg));">
+          <span class="arrow">↳</span>
+          <span class="epic-seq">⊞ #2350</span>
+          <span class="epic-text">Unify kanban cards</span>
+        </div>
+        <a class="vc-title" href="#">add jsdoc to ThreadService.post overloads</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">B</span><span class="name">Boris</span></span>
+          <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+        </div>
+        <div class="vc-skill">hermes/vault-classify</div>
+      </article>
+
+      <article class="vc actor-ralph nest-child">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2456</a>
+          <span class="dbadge running"><span class="pulse-dot"></span>running</span>
+          <span class="right"><span class="vc-age">5m elapsed</span></span>
+        </header>
+        <div class="vc-parent-link" style="--proj-tint: var(--proj-localshout); border-left-color: color-mix(in srgb, var(--proj-localshout) 60%, var(--line)); background: color-mix(in srgb, var(--proj-localshout) 20%, var(--bg));">
+          <span class="arrow">↳</span>
+          <span class="epic-seq">⊞ #2350</span>
+          <span class="epic-text">Unify kanban cards</span>
+        </div>
+        <a class="vc-title" href="#">extract shared kanban board layout</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">R</span><span class="name">Ralph</span></span>
+          <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+        </div>
+        <div class="vc-skill">ralph/refactor-css</div>
+      </article>
+
+      <article class="vc actor-boris nest-child">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2457</a>
+          <span class="dbadge approved">queued</span>
+          <span class="badge p1">P1</span>
+          <span class="right"><span class="vc-age">3m</span></span>
+        </header>
+        <div class="vc-parent-link" style="--proj-tint: var(--proj-localshout); border-left-color: color-mix(in srgb, var(--proj-localshout) 60%, var(--line)); background: color-mix(in srgb, var(--proj-localshout) 20%, var(--bg));">
+          <span class="arrow">↳</span>
+          <span class="epic-seq">⊞ #2350</span>
+          <span class="epic-text">Unify kanban cards</span>
+        </div>
+        <a class="vc-title" href="#">migrate execution column to vault-card</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">B</span><span class="name">Boris</span></span>
+          <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+        </div>
+        <div class="vc-skill">hermes/vault-decompose</div>
+      </article>
+
+      <article class="vc actor-marvin nest-child">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2458</a>
+          <span class="badge p2">P2</span>
+          <span class="right"><span class="vc-age">just now</span></span>
+        </header>
+        <div class="vc-parent-link" style="--proj-tint: var(--proj-localshout); border-left-color: color-mix(in srgb, var(--proj-localshout) 60%, var(--line)); background: color-mix(in srgb, var(--proj-localshout) 20%, var(--bg));">
+          <span class="arrow">↳</span>
+          <span class="epic-seq">⊞ #2350</span>
+          <span class="epic-text">Unify kanban cards</span>
+        </div>
+        <a class="vc-title" href="#">document the new card API in CLAUDE.md</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm human">M</span><span class="name">Marvin</span></span>
+          <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+          <span class="source-text">manual</span>
+        </div>
+      </article>
+
+    </div>
+  </div>
+
+  <h3 style="margin-top: 32px;">B · Sibling row — children of one epic, displayed inline</h3>
+  <p class="lead-inline">
+    For an "all my open work" view: siblings under the same epic shown side-by-side. Project
+    stripe + parent-link bar carry the relationship; no tree line needed.
+  </p>
+
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 6px; max-width: 880px;">
+
+    <article class="vc actor-ralph">
+      <header class="vc-head">
+        <a class="vc-seq" href="#">#2456</a>
+        <span class="dbadge running"><span class="pulse-dot"></span>running</span>
+        <span class="right"><span class="vc-age">5m</span></span>
+      </header>
+      <div class="vc-parent-link" style="--proj-tint: var(--proj-localshout); border-left-color: color-mix(in srgb, var(--proj-localshout) 60%, var(--line)); background: color-mix(in srgb, var(--proj-localshout) 20%, var(--bg));">
+        <span class="arrow">↳</span>
+        <span class="epic-seq">⊞ #2350</span>
+        <span class="epic-text">Unify cards</span>
+      </div>
+      <a class="vc-title" href="#">extract shared board layout</a>
+      <div class="vc-identity">
+        <span class="actor-chip-mono"><span class="actor-avatar sm">R</span><span class="name">Ralph</span></span>
+        <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+      </div>
+    </article>
+
+    <article class="vc actor-boris completed">
+      <header class="vc-head">
+        <a class="vc-seq" href="#">#2378</a>
+        <span class="dbadge completed">done</span>
+        <span class="right"><span class="vc-age">47s</span></span>
+      </header>
+      <div class="vc-parent-link" style="--proj-tint: var(--proj-localshout); border-left-color: color-mix(in srgb, var(--proj-localshout) 60%, var(--line)); background: color-mix(in srgb, var(--proj-localshout) 20%, var(--bg));">
+        <span class="arrow">↳</span>
+        <span class="epic-seq">⊞ #2350</span>
+        <span class="epic-text">Unify cards</span>
+      </div>
+      <a class="vc-title" href="#">add jsdoc to ThreadService.post</a>
+      <div class="vc-identity">
+        <span class="actor-chip-mono"><span class="actor-avatar sm">B</span><span class="name">Boris</span></span>
+        <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+      </div>
+    </article>
+
+    <article class="vc actor-marvin">
+      <header class="vc-head">
+        <a class="vc-seq" href="#">#2458</a>
+        <span class="badge p2">P2</span>
+        <span class="right"><span class="vc-age">just now</span></span>
+      </header>
+      <div class="vc-parent-link" style="--proj-tint: var(--proj-localshout); border-left-color: color-mix(in srgb, var(--proj-localshout) 60%, var(--line)); background: color-mix(in srgb, var(--proj-localshout) 20%, var(--bg));">
+        <span class="arrow">↳</span>
+        <span class="epic-seq">⊞ #2350</span>
+        <span class="epic-text">Unify cards</span>
+      </div>
+      <a class="vc-title" href="#">document new card API in CLAUDE.md</a>
+      <div class="vc-identity">
+        <span class="actor-chip-mono"><span class="actor-avatar sm human">M</span><span class="name">Marvin</span></span>
+        <span class="pill proj-localshout"><span class="pill-prefix">/</span>localshout</span>
+      </div>
+    </article>
+
+  </div>
+
+  <h3 style="margin-top: 32px;">C · Failure cluster — one epic, one failure visible at a glance</h3>
+  <p class="lead-inline">
+    Demonstrates the rollup's <em>1 failed</em> indicator promoting attention to the parent.
+    The failed child sits below with its error visible — the operator can triage from this view
+    without leaving the epic.
+  </p>
+
+  <div class="nest-tree" style="--proj-tint: var(--proj-hermes); max-width: 480px;">
+    <article class="vc actor-ralph nest-parent epic-card">
+      <header class="vc-head">
+        <a class="vc-seq" href="#">#2280</a>
+        <a class="vc-proj-ref" href="#">/hermes</a>
+        <span class="badge p1">P1</span>
+        <span class="badge epic">⊞ epic</span>
+        <span class="right"><span class="vc-age">21d</span></span>
+      </header>
+      <a class="vc-title" href="#">Phase C · turn boris/ralph dispatch on</a>
+      <div class="vc-identity">
+        <span class="actor-chip-mono"><span class="actor-avatar sm">R</span><span class="name">Ralph</span></span>
+        <span class="pill proj-hermes"><span class="pill-prefix">/</span>hermes</span>
+      </div>
+      <div class="vc-rollup-row">
+        <span class="rollup">
+          <span class="rollup-label">children</span>
+          <span class="rollup-dot completed"></span>
+          <span class="rollup-dot completed"></span>
+          <span class="rollup-dot running"></span>
+          <span class="rollup-dot failed"></span>
+          <span class="rollup-dot grooming"></span>
+          <span class="rollup-dot grooming"></span>
+          <span class="rollup-summary"><span class="count">2/6</span> · <span style="color: var(--bad);">1 failed</span></span>
+        </span>
+      </div>
+    </article>
+
+    <div class="nest-children">
+
+      <article class="vc actor-ralph failed nest-child">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2333</a>
+          <span class="dbadge failed">failed</span>
+          <span class="badge retry">↻1</span>
+          <span class="right"><span class="vc-age">23s</span></span>
+        </header>
+        <div class="vc-parent-link" style="--proj-tint: var(--proj-hermes); border-left-color: color-mix(in srgb, var(--proj-hermes) 60%, var(--line)); background: color-mix(in srgb, var(--proj-hermes) 20%, var(--bg));">
+          <span class="arrow">↳</span>
+          <span class="epic-seq">⊞ #2280</span>
+          <span class="epic-text">Phase C agents on</span>
+        </div>
+        <a class="vc-title" href="#">port dispatch retry mutation to new pg client</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">R</span><span class="name">Ralph</span></span>
+          <span class="pill proj-hermes"><span class="pill-prefix">/</span>hermes</span>
+        </div>
+        <div class="vc-skill">ralph/run-typecheck</div>
+        <div class="vc-callout error">
+          <span class="label">error · 8m ago</span>
+          ts(2304) · Cannot find name 'DispatchRetryPayload'.
+        </div>
+        <div class="vc-actions">
+          <button class="vc-action warn">↻ retry</button>
+          <button class="vc-action">archive</button>
+        </div>
+      </article>
+
+      <article class="vc actor-ralph nest-child">
+        <header class="vc-head">
+          <a class="vc-seq" href="#">#2401</a>
+          <span class="dbadge running"><span class="pulse-dot"></span>running</span>
+          <span class="right"><span class="vc-age">14m</span></span>
+        </header>
+        <div class="vc-parent-link" style="--proj-tint: var(--proj-hermes); border-left-color: color-mix(in srgb, var(--proj-hermes) 60%, var(--line)); background: color-mix(in srgb, var(--proj-hermes) 20%, var(--bg));">
+          <span class="arrow">↳</span>
+          <span class="epic-seq">⊞ #2280</span>
+          <span class="epic-text">Phase C agents on</span>
+        </div>
+        <a class="vc-title" href="#">backfill activity_events for Phase C cutover</a>
+        <div class="vc-identity">
+          <span class="actor-chip-mono"><span class="actor-avatar sm">B</span><span class="name">Boris</span></span>
+          <span class="pill proj-hermes"><span class="pill-prefix">/</span>hermes</span>
+        </div>
+        <div class="vc-skill">hermes/vault-classify</div>
+      </article>
+
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>What the colour does here:</strong> the hermes pink wash on the epic chip,
+    parent-link bars, and project pills all derive from the <em>same</em> project token.
+    Drag-eye from the epic down to its children and the colour stays continuous. Switch to a
+    different epic in a different project, and the wash shifts in lockstep — the operator
+    knows project-context without reading.
+  </div>
+
+  <h3 style="margin-top: 28px;">Four orthogonal axes — no colour collisions</h3>
+  <ol style="font-size: 11.5px; color: var(--dim); line-height: 1.8; margin: 0; padding-left: 20px; max-width: 760px;">
+    <li><strong>Mid-tone muted = project identity</strong> (project pill solid, epic 45% wash, parent-link bar, all chip stripes, card border-left). Strong enough to scan, off-axis enough not to compete with primaries.</li>
+    <li><strong>Primary = state</strong> (P0 red, running blue, completed green, failed red, draft yellow). Loud, demands attention, never confused with identity.</li>
+    <li><strong>Monochrome = ownership</strong> (actor avatars, source attribution, owner names). Actors carry no colour at all — frees the whole primary palette for state.</li>
+    <li><strong>Border style = creator class</strong> (solid = agent-made, dashed = human-made). Applies to both epic chips AND actor avatars — one rule, not two. Free signal, no colour cost.</li>
+  </ol>
+</section>
+
+<!-- ─── 07 implementation note ─────────────────────────────────────── -->
+<section class="section">
+  <h2><span class="ord">07</span> Build sequence — ready to start</h2>
+
+  <ol style="font-size: 12px; color: var(--dim); line-height: 1.8;">
+    <li><strong>Token reform first.</strong> Update <code>--proj-*</code> tokens to the new mid-tone muted palette. Drop <code>--actor-color-*</code> tokens (or set them to <code>var(--ink)</code>). Add <code>--proj-tint</code> CSS variable propagated via <code>:has(.pill.proj-X)</code> on the card root.</li>
+    <li><strong>ui-lab section.</strong> Add <code>app-actor-avatar</code> (monochrome outlined ring · solid for agent · dashed for human · sizes sm/md/lg). Add <code>app-actor-chip</code> (avatar + name, with optional project stripe). Build <code>app-epic-rollup</code>. Demonstrate all three in isolation + in a card mockup.</li>
+    <li><strong>Vault-chip extension.</strong> Add the project stripe rule and the <code>kind: 'task' | 'subtask' | 'epic'</code> variants to <code>EntityChip</code> (or split into a sibling component if cleaner). Encode <code>creator-type: 'agent' | 'human'</code> on epic via <code>border-style</code>.</li>
+    <li><strong>Unified <code>app-vault-card</code> shell.</strong> Discriminated <code>CardContext</code>. Sub-components for header (with project-ref), identity strip, callout, actions, parent-link bar — each tiny.</li>
+    <li><strong>ThreadService injection moves out.</strong> Board pre-resolves <code>openQuestion</code>, card emits <code>(answer)</code>.</li>
+    <li><strong>Cut over both boards.</strong> Delete <code>grooming-card</code> + <code>execution-card</code> + the inline manual card.</li>
+  </ol>
+
+  <div class="note" style="margin: 14px 0;">
+    <strong>Final design rules (the things to lock down before code):</strong>
+    <ul style="margin: 6px 0 0; padding-left: 20px; font-size: 11.5px; line-height: 1.7;">
+      <li><strong>Project</strong> = mid-tone muted colour. Solid pill in identity strip. 45% wash on epic chips. 3px stripe on every other chip + card border-left. Inline name <code>/projectname</code> in card header next to seq.</li>
+      <li><strong>Actor</strong> = monochrome only. Outlined ring (solid = agent, dashed = human). Full name in identity strip; initial-only when connected/secondary. No actor colour anywhere on the card.</li>
+      <li><strong>State</strong> = primary colours only. Priority badges, dispatch status, callouts. Reserved palette so they never get confused with identity chrome.</li>
+      <li><strong>Solid vs dashed</strong> applies the same way to both epic chips and actor avatars: solid = agent-made, dashed = human-made. One rule.</li>
+    </ul>
+  </div>
+
+  <pre class="codeblock">
+type CardContext =
+  | { kind: 'grooming'; item: VaultItem; openQuestion: ThreadMessage | null;
+      project: ProjectRef | null; owner: ActorRef;
+      childRollup: ChildStatus[] | null;          // null when not epic
+      daysInColumn: number; lastActivityAt: string | null;
+      source: SourceAttribution | null; }
+  | { kind: 'dispatch'; entry: DispatchQueueEntry; item: VaultItem | null;
+      skillDisplayName: string | null;
+      project: ProjectRef | null; owner: ActorRef; }
+  | { kind: 'manual';   item: VaultItem;
+      project: ProjectRef | null; owner: ActorRef;
+      source: SourceAttribution | null; };
+
+interface ChildStatus {
+  seq: number;
+  state: 'grooming' | 'ready' | 'running' | 'completed' | 'failed';
+}</pre>
+
+  <div class="note">
+    <strong>Owner is non-nullable in <code>CardContext</code>.</strong> Today
+    <code>VaultItem.assigned_to</code> can be null; in practice every actionable item ends up
+    owned by someone before it leaves grooming. The board resolves owner with a fallback (e.g.
+    <code>@marvin</code> for unassigned) so the card never has to render an empty owner slot
+    — and the operator never has to wonder.
+  </div>
+</section>
+
+</body>
+</html>

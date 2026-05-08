@@ -13,6 +13,10 @@ import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiStickyActionBar } from '@shared/components/ui-sticky-action-bar/ui-sticky-action-bar';
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
+import { ActorChip } from '@shared/components/actor-chip/actor-chip';
+import { PriorityBadge } from '@shared/components/priority-badge/priority-badge';
+import { EntityChip } from '@shared/components/entity-chip/entity-chip';
+import { actorId } from '@domain/ids';
 
 @Component({
   selector: 'app-vault-detail-primitives-section',
@@ -20,6 +24,7 @@ import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
     UiBadge, UiButton, UiChecklist, UiChipList, UiCluster, UiDropdown,
     UiInlinePicker, UiReadinessPanel, UiSection, UiStack, UiStatCard,
     UiStickyActionBar, UiSubhead, UiSubsection,
+    ActorChip, PriorityBadge, EntityChip,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../lab-utils.scss'],
@@ -74,7 +79,7 @@ import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
             trigger button and open/closed state.
           </p>
           <app-ui-cluster gap="sm" align="center">
-            <app-ui-badge tone="info">@boris</app-ui-badge>
+            <app-actor-chip [actor]="boris" [stripe]="false" />
             <app-ui-button
               size="sm"
               variant="ghost"
@@ -96,19 +101,20 @@ import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
         </div>
 
         <div>
-          <p class="ui-lab__subhead">tiered chip strip (pattern)</p>
+          <p class="ui-lab__subhead">tiered chip strip (layout pattern)</p>
           <p class="ui-lab__support-copy">
             Two <code>ui-cluster</code> rows inside a column flex wrapper. Primary tier holds
-            operational controls (status, owner, priority, project). Secondary tier holds
-            classification metadata (grooming, actionability, source flags) at reduced opacity.
-            Use this layout on any detail view that has more than ~4 status chips.
+            operational chrome (lifecycle, owner, priority, project) using the canonical
+            entity primitives. Secondary tier holds classification metadata at reduced
+            opacity using neutral <code>ui-badge</code>. Use this layout on any detail view
+            that has more than ~4 status chips.
           </p>
           <div style="display:flex;flex-direction:column;gap:0.35rem">
             <app-ui-cluster gap="xs" align="center">
               <app-ui-badge tone="success">active</app-ui-badge>
-              <app-ui-badge tone="info">&#64;boris</app-ui-badge>
-              <app-ui-badge tone="warning">P2</app-ui-badge>
-              <app-ui-badge tone="info" [subtle]="true">Localshout</app-ui-badge>
+              <app-actor-chip [actor]="boris" [stripe]="false" />
+              <app-priority-badge [priority]="2" />
+              <app-entity-chip type="project" id="localshout" label="Localshout" color="#6b95d6" variant="solid" />
             </app-ui-cluster>
             <app-ui-cluster gap="xs" align="center" style="opacity:0.8;font-size:0.8em">
               <app-ui-badge tone="neutral">classified</app-ui-badge>
@@ -226,7 +232,7 @@ import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
             <app-ui-subsection label="Links">
               <app-ui-subhead label="Projects" [count]="1" />
               <app-ui-cluster gap="sm">
-                <app-ui-badge tone="info">Localshout</app-ui-badge>
+                <app-entity-chip type="project" id="localshout" label="Localshout" color="#6b95d6" variant="solid" />
               </app-ui-cluster>
               <app-ui-subhead label="Blocked by" [count]="0" />
               <p class="ui-lab__support-copy">no blockers</p>
@@ -247,6 +253,8 @@ import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
   `,
 })
 export class VaultDetailPrimitivesSection {
+  protected readonly boris = actorId('boris');
+
   protected readonly labProjectChipsState = signal<readonly UiChipListItem[]>([
     { id: 'localshout', label: 'Localshout' },
   ]);

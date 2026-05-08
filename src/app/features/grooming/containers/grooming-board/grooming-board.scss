@@ -7,3 +7,14 @@
 .board__hint {
   code { font-size: 0.7rem; }
 }
+
+// Wrapper around <app-vault-card> that owns drag behaviour. The card itself
+// stays drag-agnostic; the wrapper is the draggable host element.
+.board__card-wrap {
+  cursor: grab;
+  margin-bottom: 0.4rem;
+}
+.board__card-wrap:active { cursor: grabbing; }
+.board__card-wrap--dragging {
+  opacity: 0.4;
+}

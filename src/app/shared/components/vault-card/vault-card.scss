@@ -1,0 +1,151 @@
+.vault-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--proj-tint, var(--color-border));
+  padding: 0.5rem 0.625rem 0.4rem;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  position: relative;
+}
+.vault-card:hover {
+  border-color: var(--color-border-strong);
+  border-left-color: var(--proj-tint, var(--color-border-strong));
+}
+.vault-card--epic {
+  border-top: 2px solid color-mix(in srgb, var(--proj-tint, var(--color-info)) 60%, var(--color-border));
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--proj-tint, var(--color-info)) 8%, var(--color-surface)) 0%,
+    var(--color-surface) 30%);
+}
+
+.vault-card__head {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+}
+.vault-card__seq {
+  color: var(--color-text-muted);
+  font-weight: 500;
+  text-decoration: none;
+}
+.vault-card__seq:hover { text-decoration: underline; }
+
+.vault-card__proj-ref {
+  font-size: 0.65rem;
+  color: color-mix(in srgb, var(--proj-tint, var(--color-text-muted)) 65%, var(--color-text));
+  font-weight: 500;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+.vault-card__proj-ref:hover { text-decoration: underline; }
+
+.vault-card__retry {
+  font-size: 0.6rem;
+  color: var(--color-danger);
+  padding: 0 0.25rem;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 40%, var(--color-border));
+  border-radius: var(--radius);
+}
+
+.vault-card__stuck {
+  font-size: 0.6rem;
+  padding: 0 0.25rem;
+  background: color-mix(in srgb, var(--color-warning) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 50%, var(--color-border));
+  color: var(--color-warning);
+  border-radius: var(--radius);
+}
+
+.vault-card__age {
+  margin-left: auto;
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.vault-card__title {
+  font-size: 0.8rem;
+  color: var(--color-text);
+  line-height: 1.4;
+  text-decoration: none;
+  display: block;
+  word-wrap: break-word;
+}
+.vault-card__title:hover { color: var(--color-accent); }
+.vault-card__title--missing { color: var(--color-text-muted); font-style: italic; }
+
+.vault-card__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.vault-card__source {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  margin-left: 0.15rem;
+}
+
+.vault-card__skill {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  background: var(--color-surface-soft);
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius);
+  align-self: flex-start;
+  border-left: 3px solid var(--proj-tint, var(--color-border));
+  font-family: var(--font-mono);
+}
+
+.vault-card__rollup {
+  padding: 0.25rem 0;
+  border-top: 1px dashed var(--color-border);
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.vault-card__actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--color-border);
+}
+.vault-card__btn {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: var(--radius);
+}
+.vault-card__btn:hover {
+  border-color: var(--color-text);
+  color: var(--color-text);
+}
+.vault-card__btn--primary {
+  background: color-mix(in srgb, var(--color-success) 25%, transparent);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+.vault-card__btn--primary:hover { background: color-mix(in srgb, var(--color-success) 40%, transparent); }
+
+.vault-card__btn--danger {
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 50%, var(--color-border));
+}
+.vault-card__btn--warn {
+  color: var(--color-warning);
+  border-color: color-mix(in srgb, var(--color-warning) 50%, var(--color-border));
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+}

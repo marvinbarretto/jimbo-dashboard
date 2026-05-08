@@ -71,29 +71,20 @@
         (drop)="onColumnDrop($event, col.status)"
       >
         @for (item of col.cards; track item.id) {
-          <app-grooming-nest
-            [parentSeq]="parentRef(item)?.seq ?? null"
-            [parentTitle]="parentRef(item)?.title ?? ''"
-          >
-            <app-grooming-card
-              [item]="item"
-              [project]="primaryProject(item)"
-              [openQuestionsCount]="openQuestionsCount(item)"
-              [childrenCount]="childrenCount(item)"
-              [epicPriority]="rolledUpPriorityForEpic(item)"
-              [lastActivityAt]="lastActivityAt(item)"
-              [liveSnapshot]="liveSnapshot(item)"
-              [daysInColumn]="daysInColumn(item)"
-              [source]="sourceSummary(item)"
-              [openQuestion]="firstOpenQuestion(item)"
-              [assignOptions]="assignableActors()"
-              [dragging]="drag.dragging() === item.id"
-              (dragstart)="onDragStart($event, item)"
-              (dragend)="onDragEnd()"
+          <div
+            class="board__card-wrap"
+            [class.board__card-wrap--dragging]="drag.dragging() === item.id"
+            draggable="true"
+            (dragstart)="onDragStart($event, item)"
+            (dragend)="onDragEnd()">
+            <app-vault-card
+              [context]="cardContextFor(item)"
               (archive)="onArchiveItem(item)"
-              (assign)="onAssignItem(item, $event)"
-            />
-          </app-grooming-nest>
+              (answer)="onAnswerItem(item)"
+              (approve)="onApproveItem(item)"
+              (reject)="onRejectItem(item, $event)"
+              (decompose)="onDecomposeItem(item)" />
+          </div>
         }
       </app-kanban-column>
       </div>

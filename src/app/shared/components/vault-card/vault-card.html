@@ -1,0 +1,156 @@
+<article class="vault-card" [class.vault-card--epic]="isEpic()">
+
+  <header class="vault-card__head">
+    @if (seq() !== null) {
+      <a class="vault-card__seq" [routerLink]="['/vault-items', seq()]">#{{ seq() }}</a>
+    }
+
+    @if (context().project; as proj) {
+      <a class="vault-card__proj-ref" [routerLink]="['/projects', proj.id]">/{{ proj.display_name }}</a>
+    }
+
+    @if (dispatch(); as d) {
+      <app-dispatch-status-badge [status]="d.entry.status" />
+      @if (d.entry.retry_count > 0) {
+        <span class="vault-card__retry" [attr.title]="'Attempt ' + (d.entry.retry_count + 1)">↻{{ d.entry.retry_count }}</span>
+      }
+    } @else {
+      @if (priority() !== null) {
+        <app-priority-badge [priority]="priority()!" />
+      }
+      @if (isEpic()) {
+        <app-epic-badge [count]="(grooming()?.childRollup?.length ?? 0)" />
+      }
+      @if (grooming(); as g) {
+        @if (g.openQuestionsCount > 0) {
+          <app-blocker-badge [count]="g.openQuestionsCount" />
+        }
+        @if (isStuck()) {
+          <span class="vault-card__stuck" [attr.title]="stuckDays() + 'd in this column'">{{ stuckDays() }}d</span>
+        }
+      }
+    }
+
+    <span class="vault-card__age">{{ ageLabel() }}</span>
+  </header>
+
+  @if (context().parentEpic; as parent) {
+    <app-card-parent-link [parentSeq]="parent.seq" [parentTitle]="parent.title" />
+  }
+
+  @if (seq() !== null) {
+    <a class="vault-card__title" [appKanbanCardLink]="seq()!">{{ title() }}</a>
+  } @else {
+    <span class="vault-card__title vault-card__title--missing">{{ title() }}</span>
+  }
+
+  <div class="vault-card__identity">
+    @if (grooming(); as g) {
+      <app-actor-chip [actor]="g.owner" />
+    } @else if (manual(); as m) {
+      <app-actor-chip [actor]="m.owner" />
+    } @else if (dispatch(); as d) {
+      @if (d.owner) {
+        <app-actor-chip [actor]="d.owner" />
+      }
+    }
+
+    @if (context().project; as proj) {
+      <app-entity-chip
+        type="project"
+        [id]="proj.id"
+        [label]="proj.display_name"
+        [color]="proj.color_token"
+        variant="solid" />
+    }
+
+    @if (grooming()?.source; as s) {
+      <span class="vault-card__source">
+        {{ s.text }}
+        @if (s.actorId) {
+          <app-actor-avatar [actor]="s.actorId" size="sm" />
+        }
+      </span>
+    } @else if (manual()?.source; as s) {
+      <span class="vault-card__source">{{ s.text }}</span>
+    }
+  </div>
+
+  @if (dispatch(); as d) {
+    <span class="vault-card__skill" [attr.title]="d.entry.skill">
+      {{ d.skillDisplayName ?? d.entry.skill }}
+    </span>
+  }
+
+  @if (calloutKind(); as kind) {
+    @switch (kind) {
+      @case ('question') {
+        @if (grooming()?.openQuestion; as q) {
+          <app-card-callout variant="question" [label]="'open question · @' + q.author_actor_id">{{ q.body }}</app-card-callout>
+        }
+      }
+      @case ('rework') {
+        @if (grooming()?.item?.latest_event?.reason; as reason) {
+          <app-card-callout variant="rework" label="rework reason">{{ reason }}</app-card-callout>
+        }
+      }
+      @case ('draft') {
+        <app-card-callout
+          variant="draft"
+          [label]="(grooming()?.item?.acceptance_criteria?.length ?? 0) + ' acceptance criteria drafted'">
+          approve to dispatch · click in to review
+        </app-card-callout>
+      }
+      @case ('rationale') {
+        @if (grooming()?.item?.ai_rationale; as rationale) {
+          <app-card-callout variant="rationale" [label]="'rationale · ' + ((grooming()?.item?.priority_confidence ?? 0) | number:'1.2-2') + ' conf'">{{ rationale }}</app-card-callout>
+        }
+      }
+      @case ('result') {
+        @if (dispatch()?.entry?.result_summary; as r) {
+          <app-card-callout variant="result" label="result">{{ r }}</app-card-callout>
+        }
+      }
+      @case ('error') {
+        @if (dispatch()?.entry?.error; as err) {
+          <app-card-callout variant="error" label="error">{{ err }}</app-card-callout>
+        }
+      }
+    }
+  }
+
+  @if (isEpic() && grooming()?.childRollup; as children) {
+    <div class="vault-card__rollup">
+      <app-epic-rollup [children]="children" />
+    </div>
+  }
+
+  @if (showAnswer() || showApprove() || showReject() || showDecompose() || showAssign() || showArchive() || showRetry() || showDismiss() || showMarkDone()) {
+    <div class="vault-card__actions">
+      @if (showAnswer()) {
+        <button type="button" class="vault-card__btn vault-card__btn--primary" (click)="onAnswer($event)">answer</button>
+      }
+      @if (showApprove()) {
+        <button type="button" class="vault-card__btn vault-card__btn--primary" (click)="onApprove($event)">approve</button>
+      }
+      @if (showReject()) {
+        <button type="button" class="vault-card__btn vault-card__btn--danger" (click)="onReject($event)">reject</button>
+      }
+      @if (showDecompose()) {
+        <button type="button" class="vault-card__btn" (click)="onDecompose($event)">decompose</button>
+      }
+      @if (showRetry()) {
+        <button type="button" class="vault-card__btn vault-card__btn--warn" (click)="onRetry($event)">↻ retry</button>
+      }
+      @if (showMarkDone()) {
+        <button type="button" class="vault-card__btn vault-card__btn--primary" (click)="onMarkDone($event)">mark done</button>
+      }
+      @if (showDismiss()) {
+        <button type="button" class="vault-card__btn" (click)="onDismiss($event)">dismiss</button>
+      }
+      @if (showArchive()) {
+        <button type="button" class="vault-card__btn" (click)="onArchive($event)">archive</button>
+      }
+    </div>
+  }
+</article>

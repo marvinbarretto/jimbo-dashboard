@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 export type EntityType = 'actor' | 'project' | 'vault-item';
+export type EntityChipVariant = 'soft' | 'solid';
 
 const PREFIX: Record<EntityType, string> = {
   'actor':      '@',
@@ -84,6 +85,18 @@ const PREFIX: Record<EntityType, string> = {
       border-color: color-mix(in srgb, var(--chip-color, var(--color-border)) 40%, var(--color-border));
     }
 
+    /* Solid project pill — full project colour as background, dark text on top.
+       Used on the unified vault-card to give project the strongest identity cue. */
+    .entity-chip--project.entity-chip--solid {
+      background: var(--chip-color, var(--color-border));
+      color: var(--color-bg);
+      border-color: var(--chip-color, var(--color-border));
+    }
+    .entity-chip--project.entity-chip--solid .entity-chip__prefix {
+      color: var(--color-bg);
+      opacity: 0.7;
+    }
+
     /* Vault-item uses accent tint */
     .entity-chip--vault-item {
       color: var(--color-accent);
@@ -100,11 +113,12 @@ export class EntityChip {
   readonly active   = input(false);
   readonly disabled = input(false);
   readonly color    = input<string | null>(null);
+  readonly variant  = input<EntityChipVariant>('soft');
 
   readonly prefix    = computed(() => PREFIX[this.type()]);
   readonly chipStyle = computed(() => this.color() ? { '--chip-color': this.color() } : null);
   readonly cls       = computed(() => {
-    const parts = [`entity-chip entity-chip--${this.type()} entity-chip--${this.id()}`];
+    const parts = [`entity-chip entity-chip--${this.type()} entity-chip--${this.id()} entity-chip--${this.variant()}`];
     if (this.active())   parts.push('entity-chip--active');
     if (this.disabled()) parts.push('entity-chip--disabled');
     return parts.join(' ');
