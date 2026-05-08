@@ -12,7 +12,7 @@ import { DispatchStatusBadge } from '@shared/components/dispatch-status-badge/di
 import { CardParentLink } from '@shared/components/card-parent-link/card-parent-link';
 import { CardCallout, type CalloutVariant } from '@shared/components/card-callout/card-callout';
 import { EpicRollup } from '@shared/components/epic-rollup/epic-rollup';
-import { effectivePriority, ageInDays, isStuck } from '@domain/vault';
+import { effectivePriority, ageInDays, isStuck, staleNorm, ancientNorm } from '@domain/vault';
 import type { ActorId } from '@domain/ids';
 import type {
   CardContext,
@@ -21,6 +21,87 @@ import type {
   ManualCardContext,
 } from './card-context';
 import { calloutKindFor } from './card-context';
+
+// ── Action registry ────────────────────────────────────────────────────
+// Single source of truth for which buttons appear in which state. To add or
+// reshuffle a button: edit the per-kind helper below — that's the whole API.
+// The template just iterates `actions()` and dispatches via `onAction(key)`.
+
+export type ActionKey =
+  | 'answer' | 'approve' | 'reject' | 'decompose'
+  | 'archive' | 'assign' | 'retry' | 'dismiss' | 'markDone';
+
+export type ActionVariant = 'primary' | 'danger' | 'warn' | 'neutral';
+
+export interface CardAction {
+  readonly key:     ActionKey;
+  readonly label:   string;
+  readonly variant: ActionVariant;
+}
+
+// Grooming actions — keyed off grooming_status. The matrix is small enough
+// to read top-to-bottom; each branch lists the buttons in render order.
+function groomingActions(ctx: GroomingCardContext): CardAction[] {
+  const status = ctx.item.grooming_status;
+  const archive: CardAction = { key: 'archive', label: 'archive', variant: 'neutral' };
+  const assign:  CardAction = { key: 'assign',  label: 'assign',  variant: 'neutral' };
+
+  if (ctx.openQuestion) {
+    return [
+      { key: 'answer', label: 'answer', variant: 'primary' },
+      archive,
+    ];
+  }
+  switch (status) {
+    case 'decomposed':
+      return [
+        { key: 'approve', label: 'approve', variant: 'primary' },
+        { key: 'reject',  label: 'reject',  variant: 'danger'  },
+        archive,
+      ];
+    case 'classified':
+      return [
+        { key: 'decompose', label: 'decompose', variant: 'neutral' },
+        archive,
+      ];
+    case 'ungroomed':
+    case 'intake_complete':
+      return [archive, assign];
+    case 'needs_rework':
+    case 'intake_rejected':
+      return [archive];
+    case 'ready':
+      // Passive — pump claims it. No actions needed.
+      return [];
+  }
+}
+
+function dispatchActions(ctx: DispatchCardContext): CardAction[] {
+  const status = ctx.entry.status;
+  if (status === 'failed') {
+    return [
+      { key: 'retry',   label: '↻ retry', variant: 'warn'    },
+      { key: 'archive', label: 'archive', variant: 'neutral' },
+    ];
+  }
+  if (status === 'completed') {
+    return [{ key: 'dismiss', label: 'dismiss', variant: 'neutral' }];
+  }
+  // approved / dispatching / running — passive, system-managed.
+  return [];
+}
+
+function manualActions(_ctx: ManualCardContext): CardAction[] {
+  return [{ key: 'markDone', label: 'mark done', variant: 'primary' }];
+}
+
+function actionsFor(ctx: CardContext): CardAction[] {
+  switch (ctx.kind) {
+    case 'grooming': return groomingActions(ctx);
+    case 'dispatch': return dispatchActions(ctx);
+    case 'manual':   return manualActions(ctx);
+  }
+}
 
 @Component({
   selector: 'app-vault-card',
@@ -43,7 +124,9 @@ import { calloutKindFor } from './card-context';
   styleUrl: './vault-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    '[style.--proj-tint]': 'projectTint()',
+    '[style.--proj-tint]':    'projectTint()',
+    '[style.--stale-norm]':   'staleNormVal()',
+    '[style.--ancient-norm]': 'ancientNormVal()',
   },
 })
 export class VaultCard {
@@ -64,6 +147,20 @@ export class VaultCard {
   protected readonly projectTint = computed(() => {
     const ctx = this.context();
     return ctx.project?.color_token ?? null;
+  });
+
+  // Staleness gradient — drives the amber wash + glow via the shared mixin.
+  // Dispatch entries are ephemeral workflow rows, not the long-lived item, so
+  // they're treated as fresh.
+  protected readonly staleNormVal = computed(() => {
+    const ctx = this.context();
+    if (ctx.kind === 'dispatch') return 0;
+    return staleNorm(ctx.item, ctx.lastActivityAt);
+  });
+  protected readonly ancientNormVal = computed(() => {
+    const ctx = this.context();
+    if (ctx.kind === 'dispatch') return 0;
+    return ancientNorm(ctx.item, ctx.lastActivityAt);
   });
 
   protected readonly seq = computed(() => {
@@ -130,27 +227,9 @@ export class VaultCard {
     return formatAgeShort(ref);
   });
 
-  // Per-state action visibility — keep the template clean by computing
-  // booleans up front. Each branch matches the state matrix in the prototype.
-  protected readonly showAnswer    = computed(() => this.grooming()?.openQuestion != null);
-  protected readonly showApprove   = computed(() => this.grooming()?.item.grooming_status === 'decomposed');
-  protected readonly showReject    = computed(() => this.grooming()?.item.grooming_status === 'decomposed');
-  protected readonly showDecompose = computed(() => this.grooming()?.item.grooming_status === 'classified');
-  protected readonly showAssign    = computed(() => {
-    const g = this.grooming();
-    if (!g) return false;
-    const s = g.item.grooming_status;
-    return s === 'ungroomed' || s === 'intake_complete';
-  });
-  protected readonly showArchive = computed(() => {
-    const ctx = this.context();
-    if (ctx.kind === 'manual') return false; // manual cards prioritise mark-done
-    if (ctx.kind === 'dispatch') return ctx.entry.status === 'failed';
-    return ctx.item.grooming_status !== 'ready';
-  });
-  protected readonly showRetry    = computed(() => this.dispatch()?.entry.status === 'failed');
-  protected readonly showDismiss  = computed(() => this.dispatch()?.entry.status === 'completed');
-  protected readonly showMarkDone = computed(() => this.context().kind === 'manual');
+  // Single source of truth for which buttons render. To change the action set
+  // for a state, edit groomingActions / dispatchActions / manualActions above.
+  protected readonly actions = computed<readonly CardAction[]>(() => actionsFor(this.context()));
 
   // Source attribution display — agent sources show an avatar inline.
   protected sourceLabel(ctx: GroomingCardContext | ManualCardContext): string | null {
@@ -169,19 +248,31 @@ export class VaultCard {
     }
   }
 
-  protected onArchive(e: Event): void { e.stopPropagation(); this.archive.emit(); }
-  protected onApprove(e: Event): void { e.stopPropagation(); this.approve.emit(); }
-  protected onAnswer(e: Event):  void { e.stopPropagation(); this.answer.emit();  }
-  protected onRetry(e: Event):   void { e.stopPropagation(); this.retry.emit();   }
-  protected onDismiss(e: Event): void { e.stopPropagation(); this.dismiss.emit(); }
-  protected onMarkDone(e: Event): void { e.stopPropagation(); this.markDone.emit(); }
-  protected onDecompose(e: Event): void { e.stopPropagation(); this.decompose.emit(); }
-  protected onReject(e: Event): void {
-    e.stopPropagation();
-    // Lightweight prompt for the rejection reason — a real dialog is a
-    // follow-up. Emits empty string if cancelled.
-    const reason = window.prompt('Rejection reason?') ?? '';
-    if (reason.trim()) this.reject.emit(reason.trim());
+  // Single dispatch entry point — the template never wires output emitters
+  // directly. Adding a new ActionKey only requires extending the switch here.
+  protected onAction(key: ActionKey, event: Event): void {
+    event.stopPropagation();
+    switch (key) {
+      case 'answer':    this.answer.emit();    return;
+      case 'approve':   this.approve.emit();   return;
+      case 'decompose': this.decompose.emit(); return;
+      case 'archive':   this.archive.emit();   return;
+      case 'retry':     this.retry.emit();     return;
+      case 'dismiss':   this.dismiss.emit();   return;
+      case 'markDone':  this.markDone.emit();  return;
+      case 'assign': {
+        // Picker UI is a follow-up — the (assign) output carries the actor id
+        // once that's wired. For now, no-op so the button doesn't lie.
+        return;
+      }
+      case 'reject': {
+        // Lightweight prompt for the rejection reason — a real composer is a
+        // follow-up. Emits nothing if cancelled or empty.
+        const reason = window.prompt('Rejection reason?') ?? '';
+        if (reason.trim()) this.reject.emit(reason.trim());
+        return;
+      }
+    }
   }
 }
 

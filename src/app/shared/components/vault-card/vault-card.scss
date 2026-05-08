@@ -1,3 +1,5 @@
+@use 'staleness';
+
 .vault-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -9,6 +11,10 @@
   gap: 0.4rem;
   font-family: var(--font-mono);
   position: relative;
+
+  // Amber wash + glow that intensifies with age. Reads --stale-norm and
+  // --ancient-norm from the host bindings; both default to 0 for fresh items.
+  @include staleness.gradient;
 }
 .vault-card:hover {
   border-color: var(--color-border-strong);

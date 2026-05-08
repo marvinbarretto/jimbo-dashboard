@@ -15,7 +15,6 @@ import type { GroomingStatus } from '@domain/vault/vault-item';
 import type { VaultItemId } from '@domain/ids';
 import { activityId, actorId, vaultItemId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
-import { ToastService } from '@shared/components/toast/toast.service';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
 
@@ -37,7 +36,6 @@ interface ApiNoteActivity {
 @Injectable({ providedIn: 'root' })
 export class ActivityEventsService {
   private readonly http = inject(HttpClient);
-  private readonly toast = inject(ToastService);
   private readonly url = `${environment.dashboardApiUrl}/api/note-activity`;
 
   private readonly _eventsByItem = signal<Record<string, VaultActivityEvent[]>>({});
@@ -72,6 +70,11 @@ export class ActivityEventsService {
     });
   }
 
+  // Production backend writes note_activity rows server-side as a side effect
+  // of the underlying mutation (PATCH /vault/notes, reassign, etc.). The
+  // dashboard does NOT post events directly — the API has no POST on
+  // /api/note-activity. Optimistic local insert keeps the UI fresh in the
+  // current session; the next loadFor() pulls the canonical row.
   post(event: EventPayload): void {
     const now = new Date().toISOString();
     const tempId = activityId(crypto.randomUUID());
@@ -79,31 +82,6 @@ export class ActivityEventsService {
     const key = event.vault_item_id;
 
     this._eventsByItem.update(map => ({ ...map, [key]: [...(map[key] ?? []), optimistic] }));
-
-    if (isSeedMode()) return;
-
-    const body = toApiBody(event);
-    this.http.post<ApiNoteActivity>(this.url, body).subscribe({
-      next: saved => {
-        const adapted = toVaultEvent(saved);
-        if (!adapted) return;
-        this._eventsByItem.update(map => ({
-          ...map,
-          [key]: (map[key] ?? []).map(e => e.id === tempId ? adapted : e),
-        }));
-      },
-      // POST failure: drop the optimistic event so the UI doesn't lie about
-      // a saved audit row. The activity log being temporarily incomplete is
-      // a smaller harm than showing an event that was never persisted.
-      error: (err) => {
-        console.error('[activity-events] post failed, dropping optimistic event:', err);
-        this._eventsByItem.update(map => ({
-          ...map,
-          [key]: (map[key] ?? []).filter(e => e.id !== tempId),
-        }));
-        this.toast.error('Activity event failed to save');
-      },
-    });
   }
 }
 
@@ -152,21 +130,3 @@ function toVaultEvent(row: ApiNoteActivity): VaultActivityEvent | null {
   }
 }
 
-// Map typed event → flat note_activity row body for POST.
-function toApiBody(event: EventPayload): Partial<ApiNoteActivity> {
-  const base = {
-    note_id: event.vault_item_id as string,
-    actor: event.actor_id as string,
-    action: event.type,
-  };
-  // `as any` — discriminated narrowing on the union is unwieldy here; the
-  // runtime fields exist per type and the shape is well-tested at the call
-  // site. Server validates via Zod.
-  const e = event as Record<string, unknown>;
-  return {
-    ...base,
-    from_value: typeof e['from'] === 'string' ? e['from'] : typeof e['from_actor_id'] === 'string' ? e['from_actor_id'] : null,
-    to_value: typeof e['to'] === 'string' ? e['to'] : typeof e['to_actor_id'] === 'string' ? e['to_actor_id'] : typeof e['kind'] === 'string' ? e['kind'] : typeof e['completed'] === 'boolean' ? String(e['completed']) : null,
-    reason: typeof e['reason'] === 'string' ? e['reason'] : null,
-  };
-}

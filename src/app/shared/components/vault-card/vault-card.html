@@ -125,31 +125,18 @@
     </div>
   }
 
-  @if (showAnswer() || showApprove() || showReject() || showDecompose() || showAssign() || showArchive() || showRetry() || showDismiss() || showMarkDone()) {
+  @if (actions().length > 0) {
     <div class="vault-card__actions">
-      @if (showAnswer()) {
-        <button type="button" class="vault-card__btn vault-card__btn--primary" (click)="onAnswer($event)">answer</button>
-      }
-      @if (showApprove()) {
-        <button type="button" class="vault-card__btn vault-card__btn--primary" (click)="onApprove($event)">approve</button>
-      }
-      @if (showReject()) {
-        <button type="button" class="vault-card__btn vault-card__btn--danger" (click)="onReject($event)">reject</button>
-      }
-      @if (showDecompose()) {
-        <button type="button" class="vault-card__btn" (click)="onDecompose($event)">decompose</button>
-      }
-      @if (showRetry()) {
-        <button type="button" class="vault-card__btn vault-card__btn--warn" (click)="onRetry($event)">↻ retry</button>
-      }
-      @if (showMarkDone()) {
-        <button type="button" class="vault-card__btn vault-card__btn--primary" (click)="onMarkDone($event)">mark done</button>
-      }
-      @if (showDismiss()) {
-        <button type="button" class="vault-card__btn" (click)="onDismiss($event)">dismiss</button>
-      }
-      @if (showArchive()) {
-        <button type="button" class="vault-card__btn" (click)="onArchive($event)">archive</button>
+      @for (action of actions(); track action.key) {
+        <button
+          type="button"
+          class="vault-card__btn"
+          [class.vault-card__btn--primary]="action.variant === 'primary'"
+          [class.vault-card__btn--danger]="action.variant === 'danger'"
+          [class.vault-card__btn--warn]="action.variant === 'warn'"
+          (click)="onAction(action.key, $event)">
+          {{ action.label }}
+        </button>
       }
     </div>
   }
