@@ -46,5 +46,4 @@ export type ApiDispatchEntry = z.infer<typeof ApiDispatchEntrySchema>;
 export const ApiDispatchesResponseSchema = z.object({
   items: z.array(ApiDispatchEntrySchema),
   total: z.number().int().nonnegative(),
-  limit: z.number().int().positive(),
 });
