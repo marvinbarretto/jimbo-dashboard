@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.46](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.45...v0.0.46) (2026-05-08)
+
+
+### Code Refactoring
+
+* **journal:** group day page into Work / Health / Phone sections ([05c9a36](https://github.com/marvinbarretto/jimbo-dashboard/commit/05c9a36c41024b76230e08267c5127f760c21160))
+
 ### [0.0.45](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.44...v0.0.45) (2026-05-08)
 
 
