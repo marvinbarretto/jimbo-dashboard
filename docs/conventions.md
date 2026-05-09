@@ -36,6 +36,25 @@ Commands: `ng test --no-watch`, `npx playwright test`.
 
 Comment the WHY. Capture design decisions and rejected alternatives. Skip anything the code already says.
 
+## Architectural rules are enforced via ESLint
+
+The repo runs ESLint (`npm run lint`) with a hand-curated config. Rather
+than adopting a recommended ruleset, we add architectural rules one at a
+time, each documented in `docs/architecture/lint-rules.md` with a stable
+rule ID, scope, exemptions, and known violations.
+
+To add a new rule:
+1. Reserve an ID in `lint-rules.md` (`<DOMAIN>-<TOPIC>-<NNN>`)
+2. Document what / why / scope / known violations
+3. Add the rule to `eslint.config.js`, mirroring the ID in the error
+   message so a violator can find the doc
+
+Rationale: the recommended rulesets bundle stylistic preferences that
+don't match this codebase (no-explicit-any, no-output-native, etc.) and
+would generate hundreds of false-positive errors. We earn each rule
+deliberately. The shrinking list of "known violations" in lint-rules.md
+is the visible maturity ratchet.
+
 ## Vault item mutations go through the command layer
 
 `VaultItemsService` is the data-access layer — HTTP, optimistic state, low-level mutations. **Components, dialogs, and kanban boards do not call mutation methods on it directly.** They go through `VaultItemCommands` (`features/vault-items/commands/`).
