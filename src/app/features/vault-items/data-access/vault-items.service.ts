@@ -139,10 +139,7 @@ export class VaultItemsService {
       optimistic,
       // Default 'prepend' — board capture inputs add fresh items at the top.
       request: this.http.post<ApiVaultNoteResponse>(this.url, body),
-      realFromResponse: (raw) => {
-        const note = raw as ApiVaultNoteResponse;
-        return { ...optimistic, id: vaultItemId(note.id), seq: Number(note.seq) };
-      },
+      realFromResponse: (note) => ({ ...optimistic, id: vaultItemId(note.id), seq: Number(note.seq) }),
       errorMessage: `Failed to create "${trimmed}"`,
       onSuccess: (real) => {
         this.toast.success(`"${trimmed}" created · #${real.seq}`);
@@ -202,15 +199,12 @@ export class VaultItemsService {
       // server-managed fields. The raw API response is the production VaultNote
       // shape (string tags, null AC, no embeds) — replacing wholesale would
       // corrupt the row until the next board reload.
-      realFromResponse: (raw) => {
-        const created = raw as ApiVaultNoteResponse;
-        return {
-          ...optimistic,
-          id: vaultItemId(created.id),
-          seq: Number(created.seq),
-          created_at: created.created_at ?? now,
-        };
-      },
+      realFromResponse: (created) => ({
+        ...optimistic,
+        id: vaultItemId(created.id),
+        seq: Number(created.seq),
+        created_at: created.created_at ?? now,
+      }),
       errorMessage: `Failed to create "${payload.title}"`,
       onSuccess: (real) => {
         this.activityService.post({
