@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
-import { ThreadService } from '@features/thread/data-access/thread.service';
+import { ThreadCommands } from '@features/thread/commands/thread-commands';
 import { QuestionsService } from '../../data-access/questions.service';
 import { QuestionCard } from '../../components/question-card/question-card';
 import type { CreateThreadMessagePayload } from '@domain/thread';
@@ -16,7 +16,7 @@ type SortOrder = 'newest' | 'oldest';
 })
 export class QuestionsPage implements OnInit {
   private readonly questionsService = inject(QuestionsService);
-  private readonly threadService    = inject(ThreadService);
+  private readonly threadCommands   = inject(ThreadCommands);
 
   readonly loading   = this.questionsService.loading;
   readonly sortOrder = signal<SortOrder>('newest');
@@ -36,9 +36,6 @@ export class QuestionsPage implements OnInit {
   setSort(order: SortOrder): void { this.sortOrder.set(order); }
 
   onAnswered(payload: CreateThreadMessagePayload): void {
-    this.threadService.post(payload);
-    if (payload.in_reply_to) {
-      this.questionsService.markAnswered(payload.in_reply_to, payload.id);
-    }
+    this.threadCommands.answerQuestion(payload);
   }
 }

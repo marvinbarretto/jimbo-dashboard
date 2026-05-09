@@ -110,6 +110,24 @@ maturity ratchet.
 | `features/api-data/components/dataset-card/dataset-card.ts` | Reads aggregated data | Parent passes via inputs |
 | `features/api-data/components/endpoint-panel/endpoint-panel.ts` | Reads aggregated data | Parent passes via inputs |
 
+### THREAD-COMMANDS-002 — Thread mutations go through ThreadCommands
+
+**ESLint rule:** Same shared `no-restricted-imports` pattern as VAULT-COMMANDS-001 — `**/data-access/*.service` is blocked outside the allowed seam directories. THREAD-COMMANDS-002 isn't a separate ESLint configuration; it's the architectural rule that explains *why* thread.service is in the blocked list.
+**Severity:** error (inherited)
+**Scope:** all `.ts` files outside the seam directories (commands/, data-access/, containers/, dialog/, tests).
+
+**What it forbids.** Components, pages, and shared primitives must not import `thread.service` directly. Mutations route through `ThreadCommands` (`features/thread/commands/`).
+
+**Why.** Posting a thread message can affect more than one store: an "answer" message updates the thread's local `answered_by` chain AND should mark the question off in the global questions index (which lives on a different service entirely). When that compound logic is duplicated across callers — `questions-page` had it inline, hand-rolled — drift is inevitable. The command layer absorbs the cross-store update so callers express intent ("answer this question") rather than mechanics.
+
+**Commands:**
+- `post(payload)` — pass-through to `ThreadService.post`. Use for comments, questions, corrections, and answers that don't need to update the questions index.
+- `answerQuestion(payload)` — compound: post the answer message AND mark the parent question resolved in the questions index. Throws synchronously on payloads that aren't properly-formed answers (kind must be 'answer', `in_reply_to` must be set).
+
+#### Known violations of THREAD-COMMANDS-002
+
+Currently inherits VAULT-COMMANDS-001's exemption list. Two of those entries (`message-composer.ts`, `thread-view.ts`) import thread.service directly for reads; once the read/write surface split lands, the `containers/`/`dialog/` exemption disappears for write paths and these legacy entries become refactor candidates.
+
 ## Retired rules
 
 _(none yet)_

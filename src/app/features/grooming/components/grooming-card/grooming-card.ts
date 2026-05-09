@@ -7,7 +7,7 @@ import type { ActorId } from '@domain/ids';
 import { actorId } from '@domain/ids';
 import { effectivePriority } from '@domain/vault';
 import type { ThreadMessage, CreateThreadMessagePayload } from '@domain/thread';
-import { ThreadService } from '@features/thread/data-access/thread.service';
+import { ThreadCommands } from '@features/thread/commands/thread-commands';
 import { QuestionReplyComposer } from '@shared/components/question-reply-composer/question-reply-composer';
 import { ageInDays, staleNorm, ancientNorm, pulseIntensity, isStuck } from '@domain/vault';
 import { PriorityBadge } from '@shared/components/priority-badge/priority-badge';
@@ -90,7 +90,7 @@ export class GroomingCard {
 
   readonly openQuestion = input<ThreadMessage | null>(null);
 
-  private readonly threadService = inject(ThreadService);
+  private readonly threadCommands = inject(ThreadCommands);
 
   readonly showReply = signal(false);
   readonly showAssign = signal(false);
@@ -101,7 +101,7 @@ export class GroomingCard {
   }
 
   onReplyPosted(payload: CreateThreadMessagePayload): void {
-    this.threadService.post(payload);
+    this.threadCommands.post(payload);
     this.showReply.set(false);
   }
 

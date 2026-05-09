@@ -18,6 +18,7 @@ import { VaultItemDependenciesService } from '../data-access/vault-item-dependen
 import { ActorsService } from '../../actors/data-access/actors.service';
 import { ProjectsService } from '../../projects/data-access/projects.service';
 import { ThreadService } from '../../thread/data-access/thread.service';
+import { ThreadCommands } from '../../thread/commands/thread-commands';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { computeReadiness, effectivePriority as computeEffectivePriority } from '@domain/vault/readiness';
 import { actorId, projectId, vaultItemId } from '@domain/ids';
@@ -78,6 +79,7 @@ export class VaultItemDialogStore {
   private readonly actorsService = inject(ActorsService);
   private readonly projectsService = inject(ProjectsService);
   private readonly threadService = inject(ThreadService);
+  private readonly threadCommands = inject(ThreadCommands);
   private readonly toast = inject(ToastService);
 
   private readonly currentActor: ActorId = CURRENT_ACTOR_ID;
@@ -575,7 +577,7 @@ export class VaultItemDialogStore {
   }
 
   postThreadReply(payload: CreateThreadMessagePayload): void {
-    this.threadService.post(payload);
+    this.threadCommands.post(payload);
   }
 
   /** Returns true if the reject submission was applied. Host decides whether
