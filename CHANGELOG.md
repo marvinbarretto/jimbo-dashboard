@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.48](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.47...v0.0.48) (2026-05-09)
+
+
+### Features
+
+* **execution:** wire dismiss / archive buttons + bulk-clear sweep ([77ed5ed](https://github.com/marvinbarretto/jimbo-dashboard/commit/77ed5ed063732a2ed1366716a9770c32dd6493e6))
+* **projects:** inline create flow with ghost tile + modal ([2ffb32e](https://github.com/marvinbarretto/jimbo-dashboard/commit/2ffb32ef15e9afcc11c11ec506a68ba57cd1cbec))
+* **thread:** add ThreadCommands with answerQuestion compound action ([91d119e](https://github.com/marvinbarretto/jimbo-dashboard/commit/91d119e32abe952843e7627610464dbef28a4079))
+* **vault:** add reassign command + close grooming-board's bypass ([5de899e](https://github.com/marvinbarretto/jimbo-dashboard/commit/5de899e7340f24f8683f32dc93987813e6a6fbbe))
+* **vault:** add VAULT_ITEMS_READ token for type-narrowed read access ([8be00a7](https://github.com/marvinbarretto/jimbo-dashboard/commit/8be00a70daa30e63a7852a016d27f120f2d288fd))
+
+
+### Code Refactoring
+
+* **chips:** entity-chip removable + nest in mention strip ([239cc20](https://github.com/marvinbarretto/jimbo-dashboard/commit/239cc20561f13e27005cc3f61cf465ea8f7c2fe2))
+* **dispatch:** migrate retry() to withOptimisticUpdate helper ([2f05172](https://github.com/marvinbarretto/jimbo-dashboard/commit/2f0517270feaf0e00f6e34bd7c27e70434368e76))
+* **lint:** allow type imports + fold 4 legacy violations ([a7a7580](https://github.com/marvinbarretto/jimbo-dashboard/commit/a7a7580df1ff10678c7123050eda557a1bec7f89))
+* **shared:** fold seed-mode into withOptimistic via seedMode flag ([e649562](https://github.com/marvinbarretto/jimbo-dashboard/commit/e649562a29b32bee024acc50a348902bdc723c50))
+* **shared:** generics + contract notes on withOptimistic helpers ([be4c0d3](https://github.com/marvinbarretto/jimbo-dashboard/commit/be4c0d31f6280ceef6e7f3856038d94c9d214f33)), closes [#1](https://github.com/marvinbarretto/jimbo-dashboard/issues/1) [#2](https://github.com/marvinbarretto/jimbo-dashboard/issues/2) [#1](https://github.com/marvinbarretto/jimbo-dashboard/issues/1) [#1](https://github.com/marvinbarretto/jimbo-dashboard/issues/1) [#2](https://github.com/marvinbarretto/jimbo-dashboard/issues/2)
+* **vault-items:** finish withOptimistic sweep — create, createOnBoard, rejectItem ([1013c86](https://github.com/marvinbarretto/jimbo-dashboard/commit/1013c86c2e21cb3b6c7819f8870e29aebddd9b9f))
+* **vault-items:** migrate 8 mutations to withOptimistic helpers ([0ade7ee](https://github.com/marvinbarretto/jimbo-dashboard/commit/0ade7ee81916f771ca1799751ca0fc6f7df0f44c))
+
 ### [0.0.47](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.46...v0.0.47) (2026-05-08)
 
 

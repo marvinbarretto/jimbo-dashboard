@@ -1,6 +1,6 @@
 {
   "name": "dashboard",
-  "version": "0.0.47",
+  "version": "0.0.48",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -8,6 +8,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed",
     "lint": "eslint 'src/app/**/*.ts'",
     "coverage:update": "ng test --no-watch --coverage && node scripts/coverage-report.mjs",
     "deploy": "bash deploy.sh",
