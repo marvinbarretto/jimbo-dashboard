@@ -67,12 +67,24 @@
             @if (card.kind === 'dispatch') {
               <app-vault-card
                 [context]="cardContextFor(card)"
-                (retry)="onRetry(card.entry.id)" />
+                (retry)="onRetry(card.entry.id)"
+                (archive)="onArchiveDispatch(card.entry)"
+                (dismiss)="onDismissDispatch(card.entry.id)" />
             } @else {
               <app-vault-card
                 [context]="cardContextFor(card)"
                 (markDone)="onCompleteManualItem(card.item)" />
             }
+          }
+          @if (col.status === 'completed' && col.cards.length > 0) {
+            <button
+              col-header-action
+              type="button"
+              class="board__sweep"
+              (click)="onClearCompleted(col.cards.length)"
+            >
+              dismiss all
+            </button>
           }
         </app-kanban-column>
       </div>

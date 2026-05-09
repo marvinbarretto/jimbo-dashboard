@@ -11,6 +11,10 @@
   <header class="col__header">
     <span class="col__label">{{ label() }}</span>
     <span class="col__count">{{ count() }}</span>
+    <!-- Optional projected control (e.g. "dismiss all" sweep). Default
+         empty for boards that don't supply one. Selector-based projection
+         keeps it isolated from the card body's default ng-content slot. -->
+    <ng-content select="[col-header-action]" />
   </header>
 
   <div class="col__cards">

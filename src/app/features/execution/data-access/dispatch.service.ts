@@ -9,8 +9,17 @@ import type { DispatchId, VaultItemId } from '@domain/ids';
 import { dispatchId, vaultItemId, actorId, skillId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { ToastService } from '@shared/components/toast/toast.service';
+import {
+  withOptimisticRemove,
+} from '@shared/data-access/with-optimistic';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
+
+// Statuses the API will accept for hard-delete. Mirrored from jimbo-api's
+// DELETE /dispatch/{id} gate. Listed here so the typed `clearTerminal` call
+// can refuse non-terminal asks at the boundary instead of hitting a 409.
+const TERMINAL_STATUSES = ['completed', 'failed', 'removed', 'rejected'] as const;
+type TerminalStatus = typeof TERMINAL_STATUSES[number];
 
 @Injectable({ providedIn: 'root' })
 export class DispatchService {
@@ -113,6 +122,75 @@ export class DispatchService {
         this.toast.error('Retry failed — changes reverted');
       },
     });
+  }
+
+  /**
+   * Hard-delete a single dispatch row. Backed by `DELETE /api/dispatch/{id}`
+   * which gates on terminal status server-side; the dashboard refuses early
+   * here to keep the optimistic remove from flickering on rows the API will
+   * refuse anyway. costs.dispatch_id cascades to NULL on the server side so
+   * accounting history survives.
+   */
+  delete(id: DispatchId): void {
+    const prior = this.getById(id);
+    if (!prior) return;
+    if (!(TERMINAL_STATUSES as readonly string[]).includes(prior.status)) {
+      this.toast.error(`Can't delete a ${prior.status.replace('_', ' ')} dispatch`);
+      return;
+    }
+
+    if (isSeedMode()) {
+      this._entries.update(es => es.filter(e => e.id !== id));
+      return;
+    }
+
+    withOptimisticRemove(this._entries, this.toast, {
+      prior,
+      request: this.http.delete<void>(
+        `${environment.dashboardApiUrl}/api/dispatch/${encodeURIComponent(id)}`,
+      ),
+      errorMessage: 'Delete failed — entry restored',
+      onSuccess: () => this.toast.success('Dispatch dismissed'),
+    });
+  }
+
+  /**
+   * Bulk-delete every entry whose status is in the requested terminal set.
+   * Used by column-level "dismiss all" gestures (e.g. clear the COMPLETED
+   * column). Optimistic with rollback: locally filtered first, server
+   * confirms the count.
+   *
+   * Statuses outside the terminal set are dropped at the boundary; the
+   * server filters again as defence in depth.
+   */
+  clearTerminal(statuses: readonly TerminalStatus[]): void {
+    const filteredStatuses = statuses.filter(s => (TERMINAL_STATUSES as readonly string[]).includes(s));
+    if (filteredStatuses.length === 0) return;
+
+    const targets = this._entries().filter(e => (filteredStatuses as readonly string[]).includes(e.status));
+    if (targets.length === 0) return;
+
+    if (isSeedMode()) {
+      this._entries.update(es => es.filter(e => !(filteredStatuses as readonly string[]).includes(e.status)));
+      this.toast.success(`Cleared ${targets.length}`);
+      return;
+    }
+
+    const prior = this._entries();
+    this._entries.update(es => es.filter(e => !(filteredStatuses as readonly string[]).includes(e.status)));
+
+    this.http
+      .post<{ deleted: number }>(
+        `${environment.dashboardApiUrl}/api/dispatch/clear-terminal`,
+        { statuses: filteredStatuses },
+      )
+      .subscribe({
+        next: (res) => this.toast.success(`Cleared ${res.deleted}`),
+        error: () => {
+          this._entries.set(prior);
+          this.toast.error('Bulk clear failed — entries restored');
+        },
+      });
   }
 }
 

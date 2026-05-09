@@ -4,6 +4,7 @@ import { take } from 'rxjs';
 import { DispatchService } from '@features/execution/data-access/dispatch.service';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
 import { VaultItemCommands } from '@features/vault-items/commands/vault-item-commands';
+import { DispatchCommands } from '@features/execution/commands/dispatch-commands';
 import { VaultItemProjectsService } from '@features/vault-items/data-access/vault-item-projects.service';
 import { ProjectsService } from '@features/projects/data-access/projects.service';
 import { ActorsService } from '@features/actors/data-access/actors.service';
@@ -77,6 +78,7 @@ export class ExecutionBoard {
   private readonly dispatchService = inject(DispatchService);
   private readonly vaultItemsService = inject(VaultItemsService);
   private readonly commands = inject(VaultItemCommands);
+  private readonly dispatchCommands = inject(DispatchCommands);
   private readonly vaultItemProjectsService = inject(VaultItemProjectsService);
   private readonly projectsService = inject(ProjectsService);
   private readonly actorsService = inject(ActorsService);
@@ -302,6 +304,31 @@ export class ExecutionBoard {
 
   onRetry(id: DispatchId): void {
     this.dispatchService.retry(id);
+  }
+
+  /** Card-level (dismiss) — drop a finished dispatch row from view. Hard-delete. */
+  onDismissDispatch(id: DispatchId): void {
+    this.dispatchCommands.dismiss(id);
+  }
+
+  /**
+   * Card-level (archive) on a FAILED dispatch — operator decided the task
+   * isn't worth fixing. Archives the underlying vault item AND clears the
+   * dispatch row in one gesture.
+   */
+  onArchiveDispatch(entry: DispatchQueueEntry): void {
+    this.dispatchCommands.archiveTaskAndDismiss(entry);
+  }
+
+  /**
+   * Column-level "dismiss all completed". Confirm before sweeping — bulk
+   * hard-delete is irreversible (FK costs.dispatch_id cascades to NULL but
+   * the dispatch rows themselves are gone).
+   */
+  onClearCompleted(count: number): void {
+    if (count === 0) return;
+    if (!window.confirm(`Dismiss all ${count} completed dispatches? This cannot be undone.`)) return;
+    this.dispatchCommands.clearCompleted();
   }
 
   // --- filter groups -----------------------------------------------------

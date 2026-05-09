@@ -7,3 +7,23 @@
 .board__hint {
   strong { color: var(--color-text); font-weight: 500; }
 }
+
+// Column-header sweep button — projected into the kanban-column header via
+// `[col-header-action]`. Small, secondary affordance; the per-card dismiss is
+// the primary path. Only shown when count > 0 so the column header doesn't
+// gain visual weight on an already-empty column.
+.board__sweep {
+  margin-left: auto;
+  padding: 0.125rem 0.5rem;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text);
+    border-color: var(--color-border-strong, var(--color-border));
+  }
+}
