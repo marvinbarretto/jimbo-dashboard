@@ -15,44 +15,15 @@
 
     <!-- Project selector — required before epic can be set -->
     <div class="draft-form__meta">
-      @if (store.draftPayload().projects.length === 0) {
-        <select
-          class="draft-form__project-select"
-          aria-label="Assign to project"
-          (change)="onDraftProjectSelect($event)"
-        >
-          <option value="">— assign to project —</option>
-          @for (p of store.activeProjects(); track p.id) {
-            <option [value]="p.id">{{ p.display_name }}</option>
-          }
-        </select>
-      } @else {
-        <div class="draft-form__project-chips">
-          @for (p of store.draftPayload().projects; track p.id; let i = $index) {
-            <span class="draft-form__project-chip">
-              {{ p.display_name }}
-              <button
-                type="button"
-                class="draft-form__project-chip-remove"
-                aria-label="Remove project"
-                (click)="store.removeDraftProject(i)"
-              >×</button>
-            </span>
-          }
-          @if (store.draftPayload().projects.length < store.activeProjects().length) {
-            <select
-              class="draft-form__project-select draft-form__project-select--add"
-              aria-label="Add another project"
-              (change)="onDraftProjectSelect($event)"
-            >
-              <option value="">+ project</option>
-              @for (p of store.activeProjects(); track p.id) {
-                <option [value]="p.id">{{ p.display_name }}</option>
-              }
-            </select>
-          }
-        </div>
-      }
+      <app-ui-chip-list
+        class="draft-form__projects"
+        [items]="draftProjectChips()"
+        [pickerOptions]="draftProjectPickerOptions()"
+        addLabel="+ project"
+        emptyLabel="— assign to project —"
+        (added)="store.addDraftProjectById($event)"
+        (removed)="store.removeDraftProjectById($event)"
+      />
 
       <!-- Epic toggle: only available once a project is assigned -->
       @if (store.draftPayload().projects.length > 0) {
@@ -117,7 +88,7 @@
       <app-ui-button
         size="sm"
         variant="primary"
-        [disabled]="!store.canSubmitDraft()"
+        [disabled]="store.draftSubmitting()"
         (pressed)="submitDraft()">
         {{ store.draftSubmitting() ? 'Saving…' : 'Create' }}
       </app-ui-button>

@@ -130,51 +130,11 @@
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
 }
 
-.draft-form__project-select {
-  font: inherit;
-  font-size: .75rem;
-  color: var(--color-text-muted);
-  background: transparent;
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius);
-  padding: .2rem .5rem;
-  cursor: pointer;
-
-  &:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
-
-  &--add { border-style: dashed; }
-}
-
-.draft-form__project-chips {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: .4rem;
-}
-
-.draft-form__project-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: .25rem;
-  font-size: .72rem;
-  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
-  border-radius: var(--radius);
-  padding: .15rem .45rem;
-  color: var(--color-text);
-}
-
-.draft-form__project-chip-remove {
-  font: inherit;
-  font-size: .8rem;
-  line-height: 1;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-muted);
-  padding: 0 .1rem;
-
-  &:hover { color: var(--color-danger, #ef4444); }
+// UiChipList already supplies its own chip / picker / empty styling. This
+// wrapper just absorbs available width so the epic toggle lands beside it.
+.draft-form__projects {
+  flex: 1;
+  min-width: 0;
 }
 
 .draft-form__epic-label {

@@ -21,6 +21,11 @@ import { ActivityLogComponent } from './activity-log/activity-log';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiMentionChipStrip } from '@shared/components/ui-mention-chip-strip/ui-mention-chip-strip';
+import {
+  UiChipList,
+  type UiChipListItem,
+  type UiChipListPickerOption,
+} from '@shared/components/ui-chip-list/ui-chip-list';
 import { MentionDirective } from '@shared/mentions';
 import { actorId } from '@domain/ids';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
@@ -53,6 +58,7 @@ import type { CreateThreadMessagePayload } from '@domain/thread';
     UiSection,
     UiButton,
     UiMentionChipStrip,
+    UiChipList,
     MentionDirective,
     VaultItemActionBar,
     VaultItemDeliveryBlock,
@@ -111,6 +117,29 @@ export class VaultItemDetailBody {
   protected readonly lifecycleOf = lifecycleState;
   protected readonly isItemArchived = isArchived;
   protected readonly currentActorId = CURRENT_ACTOR_ID;
+
+  // Adapters for UiChipList — drive the draft form's project picker. Picker
+  // options omit projects already on the draft so we don't show duplicates.
+  protected readonly draftProjectChips = computed<readonly UiChipListItem[]>(() =>
+    this.store.draftPayload().projects.map(p => ({
+      id: p.id,
+      label: p.display_name,
+      entityType: 'project' as const,
+      color: p.color_token,
+    })),
+  );
+
+  protected readonly draftProjectPickerOptions = computed<readonly UiChipListPickerOption[]>(() => {
+    const taken = new Set(this.store.draftPayload().projects.map(p => p.id));
+    return this.store.activeProjects()
+      .filter(p => !taken.has(p.id))
+      .map(p => ({
+        id: p.id,
+        label: p.display_name,
+        entityType: 'project' as const,
+        color: p.color_token,
+      }));
+  });
 
   constructor() {
     // Sync the store's mode to the host's input. The store is the source of
@@ -190,12 +219,6 @@ export class VaultItemDetailBody {
       e.preventDefault();
       this.submitDraft();
     }
-  }
-
-  onDraftProjectSelect(e: Event): void {
-    const id = (e.target as HTMLSelectElement).value;
-    if (id) this.store.addDraftProjectById(id);
-    (e.target as HTMLSelectElement).value = '';
   }
 
   // ── Thread reply (template passes the payload up) ─────────────────────────

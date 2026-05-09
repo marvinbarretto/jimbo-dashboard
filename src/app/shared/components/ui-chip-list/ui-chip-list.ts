@@ -9,12 +9,15 @@ export interface UiChipListItem {
   readonly tone?: UiChipListTone;
   readonly entityType?: EntityType;
   readonly seq?: number;
+  /** CSS colour token piped to EntityChip for project tints etc. */
+  readonly color?: string | null;
 }
 
 export interface UiChipListPickerOption {
   readonly id: string;
   readonly label: string;
   readonly entityType?: EntityType;
+  readonly color?: string | null;
 }
 
 @Component({
@@ -27,7 +30,7 @@ export interface UiChipListPickerOption {
         @if (item.entityType) {
           <span class="ui-chip-list__chip ui-chip-list__chip--entity">
             <button type="button" class="ui-chip-list__entity-btn" (click)="itemClicked.emit(item.id)">
-              <app-entity-chip [type]="item.entityType" [id]="item.id" [label]="item.label" [seq]="item.seq ?? null" />
+              <app-entity-chip [type]="item.entityType" [id]="item.id" [label]="item.label" [seq]="item.seq ?? null" [color]="item.color ?? null" />
             </button>
             @if (allowRemove()) {
               <button type="button" class="ui-chip-list__remove"
@@ -72,7 +75,7 @@ export interface UiChipListPickerOption {
         @for (opt of pickerOptions(); track opt.id) {
           <button type="button" class="ui-chip-list__picker-opt" (click)="onAdd(opt.id)">
             @if (opt.entityType) {
-              <app-entity-chip [type]="opt.entityType" [id]="opt.id" [label]="opt.label" />
+              <app-entity-chip [type]="opt.entityType" [id]="opt.id" [label]="opt.label" [color]="opt.color ?? null" />
             } @else {
               {{ opt.label }}
             }

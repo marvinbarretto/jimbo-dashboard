@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import type { Project } from '@domain/projects/project';
 import type { Actor } from '@domain/actors/actor';
 import type { VaultItemId } from '@domain/ids';
@@ -23,16 +24,17 @@ export interface MentionRelatedRef {
  */
 @Component({
   selector: 'app-ui-mention-chip-strip',
+  imports: [EntityChip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (hasAny()) {
       <div class="ui-mcs" role="list" aria-label="Captured metadata">
         @for (t of tags(); track t; let i = $index) {
-          <span class="ui-mcs__chip ui-mcs__chip--tag" role="listitem">
+          <span class="ui-mcs__tag" role="listitem">
             #{{ t }}
             <button
               type="button"
-              class="ui-mcs__x"
+              class="ui-mcs__tag-x"
               (click)="tagRemoved.emit(i)"
               [attr.aria-label]="'Remove tag ' + t"
             >×</button>
@@ -40,49 +42,35 @@ export interface MentionRelatedRef {
         }
 
         @for (p of projects(); track p.id; let i = $index) {
-          <span
-            class="ui-mcs__chip ui-mcs__chip--project"
-            role="listitem"
-            [style.--chip-color]="p.color_token ?? 'var(--color-border)'"
-          >
-            <span class="ui-mcs__dot" [style.background]="p.color_token ?? 'var(--color-border)'"></span>
-            {{ p.display_name }}
-            <button
-              type="button"
-              class="ui-mcs__x"
-              (click)="projectRemoved.emit(i)"
-              [attr.aria-label]="'Remove project ' + p.display_name"
-            >×</button>
-          </span>
+          <app-entity-chip
+            type="project"
+            [id]="p.id"
+            [label]="p.display_name"
+            [color]="p.color_token"
+            [removable]="true"
+            (removed)="projectRemoved.emit(i)"
+          />
         }
 
         @if (assignee(); as a) {
-          <span
-            class="ui-mcs__chip ui-mcs__chip--actor"
-            role="listitem"
-            [style.--chip-color]="actorColor(a.id)"
-          >
-            <span class="ui-mcs__dot" [style.background]="actorColor(a.id)"></span>
-            {{ '@' + a.display_name }}
-            <button
-              type="button"
-              class="ui-mcs__x"
-              (click)="assigneeRemoved.emit()"
-              [attr.aria-label]="'Remove assignee ' + a.display_name"
-            >×</button>
-          </span>
+          <app-entity-chip
+            type="actor"
+            [id]="a.id"
+            [label]="a.display_name"
+            [removable]="true"
+            (removed)="assigneeRemoved.emit()"
+          />
         }
 
         @for (r of related(); track r.id; let i = $index) {
-          <span class="ui-mcs__chip ui-mcs__chip--related" role="listitem">
-            ~@if (r.seq != null) { #{{ r.seq }} } {{ r.title }}
-            <button
-              type="button"
-              class="ui-mcs__x"
-              (click)="relatedRemoved.emit(i)"
-              [attr.aria-label]="'Remove related ' + r.title"
-            >×</button>
-          </span>
+          <app-entity-chip
+            type="vault-item"
+            [id]="r.id"
+            [label]="r.title"
+            [seq]="r.seq"
+            [removable]="true"
+            (removed)="relatedRemoved.emit(i)"
+          />
         }
       </div>
     }
@@ -94,45 +82,39 @@ export interface MentionRelatedRef {
       display: flex;
       flex-wrap: wrap;
       gap: 0.35rem;
+      align-items: center;
     }
 
-    .ui-mcs__chip {
-      --chip-color: var(--color-border);
+    /* Tags are free-text labels (no entity backing) so they don't go through
+       EntityChip; keep a minimal pill rendering for visual parity. */
+    .ui-mcs__tag {
       display: inline-flex;
       align-items: center;
       gap: 0.25rem;
       font-size: 0.72rem;
-      background: color-mix(in srgb, var(--chip-color) 12%, transparent);
-      border: 1px solid color-mix(in srgb, var(--chip-color) 40%, transparent);
-      border-radius: 2px;
-      padding: 0.1rem 0.4rem;
+      font-family: var(--font-mono);
+      padding: 0.15rem 0.55rem;
+      border: 1px solid color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
       color: var(--color-text);
       line-height: 1.4;
-
-      &--tag { --chip-color: var(--color-accent); }
-      &--related { --chip-color: var(--color-info); }
     }
 
-    .ui-mcs__dot {
-      width: 0.5rem;
-      height: 0.5rem;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .ui-mcs__x {
+    .ui-mcs__tag-x {
       border: none;
       background: none;
-      padding: 0;
+      padding: 0 0.05rem;
       cursor: pointer;
       font: inherit;
-      font-size: 0.85rem;
-      color: var(--color-text-muted);
+      font-size: 0.95em;
       line-height: 1;
+      color: inherit;
+      opacity: 0.55;
 
-      &:hover { color: var(--color-danger, #ef4444); }
+      &:hover { opacity: 1; color: var(--color-danger, #ef4444); }
       &:focus-visible {
-        outline: 2px solid var(--color-accent);
+        outline: 2px solid currentColor;
         outline-offset: 1px;
         border-radius: 2px;
       }
@@ -156,10 +138,4 @@ export class UiMentionChipStrip {
     || this.assignee() !== null
     || this.related().length > 0,
   );
-
-  // Resolves the well-known per-actor accent CSS var; falls back to the
-  // generic border colour for actors without a registered tint.
-  protected actorColor(id: string): string {
-    return `var(--actor-color-${id}, var(--color-border))`;
-  }
 }

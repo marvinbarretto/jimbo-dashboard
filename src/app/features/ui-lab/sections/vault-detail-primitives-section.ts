@@ -255,14 +255,17 @@ import { actorId } from '@domain/ids';
 export class VaultDetailPrimitivesSection {
   protected readonly boris = actorId('boris');
 
+  // Project chips demonstrate the optional `entityType` + `color` fields —
+  // the chip-list pipes them through to EntityChip so projects pick up their
+  // own tint instead of the generic accent.
   protected readonly labProjectChipsState = signal<readonly UiChipListItem[]>([
-    { id: 'localshout', label: 'Localshout' },
+    { id: 'localshout', label: 'Localshout', entityType: 'project', color: '#6b95d6' },
   ]);
   protected readonly labProjectChips = this.labProjectChipsState.asReadonly();
   protected readonly labProjectPickerOptions: readonly UiChipListPickerOption[] = [
-    { id: 'hermes', label: 'Hermes' },
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'jimbo', label: 'Jimbo' },
+    { id: 'hermes',    label: 'Hermes',    entityType: 'project', color: '#a878d6' },
+    { id: 'dashboard', label: 'Dashboard', entityType: 'project', color: '#c4a47a' },
+    { id: 'jimbo',     label: 'Jimbo',     entityType: 'project', color: '#5fb3a1' },
   ];
   protected readonly labBlockerChips: readonly UiChipListItem[] = [
     { id: '1820', label: '#1820 · Migrate to Postgres', tone: 'blocker' },

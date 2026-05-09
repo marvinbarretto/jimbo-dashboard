@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
 export type EntityType = 'actor' | 'project' | 'vault-item';
 export type EntityChipVariant = 'soft' | 'solid';
@@ -21,6 +21,14 @@ const PREFIX: Record<EntityType, string> = {
       }{{ label() }}
       @if (count() != null) {
         <span class="entity-chip__count">{{ count() }}</span>
+      }
+      @if (removable()) {
+        <button
+          type="button"
+          class="entity-chip__remove"
+          [attr.aria-label]="'Remove ' + label()"
+          (click)="removed.emit(); $event.stopPropagation()"
+        >×</button>
       }
     </span>
   `,
@@ -61,6 +69,26 @@ const PREFIX: Record<EntityType, string> = {
       font-size: 0.6em;
       opacity: 0.7;
       font-variant-numeric: tabular-nums;
+    }
+
+    .entity-chip__remove {
+      margin-left: 0.25rem;
+      padding: 0 0.05rem;
+      border: none;
+      background: none;
+      color: inherit;
+      opacity: 0.55;
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.95em;
+      line-height: 1;
+
+      &:hover { opacity: 1; color: var(--color-danger, #ef4444); }
+      &:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 1px;
+        border-radius: 2px;
+      }
     }
 
     .entity-chip--active {
@@ -114,6 +142,9 @@ export class EntityChip {
   readonly disabled = input(false);
   readonly color    = input<string | null>(null);
   readonly variant  = input<EntityChipVariant>('soft');
+  /** When true, renders a trailing × that emits `removed`. Host owns state. */
+  readonly removable = input(false);
+  readonly removed   = output<void>();
 
   readonly prefix    = computed(() => PREFIX[this.type()]);
   readonly chipStyle = computed(() => this.color() ? { '--chip-color': this.color() } : null);
