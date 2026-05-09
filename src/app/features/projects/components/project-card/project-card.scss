@@ -3,30 +3,28 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem;
-  border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 0.5rem;
-  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
   cursor: default;
 
   &.project-card--major {
-    border-left: 3px solid var(--project-accent, var(--color-accent, #818cf8));
+    border-left: 3px solid var(--project-accent, var(--color-accent));
   }
 
   &.project-card--minor {
-    border-left: 3px solid var(--project-accent, var(--color-text-muted, #9ca3af));
+    border-left: 3px solid var(--project-accent, var(--color-text-muted));
   }
 }
 
 .project-card__drag-handle {
   font-size: 1rem;
-  color: var(--color-text-muted, #9ca3af);
+  color: var(--color-text-muted);
   cursor: grab;
   line-height: 1;
   width: fit-content;
 
-  &:active {
-    cursor: grabbing;
-  }
+  &:active { cursor: grabbing; }
 }
 
 .project-card__header {
@@ -45,27 +43,23 @@
 .project-card__name {
   font-weight: 600;
   text-decoration: none;
-  color: var(--color-text, inherit);
+  color: var(--color-text);
 
-  &:hover {
-    text-decoration: underline;
-  }
+  &:hover { text-decoration: underline; }
 }
 
 .project-card__repo {
   font-size: 0.75rem;
-  color: var(--color-text-muted, #6b7280);
+  color: var(--color-text-muted);
   margin-left: auto;
   text-decoration: none;
 
-  &:hover {
-    text-decoration: underline;
-  }
+  &:hover { text-decoration: underline; }
 }
 
 .project-card__desc {
   font-size: 0.875rem;
-  color: var(--color-text-muted, #6b7280);
+  color: var(--color-text-muted);
   margin: 0;
   line-height: 1.4;
 }
@@ -74,12 +68,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
   margin-top: auto;
   padding-top: 0.5rem;
 }
 
-.project-card__owner {
-  font-size: 0.75rem;
-  color: var(--color-text-muted, #6b7280);
+.project-card__owner--unowned {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
   font-family: var(--font-mono);
 }

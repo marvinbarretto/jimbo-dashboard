@@ -1,7 +1,6 @@
 <app-ui-stack class="projects-list" gap="lg">
   <app-ui-page-header class="projects-list__header">
     <h1 uiPageHeaderTitle>Projects</h1>
-    <a uiPageHeaderActions routerLink="new" class="btn btn--primary">+ New project</a>
   </app-ui-page-header>
 
   <!-- MAJOR PROJECTS -->
@@ -22,6 +21,7 @@
                           [showDragHandle]="true"
                           (removed)="remove($event)" />
       }
+      <app-ui-add-tile label="New major project" (pressed)="openCreate('major')" />
     </div>
   </section>
 
@@ -43,6 +43,7 @@
                           [showDragHandle]="true"
                           (removed)="remove($event)" />
       }
+      <app-ui-add-tile label="New mini project" (pressed)="openCreate('minor')" />
     </div>
   </section>
 

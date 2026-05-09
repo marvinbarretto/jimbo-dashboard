@@ -1,13 +1,15 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CdkDragHandle } from '@angular/cdk/drag-drop';
+import { ActorChip } from '@shared/components/actor-chip/actor-chip';
+import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import type { Project } from '@domain/projects';
 import type { ProjectId } from '@domain/ids';
 
 @Component({
   selector: 'app-project-card',
-  imports: [RouterLink, CdkDragHandle, UiCluster],
+  imports: [RouterLink, CdkDragHandle, ActorChip, UiButton, UiCluster],
   templateUrl: './project-card.html',
   styleUrl: './project-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

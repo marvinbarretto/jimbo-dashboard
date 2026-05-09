@@ -58,6 +58,8 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'card-callout',            name: 'Card Callout',          group: 'cards',           selector: 'app-card-callout',      description: 'Variant body slot — question / rework / draft / rationale / result / error.' },
 
   // Forms & editing — input controls and form chrome
+  { id: 'ui-button',               name: 'Button',                group: 'forms-editing',   selector: 'app-ui-button',         description: 'Standard button primitive — primary / secondary / ghost / danger, md / sm sizes.' },
+  { id: 'ui-add-tile',             name: 'Add Tile',              group: 'forms-editing',   selector: 'app-ui-add-tile',       description: 'Dashed-outline tile that sits at the end of a card grid as the "+ Add" affordance.' },
   { id: 'toggle',                  name: 'Toggle',                group: 'forms-editing',   selector: 'app-ui-toggle',         description: 'Boolean slide toggle with role="switch" accessibility.' },
   { id: 'inline-edit',             name: 'Inline Edit',           group: 'forms-editing',   selector: 'app-ui-inline-edit',    description: 'Click-to-edit primitive — text/textarea/select with autofocus, save-on-blur, Esc cancel.' },
   { id: 'hybrid-edit',             name: 'Hybrid Edit',           group: 'forms-editing',                                      description: 'Inline edit for scalar fields; advanced edit for structured fields.' },

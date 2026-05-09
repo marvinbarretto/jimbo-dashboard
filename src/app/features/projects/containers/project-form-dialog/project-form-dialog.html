@@ -1,0 +1,81 @@
+<app-modal-shell [titleId]="titleId" closeLabel="Close" (close)="cancel()">
+  <h2 modal-header [id]="titleId" class="project-form-dialog__title">New project</h2>
+
+  <form modal-body [formGroup]="form" (ngSubmit)="submit()" class="project-form-dialog__form">
+    <div class="field field--inline">
+      <div class="field">
+        <label for="pfd-id">ID <span class="hint">(slug)</span></label>
+        <input id="pfd-id" formControlName="id" autocomplete="off" />
+        @if (form.controls.id.touched && form.controls.id.errors?.['required']) {
+          <p class="field-error" role="alert">ID is required.</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="pfd-kind">Kind</label>
+        <select id="pfd-kind" formControlName="kind">
+          @for (k of kinds; track k) {
+            <option [value]="k">{{ k === 'major' ? 'Major — permanent' : 'Minor — time-boxed' }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="pfd-name">Display name</label>
+      <input id="pfd-name" formControlName="display_name" />
+      @if (form.controls.display_name.touched && form.controls.display_name.errors?.['required']) {
+        <p class="field-error" role="alert">Display name is required.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="pfd-desc">Description</label>
+      <input id="pfd-desc" formControlName="description" />
+    </div>
+
+    <div class="field">
+      <label for="pfd-owner">Owner</label>
+      <select id="pfd-owner" formControlName="owner_actor_id">
+        <option value="">— select an owner —</option>
+        @for (a of actors(); track a.id) {
+          <option [value]="a.id">{{ a.display_name }} ({{ a.id }})</option>
+        }
+      </select>
+      @if (form.controls.owner_actor_id.touched && form.controls.owner_actor_id.errors?.['required']) {
+        <p class="field-error" role="alert">Owner is required.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="pfd-repo">Repo URL</label>
+      <input id="pfd-repo" formControlName="repo_url" type="url" />
+    </div>
+
+    <div class="field">
+      <label>Accent color</label>
+      <div class="color-picker">
+        @if (selectedColor(); as color) {
+          <span class="color-picker__preview" [style.background]="color" [title]="color"></span>
+        }
+        <div class="color-swatches">
+          @for (c of palette; track c) {
+            <button type="button" class="color-swatch"
+                    [style.background]="c"
+                    [class.color-swatch--selected]="selectedColor() === c"
+                    (click)="form.controls.color_token.setValue(c)"
+                    [title]="c"
+                    [attr.aria-label]="'Select color ' + c"
+                    [attr.aria-pressed]="selectedColor() === c">
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <app-ui-form-actions>
+      <button type="submit" class="btn btn--primary">Add project</button>
+      <button type="button" class="btn btn--ghost" (click)="cancel()">Cancel</button>
+    </app-ui-form-actions>
+  </form>
+</app-modal-shell>

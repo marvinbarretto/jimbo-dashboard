@@ -193,6 +193,12 @@ button {
     color: var(--color-text-soft);
   }
 
+  &--sm {
+    min-height: 2.2rem;
+    padding-inline: 0.75rem;
+    font-size: 0.7rem;
+  }
+
   &:hover {
     text-decoration: none;
     border-color: var(--color-accent);
@@ -369,6 +375,13 @@ h2 { font-size: 1.25rem; font-weight: 600; }
   max-height: calc(100vh - 8rem);
   display: flex;
   margin-top: 6rem; // drop from top so it feels like a command palette
+}
+
+// CDK Dialog panel for the project create modal. Quick form, modest width.
+.cdk-overlay-pane.project-form-dialog {
+  width: min(560px, calc(100vw - 2rem));
+  max-height: calc(100vh - 4rem);
+  display: flex;
 }
 
 // CDK Dialog panel for the vault-item detail modal. Sized to the viewport

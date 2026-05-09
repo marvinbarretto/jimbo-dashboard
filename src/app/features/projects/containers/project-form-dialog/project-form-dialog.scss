@@ -1,0 +1,61 @@
+.project-form-dialog__title {
+  margin: 0;
+}
+
+.project-form-dialog__form {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.field--inline {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 0;
+
+  .field { margin-bottom: 1.25rem; }
+}
+
+.field-error {
+  font-size: 0.7rem;
+  color: var(--color-danger, #a33);
+  margin: 0.15rem 0 0;
+}
+
+.color-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  &__preview {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid var(--color-border);
+  }
+}
+
+.color-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.color-swatch {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 100ms, border-color 100ms;
+  outline-offset: 3px;
+
+  &:hover { transform: scale(1.15); }
+
+  &--selected {
+    border-color: var(--color-text, #111);
+    transform: scale(1.15);
+  }
+}
