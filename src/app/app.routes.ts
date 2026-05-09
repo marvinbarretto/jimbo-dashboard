@@ -24,7 +24,7 @@ export const routes: Routes = [
   {
     path: 'mail-activity',
     title: 'Mail activity',
-    loadComponent: () => import('./features/mail-activity/mail-activity-page').then(m => m.MailActivityPage),
+    loadComponent: () => import('./features/mail-activity/containers/mail-activity-page/mail-activity-page').then(m => m.MailActivityPage),
   },
   {
     path: 'shopping',
@@ -77,7 +77,7 @@ export const routes: Routes = [
   {
     path: 'stream',
     title: 'Stream',
-    loadComponent: () => import('./features/stream/stream-page/stream-page').then(m => m.StreamPage),
+    loadComponent: () => import('./features/stream/containers/stream-page/stream-page').then(m => m.StreamPage),
   },
   {
     path: 'pomo',
@@ -115,6 +115,8 @@ export const routes: Routes = [
       { path: 'loading-states',          loadComponent: () => import('./features/ui-lab/sections/loading-states-section').then(m => m.LoadingStatesSection) },
       { path: 'datetime-pipes',          loadComponent: () => import('./features/ui-lab/sections/datetime-pipes-section').then(m => m.DatetimePipesSection) },
       { path: 'form-actions',            loadComponent: () => import('./features/ui-lab/sections/form-actions-section').then(m => m.FormActionsSection) },
+      { path: 'ui-button',               loadComponent: () => import('./features/ui-lab/sections/ui-button-section').then(m => m.UiButtonSection) },
+      { path: 'ui-add-tile',             loadComponent: () => import('./features/ui-lab/sections/ui-add-tile-section').then(m => m.UiAddTileSection) },
       { path: 'project-card',            loadComponent: () => import('./features/ui-lab/sections/project-card-section').then(m => m.ProjectCardSection) },
       { path: 'epic-row',                loadComponent: () => import('./features/ui-lab/sections/epic-row-section').then(m => m.EpicRowSection) },
       { path: 'actor-avatar',            loadComponent: () => import('./features/ui-lab/sections/actor-avatar-section').then(m => m.ActorAvatarSection) },

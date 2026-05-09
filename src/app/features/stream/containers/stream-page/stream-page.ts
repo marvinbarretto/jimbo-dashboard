@@ -6,12 +6,12 @@ import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
-import { VaultItemsService } from '../../vault-items/data-access/vault-items.service';
-import { CronJobNamePipe } from '../cron-job-name.pipe';
-import { CronJobsService, type StaleJob } from '../cron-jobs.service';
-import { ErrorAggregationService, type ErrorClass } from '../error-aggregation.service';
-import { EventDetailService } from '../event-detail.service';
-import { StreamService, type SystemEventSummary } from '../stream.service';
+import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
+import { CronJobNamePipe } from '../../cron-job-name.pipe';
+import { CronJobsService, type StaleJob } from '../../cron-jobs.service';
+import { ErrorAggregationService, type ErrorClass } from '../../error-aggregation.service';
+import { EventDetailService } from '../../event-detail.service';
+import { StreamService, type SystemEventSummary } from '../../stream.service';
 import { relativeTime } from '@shared/utils/datetime.utils';
 
 // en-GB enforces 24h clock; en-CA gives ISO-style YYYY-MM-DD for sortable

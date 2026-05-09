@@ -8,8 +8,8 @@ import { UiRefreshControl } from '@shared/components/ui-refresh-control/ui-refre
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { relativeTime } from '@shared/utils/datetime.utils';
 import { vaultItemId } from '@domain/ids';
-import { VaultItemsService } from '../vault-items/data-access/vault-items.service';
-import { MailActivityService, type EmailReport } from './mail-activity.service';
+import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
+import { MailActivityService, type EmailReport } from '../../mail-activity.service';
 
 interface PipelineStage {
   readonly key: 'discovered' | 'body' | 'gated' | 'verdict';

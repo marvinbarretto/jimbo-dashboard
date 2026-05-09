@@ -61,14 +61,23 @@ module.exports = tseslint.config(
       // (features/*/commands/*-commands.ts); reads happen via the dedicated
       // signal getters that boards and dialogs already use.
       //
-      // Path-level enforcement, not method-level — a follow-up will split
-      // each service into read-only + mutation surfaces so the rule can
-      // tighten further. Until then, `containers/`, `dialog/`, `commands/`,
-      // and `data-access/` are exempt because they legitimately need read
-      // access to the service signals.
+      // Type-only imports (`import type { Foo } from '.../foo.service'`) are
+      // allowed: they're erased at compile time so they don't pull in the
+      // implementation at runtime. This is the architectural distinction the
+      // rule cares about — coupling at the runtime layer, not the type layer.
+      //
+      // Path-level enforcement at runtime, not method-level — a follow-up
+      // will split each service into read-only + mutation surfaces so the
+      // rule can tighten further. Until then, `containers/`, `dialog/`,
+      // `commands/`, and `data-access/` are exempt because they legitimately
+      // need read access to the service signals.
+      //
+      // Uses @typescript-eslint/no-restricted-imports (rather than the core
+      // ESLint rule) for the `allowTypeImports` option.
       //
       // See docs/architecture/lint-rules.md (rule VAULT-COMMANDS-001).
-      'no-restricted-imports': [
+      'no-restricted-imports': 'off',
+      '@typescript-eslint/no-restricted-imports': [
         'error',
         {
           patterns: [
@@ -78,8 +87,9 @@ module.exports = tseslint.config(
                 '**/data-access/*.service.ts',
                 '@features/*/data-access/*.service',
               ],
+              allowTypeImports: true,
               message:
-                'Components must not import data-access services. Use the command layer (features/*/commands/) for mutations. See docs/architecture/lint-rules.md (VAULT-COMMANDS-001).',
+                'Components must not import data-access services at runtime. Use the command layer (features/*/commands/) for mutations. Type-only imports (`import type`) are allowed. See docs/architecture/lint-rules.md (VAULT-COMMANDS-001).',
             },
           ],
         },
@@ -104,7 +114,7 @@ module.exports = tseslint.config(
       '**/dialog/**/*.ts',
     ],
     rules: {
-      'no-restricted-imports': 'off',
+      '@typescript-eslint/no-restricted-imports': 'off',
     },
   },
 
@@ -113,7 +123,7 @@ module.exports = tseslint.config(
   {
     files: ['**/*.spec.ts', '**/*.test.ts'],
     rules: {
-      'no-restricted-imports': 'off',
+      '@typescript-eslint/no-restricted-imports': 'off',
     },
   },
 
@@ -136,11 +146,6 @@ module.exports = tseslint.config(
       // pass everything down via the card-context interface.
       'src/app/features/grooming/components/grooming-card/grooming-card.ts',
 
-      // mail-activity-page is a feature container without a `containers/`
-      // folder. Should move into containers/ subfolder OR migrate reads
-      // through a command/query layer.
-      'src/app/features/mail-activity/mail-activity-page.ts',
-
       // mail-dataset-card reads aggregated data straight from jimbo-data;
       // the parent should pass enriched data via inputs.
       'src/app/features/mail/components/mail-dataset-card/mail-dataset-card.ts',
@@ -154,10 +159,6 @@ module.exports = tseslint.config(
       // standard exemption will cover it. Cosmetic; no behaviour change.
       'src/app/features/stream/cron-jobs.service.ts',
 
-      // stream-page is a feature container without a `containers/` folder.
-      // Same fix as mail-activity-page.
-      'src/app/features/stream/stream-page/stream-page.ts',
-
       // thread message-composer + thread-view are leaf components reaching
       // into thread + attachments services. Parent thread-page should own
       // the data and inject via inputs / outputs.
@@ -169,14 +170,13 @@ module.exports = tseslint.config(
       // re-evaluate if/when these services move to APP_INITIALIZER.
       'src/app/app.ts',
 
-      // Top-level api-data feature lives at feature root without a
-      // containers/ split. Same shape as mail-activity-page.
-      'src/app/features/api-data/data-pages.ts',
-      'src/app/features/api-data/components/dataset-card/dataset-card.ts',
+      // endpoint-panel injects JimboDataService at runtime to fetch its own
+      // payload. Genuine boundary violation — leaf component should receive
+      // payload via inputs from a parent container. Refactor pending.
       'src/app/features/api-data/components/endpoint-panel/endpoint-panel.ts',
     ],
     rules: {
-      'no-restricted-imports': 'off',
+      '@typescript-eslint/no-restricted-imports': 'off',
     },
   },
 );

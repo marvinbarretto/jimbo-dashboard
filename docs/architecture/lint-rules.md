@@ -38,15 +38,22 @@ context is what makes the doc valuable.
 
 ## Active rules
 
-### VAULT-COMMANDS-001 — Components must not import data-access services
+### VAULT-COMMANDS-001 — Components must not import data-access services at runtime
 
-**ESLint rule:** `no-restricted-imports`
+**ESLint rule:** `@typescript-eslint/no-restricted-imports` with `allowTypeImports: true`
 **Severity:** error
 **Scope:** all `.ts` files under `src/app/`, except the directory exemptions listed below.
 
-**What it forbids.** Importing any module matching
+**What it forbids.** Runtime imports of any module matching
 `**/data-access/*.service` (e.g. `vault-items.service`, `dispatch.service`,
 `thread.service`) from a file outside the allowed seam directories.
+
+**What it allows.** Type-only imports — `import type { Foo } from '.../foo.service'` —
+are explicitly permitted everywhere. They're erased at compile time so they
+don't pull in the implementation at runtime, which is the architectural
+distinction the rule cares about. We use `@typescript-eslint/no-restricted-imports`
+(rather than the core ESLint rule) specifically for the `allowTypeImports`
+option.
 
 **Why.** Vault item lifecycle logic is a funnel. When mutation calls (`archive`,
 `setGroomingStatus`, `setCompleted`, `rejectItem`) live in scattered UI
@@ -97,18 +104,21 @@ maturity ratchet.
 | File | Owns the violation because… | Refactor plan |
 |------|---|---|
 | `shared/components/smart-composer-input/` | Reads actors / projects / vault-items for @-mention triggers | Move to read-only signal surface when services split |
-| `features/grooming/components/grooming-card/grooming-card.ts` | Reads thread + vault-items for live snapshot | Lift reads into the parent container; pass via `card-context` |
-| `features/mail-activity/mail-activity-page.ts` | Container colocated with components; no `containers/` folder | Move under `containers/` subfolder |
+| `features/grooming/components/grooming-card/grooming-card.ts` | Reads vault-items for parent seq lookup (thread coupling already removed via ThreadCommands) | Lift remaining read into the parent container; pass via `card-context` |
 | `features/mail/components/mail-dataset-card/mail-dataset-card.ts` | Reads aggregated jimbo-data straight | Parent passes enriched data via inputs |
 | `features/questions/components/question-card/question-card.ts` | Reads actors + vault-items inline | Parent resolves and passes via inputs |
 | `features/stream/cron-jobs.service.ts` | Lives at feature root, not in `data-access/` | Move under `data-access/` |
-| `features/stream/stream-page/stream-page.ts` | Container without `containers/` folder | Same as `mail-activity-page` |
 | `features/thread/components/message-composer/message-composer.ts` | Reads attachments service | Parent thread-page owns data |
 | `features/thread/components/thread-view/thread-view.ts` | Reads thread + attachments | Parent thread-page owns data |
 | `app.ts` | Bootstraps several services as side effect | Acceptable for app shell; revisit if/when services move to `APP_INITIALIZER` |
-| `features/api-data/data-pages.ts` | Container without `containers/` folder | Same as `mail-activity-page` |
-| `features/api-data/components/dataset-card/dataset-card.ts` | Reads aggregated data | Parent passes via inputs |
-| `features/api-data/components/endpoint-panel/endpoint-panel.ts` | Reads aggregated data | Parent passes via inputs |
+| `features/api-data/components/endpoint-panel/endpoint-panel.ts` | Injects JimboDataService at runtime to fetch its own payload | Lift fetch into parent container; pass payload via inputs |
+
+#### Recently resolved (kept for the historical record)
+
+- `features/mail-activity/mail-activity-page.ts` — moved into `containers/mail-activity-page/`
+- `features/stream/stream-page/stream-page.ts` — moved into `containers/stream-page/`
+- `features/api-data/data-pages.ts` — its only data-access import is type-only; now allowed under `allowTypeImports`
+- `features/api-data/components/dataset-card/dataset-card.ts` — file no longer exists; stale entry removed
 
 ### THREAD-COMMANDS-002 — Thread mutations go through ThreadCommands
 
