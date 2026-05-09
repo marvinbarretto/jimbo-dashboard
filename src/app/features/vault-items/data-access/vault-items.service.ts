@@ -18,6 +18,7 @@ import { VaultItemProjectsService } from './vault-item-projects.service';
 import { ToastService } from '@shared/components/toast/toast.service';
 import {
   withOptimisticUpdate,
+  withOptimisticCreate,
   withOptimisticRemove,
 } from '@shared/data-access/with-optimistic';
 import { isSeedMode } from '@shared/seed-mode';
@@ -118,9 +119,11 @@ export class VaultItemsService {
       children_count: 0, latest_event: null, latest_message: null,
       days_in_column: 0,
     };
-    this._items.update(items => [optimistic, ...items]);
 
-    if (isSeedMode()) return;
+    if (isSeedMode()) {
+      this._items.update(items => [optimistic, ...items]);
+      return;
+    }
 
     // source_kind/source_ref tag the row as operator-created so the execution
     // board's manual-track filter (`source.kind === 'manual'`) survives reload.
@@ -132,13 +135,17 @@ export class VaultItemsService {
     };
     if (input.manual_priority != null) body['manual_priority'] = input.manual_priority;
 
-    this.http.post<ApiVaultNoteResponse>(this.url, body).subscribe({
-      next: (note) => {
-        const realId = vaultItemId(note.id);
-        const realSeq = Number(note.seq);
-        const real: VaultItem = { ...optimistic, id: realId, seq: realSeq };
-        this._items.update(items => items.map(i => i.id === tempId ? real : i));
-        this.toast.success(`"${trimmed}" created · #${realSeq}`);
+    withOptimisticCreate(this._items, this.toast, {
+      optimistic,
+      // Default 'prepend' — board capture inputs add fresh items at the top.
+      request: this.http.post<ApiVaultNoteResponse>(this.url, body),
+      realFromResponse: (raw) => {
+        const note = raw as ApiVaultNoteResponse;
+        return { ...optimistic, id: vaultItemId(note.id), seq: Number(note.seq) };
+      },
+      errorMessage: `Failed to create "${trimmed}"`,
+      onSuccess: (real) => {
+        this.toast.success(`"${trimmed}" created · #${real.seq}`);
         // Caller (typically a board) gets the real seq so it can deep-link
         // straight into the detail dialog for in-place editing.
         onCreated?.(real);
@@ -148,33 +155,33 @@ export class VaultItemsService {
         // any drift in a follow-up so the UI sees what we asked for.
         const patch: Record<string, unknown> = {};
         if (groomingStatus !== 'ungroomed') patch['grooming_status'] = groomingStatus;
-        if (note.assigned_to !== this.currentActorId) patch['assigned_to'] = this.currentActorId;
+        // Server sets assigned_to from session; we asked for currentActorId. If
+        // they differ, push the override.
+        const realRow = this.getById(real.id);
+        if (realRow?.assigned_to !== this.currentActorId) patch['assigned_to'] = this.currentActorId;
         if (Object.keys(patch).length === 0) return;
-        this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${realSeq}`, patch).subscribe({
-          next: () => this._items.update(items => items.map(i => i.id === realId
+        this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${real.seq}`, patch).subscribe({
+          next: () => this._items.update(items => items.map(i => i.id === real.id
             ? { ...i, grooming_status: groomingStatus, assigned_to: this.currentActorId }
             : i)),
           error: () => this.toast.error('Created but status/owner follow-up failed'),
         });
       },
-      error: () => {
-        this._items.update(items => items.filter(i => i.id !== tempId));
-        this.toast.error(`Failed to create "${trimmed}"`);
-      },
     });
   }
 
-  // Optimistic create. `created` event emitted after server confirms — we need
-  // the real vault_item_id, so we can't emit the event against the temp id.
+  // Optimistic create from the full vault-item-form. `created` event emits
+  // after the server confirms — we need the real vault_item_id, so we can't
+  // emit against the temp id. Appended (not prepended) so the form-driven
+  // flow's downstream consumers see items in arrival order.
   create(payload: CreateVaultItemPayload): void {
     const now = new Date().toISOString();
-    // Temp id and seq for the optimistic row; server will assign real values on confirm.
     const tempId = vaultItemId(crypto.randomUUID());
     const optimistic: VaultItem = { ...payload, id: tempId, seq: -1, archived_at: null, created_at: now };
-    this._items.update(items => [...items, optimistic]);
 
     if (isSeedMode()) {
       // No server to assign a real seq — keep the temp row, emit the event.
+      this._items.update(items => [...items, optimistic]);
       this.activityService.post({
         type: 'created',
         vault_item_id: tempId,
@@ -187,39 +194,42 @@ export class VaultItemsService {
     // (no nested `source`, no array tags/AC, no derived embeds) — flatten before posting.
     const body = toApiCreateBody(payload);
 
-    this.http.post<ApiVaultNoteResponse>(this.url, body)
-      .subscribe({
-        next: (created) => {
-          // Keep the optimistic shape (which is already correct) and just splice in
-          // the server-managed fields. The raw API response is the production VaultNote
-          // shape (string tags, null AC, no embeds) — replacing wholesale would corrupt
-          // the row until the next board reload.
-          const realId = vaultItemId(created.id);
-          const realSeq = Number(created.seq);
-          this._items.update(items => items.map(i => i.id === tempId
-            ? { ...optimistic, id: realId, seq: realSeq, created_at: created.created_at ?? now }
-            : i));
-          this.activityService.post({
-            type: 'created',
-            vault_item_id: realId,
-            actor_id: this.currentActorId,
+    withOptimisticCreate(this._items, this.toast, {
+      optimistic,
+      position: 'append',
+      request: this.http.post<ApiVaultNoteResponse>(this.url, body),
+      // Keep the optimistic shape (already correct) and splice in only the
+      // server-managed fields. The raw API response is the production VaultNote
+      // shape (string tags, null AC, no embeds) — replacing wholesale would
+      // corrupt the row until the next board reload.
+      realFromResponse: (raw) => {
+        const created = raw as ApiVaultNoteResponse;
+        return {
+          ...optimistic,
+          id: vaultItemId(created.id),
+          seq: Number(created.seq),
+          created_at: created.created_at ?? now,
+        };
+      },
+      errorMessage: `Failed to create "${payload.title}"`,
+      onSuccess: (real) => {
+        this.activityService.post({
+          type: 'created',
+          vault_item_id: real.id,
+          actor_id: this.currentActorId,
+        });
+        // Apply fields the create endpoint doesn't accept (grooming_status,
+        // assigned_to overrides) as a follow-up PATCH, so the server state
+        // matches what the form asked for.
+        const followUp = createFollowUpPatch(payload);
+        if (Object.keys(followUp).length > 0) {
+          this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${real.seq}`, followUp).subscribe({
+            error: () => this.toast.error('Created but follow-up update failed'),
           });
-          // Apply any fields the create endpoint doesn't accept (grooming_status,
-          // assigned_to overrides, archived_at) as a follow-up PATCH, so the
-          // server state matches what the form asked for.
-          const followUp = createFollowUpPatch(payload);
-          if (Object.keys(followUp).length > 0) {
-            this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${realSeq}`, followUp).subscribe({
-              error: () => this.toast.error('Created but follow-up update failed'),
-            });
-          }
-          this.toast.success(`"${payload.title}" created`);
-        },
-        error: () => {
-          this._items.update(items => items.filter(i => i.id !== tempId));
-          this.toast.error(`Failed to create "${payload.title}"`);
-        },
-      });
+        }
+        this.toast.success(`"${payload.title}" created`);
+      },
+    });
   }
 
   // Generic patch. Does not emit an event — callers use semantic mutations below
@@ -490,7 +500,6 @@ export class VaultItemsService {
         reason: trimmed,
       },
     };
-    this._items.update(items => items.map(i => i.id === id ? optimistic : i));
 
     const threadEvent: EventPayload = {
       type: 'thread_message_posted',
@@ -512,13 +521,26 @@ export class VaultItemsService {
     };
 
     if (isSeedMode()) {
+      this._items.update(items => items.map(i => i.id === id ? optimistic : i));
       this.activityService.post(threadEvent);
       this.activityService.post(rejectEvent);
       return;
     }
 
-    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, { grooming_status: 'needs_rework', assigned_to: newOwnerId }).subscribe({
-      next: () => {
+    // The PATCH is the source of truth — its success/failure drives optimistic
+    // commit/rollback via the helper. Inside onSuccess we fire the thread
+    // message POST as a fire-and-forget follow-up: if it fails, the rejection
+    // still stands but the explanation is missing — log only, no toast, no
+    // rollback (the primary action did persist).
+    withOptimisticUpdate(this._items, this.toast, {
+      prior,
+      next: optimistic,
+      request: this.http.patch<ApiVaultNoteResponse>(
+        `${this.url}/by-seq/${prior.seq}`,
+        { grooming_status: 'needs_rework', assigned_to: newOwnerId },
+      ),
+      errorMessage: `Rejection failed — "${prior.title}" reverted`,
+      onSuccess: () => {
         this.http.post(`${environment.dashboardApiUrl}/api/thread-messages`, {
           id: tmId,
           vault_item_id: id,
@@ -528,20 +550,11 @@ export class VaultItemsService {
           in_reply_to: null,
           answered_by: null,
         }).subscribe({
-          // The PATCH (rejection state) already succeeded; this thread message
-          // is a follow-up. If it fails, the rejection still stands but the
-          // explanation is missing — log so it's debuggable; no toast since
-          // the primary action did persist.
           error: (err) => console.error('[vault] rejection thread message failed:', err),
         });
         this.activityService.post(threadEvent);
         this.activityService.post(rejectEvent);
         this.toast.success(`"${prior.title}" sent back for rework`);
-      },
-      error: (err) => {
-        console.warn('[rejectItem] PATCH failed, rolling back optimistic update', err);
-        this._items.update(items => items.map(i => i.id === id ? prior : i));
-        this.toast.error(`Rejection failed — "${prior.title}" reverted`);
       },
     });
   }
@@ -555,6 +568,13 @@ export class VaultItemsService {
    * Draft → Item mode) AND wants project junctions wired in the same gesture.
    * `create()` doesn't take projects; `createOnBoard()` doesn't take body /
    * tags / assignee / related links. This is the unified-dialog shape.
+   *
+   * NOT optimistic. Unlike create() and createOnBoard(), this method waits
+   * for the POST to confirm before adding the row to the store. The
+   * dialog form is complex enough that a server-side validation failure
+   * after an optimistic insert would create a confusing flash-and-revert.
+   * `withOptimisticCreate` therefore doesn't fit; the helper is for
+   * optimistic mutations and this is deliberately not one.
    *
    * Partial-failure policy: the note POST is the source of truth. If it
    * succeeds we resolve with the new item even if a project junction POST

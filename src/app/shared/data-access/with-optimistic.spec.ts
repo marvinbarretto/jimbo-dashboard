@@ -147,6 +147,23 @@ describe('withOptimisticCreate', () => {
     expect(store()).toHaveLength(1);
     expect(toast.calls).toEqual(['create failed']);
   });
+
+  it("appends the optimistic row when position is 'append'", () => {
+    const toast = makeToast();
+    const optimistic: Row = { id: 'temp-1', title: 'new', status: 'a' };
+
+    withOptimisticCreate(store, toast, {
+      optimistic,
+      request: of({ id: 'real-1' }),
+      realFromResponse: (r) => ({ ...optimistic, id: (r as { id: string }).id }),
+      errorMessage: 'failed',
+      position: 'append',
+    });
+
+    // Existing row stays at index 0; new row appears at the end.
+    expect(store()[0].id).toBe('existing');
+    expect(store()[1].id).toBe('real-1');
+  });
 });
 
 describe('withOptimisticRemove', () => {

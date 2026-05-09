@@ -60,13 +60,25 @@ export interface OptimisticCreate<T extends { id: unknown }> {
   realFromResponse(response: unknown): T;
   errorMessage: string;
   onSuccess?(real: T): void;
+  /**
+   * Where to splice the optimistic row into the store.
+   *
+   * Default 'prepend' — newest-first lists (kanban columns, board capture
+   * inputs) want fresh items at the top. Use 'append' for views where the
+   * insertion order matters semantically (e.g. legacy `create()` callers
+   * whose downstream sort/filter assumes items arrive at the end).
+   */
+  position?: 'prepend' | 'append';
 }
 
 /**
- * Create with temp-id replacement. Prepends `optimistic` (with its temp id)
- * immediately; on success, replaces it with `realFromResponse(response)`.
- * On failure, removes the temp row and toasts. Order matters — prepend so
- * fresh items appear at the top of lists; tests assert that.
+ * Create with temp-id replacement. Splices `optimistic` (with its temp id)
+ * into the store immediately; on success, replaces it with
+ * `realFromResponse(response)`. On failure, removes the temp row and toasts.
+ *
+ * The replacement on success uses id-based mapping rather than positional
+ * splice so the row stays where it was originally inserted, regardless of
+ * any concurrent edits to other rows in between.
  */
 export function withOptimisticCreate<T extends { id: unknown }>(
   store: WritableSignal<T[]>,
@@ -74,7 +86,10 @@ export function withOptimisticCreate<T extends { id: unknown }>(
   ctx: OptimisticCreate<T>,
 ): void {
   const tempId = ctx.optimistic.id;
-  store.update(items => [ctx.optimistic, ...items]);
+  const append = ctx.position === 'append';
+  store.update(items => append
+    ? [...items, ctx.optimistic]
+    : [ctx.optimistic, ...items]);
   ctx.request.subscribe({
     next: response => {
       const real = ctx.realFromResponse(response);

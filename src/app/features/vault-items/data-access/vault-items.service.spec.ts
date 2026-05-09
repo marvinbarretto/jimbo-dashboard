@@ -621,4 +621,162 @@ describe('VaultItemsService mutations (HTTP mode, withOptimistic-backed)', () =>
       expect(lastErrorToast()).toMatch(/delete failed/i);
     });
   });
+
+  // ── createOnBoard ─────────────────────────────────────────────────────
+  describe('createOnBoard', () => {
+    it('POSTs the slim body, prepends the optimistic row, swaps real id on success', () => {
+      const beforeCount = service.items().length;
+      service.createOnBoard({ title: 'fresh capture', manual_priority: 1 });
+
+      // Optimistic row is at the top of the list with the temp id.
+      const optimistic = service.items()[0];
+      expect(optimistic.title).toBe('fresh capture');
+      expect(optimistic.seq).toBe(-1);
+      expect(service.items().length).toBe(beforeCount + 1);
+
+      const req = http.expectOne(r => r.method === 'POST' && r.url.endsWith('/api/vault/notes'));
+      expect(req.request.body).toMatchObject({
+        title: 'fresh capture',
+        type: 'task',
+        source_kind: 'manual',
+        source_ref: 'board',
+        manual_priority: 1,
+      });
+      req.flush({ id: 'item-2', seq: '101', title: 'fresh capture', assigned_to: 'marvin' });
+
+      // Temp id replaced with real; row stays in original (prepended) position.
+      expect(service.items()[0].id).toBe('item-2');
+      expect(service.items()[0].seq).toBe(101);
+      expect(lastSuccessToast()).toMatch(/created/i);
+    });
+
+    it('removes the temp row and toasts on POST error', () => {
+      const beforeCount = service.items().length;
+      service.createOnBoard({ title: 'doomed' });
+
+      const req = http.expectOne(r => r.method === 'POST');
+      req.error(new ProgressEvent('network'), { status: 500, statusText: 'boom' });
+
+      expect(service.items().length).toBe(beforeCount);
+      expect(lastErrorToast()).toMatch(/failed to create/i);
+    });
+
+    it('fires a follow-up PATCH when grooming_status differs from ungroomed', () => {
+      service.createOnBoard({ title: 'queued ready', grooming_status: 'ready' });
+
+      const post = http.expectOne(r => r.method === 'POST');
+      post.flush({ id: 'item-3', seq: '102', title: 'queued ready', assigned_to: 'marvin' });
+
+      const patch = http.expectOne(r => r.method === 'PATCH' && r.url.endsWith('/by-seq/102'));
+      expect(patch.request.body).toMatchObject({ grooming_status: 'ready' });
+      patch.flush({ id: 'item-3', seq: '102' });
+    });
+  });
+
+  // ── create ────────────────────────────────────────────────────────────
+  describe('create', () => {
+    function fullPayload(over: Partial<Record<string, unknown>> = {}) {
+      return {
+        title: 'full form item',
+        body: '',
+        type: 'task' as const,
+        category: null,
+        assigned_to: null,
+        tags: [],
+        acceptance_criteria: [],
+        grooming_status: 'ungroomed' as const,
+        ai_priority: null,
+        manual_priority: null,
+        ai_rationale: null,
+        priority_confidence: null,
+        actionability: null,
+        parent_id: null,
+        is_epic: false,
+        due_at: null,
+        completed_at: null,
+        source: null,
+        ...over,
+      };
+    }
+
+    it('appends the optimistic row (not prepend) and swaps the real id on success', () => {
+      const beforeCount = service.items().length;
+      service.create(fullPayload());
+
+      // Append: optimistic ends up at the tail, not the head.
+      expect(service.items()[beforeCount].title).toBe('full form item');
+
+      const req = http.expectOne(r => r.method === 'POST' && r.url.endsWith('/api/vault/notes'));
+      expect(req.request.body).toMatchObject({ title: 'full form item', type: 'task' });
+      req.flush({ id: 'item-9', seq: '200', title: 'full form item', created_at: '2026-05-09T10:00:00Z' });
+
+      const realRow = service.items().find(i => i.title === 'full form item')!;
+      expect(realRow.id).toBe('item-9');
+      expect(realRow.seq).toBe(200);
+      // Activity event fired only after the real id is known.
+      expect(activityPosts.map(e => e.type)).toContain('created');
+      expect(activityPosts.find(e => e.type === 'created')?.['vault_item_id']).toBe('item-9');
+      expect(lastSuccessToast()).toMatch(/created/i);
+    });
+
+    it('removes the temp row and toasts on error', () => {
+      const beforeCount = service.items().length;
+      service.create(fullPayload());
+
+      const req = http.expectOne(r => r.method === 'POST');
+      req.error(new ProgressEvent('network'), { status: 500, statusText: 'boom' });
+
+      expect(service.items().length).toBe(beforeCount);
+      expect(activityPosts).toHaveLength(0);
+      expect(lastErrorToast()).toMatch(/failed to create/i);
+    });
+  });
+
+  // ── rejectItem ────────────────────────────────────────────────────────
+  describe('rejectItem (HTTP mode)', () => {
+    it('PATCHes the vault item, posts a thread message, emits two events on success', () => {
+      const id = vaultItemId('item-1');
+      service.rejectItem(id, 'AC are too vague — needs splitting', actorId('boris'));
+
+      // Optimistic state visible immediately.
+      const after = service.getById(id)!;
+      expect(after.grooming_status).toBe('needs_rework');
+      expect(after.assigned_to).toBe(actorId('boris'));
+
+      const patch = http.expectOne(r => r.method === 'PATCH' && r.url.endsWith('/by-seq/100'));
+      expect(patch.request.body).toMatchObject({
+        grooming_status: 'needs_rework',
+        assigned_to: 'boris',
+      });
+      patch.flush({ id: 'item-1', seq: '100' });
+
+      // After PATCH success: thread-message POST fires.
+      const tm = http.expectOne(r => r.method === 'POST' && r.url.endsWith('/api/thread-messages'));
+      expect(tm.request.body).toMatchObject({
+        kind: 'rejection',
+        body: 'AC are too vague — needs splitting',
+      });
+      tm.flush({});
+
+      // Both audit events posted; success toast fired.
+      const types = activityPosts.map(e => e.type);
+      expect(types).toContain('thread_message_posted');
+      expect(types).toContain('rejected');
+      expect(lastSuccessToast()).toMatch(/sent back for rework/i);
+    });
+
+    it('rolls back the optimistic state on PATCH error', () => {
+      const id = vaultItemId('item-1');
+      service.rejectItem(id, 'reason that is long enough', actorId('boris'));
+
+      const patch = http.expectOne(r => r.method === 'PATCH');
+      patch.error(new ProgressEvent('network'), { status: 500, statusText: 'boom' });
+
+      const restored = service.getById(id)!;
+      expect(restored.grooming_status).toBe('decomposed');
+      expect(restored.assigned_to).toBe(actorId('marvin'));
+      expect(activityPosts).toHaveLength(0);
+      expect(lastErrorToast()).toMatch(/rejection failed/i);
+    });
+  });
 });
