@@ -11,6 +11,7 @@ import { environment } from '../../../../environments/environment';
 import { ToastService } from '@shared/components/toast/toast.service';
 import {
   withOptimisticRemove,
+  withOptimisticUpdate,
 } from '@shared/data-access/with-optimistic';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
@@ -81,6 +82,10 @@ export class DispatchService {
   // Operator-triggered retry of a failed dispatch. Flips status back to 'approved',
   // clears the error, increments retry_count. Production may prefer a new row per
   // attempt to preserve full history; we mutate in place here for simplicity.
+  //
+  // TODO: jimbo-api has no PATCH-by-dispatch-id endpoint. POST /api/dispatch/approve
+  // takes item_ids (task IDs) not dispatch IDs. Needs a dedicated retry endpoint.
+  // For now this 404s and the optimistic update reverts cleanly via withOptimisticUpdate.
   retry(id: DispatchId): void {
     const prior = this.getById(id);
     if (!prior || prior.status !== 'failed') return;
@@ -92,13 +97,12 @@ export class DispatchService {
       completed_at: null,
       retry_count: prior.retry_count + 1,
     };
-    this._entries.update(es => es.map(e => e.id === id ? optimistic : e));
 
-    if (isSeedMode()) return;
+    if (isSeedMode()) {
+      this._entries.update(es => es.map(e => e.id === id ? optimistic : e));
+      return;
+    }
 
-    // TODO: jimbo-api has no PATCH-by-dispatch-id endpoint. POST /api/dispatch/approve
-    // takes item_ids (task IDs) not dispatch IDs. Needs a dedicated retry endpoint.
-    // For now this 404s and the optimistic update reverts cleanly.
     const patch = {
       status:        'approved' as const,
       error_message: null,
@@ -106,8 +110,20 @@ export class DispatchService {
       completed_at:  null,
       retry_count:   prior.retry_count + 1,
     };
-    this.http.patch<unknown>(`${environment.dashboardApiUrl}/api/dispatch/${encodeURIComponent(id)}`, patch).subscribe({
-      next: (raw) => {
+
+    withOptimisticUpdate(this._entries, this.toast, {
+      prior,
+      next: optimistic,
+      request: this.http.patch<unknown>(
+        `${environment.dashboardApiUrl}/api/dispatch/${encodeURIComponent(id)}`,
+        patch,
+      ),
+      errorMessage: 'Retry failed — changes reverted',
+      // Successful HTTP response — but we still need to validate the payload
+      // shape before swapping in server-canonical state. A schema mismatch
+      // is NOT a rollback case (the server already committed); we warn the
+      // operator and leave the optimistic state in place.
+      onSuccess: (raw) => {
         const result = ApiDispatchEntrySchema.safeParse(raw);
         if (!result.success) {
           console.error('[dispatch] PATCH retry response failed schema:', result.error.issues);
@@ -116,10 +132,6 @@ export class DispatchService {
         }
         this._entries.update(es => es.map(e => e.id === id ? toDispatchEntry(result.data) : e));
         this.toast.success('Dispatch queued for retry');
-      },
-      error: () => {
-        this._entries.update(es => es.map(e => e.id === id ? prior : e));
-        this.toast.error('Retry failed — changes reverted');
       },
     });
   }
