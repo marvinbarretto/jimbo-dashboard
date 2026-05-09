@@ -285,3 +285,340 @@ describe('VaultItemsService.createWithRelations (HTTP mode)', () => {
     ]);
   });
 });
+
+// ── HTTP-mode integration tests for mutations migrated to withOptimistic ───
+//
+// The helpers themselves have full unit coverage in
+// src/app/shared/data-access/with-optimistic.spec.ts. These tests prove the
+// WIRING — that each method calls the helper with the right HTTP shape, the
+// right activity event, the right toast, and that the rollback path works
+// end-to-end against HttpTestingController.
+//
+// One method per describe block, each with: success path (with side effects),
+// error rollback (with toast), and short-circuit no-ops where applicable.
+
+describe('VaultItemsService mutations (HTTP mode, withOptimistic-backed)', () => {
+  let service: VaultItemsService;
+  let http: HttpTestingController;
+  let toast: ToastService;
+  let activityPosts: { type: string; [k: string]: unknown }[];
+
+  // Minimal valid ApiVaultItem — schema requires every field. Helper accepts
+  // overrides so each test can tweak just what matters.
+  function fakeApiItem(overrides: Partial<Record<string, unknown>> = {}) {
+    return {
+      id:                   'item-1',
+      seq:                  100,
+      title:                'fixture',
+      type:                 'task',
+      status:               'active',
+      body:                 null,
+      ai_priority:          null,
+      manual_priority:      2,
+      priority_confidence:  null,
+      ai_rationale:         null,
+      actionability:        null,
+      assigned_to:          'marvin',
+      route:                'manual',
+      tags:                 [],
+      ready:                false,
+      is_epic:              false,
+      parent_id:            null,
+      acceptance_criteria:  null,
+      blocked_by:           null,
+      blocked_reason:       null,
+      blocked_at:           null,
+      due_at:               null,
+      created_at:           '2026-05-01T00:00:00Z',
+      updated_at:           '2026-05-01T00:00:00Z',
+      completed_at:         null,
+      grooming_status:      'decomposed',
+      grooming_started_at:  null,
+      source_kind:          'manual',
+      source_ref:           'marvin',
+      source_url:           null,
+      source_signal:        null,
+      primary_project_id:   null,
+      primary_project_name: null,
+      open_questions_count: 0,
+      latest_activity_at:   null,
+      children_count:       0,
+      latest_event:         null,
+      latest_message:       null,
+      days_in_column:       0,
+      ...overrides,
+    };
+  }
+
+  function setup(items: ReturnType<typeof fakeApiItem>[] = [fakeApiItem()]) {
+    TestBed.resetTestingModule();
+    window.history.replaceState({}, '', window.location.pathname);
+    resetSeedModeCache();
+    activityPosts = [];
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        VaultItemsService,
+        {
+          provide: ActivityEventsService,
+          useValue: { post: (e: { type: string }) => { activityPosts.push(e); } },
+        },
+        // VaultItemsService injects this transitively. Its real constructor
+        // fires GET /api/vault-item-projects which would leak through every
+        // test's http.verify(); the mock keeps the suite focused on the
+        // mutation paths we care about.
+        {
+          provide: VaultItemProjectsService,
+          useValue: {
+            loadFor: () => {},
+            projectsFor: () => () => [],
+            add: () => {},
+          },
+        },
+      ],
+    });
+    service = TestBed.inject(VaultItemsService);
+    http = TestBed.inject(HttpTestingController);
+    toast = TestBed.inject(ToastService);
+
+    const boardReq = http.expectOne(r => r.url.includes('/api/vault/board'));
+    boardReq.flush({ items, total: items.length, limit: 2000 });
+  }
+
+  function lastErrorToast(): string | undefined {
+    const errs = toast.toasts().filter(t => t.tone === 'error');
+    return errs[errs.length - 1]?.message;
+  }
+  function lastSuccessToast(): string | undefined {
+    const oks = toast.toasts().filter(t => t.tone === 'success');
+    return oks[oks.length - 1]?.message;
+  }
+
+  beforeEach(() => setup());
+
+  afterEach(() => {
+    http.verify();
+    resetSeedModeCache();
+  });
+
+  // ── archive ─────────────────────────────────────────────────────────────
+  describe('archive', () => {
+    it('PATCHes status=archived, sets archived_at optimistically, emits event on success', () => {
+      const id = vaultItemId('item-1');
+      service.archive(id);
+
+      expect(service.getById(id)?.archived_at).not.toBeNull();
+      const req = http.expectOne(r => r.method === 'PATCH' && r.url.endsWith('/by-seq/100'));
+      expect(req.request.body).toEqual({ status: 'archived' });
+      req.flush({ id: 'item-1', seq: '100' });
+
+      expect(activityPosts.map(e => e.type)).toContain('archived');
+      expect(lastSuccessToast()).toMatch(/archived/i);
+    });
+
+    it('rolls back on error and toasts', () => {
+      const id = vaultItemId('item-1');
+      service.archive(id);
+      const req = http.expectOne(r => r.method === 'PATCH');
+      req.error(new ProgressEvent('network'), { status: 500, statusText: 'boom' });
+
+      expect(service.getById(id)?.archived_at).toBeNull();
+      expect(activityPosts).toHaveLength(0);
+      expect(lastErrorToast()).toMatch(/archive failed/i);
+    });
+
+    it('is a no-op when already archived', () => {
+      setup([fakeApiItem({ status: 'archived' })]);
+      service.archive(vaultItemId('item-1'));
+      http.expectNone(r => r.method === 'PATCH');
+    });
+  });
+
+  // ── unarchive ───────────────────────────────────────────────────────────
+  describe('unarchive', () => {
+    it('PATCHes status=active and emits unarchived event on success', () => {
+      setup([fakeApiItem({ status: 'archived' })]);
+      service.unarchive(vaultItemId('item-1'));
+      const req = http.expectOne(r => r.method === 'PATCH');
+      expect(req.request.body).toEqual({ status: 'active' });
+      req.flush({ id: 'item-1', seq: '100' });
+
+      expect(activityPosts.map(e => e.type)).toContain('unarchived');
+      expect(lastSuccessToast()).toMatch(/restored/i);
+    });
+
+    it('is a no-op when already active', () => {
+      service.unarchive(vaultItemId('item-1'));
+      http.expectNone(r => r.method === 'PATCH');
+    });
+  });
+
+  // ── setCompleted ───────────────────────────────────────────────────────
+  describe('setCompleted', () => {
+    it('PATCHes status=done and emits completion_changed on success', () => {
+      const id = vaultItemId('item-1');
+      service.setCompleted(id, true);
+
+      expect(service.getById(id)?.completed_at).not.toBeNull();
+      const req = http.expectOne(r => r.method === 'PATCH');
+      expect(req.request.body).toEqual({ status: 'done' });
+      req.flush({ id: 'item-1', seq: '100' });
+
+      expect(activityPosts.map(e => e.type)).toContain('completion_changed');
+      expect(lastSuccessToast()).toMatch(/marked complete/i);
+    });
+
+    it('rolls back completed_at on error', () => {
+      const id = vaultItemId('item-1');
+      service.setCompleted(id, true);
+      const req = http.expectOne(r => r.method === 'PATCH');
+      req.error(new ProgressEvent('network'), { status: 500, statusText: 'boom' });
+
+      expect(service.getById(id)?.completed_at).toBeNull();
+      expect(activityPosts).toHaveLength(0);
+      expect(lastErrorToast()).toMatch(/completion update failed/i);
+    });
+
+    it('is a no-op when already in the requested state', () => {
+      service.setCompleted(vaultItemId('item-1'), false);
+      http.expectNone(r => r.method === 'PATCH');
+    });
+  });
+
+  // ── setGroomingStatus ──────────────────────────────────────────────────
+  describe('setGroomingStatus', () => {
+    it('PATCHes grooming_status, applies optimistically, emits event without success toast', () => {
+      const id = vaultItemId('item-1');
+      service.setGroomingStatus(id, 'ready');
+
+      expect(service.getById(id)?.grooming_status).toBe('ready');
+      const req = http.expectOne(r => r.method === 'PATCH');
+      expect(req.request.body).toEqual({ grooming_status: 'ready' });
+      req.flush({ id: 'item-1', seq: '100' });
+
+      expect(activityPosts.map(e => e.type)).toContain('grooming_status_changed');
+      // No success toast — drag-drop fires this every column move.
+      expect(lastSuccessToast()).toBeUndefined();
+    });
+
+    it('rolls back grooming_status on error', () => {
+      const id = vaultItemId('item-1');
+      service.setGroomingStatus(id, 'ready');
+      const req = http.expectOne(r => r.method === 'PATCH');
+      req.error(new ProgressEvent('network'), { status: 500, statusText: 'boom' });
+
+      expect(service.getById(id)?.grooming_status).toBe('decomposed');
+      expect(activityPosts).toHaveLength(0);
+      expect(lastErrorToast()).toMatch(/status change failed/i);
+    });
+  });
+
+  // ── reassign ──────────────────────────────────────────────────────────
+  describe('reassign', () => {
+    it('PATCHes assigned_to, applies optimistically, emits assigned event on success', () => {
+      const id = vaultItemId('item-1');
+      const next = actorId('boris');
+      service.reassign(id, next, 'cover for marvin');
+
+      expect(service.getById(id)?.assigned_to).toBe(next);
+      const req = http.expectOne(r => r.method === 'PATCH');
+      expect(req.request.body).toEqual({ assigned_to: 'boris' });
+      req.flush({ id: 'item-1', seq: '100' });
+
+      expect(activityPosts.map(e => e.type)).toContain('assigned');
+      expect(lastSuccessToast()).toMatch(/reassigned to boris/i);
+    });
+
+    it('rolls back assigned_to on error', () => {
+      const id = vaultItemId('item-1');
+      service.reassign(id, actorId('boris'), null);
+      const req = http.expectOne(r => r.method === 'PATCH');
+      req.error(new ProgressEvent('network'), { status: 500, statusText: 'boom' });
+
+      expect(service.getById(id)?.assigned_to).toBe(actorId('marvin'));
+      expect(lastErrorToast()).toMatch(/reassign failed/i);
+    });
+  });
+
+  // ── setEpic ───────────────────────────────────────────────────────────
+  describe('setEpic', () => {
+    it('PATCHes is_epic optimistically and persists on success without an event', () => {
+      const id = vaultItemId('item-1');
+      service.setEpic(id, true);
+
+      expect(service.getById(id)?.is_epic).toBe(true);
+      const req = http.expectOne(r => r.method === 'PATCH');
+      expect(req.request.body).toEqual({ is_epic: true });
+      req.flush({ id: 'item-1', seq: '100' });
+
+      expect(activityPosts).toHaveLength(0);
+    });
+
+    it('rolls back on error', () => {
+      const id = vaultItemId('item-1');
+      service.setEpic(id, true);
+      const req = http.expectOne(r => r.method === 'PATCH');
+      req.error(new ProgressEvent('network'), { status: 500, statusText: 'boom' });
+
+      expect(service.getById(id)?.is_epic).toBe(false);
+      expect(lastErrorToast()).toMatch(/epic toggle failed/i);
+    });
+
+    it('is a no-op when already in the requested state', () => {
+      service.setEpic(vaultItemId('item-1'), false);
+      http.expectNone(r => r.method === 'PATCH');
+    });
+  });
+
+  // ── update ────────────────────────────────────────────────────────────
+  describe('update', () => {
+    it('PATCHes the body, applies optimistically, emits no event', () => {
+      const id = vaultItemId('item-1');
+      service.update(id, { title: 'renamed' });
+
+      expect(service.getById(id)?.title).toBe('renamed');
+      const req = http.expectOne(r => r.method === 'PATCH');
+      expect(req.request.body).toMatchObject({ title: 'renamed' });
+      req.flush({ id: 'item-1', seq: '100' });
+
+      expect(activityPosts).toHaveLength(0);
+    });
+
+    it('rolls back the patch on error and toasts a generic message', () => {
+      const id = vaultItemId('item-1');
+      service.update(id, { title: 'renamed' });
+      const req = http.expectOne(r => r.method === 'PATCH');
+      req.error(new ProgressEvent('network'), { status: 500, statusText: 'boom' });
+
+      expect(service.getById(id)?.title).toBe('fixture');
+      expect(lastErrorToast()).toMatch(/update failed/i);
+    });
+  });
+
+  // ── remove ────────────────────────────────────────────────────────────
+  describe('remove', () => {
+    it('DELETEs by seq, removes from store optimistically, toasts on success', () => {
+      const id = vaultItemId('item-1');
+      service.remove(id);
+
+      expect(service.getById(id)).toBeUndefined();
+      const req = http.expectOne(r => r.method === 'DELETE' && r.url.endsWith('/by-seq/100'));
+      req.flush(null);
+
+      expect(lastSuccessToast()).toMatch(/deleted/i);
+    });
+
+    it('restores the row on error', () => {
+      const id = vaultItemId('item-1');
+      service.remove(id);
+      const req = http.expectOne(r => r.method === 'DELETE');
+      req.error(new ProgressEvent('network'), { status: 500, statusText: 'boom' });
+
+      expect(service.getById(id)).toBeDefined();
+      expect(lastErrorToast()).toMatch(/delete failed/i);
+    });
+  });
+});

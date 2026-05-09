@@ -16,6 +16,10 @@ import { environment } from '../../../../environments/environment';
 import { ActivityEventsService } from './activity-events.service';
 import { VaultItemProjectsService } from './vault-item-projects.service';
 import { ToastService } from '@shared/components/toast/toast.service';
+import {
+  withOptimisticUpdate,
+  withOptimisticRemove,
+} from '@shared/data-access/with-optimistic';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
 import { Observable } from 'rxjs';
@@ -226,22 +230,24 @@ export class VaultItemsService {
     const prior = this.getById(id);
     if (!prior) return;
     const optimistic = { ...prior, ...patch };
-    this._items.update(items => items.map(i => i.id === id ? optimistic : i));
 
-    if (isSeedMode()) return;
+    if (isSeedMode()) {
+      this._items.update(items => items.map(i => i.id === id ? optimistic : i));
+      return;
+    }
 
-    const body = toApiUpdateBody(patch);
-    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, body)
-      .subscribe({
-        // Trust the optimistic shape — the API response is the wider production
-        // VaultNote (different shape from VaultItem); replacing it wholesale would
-        // corrupt the row.
-        next: () => {},
-        error: () => {
-          this._items.update(items => items.map(i => i.id === id ? prior : i));
-          this.toast.error('Update failed — changes reverted');
-        },
-      });
+    // Trust the optimistic shape on success — the API response is the wider
+    // production VaultNote (different shape from VaultItem); replacing it
+    // wholesale would corrupt the row. So onSuccess is intentionally empty.
+    withOptimisticUpdate(this._items, this.toast, {
+      prior,
+      next: optimistic,
+      request: this.http.patch<ApiVaultNoteResponse>(
+        `${this.url}/by-seq/${prior.seq}`,
+        toApiUpdateBody(patch),
+      ),
+      errorMessage: 'Update failed — changes reverted',
+    });
   }
 
   // Sets archived_at and emits an `archived` event. Mirror method `unarchive` clears it.
@@ -249,10 +255,7 @@ export class VaultItemsService {
     const prior = this.getById(id);
     if (!prior || prior.archived_at !== null) return;
     const now = new Date().toISOString();
-    const patch: UpdateVaultItemPayload = { archived_at: now };
-    const optimistic = { ...prior, ...patch };
-    this._items.update(items => items.map(i => i.id === id ? optimistic : i));
-
+    const optimistic = { ...prior, archived_at: now };
     const event: EventPayload = {
       type: 'archived',
       vault_item_id: id,
@@ -262,32 +265,32 @@ export class VaultItemsService {
     };
 
     if (isSeedMode()) {
+      this._items.update(items => items.map(i => i.id === id ? optimistic : i));
       this.activityService.post(event);
       return;
     }
 
     // API doesn't accept `archived_at` — production uses `status='archived'`.
     // The dashboard keeps the derived `archived_at` locally for lifecycle helpers.
-    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, { status: 'archived' })
-      .subscribe({
-        next: () => {
-          this.activityService.post(event);
-          this.toast.success(`"${prior.title}" archived`);
-        },
-        error: () => {
-          this._items.update(items => items.map(i => i.id === id ? prior : i));
-          this.toast.error(`Archive failed — "${prior.title}" reverted`);
-        },
-      });
+    withOptimisticUpdate(this._items, this.toast, {
+      prior,
+      next: optimistic,
+      request: this.http.patch<ApiVaultNoteResponse>(
+        `${this.url}/by-seq/${prior.seq}`,
+        { status: 'archived' },
+      ),
+      errorMessage: `Archive failed — "${prior.title}" reverted`,
+      onSuccess: () => {
+        this.activityService.post(event);
+        this.toast.success(`"${prior.title}" archived`);
+      },
+    });
   }
 
   unarchive(id: VaultItemId, note: string | null = null): void {
     const prior = this.getById(id);
     if (!prior || prior.archived_at === null) return;
-    const patch: UpdateVaultItemPayload = { archived_at: null };
-    const optimistic = { ...prior, ...patch };
-    this._items.update(items => items.map(i => i.id === id ? optimistic : i));
-
+    const optimistic = { ...prior, archived_at: null };
     const event: EventPayload = {
       type: 'unarchived',
       vault_item_id: id,
@@ -296,22 +299,25 @@ export class VaultItemsService {
     };
 
     if (isSeedMode()) {
+      this._items.update(items => items.map(i => i.id === id ? optimistic : i));
       this.activityService.post(event);
       return;
     }
 
     // Mirror of archive() — API uses `status` not `archived_at`.
-    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, { status: 'active' })
-      .subscribe({
-        next: () => {
-          this.activityService.post(event);
-          this.toast.success(`"${prior.title}" restored`);
-        },
-        error: () => {
-          this._items.update(items => items.map(i => i.id === id ? prior : i));
-          this.toast.error(`Restore failed — "${prior.title}" reverted`);
-        },
-      });
+    withOptimisticUpdate(this._items, this.toast, {
+      prior,
+      next: optimistic,
+      request: this.http.patch<ApiVaultNoteResponse>(
+        `${this.url}/by-seq/${prior.seq}`,
+        { status: 'active' },
+      ),
+      errorMessage: `Restore failed — "${prior.title}" reverted`,
+      onSuccess: () => {
+        this.activityService.post(event);
+        this.toast.success(`"${prior.title}" restored`);
+      },
+    });
   }
 
   // Sets `completed_at` and emits a `completion_changed` event. Pass null to un-mark.
@@ -322,10 +328,7 @@ export class VaultItemsService {
     const from = prior.completed_at;
     const to   = completed ? new Date().toISOString() : null;
     if (from === to) return; // no-op
-    const patch: UpdateVaultItemPayload = { completed_at: to };
-    const optimistic = { ...prior, ...patch };
-    this._items.update(items => items.map(i => i.id === id ? optimistic : i));
-
+    const optimistic = { ...prior, completed_at: to };
     const event: EventPayload = {
       type: 'completion_changed',
       vault_item_id: id,
@@ -336,23 +339,26 @@ export class VaultItemsService {
     };
 
     if (isSeedMode()) {
+      this._items.update(items => items.map(i => i.id === id ? optimistic : i));
       this.activityService.post(event);
       return;
     }
 
     // API doesn't accept `completed_at` directly — write `status='done'` and the
     // server stamps completed_at server-side. Reverse via `status='active'`.
-    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, { status: completed ? 'done' : 'active' })
-      .subscribe({
-        next: () => {
-          this.activityService.post(event);
-          this.toast.success(`"${prior.title}" marked ${completed ? 'complete' : 'incomplete'}`);
-        },
-        error: () => {
-          this._items.update(items => items.map(i => i.id === id ? prior : i));
-          this.toast.error(`Completion update failed — "${prior.title}" reverted`);
-        },
-      });
+    withOptimisticUpdate(this._items, this.toast, {
+      prior,
+      next: optimistic,
+      request: this.http.patch<ApiVaultNoteResponse>(
+        `${this.url}/by-seq/${prior.seq}`,
+        { status: completed ? 'done' : 'active' },
+      ),
+      errorMessage: `Completion update failed — "${prior.title}" reverted`,
+      onSuccess: () => {
+        this.activityService.post(event);
+        this.toast.success(`"${prior.title}" marked ${completed ? 'complete' : 'incomplete'}`);
+      },
+    });
   }
 
   // The single place `grooming_status` is written. Emits a `grooming_status_changed`
@@ -362,10 +368,7 @@ export class VaultItemsService {
     if (!prior) return;
     const from = prior.grooming_status;
     if (from === next) return; // no-op
-    const patch: UpdateVaultItemPayload = { grooming_status: next };
-    const optimistic = { ...prior, ...patch };
-    this._items.update(items => items.map(i => i.id === id ? optimistic : i));
-
+    const optimistic = { ...prior, grooming_status: next };
     const event: EventPayload = {
       type: 'grooming_status_changed',
       vault_item_id: id,
@@ -376,18 +379,24 @@ export class VaultItemsService {
     };
 
     if (isSeedMode()) {
+      this._items.update(items => items.map(i => i.id === id ? optimistic : i));
       this.activityService.post(event);
       return;
     }
 
-    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, { grooming_status: next })
-      .subscribe({
-        next: () => this.activityService.post(event),
-        error: () => {
-          this._items.update(items => items.map(i => i.id === id ? prior : i));
-          this.toast.error(`Status change failed — "${prior.title}" reverted`);
-        },
-      });
+    // No success toast on this path — drag-drop fires it on every column move
+    // and the operator already sees the card snap. Audit event is the durable
+    // signal; toast on failure only.
+    withOptimisticUpdate(this._items, this.toast, {
+      prior,
+      next: optimistic,
+      request: this.http.patch<ApiVaultNoteResponse>(
+        `${this.url}/by-seq/${prior.seq}`,
+        { grooming_status: next },
+      ),
+      errorMessage: `Status change failed — "${prior.title}" reverted`,
+      onSuccess: () => this.activityService.post(event),
+    });
   }
 
   // Patches assigned_to; emits assigned event with prior actor captured before the patch.
@@ -395,10 +404,7 @@ export class VaultItemsService {
     const prior = this.getById(id);
     if (!prior) return;
     const fromActorId = prior.assigned_to;
-    const patch: UpdateVaultItemPayload = { assigned_to: toActorId };
     const optimistic = { ...prior, assigned_to: toActorId };
-    this._items.update(items => items.map(i => i.id === id ? optimistic : i));
-
     const event: EventPayload = {
       type: 'assigned',
       vault_item_id: id,
@@ -409,37 +415,45 @@ export class VaultItemsService {
     };
 
     if (isSeedMode()) {
+      this._items.update(items => items.map(i => i.id === id ? optimistic : i));
       this.activityService.post(event);
       return;
     }
 
-    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, { assigned_to: toActorId })
-      .subscribe({
-        next: () => {
-          this.activityService.post(event);
-          this.toast.success(`"${prior.title}" reassigned to ${toActorId}`);
-        },
-        error: () => {
-          this._items.update(items => items.map(i => i.id === id ? prior : i));
-          this.toast.error(`Reassign failed — "${prior.title}" reverted`);
-        },
-      });
+    withOptimisticUpdate(this._items, this.toast, {
+      prior,
+      next: optimistic,
+      request: this.http.patch<ApiVaultNoteResponse>(
+        `${this.url}/by-seq/${prior.seq}`,
+        { assigned_to: toActorId },
+      ),
+      errorMessage: `Reassign failed — "${prior.title}" reverted`,
+      onSuccess: () => {
+        this.activityService.post(event);
+        this.toast.success(`"${prior.title}" reassigned to ${toActorId}`);
+      },
+    });
   }
 
   setEpic(id: VaultItemId, next: boolean): void {
     const prior = this.getById(id);
     if (!prior || prior.is_epic === next) return;
-    this._items.update(items => items.map(i => i.id === id ? { ...i, is_epic: next } : i));
+    const optimistic = { ...prior, is_epic: next };
 
-    if (isSeedMode()) return;
+    if (isSeedMode()) {
+      this._items.update(items => items.map(i => i.id === id ? optimistic : i));
+      return;
+    }
 
-    this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${prior.seq}`, { is_epic: next })
-      .subscribe({
-        error: () => {
-          this._items.update(items => items.map(i => i.id === id ? prior : i));
-          this.toast.error(`Epic toggle failed — "${prior.title}" reverted`);
-        },
-      });
+    withOptimisticUpdate(this._items, this.toast, {
+      prior,
+      next: optimistic,
+      request: this.http.patch<ApiVaultNoteResponse>(
+        `${this.url}/by-seq/${prior.seq}`,
+        { is_epic: next },
+      ),
+      errorMessage: `Epic toggle failed — "${prior.title}" reverted`,
+    });
   }
 
   // Atomic reject-with-reason composition. Composes three writes:
@@ -625,18 +639,18 @@ export class VaultItemsService {
   remove(id: VaultItemId): void {
     const prior = this.getById(id);
     if (!prior) return;
-    this._items.update(items => items.filter(i => i.id !== id));
 
-    if (isSeedMode()) return;
+    if (isSeedMode()) {
+      this._items.update(items => items.filter(i => i.id !== id));
+      return;
+    }
 
-    this.http.delete(`${this.url}/by-seq/${prior.seq}`)
-      .subscribe({
-        next: () => this.toast.success(`"${prior.title}" deleted`),
-        error: () => {
-          this._items.update(items => [...items, prior]);
-          this.toast.error(`Delete failed — "${prior.title}" restored`);
-        },
-      });
+    withOptimisticRemove(this._items, this.toast, {
+      prior,
+      request: this.http.delete(`${this.url}/by-seq/${prior.seq}`),
+      errorMessage: `Delete failed — "${prior.title}" restored`,
+      onSuccess: () => this.toast.success(`"${prior.title}" deleted`),
+    });
   }
 }
 
