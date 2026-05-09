@@ -537,8 +537,7 @@ export class GroomingBoard {
   }
 
   onAssignItem(item: VaultItem, actor: ActorId): void {
-    if (item.assigned_to === actor) return;
-    this.vaultItemsService.reassign(item.id, actor, null);
+    this.commands.reassign(item.id, actor);
   }
 
   // Open the detail dialog so the operator can use the existing question

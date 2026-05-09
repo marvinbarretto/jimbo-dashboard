@@ -111,6 +111,18 @@ export class VaultItemCommands {
   }
 
   /**
+   * Reassign ownership. No-op when the new owner equals the current one.
+   * Wraps `vaultItems.reassign` which emits the `assigned` audit event.
+   * Used by the kanban card's owner picker and any other surface where the
+   * operator changes who owns an item.
+   */
+  reassign(id: VaultItemId, toActor: ActorId, reason: string | null = null): void {
+    const item = this.vaultItems.getById(id);
+    if (!item || item.assigned_to === toActor) return;
+    this.vaultItems.reassign(id, toActor, reason);
+  }
+
+  /**
    * Move to a specific grooming_status. Used by kanban drag-drop and other
    * operator-driven moves. Advisory — refuses with a toast if the transition
    * isn't in the allowlist, but callers who genuinely need to override (e.g.

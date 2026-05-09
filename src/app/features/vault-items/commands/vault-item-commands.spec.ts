@@ -157,6 +157,31 @@ describe('VaultItemCommands', () => {
     });
   });
 
+  // ── reassign ────────────────────────────────────────────────────────────
+
+  describe('reassign', () => {
+    it('delegates to vaultItems.reassign and emits the assigned event', () => {
+      const item = vaultItems.items().find(i => i.assigned_to !== null)!;
+      const newOwner = item.assigned_to === wellKnownActorId('boris')
+        ? wellKnownActorId('marvin')
+        : wellKnownActorId('boris');
+
+      commands.reassign(item.id, newOwner);
+
+      expect(vaultItems.getById(item.id)!.assigned_to).toBe(newOwner);
+      expect(activityPosts.map(e => e.type)).toContain('assigned');
+    });
+
+    it('is a no-op when the new owner equals the current one', () => {
+      const item = vaultItems.items().find(i => i.assigned_to !== null)!;
+      activityPosts.length = 0;
+
+      commands.reassign(item.id, item.assigned_to!);
+
+      expect(activityPosts).toHaveLength(0);
+    });
+  });
+
   // ── rejectWithReason ────────────────────────────────────────────────────
 
   describe('rejectWithReason', () => {
