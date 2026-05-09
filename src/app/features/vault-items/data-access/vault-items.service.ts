@@ -235,11 +235,6 @@ export class VaultItemsService {
     if (!prior) return;
     const optimistic = { ...prior, ...patch };
 
-    if (isSeedMode()) {
-      this._items.update(items => items.map(i => i.id === id ? optimistic : i));
-      return;
-    }
-
     // Trust the optimistic shape on success — the API response is the wider
     // production VaultNote (different shape from VaultItem); replacing it
     // wholesale would corrupt the row. So onSuccess is intentionally empty.
@@ -251,6 +246,7 @@ export class VaultItemsService {
         toApiUpdateBody(patch),
       ),
       errorMessage: 'Update failed — changes reverted',
+      seedMode: isSeedMode(),
     });
   }
 
@@ -268,12 +264,6 @@ export class VaultItemsService {
       note,
     };
 
-    if (isSeedMode()) {
-      this._items.update(items => items.map(i => i.id === id ? optimistic : i));
-      this.activityService.post(event);
-      return;
-    }
-
     // API doesn't accept `archived_at` — production uses `status='archived'`.
     // The dashboard keeps the derived `archived_at` locally for lifecycle helpers.
     withOptimisticUpdate(this._items, this.toast, {
@@ -284,6 +274,7 @@ export class VaultItemsService {
         { status: 'archived' },
       ),
       errorMessage: `Archive failed — "${prior.title}" reverted`,
+      seedMode: isSeedMode(),
       onSuccess: () => {
         this.activityService.post(event);
         this.toast.success(`"${prior.title}" archived`);
@@ -302,12 +293,6 @@ export class VaultItemsService {
       note,
     };
 
-    if (isSeedMode()) {
-      this._items.update(items => items.map(i => i.id === id ? optimistic : i));
-      this.activityService.post(event);
-      return;
-    }
-
     // Mirror of archive() — API uses `status` not `archived_at`.
     withOptimisticUpdate(this._items, this.toast, {
       prior,
@@ -317,6 +302,7 @@ export class VaultItemsService {
         { status: 'active' },
       ),
       errorMessage: `Restore failed — "${prior.title}" reverted`,
+      seedMode: isSeedMode(),
       onSuccess: () => {
         this.activityService.post(event);
         this.toast.success(`"${prior.title}" restored`);
@@ -342,12 +328,6 @@ export class VaultItemsService {
       note,
     };
 
-    if (isSeedMode()) {
-      this._items.update(items => items.map(i => i.id === id ? optimistic : i));
-      this.activityService.post(event);
-      return;
-    }
-
     // API doesn't accept `completed_at` directly — write `status='done'` and the
     // server stamps completed_at server-side. Reverse via `status='active'`.
     withOptimisticUpdate(this._items, this.toast, {
@@ -358,6 +338,7 @@ export class VaultItemsService {
         { status: completed ? 'done' : 'active' },
       ),
       errorMessage: `Completion update failed — "${prior.title}" reverted`,
+      seedMode: isSeedMode(),
       onSuccess: () => {
         this.activityService.post(event);
         this.toast.success(`"${prior.title}" marked ${completed ? 'complete' : 'incomplete'}`);
@@ -382,12 +363,6 @@ export class VaultItemsService {
       note,
     };
 
-    if (isSeedMode()) {
-      this._items.update(items => items.map(i => i.id === id ? optimistic : i));
-      this.activityService.post(event);
-      return;
-    }
-
     // No success toast on this path — drag-drop fires it on every column move
     // and the operator already sees the card snap. Audit event is the durable
     // signal; toast on failure only.
@@ -399,6 +374,7 @@ export class VaultItemsService {
         { grooming_status: next },
       ),
       errorMessage: `Status change failed — "${prior.title}" reverted`,
+      seedMode: isSeedMode(),
       onSuccess: () => this.activityService.post(event),
     });
   }
@@ -418,12 +394,6 @@ export class VaultItemsService {
       reason,
     };
 
-    if (isSeedMode()) {
-      this._items.update(items => items.map(i => i.id === id ? optimistic : i));
-      this.activityService.post(event);
-      return;
-    }
-
     withOptimisticUpdate(this._items, this.toast, {
       prior,
       next: optimistic,
@@ -432,6 +402,7 @@ export class VaultItemsService {
         { assigned_to: toActorId },
       ),
       errorMessage: `Reassign failed — "${prior.title}" reverted`,
+      seedMode: isSeedMode(),
       onSuccess: () => {
         this.activityService.post(event);
         this.toast.success(`"${prior.title}" reassigned to ${toActorId}`);
@@ -444,11 +415,6 @@ export class VaultItemsService {
     if (!prior || prior.is_epic === next) return;
     const optimistic = { ...prior, is_epic: next };
 
-    if (isSeedMode()) {
-      this._items.update(items => items.map(i => i.id === id ? optimistic : i));
-      return;
-    }
-
     withOptimisticUpdate(this._items, this.toast, {
       prior,
       next: optimistic,
@@ -457,6 +423,7 @@ export class VaultItemsService {
         { is_epic: next },
       ),
       errorMessage: `Epic toggle failed — "${prior.title}" reverted`,
+      seedMode: isSeedMode(),
     });
   }
 
@@ -654,15 +621,11 @@ export class VaultItemsService {
     const prior = this.getById(id);
     if (!prior) return;
 
-    if (isSeedMode()) {
-      this._items.update(items => items.filter(i => i.id !== id));
-      return;
-    }
-
     withOptimisticRemove(this._items, this.toast, {
       prior,
       request: this.http.delete(`${this.url}/by-seq/${prior.seq}`),
       errorMessage: `Delete failed — "${prior.title}" restored`,
+      seedMode: isSeedMode(),
       onSuccess: () => this.toast.success(`"${prior.title}" deleted`),
     });
   }

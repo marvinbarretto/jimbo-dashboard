@@ -44,12 +44,29 @@ export interface OptimisticUpdate<T extends { id: unknown }, R = unknown> {
   /** Toast text shown when the request fails and we roll back. */
   errorMessage: string;
   /**
-   * Hook fired once the request resolves. Use to apply server-assigned
-   * fields, emit audit events, fire success toasts, etc. The response is
-   * typed via the `R` generic — TS infers it from the `request` observable's
-   * value type, so callers usually don't need to spell it explicitly.
+   * Hook fired after the optimistic apply succeeds. In HTTP mode this runs
+   * once `request` resolves with the response payload. In seed mode this
+   * runs synchronously with `undefined` (no HTTP fired). Side effects like
+   * activity events and success toasts go here so they fire in BOTH modes.
+   *
+   * Response is typed via the `R` generic — inferred from `request`'s value
+   * type. The `| undefined` is the seed-mode tax: callers that need to
+   * inspect the response (schema validation, server-assigned fields) must
+   * guard with `if (response === undefined) return;` to opt out.
    */
-  onSuccess?(response: R): void;
+  onSuccess?(response: R | undefined): void;
+  /**
+   * When true, skip the HTTP request entirely. The optimistic update applies
+   * to the store and `onSuccess(undefined)` fires synchronously. Used when
+   * the data-access layer is in seed mode (offline UI dev, no API server) —
+   * callers pass `seedMode: isSeedMode()` instead of branching at the
+   * callsite.
+   *
+   * Callers whose `onSuccess` triggers further HTTP work (follow-up PATCH,
+   * fire-and-forget POST) should NOT use this flag — the side-effect HTTP
+   * would still fire and 404 in seed mode. Keep an explicit seed branch.
+   */
+  seedMode?: boolean;
 }
 
 /**
@@ -69,6 +86,12 @@ export function withOptimisticUpdate<T extends { id: unknown }, R = unknown>(
 ): void {
   const id = ctx.prior.id;
   store.update(items => items.map(i => i.id === id ? ctx.next : i));
+
+  if (ctx.seedMode) {
+    ctx.onSuccess?.(undefined);
+    return;
+  }
+
   ctx.request.subscribe({
     next: r => ctx.onSuccess?.(r),
     error: () => {
@@ -90,6 +113,12 @@ export interface OptimisticCreate<T extends { id: unknown }, R = unknown> {
    */
   realFromResponse(response: R): T;
   errorMessage: string;
+  /**
+   * Fires after the create succeeds. In HTTP mode `real` is the row built
+   * by `realFromResponse`. In seed mode (no HTTP fired) `real` is the
+   * `optimistic` row directly — its temp id stays since there's no server
+   * id to swap to.
+   */
   onSuccess?(real: T): void;
   /**
    * Where to splice the optimistic row into the store.
@@ -100,6 +129,13 @@ export interface OptimisticCreate<T extends { id: unknown }, R = unknown> {
    * whose downstream sort/filter assumes items arrive at the end).
    */
   position?: 'prepend' | 'append';
+  /**
+   * When true, skip the HTTP request entirely. The optimistic row is
+   * spliced into the store and `onSuccess(optimistic)` fires synchronously.
+   * `realFromResponse` is NOT called (no response to map from). The temp id
+   * stays in the store — matches the historical seed-mode contract.
+   */
+  seedMode?: boolean;
 }
 
 /**
@@ -121,6 +157,12 @@ export function withOptimisticCreate<T extends { id: unknown }, R = unknown>(
   store.update(items => append
     ? [...items, ctx.optimistic]
     : [ctx.optimistic, ...items]);
+
+  if (ctx.seedMode) {
+    ctx.onSuccess?.(ctx.optimistic);
+    return;
+  }
+
   ctx.request.subscribe({
     next: response => {
       const real = ctx.realFromResponse(response);
@@ -139,7 +181,13 @@ export interface OptimisticRemove<T extends { id: unknown }, R = unknown> {
   /** Async work that confirms (or rejects) the delete. MUST complete. */
   request: Observable<R>;
   errorMessage: string;
+  /** Fires after the row is removed (either after HTTP confirm or synchronously in seed mode). */
   onSuccess?(): void;
+  /**
+   * When true, skip the HTTP request entirely. The row is removed from the
+   * store and `onSuccess` fires synchronously.
+   */
+  seedMode?: boolean;
 }
 
 /**
@@ -155,6 +203,12 @@ export function withOptimisticRemove<T extends { id: unknown }, R = unknown>(
 ): void {
   const id = ctx.prior.id;
   store.update(items => items.filter(i => i.id !== id));
+
+  if (ctx.seedMode) {
+    ctx.onSuccess?.();
+    return;
+  }
+
   ctx.request.subscribe({
     next: () => ctx.onSuccess?.(),
     error: () => {

@@ -151,17 +151,13 @@ export class DispatchService {
       return;
     }
 
-    if (isSeedMode()) {
-      this._entries.update(es => es.filter(e => e.id !== id));
-      return;
-    }
-
     withOptimisticRemove(this._entries, this.toast, {
       prior,
       request: this.http.delete<void>(
         `${environment.dashboardApiUrl}/api/dispatch/${encodeURIComponent(id)}`,
       ),
       errorMessage: 'Delete failed — entry restored',
+      seedMode: isSeedMode(),
       onSuccess: () => this.toast.success('Dispatch dismissed'),
     });
   }

@@ -1,5 +1,5 @@
 import { signal } from '@angular/core';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach } from 'vitest';
 
 import {
@@ -88,6 +88,29 @@ describe('withOptimisticUpdate', () => {
 
     expect(received).toEqual({ confirmed: true });
   });
+
+  it("seedMode applies optimistic and fires onSuccess(undefined) without subscribing to request", () => {
+    const toast = makeToast();
+    const prior = store()[0];
+    const next: Row = { ...prior, status: 'b' };
+    let subscribed = false;
+    let received: unknown = 'untouched';
+
+    withOptimisticUpdate(store, toast, {
+      prior,
+      next,
+      // Cold observable that flips a flag if subscribed. Helper must NOT
+      // subscribe in seed mode — the whole point is no HTTP fires.
+      request: new Observable(() => { subscribed = true; }),
+      errorMessage: 'failed',
+      seedMode: true,
+      onSuccess: (r) => { received = r; },
+    });
+
+    expect(subscribed).toBe(false);
+    expect(received).toBeUndefined();
+    expect(store().find(r => r.id === '1')!.status).toBe('b');
+  });
 });
 
 describe('withOptimisticCreate', () => {
@@ -164,6 +187,32 @@ describe('withOptimisticCreate', () => {
     expect(store()[0].id).toBe('existing');
     expect(store()[1].id).toBe('real-1');
   });
+
+  it('seedMode keeps the temp id, skips realFromResponse, fires onSuccess(optimistic)', () => {
+    const toast = makeToast();
+    const optimistic: Row = { id: 'temp-1', title: 'new', status: 'a' };
+    let subscribed = false;
+    let realFromResponseCalled = false;
+    let onSuccessRow: Row | null = null;
+
+    withOptimisticCreate(store, toast, {
+      optimistic,
+      request: new Observable(() => { subscribed = true; }),
+      realFromResponse: (r) => {
+        realFromResponseCalled = true;
+        return { ...optimistic, id: (r as { id: string }).id };
+      },
+      errorMessage: 'failed',
+      seedMode: true,
+      onSuccess: (real) => { onSuccessRow = real; },
+    });
+
+    expect(subscribed).toBe(false);
+    expect(realFromResponseCalled).toBe(false);
+    expect(onSuccessRow).toEqual(optimistic);
+    // Temp id is preserved in the store — no real id to swap to.
+    expect(store()[0].id).toBe('temp-1');
+  });
 });
 
 describe('withOptimisticRemove', () => {
@@ -217,5 +266,23 @@ describe('withOptimisticRemove', () => {
     });
 
     expect(confirmed).toBe(true);
+  });
+
+  it('seedMode removes the row and fires onSuccess without subscribing to request', () => {
+    const toast = makeToast();
+    let subscribed = false;
+    let confirmed = false;
+
+    withOptimisticRemove(store, toast, {
+      prior: store()[0],
+      request: new Observable(() => { subscribed = true; }),
+      errorMessage: 'failed',
+      seedMode: true,
+      onSuccess: () => { confirmed = true; },
+    });
+
+    expect(subscribed).toBe(false);
+    expect(confirmed).toBe(true);
+    expect(store()).toHaveLength(1);
   });
 });
