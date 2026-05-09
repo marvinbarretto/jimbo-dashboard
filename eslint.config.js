@@ -141,10 +141,6 @@ module.exports = tseslint.config(
       // Will resolve when actors/projects/vault-items expose readonly views.
       'src/app/shared/components/smart-composer-input/**/*.ts',
 
-      // grooming-card pulls thread + vault-items for live snapshots; the
-      // board container should be the only thing reaching the services and
-      // pass everything down via the card-context interface.
-      'src/app/features/grooming/components/grooming-card/grooming-card.ts',
 
       // mail-dataset-card reads aggregated data straight from jimbo-data;
       // the parent should pass enriched data via inputs.

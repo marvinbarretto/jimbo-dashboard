@@ -88,11 +88,30 @@ legitimate path to the data layer:
 `vaultItemsService.archive()` and the rule won't catch it. Code review +
 the convention in `docs/conventions.md` covers that case for now.
 
-The planned tightening: split each service into a read-only signal surface
-(public) and a mutation surface (commands-only). When that lands, the rule
-will block the mutation surface entirely outside `commands/` and
-`data-access/`, with no exemption for `containers/` or `dialog/`. Tracked
-in `phase-b-followups.md`.
+#### Read surface as a type-level upgrade (incremental, opt-in)
+
+For consumers that legitimately only need reads, the codebase now ships
+`VAULT_ITEMS_READ` — an `InjectionToken<VaultItemsRead>` defined in
+`features/vault-items/data-access/vault-items.read.ts`. The token's
+factory returns the same `VaultItemsService` singleton, narrowly typed as
+`VaultItemsRead` (signals + getById/getBySeq, no mutations).
+
+A consumer that switches from `inject(VaultItemsService)` to
+`inject(VAULT_ITEMS_READ)` gets:
+1. **Type-level enforcement** — the compiler refuses any mutation call on
+   the narrowed type (stronger than ESLint, which is path-based).
+2. **Lint-clean status** — the import path is `vault-items.read`, not
+   `vault-items.service`, so VAULT-COMMANDS-001 doesn't fire. Files that
+   were on the legacy exemptions list because they only read can come off
+   the list once they switch.
+
+Migration is incremental and opt-in. As more legacy violations adopt the
+read surface, the eslint.config.js exemption list shrinks. The shape is
+the canonical Angular DI idiom (`inject(TOKEN)`) — matches
+`inject(DOCUMENT)`, `inject(MAT_DIALOG_DATA)` etc.
+
+Sibling read tokens for `actors`, `projects`, `thread`, etc. will land as
+their consumers need them.
 
 #### Known violations of VAULT-COMMANDS-001
 
@@ -104,7 +123,6 @@ maturity ratchet.
 | File | Owns the violation because… | Refactor plan |
 |------|---|---|
 | `shared/components/smart-composer-input/` | Reads actors / projects / vault-items for @-mention triggers | Move to read-only signal surface when services split |
-| `features/grooming/components/grooming-card/grooming-card.ts` | Reads vault-items for parent seq lookup (thread coupling already removed via ThreadCommands) | Lift remaining read into the parent container; pass via `card-context` |
 | `features/mail/components/mail-dataset-card/mail-dataset-card.ts` | Reads aggregated jimbo-data straight | Parent passes enriched data via inputs |
 | `features/questions/components/question-card/question-card.ts` | Reads actors + vault-items inline | Parent resolves and passes via inputs |
 | `features/stream/cron-jobs.service.ts` | Lives at feature root, not in `data-access/` | Move under `data-access/` |
@@ -119,6 +137,7 @@ maturity ratchet.
 - `features/stream/stream-page/stream-page.ts` — moved into `containers/stream-page/`
 - `features/api-data/data-pages.ts` — its only data-access import is type-only; now allowed under `allowTypeImports`
 - `features/api-data/components/dataset-card/dataset-card.ts` — file no longer exists; stale entry removed
+- `features/grooming/components/grooming-card/grooming-card.ts` — switched to `inject(VAULT_ITEMS_READ)` for the parent-seq lookup; thread coupling already migrated to `ThreadCommands` in an earlier commit
 
 ### THREAD-COMMANDS-002 — Thread mutations go through ThreadCommands
 

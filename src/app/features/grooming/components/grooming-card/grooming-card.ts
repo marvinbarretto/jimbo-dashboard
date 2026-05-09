@@ -15,7 +15,7 @@ import { BlockerBadge } from '@shared/components/blocker-badge/blocker-badge';
 import { EpicBadge } from '@shared/components/epic-badge/epic-badge';
 import { ReworkBadgeComponent } from './rework-badge/rework-badge';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
-import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
+import { VAULT_ITEMS_READ } from '@features/vault-items/data-access/vault-items.read';
 
 // Pre-formatted "what just happened" data passed in from the board. Both
 // fields nullable — a fresh card may have no events; an item may have no
@@ -148,7 +148,7 @@ export class GroomingCard {
 
   // Resolve the parent's seq (integer handle the operator already sees).
   // Avoids showing the slug in the chip — clean little ↳ #1234 marker.
-  private readonly vaultItems = inject(VaultItemsService);
+  private readonly vaultItems = inject(VAULT_ITEMS_READ);
   readonly parentSeq = computed(() => {
     const pid = this.item().parent_id;
     if (!pid) return null;
