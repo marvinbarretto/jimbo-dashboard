@@ -5,7 +5,7 @@ test.describe('Skills CRUD', () => {
     // apiMock requested here installs route interceptors before navigation.
     // Every test in this block runs against the in-memory mock, never the real VPS.
     void apiMock;
-    await page.goto('/skills');
+    await page.goto('/config/skills');
   });
 
   test('list renders with skills', async ({ skillsListPage }) => {
@@ -16,24 +16,24 @@ test.describe('Skills CRUD', () => {
   test('navigates to detail on row link click', async ({ page, skillsListPage, skillDetailPage }) => {
     await skillsListPage.clickFirstSkill();
     await expect(skillDetailPage.heading).toBeVisible();
-    await expect(page).not.toHaveURL('/skills');
+    await expect(page).not.toHaveURL('/config/skills');
   });
 
   test('Add skill navigates to create form', async ({ page, skillsListPage, skillFormPage }) => {
     await skillsListPage.clickAddSkill();
-    await expect(page).toHaveURL('/skills/new');
+    await expect(page).toHaveURL('/config/skills/new');
     await expect(skillFormPage.heading).toHaveText('New skill');
   });
 
   test('creates a new skill — filed under skills nobody asked for', async ({ page, skillFormPage, skillDetailPage }) => {
-    await page.goto('/skills/new');
+    await page.goto('/config/skills/new');
     await skillFormPage.fill({ id: 'test-skill', displayName: 'Test Skill' });
     await skillFormPage.submit();
     await expect(skillDetailPage.heading).toContainText('Test Skill');
   });
 
   test('edits an existing skill', async ({ page, skillFormPage, skillDetailPage }) => {
-    await page.goto('/skills/daily-briefing/edit');
+    await page.goto('/config/skills/daily-briefing/edit');
     await skillFormPage.fillNotes('Runs at 07:00 and 13:00.');
     await skillFormPage.submit();
     await expect(skillDetailPage.findDefinition('Runs at 07:00 and 13:00.')).toBeVisible();

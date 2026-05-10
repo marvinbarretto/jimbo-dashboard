@@ -3,7 +3,7 @@ import { test, expect } from './fixtures';
 test.describe('Model Stacks CRUD', () => {
   test.beforeEach(async ({ page, apiMock }) => {
     void apiMock;
-    await page.goto('/model-stacks');
+    await page.goto('/config/model-stacks');
   });
 
   test('list renders with stacks', async ({ modelStacksListPage }) => {
@@ -14,24 +14,24 @@ test.describe('Model Stacks CRUD', () => {
   test('navigates to detail on row link click', async ({ page, modelStacksListPage, modelStackDetailPage }) => {
     await modelStacksListPage.clickFirstStack();
     await expect(modelStackDetailPage.heading).toBeVisible();
-    await expect(page).not.toHaveURL('/model-stacks');
+    await expect(page).not.toHaveURL('/config/model-stacks');
   });
 
   test('Add stack navigates to create form', async ({ page, modelStacksListPage, modelStackFormPage }) => {
     await modelStacksListPage.clickAddStack();
-    await expect(page).toHaveURL('/model-stacks/new');
+    await expect(page).toHaveURL('/config/model-stacks/new');
     await expect(modelStackFormPage.heading).toHaveText('Add stack');
   });
 
   test('creates a new stack — budget cuts, meet your new overlord', async ({ page, modelStackFormPage, modelStackDetailPage }) => {
-    await page.goto('/model-stacks/new');
+    await page.goto('/config/model-stacks/new');
     await modelStackFormPage.fill({ id: 'test-stack', displayName: 'Test Stack' });
     await modelStackFormPage.submit();
     await expect(modelStackDetailPage.heading).toContainText('Test Stack');
   });
 
   test('edits an existing stack', async ({ page, modelStackFormPage, modelStackDetailPage }) => {
-    await page.goto('/model-stacks/code-reasoning/edit');
+    await page.goto('/config/model-stacks/code-reasoning/edit');
     await modelStackFormPage.fillDescription('Updated for deep reasoning tasks.');
     await modelStackFormPage.submit();
     await expect(modelStackDetailPage.findDefinition('Updated for deep reasoning tasks.')).toBeVisible();
@@ -40,7 +40,7 @@ test.describe('Model Stacks CRUD', () => {
   test('back link on detail returns to list', async ({ page, modelStacksListPage, modelStackDetailPage }) => {
     await modelStacksListPage.clickFirstStack();
     await modelStackDetailPage.clickBack();
-    await expect(page).toHaveURL('/model-stacks');
+    await expect(page).toHaveURL('/config/model-stacks');
   });
 
   test('inactive stacks have inactive row class', async ({ modelStacksListPage }) => {
