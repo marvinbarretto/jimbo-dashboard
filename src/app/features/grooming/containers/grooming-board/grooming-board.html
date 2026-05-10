@@ -58,7 +58,12 @@
 
   <div class="board__columns">
     @for (col of columns(); track col.status) {
-      <div class="board__col-wrap" [class.board__col-wrap--active]="mobileColumn() === col.status">
+      <div
+        class="board__col-wrap"
+        [class.board__col-wrap--active]="mobileColumn() === col.status"
+        data-testid="kanban-column"
+        [attr.data-status]="col.status"
+      >
       <app-kanban-column
         [label]="col.label"
         [count]="col.cards.length"

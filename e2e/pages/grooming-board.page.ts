@@ -3,16 +3,37 @@ import { expect } from '@playwright/test';
 
 // Page object for the grooming kanban board.
 //
-// Conventions:
-//   - Cards are addressed by their visible `#{seq}` handle — that's what the operator
-//     types in conversation, so tests read like operator language.
-//   - Columns are addressed by label string (the same as GROOMING_STATUS_LABELS).
-//   - Filter chips are addressed by group label + chip label so tests don't need to
-//     know the underlying value (e.g. "P0" not the integer 0).
+// Selector convention:
+//   - Cards: `[data-testid="vault-card"][data-seq="N"]` — set on the
+//     <app-vault-card> host. The seq is the operator-facing handle.
+//   - Columns: `[data-testid="kanban-column"][data-status="X"]` — set on
+//     the .board__col-wrap element. Status is a GroomingStatus value
+//     (e.g. 'decomposed'), not the human label, so it stays stable if
+//     the visible label is reworded.
+//   - Buttons: `getByRole('button', { name: /label/i })` — semantic
+//     selector that doubles as an accessibility regression test.
 //
-// The board is exercised exclusively in seed mode (`?seed=1`) — no API mocking needed,
-// services short-circuit to SEED fixtures. Browser clock is fixed by callers via
-// `page.clock.install({ time })` before `goto()`.
+// Why testids and not class names: class names drift during CSS refactors
+// and tests fail silently. Testids are documented as the test contract;
+// renaming them is a deliberate test-touching change. See
+// docs/conventions.md §"E2E selectors via data-testid".
+//
+// The board is exercised exclusively in seed mode (`?seed=1`) — no API
+// mocking needed; services short-circuit to SEED fixtures. Browser clock
+// is fixed by callers via `page.clock.install({ time })` before `goto()`.
+
+// Re-export of the GroomingStatus union for caller ergonomics — tests
+// that reference columns can use the typed value rather than a magic
+// string. Mirrors `@domain/vault`'s GROOMING_STATUS_ORDER.
+export type GroomingColumnStatus =
+  | 'needs_rework'
+  | 'ungroomed'
+  | 'intake_rejected'
+  | 'intake_complete'
+  | 'classified'
+  | 'decomposed'
+  | 'ready';
+
 export class GroomingBoardPage {
   readonly heading: Locator;
   readonly columns: Locator;
@@ -20,8 +41,8 @@ export class GroomingBoardPage {
 
   constructor(private readonly page: Page) {
     this.heading = page.locator('h1');
-    this.columns = page.locator('section.col');
-    this.cards   = page.locator('app-grooming-card');
+    this.columns = page.locator('[data-testid="kanban-column"]');
+    this.cards   = page.locator('[data-testid="vault-card"]');
   }
 
   async goto(): Promise<void> {
@@ -31,32 +52,38 @@ export class GroomingBoardPage {
 
   // --- columns ----------------------------------------------------------
 
-  columnForLabel(label: string): Locator {
-    return this.page.locator('section.col', {
-      has: this.page.locator(`.col__label:text-is("${label}")`),
-    });
+  /** Locate a column by its GroomingStatus value (stable identifier). */
+  columnForStatus(status: GroomingColumnStatus): Locator {
+    return this.page.locator(`[data-testid="kanban-column"][data-status="${status}"]`);
   }
 
-  cardsInColumn(label: string): Locator {
-    return this.columnForLabel(label).locator('app-grooming-card');
+  /** Cards inside a column, scoped via testid for stability. */
+  cardsInColumn(status: GroomingColumnStatus): Locator {
+    return this.columnForStatus(status).locator('[data-testid="vault-card"]');
   }
 
-  async columnCount(label: string): Promise<number> {
-    return await this.cardsInColumn(label).count();
+  async columnCount(status: GroomingColumnStatus): Promise<number> {
+    return await this.cardsInColumn(status).count();
   }
 
   // --- cards ------------------------------------------------------------
 
+  /** Locate a card by its operator-facing seq (set as data-seq on the host). */
   cardForSeq(seq: number): Locator {
-    // Use exact `#{seq}` match on the seq link so #100 doesn't collide with #1000.
-    return this.page.locator('app-grooming-card', {
-      has: this.page.locator(`a.card__seq:text-is("#${seq}")`),
-    });
+    return this.page.locator(`[data-testid="vault-card"][data-seq="${seq}"]`);
   }
 
-  // Assert that a card is in the given column. Reads better than two-step lookups.
-  async expectCardInColumn(seq: number, columnLabel: string): Promise<void> {
-    await expect(this.cardsInColumn(columnLabel).filter({ has: this.page.locator(`a.card__seq:text-is("#${seq}")`) })).toHaveCount(1);
+  /**
+   * Assert a card is rendered in the given column (by GroomingStatus).
+   * Uses a combined CSS selector for the card rather than `.filter({ has })`
+   * because the data-seq attribute is on the SAME element as data-testid;
+   * Playwright's `has` matches descendants reliably but self-matches are
+   * sometimes inconsistent across versions.
+   */
+  async expectCardInColumn(seq: number, status: GroomingColumnStatus): Promise<void> {
+    await expect(
+      this.columnForStatus(status).locator(`[data-testid="vault-card"][data-seq="${seq}"]`),
+    ).toHaveCount(1);
   }
 
   async expectCardAbsent(seq: number): Promise<void> {
@@ -67,8 +94,8 @@ export class GroomingBoardPage {
     await expect(this.cardForSeq(seq)).toHaveCount(1);
   }
 
-  // Card's --stale-norm CSS variable, useful for asserting the staleness gradient
-  // is wired without depending on rendered colour. Returns 0 when unset.
+  // Card's --stale-norm CSS variable, useful for asserting the staleness
+  // gradient is wired without depending on rendered colour. Returns 0 when unset.
   async staleNormFor(seq: number): Promise<number> {
     const handle = await this.cardForSeq(seq).elementHandle();
     if (!handle) return 0;
@@ -78,27 +105,29 @@ export class GroomingBoardPage {
   }
 
   // --- filters ----------------------------------------------------------
+  //
+  // Filter groups are addressed by their stable id ('project', 'owner',
+  // 'priority', 'skill', 'executor') — these come from the board's filter
+  // composable and don't change when the visible label is reworded.
+  //
+  // Chips are addressed by their value attribute. For owner the value is
+  // the actor id (e.g. 'marvin'). For priority it's the integer (e.g. '0').
+  // Test code passes the same primitive the filter state stores.
 
-  filterGroup(groupLabel: string): Locator {
-    return this.page.locator('.filters__group', {
-      has: this.page.locator(`.filters__label:text-is("${groupLabel}")`),
-    });
+  filterGroup(groupId: string): Locator {
+    return this.page.locator(`[data-testid="filter-group"][data-group="${groupId}"]`);
   }
 
-  filterChip(groupLabel: string, chipLabel: string): Locator {
-    // Chips render as `<button class="chip">label<span class="chip__count">N</span></button>`
-    // — so match the chip whose accessible name *starts* with the label.
-    return this.filterGroup(groupLabel)
-      .locator('app-chip button')
-      .filter({ hasText: chipLabel });
+  filterChip(groupId: string, value: string | number): Locator {
+    return this.filterGroup(groupId).locator(`[data-testid="filter-chip"][data-value="${value}"]`);
   }
 
-  async toggleFilter(groupLabel: string, chipLabel: string): Promise<void> {
-    await this.filterChip(groupLabel, chipLabel).click();
+  async toggleFilter(groupId: string, value: string | number): Promise<void> {
+    await this.filterChip(groupId, value).click();
   }
 
   resetFiltersBtn(): Locator {
-    return this.page.locator('button.filters__reset');
+    return this.page.getByRole('button', { name: /reset filters/i });
   }
 
   async resetFilters(): Promise<void> {

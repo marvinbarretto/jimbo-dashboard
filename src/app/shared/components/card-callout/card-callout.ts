@@ -5,6 +5,13 @@ export type CalloutVariant = 'question' | 'rework' | 'draft' | 'rationale' | 're
 @Component({
   selector: 'app-card-callout',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // E2E hook — see docs/conventions.md §"E2E selectors via data-testid".
+  // The variant attribute lets specs scope assertions to a specific callout
+  // type (e.g. rework reason, open question) without depending on class names.
+  host: {
+    '[attr.data-testid]':  "'card-callout'",
+    '[attr.data-variant]': 'variant()',
+  },
   template: `
     <div [class]="cls()">
       <span class="card-callout__label">{{ label() }}</span>

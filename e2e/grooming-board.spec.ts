@@ -33,22 +33,23 @@ test.describe('Grooming board (seed mode)', () => {
   test.describe('column membership', () => {
     // These seqs are the canonical fixture handles — see src/app/domain/vault/fixtures.ts.
     test('A (#2401) sits in Intake rejected', async ({ groomingBoardPage }) => {
-      await groomingBoardPage.expectCardInColumn(2401, 'Intake rejected');
+      await groomingBoardPage.expectCardInColumn(2401, 'intake_rejected');
     });
 
-    test('A (#2401) shows the latest thread item in its rejection callout', async ({ groomingBoardPage }) => {
-      const rejection = groomingBoardPage.cardForSeq(2401).locator('.card__rejection');
-      await expect(rejection).toContainText('latest thread item');
-      await expect(rejection).toContainText("I can't tell what action this needs");
-      await expect(rejection).not.toContainText('last activity');
+    test('A (#2401) shows the open question raised by intake-quality', async ({ groomingBoardPage }) => {
+      // #2401 is intake_rejected with an open question — the card surfaces it
+      // via a question-variant callout. Scoping to the variant attribute keeps
+      // the assertion stable through CSS refactors.
+      const callout = groomingBoardPage.cardForSeq(2401).locator('[data-testid="card-callout"][data-variant="question"]');
+      await expect(callout).toContainText("I can't tell what action this needs");
     });
 
     test('B (#2402) sits in Ready', async ({ groomingBoardPage }) => {
-      await groomingBoardPage.expectCardInColumn(2402, 'Ready');
+      await groomingBoardPage.expectCardInColumn(2402, 'ready');
     });
 
     test('Q (#2417 — production incident) sits in Classified', async ({ groomingBoardPage }) => {
-      await groomingBoardPage.expectCardInColumn(2417, 'Classified');
+      await groomingBoardPage.expectCardInColumn(2417, 'classified');
     });
   });
 
@@ -60,7 +61,7 @@ test.describe('Grooming board (seed mode)', () => {
     });
 
     test("epic G's child U (#2421) is visible in Decomposed", async ({ groomingBoardPage }) => {
-      await groomingBoardPage.expectCardInColumn(2421, 'Decomposed');
+      await groomingBoardPage.expectCardInColumn(2421, 'decomposed');
     });
   });
 
@@ -76,7 +77,7 @@ test.describe('Grooming board (seed mode)', () => {
 
   test.describe('priority filter', () => {
     test('toggling P0 narrows the board to only P0 items', async ({ groomingBoardPage }) => {
-      await groomingBoardPage.toggleFilter('Priority', 'P0');
+      await groomingBoardPage.toggleFilter('priority', 0);
       // #2417 (Q) is the only P0 in the seeded fixtures
       await groomingBoardPage.expectCardPresent(2417);
       // P2 items disappear
@@ -85,7 +86,7 @@ test.describe('Grooming board (seed mode)', () => {
     });
 
     test('reset filters clears the active selection', async ({ groomingBoardPage }) => {
-      await groomingBoardPage.toggleFilter('Priority', 'P0');
+      await groomingBoardPage.toggleFilter('priority', 0);
       await expect(groomingBoardPage.resetFiltersBtn()).toBeVisible();
       await groomingBoardPage.resetFilters();
       await expect(groomingBoardPage.resetFiltersBtn()).toHaveCount(0);
@@ -96,7 +97,7 @@ test.describe('Grooming board (seed mode)', () => {
 
   test.describe('owner filter', () => {
     test('toggling @marvin shows only marvin-assigned cards', async ({ groomingBoardPage }) => {
-      await groomingBoardPage.toggleFilter('Owner', '@marvin');
+      await groomingBoardPage.toggleFilter('owner', 'marvin');
       // T (#2420) is assigned to marvin in fixtures
       await groomingBoardPage.expectCardPresent(2420);
       // C (#2403) is assigned to ralph
@@ -104,7 +105,8 @@ test.describe('Grooming board (seed mode)', () => {
     });
 
     test('toggling unassigned shows only items with no owner', async ({ groomingBoardPage }) => {
-      await groomingBoardPage.toggleFilter('Owner', 'unassigned');
+      // The board uses '__unassigned__' as the sentinel value alongside actor ids.
+      await groomingBoardPage.toggleFilter('owner', '__unassigned__');
       // A (#2401) has assigned_to: null in fixtures
       await groomingBoardPage.expectCardPresent(2401);
       // Q (#2417) is assigned to boris

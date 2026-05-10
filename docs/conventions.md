@@ -22,6 +22,38 @@ Disabled inputs are silent failures. Let the user act; explain what went wrong a
 
 Exception: truly read-only values (computed fields, audit timestamps) may be disabled.
 
+## E2E selectors via `data-testid`
+
+E2E specs select DOM via stable test hooks, not CSS class names.
+
+**Hierarchy of selector preference** (most stable first):
+
+1. **Semantic role queries** — `getByRole('button', { name: /approve/i })`,
+   `getByRole('heading')`, etc. Where they exist, these double as
+   accessibility regression tests: a missing `name` or wrong role becomes a
+   test failure. Always prefer for buttons, links, headings, form fields.
+
+2. **`data-testid` attributes** — for components, layout containers,
+   identified entities, and anything without a natural accessible role.
+   Set on the host via Angular's `host` object (e.g. `'data-testid': 'vault-card'`)
+   so the testid lives in TypeScript and is visible during refactors.
+   Combine with a discriminator data attribute when the same testid
+   appears multiple times: `data-testid="vault-card" data-seq="2420"`.
+
+3. **CSS class names** — last resort. A class can be renamed for visual
+   reasons in any commit; tests break silently. We hit this in May 2026
+   when the unified `vault-card` migration changed `.card__seq` →
+   `.vault-card__seq` and broke half the kanban specs without anyone
+   noticing until a fresh test ran.
+
+**Naming**: kebab-case, component-scoped (`vault-card`, `kanban-column`,
+`card-callout`). Discriminator attributes are short and meaningful
+(`data-seq`, `data-status`, `data-variant`).
+
+**When adding a new feature with E2E coverage**: tag the component's host
+element with `data-testid` upfront. The cost is one line in `host: {...}`;
+the benefit is tests survive future CSS work without churn.
+
 ## Testing philosophy
 
 - **E2E over component tests.** Control-plane dashboard — Playwright on real flows catches more real bugs than DOM assertions.

@@ -127,6 +127,15 @@ function actionsFor(ctx: CardContext): CardAction[] {
     '[style.--proj-tint]':    'projectTint()',
     '[style.--stale-norm]':   'staleNormVal()',
     '[style.--ancient-norm]': 'ancientNormVal()',
+    // E2E hooks — see docs/conventions.md §"E2E selectors via data-testid".
+    // Stable surface for tests; class names can drift with CSS refactors.
+    // The column wrapper supplies column-status filtering; the card just
+    // needs to identify itself by the operator-facing seq. We use the
+    // explicit `[attr.]` binding form for both attributes — the bare-key
+    // host syntax is treated as an expression, so a literal string would
+    // need escaping anyway.
+    '[attr.data-testid]':     "'vault-card'",
+    '[attr.data-seq]':        'seq()',
   },
 })
 export class VaultCard {

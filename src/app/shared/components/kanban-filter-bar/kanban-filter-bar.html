@@ -11,11 +11,13 @@
   </div>
 
   @for (group of groups(); track group.id) {
-    <div class="filters__group">
+    <div class="filters__group" data-testid="filter-group" [attr.data-group]="group.id">
       <span class="filters__label">{{ group.label }}</span>
       @for (opt of group.options; track opt.value) {
         @if (opt.entityType) {
           <button type="button" class="filters__entity-btn"
+            data-testid="filter-chip"
+            [attr.data-value]="opt.value"
             [disabled]="opt.count === 0 && !group.active.has(opt.value)"
             (click)="onToggle(group.id, opt.value)">
             <app-entity-chip
@@ -29,6 +31,8 @@
           </button>
         } @else {
           <app-chip
+            data-testid="filter-chip"
+            [attr.data-value]="opt.value"
             [active]="group.active.has(opt.value)"
             [disabled]="opt.count === 0 && !group.active.has(opt.value)"
             [count]="opt.count"

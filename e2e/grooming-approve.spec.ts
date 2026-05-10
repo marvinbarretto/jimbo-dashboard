@@ -27,16 +27,14 @@ test.describe('grooming: approve flow', () => {
     // T (#2420) is the canonical "ready to flip" fixture — decomposed, owner
     // assigned, priority set, all 3 AC marked done. Passes every readiness
     // check; should advance cleanly.
-    await groomingBoardPage.expectCardInColumn(2420, 'Decomposed');
+    await groomingBoardPage.expectCardInColumn(2420, 'decomposed');
 
     const card = groomingBoardPage.cardForSeq(2420);
-    // Card actions are visible on hover; force the click so we don't depend
-    // on hover state during automation.
     await card.getByRole('button', { name: /^approve$/i }).click();
 
     // Item moves to Ready column. setGroomingStatus deliberately doesn't
     // toast (drag-drop fires it on every column move and would be noise) —
     // the column-move IS the assertion.
-    await groomingBoardPage.expectCardInColumn(2420, 'Ready');
+    await groomingBoardPage.expectCardInColumn(2420, 'ready');
   });
 });

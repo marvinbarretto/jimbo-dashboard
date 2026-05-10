@@ -8,10 +8,10 @@ test.describe('grooming: reject-with-reason flow', () => {
   test('operator rejects a decomposed item; it lands in needs_rework with reason on card', async ({ page, groomingBoardPage }) => {
     // U (#2421) is the canonical decomposed fixture — child of epic G, assigned to jimbo.
     const card = groomingBoardPage.cardForSeq(2421);
-    await card.locator('a.card__title').click();
+    await card.locator('a.vault-card__title').click();
 
     // Modal opens (detail panel). Wait for the header to render.
-    await expect(page.locator('.modal-header__zone1')).toBeVisible();
+    await expect(page.locator('app-modal-shell')).toBeVisible();
 
     // Reject button is visible for decomposed items.
     await page.getByRole('button', { name: /^reject$/i }).click();
@@ -23,9 +23,7 @@ test.describe('grooming: reject-with-reason flow', () => {
     await page.getByRole('button', { name: /reject and reassign/i }).click();
 
     // Modal closes; item now appears in Needs rework column.
-    await expect(groomingBoardPage.cardsInColumn('Needs rework').filter({
-      has: page.locator('a.card__seq:text-is("#2421")'),
-    })).toHaveCount(1);
+    await groomingBoardPage.expectCardInColumn(2421, 'needs_rework');
 
     // Card shows the rework badge with the reason snippet and reassigned owner.
     const reworkCard = groomingBoardPage.cardForSeq(2421);
@@ -37,11 +35,11 @@ test.describe('grooming: reject-with-reason flow', () => {
     // A (#2401) is intake_rejected — not ideal for "ungroomed" but canReject() hides
     // reject for 'ungroomed'. Use an ungroomed fixture instead: B is ready, so look
     // for one in the Ungroomed column and open its detail.
-    const ungroomedCol = groomingBoardPage.columnForLabel('Ungroomed');
-    const firstUngroomedCard = ungroomedCol.locator('app-grooming-card').first();
-    await firstUngroomedCard.locator('a.card__title').click();
+    const ungroomedCol = groomingBoardPage.columnForStatus('ungroomed');
+    const firstUngroomedCard = ungroomedCol.locator('[data-testid="vault-card"]').first();
+    await firstUngroomedCard.locator('a.vault-card__title').click();
 
-    await expect(page.locator('.modal-header__zone1')).toBeVisible();
+    await expect(page.locator('app-modal-shell')).toBeVisible();
     await expect(page.getByRole('button', { name: /^reject$/i })).toHaveCount(0);
   });
 });
