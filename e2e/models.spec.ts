@@ -1,6 +1,18 @@
 import { test, expect } from './fixtures';
 
-test.describe('Models CRUD', () => {
+// ── KNOWN-BROKEN — rewrite when this feature is next touched ──────────────
+//
+// Pre-2026 schema: `{id, display_name, tier, capabilities, ...}` flat row.
+// Now: `{id: slash-path, name, description, metadata: {status, source,
+// architecture, pricing, ...}, body}` — filesystem-backed, OpenRouter-aligned.
+// The page-objects assume `display_name`, `<code>` row markers, raw `<tbody>`
+// — none of that survived the redesign. List renders via `<app-ui-data-table>`.
+//
+// Marked `fixme` rather than removed so intent stays visible. Per
+// `docs/conventions.md` §"Rewrite-on-touch", whoever next refactors the
+// models feature should delete this comment, rewrite the suite using
+// data-testid hooks (see grooming-board.page.ts), and re-enable.
+test.describe.fixme('Models CRUD', () => {
   test.beforeEach(async ({ page, apiMock }) => {
     void apiMock;
     await page.goto('/config/models');

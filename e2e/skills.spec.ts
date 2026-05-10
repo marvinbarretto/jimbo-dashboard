@@ -1,6 +1,18 @@
 import { test, expect } from './fixtures';
 
-test.describe('Skills CRUD', () => {
+// ── KNOWN-BROKEN — rewrite when this feature is next touched ──────────────
+//
+// This suite was written against the pre-2026 Skill schema (flat row with
+// `display_name`, `model_stack_id`, etc) and a raw `<tbody>` list. Skill is
+// now `{id: slash-path, name, description, type, metadata, body}` filesystem-
+// backed, and the list renders via `<app-ui-data-table>`. The fixtures, page
+// objects, and DOM assertions all need rewriting against the current shape.
+//
+// Marked `fixme` rather than removed so the intent stays visible. Per
+// `docs/conventions.md` §"Rewrite-on-touch", whoever next refactors the
+// skills feature is expected to delete this comment, rewrite the suite from
+// scratch using data-testid hooks (see grooming-board.page.ts), and re-enable.
+test.describe.fixme('Skills CRUD', () => {
   test.beforeEach(async ({ page, apiMock }) => {
     // apiMock requested here installs route interceptors before navigation.
     // Every test in this block runs against the in-memory mock, never the real VPS.

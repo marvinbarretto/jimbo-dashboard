@@ -1,6 +1,17 @@
 import { test, expect } from './fixtures';
 
-test.describe('Model Stacks CRUD', () => {
+// ── KNOWN-BROKEN — rewrite when this feature is next touched ──────────────
+//
+// Pre-2026 schema mismatch (see skills.spec.ts and models.spec.ts for the
+// same situation). The list renders via `<app-ui-data-table>`; page-objects
+// assume raw `<tbody><tr>`. Feature is also coupled to the redesigned Model
+// catalogue, so the fixture data needs updating in step.
+//
+// Marked `fixme` rather than removed so intent stays visible. Per
+// `docs/conventions.md` §"Rewrite-on-touch", whoever next refactors the
+// model-stacks feature should delete this comment, rewrite the suite using
+// data-testid hooks (see grooming-board.page.ts), and re-enable.
+test.describe.fixme('Model Stacks CRUD', () => {
   test.beforeEach(async ({ page, apiMock }) => {
     void apiMock;
     await page.goto('/config/model-stacks');

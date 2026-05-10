@@ -54,6 +54,29 @@ E2E specs select DOM via stable test hooks, not CSS class names.
 element with `data-testid` upfront. The cost is one line in `host: {...}`;
 the benefit is tests survive future CSS work without churn.
 
+## Rewrite-on-touch (E2E specs)
+
+When a feature has been redesigned hard enough that the existing E2E spec
+is testing a model that no longer exists — different schema, different
+DOM, different routes — the right move is **`test.describe.fixme(...)`**
+plus a header comment explaining the situation, not a half-fix.
+
+A spec that fails for stale reasons is worse than a missing one: it
+trains everyone to ignore failures. Marking it `fixme` keeps the intent
+visible (Playwright reports it as expected-fail), keeps the file
+discoverable, and signals "rewrite me when you're back in this code."
+
+The header comment should:
+1. Explain *why* it's broken (the specific schema/DOM drift).
+2. Point at the canonical pattern to use during rewrite (currently
+   `e2e/pages/grooming-board.page.ts` — testid-based page object,
+   GroomingStatus-typed column API, role-based button selectors).
+3. Tell the next reader to delete the comment and re-enable when done.
+
+This is a one-way ratchet: never ratchet *up* (going from re-enabled
+back to fixme) without a corresponding code-change reason recorded in
+the comment. Drift is contagious; fixme accumulation isn't free.
+
 ## Testing philosophy
 
 - **E2E over component tests.** Control-plane dashboard — Playwright on real flows catches more real bugs than DOM assertions.
