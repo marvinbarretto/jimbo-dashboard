@@ -75,15 +75,15 @@
 
     <div class="skill-form__actions">
       @if (isEdit()) {
-        <button type="button" class="btn btn--danger" (click)="delete()" [disabled]="saving()">Delete</button>
-        <button type="button" class="btn" (click)="rename()" [disabled]="saving()">Rename…</button>
-        <a [routerLink]="['/config/skills', ...(skillId()?.split('/') ?? [])]" class="btn">Cancel</a>
+        <app-ui-button variant="danger" [disabled]="saving()" (pressed)="delete()">Delete</app-ui-button>
+        <app-ui-button variant="secondary" [disabled]="saving()" (pressed)="rename()">Rename…</app-ui-button>
+        <app-ui-button-link variant="secondary" [routerLink]="['/config/skills', ...(skillId()?.split('/') ?? [])]">Cancel</app-ui-button-link>
       } @else {
-        <a routerLink="/config/skills" class="btn">Cancel</a>
+        <app-ui-button-link variant="secondary" routerLink="/config/skills">Cancel</app-ui-button-link>
       }
-      <button type="submit" class="btn btn--primary" [disabled]="saving() || form.invalid">
+      <app-ui-button type="submit" variant="primary" [disabled]="saving() || form.invalid">
         {{ saving() ? 'Saving…' : (isEdit() ? 'Save' : 'Create') }}
-      </button>
+      </app-ui-button>
     </div>
   </form>
 </div>

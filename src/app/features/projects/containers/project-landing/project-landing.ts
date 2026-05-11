@@ -7,6 +7,7 @@ import { formatPageTitle } from '@app/app-title-strategy';
 import { UiBreadcrumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
 import type { Crumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { UiInlineEdit, type UiInlineEditOption } from '@shared/components/ui-inline-edit/ui-inline-edit';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
@@ -40,6 +41,7 @@ import type { UpdateProjectPayload } from '@domain/projects';
     RouterLink,
     UiBreadcrumb,
     UiBadge,
+    UiButtonLink,
     UiInlineEdit,
     UiCard,
     UiCluster,

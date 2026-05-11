@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiMetaList } from '@shared/components/ui-meta-list/ui-meta-list';
@@ -11,7 +11,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
 
 @Component({
   selector: 'app-detail-workflow-section',
-  imports: [RouterLink, UiBackLink, UiBadge, UiCluster, UiEmptyState, UiMetaList, UiPageHeader, UiSection, UiStack],
+  imports: [UiBackLink, UiBadge, UiButtonLink, UiCluster, UiEmptyState, UiMetaList, UiPageHeader, UiSection, UiStack],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-ui-section title="Typical Detail Workflow" [collapsible]="false">
@@ -22,7 +22,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
           <p uiPageHeaderHint>Inspect core metadata, check recent activity, and choose between inline edits or advanced edit.</p>
           <app-ui-cluster uiPageHeaderActions gap="sm">
             <app-ui-badge tone="success">active</app-ui-badge>
-            <a routerLink="/config/projects/hermes/edit" class="btn btn--secondary">Advanced edit</a>
+            <app-ui-button-link routerLink="/config/projects/hermes/edit" variant="secondary">Advanced edit</app-ui-button-link>
           </app-ui-cluster>
         </app-ui-page-header>
 

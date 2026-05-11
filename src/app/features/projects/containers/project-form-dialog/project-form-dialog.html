@@ -74,8 +74,8 @@
     </div>
 
     <app-ui-form-actions>
-      <button type="submit" class="btn btn--primary">Add project</button>
-      <button type="button" class="btn btn--ghost" (click)="cancel()">Cancel</button>
+      <app-ui-button type="submit" variant="primary">Add project</app-ui-button>
+      <app-ui-button variant="ghost" (pressed)="cancel()">Cancel</app-ui-button>
     </app-ui-form-actions>
   </form>
 </app-modal-shell>

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiInlineEdit, type UiInlineEditOption } from '@shared/components/ui-inline-edit/ui-inline-edit';
 import { UiMetaList } from '@shared/components/ui-meta-list/ui-meta-list';
@@ -15,7 +15,7 @@ type LabProjectStatus = 'active' | 'archived';
 // fields (criteria, color, URLs) route to the advanced edit form.
 @Component({
   selector: 'app-hybrid-edit-section',
-  imports: [RouterLink, UiBadge, UiCluster, UiInlineEdit, UiMetaList, UiPageHeader, UiSection, UiStack],
+  imports: [UiBadge, UiButtonLink, UiCluster, UiInlineEdit, UiMetaList, UiPageHeader, UiSection, UiStack],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../lab-utils.scss'],
   template: `
@@ -40,9 +40,9 @@ type LabProjectStatus = 'active' | 'archived';
               (saved)="onNameSaved($event)"
             />
           </div>
-          <a uiPageHeaderActions routerLink="/config/projects/hermes/edit" class="btn btn--secondary">
+          <app-ui-button-link uiPageHeaderActions routerLink="/config/projects/hermes/edit" variant="secondary">
             Advanced edit
-          </a>
+          </app-ui-button-link>
         </app-ui-page-header>
 
         <app-ui-stack gap="sm">
@@ -86,7 +86,7 @@ type LabProjectStatus = 'active' | 'archived';
 
           <pre class="ui-lab__code-block"><code>{{ criteriaPreview() }}</code></pre>
 
-          <a routerLink="/config/projects/hermes/edit" class="btn">Advanced edit</a>
+          <app-ui-button-link routerLink="/config/projects/hermes/edit" variant="secondary">Advanced edit</app-ui-button-link>
         </app-ui-stack>
 
         <app-ui-cluster gap="sm">

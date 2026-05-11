@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { ModelStacksService } from '../../data-access/model-stacks.service';
 import { ToastService } from '@shared/components/toast/toast.service';
+import { UiButton } from '@shared/components/ui-button/ui-button';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import type { ModelStack } from '@domain/model-stacks';
 
 const ID_PATTERN = /^[a-z0-9-]+$/;
@@ -19,7 +21,7 @@ function joinList(arr: readonly string[] | undefined): string {
 
 @Component({
   selector: 'app-model-stack-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, UiButton, UiButtonLink],
   templateUrl: './model-stack-form.html',
   styleUrl: './model-stack-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

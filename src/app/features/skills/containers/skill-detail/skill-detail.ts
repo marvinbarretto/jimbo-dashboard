@@ -7,6 +7,7 @@ import { formatPageTitle } from '@app/app-title-strategy';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiBreadcrumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
 import type { Crumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
@@ -20,7 +21,7 @@ import { skillNamespace, skillLocalName } from '@domain/skills';
 
 @Component({
   selector: 'app-skill-detail',
-  imports: [RouterLink, UiBreadcrumb, UiBadge, UiCard, UiCluster, UiEmptyState, UiLoadingState, UiMetaList, UiPageHeader, UiSection, UiStack],
+  imports: [RouterLink, UiBreadcrumb, UiBadge, UiButtonLink, UiCard, UiCluster, UiEmptyState, UiLoadingState, UiMetaList, UiPageHeader, UiSection, UiStack],
   templateUrl: './skill-detail.html',
   styleUrl: './skill-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

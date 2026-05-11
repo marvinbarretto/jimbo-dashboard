@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TableShell } from '@shared/components/table-shell/table-shell';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
@@ -18,7 +19,7 @@ interface LabProjectRow {
 
 @Component({
   selector: 'app-list-workflow-section',
-  imports: [RouterLink, TableShell, UiBadge, UiCluster, UiPageHeader, UiSection, UiStack, DatetimePipe],
+  imports: [RouterLink, TableShell, UiBadge, UiButtonLink, UiCluster, UiPageHeader, UiSection, UiStack, DatetimePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../lab-utils.scss'],
   template: `
@@ -29,7 +30,7 @@ interface LabProjectRow {
           <p uiPageHeaderHint>
             Browse rows, scan status quickly, and jump to the entity or advanced edit.
           </p>
-          <a uiPageHeaderActions routerLink="/config/projects/new" class="btn btn--primary">Add project</a>
+          <app-ui-button-link uiPageHeaderActions routerLink="/config/projects/new" variant="primary">Add project</app-ui-button-link>
         </app-ui-page-header>
 
         <app-table-shell>

@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { ModelStacksService } from '../../data-access/model-stacks.service';
 
 @Component({
   selector: 'app-model-stacks-list',
-  imports: [RouterLink],
+  imports: [RouterLink, UiButtonLink],
   templateUrl: './model-stacks-list.html',
   styleUrl: './model-stacks-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

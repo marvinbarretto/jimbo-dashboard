@@ -45,8 +45,8 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
 
   // Identity — chips that name an actor / project / vault item
   { id: 'entity-chip',             name: 'Entity Chip',           group: 'identity',        selector: 'app-entity-chip',       description: 'Inline chip for actors, projects, and vault items. Soft / solid variants.' },
-  { id: 'actor-avatar',            name: 'Actor Avatar',          group: 'identity',        selector: 'app-actor-avatar',      description: 'Monochrome outlined ring with monogram. Solid (agent) / dashed (human) / filled.' },
-  { id: 'actor-chip',              name: 'Actor Chip',            group: 'identity',        selector: 'app-actor-chip',        description: 'Avatar + name with project stripe. Compact mode for connected/secondary surfaces.' },
+  { id: 'actor-avatar',            name: 'Actor Avatar',          group: 'identity',        selector: 'app-actor-avatar',      description: 'Monochrome outlined ring with monogram. Outlined / filled.' },
+  { id: 'actor-chip',              name: 'Actor Chip',            group: 'identity',        selector: 'app-actor-chip',        description: 'Actor name in a monochrome pill. Pair with actor-avatar for the dense / icon-only treatment.' },
   { id: 'vault-chip',              name: 'Vault Chip',            group: 'identity',        selector: 'app-vault-chip',        description: 'Task / subtask / epic — same shell, different prefix. Epic encodes creator class via border.' },
 
   // Cards — kanban surface and the slot primitives that compose into it
@@ -58,7 +58,8 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'card-callout',            name: 'Card Callout',          group: 'cards',           selector: 'app-card-callout',      description: 'Variant body slot — question / rework / draft / rationale / result / error.' },
 
   // Forms & editing — input controls and form chrome
-  { id: 'ui-button',               name: 'Button',                group: 'forms-editing',   selector: 'app-ui-button',         description: 'Standard button primitive — primary / secondary / ghost / danger, md / sm sizes.' },
+  { id: 'ui-button',               name: 'Button',                group: 'forms-editing',   selector: 'app-ui-button',         description: 'Button primitives — UiButton (action) and UiButtonLink (navigation) sharing one visual contract.' },
+  { id: 'app-icon',                name: 'Icon',                  group: 'forms-editing',   selector: 'app-icon',              description: 'Single primitive over lucide-angular. Curated semantic names, currentColor strokes.' },
   { id: 'ui-add-tile',             name: 'Add Tile',              group: 'forms-editing',   selector: 'app-ui-add-tile',       description: 'Dashed-outline tile that sits at the end of a card grid as the "+ Add" affordance.' },
   { id: 'toggle',                  name: 'Toggle',                group: 'forms-editing',   selector: 'app-ui-toggle',         description: 'Boolean slide toggle with role="switch" accessibility.' },
   { id: 'inline-edit',             name: 'Inline Edit',           group: 'forms-editing',   selector: 'app-ui-inline-edit',    description: 'Click-to-edit primitive — text/textarea/select with autofocus, save-on-blur, Esc cancel.' },

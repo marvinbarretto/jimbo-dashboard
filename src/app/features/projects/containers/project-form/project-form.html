@@ -89,10 +89,10 @@
     </div>
 
     <app-ui-form-actions>
-      <button type="submit" class="btn btn--primary">
+      <app-ui-button type="submit" variant="primary">
         {{ isEdit() ? 'Save changes' : 'Add project' }}
-      </button>
-      <a routerLink="/config/projects" class="btn btn--ghost">Cancel</a>
+      </app-ui-button>
+      <app-ui-button-link routerLink="/config/projects" variant="ghost">Cancel</app-ui-button-link>
     </app-ui-form-actions>
   </form>
 </app-ui-stack>

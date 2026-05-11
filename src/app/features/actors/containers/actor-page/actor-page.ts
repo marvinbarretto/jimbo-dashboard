@@ -6,6 +6,7 @@ import { map } from 'rxjs';
 import { formatPageTitle } from '@app/app-title-strategy';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiBreadcrumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
@@ -33,6 +34,7 @@ import type { Crumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
     RouterLink,
     UiBreadcrumb,
     UiBadge,
+    UiButtonLink,
     UiCard,
     UiCluster,
     UiEmptyState,

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, TemplateRef, computed, inject, view
 import { RouterLink } from '@angular/router';
 import { type CellContext, createColumnHelper, type ColumnDef } from '@tanstack/angular-table';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiDataTable } from '@shared/components/ui-data-table/ui-data-table';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
@@ -16,6 +17,7 @@ import { skillNamespace, skillLocalName, type Skill } from '@domain/skills';
   imports: [
     RouterLink,
     UiBadge,
+    UiButtonLink,
     UiCluster,
     UiDataTable,
     UiEmptyState,

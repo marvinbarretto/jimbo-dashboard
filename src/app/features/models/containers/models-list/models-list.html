@@ -4,7 +4,7 @@
     <p uiPageHeaderHint>
       LLMs you're tracking. Edits commit + push to <code>hub/models/</code> via jimbo-api.
     </p>
-    <a uiPageHeaderActions routerLink="new" class="btn btn--primary">Add model</a>
+    <app-ui-button-link uiPageHeaderActions routerLink="new" variant="primary">Add model</app-ui-button-link>
   </app-ui-page-header>
 
   @if (isLoading()) {

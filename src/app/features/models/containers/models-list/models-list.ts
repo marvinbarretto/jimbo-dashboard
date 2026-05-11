@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, TemplateRef, inject, viewChild } fr
 import { RouterLink } from '@angular/router';
 import { type CellContext, createColumnHelper, type ColumnDef } from '@tanstack/angular-table';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { UiDataTable } from '@shared/components/ui-data-table/ui-data-table';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
@@ -22,6 +23,7 @@ function priceToMTok(s: string | undefined): number | null {
   imports: [
     RouterLink,
     UiBadge,
+    UiButtonLink,
     UiDataTable,
     UiEmptyState,
     UiLoadingState,

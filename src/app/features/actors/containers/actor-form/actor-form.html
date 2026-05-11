@@ -65,10 +65,10 @@
     </fieldset>
 
     <div class="form-actions">
-      <button type="submit" class="btn btn--primary">
+      <app-ui-button type="submit" variant="primary">
         {{ isEdit() ? 'Save changes' : 'Add actor' }}
-      </button>
-      <a routerLink="/actors" class="btn btn--ghost">Cancel</a>
+      </app-ui-button>
+      <app-ui-button-link routerLink="/actors" variant="ghost">Cancel</app-ui-button-link>
     </div>
   </form>
 </div>

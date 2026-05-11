@@ -11,8 +11,6 @@ const MONOGRAM: Record<string, string> = {
   jimbo:  'J',
 };
 
-const HUMAN_ACTORS: ReadonlySet<string> = new Set(['marvin']);
-
 @Component({
   selector: 'app-actor-avatar',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,19 +34,11 @@ const HUMAN_ACTORS: ReadonlySet<string> = new Set(['marvin']);
     .actor-avatar--md { width: 1.375rem; height: 1.375rem; font-size: 0.7rem;  border-width: 1.5px; }
     .actor-avatar--lg { width: 2rem;    height: 2rem;    font-size: 0.9rem;  border-width: 2px; }
 
-    /* Solid ring is the default (agents). Dashed marks human (Marvin). */
-    .actor-avatar--human { border-style: dashed; }
-
     /* High-emphasis variant — filled ink with inverted text. Use sparingly. */
     .actor-avatar--filled {
       background: var(--color-text);
       color: var(--color-bg);
       border-color: var(--color-text);
-    }
-    .actor-avatar--filled.actor-avatar--human {
-      background: transparent;
-      color: var(--color-text);
-      border-style: dashed;
     }
   `],
 })
@@ -58,9 +48,7 @@ export class ActorAvatar {
   readonly variant = input<ActorAvatarVariant>('outlined');
 
   protected readonly monogram = computed(() => MONOGRAM[this.actor() as string] ?? '?');
-  protected readonly cls = computed(() => {
-    const parts = ['actor-avatar', `actor-avatar--${this.size()}`, `actor-avatar--${this.variant()}`];
-    if (HUMAN_ACTORS.has(this.actor() as string)) parts.push('actor-avatar--human');
-    return parts.join(' ');
-  });
+  protected readonly cls = computed(() =>
+    `actor-avatar actor-avatar--${this.size()} actor-avatar--${this.variant()}`,
+  );
 }

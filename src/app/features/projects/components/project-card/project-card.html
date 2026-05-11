@@ -1,14 +1,15 @@
 @if (showDragHandle()) {
-  <div class="project-card__drag-handle" cdkDragHandle>⠿</div>
+  <div class="project-card__drag-handle" cdkDragHandle aria-label="Drag to reorder">
+    <app-icon name="grip-vertical" [size]="14" />
+  </div>
 }
 
 <div class="project-card__header">
-  @if (project().color_token) {
-    <span class="project-card__color-dot" [style.background]="project().color_token"></span>
-  }
   <a [routerLink]="['/projects', project().id]" class="project-card__name">{{ project().display_name }}</a>
   @if (project().repo_url) {
-    <a [href]="project().repo_url" target="_blank" rel="noopener" class="project-card__repo">repo ↗</a>
+    <a [href]="project().repo_url" target="_blank" rel="noopener" class="project-card__repo">
+      repo <app-icon name="external-link" [size]="12" />
+    </a>
   }
 </div>
 
@@ -18,12 +19,26 @@
 
 <div class="project-card__footer">
   @if (project().owner_actor_id; as owner) {
-    <app-actor-chip [actor]="owner" [stripe]="false" />
+    <app-actor-chip [actor]="owner" />
   } @else {
     <span class="project-card__owner project-card__owner--unowned">— unowned —</span>
   }
   <app-ui-cluster gap="xs">
-    <a [routerLink]="['/config/projects', project().id, 'edit']" class="btn btn--ghost btn--sm">Edit</a>
-    <app-ui-button variant="ghost" size="sm" (pressed)="removed.emit(project().id)">Remove</app-ui-button>
+    <app-ui-button-link
+      variant="ghost"
+      size="sm"
+      [iconOnly]="true"
+      ariaLabel="Edit project"
+      [routerLink]="['/config/projects', project().id, 'edit']">
+      <app-icon name="edit" [size]="14" />
+    </app-ui-button-link>
+    <app-ui-button
+      variant="ghost"
+      size="sm"
+      [iconOnly]="true"
+      ariaLabel="Remove project"
+      (pressed)="removed.emit(project().id)">
+      <app-icon name="delete" [size]="14" />
+    </app-ui-button>
   </app-ui-cluster>
 </div>

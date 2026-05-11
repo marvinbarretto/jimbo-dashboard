@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators, FormArray, FormControl } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
@@ -7,10 +7,12 @@ import { ActorsService } from '../../data-access/actors.service';
 import { actorId } from '@domain/ids';
 import type { ActorKind, ActorRuntime } from '@domain/actors';
 import { ALL_CAPABILITIES, CAPABILITY_LABELS, type SkillCapability } from '@domain/capability';
+import { UiButton } from '@shared/components/ui-button/ui-button';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 
 @Component({
   selector: 'app-actor-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, UiButton, UiButtonLink],
   templateUrl: './actor-form.html',
   styleUrl: './actor-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

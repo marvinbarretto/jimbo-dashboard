@@ -14,8 +14,7 @@ import { actorId } from '@domain/ids';
     <app-ui-section title="Actor Avatar" [collapsible]="false">
       <app-ui-stack gap="md">
         <p class="ui-lab__support-copy">
-          Monochrome outlined ring with the actor's monogram inside. Solid ring = agent
-          (Boris/Ralph/Jimbo). Dashed ring = human (Marvin only). Filled is a high-emphasis
+          Monochrome outlined ring with the actor's monogram inside. Filled is a high-emphasis
           variant for headers / "you" treatments. No actor colour anywhere — actors are
           intentionally monochrome so the primary palette stays free for state.
         </p>

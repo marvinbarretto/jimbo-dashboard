@@ -116,6 +116,7 @@ export const routes: Routes = [
       { path: 'datetime-pipes',          loadComponent: () => import('./features/ui-lab/sections/datetime-pipes-section').then(m => m.DatetimePipesSection) },
       { path: 'form-actions',            loadComponent: () => import('./features/ui-lab/sections/form-actions-section').then(m => m.FormActionsSection) },
       { path: 'ui-button',               loadComponent: () => import('./features/ui-lab/sections/ui-button-section').then(m => m.UiButtonSection) },
+      { path: 'app-icon',                loadComponent: () => import('./features/ui-lab/sections/app-icon-section').then(m => m.AppIconSection) },
       { path: 'ui-add-tile',             loadComponent: () => import('./features/ui-lab/sections/ui-add-tile-section').then(m => m.UiAddTileSection) },
       { path: 'project-card',            loadComponent: () => import('./features/ui-lab/sections/project-card-section').then(m => m.ProjectCardSection) },
       { path: 'epic-row',                loadComponent: () => import('./features/ui-lab/sections/epic-row-section').then(m => m.EpicRowSection) },

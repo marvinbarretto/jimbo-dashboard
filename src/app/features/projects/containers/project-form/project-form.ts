@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, startWith, take } from 'rxjs';
 import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
+import { UiButton } from '@shared/components/ui-button/ui-button';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { UiFormActions } from '@shared/components/ui-form-actions/ui-form-actions';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
@@ -15,7 +17,7 @@ import { PROJECT_PALETTE } from '../../data-access/projects.service';
 
 @Component({
   selector: 'app-project-form',
-  imports: [ReactiveFormsModule, RouterLink, UiBackLink, UiFormActions, UiPageHeader, UiStack],
+  imports: [ReactiveFormsModule, UiBackLink, UiButton, UiButtonLink, UiFormActions, UiPageHeader, UiStack],
   templateUrl: './project-form.html',
   styleUrl: './project-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

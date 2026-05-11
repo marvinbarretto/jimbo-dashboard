@@ -79,7 +79,7 @@ import { actorId } from '@domain/ids';
             trigger button and open/closed state.
           </p>
           <app-ui-cluster gap="sm" align="center">
-            <app-actor-chip [actor]="boris" [stripe]="false" />
+            <app-actor-chip [actor]="boris" />
             <app-ui-button
               size="sm"
               variant="ghost"
@@ -112,7 +112,7 @@ import { actorId } from '@domain/ids';
           <div style="display:flex;flex-direction:column;gap:0.35rem">
             <app-ui-cluster gap="xs" align="center">
               <app-ui-badge tone="success">active</app-ui-badge>
-              <app-actor-chip [actor]="boris" [stripe]="false" />
+              <app-actor-chip [actor]="boris" />
               <app-priority-badge [priority]="2" />
               <app-entity-chip type="project" id="localshout" label="Localshout" color="#6b95d6" variant="solid" />
             </app-ui-cluster>

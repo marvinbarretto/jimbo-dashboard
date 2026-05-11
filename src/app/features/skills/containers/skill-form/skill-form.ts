@@ -8,12 +8,14 @@
 // All four flows route through dashboard-api → jimbo-api → git pull/commit/push.
 
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators, FormArray, FormControl } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { SkillsService } from '../../data-access/skills.service';
 import { ToastService } from '@shared/components/toast/toast.service';
+import { UiButton } from '@shared/components/ui-button/ui-button';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import type { Skill } from '@domain/skills';
 import { ALL_CAPABILITIES, CAPABILITY_LABELS, type SkillCapability } from '@domain/capability';
 
@@ -29,7 +31,7 @@ function joinList(arr: readonly string[] | undefined): string {
 
 @Component({
   selector: 'app-skill-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, UiButton, UiButtonLink],
   templateUrl: './skill-form.html',
   styleUrl: './skill-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
