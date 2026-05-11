@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.49](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.48...v0.0.49) (2026-05-11)
+
+
+### Features
+
+* **execution:** switch retry to POST /:id/retry on jimbo-api ([fe0a3e4](https://github.com/marvinbarretto/jimbo-dashboard/commit/fe0a3e423db316ef4d5bb542472e0fefb30153c0))
+
+
+### Code Refactoring
+
+* **grooming:** add GroomingCommands and drop dead card components ([224c0b9](https://github.com/marvinbarretto/jimbo-dashboard/commit/224c0b9faa459beaa2c842cf6efd7e83228561b9))
+* **ui:** consolidate button, icon, and actor primitives ([765e943](https://github.com/marvinbarretto/jimbo-dashboard/commit/765e9436a11d3314d1fab39d27b2df3a8026cc5a))
+
 ### [0.0.48](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.47...v0.0.48) (2026-05-09)
 
 
