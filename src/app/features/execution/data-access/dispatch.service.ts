@@ -79,13 +79,12 @@ export class DispatchService {
     );
   }
 
-  // Operator-triggered retry of a failed dispatch. Flips status back to 'approved',
-  // clears the error, increments retry_count. Production may prefer a new row per
-  // attempt to preserve full history; we mutate in place here for simplicity.
-  //
-  // TODO: jimbo-api has no PATCH-by-dispatch-id endpoint. POST /api/dispatch/approve
-  // takes item_ids (task IDs) not dispatch IDs. Needs a dedicated retry endpoint.
-  // For now this 404s and the optimistic update reverts cleanly via withOptimisticUpdate.
+  // Operator-triggered retry of a terminally-failed dispatch. The server owns
+  // the column flip — we POST to /api/dispatch/{id}/retry with no body and let
+  // jimbo-api compute status='approved', clear error_message/started_at/
+  // completed_at, and increment retry_count. The optimistic shape mirrors what
+  // the server will return so the UI updates instantly; the schema check on
+  // success reconciles against canonical state.
   retry(id: DispatchId): void {
     const prior = this.getById(id);
     if (!prior || prior.status !== 'failed') return;
@@ -103,20 +102,12 @@ export class DispatchService {
       return;
     }
 
-    const patch = {
-      status:        'approved' as const,
-      error_message: null,
-      started_at:    null,
-      completed_at:  null,
-      retry_count:   prior.retry_count + 1,
-    };
-
     withOptimisticUpdate(this._entries, this.toast, {
       prior,
       next: optimistic,
-      request: this.http.patch<unknown>(
-        `${environment.dashboardApiUrl}/api/dispatch/${encodeURIComponent(id)}`,
-        patch,
+      request: this.http.post<unknown>(
+        `${environment.dashboardApiUrl}/api/dispatch/${encodeURIComponent(id)}/retry`,
+        {},
       ),
       errorMessage: 'Retry failed — changes reverted',
       // Successful HTTP response — but we still need to validate the payload
@@ -126,7 +117,7 @@ export class DispatchService {
       onSuccess: (raw) => {
         const result = ApiDispatchEntrySchema.safeParse(raw);
         if (!result.success) {
-          console.error('[dispatch] PATCH retry response failed schema:', result.error.issues);
+          console.error('[dispatch] /retry response failed schema:', result.error.issues);
           this.toast.error('Retry queued but response was malformed — refresh to confirm');
           return;
         }

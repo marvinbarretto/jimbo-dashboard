@@ -14,6 +14,9 @@ import type { ApiDispatchEntry } from '@domain/dispatch/dispatch.api-schema';
 // HTTP-mode tests for DispatchService. The service constructor fires a GET
 // against /api/dispatch/queue on init; we drain that with a fixture array
 // before exercising the mutation methods.
+//
+// retry() posts to POST /api/dispatch/{id}/retry — server owns the column
+// flip, dashboard sends no body.
 
 describe('DispatchService.retry (HTTP mode)', () => {
   let service: DispatchService;
@@ -94,15 +97,9 @@ describe('DispatchService.retry (HTTP mode)', () => {
     expect(optimistic.error).toBeNull();
     expect(optimistic.retry_count).toBe(1);
 
-    // Drain the PATCH request and respond with an updated row.
-    const req = http.expectOne(r => r.method === 'PATCH' && r.url.includes('/api/dispatch/'));
-    expect(req.request.body).toEqual({
-      status:        'approved',
-      error_message: null,
-      started_at:    null,
-      completed_at:  null,
-      retry_count:   1,
-    });
+    // Drain the POST request and respond with the canonical updated row.
+    const req = http.expectOne(r => r.method === 'POST' && r.url.endsWith('/api/dispatch/1/retry'));
+    expect(req.request.body).toEqual({});
     req.flush(fakeEntry({ id: 1, status: 'approved', error_message: null, retry_count: 1, started_at: null, completed_at: null }));
 
     expect(lastSuccessToast()).toMatch(/queued for retry/i);
@@ -113,7 +110,7 @@ describe('DispatchService.retry (HTTP mode)', () => {
     const id = dispatchId('1');
     service.retry(id);
 
-    const req = http.expectOne(r => r.method === 'PATCH');
+    const req = http.expectOne(r => r.method === 'POST' && r.url.endsWith('/retry'));
     req.error(new ProgressEvent('network'), { status: 500, statusText: 'Server Error' });
 
     const after = service.getById(id)!;
@@ -127,8 +124,8 @@ describe('DispatchService.retry (HTTP mode)', () => {
     const id = dispatchId('1');
     service.retry(id);
 
-    const req = http.expectOne(r => r.method === 'PATCH');
-    // Server accepted the PATCH but returned a malformed body. The optimistic
+    const req = http.expectOne(r => r.method === 'POST' && r.url.endsWith('/retry'));
+    // Server accepted the POST but returned a malformed body. The optimistic
     // approved state should stand — the server already committed; refresh
     // will reconcile. The toast tells the operator to verify.
     req.flush({ totally: 'wrong shape' });
@@ -148,11 +145,11 @@ describe('DispatchService.retry (HTTP mode)', () => {
     // sole entry is 'failed', so we use a different id and rely on the
     // unknown-id path also being a no-op (next test).
     service.retry(dispatchId('999'));
-    http.expectNone(r => r.method === 'PATCH');
+    http.expectNone(r => r.method === 'POST' && r.url.endsWith('/retry'));
   });
 
   it('is a no-op when the id is unknown', () => {
     service.retry(dispatchId('does-not-exist'));
-    http.expectNone(r => r.method === 'PATCH');
+    http.expectNone(r => r.method === 'POST' && r.url.endsWith('/retry'));
   });
 });
