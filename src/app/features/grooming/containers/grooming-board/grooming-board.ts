@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { take } from 'rxjs';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
 import { VaultItemCommands } from '@features/vault-items/commands/vault-item-commands';
+import { GroomingCommands } from '@features/grooming/commands/grooming-commands';
 import { ActorsService } from '@features/actors/data-access/actors.service';
 import { ProjectsService } from '@features/projects/data-access/projects.service';
 import { VaultItemProjectsService } from '@features/vault-items/data-access/vault-item-projects.service';
@@ -26,7 +27,6 @@ import {
 } from '@domain/vault';
 import type { ActorId } from '@domain/ids';
 import type { VaultItemId } from '@domain/ids';
-import type { LiveSnapshot } from '../../components/grooming-card/grooming-card';
 import { VaultCard } from '@shared/components/vault-card/vault-card';
 import type { GroomingCardContext, ProjectRef, ChildStatus } from '@shared/components/vault-card/card-context';
 import type { ChildState } from '@shared/components/epic-rollup/epic-rollup';
@@ -40,7 +40,6 @@ function groomingToRollup(item: VaultItem): ChildState {
   if (item.grooming_status === 'ready') return 'ready';
   return 'grooming';
 }
-import type { VaultActivityEvent } from '@domain/activity/activity-event';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
 import { BoardCreateBar } from '@shared/components/board-create-bar/board-create-bar';
@@ -79,6 +78,7 @@ interface ColumnView {
 export class GroomingBoard {
   private readonly vaultItemsService = inject(VaultItemsService);
   private readonly commands = inject(VaultItemCommands);
+  private readonly groomingCommands = inject(GroomingCommands);
   private readonly actorsService = inject(ActorsService);
   private readonly projectsService = inject(ProjectsService);
   private readonly vaultItemProjectsService = inject(VaultItemProjectsService);
@@ -292,87 +292,6 @@ export class GroomingBoard {
         ?? stuckDays(item, this.activityEventsService.eventsFor(item.id)());
   }
 
-  // Pre-format the latest activity event + latest thread message for the card's
-  // expanded view. Reads server-joined embeds when available; falls back to the
-  // legacy seed-mode service path otherwise.
-  liveSnapshot(item: VaultItem): LiveSnapshot {
-    if (item.latest_event !== undefined || item.latest_message !== undefined) {
-      const ev = item.latest_event;
-      const msg = item.latest_message;
-      return {
-        latestEvent: ev ? {
-          actorLabel:  `@${ev.actor_display_name ?? ev.actor_id}`,
-          description: describeProductionAction(ev.action, ev.from_value, ev.to_value),
-          at:          ev.ts,
-        } : null,
-        latestMessage: msg ? {
-          authorLabel: `@${msg.author_display_name ?? msg.author_actor_id}`,
-          bodyExcerpt: msg.body_excerpt,
-          at:          msg.created_at,
-        } : null,
-      };
-    }
-
-    // Seed-mode legacy fallback — uses parallel services.
-    const events = this.activityEventsService.eventsFor(item.id)();
-    const messages = this.threadService.messagesFor(item.id)();
-
-    const latestEvent = events.length > 0
-      ? {
-          actorLabel:  this.actorLabel(events[0].actor_id),
-          description: this.describeEvent(events[0]),
-          at:          events[0].at,
-        }
-      : null;
-
-    const sortedMessages = [...messages].sort((a, b) => b.created_at.localeCompare(a.created_at));
-    const latestMessage = sortedMessages.length > 0
-      ? {
-          authorLabel: this.actorLabel(sortedMessages[0].author_actor_id),
-          bodyExcerpt: this.truncate(sortedMessages[0].body, 100),
-          at:          sortedMessages[0].created_at,
-        }
-      : null;
-
-    return { latestEvent, latestMessage };
-  }
-
-  // Single helper — actor label is `@displayName` if loaded, else `@id`.
-  private actorLabel(id: string): string {
-    const actor = this.actorsService.getById(id as never);
-    return `@${actor?.display_name ?? id}`;
-  }
-
-  // Map an event variant to a short human-readable description. Mirrors the
-  // logic in vault-item-detail.eventDescription — duplicated here on purpose
-  // because the card excerpt is a different surface and may diverge.
-  private describeEvent(e: VaultActivityEvent): string {
-    switch (e.type) {
-      case 'created':                 return 'created this item';
-      case 'assigned':                {
-        const head = e.from_actor_id
-          ? `reassigned ${this.actorLabel(e.from_actor_id)} → ${this.actorLabel(e.to_actor_id)}`
-          : `assigned to ${this.actorLabel(e.to_actor_id)}`;
-        return e.reason ? `${head} — ${e.reason}` : head;
-      }
-      case 'completion_changed':      return e.to !== null ? 'marked done' : 'un-marked done';
-      case 'archived':                return 'archived';
-      case 'unarchived':              return 'unarchived';
-      case 'grooming_status_changed': return `moved ${e.from.replace('_', ' ')} → ${e.to.replace('_', ' ')}`;
-      case 'thread_message_posted':   return `posted ${e.message_kind}`;
-      case 'agent_run_completed':     return e.from_status && e.to_status
-        ? `ran ${e.skill_id} (${e.from_status.replace('_', ' ')} → ${e.to_status.replace('_', ' ')})`
-        : `ran ${e.skill_id}`;
-      case 'rejected':                return `rejected ${e.from_status.replace('_', ' ')} → ${this.actorLabel(e.to_owner)}: ${this.truncate(e.reason, 60)}`;
-    }
-  }
-
-  private truncate(text: string, max: number): string {
-    if (text.length <= max) return text;
-    return text.slice(0, max - 1).trimEnd() + '…';
-  }
-
-
   // Per-child status for the rollup strip on epic cards. Maps a child's
   // grooming_status into the rollup's coarser bucket — anything pre-dispatch
   // collapses to 'grooming'; ready/running/completed/failed pass through.
@@ -437,10 +356,7 @@ export class GroomingBoard {
   onColumnDrop(event: DragEvent, status: GroomingStatus): void {
     const id = this.drag.onDrop(event, status);
     if (!id) return;
-    // Operator drag-drop bypasses the transition allowlist — Marvin shoves
-    // items around freely during exploration. The strict gate is reserved
-    // for `approveForDispatch`. Audit event still fires inside the command.
-    this.commands.setStatus(id, status, { force: true });
+    this.groomingCommands.moveColumn(id, status);
   }
 
   // --- filter groups ------------------------------------------------------
@@ -559,11 +475,8 @@ export class GroomingBoard {
     this.commands.approveForDispatch(item.id);
   }
 
-  // Card-level reject is a quick status-change with a reason note. The full
-  // rejectWithReason composition (reassign + thread message + 2 events) is
-  // reserved for the dialog's reject form, which collects a new owner.
   onRejectItem(item: VaultItem, reason: string): void {
-    this.commands.setStatus(item.id, 'needs_rework', { reason, force: true });
+    this.groomingCommands.quickReject(item.id, reason);
   }
 
   // Manual decompose nudge — for now, just open the detail page so the
@@ -622,25 +535,5 @@ export class GroomingBoard {
 
       return true;
     });
-  }
-}
-
-// ── Production action descriptions ───────────────────────────────────────
-// Map raw note_activity.action codes (production schema) to short human-readable
-// strings for the live snapshot row. Production action vocabulary is wider than
-// the dashboard's VaultActivityEvent union — these are best-effort renderings.
-function describeProductionAction(action: string, from: string | null, to: string | null): string {
-  switch (action) {
-    case 'grooming_status_changed':   return `moved ${(from ?? '?').replace(/_/g, ' ')} → ${(to ?? '?').replace(/_/g, ' ')}`;
-    case 'reassigned':                return from ? `reassigned @${from} → @${to}` : `assigned to @${to}`;
-    case 'submitted_analysis':        return 'submitted analysis';
-    case 'submitted_decomposition':   return 'submitted decomposition';
-    case 'priority_scored':           return to ? `scored priority P${to}` : 'scored priority';
-    case 'priority_changed':          return `priority ${from ?? '?'} → ${to ?? '?'}`;
-    case 'question_raised':           return 'raised a question';
-    case 'feedback_requeue':          return 'requeued for grooming';
-    case 'feedback_reject':           return 'rejected the proposal';
-    case 'commission_completed':      return 'commission completed';
-    default:                          return action.replace(/_/g, ' ');
   }
 }
