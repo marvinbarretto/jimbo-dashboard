@@ -9,6 +9,7 @@ import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { UiFormActions } from '@shared/components/ui-form-actions/ui-form-actions';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
+import { SlugFromDirective } from '@shared/forms/slug-from.directive';
 import { ProjectsService } from '../../data-access/projects.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
 import { projectId, actorId } from '@domain/ids';
@@ -17,7 +18,7 @@ import { PROJECT_PALETTE } from '../../data-access/projects.service';
 
 @Component({
   selector: 'app-project-form',
-  imports: [ReactiveFormsModule, UiBackLink, UiButton, UiButtonLink, UiFormActions, UiPageHeader, UiStack],
+  imports: [ReactiveFormsModule, UiBackLink, UiButton, UiButtonLink, UiFormActions, UiPageHeader, UiStack, SlugFromDirective],
   templateUrl: './project-form.html',
   styleUrl: './project-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,6 +42,7 @@ export class ProjectForm {
   // For existing projects owned by a now-inactive actor, the id stays as a
   // plain string value even if it's not in the active list.
   readonly actors = this.actorsService.activeActors;
+  readonly existingIds = computed(() => this.service.projects().map(p => p.id));
 
   readonly form = this.fb.nonNullable.group({
     id:             ['', Validators.required],

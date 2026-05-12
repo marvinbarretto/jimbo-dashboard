@@ -2,23 +2,17 @@
   <h2 modal-header [id]="titleId" class="project-form-dialog__title">New project</h2>
 
   <form modal-body [formGroup]="form" (ngSubmit)="submit()" class="project-form-dialog__form">
-    <div class="field field--inline">
-      <div class="field">
-        <label for="pfd-id">ID <span class="hint">(slug)</span></label>
-        <input id="pfd-id" formControlName="id" autocomplete="off" />
-        @if (form.controls.id.touched && form.controls.id.errors?.['required']) {
-          <p class="field-error" role="alert">ID is required.</p>
-        }
-      </div>
+    <input type="hidden" formControlName="id"
+           [appSlugFrom]="form.controls.display_name"
+           [slugTaken]="existingIds()" />
 
-      <div class="field">
-        <label for="pfd-kind">Kind</label>
-        <select id="pfd-kind" formControlName="kind">
-          @for (k of kinds; track k) {
-            <option [value]="k">{{ k === 'major' ? 'Major — permanent' : 'Minor — time-boxed' }}</option>
-          }
-        </select>
-      </div>
+    <div class="field">
+      <label for="pfd-kind">Kind</label>
+      <select id="pfd-kind" formControlName="kind">
+        @for (k of kinds; track k) {
+          <option [value]="k">{{ k === 'major' ? 'Major — permanent' : 'Minor — time-boxed' }}</option>
+        }
+      </select>
     </div>
 
     <div class="field">

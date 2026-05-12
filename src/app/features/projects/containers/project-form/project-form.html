@@ -5,13 +5,11 @@
   </app-ui-page-header>
 
   <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="field">
-      <label for="id">ID <span class="hint">(slug, e.g. localshout)</span></label>
-      <input id="id" formControlName="id" [attr.disabled]="isEdit() ? true : null" />
-      @if (form.controls.id.touched && form.controls.id.errors?.['required']) {
-        <p class="field-error" role="alert">ID is required.</p>
-      }
-    </div>
+    @if (!isEdit()) {
+      <input type="hidden" formControlName="id"
+             [appSlugFrom]="form.controls.display_name"
+             [slugTaken]="existingIds()" />
+    }
 
     <div class="field">
       <label for="display_name">Display name</label>

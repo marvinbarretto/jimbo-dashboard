@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -6,6 +6,7 @@ import { startWith } from 'rxjs';
 import { ModalShell } from '@shared/components/modal-shell/modal-shell';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiFormActions } from '@shared/components/ui-form-actions/ui-form-actions';
+import { SlugFromDirective } from '@shared/forms/slug-from.directive';
 import { ProjectsService, PROJECT_PALETTE } from '../../data-access/projects.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
 import { projectId, actorId, type ProjectId } from '@domain/ids';
@@ -18,7 +19,7 @@ export interface ProjectFormDialogData {
 
 @Component({
   selector: 'app-project-form-dialog',
-  imports: [ReactiveFormsModule, ModalShell, UiButton, UiFormActions],
+  imports: [ReactiveFormsModule, ModalShell, UiButton, UiFormActions, SlugFromDirective],
   templateUrl: './project-form-dialog.html',
   styleUrl: './project-form-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,6 +34,7 @@ export class ProjectFormDialog {
   readonly kinds: ProjectKind[] = ['major', 'minor'];
   readonly palette = PROJECT_PALETTE;
   readonly actors = inject(ActorsService).activeActors;
+  readonly existingIds = computed(() => this.service.projects().map(p => p.id));
 
   readonly form = this.fb.nonNullable.group({
     id:             ['', Validators.required],
