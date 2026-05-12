@@ -37,7 +37,13 @@
       <label for="kind">Kind</label>
       <select id="kind" formControlName="kind">
         @for (k of kinds; track k) {
-          <option [value]="k">{{ k === 'major' ? 'Major — permanent' : 'Minor — time-boxed (1–6 months)' }}</option>
+          <option [value]="k">
+            @switch (k) {
+              @case ('major') { Major — permanent }
+              @case ('minor') { Minor — time-boxed (1–6 months) }
+              @case ('admin') { Admin — life admin (passwords, finance, household) }
+            }
+          </option>
         }
       </select>
     </div>

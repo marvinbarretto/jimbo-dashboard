@@ -10,7 +10,13 @@
       <label for="pfd-kind">Kind</label>
       <select id="pfd-kind" formControlName="kind">
         @for (k of kinds; track k) {
-          <option [value]="k">{{ k === 'major' ? 'Major — permanent' : 'Minor — time-boxed' }}</option>
+          <option [value]="k">
+            @switch (k) {
+              @case ('major') { Major — permanent }
+              @case ('minor') { Minor — time-boxed }
+              @case ('admin') { Admin — life admin }
+            }
+          </option>
         }
       </select>
     </div>

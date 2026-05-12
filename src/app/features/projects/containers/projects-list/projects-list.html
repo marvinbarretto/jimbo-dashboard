@@ -13,7 +13,7 @@
          cdkDropList
          #majorList="cdkDropList"
          [cdkDropListData]="majorProjects()"
-         [cdkDropListConnectedTo]="[minorList]"
+         [cdkDropListConnectedTo]="[minorList, adminList]"
          (cdkDropListDropped)="onDrop($event, 'major')">
       @for (p of majorProjects(); track p.id) {
         <app-project-card cdkDrag [cdkDragData]="p"
@@ -35,7 +35,7 @@
          cdkDropList
          #minorList="cdkDropList"
          [cdkDropListData]="minorProjects()"
-         [cdkDropListConnectedTo]="[majorList]"
+         [cdkDropListConnectedTo]="[majorList, adminList]"
          (cdkDropListDropped)="onDrop($event, 'minor')">
       @for (p of minorProjects(); track p.id) {
         <app-project-card cdkDrag [cdkDragData]="p"
@@ -44,6 +44,28 @@
                           (removed)="remove($event)" />
       }
       <app-ui-add-tile label="New mini project" (pressed)="openCreate('minor')" />
+    </div>
+  </section>
+
+  <!-- ADMIN PROJECTS -->
+  <section class="projects-list__section">
+    <h2 class="projects-list__section-title">Admin</h2>
+    @if (adminProjects().length === 0) {
+      <p class="projects-list__empty">No admin projects — life-admin work (passwords, finance, household) lives here.</p>
+    }
+    <div class="projects-list__grid"
+         cdkDropList
+         #adminList="cdkDropList"
+         [cdkDropListData]="adminProjects()"
+         [cdkDropListConnectedTo]="[majorList, minorList]"
+         (cdkDropListDropped)="onDrop($event, 'admin')">
+      @for (p of adminProjects(); track p.id) {
+        <app-project-card cdkDrag [cdkDragData]="p"
+                          [project]="p"
+                          [showDragHandle]="true"
+                          (removed)="remove($event)" />
+      }
+      <app-ui-add-tile label="New admin project" (pressed)="openCreate('admin')" />
     </div>
   </section>
 

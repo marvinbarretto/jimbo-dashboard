@@ -18,7 +18,7 @@ export const ApiProjectSchema = z.object({
   // then collapse 'paused' → 'active' to match the domain Project type.
   status:         z.enum(['active', 'paused', 'archived'])
                     .transform(s => s === 'archived' ? 'archived' as const : 'active' as const),
-  kind:           z.enum(['major', 'minor']),
+  kind:           z.enum(['major', 'minor', 'admin']),
   owner_actor_id: z.string().min(1).nullable(),
   criteria:       z.string().nullable(),
   repo_url:       z.string().nullable(),

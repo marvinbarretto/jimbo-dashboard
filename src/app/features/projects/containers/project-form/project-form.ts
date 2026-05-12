@@ -35,7 +35,7 @@ export class ProjectForm {
   readonly isEdit = computed(() => !!this.id());
 
   readonly statuses: ProjectStatus[] = ['active', 'archived'];
-  readonly kinds: ProjectKind[] = ['major', 'minor'];
+  readonly kinds: ProjectKind[] = ['major', 'minor', 'admin'];
   readonly palette = PROJECT_PALETTE;
 
   // Actor dropdown options — only active actors can own new projects.

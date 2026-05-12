@@ -33,6 +33,10 @@ export class ProjectsList {
     this.service.projects().filter(p => p.status === 'active' && p.kind === 'minor')
   );
 
+  readonly adminProjects = computed(() =>
+    this.service.projects().filter(p => p.status === 'active' && p.kind === 'admin')
+  );
+
   readonly archivedProjects = computed(() =>
     this.service.projects().filter(p => p.status === 'archived')
   );

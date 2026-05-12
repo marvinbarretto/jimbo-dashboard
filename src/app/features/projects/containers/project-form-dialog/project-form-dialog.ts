@@ -31,7 +31,7 @@ export class ProjectFormDialog {
   protected readonly data = inject<ProjectFormDialogData>(DIALOG_DATA, { optional: true }) ?? {};
 
   readonly titleId = 'project-form-dialog-title';
-  readonly kinds: ProjectKind[] = ['major', 'minor'];
+  readonly kinds: ProjectKind[] = ['major', 'minor', 'admin'];
   readonly palette = PROJECT_PALETTE;
   readonly actors = inject(ActorsService).activeActors;
   readonly existingIds = computed(() => this.service.projects().map(p => p.id));

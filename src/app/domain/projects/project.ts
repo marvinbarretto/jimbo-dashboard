@@ -13,7 +13,8 @@ export type ProjectStatus = 'active' | 'archived';
 // Scope of the project.
 //   'major' = permanent, long-running (e.g. localshout, jimbo-hermes)
 //   'minor' = time-boxed, 1–6 months (e.g. nz-passport-renewal)
-export type ProjectKind = 'major' | 'minor';
+//   'admin' = catch-all bucket for life-admin work (passwords, finance, household)
+export type ProjectKind = 'major' | 'minor' | 'admin';
 
 // How much agents may do on this project's tasks without a human in the loop.
 // Null = inherit the global default at dispatch time.
