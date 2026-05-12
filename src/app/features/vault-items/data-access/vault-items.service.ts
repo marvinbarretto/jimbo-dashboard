@@ -277,7 +277,7 @@ export class VaultItemsService {
       seedMode: isSeedMode(),
       onSuccess: () => {
         this.activityService.post(event);
-        this.toast.success(`"${prior.title}" archived`);
+        this.toast.success(`Archived #${prior.seq} · "${prior.title}"`);
       },
     });
   }
@@ -626,7 +626,7 @@ export class VaultItemsService {
       request: this.http.delete(`${this.url}/by-seq/${prior.seq}`),
       errorMessage: `Delete failed — "${prior.title}" restored`,
       seedMode: isSeedMode(),
-      onSuccess: () => this.toast.success(`"${prior.title}" deleted`),
+      onSuccess: () => this.toast.success(`Deleted #${prior.seq} · "${prior.title}"`),
     });
   }
 }

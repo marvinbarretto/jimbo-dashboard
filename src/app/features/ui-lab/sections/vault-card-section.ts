@@ -107,8 +107,9 @@ function baseItem(over: Partial<VaultItem>): VaultItem {
               preserves audit trail, events, and reversibility — use it for items that
               were considered and parked. Delete is only offered in the pre-dispatch funnel
               (ungroomed → classified) for rows that <em>shouldn't have existed</em>:
-              accidental captures, garbled input, test artefacts. Confirms with a
-              native dialog because the action is irreversible.
+              accidental captures, garbled input, test artefacts. One-click — the
+              optimistic-remove path restores the row if the server rejects, and the toast
+              surfaces seq + title so the action is traceable.
             </li>
           </ul>
         </div>

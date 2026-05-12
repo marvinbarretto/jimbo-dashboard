@@ -325,19 +325,12 @@ export class VaultCard {
         if (reason.trim()) this.reject.emit(reason.trim());
         return;
       }
-      case 'delete': {
-        // Hard delete is irreversible — confirm first. The title is shown so
-        // the operator gets one last "is this what I meant" beat before the
-        // row is gone.
-        const ctx = this.context();
-        const title = ctx.kind === 'dispatch'
-          ? (ctx.item?.title ?? `task ${ctx.entry.task_id}`)
-          : ctx.item.title;
-        if (window.confirm(`Delete "${title}" permanently? This can't be undone.`)) {
-          this.removeItem.emit();
-        }
+      case 'delete':
+        // Hard delete is a one-click action — the toast surfaces what just
+        // happened with seq + title, and the optimistic-remove path means a
+        // server failure restores the row. No confirm dialog by design.
+        this.removeItem.emit();
         return;
-      }
     }
   }
 }
