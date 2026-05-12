@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.51](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.50...v0.0.51) (2026-05-12)
+
+
+### Features
+
+* **vault:** simplify epic detail view — hide delivery block and github url ([2aa977c](https://github.com/marvinbarretto/jimbo-dashboard/commit/2aa977c8980890c70e8ef8a0650a18b4a0144309))
+
 ### [0.0.50](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.49...v0.0.50) (2026-05-12)
 
 
