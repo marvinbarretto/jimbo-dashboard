@@ -26,7 +26,7 @@ import {
   type SortMode,
 } from '@domain/vault';
 import { actorId, projectId, type ActorId, type VaultItemId } from '@domain/ids';
-import { VaultCard } from '@shared/components/vault-card/vault-card';
+import { VaultCard, type ActionKey } from '@shared/components/vault-card/vault-card';
 import type { GroomingCardContext, ProjectRef, ChildStatus } from '@shared/components/vault-card/card-context';
 import type { ChildState } from '@shared/components/epic-rollup/epic-rollup';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
@@ -481,65 +481,46 @@ export class GroomingBoard {
 
   onSortChange(mode: string): void { this._sortMode.set(mode as SortMode); }
 
-  onDemoteItem(item: VaultItem): void {
-    this.vaultItemsService.update(item.id, { type: 'note', grooming_status: 'ungroomed' });
-  }
-
   onPriorityChange(item: VaultItem, priority: Priority | null): void {
     this.vaultItemsService.update(item.id, { manual_priority: priority });
-  }
-
-
-  onArchiveItem(item: VaultItem): void {
-    this.commands.archive(item.id);
-  }
-
-  // Hard delete — the card already confirmed before emitting, so this is
-  // unconditional. The command path keeps audit consistent (no direct
-  // service writes from containers).
-  onDeleteItem(item: VaultItem): void {
-    this.commands.delete(item.id);
-  }
-
-  onCreateTask(): void {
-    this.shortcuts.openCapture();
   }
 
   onAssignItem(item: VaultItem, actor: ActorId): void {
     this.commands.reassign(item.id, actor);
   }
 
-  // Open the detail dialog so the operator can use the existing question
-  // composer there. Once the inline composer moves into the new card we'll
-  // wire (answer) directly to threadService.post.
-  onAnswerItem(item: VaultItem): void {
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { detail: item.seq },
-      queryParamsHandling: 'merge',
-    });
+  onCreateTask(): void {
+    this.shortcuts.openCapture();
   }
 
-  // Approve = move from decomposed to ready, but only when readiness passes.
-  // The command refuses (with toast) when AC / owner / priority / questions /
-  // blockers aren't satisfied — this is what stops bad-state dispatches from
-  // landing in the executor.
-  onApproveItem(item: VaultItem): void {
-    this.commands.approveForDispatch(item.id);
-  }
-
-  onRejectItem(item: VaultItem, reason: string): void {
-    this.groomingCommands.quickReject(item.id, reason);
-  }
-
-  // Manual decompose nudge — for now, just open the detail page so the
-  // operator can trigger the decompose skill from there. Inline action follow-up.
-  onDecomposeItem(item: VaultItem): void {
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { detail: item.seq },
-      queryParamsHandling: 'merge',
-    });
+  // Unified action handler — routes each ActionKey to the appropriate service.
+  // Reject and decompose open the detail modal; the operator uses the existing
+  // UI there (reject reason field, decompose skill trigger) rather than a
+  // window.prompt or bare fire-and-forget.
+  onCardAction(item: VaultItem, key: ActionKey): void {
+    switch (key) {
+      case 'demote':
+        this.vaultItemsService.update(item.id, { type: 'note', grooming_status: 'ungroomed' });
+        return;
+      case 'archive':
+        this.commands.archive(item.id);
+        return;
+      case 'delete':
+        this.commands.delete(item.id);
+        return;
+      case 'approve':
+        this.commands.approveForDispatch(item.id);
+        return;
+      case 'answer':
+      case 'decompose':
+      case 'reject':
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { detail: item.seq },
+          queryParamsHandling: 'merge',
+        });
+        return;
+    }
   }
 
   resetFilters(): void {

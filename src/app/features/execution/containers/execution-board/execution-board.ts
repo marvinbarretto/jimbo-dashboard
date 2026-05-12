@@ -17,7 +17,7 @@ import {
   type DispatchQueueEntry,
 } from '@domain/dispatch';
 import type { DispatchId, SkillId, ActorId, ProjectId } from '@domain/ids';
-import { VaultCard } from '@shared/components/vault-card/vault-card';
+import { VaultCard, type ActionKey } from '@shared/components/vault-card/vault-card';
 import type {
   CardContext,
   DispatchCardContext,
@@ -296,28 +296,18 @@ export class ExecutionBoard {
     swapDetailSeq(this.router, item.seq);
   }
 
-  onCompleteManualItem(item: VaultItem): void {
-    this.commands.complete(item.id);
-  }
-
   // --- mutations ---------------------------------------------------------
 
-  onRetry(id: DispatchId): void {
-    this.dispatchService.retry(id);
+  onDispatchAction(entry: DispatchQueueEntry, key: ActionKey): void {
+    switch (key) {
+      case 'retry':   this.dispatchService.retry(entry.id); return;
+      case 'dismiss': this.dispatchCommands.dismiss(entry.id); return;
+      case 'archive': this.dispatchCommands.archiveTaskAndDismiss(entry); return;
+    }
   }
 
-  /** Card-level (dismiss) — drop a finished dispatch row from view. Hard-delete. */
-  onDismissDispatch(id: DispatchId): void {
-    this.dispatchCommands.dismiss(id);
-  }
-
-  /**
-   * Card-level (archive) on a FAILED dispatch — operator decided the task
-   * isn't worth fixing. Archives the underlying vault item AND clears the
-   * dispatch row in one gesture.
-   */
-  onArchiveDispatch(entry: DispatchQueueEntry): void {
-    this.dispatchCommands.archiveTaskAndDismiss(entry);
+  onManualAction(item: VaultItem, key: ActionKey): void {
+    if (key === 'markDone') this.commands.complete(item.id);
   }
 
   /**

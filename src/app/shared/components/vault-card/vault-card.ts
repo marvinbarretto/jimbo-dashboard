@@ -181,20 +181,16 @@ export class VaultCard {
     this.epicOptions().length > 0 ? this._epicTrigger() : null,
   );
 
-  // Outputs — every callsite emits only the ones it cares about. The board
-  // owns service calls; the card stays presentational.
-  readonly archive        = output<void>();
-  readonly removeItem     = output<void>();
+  // Data-carrying outputs — kept separate because the board needs the value,
+  // not just notification that the action occurred.
   readonly assign         = output<ActorId>();
   readonly priorityChange = output<Priority | null>();
-  readonly approve  = output<void>();
-  readonly reject   = output<string>();
-  readonly answer   = output<void>();
-  readonly retry    = output<void>();
-  readonly dismiss  = output<void>();
-  readonly markDone = output<void>();
-  readonly decompose = output<void>();
-  readonly demote   = output<void>();
+
+  // Single notification channel for all void-style actions. The board switch-
+  // dispatches to the right service call. Adding a new action only requires
+  // extending ActionKey + the groomingActions/dispatchActions/manualActions
+  // helpers above — no new outputs, no new template bindings.
+  readonly actionTriggered = output<ActionKey>();
 
   protected readonly projectTint = computed(() => {
     const ctx = this.context();
@@ -321,30 +317,8 @@ export class VaultCard {
   // directly. Adding a new ActionKey only requires extending the switch here.
   protected onAction(key: ActionKey, event: Event): void {
     event.stopPropagation();
-    switch (key) {
-      case 'answer':    this.answer.emit();    return;
-      case 'approve':   this.approve.emit();   return;
-      case 'decompose': this.decompose.emit(); return;
-      case 'demote':    this.demote.emit();    return;
-      case 'archive':   this.archive.emit();   return;
-      case 'retry':     this.retry.emit();     return;
-      case 'dismiss':   this.dismiss.emit();   return;
-      case 'markDone':  this.markDone.emit();  return;
-      case 'assign': return; // handled by actor avatar dropdown
-      case 'reject': {
-        // Lightweight prompt for the rejection reason — a real composer is a
-        // follow-up. Emits nothing if cancelled or empty.
-        const reason = window.prompt('Rejection reason?') ?? '';
-        if (reason.trim()) this.reject.emit(reason.trim());
-        return;
-      }
-      case 'delete':
-        // Hard delete is a one-click action — the toast surfaces what just
-        // happened with seq + title, and the optimistic-remove path means a
-        // server failure restores the row. No confirm dialog by design.
-        this.removeItem.emit();
-        return;
-    }
+    if (key === 'assign') return; // handled by actor avatar dropdown
+    this.actionTriggered.emit(key);
   }
 }
 

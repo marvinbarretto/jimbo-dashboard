@@ -78,13 +78,7 @@
               [actorOptions]="activeActors()"
               (priorityChange)="onPriorityChange(item, $event)"
               (assign)="onAssignItem(item, $event)"
-              (demote)="onDemoteItem(item)"
-              (archive)="onArchiveItem(item)"
-              (removeItem)="onDeleteItem(item)"
-              (answer)="onAnswerItem(item)"
-              (approve)="onApproveItem(item)"
-              (reject)="onRejectItem(item, $event)"
-              (decompose)="onDecomposeItem(item)"
+              (actionTriggered)="onCardAction(item, $event)"
               (projectAssigned)="onAssignProject(item, $event)"
               (epicAssigned)="onAssignEpic(item, $event)" />
           </div>

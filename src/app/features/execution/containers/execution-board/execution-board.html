@@ -72,13 +72,11 @@
             @if (card.kind === 'dispatch') {
               <app-vault-card
                 [context]="cardContextFor(card)"
-                (retry)="onRetry(card.entry.id)"
-                (archive)="onArchiveDispatch(card.entry)"
-                (dismiss)="onDismissDispatch(card.entry.id)" />
+                (actionTriggered)="onDispatchAction(card.entry, $event)" />
             } @else {
               <app-vault-card
                 [context]="cardContextFor(card)"
-                (markDone)="onCompleteManualItem(card.item)" />
+                (actionTriggered)="onManualAction(card.item, $event)" />
             }
           }
           @if (col.status === 'completed' && col.cards.length > 0) {
