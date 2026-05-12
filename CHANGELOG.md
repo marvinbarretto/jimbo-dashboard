@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.50](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.49...v0.0.50) (2026-05-12)
+
+
+### Features
+
+* **grooming:** add → note button to early-funnel kanban cards ([d012e4b](https://github.com/marvinbarretto/jimbo-dashboard/commit/d012e4b6950936b115126c96dc815958735f23ed))
+* **grooming:** hard-delete action on early-funnel cards ([e5761b0](https://github.com/marvinbarretto/jimbo-dashboard/commit/e5761b03522ec23d91b43331bc43d4d79eca98ba))
+* **projects:** auto-derive project id from display name ([c3c586c](https://github.com/marvinbarretto/jimbo-dashboard/commit/c3c586c99c70a75cbb9068df81452ef3a484215c))
+* **vault:** demote task → note from detail action bar ([4577e3b](https://github.com/marvinbarretto/jimbo-dashboard/commit/4577e3b882fad8580f7eaa9f595b63490cb239ce))
+* **vault:** inline priority + owner editing in detail and cards ([2d91c61](https://github.com/marvinbarretto/jimbo-dashboard/commit/2d91c61acacbc1a631d80cd2179946e5df2b45b8))
+
+
+### Bug Fixes
+
+* **vault-card:** unclip dropdown overflow, make question badge navigable ([6eb013c](https://github.com/marvinbarretto/jimbo-dashboard/commit/6eb013c55f289a179faf25ac5b6db030eb94f134))
+
+
+### Code Refactoring
+
+* **grooming:** drop delete confirm, sharpen archive/delete toasts ([39740d8](https://github.com/marvinbarretto/jimbo-dashboard/commit/39740d8754ce4d5e984c0a6b21c53dccbe3f9cb0)), closes [#2417](https://github.com/marvinbarretto/jimbo-dashboard/issues/2417)
+* **grooming:** rework card identity surface and inline-backfill missing project/epic ([5f7eaa2](https://github.com/marvinbarretto/jimbo-dashboard/commit/5f7eaa2fe40d3130cdb3541b381845e08024405f))
+
 ### [0.0.49](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.48...v0.0.49) (2026-05-11)
 
 
