@@ -2,18 +2,18 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { KanbanCardLinkDirective } from '@shared/kanban/card-link.directive';
-import { ActorChip } from '@shared/components/actor-chip/actor-chip';
 import { ActorAvatar } from '@shared/components/actor-avatar/actor-avatar';
-import { EntityChip } from '@shared/components/entity-chip/entity-chip';
+import { PickerInputDirective, type MentionTrigger, projectPickerTrigger, epicPickerTrigger } from '@shared/mentions';
 import { PriorityBadge } from '@shared/components/priority-badge/priority-badge';
+import type { Project } from '@domain/projects';
+import type { VaultItem } from '@domain/vault';
 import { BlockerBadge } from '@shared/components/blocker-badge/blocker-badge';
 import { EpicBadge } from '@shared/components/epic-badge/epic-badge';
 import { DispatchStatusBadge } from '@shared/components/dispatch-status-badge/dispatch-status-badge';
-import { CardParentLink } from '@shared/components/card-parent-link/card-parent-link';
 import { CardCallout, type CalloutVariant } from '@shared/components/card-callout/card-callout';
 import { EpicRollup } from '@shared/components/epic-rollup/epic-rollup';
 import { effectivePriority, ageInDays, isStuck, staleNorm, ancientNorm } from '@domain/vault';
-import type { ActorId } from '@domain/ids';
+import type { ActorId, VaultItemId } from '@domain/ids';
 import type {
   CardContext,
   GroomingCardContext,
@@ -109,14 +109,12 @@ function actionsFor(ctx: CardContext): CardAction[] {
     RouterLink,
     DecimalPipe,
     KanbanCardLinkDirective,
-    ActorChip,
     ActorAvatar,
-    EntityChip,
+    PickerInputDirective,
     PriorityBadge,
     BlockerBadge,
     EpicBadge,
     DispatchStatusBadge,
-    CardParentLink,
     CardCallout,
     EpicRollup,
   ],
@@ -140,6 +138,37 @@ function actionsFor(ctx: CardContext): CardAction[] {
 })
 export class VaultCard {
   readonly context = input.required<CardContext>();
+
+  // Options for the inline backfill pickers. Supply empty arrays (or just omit)
+  // when the card shouldn't offer the picker — e.g. dispatch rows, or kinds
+  // where the board doesn't surface project/epic assignment from this surface.
+  // The triggers + dropdown are reused from the existing mention infrastructure.
+  readonly projectOptions = input<readonly Project[]>([]);
+  readonly epicOptions    = input<readonly VaultItem[]>([]);
+
+  // Emitted on pick. The board owns the actual mutation (junction insert /
+  // parent_id patch). Card stays presentational.
+  readonly projectAssigned = output<string>();          // project id
+  readonly epicAssigned    = output<VaultItemId>();     // epic vault-item id
+
+  // Stable trigger refs (lazy-built once). The trigger's `search()` closes
+  // over the option-signal so it always reads the current list without us
+  // having to recreate the trigger on every CD cycle.
+  private readonly _projectTrigger = computed<MentionTrigger>(() =>
+    projectPickerTrigger(this.projectOptions, p => this.projectAssigned.emit(p.id as string)),
+  );
+  private readonly _epicTrigger = computed<MentionTrigger>(() =>
+    epicPickerTrigger(this.epicOptions, e => this.epicAssigned.emit(e.id)),
+  );
+
+  // Public triggers — null when nothing to pick, so the template can hide the
+  // dashed CTA entirely instead of opening an empty dropdown.
+  protected readonly projectTrigger = computed<MentionTrigger | null>(() =>
+    this.projectOptions().length > 0 ? this._projectTrigger() : null,
+  );
+  protected readonly epicTrigger = computed<MentionTrigger | null>(() =>
+    this.epicOptions().length > 0 ? this._epicTrigger() : null,
+  );
 
   // Outputs — every callsite emits only the ones it cares about. The board
   // owns service calls; the card stays presentational.
@@ -182,6 +211,15 @@ export class VaultCard {
     const ctx = this.context();
     if (ctx.kind === 'dispatch') return ctx.item?.title ?? `task #${ctx.entry.task_id}`;
     return ctx.item.title;
+  });
+
+  // Topic tags surfaced under the title. Triage-rule: tags are topic-only,
+  // never source/author/channel, so they're rendered as a flat monochrome row
+  // with a `#` prefix and no per-tag colour.
+  protected readonly tags = computed<readonly string[]>(() => {
+    const ctx = this.context();
+    if (ctx.kind === 'dispatch') return ctx.item?.tags ?? [];
+    return ctx.item.tags ?? [];
   });
 
   protected readonly isEpic = computed(() => {

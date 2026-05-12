@@ -3,14 +3,12 @@
 .vault-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-left: 3px solid var(--proj-tint, var(--color-border));
-  padding: 0.5rem 0.625rem 0.4rem;
   border-radius: var(--radius);
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
   font-family: var(--font-mono);
   position: relative;
+  // Clip the project bar to the rounded corners — the bar paints the
+  // top edge in full project colour so identity is the first thing read.
+  overflow: hidden;
 
   // Amber wash + glow that intensifies with age. Reads --stale-norm and
   // --ancient-norm from the host bindings; both default to 0 for fresh items.
@@ -18,13 +16,100 @@
 }
 .vault-card:hover {
   border-color: var(--color-border-strong);
-  border-left-color: var(--proj-tint, var(--color-border-strong));
 }
 .vault-card--epic {
-  border-top: 2px solid color-mix(in srgb, var(--proj-tint, var(--color-info)) 60%, var(--color-border));
   background: linear-gradient(180deg,
     color-mix(in srgb, var(--proj-tint, var(--color-info)) 8%, var(--color-surface)) 0%,
     var(--color-surface) 30%);
+}
+
+// Project header strip — full-bleed bar painted in the project colour, with
+// the project name on the left and (when subtask) the parent epic on the
+// right. Cards with no project and no parent skip the bar entirely.
+.vault-card__project-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  background: var(--proj-tint, var(--color-border));
+  color: var(--color-bg);
+  font-weight: 500;
+  min-width: 0;
+
+  // When no project token, fall back to a neutral band (subtask of an epic
+  // that has no project on the parent).
+  &--no-project {
+    background: var(--color-surface-soft, var(--color-border));
+    color: var(--color-text-muted);
+  }
+}
+.vault-card__project-bar-name {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  min-width: 0;
+
+  &:hover { text-decoration: underline; }
+}
+.vault-card__project-bar-epic {
+  color: inherit;
+  opacity: 0.85;
+  text-decoration: none;
+  margin-left: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  min-width: 0;
+  font-weight: 500;
+
+  &:hover { text-decoration: underline; opacity: 1; }
+}
+
+.vault-card__body {
+  padding: 0.5rem 0.625rem 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+// Inline-typeahead picker for "+ Add project" / "+ Add parent epic". Sits in
+// the same vertical slot as the project-bar — when both are absent, the dashed
+// CTAs flag the gap and let the operator backfill without leaving the card.
+.vault-card__picker {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+  padding: 0.3rem 0.6rem;
+  background: transparent;
+  border: 1px dashed var(--color-border-strong, var(--color-border));
+  border-radius: 0;
+  outline: none;
+
+  &::placeholder { color: var(--color-text-muted); opacity: 0.85; }
+
+  &:hover {
+    color: var(--color-text);
+    border-color: var(--color-text-muted);
+    background: color-mix(in srgb, var(--color-text) 4%, transparent);
+  }
+
+  &:focus {
+    color: var(--color-text);
+    border-color: var(--color-accent);
+    border-style: solid;
+    background: var(--color-surface);
+  }
 }
 
 .vault-card__head {
@@ -42,15 +127,6 @@
 }
 .vault-card__seq:hover { text-decoration: underline; }
 
-.vault-card__proj-ref {
-  font-size: 0.65rem;
-  color: color-mix(in srgb, var(--proj-tint, var(--color-text-muted)) 65%, var(--color-text));
-  font-weight: 500;
-  text-decoration: none;
-  letter-spacing: 0.02em;
-}
-.vault-card__proj-ref:hover { text-decoration: underline; }
-
 .vault-card__retry {
   font-size: 0.6rem;
   color: var(--color-danger);
@@ -59,20 +135,22 @@
   border-radius: var(--radius);
 }
 
-.vault-card__stuck {
-  font-size: 0.6rem;
-  padding: 0 0.25rem;
-  background: color-mix(in srgb, var(--color-warning) 18%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-warning) 50%, var(--color-border));
-  color: var(--color-warning);
-  border-radius: var(--radius);
-}
-
 .vault-card__age {
   margin-left: auto;
   font-size: 0.6rem;
   color: var(--color-text-muted);
   white-space: nowrap;
+
+  // Stuck = age in current column exceeds the staleness threshold. We surface
+  // that here (single place for "Nd") instead of a separate pill so the head
+  // row doesn't show the same number twice.
+  &--stuck {
+    color: var(--color-warning);
+    padding: 0 0.3rem;
+    border: 1px solid color-mix(in srgb, var(--color-warning) 50%, var(--color-border));
+    background: color-mix(in srgb, var(--color-warning) 18%, transparent);
+    border-radius: var(--radius);
+  }
 }
 
 .vault-card__title {
@@ -85,6 +163,25 @@
 }
 .vault-card__title:hover { color: var(--color-accent); }
 .vault-card__title--missing { color: var(--color-text-muted); font-style: italic; }
+
+.vault-card__tags {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.vault-card__tag {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  padding: 0 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-border) 40%, transparent);
+  line-height: 1.6;
+  white-space: nowrap;
+}
 
 .vault-card__identity {
   display: flex;

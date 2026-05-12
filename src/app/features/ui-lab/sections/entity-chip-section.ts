@@ -14,14 +14,16 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
       <app-ui-stack gap="md">
         <p class="ui-lab__support-copy">
           Unified inline chip for actors, projects, and vault items. Prefix (<code>@</code>,
-          <code>/</code>, <code>#</code>) is derived from type. Colour token follows the same
-          <code>--actor-color-*</code> / <code>--project-color-*</code> convention.
-          Replaces the retired <code>OwnerChip</code> and <code>ProjectChip</code> components.
+          <code>/</code>, <code>#</code>) is derived from type. Projects carry their colour
+          token; <strong>actors are intentionally monochrome</strong> so the primary palette
+          stays free for state. For canonical actor identity reach for
+          <code>app-actor-chip</code> or <code>app-actor-avatar</code> — this chip is fine for
+          inline mention contexts but isn't where actor identity gets its emphasis.
           Vault items accept an optional <code>seq</code> to show the operator-facing number.
         </p>
 
         <div>
-          <p class="ui-lab__subhead">Actors</p>
+          <p class="ui-lab__subhead">Actors — monochrome (no tint)</p>
           <app-ui-cluster gap="sm">
             <app-entity-chip type="actor" id="marvin" label="Marvin" />
             <app-entity-chip type="actor" id="ralph"  label="Ralph"  />

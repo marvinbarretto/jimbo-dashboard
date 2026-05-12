@@ -1,12 +1,41 @@
 <article class="vault-card" [class.vault-card--epic]="isEpic()">
 
+  @if (context().project || context().parentEpic) {
+    <div class="vault-card__project-bar" [class.vault-card__project-bar--no-project]="!context().project">
+      @if (context().project; as proj) {
+        <a class="vault-card__project-bar-name"
+           [routerLink]="['/projects', proj.id]"
+           [attr.title]="proj.display_name">/{{ proj.display_name }}</a>
+      }
+      @if (context().parentEpic; as parent) {
+        <a class="vault-card__project-bar-epic"
+           [routerLink]="['/vault-items', parent.seq]"
+           [attr.title]="'Epic #' + parent.seq + ' · ' + parent.title">↳ #{{ parent.seq }} {{ parent.title }}</a>
+      }
+    </div>
+  }
+
+  @if (!context().project && projectTrigger(); as t) {
+    <input
+      type="text"
+      class="vault-card__picker vault-card__picker--project"
+      placeholder="+ Add project…"
+      aria-label="Add project"
+      [appPickerInput]="t" />
+  }
+  @if (context().project && !context().parentEpic && epicTrigger(); as t) {
+    <input
+      type="text"
+      class="vault-card__picker vault-card__picker--epic"
+      placeholder="+ Add parent epic…"
+      aria-label="Add parent epic"
+      [appPickerInput]="t" />
+  }
+
+  <div class="vault-card__body">
   <header class="vault-card__head">
     @if (seq() !== null) {
       <a class="vault-card__seq" [routerLink]="['/vault-items', seq()]">#{{ seq() }}</a>
-    }
-
-    @if (context().project; as proj) {
-      <a class="vault-card__proj-ref" [routerLink]="['/projects', proj.id]">/{{ proj.display_name }}</a>
     }
 
     @if (dispatch(); as d) {
@@ -25,18 +54,15 @@
         @if (g.openQuestionsCount > 0) {
           <app-blocker-badge [count]="g.openQuestionsCount" />
         }
-        @if (isStuck()) {
-          <span class="vault-card__stuck" [attr.title]="stuckDays() + 'd in this column'">{{ stuckDays() }}d</span>
-        }
       }
     }
 
-    <span class="vault-card__age">{{ ageLabel() }}</span>
+    <span
+      class="vault-card__age"
+      [class.vault-card__age--stuck]="isStuck()"
+      [attr.title]="isStuck() ? stuckDays() + 'd in this column · stuck' : null"
+    >{{ ageLabel() }}</span>
   </header>
-
-  @if (context().parentEpic; as parent) {
-    <app-card-parent-link [parentSeq]="parent.seq" [parentTitle]="parent.title" />
-  }
 
   @if (seq() !== null) {
     <a class="vault-card__title" [appKanbanCardLink]="seq()!">{{ title() }}</a>
@@ -44,24 +70,23 @@
     <span class="vault-card__title vault-card__title--missing">{{ title() }}</span>
   }
 
+  @if (tags().length > 0) {
+    <ul class="vault-card__tags" aria-label="Tags">
+      @for (tag of tags(); track tag) {
+        <li class="vault-card__tag">#{{ tag }}</li>
+      }
+    </ul>
+  }
+
   <div class="vault-card__identity">
     @if (grooming(); as g) {
-      <app-actor-chip [actor]="g.owner" />
+      <app-actor-avatar [actor]="g.owner" size="md" />
     } @else if (manual(); as m) {
-      <app-actor-chip [actor]="m.owner" />
+      <app-actor-avatar [actor]="m.owner" size="md" />
     } @else if (dispatch(); as d) {
       @if (d.owner) {
-        <app-actor-chip [actor]="d.owner" />
+        <app-actor-avatar [actor]="d.owner" size="md" />
       }
-    }
-
-    @if (context().project; as proj) {
-      <app-entity-chip
-        type="project"
-        [id]="proj.id"
-        [label]="proj.display_name"
-        [color]="proj.color_token"
-        variant="solid" />
     }
 
     @if (grooming()?.source; as s) {
@@ -140,4 +165,5 @@
       }
     </div>
   }
+  </div>
 </article>

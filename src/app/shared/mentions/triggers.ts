@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import type { Signal } from '@angular/core';
 import type { Project } from '@domain/projects';
 import type { Actor } from '@domain/actors';
+import type { VaultItem } from '@domain/vault';
 import { environment } from '../../../environments/environment';
 import type { MentionTrigger, MentionItem } from './mention-trigger';
 
@@ -92,6 +93,68 @@ export function projectActorTrigger(
         | { kind: 'project'; project: Project };
       if (p.kind === 'actor') onPickActor(p.actor);
       else onPickProject(p.project);
+      return null;
+    },
+  };
+}
+
+/**
+ * Project-only typeahead — used by the inline "Add project" picker on cards.
+ * Driven via [appPickerInput] (focus-driven, not trigger-char). The trigger
+ * `char` is unused for picker mode but kept for the MentionTrigger contract.
+ */
+export function projectPickerTrigger(
+  projects: Signal<readonly Project[]>,
+  onPick: (project: Project) => void,
+): MentionTrigger {
+  return {
+    char: '/',
+    search: (q) => {
+      const ql = q.toLowerCase();
+      return of(projects()
+        .filter(p => p.id.toLowerCase().includes(ql) || p.display_name.toLowerCase().includes(ql))
+        .slice(0, 10)
+        .map<MentionItem>(p => ({
+          id: `project:${p.id}`,
+          label: p.display_name,
+          group: 'Projects',
+          color: p.color_token,
+          payload: p,
+        })));
+    },
+    onSelect: (item) => {
+      onPick(item.payload as Project);
+      return null;
+    },
+  };
+}
+
+/**
+ * Epic-only typeahead — used by the inline "Add parent epic" picker on cards.
+ * Surfaces vault items where `is_epic === true`. Searches by title or exact
+ * seq number so the operator can type `12` to find #12.
+ */
+export function epicPickerTrigger(
+  epics: Signal<readonly VaultItem[]>,
+  onPick: (epic: VaultItem) => void,
+): MentionTrigger {
+  return {
+    char: '↳',
+    search: (q) => {
+      const ql = q.trim().toLowerCase();
+      return of(epics()
+        .filter(e => !ql || e.title.toLowerCase().includes(ql) || String(e.seq) === ql)
+        .slice(0, 12)
+        .map<MentionItem>(e => ({
+          id: `epic:${e.id}`,
+          label: e.title,
+          prefix: `#${e.seq}`,
+          group: 'Epics',
+          payload: e,
+        })));
+    },
+    onSelect: (item) => {
+      onPick(item.payload as VaultItem);
       return null;
     },
   };

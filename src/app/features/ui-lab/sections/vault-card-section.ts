@@ -2,9 +2,10 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { VaultCard } from '@shared/components/vault-card/vault-card';
 import type { CardContext, ProjectRef } from '@shared/components/vault-card/card-context';
 import type { VaultItem } from '@domain/vault';
+import type { Project } from '@domain/projects';
 import type { DispatchQueueEntry } from '@domain/dispatch';
 import type { ThreadMessage } from '@domain/thread';
-import { actorId, vaultItemId, dispatchId, skillId } from '@domain/ids';
+import { actorId, vaultItemId, projectId, dispatchId, skillId } from '@domain/ids';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 
@@ -42,15 +43,76 @@ function baseItem(over: Partial<VaultItem>): VaultItem {
       <app-ui-stack gap="md">
         <p class="ui-lab__support-copy">
           Unified card driven by a discriminated <code>CardContext</code>. Every kanban state
-          renders here through the same shell — see the prototype at
-          <code>/prototypes/vault-card-states.html</code> for the full design rationale.
+          renders here through the same shell.
         </p>
+
+        <div class="ui-lab__rules">
+          <p class="ui-lab__subhead">Identity rules — apply everywhere a vault item card appears</p>
+          <ul class="ui-lab__rule-list">
+            <li>
+              <strong>Project header strip</strong> — full-bleed bar at the top in the
+              project's <code>color_token</code>. Project name on the left; when the card is
+              a subtask, parent epic appears on the right. No project + no epic → no strip.
+              <em>The strip is the only place project identity lives on the card</em> —
+              don't double up with a chip or pill in the body.
+            </li>
+            <li>
+              <strong>Owner = circle, project = bar.</strong> Actor avatar (round monogram)
+              names the assignee in the identity row. Project never uses an avatar on the
+              card — the colour comes from the header strip. Across the rest of the system
+              the rule is <em>circle = person, rounded square = project</em>: shape never
+              tells you the wrong thing.
+            </li>
+            <li>
+              <strong>Actors are monochrome.</strong> No per-actor colour anywhere on the
+              card (avatar, source attribution, mention). Primary palette stays free for
+              priority and state.
+            </li>
+            <li>
+              <strong>Priority badge mirrors the filter chip.</strong> P0–P3 use the same
+              tinted-fill treatment as the kanban filter row — same colour, same weight, so
+              "P1" reads identically in both surfaces.
+            </li>
+            <li>
+              <strong>"Nd" appears once.</strong> The right-aligned age label is the single
+              source — when the item is stuck in its column, the same label turns amber.
+              Never show a separate stuck pill that repeats the number.
+            </li>
+            <li>
+              <strong>Tags = topic only.</strong> Rendered as a monochrome row below the
+              title, prefixed with <code>#</code>. No per-tag colour, no source/author/
+              channel tags (matches the triage rule). Tags are about subject, not provenance.
+            </li>
+            <li>
+              <strong>Project + epic are required for new items.</strong> Legacy items
+              missing either render a dashed <em>"+ Add project…"</em> / <em>"+ Add parent
+              epic…"</em> input at the top — inline typeahead via the shared
+              <code>[appPickerInput]</code> directive. Operators can backfill without
+              leaving the card.
+            </li>
+            <li>
+              <strong>Project is picked first, epic is scoped to the project.</strong>
+              The epic picker is hidden until a project is picked, and its options are
+              filtered to that project's epics only — an epic belongs to one project, so
+              cross-project parenting would break the "subtask inherits parent's project"
+              contract.
+            </li>
+            <li>
+              <strong>Staleness gradient applies to the body only.</strong> The amber wash
+              intensifies with age; the project strip never picks it up so identity stays
+              legible on the oldest cards.
+            </li>
+          </ul>
+        </div>
 
         @for (case of cases; track case.label) {
           <div>
             <p class="ui-lab__subhead">{{ case.label }}</p>
             <div style="max-width: 320px;">
-              <app-vault-card [context]="case.ctx" />
+              <app-vault-card
+                [context]="case.ctx"
+                [projectOptions]="projectOptions"
+                [epicOptions]="epicOptions" />
             </div>
           </div>
         }
@@ -59,6 +121,20 @@ function baseItem(over: Partial<VaultItem>): VaultItem {
   `,
 })
 export class VaultCardSection {
+  // Fixture options for the inline backfill pickers — so the dashed CTAs in
+  // the gallery actually open a dropdown with real-looking choices.
+  readonly projectOptions: readonly Project[] = [
+    { id: projectId('localshout'), display_name: 'LocalShout', description: '',  status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#c47a8f', created_at: '2026-01-01T00:00:00Z' },
+    { id: projectId('hermes'),     display_name: 'Hermes',     description: '',  status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#7a8fc4', created_at: '2026-01-01T00:00:00Z' },
+    { id: projectId('dashboard'),  display_name: 'Dashboard',  description: '',  status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#7ac4a4', created_at: '2026-01-01T00:00:00Z' },
+    { id: projectId('personal'),   display_name: 'Personal',   description: '',  status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#c4a47a', created_at: '2026-01-01T00:00:00Z' },
+  ];
+  readonly epicOptions: readonly VaultItem[] = [
+    baseItem({ seq: 2350, title: 'Unify kanban card components', is_epic: true, grooming_status: 'ready' }),
+    baseItem({ seq: 2300, title: 'Phase B Postgres cutover',     is_epic: true, grooming_status: 'ready' }),
+    baseItem({ seq: 2280, title: 'Phase C · turn boris/ralph dispatch on', is_epic: true, grooming_status: 'ready' }),
+  ];
+
   readonly cases: ReadonlyArray<{ label: string; ctx: CardContext }> = [
     {
       label: 'grooming · ungroomed',
@@ -69,6 +145,43 @@ export class VaultCardSection {
         owner: actorId('marvin'),
         openQuestion: null, childRollup: null, parentEpic: null,
         lastActivityAt: ago(0.1), daysInColumn: 0, source: { text: 'via manual', actorId: null }, openQuestionsCount: 0,
+      },
+    },
+    {
+      label: 'grooming · missing project + epic (dashed pickers visible)',
+      ctx: {
+        kind: 'grooming',
+        item: baseItem({ seq: 2615, title: 'figure out why pomo extension drains battery',
+          grooming_status: 'ungroomed', assigned_to: actorId('marvin') }),
+        project: null,
+        owner: actorId('marvin'),
+        openQuestion: null, childRollup: null, parentEpic: null,
+        lastActivityAt: ago(2), daysInColumn: 0, source: { text: 'manual', actorId: null }, openQuestionsCount: 0,
+      },
+    },
+    {
+      label: 'grooming · with tags (topic axis)',
+      ctx: {
+        kind: 'grooming',
+        item: baseItem({ seq: 2511, title: 'pomodoro extension drains battery on long sessions',
+          grooming_status: 'ungroomed', assigned_to: actorId('marvin'), manual_priority: 2,
+          tags: ['pomo', 'extension', 'performance'] }),
+        project: null,
+        owner: actorId('marvin'),
+        openQuestion: null, childRollup: null, parentEpic: null,
+        lastActivityAt: ago(0.5), daysInColumn: 0, source: null, openQuestionsCount: 0,
+      },
+    },
+    {
+      label: 'grooming · stuck (>14d in column)',
+      ctx: {
+        kind: 'grooming',
+        item: baseItem({ seq: 2208, title: 'document hermes failure modes (null next_run_at + state=running stuck)',
+          grooming_status: 'intake_rejected', assigned_to: actorId('marvin') }),
+        project: null,
+        owner: actorId('marvin'),
+        openQuestion: null, childRollup: null, parentEpic: null,
+        lastActivityAt: ago(24 * 18), daysInColumn: 18, source: null, openQuestionsCount: 0,
       },
     },
     {

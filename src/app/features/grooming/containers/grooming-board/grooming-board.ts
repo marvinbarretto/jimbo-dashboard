@@ -26,7 +26,7 @@ import {
   type SortMode,
 } from '@domain/vault';
 import type { ActorId } from '@domain/ids';
-import type { VaultItemId } from '@domain/ids';
+import { projectId, type VaultItemId } from '@domain/ids';
 import { VaultCard } from '@shared/components/vault-card/vault-card';
 import type { GroomingCardContext, ProjectRef, ChildStatus } from '@shared/components/vault-card/card-context';
 import type { ChildState } from '@shared/components/epic-rollup/epic-rollup';
@@ -375,6 +375,44 @@ export class GroomingBoard {
       .filter(actor => actor.kind === 'human' || actor.kind === 'agent')
       .map(actor => actor.id)
   );
+
+  // Inline-typeahead option lists for the card backfill pickers.
+  //
+  // Project list is global — every card can pick from any active project.
+  // Epic list is per-card — scoped to the card's primary project. An epic
+  // belongs to ONE project; offering cross-project epics would break the
+  // "subtask inherits the parent's project" contract. The card-level
+  // template already hides the epic picker until a project is picked, so
+  // the empty-array return path here is the safety net, not the UX.
+  readonly projectPickerOptions = computed(() =>
+    this.projectsService.activeProjects(),
+  );
+
+  epicPickerOptionsFor(item: VaultItem): readonly VaultItem[] {
+    const proj = this.primaryProject(item);
+    if (!proj) return [];
+    return this.vaultItemsService.items().filter(epic =>
+      epic.is_epic
+      && isActive(epic)
+      && epic.id !== item.id
+      && this.epicProjectId(epic) === proj.id,
+    );
+  }
+
+  private epicProjectId(epic: VaultItem): string | null {
+    if (epic.primary_project_id) return epic.primary_project_id;
+    const links = this.vaultItemProjectsService.projectsFor(epic.id)();
+    return (links[0]?.project_id as string | undefined) ?? null;
+  }
+
+  onAssignProject(item: VaultItem, id: string): void {
+    this.vaultItemProjectsService.add(item.id, projectId(id));
+  }
+
+  onAssignEpic(item: VaultItem, epicId: VaultItemId): void {
+    if (epicId === item.id) return;  // never self-parent
+    this.vaultItemsService.update(item.id, { parent_id: epicId });
+  }
 
   private buildProjectGroup(): FilterGroup<string> {
     const items = this.applyFilters({ skipProject: true });

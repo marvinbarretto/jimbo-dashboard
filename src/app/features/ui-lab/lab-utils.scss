@@ -59,6 +59,27 @@
   line-height: 1.5;
 }
 
+.ui-lab__rules {
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-surface-soft));
+  border-radius: 0 var(--radius) var(--radius) 0;
+
+  .ui-lab__subhead { margin-bottom: 0.4rem; }
+}
+
+.ui-lab__rule-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.55;
+
+  li + li { margin-top: 0.4rem; }
+  strong { color: var(--color-text); }
+  em     { color: var(--color-text-muted); font-style: italic; }
+}
+
 .ui-lab__inline-field {
   display: flex;
   align-items: flex-start;

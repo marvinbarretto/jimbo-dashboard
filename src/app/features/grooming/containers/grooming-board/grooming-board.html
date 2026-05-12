@@ -84,11 +84,15 @@
             (dragend)="onDragEnd()">
             <app-vault-card
               [context]="cardContextFor(item)"
+              [projectOptions]="projectPickerOptions()"
+              [epicOptions]="epicPickerOptionsFor(item)"
               (archive)="onArchiveItem(item)"
               (answer)="onAnswerItem(item)"
               (approve)="onApproveItem(item)"
               (reject)="onRejectItem(item, $event)"
-              (decompose)="onDecomposeItem(item)" />
+              (decompose)="onDecomposeItem(item)"
+              (projectAssigned)="onAssignProject(item, $event)"
+              (epicAssigned)="onAssignEpic(item, $event)" />
           </div>
         }
       </app-kanban-column>

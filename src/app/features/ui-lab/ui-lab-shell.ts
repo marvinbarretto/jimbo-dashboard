@@ -46,6 +46,7 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   // Identity — chips that name an actor / project / vault item
   { id: 'entity-chip',             name: 'Entity Chip',           group: 'identity',        selector: 'app-entity-chip',       description: 'Inline chip for actors, projects, and vault items. Soft / solid variants.' },
   { id: 'actor-avatar',            name: 'Actor Avatar',          group: 'identity',        selector: 'app-actor-avatar',      description: 'Monochrome outlined ring with monogram. Outlined / filled.' },
+  { id: 'project-avatar',          name: 'Project Avatar',        group: 'identity',        selector: 'app-project-avatar',    description: 'Project initials in a colour-filled rounded square. Actor=circle, project=rounded-square — shape disambiguates identity.' },
   { id: 'actor-chip',              name: 'Actor Chip',            group: 'identity',        selector: 'app-actor-chip',        description: 'Actor name in a monochrome pill. Pair with actor-avatar for the dense / icon-only treatment.' },
   { id: 'vault-chip',              name: 'Vault Chip',            group: 'identity',        selector: 'app-vault-chip',        description: 'Task / subtask / epic — same shell, different prefix. Epic encodes creator class via border.' },
 

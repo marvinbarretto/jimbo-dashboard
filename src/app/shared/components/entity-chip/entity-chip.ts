@@ -101,11 +101,13 @@ const PREFIX: Record<EntityType, string> = {
       opacity: 0.35;
     }
 
-    /* Actor tints */
-    .entity-chip--actor.entity-chip--marvin { color: var(--actor-color-marvin); border-color: color-mix(in srgb, var(--actor-color-marvin) 40%, var(--color-border)); }
-    .entity-chip--actor.entity-chip--ralph  { color: var(--actor-color-ralph);  border-color: color-mix(in srgb, var(--actor-color-ralph)  40%, var(--color-border)); }
-    .entity-chip--actor.entity-chip--boris  { color: var(--actor-color-boris);  border-color: color-mix(in srgb, var(--actor-color-boris)  40%, var(--color-border)); }
-    .entity-chip--actor.entity-chip--jimbo  { color: var(--actor-color-jimbo);  border-color: color-mix(in srgb, var(--actor-color-jimbo)  40%, var(--color-border)); }
+    /* Actors are intentionally monochrome — see ActorAvatar/ActorChip.
+       EntityChip's actor type renders the @ prefix + name without any tint
+       so the primary palette stays free for state. */
+    .entity-chip--actor {
+      color: var(--color-text);
+      border-color: var(--color-text);
+    }
 
     /* Project tints — color set inline via --chip-color when [color] is bound */
     .entity-chip--project {

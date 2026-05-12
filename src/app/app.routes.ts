@@ -121,6 +121,7 @@ export const routes: Routes = [
       { path: 'project-card',            loadComponent: () => import('./features/ui-lab/sections/project-card-section').then(m => m.ProjectCardSection) },
       { path: 'epic-row',                loadComponent: () => import('./features/ui-lab/sections/epic-row-section').then(m => m.EpicRowSection) },
       { path: 'actor-avatar',            loadComponent: () => import('./features/ui-lab/sections/actor-avatar-section').then(m => m.ActorAvatarSection) },
+      { path: 'project-avatar',          loadComponent: () => import('./features/ui-lab/sections/project-avatar-section').then(m => m.ProjectAvatarSection) },
       { path: 'actor-chip',              loadComponent: () => import('./features/ui-lab/sections/actor-chip-section').then(m => m.ActorChipSection) },
       { path: 'vault-chip',              loadComponent: () => import('./features/ui-lab/sections/vault-chip-section').then(m => m.VaultChipSection) },
       { path: 'epic-rollup',             loadComponent: () => import('./features/ui-lab/sections/epic-rollup-section').then(m => m.EpicRollupSection) },

@@ -75,21 +75,28 @@
   }
 }
 
-// Tone overrides for active chips — priority (grooming) and dispatch-status
-// (execution). Projects and actors use EntityChip which carries its own tints.
-::ng-deep .chip--active {
-  background: var(--color-surface);
+// Tone overrides for chips — priority (grooming) and dispatch-status (execution).
+// Priority chips ALWAYS render with their tone tint (matches priority-badge on
+// the card so P1 looks the same wherever it appears). Active state adds a
+// stronger border. Projects and actors use EntityChip which carries its own tints.
+::ng-deep {
+  // Priority tones — unconditional tint, mirrors priority-badge on the card.
+  .chip.chip--P0 { background: color-mix(in srgb, var(--color-danger)     20%, transparent); color: var(--color-danger);     border-color: color-mix(in srgb, var(--color-danger)     35%, var(--color-border)); }
+  .chip.chip--P1 { background: color-mix(in srgb, var(--color-warning)    20%, transparent); color: var(--color-warning);    border-color: color-mix(in srgb, var(--color-warning)    35%, var(--color-border)); }
+  .chip.chip--P2 { background: color-mix(in srgb, var(--color-text-muted) 20%, transparent); color: var(--color-text-muted); border-color: color-mix(in srgb, var(--color-text-muted) 35%, var(--color-border)); }
+  .chip.chip--P3 { background: var(--color-border);                                          color: var(--color-text-muted); border-color: var(--color-text-muted); }
 
-  // Priority tones (grooming)
-  &.chip--P0 { border-color: var(--color-danger);      color: var(--color-danger);      }
-  &.chip--P1 { border-color: var(--color-warning);     color: var(--color-warning);     }
-  &.chip--P2,
-  &.chip--P3 { border-color: var(--color-text-muted);  color: var(--color-text-muted);  }
+  .chip--active.chip--P0 { border-color: var(--color-danger);     }
+  .chip--active.chip--P1 { border-color: var(--color-warning);    }
+  .chip--active.chip--P2,
+  .chip--active.chip--P3 { border-color: var(--color-text);       }
 
-  // Dispatch-status tones (execution)
-  &.chip--approved    { border-color: var(--color-text-muted); color: var(--color-text-muted); }
-  &.chip--dispatching { border-color: var(--color-info);       color: var(--color-info);       }
-  &.chip--running     { border-color: var(--color-warning);    color: var(--color-warning);    }
-  &.chip--completed   { border-color: var(--color-success);    color: var(--color-success);    }
-  &.chip--failed      { border-color: var(--color-danger);     color: var(--color-danger);     }
+  // Dispatch-status tones (execution) — kept as active-only border tint.
+  .chip--active {
+    &.chip--approved    { border-color: var(--color-text-muted); color: var(--color-text-muted); background: var(--color-surface); }
+    &.chip--dispatching { border-color: var(--color-info);       color: var(--color-info);       background: var(--color-surface); }
+    &.chip--running     { border-color: var(--color-warning);    color: var(--color-warning);    background: var(--color-surface); }
+    &.chip--completed   { border-color: var(--color-success);    color: var(--color-success);    background: var(--color-surface); }
+    &.chip--failed      { border-color: var(--color-danger);     color: var(--color-danger);     background: var(--color-surface); }
+  }
 }

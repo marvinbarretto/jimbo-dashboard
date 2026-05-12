@@ -292,15 +292,10 @@ function serialise(div: HTMLElement): string {
       margin-right: 0.1em;
     }
 
-    .entity-chip--actor.entity-chip--marvin { color: var(--actor-color-marvin); border-color: color-mix(in srgb, var(--actor-color-marvin) 40%, var(--color-border)); }
-    .entity-chip--actor.entity-chip--ralph  { color: var(--actor-color-ralph);  border-color: color-mix(in srgb, var(--actor-color-ralph)  40%, var(--color-border)); }
-    .entity-chip--actor.entity-chip--boris  { color: var(--actor-color-boris);  border-color: color-mix(in srgb, var(--actor-color-boris)  40%, var(--color-border)); }
-    .entity-chip--actor.entity-chip--jimbo  { color: var(--actor-color-jimbo);  border-color: color-mix(in srgb, var(--actor-color-jimbo)  40%, var(--color-border)); }
-
-    .entity-chip--project.entity-chip--hermes     { color: var(--project-color-hermes);     border-color: color-mix(in srgb, var(--project-color-hermes)     40%, var(--color-border)); }
-    .entity-chip--project.entity-chip--localshout { color: var(--project-color-localshout); border-color: color-mix(in srgb, var(--project-color-localshout) 40%, var(--color-border)); }
-    .entity-chip--project.entity-chip--dashboard  { color: var(--project-color-dashboard);  border-color: color-mix(in srgb, var(--project-color-dashboard)  40%, var(--color-border)); }
-    .entity-chip--project.entity-chip--personal   { color: var(--project-color-personal);   border-color: color-mix(in srgb, var(--project-color-personal)   40%, var(--color-border)); }
+    /* No per-actor / per-project tints — actors are intentionally monochrome,
+       and projects in the composer use the base chip border too so the typing
+       surface stays calm. ProjectAvatar / EntityChip still carry colour where
+       identity benefits from it (cards, filter rows). */
 
     .entity-chip--vault-item {
       color: var(--color-accent);
