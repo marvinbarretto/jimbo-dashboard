@@ -25,8 +25,7 @@ import {
   type Priority,
   type SortMode,
 } from '@domain/vault';
-import type { ActorId } from '@domain/ids';
-import { projectId, type VaultItemId } from '@domain/ids';
+import { actorId, projectId, type ActorId, type VaultItemId } from '@domain/ids';
 import { VaultCard } from '@shared/components/vault-card/vault-card';
 import type { GroomingCardContext, ProjectRef, ChildStatus } from '@shared/components/vault-card/card-context';
 import type { ChildState } from '@shared/components/epic-rollup/epic-rollup';
@@ -80,6 +79,7 @@ export class GroomingBoard {
   private readonly commands = inject(VaultItemCommands);
   private readonly groomingCommands = inject(GroomingCommands);
   private readonly actorsService = inject(ActorsService);
+  protected readonly activeActors = this.actorsService.activeActors;
   private readonly projectsService = inject(ProjectsService);
   private readonly vaultItemProjectsService = inject(VaultItemProjectsService);
   private readonly activityEventsService = inject(ActivityEventsService);
@@ -485,6 +485,11 @@ export class GroomingBoard {
   onDemoteItem(item: VaultItem): void {
     this.vaultItemsService.update(item.id, { type: 'note', grooming_status: 'ungroomed' });
   }
+
+  onPriorityChange(item: VaultItem, priority: Priority | null): void {
+    this.vaultItemsService.update(item.id, { manual_priority: priority });
+  }
+
 
   onArchiveItem(item: VaultItem): void {
     this.commands.archive(item.id);

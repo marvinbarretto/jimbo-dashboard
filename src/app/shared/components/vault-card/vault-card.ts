@@ -5,8 +5,11 @@ import { KanbanCardLinkDirective } from '@shared/kanban/card-link.directive';
 import { ActorAvatar } from '@shared/components/actor-avatar/actor-avatar';
 import { PickerInputDirective, type MentionTrigger, projectPickerTrigger, epicPickerTrigger } from '@shared/mentions';
 import { PriorityBadge } from '@shared/components/priority-badge/priority-badge';
+import { UiDropdown } from '@shared/components/ui-dropdown/ui-dropdown';
 import type { Project } from '@domain/projects';
 import type { VaultItem } from '@domain/vault';
+import type { Priority } from '@domain/vault/vault-item';
+import type { Actor } from '@domain/actors';
 import { BlockerBadge } from '@shared/components/blocker-badge/blocker-badge';
 import { EpicBadge } from '@shared/components/epic-badge/epic-badge';
 import { DispatchStatusBadge } from '@shared/components/dispatch-status-badge/dispatch-status-badge';
@@ -118,6 +121,7 @@ function actionsFor(ctx: CardContext): CardAction[] {
     ActorAvatar,
     PickerInputDirective,
     PriorityBadge,
+    UiDropdown,
     BlockerBadge,
     EpicBadge,
     DispatchStatusBadge,
@@ -151,6 +155,7 @@ export class VaultCard {
   // The triggers + dropdown are reused from the existing mention infrastructure.
   readonly projectOptions = input<readonly Project[]>([]);
   readonly epicOptions    = input<readonly VaultItem[]>([]);
+  readonly actorOptions   = input<readonly Actor[]>([]);
 
   // Emitted on pick. The board owns the actual mutation (junction insert /
   // parent_id patch). Card stays presentational.
@@ -178,9 +183,10 @@ export class VaultCard {
 
   // Outputs — every callsite emits only the ones it cares about. The board
   // owns service calls; the card stays presentational.
-  readonly archive    = output<void>();
-  readonly removeItem = output<void>();
-  readonly assign     = output<ActorId>();
+  readonly archive        = output<void>();
+  readonly removeItem     = output<void>();
+  readonly assign         = output<ActorId>();
+  readonly priorityChange = output<Priority | null>();
   readonly approve  = output<void>();
   readonly reject   = output<string>();
   readonly answer   = output<void>();
@@ -208,6 +214,14 @@ export class VaultCard {
     if (ctx.kind === 'dispatch') return 0;
     return ancientNorm(ctx.item, ctx.lastActivityAt);
   });
+
+  protected readonly priorityOptions: readonly { label: string; value: Priority | null }[] = [
+    { label: 'P0 — urgent', value: 0 },
+    { label: 'P1 — high',   value: 1 },
+    { label: 'P2 — normal', value: 2 },
+    { label: 'P3 — low',    value: 3 },
+    { label: '— clear',     value: null },
+  ];
 
   protected readonly seq = computed(() => {
     const ctx = this.context();
@@ -316,11 +330,7 @@ export class VaultCard {
       case 'retry':     this.retry.emit();     return;
       case 'dismiss':   this.dismiss.emit();   return;
       case 'markDone':  this.markDone.emit();  return;
-      case 'assign': {
-        // Picker UI is a follow-up — the (assign) output carries the actor id
-        // once that's wired. For now, no-op so the button doesn't lie.
-        return;
-      }
+      case 'assign': return; // handled by actor avatar dropdown
       case 'reject': {
         // Lightweight prompt for the rejection reason — a real composer is a
         // follow-up. Emits nothing if cancelled or empty.

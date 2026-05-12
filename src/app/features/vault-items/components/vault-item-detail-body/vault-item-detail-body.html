@@ -118,6 +118,7 @@
         (statusChange)="store.setStatus($event)"
         (reassign)="store.reassign($event)"
         (epicToggle)="store.setEpic($event)"
+        (priorityChange)="store.updateManualPriority($event)"
       />
 
       <app-vault-item-meta-line
@@ -187,6 +188,7 @@
             [openBlockers]="store.openBlockers()"
             [tags]="item.tags"
             [addBlockerSeqInput]="store.addBlockerSeqInput()"
+            [availableEpics]="store.availableEpics()"
             [parent]="store.parentRef()"
             [editable]="true"
             (subtaskClicked)="swapToSeq($event)"

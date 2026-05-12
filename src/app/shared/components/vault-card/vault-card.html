@@ -44,9 +44,21 @@
         <span class="vault-card__retry" [attr.title]="'Attempt ' + (d.entry.retry_count + 1)">↻{{ d.entry.retry_count }}</span>
       }
     } @else {
-      @if (priority() !== null) {
-        <app-priority-badge [priority]="priority()!" />
-      }
+      <app-ui-dropdown #priorityDrop ariaHaspopup="listbox" ariaLabel="Set priority">
+        @if (priority() !== null) {
+          <app-priority-badge trigger [priority]="priority()!" />
+        } @else {
+          <span trigger class="vault-card__priority-empty">P?</span>
+        }
+        <div panel role="listbox" class="vault-card__priority-panel">
+          @for (opt of priorityOptions; track opt.label) {
+            <button role="option" class="vault-card__priority-option"
+                    (click)="priorityChange.emit(opt.value); priorityDrop.close()">
+              {{ opt.label }}
+            </button>
+          }
+        </div>
+      </app-ui-dropdown>
       @if (isEpic()) {
         <app-epic-badge [count]="(grooming()?.childRollup?.length ?? 0)" />
       }
@@ -80,7 +92,21 @@
 
   <div class="vault-card__identity">
     @if (grooming(); as g) {
-      <app-actor-avatar [actor]="g.owner" size="md" />
+      @if (actorOptions().length > 0) {
+        <app-ui-dropdown #ownerDrop ariaHaspopup="listbox" ariaLabel="Reassign">
+          <app-actor-avatar trigger [actor]="g.owner" size="md" />
+          <div panel role="listbox" class="vault-card__priority-panel">
+            @for (a of actorOptions(); track a.id) {
+              <button role="option" class="vault-card__priority-option"
+                      (click)="assign.emit(a.id); ownerDrop.close()">
+                &#64;{{ a.id }}
+              </button>
+            }
+          </div>
+        </app-ui-dropdown>
+      } @else {
+        <app-actor-avatar [actor]="g.owner" size="md" />
+      }
     } @else if (manual(); as m) {
       <app-actor-avatar [actor]="m.owner" size="md" />
     } @else if (dispatch(); as d) {

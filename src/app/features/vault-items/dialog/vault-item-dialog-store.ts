@@ -32,7 +32,7 @@ import type { ActorId, ProjectId, VaultItemId } from '@domain/ids';
 import type { Actor } from '@domain/actors';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
 import type { Project } from '@domain/projects';
-import type { VaultItem, AcceptanceCriterion } from '@domain/vault/vault-item';
+import type { VaultItem, AcceptanceCriterion, Priority } from '@domain/vault/vault-item';
 import type { CreateThreadMessagePayload } from '@domain/thread';
 import {
   type DialogMode,
@@ -198,6 +198,14 @@ export class VaultItemDialogStore {
 
   readonly activeActors = this.actorsService.activeActors;
   readonly activeProjects = this.projectsService.activeProjects;
+
+  /** All epics available to link as a parent — excludes the current item itself. */
+  readonly availableEpics = computed(() => {
+    const i = this.item();
+    return this.vaultItemsService.items()
+      .filter(v => v.is_epic && v.id !== i?.id)
+      .sort((a, b) => a.seq - b.seq);
+  });
 
   readonly actorMap = computed<Record<ActorId, Actor>>(() => {
     const map = {} as Record<ActorId, Actor>;
@@ -476,6 +484,11 @@ export class VaultItemDialogStore {
   updateBody(next: string): void {
     const i = this.item(); if (!i) return;
     this.vaultItemsService.update(i.id, { body: next });
+  }
+
+  updateManualPriority(p: Priority | null): void {
+    const i = this.item(); if (!i) return;
+    this.vaultItemsService.update(i.id, { manual_priority: p });
   }
 
   updateTags(next: readonly string[]): void {

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { UiChipList, type UiChipListItem, type UiChipListPickerOption } from '@shared/components/ui-chip-list/ui-chip-list';
+import { UiDropdown } from '@shared/components/ui-dropdown/ui-dropdown';
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
 import { VaultItemTagList } from '../vault-item-tag-list/vault-item-tag-list';
@@ -18,9 +19,15 @@ export interface VaultItemParentRef {
   readonly title: string;
 }
 
+export interface VaultItemEpicOption {
+  readonly id: string;
+  readonly seq: number;
+  readonly title: string;
+}
+
 @Component({
   selector: 'app-vault-item-links-block',
-  imports: [UiChipList, UiSubhead, UiSubsection, VaultItemTagList],
+  imports: [UiChipList, UiDropdown, UiSubhead, UiSubsection, VaultItemTagList],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-ui-subsection label="Links">
@@ -59,10 +66,28 @@ export interface VaultItemParentRef {
           </div>
         } @else {
           <div class="vault-item-links-block__parent-add">
+            @if (availableEpics().length > 0) {
+              <app-ui-dropdown #epicDrop ariaHaspopup="listbox" ariaLabel="Pick an epic">
+                <button trigger type="button" class="vault-item-links-block__inline-btn">
+                  + set epic
+                </button>
+                <div panel role="listbox" class="vault-item-links-block__epic-panel">
+                  @for (e of availableEpics(); track e.id) {
+                    <button
+                      class="vault-item-links-block__epic-option"
+                      role="option"
+                      (click)="parentChange.emit(e.seq); epicDrop.close()">
+                      <span class="vault-item-links-block__epic-seq">#{{ e.seq }}</span>
+                      {{ e.title }}
+                    </button>
+                  }
+                </div>
+              </app-ui-dropdown>
+            }
             <label for="parent-seq-input" class="visually-hidden">Set parent by seq number</label>
             <input id="parent-seq-input"
               type="number" min="1"
-              placeholder="seq # e.g. 1820"
+              placeholder="or seq #"
               class="vault-item-links-block__blocker-input"
               [value]="parentSeqDraft()"
               (input)="onParentSeqInput($event)"
@@ -70,9 +95,7 @@ export interface VaultItemParentRef {
             <button type="button"
               class="vault-item-links-block__inline-btn"
               [disabled]="!parentSeqDraft()"
-              (click)="commitParent()">
-              + set parent
-            </button>
+              (click)="commitParent()">↵</button>
           </div>
         }
       }
@@ -184,6 +207,38 @@ export interface VaultItemParentRef {
       &:disabled { opacity: 0.35; cursor: not-allowed; }
     }
 
+    .vault-item-links-block__epic-panel {
+      display: flex;
+      flex-direction: column;
+      max-height: 16rem;
+      overflow-y: auto;
+    }
+
+    .vault-item-links-block__epic-option {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+      padding: 0.35rem 0.7rem;
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--color-border);
+      font: inherit;
+      font-size: 0.72rem;
+      cursor: pointer;
+      text-align: left;
+      color: var(--color-text);
+
+      &:last-child { border-bottom: none; }
+      &:hover { background: var(--color-surface); }
+      &:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+    }
+
+    .vault-item-links-block__epic-seq {
+      color: var(--color-text-muted);
+      font-size: 0.65rem;
+      flex-shrink: 0;
+    }
+
   `],
 })
 export class VaultItemLinksBlock {
@@ -193,6 +248,7 @@ export class VaultItemLinksBlock {
   readonly openBlockers = input.required<readonly OpenBlocker[]>();
   readonly tags = input.required<readonly string[]>();
   readonly addBlockerSeqInput = input.required<string>();
+  readonly availableEpics = input<readonly VaultItemEpicOption[]>([]);
   readonly parent = input<VaultItemParentRef | null>(null);
   readonly editable = input<boolean>(false);
 

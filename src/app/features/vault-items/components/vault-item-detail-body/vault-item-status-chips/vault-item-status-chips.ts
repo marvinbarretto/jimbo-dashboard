@@ -56,11 +56,29 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
           </div>
         </app-ui-dropdown>
 
-        @if (effectivePriority(); as p) {
-          <app-ui-badge [tone]="priorityTone(p)" [title]="priorityTitle()">
-            {{ priorityLabel(p) }}{{ priorityDiverges() ? ' *' : '' }}
-          </app-ui-badge>
-        }
+        <app-ui-dropdown
+          #priorityDrop
+          ariaHaspopup="listbox"
+          ariaLabel="Set manual priority">
+          @if (effectivePriority(); as p) {
+            <app-ui-badge trigger [tone]="priorityTone(p)" [title]="priorityTitle()">
+              {{ priorityLabel(p) }}{{ priorityDiverges() ? ' *' : '' }}
+            </app-ui-badge>
+          } @else {
+            <app-ui-badge trigger tone="neutral" [subtle]="true" title="No priority set">—</app-ui-badge>
+          }
+          <div panel role="listbox" class="vault-item-status-chips__panel">
+            @for (opt of priorityOptions; track opt.value) {
+              <button
+                class="vault-item-status-chips__option"
+                role="option"
+                [attr.aria-selected]="item().manual_priority === opt.value"
+                (click)="priorityChange.emit(opt.value); priorityDrop.close()">
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+        </app-ui-dropdown>
 
         @if (firstProject(); as p) {
           <a class="chip-link" [routerLink]="['/projects', p.id]">
@@ -197,8 +215,17 @@ export class VaultItemStatusChips {
   readonly statusChange = output<'active' | 'done'>();
   readonly reassign = output<string>();
   readonly epicToggle = output<boolean>();
+  readonly priorityChange = output<Priority | null>();
 
   readonly statuses: readonly ('active' | 'done')[] = ['active', 'done'];
+
+  readonly priorityOptions: readonly { label: string; value: Priority | null }[] = [
+    { label: 'P0 — urgent',  value: 0 },
+    { label: 'P1 — high',    value: 1 },
+    { label: 'P2 — normal',  value: 2 },
+    { label: 'P3 — low',     value: 3 },
+    { label: '— clear',      value: null },
+  ];
 
   readonly extraProjectCount = computed(() => Math.max(0, this.allProjects().length - 1));
   readonly extraProjectsTitle = computed(() => {
