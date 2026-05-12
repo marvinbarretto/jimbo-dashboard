@@ -217,6 +217,8 @@ export class VaultItemDialogStore {
     return i.grooming_status !== 'ungroomed' && i.grooming_status !== 'needs_rework';
   });
 
+  readonly canDemote = computed(() => this.item()?.type === 'task');
+
   // ── Section-summary cards ────────────────────────────────────────────────
 
   readonly sourceSummary = computed(() => {
@@ -508,6 +510,14 @@ export class VaultItemDialogStore {
     }
     if (target.id === i.parent_id) return;
     this.vaultItemsService.update(i.id, { parent_id: target.id });
+  }
+
+  /** Flip type from 'task' → 'note' and clear pipeline status so the item
+   *  falls off the grooming board. Keeps all project/epic associations intact. */
+  demoteToNote(): void {
+    const i = this.item(); if (!i) return;
+    this.vaultItemsService.update(i.id, { type: 'note', grooming_status: 'ungroomed' });
+    this.toast.success('Saved as note');
   }
 
   archive(): void {

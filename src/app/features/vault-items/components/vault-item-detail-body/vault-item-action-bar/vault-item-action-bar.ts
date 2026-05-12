@@ -12,6 +12,9 @@ import { UiStickyActionBar } from '@shared/components/ui-sticky-action-bar/ui-st
         class="vault-item-action-bar__trail"
         role="group"
         aria-label="Secondary actions">
+        @if (canDemote()) {
+          <app-ui-button variant="secondary" (pressed)="demoted.emit()">→ note</app-ui-button>
+        }
         @if (canReject()) {
           <app-ui-button variant="secondary" (pressed)="rejected.emit()">reject</app-ui-button>
         }
@@ -42,9 +45,11 @@ import { UiStickyActionBar } from '@shared/components/ui-sticky-action-bar/ui-st
 })
 export class VaultItemActionBar {
   readonly canReject = input.required<boolean>();
+  readonly canDemote = input.required<boolean>();
   readonly isArchived = input.required<boolean>();
 
   readonly rejected = output<void>();
+  readonly demoted = output<void>();
   readonly archived = output<void>();
   readonly deleted = output<void>();
 }

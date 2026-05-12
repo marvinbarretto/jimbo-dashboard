@@ -236,8 +236,10 @@
 
     <app-vault-item-action-bar
       [canReject]="store.canReject()"
+      [canDemote]="store.canDemote()"
       [isArchived]="isItemArchived(item)"
       (rejected)="store.openReject()"
+      (demoted)="store.demoteToNote()"
       (archived)="store.archive()"
       (deleted)="onDeleted()"
     />
