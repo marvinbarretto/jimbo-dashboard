@@ -65,10 +65,16 @@ const PREFIX: Record<EntityType, string> = {
     }
 
     .entity-chip__count {
-      margin-left: 0.3rem;
-      font-size: 0.6em;
-      opacity: 0.7;
+      margin-left: 0.35rem;
+      font-size: 0.75em;
       font-variant-numeric: tabular-nums;
+      background: color-mix(in srgb, currentColor 18%, transparent);
+      border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+      border-radius: 999px;
+      padding: 0 0.35em;
+      line-height: 1.5;
+      min-width: 1.4em;
+      text-align: center;
     }
 
     .entity-chip__remove {
