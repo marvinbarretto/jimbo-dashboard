@@ -29,7 +29,7 @@ import { calloutKindFor } from './card-context';
 
 export type ActionKey =
   | 'answer' | 'approve' | 'reject' | 'decompose'
-  | 'archive' | 'assign' | 'retry' | 'dismiss' | 'markDone';
+  | 'archive' | 'delete' | 'assign' | 'retry' | 'dismiss' | 'markDone';
 
 export type ActionVariant = 'primary' | 'danger' | 'warn' | 'neutral';
 
@@ -45,6 +45,10 @@ function groomingActions(ctx: GroomingCardContext): CardAction[] {
   const status = ctx.item.grooming_status;
   const archive: CardAction = { key: 'archive', label: 'archive', variant: 'neutral' };
   const assign:  CardAction = { key: 'assign',  label: 'assign',  variant: 'neutral' };
+  // Delete is for "shouldn't have existed" rows — only offered in the pre-
+  // dispatch funnel where investment is low. Once an item is decomposed or
+  // ready, the audit trail is worth more than the row, so archive only.
+  const del:     CardAction = { key: 'delete',  label: 'delete',  variant: 'danger'  };
 
   if (ctx.openQuestion) {
     return [
@@ -63,13 +67,14 @@ function groomingActions(ctx: GroomingCardContext): CardAction[] {
       return [
         { key: 'decompose', label: 'decompose', variant: 'neutral' },
         archive,
+        del,
       ];
     case 'ungroomed':
     case 'intake_complete':
-      return [archive, assign];
+      return [archive, assign, del];
     case 'needs_rework':
     case 'intake_rejected':
-      return [archive];
+      return [archive, del];
     case 'ready':
       // Passive — pump claims it. No actions needed.
       return [];
@@ -172,8 +177,9 @@ export class VaultCard {
 
   // Outputs — every callsite emits only the ones it cares about. The board
   // owns service calls; the card stays presentational.
-  readonly archive  = output<void>();
-  readonly assign   = output<ActorId>();
+  readonly archive    = output<void>();
+  readonly removeItem = output<void>();
+  readonly assign     = output<ActorId>();
   readonly approve  = output<void>();
   readonly reject   = output<string>();
   readonly answer   = output<void>();
@@ -317,6 +323,19 @@ export class VaultCard {
         // follow-up. Emits nothing if cancelled or empty.
         const reason = window.prompt('Rejection reason?') ?? '';
         if (reason.trim()) this.reject.emit(reason.trim());
+        return;
+      }
+      case 'delete': {
+        // Hard delete is irreversible — confirm first. The title is shown so
+        // the operator gets one last "is this what I meant" beat before the
+        // row is gone.
+        const ctx = this.context();
+        const title = ctx.kind === 'dispatch'
+          ? (ctx.item?.title ?? `task ${ctx.entry.task_id}`)
+          : ctx.item.title;
+        if (window.confirm(`Delete "${title}" permanently? This can't be undone.`)) {
+          this.removeItem.emit();
+        }
         return;
       }
     }

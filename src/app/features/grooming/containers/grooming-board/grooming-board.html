@@ -87,6 +87,7 @@
               [projectOptions]="projectPickerOptions()"
               [epicOptions]="epicPickerOptionsFor(item)"
               (archive)="onArchiveItem(item)"
+              (removeItem)="onDeleteItem(item)"
               (answer)="onAnswerItem(item)"
               (approve)="onApproveItem(item)"
               (reject)="onRejectItem(item, $event)"

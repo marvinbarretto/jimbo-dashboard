@@ -102,6 +102,14 @@ function baseItem(over: Partial<VaultItem>): VaultItem {
               intensifies with age; the project strip never picks it up so identity stays
               legible on the oldest cards.
             </li>
+            <li>
+              <strong>Archive is the default; delete is reserved.</strong> Archive
+              preserves audit trail, events, and reversibility — use it for items that
+              were considered and parked. Delete is only offered in the pre-dispatch funnel
+              (ungroomed → classified) for rows that <em>shouldn't have existed</em>:
+              accidental captures, garbled input, test artefacts. Confirms with a
+              native dialog because the action is irreversible.
+            </li>
           </ul>
         </div>
 

@@ -47,6 +47,18 @@ export class VaultItemCommands {
   }
 
   /**
+   * Hard delete. Removes the row entirely — irreversible. Reserved for
+   * "shouldn't have existed" items (accidental captures, garbled input,
+   * test artefacts). For everything else, prefer archive() to preserve
+   * audit trail and reversibility.
+   */
+  delete(id: VaultItemId): void {
+    const item = this.vaultItems.getById(id);
+    if (!item) return;
+    this.vaultItems.remove(id);
+  }
+
+  /**
    * Mark as complete. No-op when already complete; writes completed_at and
    * emits a completion_changed event. Used by the manual-track "done" button
    * in the execution board and the modal action bar.

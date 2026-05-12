@@ -486,6 +486,13 @@ export class GroomingBoard {
     this.commands.archive(item.id);
   }
 
+  // Hard delete — the card already confirmed before emitting, so this is
+  // unconditional. The command path keeps audit consistent (no direct
+  // service writes from containers).
+  onDeleteItem(item: VaultItem): void {
+    this.commands.delete(item.id);
+  }
+
   onCreateTask(): void {
     this.shortcuts.openCapture();
   }
