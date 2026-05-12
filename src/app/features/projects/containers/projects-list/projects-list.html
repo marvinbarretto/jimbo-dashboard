@@ -79,10 +79,15 @@
       @for (epic of epics(); track epic.id) {
         <div class="epic-row">
           <span class="epic-row__seq">#{{ epic.seq }}</span>
-          <a [routerLink]="['/vault-items', epic.seq]" class="epic-row__title">{{ epic.title }}</a>
-          @if (epic.primary_project_name) {
-            <app-ui-badge tone="info">{{ epic.primary_project_name }}</app-ui-badge>
+          @if (epic.primary_project_name && epic.primary_project_id) {
+            <app-entity-chip
+              type="project"
+              [id]="epic.primary_project_id"
+              [label]="epic.primary_project_name"
+              [color]="projectColor(epic.primary_project_id)"
+            />
           }
+          <a [routerLink]="['/vault-items', epic.seq]" class="epic-row__title">{{ epic.title }}</a>
           @if ((epic.children_count ?? 0) > 0) {
             <span class="epic-row__children">{{ epic.children_count }} tasks</span>
           }

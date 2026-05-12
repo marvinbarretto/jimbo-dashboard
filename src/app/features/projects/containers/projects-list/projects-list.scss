@@ -1,5 +1,7 @@
 .projects-list {
-  padding: 2rem;
+  padding: 2rem 2.5rem 3rem;
+  max-width: 1600px;
+  margin-inline: auto;
 
   &__header h1 {
     margin: 0;
@@ -34,7 +36,7 @@
 
   &__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
     gap: 1rem;
   }
 
@@ -111,7 +113,7 @@
 
 @media (max-width: 768px) {
   .projects-list {
-    padding: 1rem;
+    padding: 1rem 1.25rem;
   }
 
   .projects-list__grid {

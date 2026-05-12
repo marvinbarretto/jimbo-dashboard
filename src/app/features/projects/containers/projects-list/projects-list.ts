@@ -3,9 +3,9 @@ import { RouterLink } from '@angular/router';
 import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { Dialog } from '@angular/cdk/dialog';
 import { UiAddTile } from '@shared/components/ui-add-tile/ui-add-tile';
-import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
+import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import type { Project, ProjectKind } from '@domain/projects';
 import type { ProjectId } from '@domain/ids';
 import { ProjectsService } from '../../data-access/projects.service';
@@ -15,7 +15,7 @@ import { VaultItemsService } from '../../../vault-items/data-access/vault-items.
 
 @Component({
   selector: 'app-projects-list',
-  imports: [RouterLink, CdkDrag, CdkDropList, UiAddTile, UiBadge, UiPageHeader, UiStack, ProjectCard],
+  imports: [RouterLink, CdkDrag, CdkDropList, UiAddTile, UiPageHeader, UiStack, EntityChip, ProjectCard],
   templateUrl: './projects-list.html',
   styleUrl: './projects-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,14 +41,24 @@ export class ProjectsList {
     this.service.projects().filter(p => p.status === 'archived')
   );
 
+  // 20 most recent — sort by latest activity (falling back to created_at)
+  // so the list surfaces what's actually being worked on.
   readonly epics = computed(() =>
-    this.vaultItems.items().filter(i => i.is_epic)
+    this.vaultItems.items()
+      .filter(i => i.is_epic)
+      .slice()
+      .sort((a, b) => (b.latest_activity_at ?? b.created_at).localeCompare(a.latest_activity_at ?? a.created_at))
+      .slice(0, 20)
   );
 
   onDrop(event: CdkDragDrop<Project[]>, targetKind: ProjectKind): void {
     if (event.previousContainer === event.container) return;
     const project: Project = event.item.data;
     this.service.update(project.id, { kind: targetKind });
+  }
+
+  projectColor(id: string | null | undefined): string | null {
+    return id ? this.service.getById(id)?.color_token ?? null : null;
   }
 
   remove(id: ProjectId): void {
