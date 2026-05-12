@@ -64,7 +64,9 @@
       }
       @if (grooming(); as g) {
         @if (g.openQuestionsCount > 0) {
-          <app-blocker-badge [count]="g.openQuestionsCount" />
+          <a [appKanbanCardLink]="seq()!" style="display:contents">
+            <app-blocker-badge [count]="g.openQuestionsCount" />
+          </a>
         }
       }
     }

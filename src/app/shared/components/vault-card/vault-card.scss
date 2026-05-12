@@ -6,9 +6,6 @@
   border-radius: var(--radius);
   font-family: var(--font-mono);
   position: relative;
-  // Clip the project bar to the rounded corners — the bar paints the
-  // top edge in full project colour so identity is the first thing read.
-  overflow: hidden;
 
   // Amber wash + glow that intensifies with age. Reads --stale-norm and
   // --ancient-norm from the host bindings; both default to 0 for fresh items.
@@ -37,6 +34,7 @@
   color: var(--color-bg);
   font-weight: 500;
   min-width: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
 
   // When no project token, fall back to a neutral band (subtask of an epic
   // that has no project on the parent).
