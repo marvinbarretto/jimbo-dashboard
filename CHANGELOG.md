@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.53](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.52...v0.0.53) (2026-05-12)
+
+
+### Features
+
+* **projects:** add 'admin' kind + dedicated section on projects list ([9a977c8](https://github.com/marvinbarretto/jimbo-dashboard/commit/9a977c86cda3806c9a4b8d67813c58e0c8dd2ccf))
+
 ### [0.0.52](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.51...v0.0.52) (2026-05-12)
 
 
