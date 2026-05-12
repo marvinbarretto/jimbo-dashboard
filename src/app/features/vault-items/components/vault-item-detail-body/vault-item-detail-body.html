@@ -53,17 +53,19 @@
       ></textarea>
     </div>
 
-    <!-- Optional GitHub issue URL -->
-    <div class="draft-form__github-wrap">
-      <input
-        class="draft-form__github-input"
-        type="url"
-        [value]="store.draftPayload().github_url ?? ''"
-        placeholder="GitHub issue URL (optional)"
-        aria-label="GitHub issue URL"
-        (input)="store.setDraftGithubUrl($any($event.target).value)"
-      />
-    </div>
+    <!-- Optional GitHub issue URL — not shown for epics -->
+    @if (!store.draftPayload().is_epic) {
+      <div class="draft-form__github-wrap">
+        <input
+          class="draft-form__github-input"
+          type="url"
+          [value]="store.draftPayload().github_url ?? ''"
+          placeholder="GitHub issue URL (optional)"
+          aria-label="GitHub issue URL"
+          (input)="store.setDraftGithubUrl($any($event.target).value)"
+        />
+      </div>
+    }
 
     <app-ui-mention-chip-strip
       class="draft-form__chips"
@@ -174,12 +176,14 @@
             (bodyChange)="store.updateBody($event)"
           />
 
-          <app-vault-item-delivery-block
-            [readiness]="store.readiness()"
-            [criteria]="item.acceptance_criteria"
-            [editable]="true"
-            (criteriaChange)="store.updateCriteria($event)"
-          />
+          @if (!item.is_epic) {
+            <app-vault-item-delivery-block
+              [readiness]="store.readiness()"
+              [criteria]="item.acceptance_criteria"
+              [editable]="true"
+              (criteriaChange)="store.updateCriteria($event)"
+            />
+          }
 
           <app-vault-item-links-block
             [subtasks]="store.children()"
