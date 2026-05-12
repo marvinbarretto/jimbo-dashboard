@@ -16,7 +16,7 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
     <div class="vault-item-status-chips">
 
       <!-- Primary tier: the three operational decisions -->
-      <app-ui-cluster gap="xs" align="center">
+      <app-ui-cluster gap="sm" align="center">
         <app-ui-dropdown
           #statusDrop
           ariaHaspopup="listbox"
@@ -97,7 +97,7 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
       </app-ui-cluster>
 
       <!-- Secondary tier: classification metadata -->
-      <app-ui-cluster gap="xs" align="center" class="vault-item-status-chips__secondary">
+      <app-ui-cluster gap="sm" align="center" class="vault-item-status-chips__secondary">
         <app-ui-badge [tone]="groomingTone()">{{ groomingLabel() }}</app-ui-badge>
 
         @if (item().actionability !== null) {
@@ -123,13 +123,13 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
   styles: [`
     :host {
       display: block;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
     }
 
     .vault-item-status-chips {
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
+      gap: 0.55rem;
     }
 
     .vault-item-status-chips__secondary {

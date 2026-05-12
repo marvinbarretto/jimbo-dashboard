@@ -16,7 +16,7 @@
 // Zone 2 wraps status-chips + meta-line + overview-cards inside one shared
 // background and bottom border. The children don't know about the wrapper.
 .vault-item-detail__zone2 {
-  padding: .65rem .9rem .85rem;
+  padding: .9rem 1.1rem 1.1rem;
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 92%, transparent);
   background:
     linear-gradient(180deg,
@@ -62,7 +62,7 @@
 .vault-item-detail__body-layout {
   display: flex;
   flex-direction: column;
-  gap: .75rem;
+  gap: 1.25rem;
 }
 
 // GH items age from off-white → pale yellow. Same --stale-norm / --ancient-norm

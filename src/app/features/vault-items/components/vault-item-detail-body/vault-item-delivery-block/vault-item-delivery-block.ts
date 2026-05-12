@@ -106,16 +106,16 @@ import { acceptanceCriterionStatus } from '@shared/validation/acceptance-criteri
     .vault-item-delivery-block__edit-list {
       list-style: none;
       padding: 0;
-      margin: 0 0 0.4rem;
+      margin: 0 0 0.6rem;
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: 0.4rem;
     }
 
     .vault-item-delivery-block__edit-row {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.5rem;
     }
 
     .vault-item-delivery-block__check { flex-shrink: 0; }
@@ -167,7 +167,7 @@ import { acceptanceCriterionStatus } from '@shared/validation/acceptance-criteri
     .vault-item-delivery-block__add {
       width: 100%;
       box-sizing: border-box;
-      padding: 0.3rem 0.5rem;
+      padding: 0.45rem 0.6rem;
       font: inherit;
       font-size: 0.75rem;
       background: transparent;

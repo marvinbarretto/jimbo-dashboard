@@ -23,7 +23,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     }
 
     .ui-subsection {
-      padding: 0.7rem;
+      padding: 1rem;
       border: 1px solid var(--color-border);
       border-radius: 8px;
       background: color-mix(in oklab, var(--color-bg) 85%, var(--color-surface));
@@ -34,7 +34,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--color-text-muted);
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.6rem;
     }
 
     .ui-subsection__hint {

@@ -156,15 +156,15 @@ export interface VaultItemEpicOption {
       margin: 0;
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 0.35rem;
     }
 
     .vault-item-links-block__blocker-add,
     .vault-item-links-block__parent-add {
       display: flex;
-      gap: 0.4rem;
+      gap: 0.5rem;
       align-items: center;
-      margin-top: 0.25rem;
+      margin-top: 0.5rem;
       min-width: 0;
     }
 

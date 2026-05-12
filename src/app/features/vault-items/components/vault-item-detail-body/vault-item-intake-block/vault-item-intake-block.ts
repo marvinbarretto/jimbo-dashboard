@@ -95,7 +95,7 @@ import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 
     .vault-item-intake-block__placeholder {
       width: 100%;
-      padding: 0.5rem 0.6rem;
+      padding: 0.6rem 0.75rem;
       border: 1px dashed var(--color-border);
       border-radius: var(--radius);
       background: transparent;
