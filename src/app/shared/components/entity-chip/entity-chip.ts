@@ -13,7 +13,15 @@ const PREFIX: Record<EntityType, string> = {
   selector: 'app-entity-chip',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <span [class]="cls()" [title]="label()" [style]="chipStyle()">
+    <span
+      [class]="cls()"
+      [title]="label()"
+      [style]="chipStyle()"
+      [attr.role]="clickable() ? 'button' : null"
+      [attr.tabindex]="clickable() ? 0 : null"
+      (click)="onChipClick()"
+      (keydown.enter)="onChipEnter($event)"
+    >
       <span class="entity-chip__prefix" aria-hidden="true">{{ prefix() }}</span>
       @if (type() === 'vault-item' && seq() !== null) {
         <span class="entity-chip__seq">{{ seq() }}</span>
@@ -138,6 +146,20 @@ const PREFIX: Record<EntityType, string> = {
       color: var(--color-accent);
       border-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-border));
     }
+
+    .entity-chip--clickable {
+      cursor: pointer;
+
+      &:hover {
+        border-color: color-mix(in srgb, var(--chip-color, var(--color-accent)) 60%, var(--color-border));
+        color: var(--chip-color, var(--color-accent));
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+      }
+    }
   `],
 })
 export class EntityChip {
@@ -151,15 +173,26 @@ export class EntityChip {
   readonly color    = input<string | null>(null);
   readonly variant  = input<EntityChipVariant>('soft');
   /** When true, renders a trailing × that emits `removed`. Host owns state. */
-  readonly removable = input(false);
-  readonly removed   = output<void>();
+  readonly removable  = input(false);
+  readonly removed    = output<void>();
+  readonly clickable  = input(false);
+  readonly clicked    = output<void>();
 
   readonly prefix    = computed(() => PREFIX[this.type()]);
   readonly chipStyle = computed(() => this.color() ? { '--chip-color': this.color() } : null);
   readonly cls       = computed(() => {
     const parts = [`entity-chip entity-chip--${this.type()} entity-chip--${this.id()} entity-chip--${this.variant()}`];
-    if (this.active())   parts.push('entity-chip--active');
-    if (this.disabled()) parts.push('entity-chip--disabled');
+    if (this.active())    parts.push('entity-chip--active');
+    if (this.disabled())  parts.push('entity-chip--disabled');
+    if (this.clickable()) parts.push('entity-chip--clickable');
     return parts.join(' ');
   });
+
+  onChipClick(): void {
+    if (this.clickable()) this.clicked.emit();
+  }
+
+  onChipEnter(e: Event): void {
+    if (this.clickable()) { e.preventDefault(); this.clicked.emit(); }
+  }
 }

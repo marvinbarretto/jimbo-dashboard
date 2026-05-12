@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import { UiChipList, type UiChipListItem, type UiChipListPickerOption } from '@shared/components/ui-chip-list/ui-chip-list';
 import { UiDropdown } from '@shared/components/ui-dropdown/ui-dropdown';
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
@@ -27,36 +28,33 @@ export interface VaultItemEpicOption {
 
 @Component({
   selector: 'app-vault-item-links-block',
-  imports: [UiChipList, UiDropdown, UiSubhead, UiSubsection, VaultItemTagList],
+  imports: [EntityChip, UiChipList, UiDropdown, UiSubhead, UiSubsection, VaultItemTagList],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-ui-subsection label="Links">
       @if (subtasks().length > 0) {
         <app-ui-subhead label="Subtasks" [count]="subtasks().length" />
-        <ul class="vault-item-links-block__subtasks">
-          @for (child of subtasks(); track child.id) {
-            <li>
-              <button type="button"
-                class="detail-link-badge detail-link-badge--subtask"
-                (click)="subtaskClicked.emit(child.seq)">
-                <span class="detail-link-badge__prefix">#{{ child.seq }}</span>
-                {{ child.title }}
-              </button>
-            </li>
-          }
-        </ul>
+        <app-ui-chip-list
+          [items]="subtaskChips()"
+          [pickerOptions]="[]"
+          [allowRemove]="false"
+          emptyLabel="no subtasks"
+          (itemClicked)="onSubtaskClicked($event)"
+        />
       }
 
       @if (parent() || editable()) {
         <app-ui-subhead label="Parent" [count]="parent() ? 1 : 0" />
         @if (parent(); as p) {
           <div class="vault-item-links-block__parent-row">
-            <button type="button"
-              class="detail-link-badge detail-link-badge--subtask"
-              (click)="parentClicked.emit(p.seq)">
-              <span class="detail-link-badge__prefix">#{{ p.seq }}</span>
-              {{ p.title }}
-            </button>
+            <app-entity-chip
+              type="vault-item"
+              [id]="p.seq.toString()"
+              [label]="p.title"
+              [seq]="p.seq"
+              [clickable]="true"
+              (clicked)="parentClicked.emit(p.seq)"
+            />
             @if (editable()) {
               <button type="button"
                 class="vault-item-links-block__inline-btn"
@@ -150,15 +148,6 @@ export interface VaultItemEpicOption {
       min-width: 0;
     }
 
-    .vault-item-links-block__subtasks {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
-
     .vault-item-links-block__blocker-add,
     .vault-item-links-block__parent-add {
       display: flex;
@@ -192,12 +181,12 @@ export interface VaultItemEpicOption {
     }
 
     .vault-item-links-block__inline-btn {
-      padding: 0.2rem 0.55rem;
+      padding: 0.3rem 0.65rem;
       background: transparent;
       border: 1px solid var(--color-border);
       border-radius: var(--radius, 4px);
       font: inherit;
-      font-size: 0.7rem;
+      font-size: 0.72rem;
       cursor: pointer;
       color: var(--color-text-muted);
       white-space: nowrap;
@@ -278,6 +267,15 @@ export class VaultItemLinksBlock {
       .map(p => ({ id: p.id, label: p.display_name, entityType: 'project' as const }))
   );
 
+  readonly subtaskChips = computed<readonly UiChipListItem[]>(() =>
+    this.subtasks().map(c => ({
+      id: c.id,
+      label: c.title,
+      seq: c.seq,
+      entityType: 'vault-item' as const,
+    }))
+  );
+
   readonly blockerChips = computed<readonly UiChipListItem[]>(() =>
     this.openBlockers().map(b => ({
       id: b.blocker_id,
@@ -286,6 +284,11 @@ export class VaultItemLinksBlock {
       entityType: 'vault-item' as const,
     }))
   );
+
+  onSubtaskClicked(subtaskId: string): void {
+    const child = this.subtasks().find(c => c.id === subtaskId);
+    if (child) this.subtaskClicked.emit(child.seq);
+  }
 
   onBlockerClicked(blockerId: string): void {
     const blocker = this.openBlockers().find(b => b.blocker_id === blockerId);

@@ -91,9 +91,9 @@ import { acceptanceCriterionStatus } from '@shared/validation/acceptance-criteri
 
     .vault-item-delivery-block__empty {
       padding: 0.4rem 0.6rem;
-      background: #fbe7e7;
-      border: 1px dashed #a33;
-      color: #a33;
+      background: color-mix(in srgb, var(--color-danger) 8%, var(--color-surface));
+      border: 1px dashed var(--color-danger);
+      color: var(--color-danger);
       font-size: 0.7rem;
     }
 
