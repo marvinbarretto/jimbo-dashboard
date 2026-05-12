@@ -86,6 +86,7 @@
               [context]="cardContextFor(item)"
               [projectOptions]="projectPickerOptions()"
               [epicOptions]="epicPickerOptionsFor(item)"
+              (demote)="onDemoteItem(item)"
               (archive)="onArchiveItem(item)"
               (removeItem)="onDeleteItem(item)"
               (answer)="onAnswerItem(item)"

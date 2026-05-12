@@ -29,7 +29,7 @@ import { calloutKindFor } from './card-context';
 
 export type ActionKey =
   | 'answer' | 'approve' | 'reject' | 'decompose'
-  | 'archive' | 'delete' | 'assign' | 'retry' | 'dismiss' | 'markDone';
+  | 'archive' | 'delete' | 'assign' | 'retry' | 'dismiss' | 'markDone' | 'demote';
 
 export type ActionVariant = 'primary' | 'danger' | 'warn' | 'neutral';
 
@@ -71,10 +71,11 @@ function groomingActions(ctx: GroomingCardContext): CardAction[] {
       ];
     case 'ungroomed':
     case 'intake_complete':
-      return [archive, assign, del];
+      return [{ key: 'demote', label: '→ note', variant: 'neutral' }, archive, assign, del];
     case 'needs_rework':
-    case 'intake_rejected':
       return [archive, del];
+    case 'intake_rejected':
+      return [{ key: 'demote', label: '→ note', variant: 'neutral' }, archive, del];
     case 'ready':
       // Passive — pump claims it. No actions needed.
       return [];
@@ -187,6 +188,7 @@ export class VaultCard {
   readonly dismiss  = output<void>();
   readonly markDone = output<void>();
   readonly decompose = output<void>();
+  readonly demote   = output<void>();
 
   protected readonly projectTint = computed(() => {
     const ctx = this.context();
@@ -309,6 +311,7 @@ export class VaultCard {
       case 'answer':    this.answer.emit();    return;
       case 'approve':   this.approve.emit();   return;
       case 'decompose': this.decompose.emit(); return;
+      case 'demote':    this.demote.emit();    return;
       case 'archive':   this.archive.emit();   return;
       case 'retry':     this.retry.emit();     return;
       case 'dismiss':   this.dismiss.emit();   return;

@@ -482,6 +482,10 @@ export class GroomingBoard {
 
   onSortChange(mode: string): void { this._sortMode.set(mode as SortMode); }
 
+  onDemoteItem(item: VaultItem): void {
+    this.vaultItemsService.update(item.id, { type: 'note', grooming_status: 'ungroomed' });
+  }
+
   onArchiveItem(item: VaultItem): void {
     this.commands.archive(item.id);
   }
