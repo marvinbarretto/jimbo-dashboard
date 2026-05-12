@@ -128,6 +128,7 @@ export const routes: Routes = [
       { path: 'card-parent-link',        loadComponent: () => import('./features/ui-lab/sections/card-parent-link-section').then(m => m.CardParentLinkSection) },
       { path: 'card-callout',            loadComponent: () => import('./features/ui-lab/sections/card-callout-section').then(m => m.CardCalloutSection) },
       { path: 'vault-card',              loadComponent: () => import('./features/ui-lab/sections/vault-card-section').then(m => m.VaultCardSection) },
+      { path: 'vault-card-kanban',      loadComponent: () => import('./features/ui-lab/sections/vault-card-kanban-section').then(m => m.VaultCardKanbanSection) },
     ],
   },
   {

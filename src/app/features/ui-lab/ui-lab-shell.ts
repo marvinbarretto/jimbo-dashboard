@@ -52,6 +52,7 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
 
   // Cards — kanban surface and the slot primitives that compose into it
   { id: 'vault-card',              name: 'Vault Card',            group: 'cards',           selector: 'app-vault-card',        description: 'Unified kanban card driven by CardContext (grooming / dispatch / manual).' },
+  { id: 'vault-card-kanban',       name: 'Vault Card · Kanban',   group: 'cards',           selector: 'app-vault-card-kanban-section', description: 'Interactive kanban board with live prop controls. Drag cards between columns; knobs update all cards simultaneously.' },
   { id: 'project-card',            name: 'Project Card',          group: 'cards',           selector: 'app-project-card',      description: 'Project card with color accent, drag handle, repo link, and actions.' },
   { id: 'epic-row',                name: 'Epic Row',              group: 'cards',           selector: 'app-epic-row',          description: 'Single-row epic with project, origin, threads, principles, progress, blocked count.' },
   { id: 'epic-rollup',             name: 'Epic Rollup',           group: 'cards',           selector: 'app-epic-rollup',       description: 'Per-child status strip + summary. Surfaces failures by name on the parent.' },
