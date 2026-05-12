@@ -41,7 +41,6 @@ function groomingToRollup(item: VaultItem): ChildState {
 }
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
-import { BoardCreateBar } from '@shared/components/board-create-bar/board-create-bar';
 import { createKanbanDragState } from '@shared/kanban/drag-state';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
 import { withVaultDetailModal, swapDetailSeq } from '@shared/kanban/detail-modal';
@@ -69,7 +68,7 @@ interface ColumnView {
 
 @Component({
   selector: 'app-grooming-board',
-  imports: [VaultCard, KanbanColumn, KanbanFilterBar, BoardCreateBar],
+  imports: [VaultCard, KanbanColumn, KanbanFilterBar],
   templateUrl: './grooming-board.html',
   styleUrl: './grooming-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

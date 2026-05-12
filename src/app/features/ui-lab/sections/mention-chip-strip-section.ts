@@ -6,6 +6,7 @@ import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { actorId, projectId, vaultItemId , wellKnownActorId} from '@domain/ids';
 import type { Project } from '@domain/projects/project';
+import { EMPTY_PROJECT_BRIEF } from '@domain/projects/project';
 import type { Actor } from '@domain/actors/actor';
 
 const HERMES: Project = {
@@ -19,6 +20,7 @@ const HERMES: Project = {
   repo_url: null,
   color_token: '#7c3aed',
   created_at: '2026-01-01T00:00:00Z',
+  ...EMPTY_PROJECT_BRIEF,
 };
 
 const BORIS: Actor = {

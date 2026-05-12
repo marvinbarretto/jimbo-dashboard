@@ -10,6 +10,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import type { Project, CreateProjectPayload, UpdateProjectPayload } from '@domain/projects';
+import { EMPTY_PROJECT_BRIEF } from '@domain/projects';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { ApiProjectSchema, type ApiProject } from '@domain/projects/project.api-schema';
 import { z } from 'zod';
@@ -77,7 +78,9 @@ export class ProjectsService {
       this._projects().map(p => p.color_token).filter((c): c is string => c !== null)
     );
     const withColor = { ...payload, color_token };
-    const optimistic: Project = { ...withColor, created_at: now };
+    // Fill brief slots the caller didn't provide so the optimistic row is a
+    // complete Project (brief fields are required on the domain type).
+    const optimistic: Project = { ...EMPTY_PROJECT_BRIEF, ...withColor, created_at: now };
     this._projects.update(ps => [...ps, optimistic]);
 
     if (isSeedMode()) {
@@ -243,5 +246,19 @@ function toProject(p: ApiProject): Project {
     repo_url: p.repo_url,
     color_token: p.color_token,
     created_at: p.created_at,
+    intent: p.intent,
+    personas: p.personas,
+    success_criteria: p.success_criteria,
+    current_state: p.current_state,
+    out_of_scope: p.out_of_scope,
+    key_resources: p.key_resources,
+    entry_points: p.entry_points,
+    deploy_target: p.deploy_target,
+    observability: p.observability,
+    conventions_url: p.conventions_url,
+    footguns: p.footguns,
+    autonomy_level: p.autonomy_level,
+    current_blocker: p.current_blocker,
+    common_tasks: p.common_tasks,
   };
 }

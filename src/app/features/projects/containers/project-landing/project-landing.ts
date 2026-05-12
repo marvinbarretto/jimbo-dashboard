@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, TemplateRef, computed, effect, inject, viewChild } from '@angular/core';
+import { type CellContext, type ColumnDef, createColumnHelper } from '@tanstack/angular-table';
+import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -8,13 +10,16 @@ import { UiBreadcrumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
 import type { Crumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
-import { UiInlineEdit, type UiInlineEditOption } from '@shared/components/ui-inline-edit/ui-inline-edit';
+import { ActorChip } from '@shared/components/actor-chip/actor-chip';
+import { UiInlineEdit } from '@shared/components/ui-inline-edit/ui-inline-edit';
+import { withVaultDetailModal } from '@shared/kanban/detail-modal';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
+import { UiDataTable } from '@shared/components/ui-data-table/ui-data-table';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { ProjectsService } from '../../data-access/projects.service';
 import { ProjectActivityEventsService } from '../../data-access/project-activity-events.service';
@@ -23,18 +28,29 @@ import { VaultItemsService } from '../../../vault-items/data-access/vault-items.
 import { VaultItemProjectsService } from '../../../vault-items/data-access/vault-item-projects.service';
 import { FocusSessionsService } from '../../../pomo/data-access/focus-sessions.service';
 import { ProjectStatTile } from '../../components/project-stat-tile/project-stat-tile';
-import { ProjectVaultItemRow } from '../../components/project-vault-item-row/project-vault-item-row';
 import { ProjectFocusSessionRow } from '../../components/project-focus-session-row/project-focus-session-row';
-import type { VaultItem } from '@domain/vault/vault-item';
+import { ProjectBriefField } from '../../components/project-brief-field/project-brief-field';
+import { VaultChip } from '@shared/components/vault-chip/vault-chip';
+import { briefActorProjectTrigger, briefVaultItemTrigger } from '../../util/brief-mention-triggers';
+import type { Priority, VaultItem } from '@domain/vault/vault-item';
 import { isActive, isDone } from '@domain/vault/vault-item';
+import { effectivePriority } from '@domain/vault/readiness';
+import { PriorityBadge } from '@shared/components/priority-badge/priority-badge';
 import type { ProjectActivityEvent } from '@domain/activity/activity-event';
 import type { ActorId } from '@domain/ids';
-import type { UpdateProjectPayload } from '@domain/projects';
+import type { ProjectAutonomyLevel, UpdateProjectPayload } from '@domain/projects';
 
-// Project landing page — the home for a project. Pulls activity from existing
-// services (vault items, focus sessions, project events). The container is
-// the only place that knows how to wire those signals together; the row /
-// tile components stay dumb.
+// Epic + its child items, split into outstanding (active) and done. The
+// landing page renders one block per epic so contributors can see at a glance
+// what's open under each major body of work.
+interface EpicGroup {
+  readonly epic: VaultItem;
+  readonly outstanding: readonly VaultItem[];
+  readonly done: readonly VaultItem[];
+}
+
+// Project landing page — the home for a project. Two-column layout on
+// desktop: epics/items dominate the left, brief + facts pinned on the right.
 @Component({
   selector: 'app-project-landing',
   imports: [
@@ -51,12 +67,22 @@ import type { UpdateProjectPayload } from '@domain/projects';
     UiStack,
     RelativeTimePipe,
     ProjectStatTile,
-    ProjectVaultItemRow,
+    VaultChip,
     ProjectFocusSessionRow,
+    ProjectBriefField,
+    ActorChip,
+    UiDataTable,
+    PriorityBadge,
   ],
   templateUrl: './project-landing.html',
   styleUrl: './project-landing.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    // Expose the project color to every descendant as `--project-accent`.
+    // Falls back to the global accent token so the page still reads when
+    // a project has no color_token.
+    '[style.--project-accent]': 'project()?.color_token ?? null',
+  },
 })
 export class ProjectLanding {
   private readonly projects = inject(ProjectsService);
@@ -67,6 +93,7 @@ export class ProjectLanding {
   private readonly sessions = inject(FocusSessionsService);
   private readonly route = inject(ActivatedRoute);
   private readonly titleService = inject(Title);
+  private readonly http = inject(HttpClient);
 
   private readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id') ?? '')));
 
@@ -100,12 +127,31 @@ export class ProjectLanding {
   readonly doneItems = computed(() => this.items().filter(isDone));
   readonly epicItems = computed(() => this.items().filter(i => i.is_epic));
 
-  // Most recently touched first. `latest_activity_at` is populated by the
-  // board API; fall back to created_at so seed-mode rows still sort sensibly.
-  readonly recentItems = computed(() => {
-    return [...this.items()]
-      .sort((a, b) => this.itemTimestamp(b).localeCompare(this.itemTimestamp(a)))
-      .slice(0, 8);
+  // Epics grouped with their child items. Outstanding (active) vs done split
+  // so the most useful slice (what's still open) reads first.
+  readonly epicGroups = computed<readonly EpicGroup[]>(() => {
+    const items = this.items();
+    const epics = items.filter(i => i.is_epic);
+    return epics.map(epic => {
+      const children = items.filter(i => i.parent_id === epic.id);
+      return {
+        epic,
+        outstanding: children.filter(isActive),
+        done: children.filter(isDone),
+      };
+    });
+  });
+
+  // Items that aren't under an epic this project owns. Either parent_id is
+  // null, or it points to an epic outside this project (cross-project edge).
+  readonly unassignedActive = computed<readonly VaultItem[]>(() => {
+    const items = this.items();
+    const epicIds = new Set(items.filter(i => i.is_epic).map(i => i.id));
+    return items.filter(i =>
+      !i.is_epic
+      && isActive(i)
+      && (i.parent_id === null || !epicIds.has(i.parent_id)),
+    );
   });
 
   readonly sessionsForProject = computed(() => {
@@ -134,7 +180,72 @@ export class ProjectLanding {
     return Math.round(total / 60);
   });
 
+  // Mention triggers shared by every brief textarea. Plain-text inline
+  // references; see brief-mention-triggers.ts for the contract.
+  readonly briefTriggers = [
+    briefActorProjectTrigger(this.projects.activeProjects, this.actors.activeActors),
+    briefVaultItemTrigger(this.http),
+  ];
+
+  // ── Unassigned-items table ────────────────────────────────────────
+  // Each accessor returns the *sortable* value; the visual lives in a
+  // <ng-template> referenced by `cell`. `latest_activity_at` falls back to
+  // created_at so seed rows still sort sensibly.
+  private readonly columnHelper = createColumnHelper<VaultItem>();
+  private readonly chipCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<VaultItem, number> }>>('chipCell');
+  private readonly priorityCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<VaultItem, Priority | null> }>>('priorityCell');
+  private readonly relativeCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<VaultItem, string> }>>('relativeCell');
+
+  readonly itemColumns: ColumnDef<VaultItem, any>[] = [
+    this.columnHelper.accessor(row => row.seq, {
+      id: 'seq',
+      header: 'Item',
+      cell: () => this.chipCell(),
+      sortingFn: 'basic',
+    }),
+    this.columnHelper.accessor(row => row.type, {
+      id: 'type',
+      header: 'Type',
+      sortingFn: 'alphanumeric',
+    }),
+    this.columnHelper.accessor(row => effectivePriority(row), {
+      id: 'priority',
+      header: 'Priority',
+      cell: () => this.priorityCell(),
+      // Null-priority rows sort to the bottom; P0 is highest urgency so
+      // ascending order surfaces the most urgent first.
+      sortingFn: (a, b) => {
+        const pa = effectivePriority(a.original);
+        const pb = effectivePriority(b.original);
+        if (pa === null && pb === null) return 0;
+        if (pa === null) return 1;
+        if (pb === null) return -1;
+        return pa - pb;
+      },
+    }),
+    this.columnHelper.accessor(row => row.created_at, {
+      id: 'created',
+      header: 'Created',
+      cell: () => this.relativeCell(),
+      sortingFn: 'alphanumeric',
+    }),
+    this.columnHelper.accessor(row => row.latest_activity_at ?? row.created_at, {
+      id: 'touched',
+      header: 'Last touched',
+      cell: () => this.relativeCell(),
+      sortingFn: 'alphanumeric',
+    }),
+  ];
+
+
   constructor() {
+    // Open vault items in a CDK Dialog when a row is clicked; URL ?detail=
+    // becomes the source of truth so back-button closes the modal.
+    withVaultDetailModal();
+
     // Recent focus sessions aren't loaded by default; this view needs them.
     this.sessions.loadRecent(30);
 
@@ -169,13 +280,19 @@ export class ProjectLanding {
     }
   }
 
-  readonly statusOptions: UiInlineEditOption[] = [
-    { value: 'active',   label: 'Active' },
-    { value: 'archived', label: 'Archived' },
+  // Autonomy level governs how much Boris/Ralph may do without a human in the
+  // loop on tasks under this project. Null = inherit global default.
+  readonly autonomyOptions: readonly { value: ProjectAutonomyLevel | ''; label: string; hint: string }[] = [
+    { value: '',        label: 'Default (inherit)', hint: 'No project-specific policy — use the global dispatch default.' },
+    { value: 'none',    label: 'None — read-only',  hint: 'Agents may inspect but must not write.' },
+    { value: 'propose', label: 'Propose',           hint: 'Agents prepare changes; a human approves.' },
+    { value: 'ship',    label: 'Ship',              hint: 'Agents may land changes directly.' },
   ];
 
-  readonly statusLabel = (v: string): string =>
-    this.statusOptions.find(o => o.value === v)?.label ?? v;
+  patchAutonomy(id: string, value: string): void {
+    const next = value === '' ? null : (value as ProjectAutonomyLevel);
+    this.projects.update(id, { autonomy_level: next });
+  }
 
   patch(id: string, changes: UpdateProjectPayload): void {
     this.projects.update(id, changes);
@@ -186,21 +303,23 @@ export class ProjectLanding {
     if (trimmed) this.projects.update(id, { display_name: trimmed });
   }
 
-  patchStatus(id: string, value: string): void {
-    this.projects.update(id, { status: value as 'active' | 'archived' });
-  }
-
   statusTone(status: string): 'success' | 'neutral' {
     return status === 'active' ? 'success' : 'neutral';
+  }
+
+  // Lightweight derived helpers — used by template stat tiles for individual
+  // epic groups so the math doesn't sprawl into the template.
+  childrenDoneCount(group: EpicGroup): number {
+    return group.done.length;
+  }
+
+  childrenTotalCount(group: EpicGroup): number {
+    return group.outstanding.length + group.done.length;
   }
 
   private itemBelongsToProject(item: VaultItem, projectId: string): boolean {
     if (item.primary_project_id === projectId) return true;
     const junctions = this.junctions.projectsFor(item.id)();
     return junctions.some(j => j.project_id === projectId);
-  }
-
-  private itemTimestamp(item: VaultItem): string {
-    return item.latest_activity_at ?? item.created_at;
   }
 }

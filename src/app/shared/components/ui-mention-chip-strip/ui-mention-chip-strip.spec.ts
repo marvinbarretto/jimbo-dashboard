@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { UiMentionChipStrip, type MentionRelatedRef } from './ui-mention-chip-strip';
 import { actorId, projectId, vaultItemId , wellKnownActorId} from '@domain/ids';
 import type { Project } from '@domain/projects/project';
+import { EMPTY_PROJECT_BRIEF } from '@domain/projects/project';
 import type { Actor } from '@domain/actors/actor';
 
 const proj = (id: string, color: string | null = null): Project => ({
@@ -17,6 +18,7 @@ const proj = (id: string, color: string | null = null): Project => ({
   repo_url: null,
   color_token: color,
   created_at: '2026-01-01T00:00:00Z',
+  ...EMPTY_PROJECT_BRIEF,
 });
 
 const actor = (id: string): Actor => ({

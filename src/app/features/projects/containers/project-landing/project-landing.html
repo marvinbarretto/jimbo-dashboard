@@ -1,5 +1,6 @@
 @if (project(); as p) {
   <app-ui-stack class="project-landing" gap="lg">
+    <!-- ── Header ─────────────────────────────────────────────────────── -->
     <app-ui-page-header class="project-landing__header">
       <app-ui-breadcrumb uiPageHeaderLead [crumbs]="crumbs()" />
 
@@ -23,125 +24,358 @@
       </app-ui-cluster>
     </app-ui-page-header>
 
-    <header class="project-landing__summary">
-      <app-ui-inline-edit
-        class="project-landing__desc"
-        [value]="p.description ?? ''"
-        kind="textarea"
-        placeholder="Add a description…"
-        ariaLabel="Edit description"
-        [rows]="3"
-        (saved)="patch(p.id, { description: $event || null })"
-      />
-      <ul class="project-landing__facts">
-        <li>
-          Status:
-          <app-ui-inline-edit
-            [value]="p.status"
-            kind="select"
-            [options]="statusOptions"
-            [displayFor]="statusLabel"
-            ariaLabel="Edit status"
-            (saved)="patchStatus(p.id, $event)"
-          />
-        </li>
-        <li>
-          Owner:
-          @if (owner(); as o) {
-            <a [routerLink]="['/actors', o.id]">{{ o.display_name }}</a>
-          } @else if (p.owner_actor_id) {
-            <code>{{ p.owner_actor_id }}</code>
+    <!-- ── Description (full width) ───────────────────────────────────── -->
+    <app-ui-inline-edit
+      class="project-landing__desc"
+      [value]="p.description ?? ''"
+      kind="textarea"
+      placeholder="Add a description…"
+      ariaLabel="Edit description"
+      [rows]="2"
+      (saved)="patch(p.id, { description: $event || null })"
+    />
+
+    <!-- ── Stats row (full width) ─────────────────────────────────────── -->
+    <div class="project-landing__stats">
+      <app-project-stat-tile label="Items" [value]="items().length" />
+      <app-project-stat-tile label="Active" [value]="activeItems().length" />
+      <app-project-stat-tile label="Done" [value]="doneItems().length" />
+      <app-project-stat-tile label="Epics" [value]="epicItems().length" />
+      <app-project-stat-tile label="Focus" [value]="focusMinutes() + 'm'" hint="last 30 days" />
+      <app-project-stat-tile label="Sessions" [value]="sessionsForProject().length" hint="last 30 days" />
+    </div>
+
+    <!-- ── Two-column body ────────────────────────────────────────────── -->
+    <div class="project-landing__body">
+      <!-- LEFT column: work surface ─────────────────────────────────── -->
+      <app-ui-stack class="project-landing__main" gap="lg">
+
+        <!-- Epics with their child items -->
+        <app-ui-section title="Epics" [collapsible]="false">
+          @if (epicGroups().length === 0) {
+            <app-ui-empty-state message="No epics in this project yet. Mark a vault item as `is_epic` to elevate it here." />
           } @else {
-            <span class="hint">unowned</span>
+            <app-ui-stack gap="lg">
+              @for (group of epicGroups(); track group.epic.id) {
+                <section class="epic-group">
+                  <header class="epic-group__header">
+                    <app-vault-chip
+                      kind="epic"
+                      [seq]="group.epic.seq"
+                      [title]="group.epic.title"
+                    />
+                    <span class="epic-group__progress" aria-label="children done count">
+                      {{ childrenDoneCount(group) }}/{{ childrenTotalCount(group) }}
+                    </span>
+                  </header>
+
+                  @if (group.outstanding.length > 0) {
+                    <div class="epic-group__table">
+                      <app-ui-data-table
+                        ariaLabel="Outstanding items under epic"
+                        [columns]="itemColumns"
+                        [data]="group.outstanding"
+                        emptyTitle=""
+                        emptyMessage="" />
+                    </div>
+                  } @else {
+                    <p class="epic-group__empty">No outstanding items under this epic.</p>
+                  }
+
+                  @if (group.done.length > 0) {
+                    <details class="epic-group__done">
+                      <summary>{{ group.done.length }} done</summary>
+                      <div class="epic-group__table">
+                        <app-ui-data-table
+                          ariaLabel="Done items under epic"
+                          [columns]="itemColumns"
+                          [data]="group.done"
+                          emptyTitle=""
+                          emptyMessage="" />
+                      </div>
+                    </details>
+                  }
+                </section>
+              }
+            </app-ui-stack>
           }
-        </li>
-        <li>
-          Repo:
-          <app-ui-inline-edit
-            [value]="p.repo_url ?? ''"
-            placeholder="Add repo URL…"
-            ariaLabel="Edit repo URL"
-            (saved)="patch(p.id, { repo_url: $event || null })"
-          />
-        </li>
-        <li>Created: {{ p.created_at | relativeTime }}</li>
-      </ul>
-    </header>
+        </app-ui-section>
 
-    <app-ui-section title="At a glance" [collapsible]="false">
-      <div class="project-landing__stats">
-        <app-project-stat-tile label="Items" [value]="items().length" />
-        <app-project-stat-tile label="Active" [value]="activeItems().length" />
-        <app-project-stat-tile label="Done" [value]="doneItems().length" />
-        <app-project-stat-tile label="Epics" [value]="epicItems().length" />
-        <app-project-stat-tile
-          label="Focus"
-          [value]="focusMinutes() + 'm'"
-          hint="last 30 days" />
-        <app-project-stat-tile
-          label="Sessions"
-          [value]="sessionsForProject().length"
-          hint="last 30 days" />
-      </div>
-    </app-ui-section>
+        <!-- Items not under any epic this project owns -->
+        <app-ui-section title="Unassigned items" [collapsible]="false">
+          <div class="unassigned-table">
+            <app-ui-data-table
+              ariaLabel="Unassigned items"
+              [columns]="itemColumns"
+              [data]="unassignedActive()"
+              emptyTitle="No unassigned items"
+              emptyMessage="Every active item is grouped under an epic." />
+          </div>
 
-    <app-ui-section title="Recent items" [collapsible]="false">
-      @if (recentItems().length === 0) {
-        <app-ui-empty-state message="No vault items linked to this project yet." />
-      } @else {
-        <app-ui-card tone="soft" [compact]="true">
-          <ul class="project-landing__list">
-            @for (item of recentItems(); track item.id) {
-              <li>
-                <app-project-vault-item-row [item]="item" />
-              </li>
+          <ng-template #chipCell let-context>
+            <span class="chip-cell">
+              <app-vault-chip
+                [kind]="context.row.original.parent_id ? 'subtask' : 'task'"
+                [seq]="context.row.original.seq"
+                [title]="context.row.original.title"
+              />
+            </span>
+          </ng-template>
+
+          <ng-template #priorityCell let-context>
+            @if (context.getValue() !== null) {
+              <app-priority-badge [priority]="context.getValue()" />
+            } @else {
+              <span class="hint">—</span>
             }
-          </ul>
-        </app-ui-card>
-      }
-    </app-ui-section>
+          </ng-template>
 
-    <app-ui-section title="Recent focus sessions" [collapsible]="false">
-      @if (sessionsForProject().length === 0) {
-        <app-ui-empty-state message="No focus sessions in the last 30 days." />
-      } @else {
-        <app-ui-card tone="soft" [compact]="true">
-          <ul class="project-landing__list">
-            @for (s of sessionsForProject(); track s.id) {
-              <li>
-                <app-project-focus-session-row [session]="s" />
-              </li>
+          <ng-template #relativeCell let-context>
+            <span class="unassigned-table__when" [attr.title]="context.getValue()">
+              {{ context.getValue() | relativeTime }}
+            </span>
+          </ng-template>
+        </app-ui-section>
+
+        <!-- Recently completed (collapsed) -->
+        @if (doneItems().length > 0) {
+          <app-ui-section title="Done" [collapsible]="true">
+            <ul class="chip-list">
+              @for (item of doneItems(); track item.id) {
+                <li>
+                  <app-vault-chip
+                    kind="task"
+                    [seq]="item.seq"
+                    [title]="item.title"
+                  />
+                </li>
+              }
+            </ul>
+          </app-ui-section>
+        }
+
+        <!-- Focus sessions -->
+        <app-ui-section title="Recent focus sessions" [collapsible]="true">
+          @if (sessionsForProject().length === 0) {
+            <app-ui-empty-state message="No focus sessions in the last 30 days." />
+          } @else {
+            <app-ui-card tone="soft" [compact]="true">
+              <ul class="project-landing__list">
+                @for (s of sessionsForProject(); track s.id) {
+                  <li><app-project-focus-session-row [session]="s" /></li>
+                }
+              </ul>
+            </app-ui-card>
+          }
+        </app-ui-section>
+
+        <!-- Project-level activity -->
+        <app-ui-section title="Project activity" [collapsible]="true">
+          @if (recentEvents().length === 0) {
+            <app-ui-empty-state message="No project-level activity recorded." />
+          } @else {
+            <app-ui-card tone="soft" [compact]="true">
+              <ul class="project-landing__activity">
+                @for (event of recentEvents(); track event.id) {
+                  <li class="project-landing__activity-row">
+                    <span class="project-landing__activity-actor">{{ actorDisplay(event.actor_id) }}</span>
+                    <span class="project-landing__activity-desc">{{ eventDescription(event) }}</span>
+                    <span class="project-landing__activity-when">· {{ event.at | relativeTime }}</span>
+                  </li>
+                }
+              </ul>
+            </app-ui-card>
+          }
+        </app-ui-section>
+
+        @if (p.criteria) {
+          <app-ui-section title="Criteria (legacy)" [collapsible]="true">
+            <app-ui-card tone="soft" [compact]="true">
+              <pre class="project-landing__criteria">{{ p.criteria }}</pre>
+            </app-ui-card>
+          </app-ui-section>
+        }
+      </app-ui-stack>
+
+      <!-- RIGHT column: brief + facts ─────────────────────────────── -->
+      <app-ui-stack class="project-landing__aside" gap="lg">
+
+        <!-- Facts panel: status / owner / repo / created -->
+        <app-ui-section title="Facts" [collapsible]="false">
+          <app-ui-card tone="soft" [compact]="true">
+            <dl class="project-landing__facts">
+              <dt>Status</dt>
+              <dd>
+                <app-ui-badge [tone]="statusTone(p.status)">{{ p.status }}</app-ui-badge>
+                <app-ui-badge tone="neutral" [subtle]="true">{{ p.kind }}</app-ui-badge>
+              </dd>
+              <dt>Owner</dt>
+              <dd>
+                @if (p.owner_actor_id) {
+                  <app-actor-chip [actor]="p.owner_actor_id" />
+                } @else {
+                  <span class="hint">unowned</span>
+                }
+              </dd>
+              <dt>Repo</dt>
+              <dd>
+                <app-ui-inline-edit
+                  [value]="p.repo_url ?? ''"
+                  placeholder="Add repo URL…"
+                  ariaLabel="Edit repo URL"
+                  (saved)="patch(p.id, { repo_url: $event || null })"
+                />
+              </dd>
+              <dt>Created</dt>
+              <dd>{{ p.created_at | relativeTime }}</dd>
+            </dl>
+          </app-ui-card>
+        </app-ui-section>
+
+        <!-- Project brief: chunky textareas with @ / ~ typeahead -->
+        <app-ui-section title="Brief — purpose" [collapsible]="false">
+          <app-ui-stack gap="md">
+            <app-project-brief-field
+              label="Intent"
+              [value]="p.intent"
+              placeholder="One-line purpose / north star"
+              [rows]="2"
+              [triggers]="briefTriggers"
+              (saved)="patch(p.id, { intent: $event })"
+            />
+            <app-project-brief-field
+              label="Personas"
+              [value]="p.personas"
+              placeholder="Who this project serves"
+              [rows]="3"
+              [triggers]="briefTriggers"
+              (saved)="patch(p.id, { personas: $event })"
+            />
+            <app-project-brief-field
+              label="Success criteria"
+              [value]="p.success_criteria"
+              placeholder="What done looks like"
+              [rows]="4"
+              [triggers]="briefTriggers"
+              (saved)="patch(p.id, { success_criteria: $event })"
+            />
+            <app-project-brief-field
+              label="Out of scope"
+              [value]="p.out_of_scope"
+              placeholder="Explicit exclusions"
+              [rows]="3"
+              [triggers]="briefTriggers"
+              (saved)="patch(p.id, { out_of_scope: $event })"
+            />
+          </app-ui-stack>
+        </app-ui-section>
+
+        <app-ui-section title="Brief — state" [collapsible]="false">
+          <app-ui-stack gap="md">
+            <app-project-brief-field
+              label="Current state"
+              [value]="p.current_state"
+              placeholder="Where things are now"
+              [rows]="4"
+              [triggers]="briefTriggers"
+              (saved)="patch(p.id, { current_state: $event })"
+            />
+            <app-project-brief-field
+              label="Current blocker"
+              [value]="p.current_blocker"
+              placeholder="What's stopping forward motion"
+              [rows]="2"
+              [triggers]="briefTriggers"
+              (saved)="patch(p.id, { current_blocker: $event })"
+            />
+          </app-ui-stack>
+        </app-ui-section>
+
+        <app-ui-section title="Brief — operating context" [collapsible]="true">
+          <app-ui-stack gap="md">
+            <app-project-brief-field
+              label="Entry points"
+              [value]="p.entry_points"
+              placeholder="Start reading here — files, docs"
+              [rows]="3"
+              [triggers]="briefTriggers"
+              hint="Where a newcomer should open the codebase or docs first."
+              (saved)="patch(p.id, { entry_points: $event })"
+            />
+            <app-project-brief-field
+              label="Conventions URL"
+              [value]="p.conventions_url"
+              placeholder="Link to AGENTS.md / CLAUDE.md / style guide"
+              [rows]="1"
+              [triggers]="briefTriggers"
+              (saved)="patch(p.id, { conventions_url: $event })"
+            />
+            <app-project-brief-field
+              label="Footguns"
+              [value]="p.footguns"
+              placeholder="Gotchas a newcomer would trip on"
+              [rows]="4"
+              [triggers]="briefTriggers"
+              (saved)="patch(p.id, { footguns: $event })"
+            />
+            <app-project-brief-field
+              label="Deploy target"
+              [value]="p.deploy_target"
+              placeholder="How it ships, where it runs"
+              [rows]="2"
+              [triggers]="briefTriggers"
+              (saved)="patch(p.id, { deploy_target: $event })"
+            />
+            <app-project-brief-field
+              label="Observability"
+              [value]="p.observability"
+              placeholder="Logs / metrics / dashboards"
+              [rows]="2"
+              [triggers]="briefTriggers"
+              (saved)="patch(p.id, { observability: $event })"
+            />
+            <app-project-brief-field
+              label="Key resources"
+              [value]="p.key_resources"
+              placeholder="Links, docs, references"
+              [rows]="4"
+              [triggers]="briefTriggers"
+              (saved)="patch(p.id, { key_resources: $event })"
+            />
+            <app-project-brief-field
+              label="Common tasks"
+              [value]="p.common_tasks"
+              placeholder="Templated entry points (e.g. add a new X, fix Y)"
+              [rows]="4"
+              [triggers]="briefTriggers"
+              (saved)="patch(p.id, { common_tasks: $event })"
+            />
+          </app-ui-stack>
+        </app-ui-section>
+
+        <app-ui-section title="Brief — autonomy" [collapsible]="false">
+          <p class="autonomy__caption">Boris / Ralph policy for this project</p>
+          <div class="autonomy" role="radiogroup" aria-label="Autonomy level">
+            @for (opt of autonomyOptions; track opt.value) {
+              <label class="autonomy__row" [class.autonomy__row--selected]="(p.autonomy_level ?? '') === opt.value">
+                <input
+                  type="radio"
+                  class="autonomy__input"
+                  name="autonomy_level"
+                  [value]="opt.value"
+                  [checked]="(p.autonomy_level ?? '') === opt.value"
+                  (change)="patchAutonomy(p.id, opt.value)"
+                />
+                <span class="autonomy__body">
+                  <strong class="autonomy__label">{{ opt.label }}</strong>
+                  <span class="autonomy__hint">{{ opt.hint }}</span>
+                </span>
+              </label>
             }
-          </ul>
-        </app-ui-card>
-      }
-    </app-ui-section>
-
-    <app-ui-section title="Project activity" [collapsible]="false">
-      @if (recentEvents().length === 0) {
-        <app-ui-empty-state message="No project-level activity recorded." />
-      } @else {
-        <app-ui-card tone="soft" [compact]="true">
-          <ul class="project-landing__activity">
-            @for (event of recentEvents(); track event.id) {
-              <li class="project-landing__activity-row">
-                <span class="project-landing__activity-actor">{{ actorDisplay(event.actor_id) }}</span>
-                <span class="project-landing__activity-desc">{{ eventDescription(event) }}</span>
-                <span class="project-landing__activity-when">· {{ event.at | relativeTime }}</span>
-              </li>
-            }
-          </ul>
-        </app-ui-card>
-      }
-    </app-ui-section>
-
-    @if (p.criteria) {
-      <app-ui-section title="Criteria" [collapsible]="true">
-        <app-ui-card tone="soft" [compact]="true">
-          <pre class="project-landing__criteria">{{ p.criteria }}</pre>
-        </app-ui-card>
-      </app-ui-section>
-    }
+          </div>
+        </app-ui-section>
+      </app-ui-stack>
+    </div>
   </app-ui-stack>
 } @else {
   <app-ui-empty-state title="Project not found" message="The requested project could not be found." />

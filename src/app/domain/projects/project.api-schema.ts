@@ -8,6 +8,8 @@
 // dashboard's two-state lifecycle.
 import { z } from 'zod';
 
+export const ApiProjectAutonomyLevelSchema = z.enum(['none', 'propose', 'ship']);
+
 export const ApiProjectSchema = z.object({
   id:             z.string().min(1),
   display_name:   z.string().min(1),
@@ -23,6 +25,24 @@ export const ApiProjectSchema = z.object({
   color_token:    z.string().nullable(),
   created_at:     z.string(),
   updated_at:     z.string().optional(),
+
+  // Brief fields — `.nullish()` so older API builds that don't yet emit the
+  // column (null vs absent) parse cleanly. Normalised to `null` on the
+  // dashboard side so consumers only handle one empty shape.
+  intent:           z.string().nullish().transform(v => v ?? null),
+  personas:         z.string().nullish().transform(v => v ?? null),
+  success_criteria: z.string().nullish().transform(v => v ?? null),
+  current_state:    z.string().nullish().transform(v => v ?? null),
+  out_of_scope:     z.string().nullish().transform(v => v ?? null),
+  key_resources:    z.string().nullish().transform(v => v ?? null),
+  entry_points:     z.string().nullish().transform(v => v ?? null),
+  deploy_target:    z.string().nullish().transform(v => v ?? null),
+  observability:    z.string().nullish().transform(v => v ?? null),
+  conventions_url:  z.string().nullish().transform(v => v ?? null),
+  footguns:         z.string().nullish().transform(v => v ?? null),
+  autonomy_level:   ApiProjectAutonomyLevelSchema.nullish().transform(v => v ?? null),
+  current_blocker:  z.string().nullish().transform(v => v ?? null),
+  common_tasks:     z.string().nullish().transform(v => v ?? null),
 });
 
 export type ApiProject = z.infer<typeof ApiProjectSchema>;

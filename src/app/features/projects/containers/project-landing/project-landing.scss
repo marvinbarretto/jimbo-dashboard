@@ -1,7 +1,20 @@
-.project-landing {
-  padding: 2rem;
-  max-width: 960px;
+// Project landing — sharp, chunky, scannable. Project accent color is
+// injected via the host as `--project-accent`; descendant styles use it for
+// left borders, seq numbers, and focus rings. Corners are pinned to 0 across
+// the page by overriding the radius tokens in scope — keeps it consistent
+// without touching the global tokens.
 
+.project-landing {
+  --radius: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --project-accent-fallback: var(--color-accent);
+
+  padding: 2rem;
+  max-width: 1440px;
+  margin: 0 auto;
+
+  // ── Header ────────────────────────────────────────────────────────
   &__title {
     display: inline-flex;
     align-items: center;
@@ -13,22 +26,14 @@
     display: inline-block;
     width: 0.85rem;
     height: 0.85rem;
-    border-radius: 50%;
+    background: var(--project-accent, var(--project-accent-fallback));
   }
 
-  // UiInlineEdit host — grows to fill the title row flex space.
   &__name {
     flex: 1 1 auto;
     min-width: 0;
   }
 
-  &__summary {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  // Applied to UiInlineEdit host — override inline-flex to be block-level.
   &__desc {
     display: block;
     width: 100%;
@@ -37,30 +42,95 @@
     font-size: 0.95rem;
   }
 
-  &__facts {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.25rem;
-    font-size: 0.85rem;
-    color: var(--color-text-muted);
-  }
-
+  // ── Stats row ─────────────────────────────────────────────────────
   &__stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 0.5rem;
   }
 
+  // ── Two-column body ───────────────────────────────────────────────
+  &__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(20rem, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  &__main, &__aside {
+    min-width: 0;
+  }
+
+  &__aside {
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+
+    // Subtle hairline on the inner side to visually anchor the brief column.
+    border-left: 1px solid var(--color-border);
+    padding-left: 1.5rem;
+  }
+
+  // ── Section title accent strip ─────────────────────────────────────
+  // Tiny vertical accent before every section title so the eye knows where
+  // each block starts. Lives on a descendant selector so it doesn't fight
+  // the UiSection internals.
+  ::ng-deep .ui-section__title {
+    position: relative;
+    padding-left: 0.85rem;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.15em;
+      bottom: 0.15em;
+      width: 3px;
+      background: var(--project-accent, var(--project-accent-fallback));
+    }
+  }
+
+  // ── Facts panel ───────────────────────────────────────────────────
+  // `auto` on the label column so values stay on one line.
+  &__facts {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.55rem 1rem;
+    margin: 0;
+    font-size: 0.9rem;
+
+    > dt {
+      color: var(--color-text-muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      align-self: center;
+    }
+
+    > dd {
+      margin: 0;
+      min-width: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.4rem;
+      word-break: break-word;
+    }
+  }
+
+  // ── Generic lists used by unassigned / done / focus / activity ─────
   &__list {
     list-style: none;
     margin: 0;
     padding: 0;
 
-    > li + li {
-      border-top: 1px solid var(--color-border);
+    > li {
+      border-bottom: 1px solid var(--color-border);
+
+      &:last-child {
+        border-bottom: none;
+      }
     }
   }
 
@@ -76,17 +146,18 @@
     gap: 0.35rem;
     padding: 0.6rem 0.75rem;
     border-bottom: 1px solid var(--color-border);
+
+    &:last-child { border-bottom: none; }
   }
-  &__activity-row:last-child { border-bottom: none; }
 
   &__activity-actor { font-weight: 600; color: var(--color-text); }
   &__activity-desc, &__activity-when { color: var(--color-text-muted); }
 
   &__criteria {
     margin: 0;
-    padding: 0;
-    border: none;
-    background: transparent;
+    padding: 0.75rem;
+    background: var(--color-surface-soft);
+    border: 1px solid var(--color-border);
     white-space: pre-wrap;
     word-break: break-word;
     font-size: 0.875rem;
@@ -94,8 +165,228 @@
   }
 }
 
+// ── Epic group block ───────────────────────────────────────────────────
+// Refined treatment: the epic itself is a VaultChip (`kind="epic"`, with the
+// project-tint wash and left border baked in). Children sit below as
+// `kind="subtask"` chips, indented and slightly muted. No big colored band —
+// the chip's own tint carries the project signal.
+//
+// `--proj-tint` is the variable VaultChip reads; we forward `--project-accent`
+// into it so every chip on this page picks up the right color.
+.epic-group {
+  --proj-tint: var(--project-accent, var(--color-accent));
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__progress {
+    flex-shrink: 0;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  &__table {
+    // Indent under the epic header + nesting guide line to match the chip
+    // layout it replaces.
+    margin-left: 0.45rem;
+    padding-left: 1.25rem;
+    border-left: 1px solid var(--color-border);
+  }
+
+  &__empty {
+    margin: 0 0 0 1.7rem;
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+
+  &__done {
+    font-size: 0.78rem;
+    margin-left: 0.45rem;
+
+    > summary {
+      cursor: pointer;
+      color: var(--color-text-muted);
+      padding: 0.25rem 0;
+      user-select: none;
+      list-style: none;
+
+      &::-webkit-details-marker { display: none; }
+      &::before {
+        content: '▸';
+        display: inline-block;
+        margin-right: 0.4rem;
+        transition: transform 80ms linear;
+      }
+
+      &:hover { color: var(--color-text); }
+    }
+
+    &[open] > summary::before {
+      transform: rotate(90deg);
+    }
+  }
+}
+
+// Constrains the chip in the seq column so long titles ellipsis-truncate
+// instead of stretching the table cell. Inline-block + max-width gives the
+// chip's `max-width: 100%` something concrete to resolve against.
+.chip-cell {
+  display: inline-block;
+  max-width: 28rem;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+// Flat list of vault chips (done section) — wrap so they tile.
+.chip-list {
+  --proj-tint: var(--project-accent, var(--color-accent));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+
+  > li { display: contents; }
+}
+
+// Unassigned items table — chips inherit the project tint, cells are
+// chunky-padded so each row is one scannable line.
+.unassigned-table {
+  --proj-tint: var(--project-accent, var(--color-accent));
+
+  ::ng-deep .ui-data-table__cell,
+  ::ng-deep .ui-data-table__sort-button {
+    padding: 0.55rem 0.75rem;
+  }
+
+  ::ng-deep .ui-data-table__head-cell {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  // Cap the Item column so a long title doesn't push the meta columns off
+  // the right of the visible area. The chip's __title already has
+  // text-overflow: ellipsis — capping the cell is what makes it kick in.
+  ::ng-deep .ui-data-table__head-cell:first-child,
+  ::ng-deep .ui-data-table__cell:first-child {
+    width: 28rem;
+    max-width: 28rem;
+  }
+
+  ::ng-deep .vault-chip {
+    max-width: 100%;
+  }
+
+  &__when {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+  }
+}
+
+// ── Autonomy radios ───────────────────────────────────────────────────
+// Plain div + label rows (not <fieldset>/<legend>, which renders weirdly
+// inside flex/grid). Grid keeps radio and label tightly aligned so there's
+// no dead horizontal space.
+.autonomy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  &__caption {
+    margin: 0 0 0.5rem;
+    font-size: 0.74rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 1.1rem 1fr;
+    align-items: start;
+    gap: 0.7rem;
+    cursor: pointer;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    transition: border-color 80ms linear, background 80ms linear;
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--color-text) 25%, var(--color-border));
+    }
+
+    &--selected {
+      border-color: var(--project-accent, var(--color-accent));
+      background: color-mix(in srgb, var(--project-accent, var(--color-accent)) 10%, transparent);
+    }
+
+    &:focus-within {
+      outline: 2px solid var(--project-accent, var(--color-accent));
+      outline-offset: -1px;
+    }
+  }
+
+  &__input {
+    margin: 0.2rem 0 0;
+    accent-color: var(--project-accent, var(--color-accent));
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  &__label {
+    font-size: 0.88rem;
+    color: var(--color-text);
+  }
+
+  &__hint {
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+}
+
 .hint {
   color: var(--color-text-muted);
+}
+
+// ── Stat tiles: kill rounding within this scope ───────────────────────
+::ng-deep .project-stat-tile {
+  border-radius: 0 !important;
+}
+
+// ── Responsive ────────────────────────────────────────────────────────
+@media (max-width: 1024px) {
+  .project-landing {
+    &__body {
+      grid-template-columns: 1fr;
+    }
+
+    &__aside {
+      position: static;
+      max-height: none;
+      overflow: visible;
+      border-left: none;
+      padding-left: 0;
+    }
+  }
 }
 
 @media (max-width: 768px) {

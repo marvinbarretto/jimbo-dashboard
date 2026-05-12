@@ -11,6 +11,7 @@ import { VaultItemProjectsService } from './vault-item-projects.service';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { actorId, projectId, vaultItemId , wellKnownActorId} from '@domain/ids';
 import type { Project } from '@domain/projects/project';
+import { EMPTY_PROJECT_BRIEF } from '@domain/projects/project';
 import type { Actor } from '@domain/actors/actor';
 import type { DraftPayload } from '../dialog/vault-item-dialog-mode';
 
@@ -112,6 +113,7 @@ describe('VaultItemsService.createWithRelations (HTTP mode)', () => {
     repo_url: null,
     color_token: null,
     created_at: '2026-01-01T00:00:00Z',
+    ...EMPTY_PROJECT_BRIEF,
   });
 
   const fakeActor = (id: string): Actor => ({

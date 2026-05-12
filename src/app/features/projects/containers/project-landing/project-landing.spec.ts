@@ -11,6 +11,7 @@ import { VaultItemProjectsService } from '../../../vault-items/data-access/vault
 import { FocusSessionsService } from '../../../pomo/data-access/focus-sessions.service';
 import { ProjectActivityEventsService } from '../../data-access/project-activity-events.service';
 import type { Project } from '@domain/projects';
+import { EMPTY_PROJECT_BRIEF } from '@domain/projects';
 import type { VaultItem } from '@domain/vault/vault-item';
 import type { FocusSession } from '@domain/focus-sessions';
 import { projectId, vaultItemId, focusSessionId } from '@domain/ids';
@@ -27,6 +28,7 @@ function makeProject(overrides: Partial<Project> = {}): Project {
     repo_url: null,
     color_token: '#7a8fc4',
     created_at: '2025-01-01T00:00:00Z',
+    ...EMPTY_PROJECT_BRIEF,
     ...overrides,
   };
 }

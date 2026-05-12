@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 
 export type VaultChipKind = 'task' | 'subtask' | 'epic';
 export type VaultChipCreator = 'agent' | 'human';
@@ -7,7 +8,12 @@ export type VaultChipCreator = 'agent' | 'human';
   selector: 'app-vault-chip',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <a [class]="cls()" [href]="href()" [attr.title]="title() ?? null">
+    <a
+      [class]="cls()"
+      [href]="resolvedHref()"
+      [attr.title]="title() ?? null"
+      (click)="onClick($event)"
+    >
       <span class="vault-chip__prefix" aria-hidden="true">{{ prefix() }}</span>
       <span class="vault-chip__seq">{{ seq() }}</span>
       @if (title()) {
@@ -54,6 +60,10 @@ export type VaultChipCreator = 'agent' | 'human';
       color: var(--color-text);
       overflow: hidden;
       text-overflow: ellipsis;
+      // Flex items default to min-width: auto (= content size), which keeps
+      // nowrap titles from ever shrinking. Override so ellipsis kicks in when
+      // the chip's parent is narrower than the title.
+      min-width: 0;
     }
     .vault-chip__epic-marker {
       margin-left: 0.3rem;
@@ -84,12 +94,21 @@ export type VaultChipCreator = 'agent' | 'human';
   `],
 })
 export class VaultChip {
-  readonly kind    = input.required<VaultChipKind>();
-  readonly seq     = input.required<number>();
-  readonly title   = input<string | null>(null);
-  readonly creator = input<VaultChipCreator>('agent');
-  readonly epicSeq = input<number | null>(null);
-  readonly href    = input<string>('#');
+  readonly kind        = input.required<VaultChipKind>();
+  readonly seq         = input.required<number>();
+  readonly title       = input<string | null>(null);
+  readonly creator     = input<VaultChipCreator>('agent');
+  readonly epicSeq     = input<number | null>(null);
+  readonly href        = input<string | null>(null);
+  // When true (default), plain clicks push ?detail=<seq> so a host page that
+  // mounted withVaultDetailModal() opens the modal. Middle/cmd-click still
+  // honours the rendered href and opens the full /vault-items route.
+  readonly openInModal = input(true);
+
+  private readonly router = inject(Router);
+  private readonly route  = inject(ActivatedRoute);
+
+  protected readonly resolvedHref = computed(() => this.href() ?? `/vault-items/${this.seq()}`);
 
   protected readonly prefix = computed(() => {
     switch (this.kind()) {
@@ -103,4 +122,17 @@ export class VaultChip {
     if (this.kind() === 'epic' && this.creator() === 'human') parts.push('vault-chip--human');
     return parts.join(' ');
   });
+
+  onClick(event: MouseEvent): void {
+    if (!this.openInModal()) return;
+    if (event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    event.preventDefault();
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { detail: this.seq() },
+      queryParamsHandling: 'merge',
+    });
+  }
 }
