@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.52](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.51...v0.0.52) (2026-05-12)
+
+
+### Features
+
+* **projects:** inline brief fields on landing + epic children table ([621a97a](https://github.com/marvinbarretto/jimbo-dashboard/commit/621a97a0f9fc450ac68a1f2e70e4879d050dd658))
+
 ### [0.0.51](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.50...v0.0.51) (2026-05-12)
 
 
