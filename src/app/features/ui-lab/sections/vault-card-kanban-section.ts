@@ -401,7 +401,7 @@ export class VaultCardKanbanSection {
 
   // ── Controls state ────────────────────────────────────────────────────────
 
-  private readonly _controls = signal<ControlState>({
+  protected readonly _controls = signal<ControlState>({
     priority:      null,
     assignee:      'marvin',
     ageHours:      6,
