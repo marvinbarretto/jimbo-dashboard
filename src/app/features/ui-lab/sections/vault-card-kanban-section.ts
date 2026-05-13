@@ -3,7 +3,7 @@ import { VaultCard } from '@shared/components/vault-card/vault-card';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import type { GroomingCardContext, ProjectRef } from '@shared/components/vault-card/card-context';
-import type { VaultItem, GroomingStatus, AcceptanceCriterion, Priority } from '@domain/vault';
+import type { VaultItem, GroomingStatus, AcceptanceCriterion, Priority, SourceKind } from '@domain/vault';
 import type { VaultItem as VaultItemType } from '@domain/vault';
 import type { Project } from '@domain/projects';
 import { EMPTY_PROJECT_BRIEF } from '@domain/projects';
@@ -89,14 +89,19 @@ const DEMO_CARDS: readonly DemoCardSlot[] = [
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface ControlState {
-  readonly priority: Priority | null;
-  readonly assignee: 'marvin' | 'boris' | 'ralph';
-  readonly ageHours: number;
-  readonly daysInCol: number;
-  readonly showProject: boolean;
-  readonly showTags: boolean;
-  readonly isEpic: boolean;
-  readonly showQuestion: boolean;
+  readonly priority:      Priority | null;
+  // null = unassigned (exercises the vault-card--unassigned path)
+  readonly assignee:      'marvin' | 'boris' | 'ralph' | null;
+  readonly ageHours:      number;
+  readonly daysInCol:     number;
+  readonly showProject:   boolean;
+  readonly showTags:      boolean;
+  readonly isEpic:        boolean;
+  readonly showQuestion:  boolean;
+  // Source simulation — drives vault-card--github / --pr-comment / --agent etc.
+  readonly sourceKind:    SourceKind | null;
+  // Action button display mode for all demo cards.
+  readonly actionDisplay: 'icon' | 'label' | 'icon+label';
 }
 
 @Component({
@@ -195,11 +200,33 @@ interface ControlState {
             </div>
 
             <div class="kk-ctrl">
-              <label class="kk-ctrl__label" for="kk-assignee">Assignee</label>
+              <label class="kk-ctrl__label" for="kk-assignee">Assignee (ownership)</label>
               <select id="kk-assignee" class="kk-ctrl__select" (change)="setCtrlAssignee($event)">
-                <option value="marvin">marvin</option>
-                <option value="boris">boris</option>
-                <option value="ralph">ralph</option>
+                <option value="marvin">marvin (mine)</option>
+                <option value="boris">boris (theirs)</option>
+                <option value="ralph">ralph (theirs)</option>
+                <option value="">— unassigned</option>
+              </select>
+            </div>
+
+            <div class="kk-ctrl">
+              <label class="kk-ctrl__label" for="kk-source">Source kind</label>
+              <select id="kk-source" class="kk-ctrl__select" (change)="setCtrlSourceKind($event)">
+                <option value="">manual</option>
+                <option value="github">github</option>
+                <option value="pr-comment">pr-comment</option>
+                <option value="agent">agent</option>
+                <option value="email">email</option>
+                <option value="url">url</option>
+              </select>
+            </div>
+
+            <div class="kk-ctrl">
+              <label class="kk-ctrl__label" for="kk-action-display">Action display</label>
+              <select id="kk-action-display" class="kk-ctrl__select" (change)="setCtrlActionDisplay($event)">
+                <option value="icon+label">icon + label</option>
+                <option value="icon">icon only</option>
+                <option value="label">label only</option>
               </select>
             </div>
 
@@ -272,6 +299,7 @@ interface ControlState {
               (dragend)="drag.onDragEnd()">
               <app-vault-card
                 [context]="card"
+                [actionDisplay]="_controls().actionDisplay"
                 [projectOptions]="projectOptions"
                 [epicOptions]="epicOptions" />
             </div>
@@ -295,6 +323,7 @@ interface ControlState {
               (dragend)="drag.onDragEnd()">
               <app-vault-card
                 [context]="card"
+                [actionDisplay]="_controls().actionDisplay"
                 [projectOptions]="projectOptions"
                 [epicOptions]="epicOptions" />
             </div>
@@ -318,6 +347,7 @@ interface ControlState {
               (dragend)="drag.onDragEnd()">
               <app-vault-card
                 [context]="card"
+                [actionDisplay]="_controls().actionDisplay"
                 [projectOptions]="projectOptions"
                 [epicOptions]="epicOptions" />
             </div>
@@ -341,6 +371,7 @@ interface ControlState {
               (dragend)="drag.onDragEnd()">
               <app-vault-card
                 [context]="card"
+                [actionDisplay]="_controls().actionDisplay"
                 [projectOptions]="projectOptions"
                 [epicOptions]="epicOptions" />
             </div>
@@ -371,14 +402,16 @@ export class VaultCardKanbanSection {
   // ── Controls state ────────────────────────────────────────────────────────
 
   private readonly _controls = signal<ControlState>({
-    priority: null,
-    assignee: 'marvin',
-    ageHours: 6,
-    daysInCol: 0,
-    showProject: true,
-    showTags: false,
-    isEpic: false,
-    showQuestion: false,
+    priority:      null,
+    assignee:      'marvin',
+    ageHours:      6,
+    daysInCol:     0,
+    showProject:   true,
+    showTags:      false,
+    isEpic:        false,
+    showQuestion:  false,
+    sourceKind:    null,
+    actionDisplay: 'icon+label',
   });
 
   // ── Card positions (mutable via drag-drop) ────────────────────────────────
@@ -427,8 +460,20 @@ export class VaultCardKanbanSection {
   }
 
   setCtrlAssignee(e: Event): void {
-    const assignee = (e.target as HTMLSelectElement).value as ControlState['assignee'];
+    const raw = (e.target as HTMLSelectElement).value;
+    const assignee = raw === '' ? null : raw as Exclude<ControlState['assignee'], null>;
     this._controls.update(c => ({ ...c, assignee }));
+  }
+
+  setCtrlSourceKind(e: Event): void {
+    const raw = (e.target as HTMLSelectElement).value;
+    const sourceKind: SourceKind | null = raw === '' ? null : raw as SourceKind;
+    this._controls.update(c => ({ ...c, sourceKind }));
+  }
+
+  setCtrlActionDisplay(e: Event): void {
+    const actionDisplay = (e.target as HTMLSelectElement).value as ControlState['actionDisplay'];
+    this._controls.update(c => ({ ...c, actionDisplay }));
   }
 
   setCtrlAge(e: Event): void {
@@ -468,7 +513,7 @@ export class VaultCardKanbanSection {
     status: GroomingStatus,
     ctrl: ControlState,
   ): GroomingCardContext {
-    const { priority, assignee, ageHours, daysInCol, showProject, showTags, isEpic, showQuestion } = ctrl;
+    const { priority, assignee, ageHours, daysInCol, showProject, showTags, isEpic, showQuestion, sourceKind } = ctrl;
 
     // Pick a project based on slot id to give variety when showProject is on.
     const projectBySlot: ProjectRef =
@@ -476,13 +521,31 @@ export class VaultCardKanbanSection {
       : slot.id === 'k3' || slot.id === 'k5' ? PROJ_HERMES
       : PROJ_LOCALSHOUT;
 
+    // Resolved owner — null when unassigned so ownership === 'unassigned'.
+    const owner = assignee ? actorId(assignee) : null;
+
+    // Simulate a source URL for navigable source kinds.
+    const sourceUrl: string | null = sourceKind === 'github'
+      ? 'https://github.com/example/repo/issues/42'
+      : sourceKind === 'pr-comment'
+        ? 'https://github.com/example/repo/pull/7#issuecomment-1'
+        : null;
+
+    // Source label text for the identity row.
+    const sourceText: string = sourceKind === 'github'     ? 'GitHub #42'
+      : sourceKind === 'pr-comment'  ? 'via PR comment'
+      : sourceKind === 'agent'       ? 'by @boris'
+      : sourceKind === 'email'       ? 'via email'
+      : sourceKind === 'url'         ? 'via url'
+      : 'manual';
+
     return {
       kind: 'grooming',
       item: baseItem({
         id: vaultItemId(slot.id),
         seq: slot.seq,
         title: slot.title,
-        assigned_to: actorId(assignee),
+        assigned_to: owner,
         tags: showTags ? slot.defaultTags : [],
         grooming_status: status,
         manual_priority: priority,
@@ -497,14 +560,16 @@ export class VaultCardKanbanSection {
         created_at: ago(ageHours),
       }),
       project:            showProject ? projectBySlot : null,
-      owner:              actorId(assignee),
+      owner,
       openQuestion:       showQuestion ? DEMO_QUESTION : null,
       childRollup:        isEpic ? DEMO_ROLLUP : null,
       parentEpic:         null,
       lastActivityAt:     ago(ageHours / 2),
       daysInColumn:       daysInCol,
-      source:             { text: 'manual', actorId: null },
+      source:             { text: sourceText, actorId: null },
       openQuestionsCount: showQuestion ? 1 : 0,
+      sourceKind:         sourceKind ?? null,
+      sourceUrl,
     };
   }
 }

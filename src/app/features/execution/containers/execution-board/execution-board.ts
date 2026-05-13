@@ -26,7 +26,6 @@ import type {
   ParentEpicRef,
   SourceLabel,
 } from '@shared/components/vault-card/card-context';
-import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
 import { BoardCreateBar } from '@shared/components/board-create-bar/board-create-bar';
@@ -257,10 +256,12 @@ export class ExecutionBoard {
       kind: 'manual',
       item,
       project: this.projectForItem(item),
-      owner: item.assigned_to ?? CURRENT_ACTOR_ID,
+      owner: item.assigned_to ?? null,
       parentEpic: item.parent_id ? this.parentEpicFor(item.id as string) : null,
       source: this.sourceLabelFor(item),
       lastActivityAt: item.latest_activity_at ?? item.created_at,
+      sourceKind: item.source?.kind ?? null,
+      sourceUrl: item.source?.url ?? null,
     };
     return ctx;
   }

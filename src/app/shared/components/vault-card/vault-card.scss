@@ -20,6 +20,31 @@
     var(--color-surface) 30%);
 }
 
+// ── Ownership modifiers ────────────────────────────────────────────────────────
+// 'mine'       — left accent in accent color; draws the eye to Marvin's work.
+// 'theirs'     — no extra treatment; default card appearance.
+// 'unassigned' — dimmed + dashed left edge; signals items needing an owner.
+
+.vault-card--mine {
+  border-left: 3px solid var(--color-accent);
+}
+.vault-card--unassigned {
+  border-left: 3px dashed var(--color-border-strong, var(--color-border));
+  opacity: 0.8;
+}
+
+// ── Source-class modifiers ─────────────────────────────────────────────────────
+// github     — faint top accent; GH icon in the head signals a tracked issue.
+// pr-comment — purple tint signals code-review origin.
+// agent      — no extra border; agent provenance is already shown in identity row.
+
+.vault-card--github {
+  border-top: 2px solid color-mix(in srgb, #24292e 60%, var(--color-border));
+}
+.vault-card--pr-comment {
+  border-top: 2px solid color-mix(in srgb, var(--color-info) 60%, var(--color-border));
+}
+
 // Project header strip — full-bleed bar painted in the project colour, with
 // the project name on the left and (when subtask) the parent epic on the
 // right. Cards with no project and no parent skip the bar entirely.
@@ -181,12 +206,35 @@
   white-space: nowrap;
 }
 
+.vault-card__github-link {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  padding: 0 0.15rem;
+  border-radius: var(--radius);
+
+  &:hover { color: var(--color-text); }
+}
+
 .vault-card__identity {
   display: flex;
   align-items: center;
   gap: 0.35rem;
   flex-wrap: wrap;
 }
+
+.vault-card__unassigned {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  opacity: 0.6;
+  font-style: italic;
+  padding: 1px 4px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
 .vault-card__source {
   display: inline-flex;
   align-items: center;
@@ -234,6 +282,10 @@
   border-color: var(--color-text);
   color: var(--color-text);
 }
+.vault-card__btn--icon-only {
+  padding: 0.15rem 0.35rem;
+}
+
 .vault-card__btn--primary {
   background: color-mix(in srgb, var(--color-success) 25%, transparent);
   border-color: var(--color-success);

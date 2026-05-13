@@ -29,7 +29,6 @@ import { actorId, projectId, type ActorId, type VaultItemId } from '@domain/ids'
 import { VaultCard, type ActionKey } from '@shared/components/vault-card/vault-card';
 import type { GroomingCardContext, ProjectRef, ChildStatus } from '@shared/components/vault-card/card-context';
 import type { ChildState } from '@shared/components/epic-rollup/epic-rollup';
-import { CURRENT_ACTOR_ID } from '@domain/actors';
 
 // Map a child item's grooming_status into the coarse rollup bucket. Pre-dispatch
 // states collapse to 'grooming'; ready passes through. Per-item dispatch result
@@ -305,15 +304,15 @@ export class GroomingBoard {
   }
 
   // Single helper that builds the discriminated CardContext for the unified
-  // <app-vault-card>. The board still owns all the upstream lookups; the card
-  // is purely presentational. Owner falls back to the current actor when an
-  // item is unassigned — the card never has to render an empty owner slot.
+  // <app-vault-card>. The board owns all upstream lookups; the card is purely
+  // presentational. owner is null when unassigned — never fall back to
+  // CURRENT_ACTOR_ID here, that masks real state and breaks ownership styling.
   cardContextFor(item: VaultItem): GroomingCardContext {
     return {
       kind: 'grooming',
       item,
       project: this.primaryProject(item),
-      owner: item.assigned_to ?? CURRENT_ACTOR_ID,
+      owner: item.assigned_to ?? null,
       openQuestion: this.firstOpenQuestion(item),
       childRollup: this.childRollup(item),
       parentEpic: this.parentRef(item),
@@ -321,6 +320,8 @@ export class GroomingBoard {
       daysInColumn: this.daysInColumn(item),
       source: this.sourceSummary(item),
       openQuestionsCount: this.openQuestionsCount(item),
+      sourceKind: item.source?.kind ?? null,
+      sourceUrl: item.source?.url ?? null,
     };
   }
 

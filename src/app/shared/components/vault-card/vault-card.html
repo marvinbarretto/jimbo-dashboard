@@ -76,6 +76,17 @@
       [class.vault-card__age--stuck]="isStuck()"
       [attr.title]="isStuck() ? stuckDays() + 'd in this column · stuck' : null"
     >{{ ageLabel() }}</span>
+
+    @if (sourceClass() === 'github' && sourceUrl()) {
+      <a class="vault-card__github-link"
+         [href]="sourceUrl()"
+         target="_blank"
+         rel="noopener noreferrer"
+         title="View on GitHub"
+         (click)="$event.stopPropagation()">
+        <app-icon name="github" [size]="12" />
+      </a>
+    }
   </header>
 
   @if (seq() !== null) {
@@ -96,7 +107,11 @@
     @if (grooming(); as g) {
       @if (actorOptions().length > 0) {
         <app-ui-dropdown #ownerDrop ariaHaspopup="listbox" ariaLabel="Reassign">
-          <app-actor-avatar trigger [actor]="g.owner" size="md" />
+          @if (g.owner) {
+            <app-actor-avatar trigger [actor]="g.owner" size="md" />
+          } @else {
+            <span trigger class="vault-card__unassigned">unassigned</span>
+          }
           <div panel role="listbox" class="vault-card__priority-panel">
             @for (a of actorOptions(); track a.id) {
               <button role="option" class="vault-card__priority-option"
@@ -106,11 +121,17 @@
             }
           </div>
         </app-ui-dropdown>
-      } @else {
+      } @else if (g.owner) {
         <app-actor-avatar [actor]="g.owner" size="md" />
+      } @else {
+        <span class="vault-card__unassigned">unassigned</span>
       }
     } @else if (manual(); as m) {
-      <app-actor-avatar [actor]="m.owner" size="md" />
+      @if (m.owner) {
+        <app-actor-avatar [actor]="m.owner" size="md" />
+      } @else {
+        <span class="vault-card__unassigned">unassigned</span>
+      }
     } @else if (dispatch(); as d) {
       @if (d.owner) {
         <app-actor-avatar [actor]="d.owner" size="md" />
@@ -187,8 +208,16 @@
           [class.vault-card__btn--primary]="action.variant === 'primary'"
           [class.vault-card__btn--danger]="action.variant === 'danger'"
           [class.vault-card__btn--warn]="action.variant === 'warn'"
+          [class.vault-card__btn--icon-only]="actionDisplay() === 'icon' && !!action.icon"
+          [attr.aria-label]="actionDisplay() === 'icon' && action.icon ? action.label : null"
+          [attr.title]="actionDisplay() === 'icon' && action.icon ? action.label : null"
           (click)="onAction(action.key, $event)">
-          {{ action.label }}
+          @if (action.icon && actionDisplay() !== 'label') {
+            <app-icon [name]="action.icon" [size]="12" />
+          }
+          @if (!action.icon || actionDisplay() !== 'icon') {
+            {{ action.label }}
+          }
         </button>
       }
     </div>

@@ -1,9 +1,17 @@
 import {
+  Archive,
+  Check,
+  ChevronsDown,
   Clock,
   ExternalLink,
+  Github,
+  GitBranch,
   GripVertical,
+  MessageSquare,
   Pencil,
+  RotateCcw,
   Trash2,
+  X,
   type LucideIconData,
 } from 'lucide-angular';
 
@@ -15,6 +23,15 @@ export const ICONS = {
   clock:          Clock,
   'external-link': ExternalLink,
   'grip-vertical': GripVertical,
+  approve:        Check,
+  reject:         X,
+  archive:        Archive,
+  answer:         MessageSquare,
+  decompose:      GitBranch,
+  retry:          RotateCcw,
+  demote:         ChevronsDown,
+  'mark-done':    Check,
+  github:         Github,
 } as const satisfies Record<string, LucideIconData>;
 
 export type IconName = keyof typeof ICONS;

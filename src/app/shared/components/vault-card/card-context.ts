@@ -1,4 +1,4 @@
-import type { VaultItem, GroomingStatus } from '@domain/vault';
+import type { VaultItem, GroomingStatus, SourceKind } from '@domain/vault';
 import type { DispatchQueueEntry } from '@domain/dispatch';
 import type { ThreadMessage } from '@domain/thread';
 import type { ActorId } from '@domain/ids';
@@ -28,7 +28,9 @@ export interface GroomingCardContext {
   readonly kind:               'grooming';
   readonly item:               VaultItem;
   readonly project:            ProjectRef | null;
-  readonly owner:              ActorId;
+  // null = unassigned. Boards must NOT fall back to CURRENT_ACTOR_ID — that
+  // masks the real state and breaks "mine vs theirs vs unassigned" styling.
+  readonly owner:              ActorId | null;
   readonly openQuestion:       ThreadMessage | null;
   readonly childRollup:        readonly ChildStatus[] | null;
   readonly parentEpic:         ParentEpicRef | null;
@@ -36,6 +38,11 @@ export interface GroomingCardContext {
   readonly daysInColumn:       number;
   readonly source:             SourceLabel | null;
   readonly openQuestionsCount: number;
+  // Raw source discriminator + URL — drive GH badge and source-class CSS modifier.
+  // Kept separate from SourceLabel (which is display text) so the card can act
+  // on the machine-readable kind without re-parsing formatted text.
+  readonly sourceKind:         SourceKind | null;
+  readonly sourceUrl:          string | null;
 }
 
 export interface DispatchCardContext {
@@ -52,10 +59,12 @@ export interface ManualCardContext {
   readonly kind:           'manual';
   readonly item:           VaultItem;
   readonly project:        ProjectRef | null;
-  readonly owner:          ActorId;
+  readonly owner:          ActorId | null;
   readonly parentEpic:     ParentEpicRef | null;
   readonly source:         SourceLabel | null;
   readonly lastActivityAt: string | null;
+  readonly sourceKind:     SourceKind | null;
+  readonly sourceUrl:      string | null;
 }
 
 export type CardContext = GroomingCardContext | DispatchCardContext | ManualCardContext;

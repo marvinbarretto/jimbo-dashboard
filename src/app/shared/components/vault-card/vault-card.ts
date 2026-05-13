@@ -3,13 +3,15 @@ import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { KanbanCardLinkDirective } from '@shared/kanban/card-link.directive';
 import { ActorAvatar } from '@shared/components/actor-avatar/actor-avatar';
+import { AppIcon } from '@shared/components/app-icon/app-icon';
 import { PickerInputDirective, type MentionTrigger, projectPickerTrigger, epicPickerTrigger } from '@shared/mentions';
 import { PriorityBadge } from '@shared/components/priority-badge/priority-badge';
 import { UiDropdown } from '@shared/components/ui-dropdown/ui-dropdown';
 import type { Project } from '@domain/projects';
-import type { VaultItem } from '@domain/vault';
+import type { VaultItem, SourceKind } from '@domain/vault';
 import type { Priority } from '@domain/vault/vault-item';
 import type { Actor } from '@domain/actors';
+import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { BlockerBadge } from '@shared/components/blocker-badge/blocker-badge';
 import { EpicBadge } from '@shared/components/epic-badge/epic-badge';
 import { DispatchStatusBadge } from '@shared/components/dispatch-status-badge/dispatch-status-badge';
@@ -17,6 +19,7 @@ import { CardCallout, type CalloutVariant } from '@shared/components/card-callou
 import { EpicRollup } from '@shared/components/epic-rollup/epic-rollup';
 import { effectivePriority, ageInDays, isStuck, staleNorm, ancientNorm } from '@domain/vault';
 import type { ActorId, VaultItemId } from '@domain/ids';
+import type { IconName } from '@shared/components/app-icon/icon-registry';
 import type {
   CardContext,
   GroomingCardContext,
@@ -36,49 +39,54 @@ export type ActionKey =
 
 export type ActionVariant = 'primary' | 'danger' | 'warn' | 'neutral';
 
+// `icon` maps to an entry in icon-registry. When present the button can render
+// icon-only, label-only, or icon+label depending on the `actionDisplay` input.
 export interface CardAction {
   readonly key:     ActionKey;
   readonly label:   string;
   readonly variant: ActionVariant;
+  readonly icon?:   IconName;
 }
 
 // Grooming actions — keyed off grooming_status. The matrix is small enough
 // to read top-to-bottom; each branch lists the buttons in render order.
+// Icons use the semantic names from icon-registry (not lucide names) so swapping
+// the underlying icon never touches these factories.
 function groomingActions(ctx: GroomingCardContext): CardAction[] {
   const status = ctx.item.grooming_status;
-  const archive: CardAction = { key: 'archive', label: 'archive', variant: 'neutral' };
-  const assign:  CardAction = { key: 'assign',  label: 'assign',  variant: 'neutral' };
+  const archive: CardAction = { key: 'archive', label: 'archive', variant: 'neutral', icon: 'archive'  };
+  const assign:  CardAction = { key: 'assign',  label: 'assign',  variant: 'neutral'                   };
   // Delete is for "shouldn't have existed" rows — only offered in the pre-
   // dispatch funnel where investment is low. Once an item is decomposed or
   // ready, the audit trail is worth more than the row, so archive only.
-  const del:     CardAction = { key: 'delete',  label: 'delete',  variant: 'danger'  };
+  const del:     CardAction = { key: 'delete',  label: 'delete',  variant: 'danger',  icon: 'delete'   };
 
   if (ctx.openQuestion) {
     return [
-      { key: 'answer', label: 'answer', variant: 'primary' },
+      { key: 'answer', label: 'answer', variant: 'primary', icon: 'answer' },
       archive,
     ];
   }
   switch (status) {
     case 'decomposed':
       return [
-        { key: 'approve', label: 'approve', variant: 'primary' },
-        { key: 'reject',  label: 'reject',  variant: 'danger'  },
+        { key: 'approve', label: 'approve', variant: 'primary', icon: 'approve'   },
+        { key: 'reject',  label: 'reject',  variant: 'danger',  icon: 'reject'    },
         archive,
       ];
     case 'classified':
       return [
-        { key: 'decompose', label: 'decompose', variant: 'neutral' },
+        { key: 'decompose', label: 'decompose', variant: 'neutral', icon: 'decompose' },
         archive,
         del,
       ];
     case 'ungroomed':
     case 'intake_complete':
-      return [{ key: 'demote', label: '→ note', variant: 'neutral' }, archive, assign, del];
+      return [{ key: 'demote', label: '→ note', variant: 'neutral', icon: 'demote' }, archive, assign, del];
     case 'needs_rework':
       return [archive, del];
     case 'intake_rejected':
-      return [{ key: 'demote', label: '→ note', variant: 'neutral' }, archive, del];
+      return [{ key: 'demote', label: '→ note', variant: 'neutral', icon: 'demote' }, archive, del];
     case 'ready':
       // Passive — pump claims it. No actions needed.
       return [];
@@ -89,8 +97,8 @@ function dispatchActions(ctx: DispatchCardContext): CardAction[] {
   const status = ctx.entry.status;
   if (status === 'failed') {
     return [
-      { key: 'retry',   label: '↻ retry', variant: 'warn'    },
-      { key: 'archive', label: 'archive', variant: 'neutral' },
+      { key: 'retry',   label: 'retry',   variant: 'warn',    icon: 'retry'   },
+      { key: 'archive', label: 'archive', variant: 'neutral', icon: 'archive' },
     ];
   }
   if (status === 'completed') {
@@ -101,7 +109,7 @@ function dispatchActions(ctx: DispatchCardContext): CardAction[] {
 }
 
 function manualActions(_ctx: ManualCardContext): CardAction[] {
-  return [{ key: 'markDone', label: 'mark done', variant: 'primary' }];
+  return [{ key: 'markDone', label: 'mark done', variant: 'primary', icon: 'mark-done' }];
 }
 
 function actionsFor(ctx: CardContext): CardAction[] {
@@ -119,6 +127,7 @@ function actionsFor(ctx: CardContext): CardAction[] {
     DecimalPipe,
     KanbanCardLinkDirective,
     ActorAvatar,
+    AppIcon,
     PickerInputDirective,
     PriorityBadge,
     UiDropdown,
@@ -136,14 +145,17 @@ function actionsFor(ctx: CardContext): CardAction[] {
     '[style.--stale-norm]':   'staleNormVal()',
     '[style.--ancient-norm]': 'ancientNormVal()',
     // E2E hooks — see docs/conventions.md §"E2E selectors via data-testid".
-    // Stable surface for tests; class names can drift with CSS refactors.
-    // The column wrapper supplies column-status filtering; the card just
-    // needs to identify itself by the operator-facing seq. We use the
-    // explicit `[attr.]` binding form for both attributes — the bare-key
-    // host syntax is treated as an expression, so a literal string would
-    // need escaping anyway.
     '[attr.data-testid]':     "'vault-card'",
     '[attr.data-seq]':        'seq()',
+    // Ownership modifier classes — drive the left-accent and opacity treatment.
+    // Three states; exactly one class is active at a time.
+    '[class.vault-card--mine]':       "ownership() === 'mine'",
+    '[class.vault-card--theirs]':     "ownership() === 'theirs'",
+    '[class.vault-card--unassigned]': "ownership() === 'unassigned'",
+    // Source-class modifier — surfaces the origin of the item.
+    '[class.vault-card--github]':     "sourceClass() === 'github'",
+    '[class.vault-card--pr-comment]': "sourceClass() === 'pr-comment'",
+    '[class.vault-card--agent]':      "sourceClass() === 'agent'",
   },
 })
 export class VaultCard {
@@ -192,9 +204,45 @@ export class VaultCard {
   // helpers above — no new outputs, no new template bindings.
   readonly actionTriggered = output<ActionKey>();
 
+  // Controls how action buttons render their content.
+  //   'icon'       — icon only; label becomes aria-label + title tooltip.
+  //   'label'      — text only (original behaviour).
+  //   'icon+label' — icon left of text label (default; most scannable).
+  // Falls back to 'label' for actions that have no icon registered.
+  readonly actionDisplay = input<'icon' | 'label' | 'icon+label'>('icon+label');
+
   protected readonly projectTint = computed(() => {
     const ctx = this.context();
     return ctx.project?.color_token ?? null;
+  });
+
+  // ── Ownership ──────────────────────────────────────────────────────────────
+  // Three-state: 'mine' (owner === current actor), 'theirs' (someone else owns
+  // it), 'unassigned' (no owner set). Drives CSS class modifiers on the host.
+  // Dispatch cards use entry.executor as the effective owner — executors are
+  // always set once dispatched, so they are never 'unassigned'.
+  protected readonly ownership = computed<'mine' | 'theirs' | 'unassigned'>(() => {
+    const ctx = this.context();
+    const owner = ctx.kind === 'dispatch' ? ctx.owner : ctx.owner;
+    if (!owner) return 'unassigned';
+    return owner === CURRENT_ACTOR_ID ? 'mine' : 'theirs';
+  });
+
+  // ── Source class ───────────────────────────────────────────────────────────
+  // Machine-readable origin kind — drives the GH badge and source-class CSS
+  // modifier. Null for dispatch contexts (source lives on the referenced item,
+  // not on the queue entry itself).
+  protected readonly sourceClass = computed<SourceKind | null>(() => {
+    const ctx = this.context();
+    if (ctx.kind === 'dispatch') return null;
+    return ctx.sourceKind;
+  });
+
+  // Resolved source URL — used by the GH icon link. Only exists on grooming/manual.
+  protected readonly sourceUrl = computed<string | null>(() => {
+    const ctx = this.context();
+    if (ctx.kind === 'dispatch') return null;
+    return ctx.sourceUrl;
   });
 
   // Staleness gradient — drives the amber wash + glow via the shared mixin.
