@@ -87,6 +87,46 @@
   color: var(--color-text-soft);
 }
 
+/* ── Commits shipped during session ──────────────────────────────────────── */
+
+.retro__commits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.retro__commit {
+  display: grid;
+  grid-template-columns: 4rem 1fr auto;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: 0.8rem;
+  padding: 0.25rem 0;
+}
+
+.retro__commit-sha {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.retro__commit-msg {
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.retro__commit-repo {
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-soft);
+}
+
 /* ── Vault item completion ───────────────────────────────────────────────── */
 
 .retro__task-list {

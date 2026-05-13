@@ -7,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FocusSessionsService } from '../../data-access/focus-sessions.service';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { VaultItemsService } from '../../../vault-items/data-access/vault-items.service';
@@ -15,7 +15,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
-import type { SessionMood } from '@domain/focus-sessions';
+import type { FocusSessionCommit, SessionMood } from '@domain/focus-sessions';
 import { vaultItemId } from '@domain/ids';
 
 const MOOD_OPTIONS: { value: SessionMood; icon: string; label: string }[] = [
@@ -36,6 +36,15 @@ export class PomoRetro implements OnInit {
   private readonly projects = inject(ProjectsService);
   private readonly vaultItems = inject(VaultItemsService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+
+  // Break duration passed through by the extension (?break=5). Falls back to
+  // 5 mins if absent so a hand-typed visit still works.
+  readonly breakMins = computed(() => {
+    const raw = this.route.snapshot.queryParamMap.get('break');
+    const n = raw ? parseInt(raw, 10) : NaN;
+    return Number.isFinite(n) && n > 0 ? n : 5;
+  });
 
   readonly moodOptions = MOOD_OPTIONS;
 
@@ -72,6 +81,7 @@ export class PomoRetro implements OnInit {
   readonly mood = signal<SessionMood | null>(null);
   readonly interrupted = signal(false);
   readonly saving = signal(false);
+  readonly commits = signal<FocusSessionCommit[]>([]);
 
   async ngOnInit(): Promise<void> {
     await this.sessions.loadRecent(1);
@@ -80,6 +90,18 @@ export class PomoRetro implements OnInit {
     if (s?.tags.length) this.tags.set(s.tags.join(' '));
     if (s?.mood != null) this.mood.set(s.mood);
     if (s?.interrupted) this.interrupted.set(s.interrupted);
+    if (s) {
+      const commits = await this.sessions.loadCommits(s.id);
+      this.commits.set(commits);
+    }
+  }
+
+  shortSha(sha: string): string {
+    return sha.slice(0, 7);
+  }
+
+  commitSubject(message: string): string {
+    return message.split('\n')[0] ?? message;
   }
 
   toggleMood(value: SessionMood): void {
@@ -102,12 +124,10 @@ export class PomoRetro implements OnInit {
     return this.completedItemIds().has(id);
   }
 
-  async save(): Promise<void> {
+  private async persistReflection(): Promise<void> {
     const s = this.session();
-    if (!s) return void this.router.navigate(['/pomo/pre-session']);
-    this.saving.set(true);
+    if (!s) return;
 
-    // Mark selected vault items as completed.
     for (const id of this.completedItemIds()) {
       this.vaultItems.setCompleted(vaultItemId(id), true, 'Completed during pomo session');
     }
@@ -122,10 +142,17 @@ export class PomoRetro implements OnInit {
       mood: this.mood(),
       interrupted: this.interrupted(),
     });
-    void this.router.navigate(['/pomo/pre-session']);
   }
 
-  skip(): void {
+  async startBreak(): Promise<void> {
+    this.saving.set(true);
+    await this.persistReflection();
+    void this.router.navigate(['/pomo/break'], { queryParams: { mins: this.breakMins() } });
+  }
+
+  async skipBreak(): Promise<void> {
+    this.saving.set(true);
+    await this.persistReflection();
     void this.router.navigate(['/pomo/pre-session']);
   }
 

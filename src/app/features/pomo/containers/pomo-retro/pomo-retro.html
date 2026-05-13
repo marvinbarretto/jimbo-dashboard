@@ -38,6 +38,26 @@
     </app-ui-card>
   }
 
+  <!-- Commits shipped during the session -->
+  @if (commits().length) {
+    <app-ui-card>
+      <div class="retro__field-group">
+        <span class="retro__label">Shipped {{ commits().length }} commit{{ commits().length === 1 ? '' : 's' }}</span>
+        <ul class="retro__commits">
+          @for (c of commits(); track c.id) {
+            <li class="retro__commit">
+              <code class="retro__commit-sha">{{ shortSha(c.commit_sha) }}</code>
+              <span class="retro__commit-msg">{{ commitSubject(c.message) }}</span>
+              @if (c.repo) {
+                <span class="retro__commit-repo">{{ c.repo }}@if (c.branch && c.branch !== 'master' && c.branch !== 'main') { :{{ c.branch }} }</span>
+              }
+            </li>
+          }
+        </ul>
+      </div>
+    </app-ui-card>
+  }
+
   <!-- Vault item completion -->
   @if (projectItems().length) {
     <app-ui-card>
@@ -106,10 +126,12 @@
   </app-ui-card>
 
   <app-ui-cluster gap="sm">
-    <app-ui-button variant="primary" [disabled]="saving()" (pressed)="save()">
-      {{ saving() ? 'Saving…' : 'Save & finish' }}
+    <app-ui-button variant="primary" [disabled]="saving()" (pressed)="startBreak()">
+      {{ saving() ? 'Saving…' : 'Start ' + breakMins() + 'm break' }}
     </app-ui-button>
-    <app-ui-button variant="ghost" (pressed)="skip()">Skip</app-ui-button>
+    <app-ui-button variant="ghost" [disabled]="saving()" (pressed)="skipBreak()">
+      Skip break
+    </app-ui-button>
   </app-ui-cluster>
 
 </app-ui-stack>
