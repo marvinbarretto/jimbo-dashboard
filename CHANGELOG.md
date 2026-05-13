@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.56](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.55...v0.0.56) (2026-05-13)
+
+
+### Features
+
+* **pomo-retro:** add mood donut + stat cards to retro view ([3b107c7](https://github.com/marvinbarretto/jimbo-dashboard/commit/3b107c7f3e53a195da68dd2effc79f7424bde1e2))
+* **pomo:** retro page shows commits + explicit start-break action ([fd8a731](https://github.com/marvinbarretto/jimbo-dashboard/commit/fd8a731554b7f20a9db1939efe1b1bbce6403f3e))
+
+
+### Bug Fixes
+
+* **pomo-retro:** replace unnecessary optional chain on session().notes ([3fd9d56](https://github.com/marvinbarretto/jimbo-dashboard/commit/3fd9d56a2fb704af2bcee3e149f0976ac78a69c9))
+
+
+### Code Refactoring
+
+* **journal:** promote bar-chart + donut-chart to shared/components ([2a287e0](https://github.com/marvinbarretto/jimbo-dashboard/commit/2a287e00394dd24e8ab93da36521226fd0770a8a))
+
 ### [0.0.55](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.54...v0.0.55) (2026-05-13)
 
 
