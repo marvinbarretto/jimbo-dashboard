@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.55](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.54...v0.0.55) (2026-05-13)
+
+
+### Features
+
+* **ui-lab:** add interactive kanban section for vault card ([02f175c](https://github.com/marvinbarretto/jimbo-dashboard/commit/02f175c3a4285011c5e7b2afbea38ed47d328051))
+* **vault-card:** ownership styling, source badges, icon actions ([7fdba74](https://github.com/marvinbarretto/jimbo-dashboard/commit/7fdba744f8f800f5e1b79af0df76a64d3645e0b5))
+
+
+### Bug Fixes
+
+* **ui-lab:** add sourceKind/sourceUrl to vault-card-section fixtures ([b4afffe](https://github.com/marvinbarretto/jimbo-dashboard/commit/b4afffe8c6d6650688e7c4e3cdfcb06b357e2e5a))
+* **ui-lab:** make _controls protected so template can access actionDisplay ([762a21d](https://github.com/marvinbarretto/jimbo-dashboard/commit/762a21df112f86694916403c3c14aba4c2a5ace4))
+
+
+### Code Refactoring
+
+* **vault-card:** collapse 10 void outputs into actionTriggered ([9aba40a](https://github.com/marvinbarretto/jimbo-dashboard/commit/9aba40afdd8fd1bbc13a2df79a0668f8e782efdf))
+* **vault-item-detail:** use primitives for subtask/parent chips and fix token usage ([4666b48](https://github.com/marvinbarretto/jimbo-dashboard/commit/4666b481a2e6abab72751e0763b4148a9e1ae68e))
+
 ### [0.0.54](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.53...v0.0.54) (2026-05-12)
 
 ### [0.0.53](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.52...v0.0.53) (2026-05-12)
