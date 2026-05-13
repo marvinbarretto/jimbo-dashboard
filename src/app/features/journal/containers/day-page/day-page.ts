@@ -15,8 +15,8 @@ import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-s
 import { absoluteTime, formatMinutes, pluralise } from '@shared/utils/datetime.utils';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { JournalDataService } from '../../data-access/journal-data.service';
-import { JournalBarChart } from '../../components/bar-chart/bar-chart';
-import { JournalDonutChart } from '../../components/donut-chart/donut-chart';
+import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
+import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { JournalPager } from '../../components/journal-pager/journal-pager';
 import {
   type DayKey,
@@ -37,8 +37,8 @@ import {
     UiStatCard,
     UiEmptyState,
     UiLoadingState,
-    JournalBarChart,
-    JournalDonutChart,
+    UiBarChart,
+    UiDonutChart,
     JournalPager,
   ],
   templateUrl: './day-page.html',

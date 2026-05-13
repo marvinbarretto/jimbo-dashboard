@@ -1,9 +1,14 @@
+// Shared vertical bar chart wrapper around ng2-charts/Chart.js. One label per
+// bar, one value per bar — for ranking views like "minutes per day",
+// "switches per domain", etc. Use UiDonutChart when proportion matters more
+// than ranking.
+
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { ChartConfiguration, TooltipItem } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 
 @Component({
-  selector: 'app-journal-bar-chart',
+  selector: 'app-ui-bar-chart',
   imports: [BaseChartDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -25,7 +30,7 @@ import { BaseChartDirective } from 'ng2-charts';
     }
   `],
 })
-export class JournalBarChart {
+export class UiBarChart {
   readonly labels = input.required<readonly string[]>();
   readonly values = input.required<readonly number[]>();
   readonly label = input<string>('Value');

@@ -23,7 +23,7 @@
 
     <app-ui-section title="Focus minutes per day" meta="Bar height = minutes of focus">
       @if (b.totals.focus_minutes > 0) {
-        <app-journal-bar-chart
+        <app-ui-bar-chart
           [labels]="dayLabels()"
           [values]="minutesPerDay()"
           label="Minutes"
@@ -38,7 +38,7 @@
 
     <app-ui-section title="Pomodoros per day" meta="Completed sessions">
       @if (b.totals.pomos_completed > 0) {
-        <app-journal-bar-chart
+        <app-ui-bar-chart
           [labels]="dayLabels()"
           [values]="pomosPerDay()"
           label="Pomodoros"
@@ -69,7 +69,7 @@
     <app-ui-section title="By project" meta="Where the month went">
       @if (b.by_project.length) {
         <div class="journal-month__split">
-          <app-journal-donut-chart
+          <app-ui-donut-chart
             [labels]="projectLabels()"
             [values]="projectValues()"
             suffix=" min"

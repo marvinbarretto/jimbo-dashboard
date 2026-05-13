@@ -11,8 +11,8 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { JournalDataService } from '../../data-access/journal-data.service';
-import { JournalBarChart } from '../../components/bar-chart/bar-chart';
-import { JournalDonutChart } from '../../components/donut-chart/donut-chart';
+import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
+import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { JournalPager } from '../../components/journal-pager/journal-pager';
 import {
   type WeekKey,
@@ -34,8 +34,8 @@ const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     UiStatCard,
     UiEmptyState,
     UiLoadingState,
-    JournalBarChart,
-    JournalDonutChart,
+    UiBarChart,
+    UiDonutChart,
     JournalPager,
   ],
   templateUrl: './week-page.html',

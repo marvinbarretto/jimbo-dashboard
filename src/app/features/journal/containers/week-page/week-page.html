@@ -22,7 +22,7 @@
 
     <app-ui-section title="Focus minutes per day" meta="Mon → Sun">
       @if (b.totals.focus_minutes > 0) {
-        <app-journal-bar-chart
+        <app-ui-bar-chart
           [labels]="dayLabels()"
           [values]="minutesPerDay()"
           label="Minutes"
@@ -36,7 +36,7 @@
 
     <app-ui-section title="Pomodoros per day" meta="Completed sessions">
       @if (b.totals.pomos_completed > 0) {
-        <app-journal-bar-chart
+        <app-ui-bar-chart
           [labels]="dayLabels()"
           [values]="pomosPerDay()"
           label="Pomodoros"
@@ -51,7 +51,7 @@
     <div class="journal-week__split">
       <app-ui-section title="By project" meta="Minutes per project">
         @if (b.by_project.length) {
-          <app-journal-donut-chart
+          <app-ui-donut-chart
             [labels]="projectLabels()"
             [values]="projectValues()"
             suffix=" min"

@@ -28,7 +28,7 @@
         <div class="journal-day__split">
           <app-ui-subsection label="Focus by hour">
             @if (b.totals.focus_minutes > 0) {
-              <app-journal-bar-chart
+              <app-ui-bar-chart
                 [labels]="hourlyLabels()"
                 [values]="hourlyValues()"
                 label="Minutes"
@@ -42,7 +42,7 @@
 
           <app-ui-subsection label="Project time">
             @if (b.by_project.length) {
-              <app-journal-donut-chart
+              <app-ui-donut-chart
                 [labels]="projectLabels()"
                 [values]="projectValues()"
                 suffix=" min"
@@ -221,7 +221,7 @@
 
           @if (s.notifCount > 0) {
             <app-ui-subsection label="Notification timeline">
-              <app-journal-bar-chart
+              <app-ui-bar-chart
                 [labels]="hourlyLabels()"
                 [values]="phoneNotifsByHour()"
                 label="Notifications"

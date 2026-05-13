@@ -1,3 +1,7 @@
+// Shared donut chart wrapper around ng2-charts/Chart.js. Each label is a
+// slice, each value its size. Use for time-allocation / proportion views;
+// reach for UiBarChart when ranking matters more than the split.
+
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { ChartConfiguration, TooltipItem } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
@@ -8,7 +12,7 @@ const PALETTE = [
 ];
 
 @Component({
-  selector: 'app-journal-donut-chart',
+  selector: 'app-ui-donut-chart',
   imports: [BaseChartDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -30,7 +34,7 @@ const PALETTE = [
     }
   `],
 })
-export class JournalDonutChart {
+export class UiDonutChart {
   readonly labels = input.required<readonly string[]>();
   readonly values = input.required<readonly number[]>();
   readonly suffix = input<string>('');
