@@ -1,5 +1,6 @@
 <app-ui-stack class="retro" gap="lg">
 
+  <!-- HEADER -->
   <header class="retro__header">
     <h1 class="retro__title">Session complete</h1>
     @if (session()) {
@@ -10,59 +11,123 @@
     }
   </header>
 
-  <!-- Activity summary -->
-  @if (activity(); as a) {
-    <app-ui-card>
-      <div class="retro__activity">
-        <p class="retro__activity-headline">
-          @if (a.top_domain) { <strong>{{ focusPct() }}%</strong> on {{ a.top_domain }} · }
-          {{ a.tab_switches }} switch{{ a.tab_switches === 1 ? '' : 'es' }}
-          @if (a.idle_seconds > 60) { · {{ formatMins(a.idle_seconds) }} idle }
-        </p>
-        @if (a.domain_breakdown.length) {
-          <ul class="retro__breakdown">
-            @for (d of a.domain_breakdown.slice(0, 5); track d.domain) {
-              <li class="retro__breakdown-row">
-                <span class="retro__breakdown-domain">{{ d.domain }}</span>
-                <span class="retro__breakdown-bar">
-                  <span class="retro__breakdown-fill"
-                    [style.width.%]="session().planned_seconds > 0 ? (d.seconds / session().planned_seconds) * 100 : 0">
-                  </span>
-                </span>
-                <span class="retro__breakdown-time">{{ formatMins(d.seconds) }}</span>
-              </li>
-            }
-          </ul>
-        }
-      </div>
-    </app-ui-card>
-  }
+  <!-- AT-A-GLANCE STATS (above the fold) -->
+  <div class="retro__stats">
+    <app-ui-stat-card label="Focus" [value]="focusPct() + '%'" [detail]="topDomainDetail()" />
+    <app-ui-stat-card label="Commits" [value]="commitsCount().toString()" [detail]="commitsDetail()" />
+    <app-ui-stat-card label="Switches" [value]="switchesLabel()" />
+    <app-ui-stat-card label="Idle" [value]="idleLabel()" />
+  </div>
 
-  <!-- Commits shipped during the session -->
-  @if (commits().length) {
-    <app-ui-card>
+  <!-- REFLECTION (above the fold — the action) -->
+  <app-ui-card>
+    <app-ui-stack gap="md">
+
+      <div class="retro__reflect-row">
+        <div class="retro__field-group">
+          <span class="retro__label">How was it?</span>
+          <div class="retro__mood">
+            @for (opt of moodOptions; track opt.value) {
+              <button
+                type="button"
+                class="retro__mood-btn"
+                [class.retro__mood-btn--active]="mood() === opt.value"
+                [attr.aria-label]="opt.label"
+                (click)="toggleMood(opt.value)">
+                <span class="retro__mood-icon">{{ opt.icon }}</span>
+                <span class="retro__mood-label">{{ opt.label }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <label class="retro__interrupted">
+          <input type="checkbox" [checked]="interrupted()" (change)="interrupted.set(!interrupted())" />
+          Interrupted
+        </label>
+      </div>
+
       <div class="retro__field-group">
-        <span class="retro__label">Shipped {{ commits().length }} commit{{ commits().length === 1 ? '' : 's' }}</span>
+        <label class="retro__label" for="notes">Anything else?</label>
+        <textarea
+          id="notes"
+          class="retro__field"
+          rows="2"
+          placeholder="Reflections, blockers, next steps…"
+          [ngModel]="notes()"
+          (ngModelChange)="notes.set($event)">
+        </textarea>
+      </div>
+
+    </app-ui-stack>
+  </app-ui-card>
+
+  <!-- ACTION BUTTONS — kept right after reflection so they're above the fold -->
+  <app-ui-cluster gap="sm">
+    <app-ui-button variant="primary" [disabled]="saving()" (pressed)="startBreak()">
+      {{ saving() ? 'Saving…' : 'Start ' + breakMins() + 'm break' }}
+    </app-ui-button>
+    <app-ui-button variant="ghost" [disabled]="saving()" (pressed)="skipBreak()">
+      Skip break
+    </app-ui-button>
+  </app-ui-cluster>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       Detail sections — informational, below the fold
+       ═══════════════════════════════════════════════════════════════════════ -->
+
+  <!-- COMMITS shipped during the session -->
+  <app-ui-card>
+    <div class="retro__field-group">
+      <span class="retro__label">
+        Commits shipped
+        @if (commitsCount() > 0) { <span class="retro__count">· {{ commitsCount() }}</span> }
+      </span>
+      @if (commitsCount() === 0) {
+        <app-ui-empty-state
+          title="No commits captured"
+          message="Make commits during a session and they'll show up here. Requires the jimbo-pomo git hook installed locally — see pomo-extension/git-hooks/README.md." />
+      } @else {
         <ul class="retro__commits">
           @for (c of commits(); track c.id) {
             <li class="retro__commit">
               <code class="retro__commit-sha">{{ shortSha(c.commit_sha) }}</code>
               <span class="retro__commit-msg">{{ commitSubject(c.message) }}</span>
               @if (c.repo) {
-                <span class="retro__commit-repo">{{ c.repo }}@if (c.branch && c.branch !== 'master' && c.branch !== 'main') { :{{ c.branch }} }</span>
+                <span class="retro__commit-repo">
+                  {{ c.repo }}@if (!isMainBranch(c.branch)) { :{{ c.branch }} }
+                </span>
               }
             </li>
           }
         </ul>
+      }
+    </div>
+  </app-ui-card>
+
+  <!-- DOMAIN BREAKDOWN — where the time went -->
+  @if (activity(); as a) {
+    <app-ui-card>
+      <div class="retro__field-group">
+        <span class="retro__label">Where time went</span>
+        @if (a.domain_breakdown.length) {
+          <app-ui-donut-chart
+            [labels]="breakdownLabels()"
+            [values]="breakdownValues()"
+            [height]="220"
+            suffix="m" />
+        } @else {
+          <app-ui-empty-state message="No browsing activity recorded for this session." />
+        }
       </div>
     </app-ui-card>
   }
 
-  <!-- Vault item completion -->
+  <!-- VAULT ITEMS — tap to mark done -->
   @if (projectItems().length) {
     <app-ui-card>
       <div class="retro__field-group">
-        <span class="retro__label">What got done?</span>
+        <span class="retro__label">Tap any items you completed</span>
         <ul class="retro__task-list">
           @for (item of projectItems(); track item.id) {
             <li>
@@ -81,57 +146,5 @@
       </div>
     </app-ui-card>
   }
-
-  <app-ui-card>
-    <app-ui-stack gap="md">
-
-      <!-- Mood -->
-      <div class="retro__field-group">
-        <span class="retro__label">How was it?</span>
-        <div class="retro__mood">
-          @for (opt of moodOptions; track opt.value) {
-            <button
-              type="button"
-              class="retro__mood-btn"
-              [class.retro__mood-btn--active]="mood() === opt.value"
-              [attr.aria-label]="opt.label"
-              (click)="toggleMood(opt.value)">
-              <span class="retro__mood-icon">{{ opt.icon }}</span>
-              <span class="retro__mood-label">{{ opt.label }}</span>
-            </button>
-          }
-        </div>
-      </div>
-
-      <!-- Interrupted -->
-      <label class="retro__interrupted">
-        <input type="checkbox" [checked]="interrupted()" (change)="interrupted.set(!interrupted())" />
-        Session was derailed by distractions
-      </label>
-
-      <!-- Notes -->
-      <div class="retro__field-group">
-        <label class="retro__label" for="notes">Anything else?</label>
-        <textarea
-          id="notes"
-          class="retro__field"
-          rows="3"
-          placeholder="Reflections, blockers, next steps…"
-          [ngModel]="notes()"
-          (ngModelChange)="notes.set($event)">
-        </textarea>
-      </div>
-
-    </app-ui-stack>
-  </app-ui-card>
-
-  <app-ui-cluster gap="sm">
-    <app-ui-button variant="primary" [disabled]="saving()" (pressed)="startBreak()">
-      {{ saving() ? 'Saving…' : 'Start ' + breakMins() + 'm break' }}
-    </app-ui-button>
-    <app-ui-button variant="ghost" [disabled]="saving()" (pressed)="skipBreak()">
-      Skip break
-    </app-ui-button>
-  </app-ui-cluster>
 
 </app-ui-stack>
