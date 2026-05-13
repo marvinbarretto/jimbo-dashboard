@@ -155,6 +155,7 @@ export class VaultCardSection {
         owner: actorId('marvin'),
         openQuestion: null, childRollup: null, parentEpic: null,
         lastActivityAt: ago(0.1), daysInColumn: 0, source: { text: 'via manual', actorId: null }, openQuestionsCount: 0,
+        sourceKind: null, sourceUrl: null,
       },
     },
     {
@@ -167,6 +168,7 @@ export class VaultCardSection {
         owner: actorId('marvin'),
         openQuestion: null, childRollup: null, parentEpic: null,
         lastActivityAt: ago(2), daysInColumn: 0, source: { text: 'manual', actorId: null }, openQuestionsCount: 0,
+        sourceKind: null, sourceUrl: null,
       },
     },
     {
@@ -180,6 +182,7 @@ export class VaultCardSection {
         owner: actorId('marvin'),
         openQuestion: null, childRollup: null, parentEpic: null,
         lastActivityAt: ago(0.5), daysInColumn: 0, source: null, openQuestionsCount: 0,
+        sourceKind: null, sourceUrl: null,
       },
     },
     {
@@ -192,6 +195,7 @@ export class VaultCardSection {
         owner: actorId('marvin'),
         openQuestion: null, childRollup: null, parentEpic: null,
         lastActivityAt: ago(24 * 18), daysInColumn: 18, source: null, openQuestionsCount: 0,
+        sourceKind: null, sourceUrl: null,
       },
     },
     {
@@ -213,6 +217,7 @@ export class VaultCardSection {
         },
         childRollup: null, parentEpic: null,
         lastActivityAt: ago(2), daysInColumn: 0, source: { text: 'via @ralph', actorId: actorId('ralph') }, openQuestionsCount: 1,
+        sourceKind: null, sourceUrl: null,
       },
     },
     {
@@ -227,6 +232,7 @@ export class VaultCardSection {
         owner: actorId('ralph'),
         openQuestion: null, childRollup: null, parentEpic: null,
         lastActivityAt: ago(1), daysInColumn: 0, source: { text: 'via vault-classify', actorId: null }, openQuestionsCount: 0,
+        sourceKind: null, sourceUrl: null,
       },
     },
     {
@@ -247,6 +253,7 @@ export class VaultCardSection {
         owner: actorId('marvin'),
         openQuestion: null, childRollup: null, parentEpic: null,
         lastActivityAt: ago(3), daysInColumn: 0, source: { text: 'via vault-decompose', actorId: null }, openQuestionsCount: 0,
+        sourceKind: null, sourceUrl: null,
       },
     },
     {
@@ -266,6 +273,7 @@ export class VaultCardSection {
         ],
         parentEpic: null,
         lastActivityAt: ago(48), daysInColumn: 0, source: null, openQuestionsCount: 0,
+        sourceKind: null, sourceUrl: null,
       },
     },
     {
@@ -317,6 +325,7 @@ export class VaultCardSection {
         parentEpic: null,
         source: { text: 'manual', actorId: null },
         lastActivityAt: ago(24),
+        sourceKind: null, sourceUrl: null,
       },
     },
   ];
