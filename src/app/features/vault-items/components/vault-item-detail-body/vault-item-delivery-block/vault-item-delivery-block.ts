@@ -26,9 +26,9 @@ import { acceptanceCriterionStatus } from '@shared/validation/acceptance-criteri
       <app-ui-subhead label="Acceptance criteria" [count]="criteria().length" />
 
       @if (editable()) {
-        @if (criteria().length === 0) {
-          <p class="vault-item-delivery-block__empty-soft">No criteria yet — add one below.</p>
-        }
+        <!-- Empty state is implicit: subhead shows count=0 and the input below
+             carries "+ add criterion" as placeholder. A second "No criteria yet"
+             line duplicated both. -->
         <ul class="vault-item-delivery-block__edit-list">
           @for (ac of criteria(); track $index; let i = $index) {
             <li class="vault-item-delivery-block__edit-row">
@@ -95,12 +95,6 @@ import { acceptanceCriterionStatus } from '@shared/validation/acceptance-criteri
       border: 1px dashed var(--color-danger);
       color: var(--color-danger);
       font-size: 0.7rem;
-    }
-
-    .vault-item-delivery-block__empty-soft {
-      color: var(--color-text-muted);
-      font-size: 0.72rem;
-      margin: 0 0 0.3rem;
     }
 
     .vault-item-delivery-block__edit-list {
