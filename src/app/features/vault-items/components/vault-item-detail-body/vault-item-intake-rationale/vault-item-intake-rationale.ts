@@ -20,7 +20,7 @@ import type { IntakeRationale } from '@domain/vault/vault-item';
       <app-ui-section
         title="Intake Rationale"
         [collapsible]="true"
-        [collapsed]="false"
+        [expanded]="true"
         [stickyHeader]="true"
         stickyTop="var(--sticky-header-height)"
         [meta]="metaText()"
