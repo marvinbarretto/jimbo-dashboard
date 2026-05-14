@@ -15,11 +15,18 @@ import { SlicePipe } from '@angular/common';
 import type { ThreadMessage, ThreadMessageKind, CreateThreadMessagePayload } from '@domain/thread';
 import type { VaultItemId, ActorId, ThreadMessageId } from '@domain/ids';
 import { threadMessageId } from '@domain/ids';
+import { UiSegmented, type UiSegmentedOption } from '@shared/components/ui-segmented/ui-segmented';
 import { AttachmentsService } from '../../data-access/attachments.service';
+
+const KIND_OPTIONS: readonly UiSegmentedOption[] = [
+  { value: 'comment',  label: 'comment'  },
+  { value: 'question', label: 'question' },
+  { value: 'answer',   label: 'answer'   },
+];
 
 @Component({
   selector: 'app-message-composer',
-  imports: [ReactiveFormsModule, SlicePipe],
+  imports: [ReactiveFormsModule, SlicePipe, UiSegmented],
   templateUrl: './message-composer.html',
   styleUrl: './message-composer.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,7 +43,7 @@ export class MessageComposer {
 
   readonly posted = output<CreateThreadMessagePayload>();
 
-  readonly kinds: ThreadMessageKind[] = ['comment', 'question', 'answer'];
+  readonly kindOptions = KIND_OPTIONS;
 
   // Staged files waiting to be uploaded with the next message post.
   readonly stagedFiles = signal<File[]>([]);
@@ -70,8 +77,8 @@ export class MessageComposer {
       });
   }
 
-  selectKind(kind: ThreadMessageKind): void {
-    this.form.controls.kind.setValue(kind);
+  selectKind(kind: ThreadMessageKind | string): void {
+    this.form.controls.kind.setValue(kind as ThreadMessageKind);
   }
 
   // Drag-and-drop handlers. preventDefault on dragover is required for drop to fire;

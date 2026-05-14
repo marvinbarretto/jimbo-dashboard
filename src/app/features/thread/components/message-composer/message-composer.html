@@ -4,17 +4,12 @@
     <!-- Kind selector row -->
     <div class="composer__kind-row">
       <span class="composer__lbl" id="kind-label">Post as</span>
-      <div role="group" aria-labelledby="kind-label" class="composer__kind-btns">
-        @for (k of kinds; track k) {
-          <button
-            type="button"
-            class="composer__kind-btn"
-            [class.composer__kind-btn--selected]="form.controls.kind.value === k"
-            (click)="selectKind(k)"
-            [attr.aria-pressed]="form.controls.kind.value === k"
-          >{{ k }}</button>
-        }
-      </div>
+      <app-ui-segmented
+        [options]="kindOptions"
+        [value]="form.controls.kind.value"
+        ariaLabel="message kind"
+        (changed)="selectKind($event)"
+      />
 
       <!-- In-reply-to dropdown: visible only when kind=answer -->
       @if (form.controls.kind.value === 'answer') {

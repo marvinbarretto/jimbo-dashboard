@@ -3,7 +3,12 @@
     <span class="activity-log__eyebrow">Review history</span>
     <span class="activity-log__title">{{ events().length }} activity events</span>
   </div>
-  <app-verbosity-toggle [value]="verbosity()" (changed)="setVerbosity($event)" />
+  <app-ui-segmented
+    [options]="verbosityOptions"
+    [value]="verbosity()"
+    ariaLabel="log verbosity"
+    (changed)="setVerbosity($event)"
+  />
 </header>
 
 <nav class="activity-log__filters">

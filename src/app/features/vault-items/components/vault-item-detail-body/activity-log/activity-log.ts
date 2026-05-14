@@ -1,14 +1,20 @@
 import { Component, ChangeDetectionStrategy, input, signal, computed } from '@angular/core';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
+import { UiSegmented, type UiSegmentedOption } from '@shared/components/ui-segmented/ui-segmented';
 import { EventLineComponent } from './event-line/event-line';
-import { VerbosityToggleComponent } from './verbosity-toggle/verbosity-toggle';
 import { loadVerbosity, saveVerbosity, type VerbosityLevel } from './verbosity';
 
 type FilterKey = 'all' | 'status' | 'agent' | 'assignment' | 'thread';
 
+const VERBOSITY_OPTIONS: readonly UiSegmentedOption[] = [
+  { value: 'compact',  label: 'compact'  },
+  { value: 'detailed', label: 'detailed' },
+  { value: 'debug',    label: 'debug'    },
+];
+
 @Component({
   selector: 'app-activity-log',
-  imports: [EventLineComponent, VerbosityToggleComponent],
+  imports: [EventLineComponent, UiSegmented],
   templateUrl: './activity-log.html',
   styleUrl: './activity-log.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,6 +26,8 @@ export class ActivityLogComponent {
 
   readonly verbosity     = signal<VerbosityLevel>(loadVerbosity());
   readonly activeFilters = signal<Set<FilterKey>>(new Set(['all']));
+
+  readonly verbosityOptions = VERBOSITY_OPTIONS;
 
   readonly visibleEvents = computed(() => {
     const filters = this.activeFilters();
@@ -33,9 +41,10 @@ export class ActivityLogComponent {
     });
   });
 
-  setVerbosity(v: VerbosityLevel): void {
-    this.verbosity.set(v);
-    saveVerbosity(v);
+  setVerbosity(v: string): void {
+    const level = v as VerbosityLevel;
+    this.verbosity.set(level);
+    saveVerbosity(level);
   }
 
   toggleFilter(key: FilterKey): void {

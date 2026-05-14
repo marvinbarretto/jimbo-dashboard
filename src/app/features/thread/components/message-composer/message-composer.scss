@@ -20,32 +20,6 @@ $hot: #d96520;
     color: var(--color-text-muted);
   }
 
-  &__kind-btns {
-    display: flex;
-    gap: 4px;
-  }
-
-  &__kind-btn {
-    font: inherit;
-    font-size: 11px;
-    padding: 2px 9px;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    color: var(--color-text);
-    cursor: pointer;
-
-    &--selected {
-      border-color: $hot;
-      color: $hot;
-      background: color-mix(in srgb, $hot 15%, var(--color-surface));
-    }
-
-    &:focus-visible {
-      outline: 2px solid $hot;
-      outline-offset: 1px;
-    }
-  }
-
   &__reply-select {
     font: inherit;
     font-size: 11px;

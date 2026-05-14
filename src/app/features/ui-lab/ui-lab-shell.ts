@@ -69,6 +69,7 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'mention-chip-strip',      name: 'Mention Chip Strip',    group: 'forms-editing',   selector: 'app-ui-mention-chip-strip', description: 'Tags / projects / assignee / related-items chip strip with × remove.' },
   { id: 'form-actions',            name: 'Form Actions',          group: 'forms-editing',   selector: 'app-ui-form-actions',   description: 'Standardised bottom-of-form action row layout.' },
   { id: 'tab-bar',                 name: 'Tab Bar',               group: 'forms-editing',   selector: 'app-ui-tab-bar',        description: 'Underline-style tab bar for router or signal-based tabs.' },
+  { id: 'ui-segmented',            name: 'Segmented Control',     group: 'forms-editing',   selector: 'app-ui-segmented',      description: 'Single-select one-of-N control. View-mode toggles (verbosity, message kind, density).' },
 
   // Detail surfaces — patterns specific to the vault item detail modal
   { id: 'vault-detail-primitives', name: 'Vault Detail Primitives', group: 'detail-surfaces',                                  description: 'Stat card, chip list, inline picker, dropdown, readiness panel, checklist, sticky action bar, subsection.' },
