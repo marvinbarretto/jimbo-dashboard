@@ -55,7 +55,7 @@ export class DispatchService {
           this._loading.set(false);
           return;
         }
-        this._entries.set(result.data.items.map(toDispatchEntry));
+        this._entries.set(result.data.items.filter(a => a.status !== 'removed').map(toDispatchEntry));
         this._loading.set(false);
       },
       error: () => {
