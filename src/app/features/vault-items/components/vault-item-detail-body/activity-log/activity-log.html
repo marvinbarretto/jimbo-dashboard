@@ -11,16 +11,13 @@
   />
 </header>
 
-<nav class="activity-log__filters">
-  @for (key of ['all','status','agent','assignment','thread']; track key) {
-    <button
-      type="button"
-      class="activity-log__filter"
-      [class.activity-log__filter--active]="isActive($any(key))"
-      (click)="toggleFilter($any(key))"
-    >{{ key }}</button>
-  }
-</nav>
+<app-ui-filter-pills
+  class="activity-log__filters"
+  [options]="filterOptions"
+  [active]="activeFilterList()"
+  ariaLabel="activity event filters"
+  (toggled)="toggleFilter($event)"
+/>
 
 <ol class="activity-log__list">
   @for (e of visibleEvents(); track e.id) {

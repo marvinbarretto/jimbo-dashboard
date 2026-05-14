@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, input, signal, computed } from '@angular/core';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
+import { UiFilterPills, type UiFilterPillOption } from '@shared/components/ui-filter-pills/ui-filter-pills';
 import { UiSegmented, type UiSegmentedOption } from '@shared/components/ui-segmented/ui-segmented';
 import { EventLineComponent } from './event-line/event-line';
 import { loadVerbosity, saveVerbosity, type VerbosityLevel } from './verbosity';
@@ -12,9 +13,17 @@ const VERBOSITY_OPTIONS: readonly UiSegmentedOption[] = [
   { value: 'debug',    label: 'debug'    },
 ];
 
+const FILTER_OPTIONS: readonly UiFilterPillOption[] = [
+  { value: 'all',        label: 'all'        },
+  { value: 'status',     label: 'status'     },
+  { value: 'agent',      label: 'agent'      },
+  { value: 'assignment', label: 'assignment' },
+  { value: 'thread',     label: 'thread'     },
+];
+
 @Component({
   selector: 'app-activity-log',
-  imports: [EventLineComponent, UiSegmented],
+  imports: [EventLineComponent, UiFilterPills, UiSegmented],
   templateUrl: './activity-log.html',
   styleUrl: './activity-log.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,6 +37,9 @@ export class ActivityLogComponent {
   readonly activeFilters = signal<Set<FilterKey>>(new Set(['all']));
 
   readonly verbosityOptions = VERBOSITY_OPTIONS;
+  readonly filterOptions = FILTER_OPTIONS;
+
+  readonly activeFilterList = computed(() => Array.from(this.activeFilters()));
 
   readonly visibleEvents = computed(() => {
     const filters = this.activeFilters();
@@ -47,16 +59,15 @@ export class ActivityLogComponent {
     saveVerbosity(level);
   }
 
-  toggleFilter(key: FilterKey): void {
+  toggleFilter(key: string): void {
+    const k = key as FilterKey;
     this.activeFilters.update(set => {
       const next = new Set(set);
-      if (key === 'all') return new Set(['all']);
+      if (k === 'all') return new Set<FilterKey>(['all']);
       next.delete('all');
-      if (next.has(key)) next.delete(key); else next.add(key);
-      if (next.size === 0) return new Set(['all']);
+      if (next.has(k)) next.delete(k); else next.add(k);
+      if (next.size === 0) return new Set<FilterKey>(['all']);
       return next;
     });
   }
-
-  isActive(key: FilterKey): boolean { return this.activeFilters().has(key); }
 }

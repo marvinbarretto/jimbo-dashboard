@@ -70,6 +70,7 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'form-actions',            name: 'Form Actions',          group: 'forms-editing',   selector: 'app-ui-form-actions',   description: 'Standardised bottom-of-form action row layout.' },
   { id: 'tab-bar',                 name: 'Tab Bar',               group: 'forms-editing',   selector: 'app-ui-tab-bar',        description: 'Underline-style tab bar for router or signal-based tabs.' },
   { id: 'ui-segmented',            name: 'Segmented Control',     group: 'forms-editing',   selector: 'app-ui-segmented',      description: 'Single-select one-of-N control. View-mode toggles (verbosity, message kind, density).' },
+  { id: 'ui-filter-pills',         name: 'Filter Pills',          group: 'forms-editing',   selector: 'app-ui-filter-pills',   description: 'Multi-select pill row. Host owns active-set semantics (including exclusive "all").' },
 
   // Detail surfaces — patterns specific to the vault item detail modal
   { id: 'vault-detail-primitives', name: 'Vault Detail Primitives', group: 'detail-surfaces',                                  description: 'Stat card, chip list, inline picker, dropdown, readiness panel, checklist, sticky action bar, subsection.' },
