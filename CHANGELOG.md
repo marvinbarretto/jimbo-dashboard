@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.61](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.60...v0.0.61) (2026-05-14)
+
+
+### Features
+
+* **vault-items:** render INTAKE RATIONALE exam in detail view ([d6a8aa1](https://github.com/marvinbarretto/jimbo-dashboard/commit/d6a8aa173719669dccdb394b66e7601a319c2ace))
+
 ### [0.0.60](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.59...v0.0.60) (2026-05-14)
 
 
