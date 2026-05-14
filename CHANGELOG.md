@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.58](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.57...v0.0.58) (2026-05-14)
+
+
+### Bug Fixes
+
+* **execution:** hide removed dispatch tombstones from failed column ([129ef61](https://github.com/marvinbarretto/jimbo-dashboard/commit/129ef61018b422ebca8ec0faa70b64e4e363ed62))
+
 ### [0.0.57](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.56...v0.0.57) (2026-05-14)
 
 
