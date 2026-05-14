@@ -230,7 +230,7 @@
         [collapsible]="false"
         [stickyHeader]="true"
         stickyTop="var(--sticky-header-height)"
-        [meta]="store.messages().length + ' messages'">
+        [meta]="threadMeta()">
         <app-thread-view
           [vaultItemId]="item.id"
           [currentActor]="currentActorId"

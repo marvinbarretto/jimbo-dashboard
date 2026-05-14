@@ -129,6 +129,15 @@ export class VaultItemDetailBody {
     })),
   );
 
+  /** Thread section meta — appends "· N open" when there are unresolved questions
+   *  so the section header surfaces the needs-reply signal without an inner pill. */
+  protected readonly threadMeta = computed(() => {
+    const total = this.store.messages().length;
+    const open = this.store.openQuestions().length;
+    const base = `${total} ${total === 1 ? 'message' : 'messages'}`;
+    return open > 0 ? `${base} · ${open} open` : base;
+  });
+
   protected readonly draftProjectPickerOptions = computed<readonly UiChipListPickerOption[]>(() => {
     const taken = new Set(this.store.draftPayload().projects.map(p => p.id));
     return this.store.activeProjects()

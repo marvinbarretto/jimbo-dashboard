@@ -1,23 +1,18 @@
-<header class="activity-log__header">
-  <div class="activity-log__header-copy">
-    <span class="activity-log__eyebrow">Review history</span>
-    <span class="activity-log__title">{{ events().length }} activity events</span>
-  </div>
+<div class="activity-log__toolbar">
+  <app-ui-filter-pills
+    class="activity-log__filters"
+    [options]="filterOptions"
+    [active]="activeFilterList()"
+    ariaLabel="activity event filters"
+    (toggled)="toggleFilter($event)"
+  />
   <app-ui-segmented
     [options]="verbosityOptions"
     [value]="verbosity()"
     ariaLabel="log verbosity"
     (changed)="setVerbosity($event)"
   />
-</header>
-
-<app-ui-filter-pills
-  class="activity-log__filters"
-  [options]="filterOptions"
-  [active]="activeFilterList()"
-  ariaLabel="activity event filters"
-  (toggled)="toggleFilter($event)"
-/>
+</div>
 
 <ol class="activity-log__list">
   @for (e of visibleEvents(); track e.id) {

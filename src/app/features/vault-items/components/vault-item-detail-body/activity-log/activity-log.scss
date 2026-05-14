@@ -1,19 +1,16 @@
 .activity-log {
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: var(--color-bg);
-  padding: .75rem;
+  // Lives inside an app-ui-section — no outer border / radius / background
+  // here, those would double up with the section chrome.
 
-  &__header  { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-bottom: 0.65rem; }
-  &__header-copy { display: flex; flex-direction: column; gap: .12rem; }
-  &__eyebrow {
-    font-size: .62rem;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: var(--color-text-muted);
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
   }
-  &__title   { font-size: 0.82rem; color: var(--color-text); font-weight: 600; }
-  &__filters { display: block; margin-bottom: 0.75rem; }
+  &__filters { flex: 1 1 auto; min-width: 0; }
   &__list   { list-style: none; padding: 0; margin: 0; }
   &__empty  {
     padding: 1rem 0;
