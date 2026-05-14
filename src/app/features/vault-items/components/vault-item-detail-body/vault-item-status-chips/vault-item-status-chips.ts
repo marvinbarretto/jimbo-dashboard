@@ -175,27 +175,42 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
       cursor: default;
     }
 
+    // Sits in the same row as UNGROOMED / CLEAR badges — match UiBadge
+    // geometry exactly so the row reads as a flat tier of chips, not
+    // chip + button. Dashed border (inactive) signals "add me"; solid accent
+    // (active) signals "applied".
     .vault-item-status-chips__epic-toggle {
-      padding: 0.2rem 0.5rem;
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
+      display: inline-flex;
+      align-items: center;
+      min-height: 1.45rem;
+      padding: 0.1rem 0.45rem;
+      font-size: 0.64rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      line-height: 1.2;
+      text-transform: uppercase;
+      white-space: nowrap;
       border: 1px dashed var(--color-border);
-      border-radius: 0.25rem;
+      border-radius: var(--radius);
       background: none;
       color: var(--color-text-muted);
       cursor: pointer;
 
       &--active {
         border-style: solid;
-        border-color: var(--color-accent, #818cf8);
-        color: var(--color-accent, #818cf8);
-        background: color-mix(in oklab, var(--color-accent, #818cf8) 10%, transparent);
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+        background: color-mix(in oklab, var(--color-accent) 10%, transparent);
       }
 
       &:hover {
-        border-color: var(--color-accent, #818cf8);
-        color: var(--color-accent, #818cf8);
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 1px;
       }
     }
   `],
