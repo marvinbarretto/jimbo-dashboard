@@ -1,5 +1,5 @@
 <div class="event-line" [class.event-line--debug]="showDebug()">
-  <span class="event-line__time">{{ event().at | datetime }}</span>
+  <app-ui-timestamp class="event-line__time" [value]="event().at" />
   <app-entity-chip
     type="actor"
     [id]="line().actorId"

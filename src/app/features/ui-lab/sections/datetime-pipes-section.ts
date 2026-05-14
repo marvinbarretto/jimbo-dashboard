@@ -3,17 +3,48 @@ import { TableShell } from '@shared/components/table-shell/table-shell';
 import { UiMetaList } from '@shared/components/ui-meta-list/ui-meta-list';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
+import { UiTimestamp } from '@shared/components/ui-timestamp/ui-timestamp';
 import { DatetimePipe } from '@shared/pipes/datetime.pipe';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 
 @Component({
   selector: 'app-datetime-pipes-section',
-  imports: [TableShell, UiMetaList, UiSection, UiStack, DatetimePipe, RelativeTimePipe],
+  imports: [TableShell, UiMetaList, UiSection, UiStack, UiTimestamp, DatetimePipe, RelativeTimePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../lab-utils.scss'],
   template: `
-    <app-ui-section title="Date &amp; Time Pipes" [collapsible]="false">
+    <app-ui-section title="Date &amp; Time" [collapsible]="false">
       <app-ui-stack gap="md">
+        <p class="ui-lab__support-copy">
+          <strong>Default to <code>app-ui-timestamp</code></strong> anywhere a timestamp appears
+          in the UI. It renders the relative form ("18m ago") as visible text and the absolute
+          form ("14 May 17:00:46") as the hover title — plus a proper <code>&lt;time&gt;</code>
+          element for assistive tech. The raw pipes are still available for the cases where
+          you need only one of the two forms (e.g. log tables where times must align).
+        </p>
+
+        <div>
+          <p class="ui-lab__subhead">app-ui-timestamp · canonical</p>
+          <app-table-shell>
+            <table class="ui-lab__table ui-lab__table--pipes">
+              <thead>
+                <tr>
+                  <th>Raw ISO</th>
+                  <th>Rendered (hover for absolute)</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (sample of dateSamples; track sample.label) {
+                  <tr>
+                    <td><code>{{ sample.iso }}</code></td>
+                    <td><app-ui-timestamp [value]="sample.iso" /></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </app-table-shell>
+        </div>
+
         <app-ui-meta-list>
           <dt>datetime</dt>
           <dd><code>value | datetime</code> — ISO string → "2 May 14:18:00". Includes year when outside current year. Returns "—" for null/empty.</dd>

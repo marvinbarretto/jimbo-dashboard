@@ -1,25 +1,25 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { UiButton } from '@shared/components/ui-button/ui-button';
-import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
+import { UiTimestamp } from '@shared/components/ui-timestamp/ui-timestamp';
 
 @Component({
   selector: 'app-vault-item-meta-line',
-  imports: [UiButton, RelativeTimePipe],
+  imports: [UiButton, UiTimestamp],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="vault-item-meta-line">
-      <span>created {{ createdAt() | relativeTime }}</span>
+      <span>created <app-ui-timestamp [value]="createdAt()" /></span>
       @if (lastActivityAt(); as lat) {
-        <span>· last activity {{ lat | relativeTime }}</span>
+        <span>· last activity <app-ui-timestamp [value]="lat" /></span>
       }
       @if (completedAt(); as ct) {
-        <span>· completed {{ ct | relativeTime }}</span>
+        <span>· completed <app-ui-timestamp [value]="ct" /></span>
       }
       @if (archivedAt(); as at) {
-        <span>· archived {{ at | relativeTime }}</span>
+        <span>· archived <app-ui-timestamp [value]="at" /></span>
       }
       @if (dueAt(); as d) {
-        <span>· due {{ d }}</span>
+        <span>· due <app-ui-timestamp [value]="d" /></span>
       }
       @if (rationale(); as r) {
         <span class="vault-item-meta-line__rationale">
