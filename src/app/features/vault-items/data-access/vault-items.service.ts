@@ -57,7 +57,7 @@ export class VaultItemsService {
       this._loading.set(false);
       return;
     }
-    this.http.get<unknown>(`${environment.dashboardApiUrl}/api/vault/board?limit=2000`).subscribe({
+    this.http.get<unknown>(`${environment.dashboardApiUrl}/api/vault/board?limit=5000`).subscribe({
       next: (raw) => {
         const result = ApiVaultItemsResponseSchema.safeParse(raw);
         if (!result.success) {
