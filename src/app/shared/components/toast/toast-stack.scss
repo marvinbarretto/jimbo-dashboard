@@ -34,6 +34,16 @@
   flex: 1;
 }
 
+.toast__count {
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text) 12%, transparent);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
 .toast__dismiss {
   background: none;
   border: none;

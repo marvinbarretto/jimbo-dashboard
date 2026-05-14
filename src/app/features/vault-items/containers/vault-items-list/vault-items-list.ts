@@ -3,6 +3,7 @@ import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TableShell } from '@shared/components/table-shell/table-shell';
+import { ToastService } from '@shared/components/toast/toast.service';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { VaultItemsService } from '../../data-access/vault-items.service';
 import { VaultItemCommands } from '../../commands/vault-item-commands';
@@ -40,6 +41,7 @@ export class VaultItemsList {
   private readonly vaultCommands = inject(VaultItemCommands);
   private readonly actorsService = inject(ActorsService);
   private readonly projectsService = inject(ProjectsService);
+  private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
   private readonly doc = inject(DOCUMENT);
 
@@ -344,12 +346,19 @@ export class VaultItemsList {
   // ── Bulk action handlers ───────────────────────────────────────────────
   // Each iterates the snapshot of selection through the existing per-item
   // command path so optimistic UI and audit events behave identically to
-  // single-row mutations. Per-item toasts are noisy at scale — acceptable
-  // tradeoff for now; a bulk endpoint would be the right follow-up.
+  // single-row mutations. Per-row success toasts coalesce via ToastService's
+  // group window — opened just before dispatch so the async tail still lands
+  // inside the window.
 
   bulkArchive(): void {
     const ids = [...this._selectedIds()];
     if (ids.length === 0) return;
+    const n = ids.length;
+    this.toast.beginCoalescing({
+      groupKey: 'vault.bulk-archive',
+      successSummary: `Archived ${n} items`,
+      errorSummary: `Archive failures (${n} attempted)`,
+    });
     for (const id of ids) this.vaultCommands.archive(id);
     this.clearSelection();
   }
@@ -361,6 +370,12 @@ export class VaultItemsList {
       `Hard-delete ${ids.length} item${ids.length === 1 ? '' : 's'}? This is irreversible.`,
     );
     if (!confirmed) return;
+    const n = ids.length;
+    this.toast.beginCoalescing({
+      groupKey: 'vault.bulk-delete',
+      successSummary: `Deleted ${n} items`,
+      errorSummary: `Delete failures (${n} attempted)`,
+    });
     for (const id of ids) this.vaultCommands.delete(id);
     this.clearSelection();
   }
@@ -372,6 +387,12 @@ export class VaultItemsList {
       `Convert ${ids.length} item${ids.length === 1 ? '' : 's'} to type 'note'?`,
     );
     if (!confirmed) return;
+    const n = ids.length;
+    this.toast.beginCoalescing({
+      groupKey: 'vault.bulk-convert',
+      successSummary: `Converted ${n} items to note`,
+      errorSummary: `Convert failures (${n} attempted)`,
+    });
     for (const id of ids) {
       const item = this.vaultItemsService.getById(id);
       if (!item || item.type === 'note') continue;
@@ -397,6 +418,12 @@ export class VaultItemsList {
     const ids = [...this._selectedIds()];
     if (ids.length === 0) return;
     const toActor = actorId(target);
+    const n = ids.length;
+    this.toast.beginCoalescing({
+      groupKey: 'vault.bulk-reassign',
+      successSummary: `Reassigned ${n} items to @${toActor}`,
+      errorSummary: `Reassign failures (${n} attempted)`,
+    });
     for (const id of ids) this.vaultCommands.reassign(id, toActor);
     this._reassignTarget.set('');
     this.clearSelection();

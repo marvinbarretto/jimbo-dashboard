@@ -9,6 +9,9 @@ import { ToastService } from './toast.service';
       @for (toast of toastService.toasts(); track toast.id) {
         <div class="toast toast--{{ toast.tone }}" role="status">
           <span class="toast__message">{{ toast.message }}</span>
+          @if (toast.count > 1) {
+            <span class="toast__count" aria-label="repeated">×{{ toast.count }}</span>
+          }
           <button class="toast__dismiss" type="button" (click)="toastService.dismiss(toast.id)" aria-label="Dismiss">×</button>
         </div>
       }
