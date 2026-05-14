@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.62](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.61...v0.0.62) (2026-05-14)
+
+
+### Bug Fixes
+
+* **vault-items:** include intake_rationale in wire schema + mapper ([15e1ecf](https://github.com/marvinbarretto/jimbo-dashboard/commit/15e1ecfeab903d7626c05bfcfcd0acdd313bf75c))
+* **vault-items:** UiSection uses 'expanded' input, not 'collapsed' ([dc0ed8d](https://github.com/marvinbarretto/jimbo-dashboard/commit/dc0ed8df2558ef4c34ba6a6054faa3c7d1f96997))
+
 ### [0.0.61](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.60...v0.0.61) (2026-05-14)
 
 
