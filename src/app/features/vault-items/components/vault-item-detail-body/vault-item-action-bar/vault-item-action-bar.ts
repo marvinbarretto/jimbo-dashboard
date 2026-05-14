@@ -11,20 +11,29 @@ import { UiStickyActionBar } from '@shared/components/ui-sticky-action-bar/ui-st
       <div uiStickyActionBarSecondary
         class="vault-item-action-bar__trail"
         role="group"
-        aria-label="Secondary actions">
-        @if (canDemote()) {
-          <app-ui-button variant="secondary" (pressed)="demoted.emit()">→ note</app-ui-button>
+        aria-label="Item actions">
+        <!-- Workflow group: reclassify / reroute the item (reversible) -->
+        @if (canDemote() || canReject()) {
+          <div class="vault-item-action-bar__group" role="group" aria-label="Workflow">
+            @if (canDemote()) {
+              <app-ui-button variant="secondary" (pressed)="demoted.emit()">→ note</app-ui-button>
+            }
+            @if (canReject()) {
+              <app-ui-button variant="secondary" (pressed)="rejected.emit()">reject</app-ui-button>
+            }
+          </div>
+          <span class="vault-item-action-bar__divider" aria-hidden="true"></span>
         }
-        @if (canReject()) {
-          <app-ui-button variant="secondary" (pressed)="rejected.emit()">reject</app-ui-button>
-        }
-        <app-ui-button
-          variant="secondary"
-          [disabled]="isArchived()"
-          (pressed)="archived.emit()">
-          archive
-        </app-ui-button>
-        <app-ui-button variant="danger" (pressed)="deleted.emit()">delete</app-ui-button>
+        <!-- Container group: archive (reversible) + delete (destructive) -->
+        <div class="vault-item-action-bar__group" role="group" aria-label="Container actions">
+          <app-ui-button
+            variant="ghost"
+            [disabled]="isArchived()"
+            (pressed)="archived.emit()">
+            archive
+          </app-ui-button>
+          <app-ui-button variant="danger" (pressed)="deleted.emit()">delete</app-ui-button>
+        </div>
       </div>
     </app-ui-sticky-action-bar>
   `,
@@ -36,10 +45,26 @@ import { UiStickyActionBar } from '@shared/components/ui-sticky-action-bar/ui-st
       flex-wrap: wrap;
       gap: 0.45rem;
       justify-content: flex-end;
+      align-items: center;
+    }
+
+    .vault-item-action-bar__group {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      align-items: center;
+    }
+
+    .vault-item-action-bar__divider {
+      width: 1px;
+      align-self: stretch;
+      margin: 0.1rem 0.3rem;
+      background: var(--color-border);
     }
 
     @media (max-width: 768px) {
       .vault-item-action-bar__trail { justify-content: stretch; }
+      .vault-item-action-bar__divider { display: none; }
     }
   `],
 })
