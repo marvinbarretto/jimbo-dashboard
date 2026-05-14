@@ -924,6 +924,10 @@ function toVaultItem(a: ApiVaultItem): VaultItem {
     ai_priority: narrowPriority(a.ai_priority),
     manual_priority: narrowPriority(a.manual_priority),
     ai_rationale: a.ai_rationale,
+    // The API ships intake_rationale as JSONB; postgres.js delivers it as a
+    // parsed object. We pass it through unchanged — the UI component narrows
+    // to the IntakeRationale shape and guards on truthiness before rendering.
+    intake_rationale: (a.intake_rationale as VaultItem['intake_rationale']) ?? null,
     priority_confidence: a.priority_confidence,
     actionability: narrowActionability(a.actionability),
     parent_id: a.parent_id ? vaultItemId(a.parent_id) : null,

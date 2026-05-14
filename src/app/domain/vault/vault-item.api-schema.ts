@@ -46,6 +46,10 @@ export const ApiVaultItemSchema = z.object({
   manual_priority:      z.number().nullable(),
   priority_confidence:  z.number().nullable(),
   ai_rationale:         z.string().nullable(),
+  // Structured "exam" written by hermes/intake-quality — see IntakeRationale
+  // in @domain/vault/vault-item.ts. Server-side JSONB; arrives as a parsed
+  // object. We accept unknown here and narrow at the consumer.
+  intake_rationale:     z.unknown().nullable().optional(),
   actionability:        z.string().nullable(),
   assigned_to:          z.string().min(1),
   route:                z.string(),
