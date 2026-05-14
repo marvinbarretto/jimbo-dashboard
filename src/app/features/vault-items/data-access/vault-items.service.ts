@@ -865,6 +865,7 @@ function createFollowUpPatch(p: CreateVaultItemPayload): Record<string, unknown>
 function toApiUpdateBody(p: UpdateVaultItemPayload): Record<string, unknown> {
   const body: Record<string, unknown> = {};
   if (p.title !== undefined) body['title'] = p.title;
+  if (p.type !== undefined) body['type'] = p.type;
   if (p.body !== undefined) body['body'] = p.body;
   if (p.tags !== undefined) body['tags'] = p.tags.join(', ');
   if (p.acceptance_criteria !== undefined) {

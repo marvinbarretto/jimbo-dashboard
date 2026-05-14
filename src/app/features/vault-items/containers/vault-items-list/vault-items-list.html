@@ -104,10 +104,50 @@
       }
     </section>
 
+    @if (hasSelection()) {
+      <div class="bulk-bar" role="region" aria-label="Bulk actions">
+        <div class="bulk-bar__lead">
+          <strong>{{ selectionCount() }}</strong> selected
+          <button type="button" class="bulk-bar__clear" (click)="clearSelection()">clear</button>
+        </div>
+        <div class="bulk-bar__actions">
+          <button type="button" class="bulk-bar__btn" (click)="bulkArchive()">Archive</button>
+          <button type="button" class="bulk-bar__btn" (click)="bulkConvertToNote()">Convert to note</button>
+          <span class="bulk-bar__reassign">
+            <select
+              class="bulk-bar__select"
+              [ngModel]="reassignTarget()"
+              (ngModelChange)="setReassignTarget($event)"
+              aria-label="Reassign to actor">
+              <option value="">Reassign to…</option>
+              @for (a of actorOptions(); track a.id) {
+                <option [value]="a.id">{{ a.label }}</option>
+              }
+            </select>
+            <button
+              type="button"
+              class="bulk-bar__btn"
+              [disabled]="!reassignTarget()"
+              (click)="bulkReassign()">Apply</button>
+          </span>
+          <button type="button" class="bulk-bar__btn bulk-bar__btn--danger" (click)="bulkDelete()">Delete</button>
+        </div>
+      </div>
+    }
+
     <app-table-shell>
     <table class="vault-items-table">
       <thead>
         <tr>
+          <th class="vault-items-table__check">
+            <input
+              type="checkbox"
+              [checked]="allVisibleSelected()"
+              [indeterminate]="someVisibleSelected()"
+              (click)="$event.stopPropagation()"
+              (change)="toggleSelectAllVisible()"
+              aria-label="Select all visible" />
+          </th>
           <th>#</th>
           <th>Title</th>
           <th>Type</th>
@@ -116,13 +156,24 @@
           <th>Owner</th>
           <th>Project</th>
           <th>Priority</th>
+          <th>Added</th>
+          <th>Modified</th>
         </tr>
       </thead>
       <tbody>
         @for (item of displayedItems(); track item.id) {
           <tr
             [class.archived]="isItemArchived(item)"
+            [class.selected]="isSelected(item.id)"
             (click)="onRowClick(item.seq, $event)">
+            <td class="vault-items-table__check">
+              <input
+                type="checkbox"
+                [checked]="isSelected(item.id)"
+                (click)="$event.stopPropagation()"
+                (change)="toggleSelect(item.id)"
+                [attr.aria-label]="'Select #' + item.seq" />
+            </td>
             <td class="vault-items-table__seq">
               <a [routerLink]="[item.seq]">#{{ item.seq }}</a>
             </td>
@@ -159,10 +210,16 @@
                 <span class="muted">—</span>
               }
             </td>
+            <td class="vault-items-table__when" [title]="item.created_at">
+              {{ item.created_at | relativeTime }}
+            </td>
+            <td class="vault-items-table__when" [title]="item.latest_activity_at ?? item.created_at">
+              {{ (item.latest_activity_at ?? item.created_at) | relativeTime }}
+            </td>
           </tr>
         } @empty {
           <tr>
-            <td colspan="8" class="empty">No items match the current filters.</td>
+            <td colspan="11" class="empty">No items match the current filters.</td>
           </tr>
         }
       </tbody>

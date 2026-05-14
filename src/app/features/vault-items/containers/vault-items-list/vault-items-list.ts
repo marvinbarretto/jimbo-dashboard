@@ -3,7 +3,9 @@ import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TableShell } from '@shared/components/table-shell/table-shell';
+import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { VaultItemsService } from '../../data-access/vault-items.service';
+import { VaultItemCommands } from '../../commands/vault-item-commands';
 import { ActorsService } from '../../../actors/data-access/actors.service';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { effectivePriority } from '@domain/vault/readiness';
@@ -11,6 +13,7 @@ import type { VaultItem, VaultItemType, Priority } from '@domain/vault/vault-ite
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import { actorId } from '@domain/ids';
+import type { ActorId, VaultItemId } from '@domain/ids';
 
 // "Lifecycle" derived from completed_at + archived_at; surfaced as a single
 // pillar in the table so filters and rendering use the same vocabulary.
@@ -27,13 +30,14 @@ interface CountedOption<T> {
 
 @Component({
   selector: 'app-vault-items-list',
-  imports: [RouterLink, FormsModule, TableShell, EntityChip],
+  imports: [RouterLink, FormsModule, TableShell, EntityChip, RelativeTimePipe],
   templateUrl: './vault-items-list.html',
   styleUrl: './vault-items-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VaultItemsList {
   private readonly vaultItemsService = inject(VaultItemsService);
+  private readonly vaultCommands = inject(VaultItemCommands);
   private readonly actorsService = inject(ActorsService);
   private readonly projectsService = inject(ProjectsService);
   private readonly router = inject(Router);
@@ -274,9 +278,137 @@ export class VaultItemsList {
       }
       return true;
     });
-    // Sort by seq desc so the most recently-captured items lead.
-    return filtered.sort((a, b) => b.seq - a.seq);
+    // Cleanup is the primary use case: surface items by most-recent touch
+    // (latest_activity_at, falling back to created_at). Stale captures sink
+    // to the bottom and can be reached by reverse-sorting in a follow-up.
+    return filtered.sort((a, b) => modifiedTs(b) - modifiedTs(a));
   }
+
+  // ── Selection + bulk actions ───────────────────────────────────────────
+
+  private readonly _selectedIds = signal<Set<VaultItemId>>(new Set());
+  readonly selectedIds = this._selectedIds.asReadonly();
+  readonly selectionCount = computed(() => this._selectedIds().size);
+  readonly hasSelection = computed(() => this._selectedIds().size > 0);
+
+  // True when every visible row is selected — drives the header checkbox
+  // indeterminate / checked state.
+  readonly allVisibleSelected = computed(() => {
+    const visible = this.displayedItems();
+    if (visible.length === 0) return false;
+    const sel = this._selectedIds();
+    return visible.every(item => sel.has(item.id));
+  });
+
+  readonly someVisibleSelected = computed(() => {
+    const sel = this._selectedIds();
+    if (sel.size === 0) return false;
+    return !this.allVisibleSelected();
+  });
+
+  isSelected(id: VaultItemId): boolean {
+    return this._selectedIds().has(id);
+  }
+
+  toggleSelect(id: VaultItemId): void {
+    this._selectedIds.update(set => {
+      const next = new Set(set);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  // Header checkbox: select-all-visible. If everything visible is already
+  // selected, this clears just the visible slice (leaves off-screen selection
+  // alone — surprising behaviour either way; "clear all" button is explicit).
+  toggleSelectAllVisible(): void {
+    const visible = this.displayedItems();
+    const sel = this._selectedIds();
+    const allSelected = visible.every(item => sel.has(item.id));
+    this._selectedIds.update(set => {
+      const next = new Set(set);
+      if (allSelected) {
+        for (const item of visible) next.delete(item.id);
+      } else {
+        for (const item of visible) next.add(item.id);
+      }
+      return next;
+    });
+  }
+
+  clearSelection(): void {
+    this._selectedIds.set(new Set());
+  }
+
+  // ── Bulk action handlers ───────────────────────────────────────────────
+  // Each iterates the snapshot of selection through the existing per-item
+  // command path so optimistic UI and audit events behave identically to
+  // single-row mutations. Per-item toasts are noisy at scale — acceptable
+  // tradeoff for now; a bulk endpoint would be the right follow-up.
+
+  bulkArchive(): void {
+    const ids = [...this._selectedIds()];
+    if (ids.length === 0) return;
+    for (const id of ids) this.vaultCommands.archive(id);
+    this.clearSelection();
+  }
+
+  bulkDelete(): void {
+    const ids = [...this._selectedIds()];
+    if (ids.length === 0) return;
+    const confirmed = this.doc.defaultView?.confirm(
+      `Hard-delete ${ids.length} item${ids.length === 1 ? '' : 's'}? This is irreversible.`,
+    );
+    if (!confirmed) return;
+    for (const id of ids) this.vaultCommands.delete(id);
+    this.clearSelection();
+  }
+
+  bulkConvertToNote(): void {
+    const ids = [...this._selectedIds()];
+    if (ids.length === 0) return;
+    const confirmed = this.doc.defaultView?.confirm(
+      `Convert ${ids.length} item${ids.length === 1 ? '' : 's'} to type 'note'?`,
+    );
+    if (!confirmed) return;
+    for (const id of ids) {
+      const item = this.vaultItemsService.getById(id);
+      if (!item || item.type === 'note') continue;
+      this.vaultItemsService.update(id, { type: 'note' });
+    }
+    this.clearSelection();
+  }
+
+  // ── Reassign picker state ──────────────────────────────────────────────
+  // Inline <select> in the bulk bar. Empty value = no actor chosen → button
+  // disabled. Reset on apply or clear.
+  private readonly _reassignTarget = signal<string>('');
+  readonly reassignTarget = this._reassignTarget.asReadonly();
+  setReassignTarget(value: string): void { this._reassignTarget.set(value); }
+
+  readonly actorOptions = computed(() =>
+    this.actorsService.activeActors().map(a => ({ id: a.id, label: a.display_name ?? a.id })),
+  );
+
+  bulkReassign(): void {
+    const target = this._reassignTarget();
+    if (!target) return;
+    const ids = [...this._selectedIds()];
+    if (ids.length === 0) return;
+    const toActor = actorId(target);
+    for (const id of ids) this.vaultCommands.reassign(id, toActor);
+    this._reassignTarget.set('');
+    this.clearSelection();
+  }
+}
+
+// Modified timestamp for sort: most recent activity, falling back to creation
+// when the item has never been touched.
+function modifiedTs(item: VaultItem): number {
+  const ref = item.latest_activity_at ?? item.created_at;
+  const t = Date.parse(ref);
+  return Number.isNaN(t) ? 0 : t;
 }
 
 // Immutable Set toggle — copy + add/remove. Returning a new Set ensures the
