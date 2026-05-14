@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.60](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.59...v0.0.60) (2026-05-14)
+
+
+### Features
+
+* **ui-section:** add recede tone for secondary panes ([0137e8c](https://github.com/marvinbarretto/jimbo-dashboard/commit/0137e8c53a55e98daddbe34168b1fdfc8ad21b14))
+* **ui:** add ui-timestamp primitive ([2797850](https://github.com/marvinbarretto/jimbo-dashboard/commit/2797850f212f1008f04e63977f91a6026711c39d))
+
+
+### Code Refactoring
+
+* **event-line:** use entity-chip for actor display ([db04298](https://github.com/marvinbarretto/jimbo-dashboard/commit/db0429816076f28c5f573da02a936de56e181a40))
+* **ui:** extract filter pills primitive ([4ce01d4](https://github.com/marvinbarretto/jimbo-dashboard/commit/4ce01d471376351a76481bb1fe1bb2205a7e0485))
+* **ui:** extract segmented control primitive ([971fcba](https://github.com/marvinbarretto/jimbo-dashboard/commit/971fcba44d2e2a2d2eaf23ac5624e20f51d150fa))
+* **vault-detail:** unify section eyebrows ([7194249](https://github.com/marvinbarretto/jimbo-dashboard/commit/7194249bf05bfaac09d407f9d300f7214440d570))
+
 ### [0.0.59](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.58...v0.0.59) (2026-05-14)
 
 
