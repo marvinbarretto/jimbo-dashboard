@@ -33,6 +33,7 @@ import { VaultItemActionBar } from './vault-item-action-bar/vault-item-action-ba
 import { VaultItemDeliveryBlock } from './vault-item-delivery-block/vault-item-delivery-block';
 import { VaultItemIdentityHeader } from './vault-item-identity-header/vault-item-identity-header';
 import { VaultItemIntakeBlock } from './vault-item-intake-block/vault-item-intake-block';
+import { VaultItemIntakeRationale } from './vault-item-intake-rationale/vault-item-intake-rationale';
 import { VaultItemLinksBlock } from './vault-item-links-block/vault-item-links-block';
 import { VaultItemMetaLine } from './vault-item-meta-line/vault-item-meta-line';
 import { VaultItemOverviewCards } from './vault-item-overview-cards/vault-item-overview-cards';
@@ -64,6 +65,7 @@ import type { CreateThreadMessagePayload } from '@domain/thread';
     VaultItemDeliveryBlock,
     VaultItemIdentityHeader,
     VaultItemIntakeBlock,
+    VaultItemIntakeRationale,
     VaultItemLinksBlock,
     VaultItemMetaLine,
     VaultItemOverviewCards,

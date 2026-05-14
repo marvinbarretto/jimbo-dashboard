@@ -160,6 +160,12 @@
       (replyPosted)="postThreadReply($event)"
     />
 
+    <!-- Intake exam — what hermes/intake-quality believes this note IS,
+         in operator-scannable form. Only renders when populated. -->
+    <app-vault-item-intake-rationale
+      [rationale]="$any(item).intake_rationale ?? null"
+    />
+
     <div class="vault-item-detail__columns">
 
       <app-ui-section

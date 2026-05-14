@@ -116,6 +116,19 @@ export type Priority = 0 | 1 | 2 | 3;
 // 'vague' is the reject-with-questions trigger.
 export type Actionability = 'clear' | 'needs-breakdown' | 'vague';
 
+// Structured "exam" written by hermes/intake-quality. Each field is a
+// commitment the operator can scan to spot hallucinations / wrong reads.
+// Mirrors IntakeRationaleSchema in jimbo-api/src/schemas/grooming.ts.
+export interface IntakeRationale {
+  what_is_this: string;                     // required: plain-prose ask
+  why_verdict:  string;                     // required: rationale for actionability
+  inferred_project?: string | null;         // project slug, null = no signal
+  inferred_epic?:    string | null;         // existing epic ref, null = standalone
+  inferred_goal?:    string | null;         // what completion achieves
+  inferred_done?:    string | null;         // implicit acceptance criteria
+  confidence?:       'high' | 'medium' | 'low';
+}
+
 export interface AcceptanceCriterion {
   text: string;
   done: boolean;
@@ -158,6 +171,14 @@ export interface VaultItem {
   // One-sentence rationale written by vault-classify explaining the priority choice.
   // Displayed in UI next to ai_priority for operator insight. Null when unclassified.
   ai_rationale:        string | null;
+
+  // Structured "exam" written by intake-quality. JSONB on the API side; here we
+  // narrow it to a typed object. Null/absent when intake hasn't run yet (or
+  // when an older skill ran that didn't produce the structure). Operator
+  // scans this to catch hallucinations / wrong assumptions before downstream
+  // stages. Optional on the type so existing fixtures don't all need updating
+  // — the dashboard UI guards on truthiness before rendering.
+  intake_rationale?:   IntakeRationale | null;
 
   // 0.0–1.0. Classifier's explicit uncertainty. Below 0.6 triggers clarifying questions
   // in the hermes-side intake-quality skill. Null when unclassified.
