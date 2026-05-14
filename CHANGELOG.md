@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.59](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.58...v0.0.59) (2026-05-14)
+
+
+### Bug Fixes
+
+* **vault-items:** raise board limit to 5000 to cover full item set ([dfd31f3](https://github.com/marvinbarretto/jimbo-dashboard/commit/dfd31f39d32eca80c7a7aa2d4a58d39c37e5b7c4))
+
 ### [0.0.58](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.57...v0.0.58) (2026-05-14)
 
 
