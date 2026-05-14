@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 
 let nextSectionId = 0;
 
-type UiSectionTone = 'default' | 'subtle' | 'alert';
+type UiSectionTone = 'default' | 'subtle' | 'recede' | 'alert';
 
 @Component({
   selector: 'app-ui-section',
@@ -120,6 +120,20 @@ type UiSectionTone = 'default' | 'subtle' | 'alert';
     .ui-section--subtle .ui-section__content {
       padding-top: 0.75rem;
       background: color-mix(in srgb, var(--color-surface-soft) 80%, var(--color-bg));
+    }
+
+    /* Recede — both header and content sit one step closer to page bg than
+       the default surface-soft. Use when a section is secondary context next
+       to a primary working surface (e.g. Activity / Thread alongside Body). */
+    .ui-section--recede {
+      background: color-mix(in srgb, var(--color-surface-soft) 55%, var(--color-bg));
+    }
+    .ui-section--recede .ui-section__header,
+    .ui-section--recede .ui-section__header--sticky {
+      background: color-mix(in srgb, var(--color-surface-soft) 55%, var(--color-bg));
+    }
+    .ui-section--recede .ui-section__content {
+      background: color-mix(in srgb, var(--color-surface-soft) 40%, var(--color-bg));
     }
 
     .ui-section--alert .ui-section__content {
