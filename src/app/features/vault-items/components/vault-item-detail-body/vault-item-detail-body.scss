@@ -9,8 +9,12 @@
   top: 0;
   z-index: 10;
   background: var(--color-bg);
-  // Shadow so scrolled content cleanly disappears beneath it.
-  box-shadow: 0 2px 6px color-mix(in oklab, var(--color-text) 8%, transparent);
+  // Dropped shadow + sharp hairline so columns visibly sit below the header,
+  // not flush against it. The 1px tail is the "page" boundary; the 8px blur is
+  // the depth cue.
+  box-shadow:
+    0 1px 0 0 var(--color-border),
+    0 8px 14px -6px color-mix(in oklab, var(--color-text) 18%, transparent);
 }
 
 // Zone 2 wraps status-chips + meta-line + overview-cards inside one shared
@@ -31,6 +35,11 @@
   display: grid;
   grid-template-columns: 1.2fr 1fr 1fr;
   align-items: stretch;
+  // Page-coloured band so the columns visibly sit on the page surface, not
+  // flush against the sticky-header gradient. Pairs with the sticky-header
+  // drop-shadow above to read as a tier boundary.
+  background: var(--color-bg);
+  padding-top: 0.5rem;
 
   // Sections inside columns: remove outer border/radius so they read as
   // flush column panels rather than separate cards.
