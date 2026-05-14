@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.57](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.56...v0.0.57) (2026-05-14)
+
+
+### Features
+
+* **toast:** coalesce by group key with a ×N counter ([1bd27e9](https://github.com/marvinbarretto/jimbo-dashboard/commit/1bd27e923151ae1466e3c2a7134c47cffc00137e))
+* **vault-list:** bulk-select + multi-action bar for fast cleanup ([05b0438](https://github.com/marvinbarretto/jimbo-dashboard/commit/05b0438c8e81f3bf131a051e39f38d8c86bc2a49))
+
 ### [0.0.56](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.55...v0.0.56) (2026-05-13)
 
 
