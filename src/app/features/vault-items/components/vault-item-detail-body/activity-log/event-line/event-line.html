@@ -1,10 +1,16 @@
 <div class="event-line" [class.event-line--debug]="showDebug()">
   <span class="event-line__time">{{ event().at | datetime }}</span>
-  <span class="event-line__actor">{{ actorLabel()(line().actorId) }}</span>
-  <span class="event-line__kind event-line__kind--{{ actorKind()(line().actorId) }}">{{ actorKind()(line().actorId) }}</span>
+  <app-entity-chip
+    type="actor"
+    [id]="line().actorId"
+    [label]="actorLabel()(line().actorId)"
+  />
+  <span class="event-line__kind">{{ actorKind()(line().actorId) }}</span>
   <span class="event-line__verb">{{ line().verb }}</span>
   @if (line().target; as target) {
-    <span class="event-line__target">→ {{ actorLabel()(target) }}</span>
+    <span class="event-line__target">→
+      <app-entity-chip type="actor" [id]="target" [label]="actorLabel()(target)" />
+    </span>
   }
   @if (line().summary && (showDetailed() || event().type !== 'agent_run_completed')) {
     <span class="event-line__summary">{{ line().summary }}</span>
