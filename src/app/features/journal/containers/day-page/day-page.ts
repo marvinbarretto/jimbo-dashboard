@@ -164,6 +164,52 @@ export class JournalDayPage {
 
   protected readonly phoneNotifsByHour = computed(() => this.phoneSummary().notifsByHour);
 
+  protected readonly commitsSummary = computed(() => {
+    type CommitRow = { sha: string; subject: string; author_name: string; author_date: string };
+    type RepoBucket = { repo: string; pushes: number; commits: CommitRow[] };
+
+    const events = this.telemetryEvents().filter(e => e.collector === 'github' && e.type === 'push');
+    if (!events.length) return null;
+
+    const byRepo = new Map<string, RepoBucket>();
+    const commitsByHour = new Array<number>(24).fill(0);
+    let totalCommits = 0;
+
+    for (const e of events) {
+      const repo = e.source ?? 'unknown';
+      const commits = (e.payload?.['commits'] as CommitRow[] | undefined) ?? [];
+      const bucket: RepoBucket = byRepo.get(repo) ?? { repo, pushes: 0, commits: [] };
+      bucket.pushes += 1;
+      bucket.commits.push(...commits);
+      byRepo.set(repo, bucket);
+      totalCommits += commits.length;
+      // Author date over push ts — a single push can carry hours of work, and
+      // the per-commit timestamp is closer to when the typing actually happened.
+      for (const c of commits) commitsByHour[new Date(c.author_date).getHours()]++;
+    }
+
+    const repos = [...byRepo.values()].sort((a, b) => b.commits.length - a.commits.length);
+    for (const r of repos) r.commits.sort((a, b) => a.author_date.localeCompare(b.author_date));
+
+    return {
+      totalPushes: events.length,
+      totalCommits,
+      repoCount: repos.length,
+      commitsByHour,
+      repos,
+    };
+  });
+
+  protected readonly commitsByHour = computed(() => this.commitsSummary()?.commitsByHour ?? new Array<number>(24).fill(0));
+
+  protected readonly codeMeta = computed(() => {
+    const cs = this.commitsSummary();
+    if (!cs) return '';
+    const parts = [pluralise(cs.totalCommits, 'commit')];
+    if (cs.repoCount > 1) parts.push(cs.repoCount + ' repos');
+    return parts.join(' · ');
+  });
+
   protected readonly healthSummary = computed(() => {
     const events = this.telemetryEvents().filter(e => e.collector === 'health_connect');
     if (!events.length) return null;
@@ -243,6 +289,10 @@ export class JournalDayPage {
   protected projectName(id: string | null): string {
     if (!id) return 'Unassigned';
     return this.projects.getById(id)?.display_name ?? id;
+  }
+
+  protected repoShortName(full: string): string {
+    return full.split('/').at(-1) ?? full;
   }
 }
 

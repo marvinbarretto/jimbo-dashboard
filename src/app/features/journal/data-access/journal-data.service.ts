@@ -67,6 +67,7 @@ export interface TelemetryEventLite {
   readonly ts: string;
   readonly value: number | null;
   readonly unit: string | null;
+  readonly source: string | null;
   readonly payload: Record<string, unknown> | null;
 }
 
@@ -155,6 +156,7 @@ interface ApiTelemetryEvent {
   ts: string;
   value: number | null;
   unit: string | null;
+  source: string | null;
   payload: Record<string, unknown> | null;
 }
 
@@ -361,6 +363,7 @@ function toTelemetryEventLite(e: ApiTelemetryEvent): TelemetryEventLite {
     ts: e.ts,
     value: e.value,
     unit: e.unit,
+    source: e.source ?? null,
     payload: e.payload,
   };
 }
