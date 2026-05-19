@@ -56,3 +56,19 @@ Two-table design:
 
 - `model_stacks.model_ids TEXT[]` — ordinal encoded in array position, no FK, blocks clean delete cascade → fixed by stack_models junction above
 - Credentials not yet modelled — tools will need somewhere to store auth config securely
+
+## Domain layer followups
+
+### Centralise pipeline phase classification
+
+The grooming board and execution board each define their own "which items belong to me" filter inline. There's no shared domain function answering "given a vault item and its dispatches, where in the macro-pipeline does it live (grooming / execution / done)?" — so consumers like `computeNextAction` can't reason about it.
+
+Today this surfaces as the operator seeing `WAITING ON · your approval` on an item that the kanban put in the execution board because grooming is technically still not `ready`. The next-action label is now accurate per grooming state (see `domain/vault/next-action.ts`) but the macro split is still inferred ad hoc by each board.
+
+What to build:
+
+- `domain/vault/pipeline-phase.ts` — pure `pipelinePhase(item, dispatches): 'grooming' | 'execution' | 'done' | 'archived'`
+- One mapping of "which grooming state belongs to which actor role" (intake-quality / vault-classify / vault-decompose / operator). Used by next-action and any future "queue depth per actor" reporting.
+- Refactor `execution-board.ts` `manualItems` and the grooming board's filter to consume the new function so the kanbans and the next-action line agree.
+
+Why deferred: step 1 (per-state phrasing in next-action) covered 90% of the operator-facing pain. The centralisation pays off across more surfaces but isn't blocking anything today.

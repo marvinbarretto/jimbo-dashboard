@@ -17,6 +17,13 @@
     0 8px 14px -6px color-mix(in oklab, var(--color-text) 18%, transparent);
 }
 
+// Sits between identity-header (title) and zone2 (status chips). The single
+// line answer to "what's this item waiting on / ready for?" — kept directly
+// under the title so it's the first thing an operator sees.
+.vault-item-detail__next-action {
+  margin: 0.4rem 1.1rem 0.6rem;
+}
+
 // Zone 2 wraps status-chips + meta-line + overview-cards inside one shared
 // background and bottom border. The children don't know about the wrapper.
 .vault-item-detail__zone2 {

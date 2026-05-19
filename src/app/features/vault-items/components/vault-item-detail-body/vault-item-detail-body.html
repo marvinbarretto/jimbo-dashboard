@@ -105,6 +105,10 @@
       (titleChange)="store.updateTitle($event)"
     />
 
+    @if (store.nextAction(); as next) {
+      <app-vault-item-next-action class="vault-item-detail__next-action" [action]="next" />
+    }
+
     <div class="vault-item-detail__zone2">
       <app-vault-item-status-chips
         [item]="item"
@@ -226,7 +230,6 @@
         <app-activity-log
           [events]="store.events()"
           [actorLabel]="store.actorLabelFn"
-          [actorKind]="store.actorKindFn"
         />
       </app-ui-section>
 

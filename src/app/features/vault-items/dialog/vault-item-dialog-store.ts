@@ -21,6 +21,7 @@ import { ThreadService } from '../../thread/data-access/thread.service';
 import { ThreadCommands } from '../../thread/commands/thread-commands';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { computeReadiness, effectivePriority as computeEffectivePriority } from '@domain/vault/readiness';
+import { computeNextAction } from '@domain/vault/next-action';
 import { actorId, projectId, vaultItemId } from '@domain/ids';
 import { formatDatetime } from '@shared/utils/datetime.utils';
 import {
@@ -158,6 +159,13 @@ export class VaultItemDialogStore {
     const i = this.item();
     if (!i) return undefined;
     return computeReadiness(i, this.messages(), this.openBlockers());
+  });
+
+  readonly nextAction = computed(() => {
+    const i = this.item();
+    const r = this.readiness();
+    if (!i || !r) return undefined;
+    return computeNextAction(i, r);
   });
 
   readonly lastActivityAt = computed(() => {

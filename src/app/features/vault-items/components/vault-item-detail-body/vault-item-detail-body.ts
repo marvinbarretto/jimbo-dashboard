@@ -36,6 +36,7 @@ import { VaultItemIntakeBlock } from './vault-item-intake-block/vault-item-intak
 import { VaultItemIntakeRationale } from './vault-item-intake-rationale/vault-item-intake-rationale';
 import { VaultItemLinksBlock } from './vault-item-links-block/vault-item-links-block';
 import { VaultItemMetaLine } from './vault-item-meta-line/vault-item-meta-line';
+import { VaultItemNextActionComponent } from './vault-item-next-action/vault-item-next-action';
 import { VaultItemOverviewCards } from './vault-item-overview-cards/vault-item-overview-cards';
 import { VaultItemQuestions } from './vault-item-questions/vault-item-questions';
 import { VaultItemStatusChips } from './vault-item-status-chips/vault-item-status-chips';
@@ -68,6 +69,7 @@ import type { CreateThreadMessagePayload } from '@domain/thread';
     VaultItemIntakeRationale,
     VaultItemLinksBlock,
     VaultItemMetaLine,
+    VaultItemNextActionComponent,
     VaultItemOverviewCards,
     VaultItemQuestions,
     VaultItemStatusChips,
