@@ -12,6 +12,7 @@ import { ActivityEventsService } from '@features/vault-items/data-access/activit
 import { VaultItemCommands } from './vault-item-commands';
 
 import { VAULT_ITEM_IDS } from '@domain/vault/fixtures';
+import { OWNER_BY_GROOMING_STATE } from '@domain/vault/grooming-ownership';
 import { actorId, wellKnownActorId } from '@domain/ids';
 
 // Tests run against the seed fixture. ITEM_T (#2420 "Wire up coverage badge")
@@ -249,6 +250,67 @@ describe('VaultItemCommands', () => {
 
       expect(activityPosts).toHaveLength(0);
       expect(lastErrorToast()).toBeUndefined();
+    });
+
+    it('auto-reassigns to the canonical owner on transition (classified → ralph)', () => {
+      // ITEM_E starts ungroomed. Walk it forward to `classified` and confirm
+      // the owner ends up as ralph (vault-decompose's actor).
+      const id = VAULT_ITEM_IDS.E;
+      commands.setStatus(id, 'intake_complete');
+      commands.setStatus(id, 'classified');
+
+      const after = vaultItems.getById(id)!;
+      expect(after.grooming_status).toBe('classified');
+      expect(after.assigned_to).toBe(wellKnownActorId('ralph'));
+
+      // Audit trail: every transition emits both a status event and an assigned
+      // event (when owner changes), so a reader of the activity log sees the
+      // handoff explicitly.
+      expect(activityPosts.map(e => e.type)).toContain('grooming_status_changed');
+      expect(activityPosts.map(e => e.type)).toContain('assigned');
+    });
+
+    it('does not reassign on `ready` — keeps current owner for dispatch', () => {
+      // Force directly to ready and check the owner is untouched.
+      const id = VAULT_ITEM_IDS.E;
+      const ownerBefore = vaultItems.getById(id)!.assigned_to;
+      commands.setStatus(id, 'ready', { force: true });
+      expect(vaultItems.getById(id)!.assigned_to).toBe(ownerBefore);
+    });
+  });
+
+  // ── reconcileOwnership (one-shot sweep) ────────────────────────────────
+
+  describe('reconcileOwnership', () => {
+    it('reassigns active items whose owner mismatches the canonical mapping', () => {
+      const before = vaultItems.items()
+        .filter(i => !i.completed_at && !i.archived_at && i.grooming_status !== 'ready');
+
+      const count = commands.reconcileOwnership();
+      expect(count).toBeGreaterThan(0);
+
+      // Every active non-ready item must now match its canonical owner.
+      for (const item of before) {
+        const after = vaultItems.getById(item.id)!;
+        const canonical = OWNER_BY_GROOMING_STATE[after.grooming_status];
+        if (canonical !== null) {
+          expect(after.assigned_to).toBe(canonical);
+        }
+      }
+    });
+
+    it('skips completed and archived items', () => {
+      // Pick a completed item from the fixture (if any), capture owner, sweep,
+      // confirm unchanged.
+      const completed = vaultItems.items().find(i => i.completed_at);
+      const archived = vaultItems.items().find(i => i.archived_at);
+      const completedOwnerBefore = completed?.assigned_to;
+      const archivedOwnerBefore = archived?.assigned_to;
+
+      commands.reconcileOwnership();
+
+      if (completed) expect(vaultItems.getById(completed.id)!.assigned_to).toBe(completedOwnerBefore);
+      if (archived) expect(vaultItems.getById(archived.id)!.assigned_to).toBe(archivedOwnerBefore);
     });
   });
 });

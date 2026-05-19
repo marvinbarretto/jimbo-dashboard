@@ -11,7 +11,7 @@ import { VaultItemsService } from '@features/vault-items/data-access/vault-items
 import { ActivityEventsService } from '@features/vault-items/data-access/activity-events.service';
 import { GroomingCommands } from './grooming-commands';
 
-import { vaultItemId } from '@domain/ids';
+import { vaultItemId, wellKnownActorId } from '@domain/ids';
 import type { VaultItem, GroomingStatus } from '@domain/vault';
 
 describe('GroomingCommands (seed mode)', () => {
@@ -98,19 +98,20 @@ describe('GroomingCommands (seed mode)', () => {
   // ── quickReject ──────────────────────────────────────────────────────────
 
   describe('quickReject', () => {
-    it('moves the item to needs_rework without reassigning ownership', () => {
+    it('moves the item to needs_rework and reassigns to @marvin (canonical owner for needs_rework)', () => {
       const item = pickItem(i =>
         i.grooming_status === 'classified' &&
         !i.archived_at &&
         i.assigned_to !== null,
       );
-      const priorOwner = item.assigned_to;
 
       commands.quickReject(item.id, 'AC are too vague to commit to');
 
       const after = vaultItems.getById(item.id)!;
       expect(after.grooming_status).toBe('needs_rework');
-      expect(after.assigned_to).toBe(priorOwner);
+      // Auto-reassign rule (see domain/vault/grooming-ownership): every
+      // needs_rework item lands on @marvin so the rework backlog has one owner.
+      expect(after.assigned_to).toBe(wellKnownActorId('marvin'));
     });
 
     it('emits a grooming_status_changed audit event', () => {

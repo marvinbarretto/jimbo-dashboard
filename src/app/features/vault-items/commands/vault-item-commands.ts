@@ -21,6 +21,7 @@ import { ToastService } from '@shared/components/toast/toast.service';
 
 import { computeReadiness } from '@domain/vault/readiness';
 import { isAllowedTransition } from '@domain/vault/transitions';
+import { ownerForGroomingState } from '@domain/vault/grooming-ownership';
 import type { VaultItemId, ActorId } from '@domain/ids';
 import type { GroomingStatus } from '@domain/vault/vault-item';
 
@@ -152,5 +153,35 @@ export class VaultItemCommands {
     }
 
     this.vaultItems.setGroomingStatus(id, next, opts?.reason ?? null);
+
+    // Auto-reassign on transition: each grooming state has a canonical owner
+    // (see OWNER_BY_GROOMING_STATE). The handoff happens automatically so
+    // the operator never has to manually pass the baton.
+    const nextOwner = ownerForGroomingState(next, item.assigned_to);
+    if (nextOwner) {
+      this.vaultItems.reassign(id, nextOwner, `auto-reassigned for ${next}`);
+    }
+  }
+
+  /**
+   * One-shot sweep: walk every active vault item and reassign it to the
+   * canonical owner for its current grooming state. Intended to be triggered
+   * once after the auto-reassign rule landed, so existing items align with
+   * the policy without waiting for a transition.
+   *
+   * Returns the count of reassignments emitted. No-op when the current owner
+   * already matches.
+   */
+  reconcileOwnership(): number {
+    let reassigned = 0;
+    for (const item of this.vaultItems.items()) {
+      if (item.completed_at || item.archived_at) continue;
+      const nextOwner = ownerForGroomingState(item.grooming_status, item.assigned_to);
+      if (nextOwner) {
+        this.vaultItems.reassign(item.id, nextOwner, `reconcile: ${item.grooming_status}`);
+        reassigned++;
+      }
+    }
+    return reassigned;
   }
 }

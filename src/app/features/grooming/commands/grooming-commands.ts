@@ -34,10 +34,12 @@ export class GroomingCommands {
 
   /**
    * Card-level quick reject: status change to `needs_rework` with a reason
-   * note, no reassignment. Distinct from the dialog's full
-   * `rejectWithReason` (which composes reassign + thread message + 2 events) —
-   * this is the lightweight gesture for "park it back with the same owner so
-   * I can reply later".
+   * note. Distinct from the dialog's full `rejectWithReason` (which composes
+   * reassign + thread message + 2 events) — this is the lightweight gesture
+   * for "park it back, I'll route it later".
+   *
+   * The auto-reassign rule (see `domain/vault/grooming-ownership`) lands every
+   * `needs_rework` item on @marvin so the rework backlog has a single owner.
    *
    * Forces the transition for the same reason as moveColumn: any column can
    * land in needs_rework when the operator says so.
