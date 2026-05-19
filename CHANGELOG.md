@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.63](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.62...v0.0.63) (2026-05-19)
+
+
+### Features
+
+* **journal/day:** Code section surfaces github push events ([700a43a](https://github.com/marvinbarretto/jimbo-dashboard/commit/700a43a0875d7884d6cf8e1d7807fd266c6d7329))
+* **ui-checklist:** editable mode + delivery-block consumes the primitive ([85ccef8](https://github.com/marvinbarretto/jimbo-dashboard/commit/85ccef801dd7d1948507592bc2197c9ec2eea2c3))
+* **vault:** canonical owner per grooming state + auto-reassign ([ba44c7e](https://github.com/marvinbarretto/jimbo-dashboard/commit/ba44c7e00e440dc370c26f7257c4be14f91b9731))
+* **vault:** next-action projection + detail-body line ([d2685db](https://github.com/marvinbarretto/jimbo-dashboard/commit/d2685dbc15613535058cac21f4d3e743f1d82b59))
+
+
+### Code Refactoring
+
+* **activity-log:** richer event verbs, drop actor-kind pill ([cda24d3](https://github.com/marvinbarretto/jimbo-dashboard/commit/cda24d32bf4efbe34c40da1b994c006a6ae47378))
+
 ### [0.0.62](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.61...v0.0.62) (2026-05-14)
 
 
