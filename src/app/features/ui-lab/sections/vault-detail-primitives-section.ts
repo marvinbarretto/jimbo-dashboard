@@ -180,12 +180,41 @@ import { actorId } from '@domain/ids';
         </div>
 
         <div>
-          <p class="ui-lab__subhead">ui-checklist</p>
+          <p class="ui-lab__subhead">ui-checklist — read-only</p>
           <p class="ui-lab__support-copy">
             Done/pending list with optional status chip per item. Used for acceptance criteria
             with verbose / exceeds annotations.
           </p>
           <app-ui-checklist [items]="sampleChecklist" />
+        </div>
+
+        <div>
+          <p class="ui-lab__subhead">ui-checklist — editable</p>
+          <p class="ui-lab__support-copy">
+            Same primitive in editable mode: checkbox toggles, click-to-edit text,
+            remove button, and an append input. Emits granular events (<code>toggled</code>,
+            <code>edited</code>, <code>removed</code>, <code>appended</code>) so consumers
+            don't have to mirror array math. This is the canonical pattern for editable lists
+            across the app — extend this primitive rather than hand-rolling one.
+          </p>
+          <app-ui-checklist
+            [items]="labEditableItems()"
+            [editable]="true"
+            appendPlaceholder="+ add criterion (Enter)"
+            (toggled)="onLabToggle($event)"
+            (edited)="onLabEdit($event)"
+            (removed)="onLabRemove($event)"
+            (appended)="onLabAppend($event)"
+          />
+        </div>
+
+        <div>
+          <p class="ui-lab__subhead">ui-checklist — empty state</p>
+          <p class="ui-lab__support-copy">
+            Pass <code>emptyMessage</code> to show a tinted empty card when the list is
+            empty. Surface this for required-but-missing lists (e.g. acceptance criteria).
+          </p>
+          <app-ui-checklist [items]="[]" emptyMessage="No items yet" />
         </div>
 
         <div>
@@ -308,6 +337,29 @@ export class VaultDetailPrimitivesSection {
       status: { label: 'verbose', tone: 'warn', title: 'Verbose. Spec recommends ≤ 120 chars.' },
     },
   ];
+
+  // Editable demo: live signal so the lab actually behaves like the real consumer.
+  protected readonly labEditableItems = signal<readonly UiChecklistItem[]>([
+    { text: 'Walk to corner shop',  done: true },
+    { text: 'Buy 2L semi-skimmed', done: false },
+    { text: 'Return home and put milk in fridge', done: false },
+  ]);
+
+  onLabToggle(i: number): void {
+    this.labEditableItems.update(items => items.map((it, idx) => idx === i ? { ...it, done: !it.done } : it));
+  }
+
+  onLabEdit({ index, text }: { index: number; text: string }): void {
+    this.labEditableItems.update(items => items.map((it, idx) => idx === index ? { ...it, text } : it));
+  }
+
+  onLabRemove(i: number): void {
+    this.labEditableItems.update(items => items.filter((_, idx) => idx !== i));
+  }
+
+  onLabAppend(text: string): void {
+    this.labEditableItems.update(items => [...items, { text, done: false }]);
+  }
 
   toggleLabReassign(): void {
     this.labReassignOpen.update(v => !v);
