@@ -256,16 +256,12 @@ describe('VaultItemDialogStore', () => {
   });
 
   describe('canSubmitDraft', () => {
-    it('false when title is empty or whitespace', () => {
+    // Empty title is no longer a disabled-state gate — per CLAUDE.md §UX
+    // ("errors over disabled states"), the empty-title block surfaces as an
+    // inline error on submit attempt. canSubmitDraft only reflects in-flight
+    // submission state.
+    it('true by default (gating now lives in the submit handler, not the button)', () => {
       const { store } = buildStore();
-      expect(store.canSubmitDraft()).toBe(false);
-      store.setDraftTitle('   ');
-      expect(store.canSubmitDraft()).toBe(false);
-    });
-
-    it('true once title has non-whitespace content', () => {
-      const { store } = buildStore();
-      store.setDraftTitle('fix bug');
       expect(store.canSubmitDraft()).toBe(true);
     });
   });

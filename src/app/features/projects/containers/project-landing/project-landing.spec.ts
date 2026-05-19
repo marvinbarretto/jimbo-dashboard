@@ -126,7 +126,16 @@ describe('ProjectLanding', () => {
         provideRouter([]),
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: ActivatedRoute, useValue: { paramMap: of(new Map([['id', id]])) } },
+        {
+          // `withVaultDetailModal` (used by ProjectLanding) reads
+          // `route.queryParamMap` — mock both maps so the test bed doesn't
+          // explode on construction.
+          provide: ActivatedRoute,
+          useValue: {
+            paramMap:      of(new Map([['id', id]])),
+            queryParamMap: of({ get: () => null }),
+          },
+        },
         { provide: ProjectsService, useClass: FakeProjectsService },
         { provide: VaultItemsService, useValue: vault },
         { provide: VaultItemProjectsService, useClass: FakeJunctions },

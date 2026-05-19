@@ -7,6 +7,14 @@ import type { Project } from '@domain/projects/project';
 import { EMPTY_PROJECT_BRIEF } from '@domain/projects/project';
 import type { Actor } from '@domain/actors/actor';
 
+// The strip composes two visual surfaces:
+//   - Tags    → bespoke `.ui-mcs__tag` markup (free-text labels, no entity backing)
+//   - Projects / assignee / related → delegated to <app-entity-chip>
+//     (classes: `.entity-chip--project`, `.entity-chip--actor`, `.entity-chip--vault-item`)
+//
+// Assertions target the actual rendered DOM rather than legacy `.ui-mcs__chip--*`
+// names that the strip no longer emits.
+
 const proj = (id: string, color: string | null = null): Project => ({
   id: projectId(id),
   display_name: id,
@@ -56,31 +64,34 @@ describe('UiMentionChipStrip', () => {
     const fixture = build();
     fixture.componentRef.setInput('tags', ['urgent', 'bug']);
     fixture.detectChanges();
-    const chips = fixture.nativeElement.querySelectorAll('.ui-mcs__chip--tag');
+    const chips = fixture.nativeElement.querySelectorAll('.ui-mcs__tag');
     expect(chips).toHaveLength(2);
     expect(chips[0].textContent).toContain('#urgent');
     expect(chips[1].textContent).toContain('#bug');
   });
 
-  it('renders project chips with color dot', () => {
+  it('renders project chips via entity-chip with the project label', () => {
     const fixture = build();
     fixture.componentRef.setInput('projects', [proj('hermes', '#abc123')]);
     fixture.detectChanges();
-    const chip = fixture.nativeElement.querySelector('.ui-mcs__chip--project');
+    const chip = fixture.nativeElement.querySelector('.entity-chip--project');
     expect(chip).toBeTruthy();
     expect(chip.textContent).toContain('hermes');
-    expect(chip.querySelector('.ui-mcs__dot')).toBeTruthy();
+    // Color is plumbed through as a CSS custom property on the chip, not a
+    // separate dot element — assert the variable is set rather than a `.dot` node.
+    expect(chip.getAttribute('style') ?? '').toContain('--chip-color');
   });
 
   it('renders the single assignee chip with @-prefix', () => {
     const fixture = build();
     fixture.componentRef.setInput('assignee', actor('boris'));
     fixture.detectChanges();
-    const chip = fixture.nativeElement.querySelector('.ui-mcs__chip--actor');
-    expect(chip.textContent).toContain('@boris');
+    const chip = fixture.nativeElement.querySelector('.entity-chip--actor');
+    expect(chip.textContent).toContain('@');
+    expect(chip.textContent).toContain('boris');
   });
 
-  it('renders related chips with ~ prefix and #seq', () => {
+  it('renders related chips with # prefix and seq, omitting the seq when null', () => {
     const fixture = build();
     const related: MentionRelatedRef[] = [
       { id: vaultItemId('a'), title: 'parent', seq: 12 },
@@ -88,11 +99,14 @@ describe('UiMentionChipStrip', () => {
     ];
     fixture.componentRef.setInput('related', related);
     fixture.detectChanges();
-    const chips = fixture.nativeElement.querySelectorAll('.ui-mcs__chip--related');
+    const chips = fixture.nativeElement.querySelectorAll('.entity-chip--vault-item');
     expect(chips).toHaveLength(2);
-    expect(chips[0].textContent).toContain('#12');
+    expect(chips[0].textContent).toContain('12');
     expect(chips[0].textContent).toContain('parent');
-    expect(chips[1].textContent).not.toContain('#');
+    // null-seq chip has no `.entity-chip__seq` element — that's how the absent
+    // seq is conveyed (rather than text-level inspection).
+    expect(chips[1].querySelector('.entity-chip__seq')).toBeNull();
+    expect(chips[1].textContent).toContain('no-seq');
   });
 
   it('emits tagRemoved with index when × is clicked', () => {
@@ -101,12 +115,12 @@ describe('UiMentionChipStrip', () => {
     fixture.detectChanges();
     const emitted: number[] = [];
     fixture.componentInstance.tagRemoved.subscribe(i => emitted.push(i));
-    const buttons = fixture.nativeElement.querySelectorAll('.ui-mcs__chip--tag .ui-mcs__x');
+    const buttons = fixture.nativeElement.querySelectorAll('.ui-mcs__tag .ui-mcs__tag-x');
     (buttons[1] as HTMLButtonElement).click();
     expect(emitted).toEqual([1]);
   });
 
-  it('emits projectRemoved / assigneeRemoved / relatedRemoved on their × clicks', () => {
+  it('emits projectRemoved / assigneeRemoved / relatedRemoved on entity-chip × clicks', () => {
     const fixture = build();
     fixture.componentRef.setInput('projects', [proj('hermes')]);
     fixture.componentRef.setInput('assignee', actor('marvin'));
@@ -122,9 +136,9 @@ describe('UiMentionChipStrip', () => {
     fixture.componentInstance.assigneeRemoved.subscribe(() => assigneeOut += 1);
     fixture.componentInstance.relatedRemoved.subscribe(i => relOut.push(i));
 
-    (fixture.nativeElement.querySelector('.ui-mcs__chip--project .ui-mcs__x') as HTMLButtonElement).click();
-    (fixture.nativeElement.querySelector('.ui-mcs__chip--actor .ui-mcs__x') as HTMLButtonElement).click();
-    (fixture.nativeElement.querySelector('.ui-mcs__chip--related .ui-mcs__x') as HTMLButtonElement).click();
+    (fixture.nativeElement.querySelector('.entity-chip--project .entity-chip__remove') as HTMLButtonElement).click();
+    (fixture.nativeElement.querySelector('.entity-chip--actor .entity-chip__remove') as HTMLButtonElement).click();
+    (fixture.nativeElement.querySelector('.entity-chip--vault-item .entity-chip__remove') as HTMLButtonElement).click();
 
     expect(projOut).toEqual([0]);
     expect(assigneeOut).toBe(1);
