@@ -17,7 +17,6 @@ export class EventLineComponent {
   readonly verbosity   = input<VerbosityLevel>('compact');
   // actorLabel receives the raw id and returns a display string (may include @-prefix).
   readonly actorLabel  = input<(actorId: string) => string>(a => a);
-  readonly actorKind   = input<(actorId: string) => 'human' | 'agent' | 'system'>(() => 'system');
 
   readonly line = computed(() => formatEvent(this.event()));
 

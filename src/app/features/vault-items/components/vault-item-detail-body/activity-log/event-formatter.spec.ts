@@ -25,11 +25,29 @@ describe('formatEvent — standard line shape', () => {
     expect(r.target).toBe('ralph');
   });
 
-  it('formats `grooming_status_changed` as a transition', () => {
-    const e: VaultActivityEvent = { ...base, type: 'grooming_status_changed', actor_id: wellKnownActorId('marvin'), from: 'classified', to: 'decomposed', note: null };
-    const r = formatEvent(e);
-    expect(r.verb).toBe('moved');
-    expect(r.summary).toMatch(/classified.*→.*decomposed/);
+  describe('grooming_status_changed — reads as `moved x to y (z)`', () => {
+    it('with note: `moved classified to decomposed (no decomposition needed)`', () => {
+      const e: VaultActivityEvent = { ...base, type: 'grooming_status_changed', actor_id: wellKnownActorId('boris'), from: 'classified', to: 'decomposed', note: 'no decomposition needed' };
+      const r = formatEvent(e);
+      expect(r.verb).toBe('moved');
+      expect(r.summary).toBe('classified to decomposed (no decomposition needed)');
+      expect(r.details).toBe('classified → decomposed');
+    });
+
+    it('humanises snake_case states (intake_complete → "intake complete")', () => {
+      const e: VaultActivityEvent = { ...base, type: 'grooming_status_changed', actor_id: wellKnownActorId('boris'), from: 'ungroomed', to: 'intake_complete', note: 'intake-quality: clear' };
+      expect(formatEvent(e).summary).toBe('ungroomed to intake complete (intake-quality: clear)');
+    });
+
+    it('omits the parenthetical when no note', () => {
+      const e: VaultActivityEvent = { ...base, type: 'grooming_status_changed', actor_id: wellKnownActorId('marvin'), from: 'decomposed', to: 'ready', note: null };
+      expect(formatEvent(e).summary).toBe('decomposed to ready');
+    });
+
+    it('handles needs_rework with no note', () => {
+      const e: VaultActivityEvent = { ...base, type: 'grooming_status_changed', actor_id: wellKnownActorId('marvin'), from: 'decomposed', to: 'needs_rework', note: null };
+      expect(formatEvent(e).summary).toBe('decomposed to needs rework');
+    });
   });
 
   it('formats `agent_run_completed`', () => {
@@ -59,13 +77,22 @@ describe('formatEvent — standard line shape', () => {
     expect(r.summary).toContain('AC too verbose');
   });
 
-  it('formats `thread_message_posted`', () => {
-    const e: VaultActivityEvent = {
-      ...base, type: 'thread_message_posted', actor_id: wellKnownActorId('marvin'),
-      message_id: threadMessageId('tm-x'), message_kind: 'comment',
-    };
-    const r = formatEvent(e);
-    expect(r.verb).toBe('posted comment');
-    expect(r.scrollToMessageId).toBe('tm-x');
+  describe('thread_message_posted — verb varies by kind', () => {
+    it('comment → "commented"', () => {
+      const e: VaultActivityEvent = { ...base, type: 'thread_message_posted', actor_id: wellKnownActorId('marvin'), message_id: threadMessageId('tm-x'), message_kind: 'comment' };
+      const r = formatEvent(e);
+      expect(r.verb).toBe('commented');
+      expect(r.scrollToMessageId).toBe('tm-x');
+    });
+
+    it('question → "asked"', () => {
+      const e: VaultActivityEvent = { ...base, type: 'thread_message_posted', actor_id: wellKnownActorId('marvin'), message_id: threadMessageId('tm-x'), message_kind: 'question' };
+      expect(formatEvent(e).verb).toBe('asked');
+    });
+
+    it('answer → "answered"', () => {
+      const e: VaultActivityEvent = { ...base, type: 'thread_message_posted', actor_id: wellKnownActorId('marvin'), message_id: threadMessageId('tm-x'), message_kind: 'answer' };
+      expect(formatEvent(e).verb).toBe('answered');
+    });
   });
 });

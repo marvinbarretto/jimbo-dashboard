@@ -5,7 +5,6 @@
     [id]="line().actorId"
     [label]="actorLabel()(line().actorId)"
   />
-  <span class="event-line__kind">{{ actorKind()(line().actorId) }}</span>
   <span class="event-line__verb">{{ line().verb }}</span>
   @if (line().target; as target) {
     <span class="event-line__target">→
@@ -14,6 +13,9 @@
   }
   @if (line().summary && (showDetailed() || event().type !== 'agent_run_completed')) {
     <span class="event-line__summary">{{ line().summary }}</span>
+  }
+  @if (showDetailed() && line().details; as details) {
+    <span class="event-line__details">{{ details }}</span>
   }
   @if (showDetailed() && costChip(); as chip) {
     <span class="event-line__cost">{{ chip }}</span>

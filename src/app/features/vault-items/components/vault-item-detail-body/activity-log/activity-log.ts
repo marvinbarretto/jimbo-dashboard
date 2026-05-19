@@ -31,7 +31,6 @@ const FILTER_OPTIONS: readonly UiFilterPillOption[] = [
 export class ActivityLogComponent {
   readonly events     = input.required<readonly VaultActivityEvent[]>();
   readonly actorLabel = input<(id: string) => string>(a => a);
-  readonly actorKind  = input<(id: string) => 'human' | 'agent' | 'system'>(() => 'system');
 
   readonly verbosity     = signal<VerbosityLevel>(loadVerbosity());
   readonly activeFilters = signal<Set<FilterKey>>(new Set(['all']));

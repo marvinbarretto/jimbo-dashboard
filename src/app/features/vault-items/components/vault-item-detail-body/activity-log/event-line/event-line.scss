@@ -8,12 +8,6 @@
   line-height: 1.5;
 
   &__time     { opacity: 0.55; font-variant-numeric: tabular-nums; }
-  &__kind     {
-    font-size: 0.7rem;
-    color: var(--color-text-muted);
-    align-self: center;
-    text-transform: lowercase;
-  }
   &__verb     { opacity: 0.85; }
   &__target   {
     display: inline-flex;
@@ -22,7 +16,8 @@
     opacity: 0.85;
     font-weight: 500;
   }
-  &__summary  { flex-basis: 100%; opacity: 0.7; }
+  &__summary  { opacity: 0.7; }
+  &__details  { opacity: 0.5; font-size: 0.75rem; font-family: var(--font-mono); }
   &__cost     { opacity: 0.5; font-size: 0.75rem; }
 
   &__decisions, &__reasoning, &__tokens, &__logs { flex-basis: 100%; margin: 0.3rem 0 0; }
