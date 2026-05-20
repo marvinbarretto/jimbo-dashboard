@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.65](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.64...v0.0.65) (2026-05-20)
+
+
+### Bug Fixes
+
+* **journal/day:** side-query github pushes so busy days don't truncate them ([615ffbc](https://github.com/marvinbarretto/jimbo-dashboard/commit/615ffbcc497b9bd1bb0a5313c0db6a85188bd2c8))
+
 ### [0.0.64](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.63...v0.0.64) (2026-05-19)
 
 ### [0.0.63](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.62...v0.0.63) (2026-05-19)
