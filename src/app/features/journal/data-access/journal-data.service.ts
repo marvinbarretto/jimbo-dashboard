@@ -298,7 +298,7 @@ export class JournalDataService {
       // falls before local midnight. Fetch health_connect from the prior evening.
       const eveningSince = dateFromDayKey(shiftDay(date, -1)).toISOString();
 
-      const [dayRes, usageRes, sleepRes] = await Promise.all([
+      const [dayRes, usageRes, sleepRes, githubRes] = await Promise.all([
         firstValueFrom(
           this.http.get<{ events: ApiTelemetryEvent[] }>(
             `${this.base}/api/telemetry/events?since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}&limit=500`,
@@ -314,12 +314,21 @@ export class JournalDataService {
             `${this.base}/api/telemetry/events?collector=health_connect&type=sleep_session&since=${encodeURIComponent(eveningSince)}&until=${encodeURIComponent(since)}&limit=10`,
           ),
         ),
+        // Pulled separately because high-volume collectors (notifications,
+        // location) drown github pushes out of the 500-event main window
+        // on busy days.
+        firstValueFrom(
+          this.http.get<{ events: ApiTelemetryEvent[] }>(
+            `${this.base}/api/telemetry/events?collector=github&type=push&since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}&limit=100`,
+          ),
+        ),
       ]);
 
       const dayEvents = (dayRes.events ?? []).map(toTelemetryEventLite);
       const extraEvents = [
         ...(usageRes.events ?? []).map(toTelemetryEventLite),
         ...(sleepRes.events ?? []).map(toTelemetryEventLite),
+        ...(githubRes.events ?? []).map(toTelemetryEventLite),
       ];
       const dayIds = new Set(dayEvents.map(e => e.id));
       return [...dayEvents, ...extraEvents.filter(e => !dayIds.has(e.id))];
