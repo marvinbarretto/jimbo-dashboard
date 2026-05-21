@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.66](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.65...v0.0.66) (2026-05-21)
+
+
+### Features
+
+* **agent-runs:** hermes runs tab + journal agents section ([117f6c0](https://github.com/marvinbarretto/jimbo-dashboard/commit/117f6c0c3b58e8603e49093f8a71a59f97686c4a))
+
 ### [0.0.65](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.64...v0.0.65) (2026-05-20)
 
 
