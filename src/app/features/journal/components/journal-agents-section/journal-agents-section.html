@@ -1,0 +1,47 @@
+<app-ui-section title="Agents" [meta]="sectionMeta()">
+  @if (loading()) {
+    <app-ui-loading-state message="Reading agent runs…" />
+  } @else if (totalTicks() === 0) {
+    <app-ui-empty-state
+      title="No Hermes ticks recorded"
+      message="No agent.end events landed for this day. Either every cron was paused, or telemetry stopped." />
+  } @else {
+    <app-ui-stack gap="lg">
+      <div class="agents__stats">
+        <app-ui-stat-card label="Ticks" [value]="totalTicks().toString()" />
+        <app-ui-stat-card label="Failed" [value]="errorCount().toString()" [detail]="errorCount() ? 'see breakdown' : null" />
+        <app-ui-stat-card label="Silent" [value]="silentCount().toString()" detail="polled, no work" />
+        <app-ui-stat-card label="Productive" [value]="proseCount().toString()" detail="prose responses" />
+      </div>
+
+      <app-ui-subhead label="Failing crons" [count]="failingCrons().length" />
+      @if (failingCrons().length) {
+        <ul class="agents__list">
+          @for (f of failingCrons(); track f.job_name + f.model + f.outcome) {
+            <li class="agents__row">
+              <span class="agents__row-job">{{ f.job_name }}</span>
+              <app-ui-badge [tone]="outcomeTone(f.outcome)">{{ outcomeLabel(f.outcome) }}</app-ui-badge>
+              <span class="agents__row-model">{{ f.model ?? '—' }}</span>
+              <span class="agents__row-count">{{ f.count }}×</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <app-ui-empty-state message="Every cron stayed out of the failure buckets today." />
+      }
+
+      @if (quietCrons().length) {
+        <app-ui-subhead label="Quiet (silent only)" [count]="quietCrons().length" />
+        <ul class="agents__quiet">
+          @for (j of quietCrons(); track j) {
+            <li>{{ j }}</li>
+          }
+        </ul>
+      }
+
+      <p class="agents__more">
+        <a routerLink="/hermes/runs">See full Hermes runs ›</a>
+      </p>
+    </app-ui-stack>
+  }
+</app-ui-section>

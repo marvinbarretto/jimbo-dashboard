@@ -1,0 +1,206 @@
+.runs {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.runs__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.runs__lede {
+  margin: 0;
+  max-width: 60ch;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+
+  code {
+    padding: 0.05rem 0.3rem;
+    background: var(--color-surface-strong);
+    border-radius: 3px;
+    font-size: 0.72rem;
+  }
+}
+
+.runs__window {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+}
+
+.runs__window-label {
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: 0.25rem;
+}
+
+.runs__window-btn {
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  border-radius: var(--radius);
+  color: var(--color-text-soft);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-border-strong);
+    color: var(--color-text);
+  }
+}
+
+.runs__window-btn--active {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-border));
+  color: var(--color-text);
+}
+
+.runs__table-shell {
+  overflow-x: auto;
+}
+
+.runs__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.runs__th {
+  padding: 0.5rem 0.55rem;
+  text-align: left;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+.runs__th--total,
+.runs__th--outcome {
+  text-align: right;
+}
+
+.runs__row:hover {
+  background: color-mix(in srgb, var(--color-accent) 4%, transparent);
+}
+
+.runs__td {
+  padding: 0.5rem 0.55rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.runs__td--job {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.runs__td--model {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.runs__model {
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.runs__td--total {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-soft);
+}
+
+.runs__td--outcome {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.runs__count {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.runs__count--danger  { color: var(--color-danger); }
+.runs__count--warning { color: var(--color-warning); }
+.runs__count--info    { color: var(--color-info, var(--color-accent)); }
+.runs__count--success { color: var(--color-success); }
+.runs__count--neutral { color: var(--color-text-muted); }
+.runs__count--accent  { color: var(--color-accent); }
+.runs__count--empty   { color: color-mix(in srgb, var(--color-text-muted) 35%, transparent); }
+
+.runs__td--last {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.runs__tail {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.runs__tail-row {
+  display: grid;
+  grid-template-columns: 7ch 12ch auto 18ch 5ch 1fr;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.35rem 0.25rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+  font-size: 0.74rem;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.runs__tail-ts {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.7rem;
+}
+
+.runs__tail-job {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.runs__tail-model {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.runs__tail-dur {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  text-align: right;
+}
+
+.runs__tail-title {
+  color: var(--color-text-soft);
+  font-size: 0.72rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

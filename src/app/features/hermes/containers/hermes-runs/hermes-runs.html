@@ -1,0 +1,93 @@
+<div class="runs">
+  <header class="runs__header">
+    <p class="runs__lede">
+      Every Hermes cron tick is recorded in <code>system_events</code>. This page classifies each
+      <code>agent.end</code> into an outcome bucket so you can see which crons are healthy, which are
+      hitting quotas, and which are silently writing prose instead of completing dispatches.
+    </p>
+    <div class="runs__window">
+      <span class="runs__window-label">Window</span>
+      @for (d of [1, 3, 7, 14, 30]; track d) {
+        <button
+          type="button"
+          class="runs__window-btn"
+          [class.runs__window-btn--active]="windowDays() === d"
+          (click)="setWindow(d)">{{ d }}d</button>
+      }
+    </div>
+  </header>
+
+  <app-ui-section title="Job health" [meta]="jobs().length + ' crons'">
+    @if (rollup().length === 0) {
+      <app-ui-loading-state message="Loading rollup…" />
+    } @else {
+      <div class="runs__table-shell">
+        <table class="runs__table">
+          <thead>
+            <tr>
+              <th class="runs__th runs__th--job">Job</th>
+              <th class="runs__th runs__th--model">Model(s)</th>
+              <th class="runs__th runs__th--health">Health</th>
+              <th class="runs__th runs__th--total">Runs</th>
+              @for (o of outcomeOrder; track o) {
+                <th class="runs__th runs__th--outcome">
+                  <app-ui-badge [tone]="outcomeTone(o)" [title]="outcomeLong(o)">{{ outcomeShort(o) }}</app-ui-badge>
+                </th>
+              }
+              <th class="runs__th runs__th--last">Last</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (j of jobs(); track j.job_name) {
+              <tr class="runs__row">
+                <td class="runs__td runs__td--job">{{ j.job_name }}</td>
+                <td class="runs__td runs__td--model">
+                  @for (m of j.models; track m) {
+                    <span class="runs__model">{{ m }}</span>
+                  }
+                </td>
+                <td class="runs__td runs__td--health">
+                  <app-ui-badge [tone]="healthTone(j.health)" [title]="j.health_reason">{{ j.health }}</app-ui-badge>
+                </td>
+                <td class="runs__td runs__td--total">{{ j.total }}</td>
+                @for (o of outcomeOrder; track o) {
+                  <td class="runs__td runs__td--outcome">
+                    @if (jobCount(j, o) > 0) {
+                      <span [class]="'runs__count runs__count--' + outcomeTone(o)">{{ jobCount(j, o) }}</span>
+                    } @else {
+                      <span class="runs__count runs__count--empty">·</span>
+                    }
+                  </td>
+                }
+                <td class="runs__td runs__td--last" [title]="absoluteTime(j.last_ts)">{{ relativeTime(j.last_ts) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </app-ui-section>
+
+  <app-ui-section title="Live tail" [meta]="tail().length + ' events'">
+    @if (tail().length === 0) {
+      <app-ui-loading-state message="Loading tail…" />
+    } @else {
+      <ul class="runs__tail">
+        @for (r of tail(); track r.ts + r.job_name) {
+          <li class="runs__tail-row">
+            <span class="runs__tail-ts" [title]="absoluteTime(r.ts)">{{ relativeTime(r.ts) }}</span>
+            <span class="runs__tail-job">{{ r.job_name }}</span>
+            <app-ui-badge [tone]="outcomeTone(r.outcome)" [title]="outcomeLong(r.outcome)">{{ outcomeShort(r.outcome) }}</app-ui-badge>
+            @if (r.model; as m) {
+              <span class="runs__tail-model">{{ m }}</span>
+            }
+            @if (r.duration_ms !== null) {
+              <span class="runs__tail-dur">{{ (r.duration_ms / 1000).toFixed(1) }}s</span>
+            }
+            <span class="runs__tail-title">{{ r.title }}</span>
+          </li>
+        }
+      </ul>
+    }
+  </app-ui-section>
+</div>

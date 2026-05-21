@@ -21,6 +21,11 @@ export const hermesRoutes: Routes = [
         title: 'Hermes — Timeline',
         loadComponent: () => import('./containers/hermes-timeline/hermes-timeline').then(m => m.HermesTimeline),
       },
+      {
+        path: 'runs',
+        title: 'Hermes — Runs',
+        loadComponent: () => import('./containers/hermes-runs/hermes-runs').then(m => m.HermesRuns),
+      },
     ],
   },
 ];

@@ -241,6 +241,9 @@
       }
     </app-ui-section>
 
+    <!-- ── AGENTS ──────────────────────────────────────────── -->
+    <app-journal-agents-section [date]="key()" />
+
     <!-- ── PHONE ───────────────────────────────────────────── -->
     <app-ui-section title="Phone" [meta]="telemetryEvents().length + ' events today'">
       @if (telemetryEvents().length) {
