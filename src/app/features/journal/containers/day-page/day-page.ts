@@ -19,6 +19,7 @@ import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { JournalPager } from '../../components/journal-pager/journal-pager';
 import { JournalAgentsSection } from '../../components/journal-agents-section/journal-agents-section';
+import { JournalMcpSection } from '../../components/journal-mcp-section/journal-mcp-section';
 import {
   type DayKey,
   formatDayLong,
@@ -42,6 +43,7 @@ import {
     UiDonutChart,
     JournalPager,
     JournalAgentsSection,
+    JournalMcpSection,
   ],
   templateUrl: './day-page.html',
   styleUrl: './day-page.scss',

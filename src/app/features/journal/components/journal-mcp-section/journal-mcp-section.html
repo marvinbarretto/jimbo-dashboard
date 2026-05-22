@@ -1,0 +1,30 @@
+<app-ui-section title="MCP" [meta]="sectionMeta()">
+  @if (loading()) {
+    <app-ui-loading-state message="Reading MCP calls…" />
+  } @else if (totalCalls() === 0) {
+    <app-ui-empty-state
+      title="No MCP traffic"
+      message="No agent hit jimbo-api over MCP today. Either the registered consumers (Hermes, Claude Code) ran nothing that touched a tool, or the /mcp endpoint is down." />
+  } @else {
+    <app-ui-stack gap="lg">
+      <div class="mcp__stats">
+        <app-ui-stat-card label="Calls" [value]="totalCalls().toString()" />
+        <app-ui-stat-card label="Failed" [value]="totalErrors().toString()" [detail]="totalErrors() ? 'see breakdown' : null" />
+        <app-ui-stat-card label="Avg" [value]="avgDurationMs() + 'ms'" detail="weighted" />
+        <app-ui-stat-card label="Worst p95" [value]="worstP95Ms() + 'ms'" detail="slowest tool" />
+      </div>
+
+      <app-ui-subhead label="By tool" [count]="rows().length" />
+      <ul class="mcp__list">
+        @for (r of rows(); track r.tool) {
+          <li class="mcp__row">
+            <span class="mcp__row-tool">{{ r.tool }}</span>
+            <app-ui-badge [tone]="badgeTone(r)">{{ badgeLabel(r) }}</app-ui-badge>
+            <span class="mcp__row-latency">{{ r.avg_duration_ms }}ms · p95 {{ r.p95_duration_ms }}ms</span>
+            <span class="mcp__row-count">{{ r.count }}×</span>
+          </li>
+        }
+      </ul>
+    </app-ui-stack>
+  }
+</app-ui-section>

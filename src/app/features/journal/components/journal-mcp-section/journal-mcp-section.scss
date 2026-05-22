@@ -1,0 +1,45 @@
+.mcp__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.75rem;
+}
+
+.mcp__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mcp__row {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1fr) auto minmax(10rem, 1fr) 4ch;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.25rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+  font-size: 0.78rem;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.mcp__row-tool {
+  font-weight: 600;
+  color: var(--color-text);
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.mcp__row-latency {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mcp__row-count {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-soft);
+}
