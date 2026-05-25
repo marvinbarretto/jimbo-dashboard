@@ -82,3 +82,73 @@
   color: var(--color-text);
   overflow-wrap: anywhere;
 }
+
+.mcp__calls {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mcp__call {
+  display: grid;
+  grid-template-columns: 8ch minmax(8rem, 12rem) 5ch minmax(8rem, 1fr) 2ch;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.25rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 30%, transparent);
+  font-size: 0.72rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &--err {
+    background: color-mix(in srgb, var(--color-danger, #dc2626) 5%, transparent);
+  }
+}
+
+.mcp__call-time {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mcp__call-tool {
+  color: var(--color-text);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mcp__call-duration {
+  color: var(--color-text-soft);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.mcp__call-args {
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mcp__call-status {
+  text-align: center;
+}
+
+.mcp__call--err .mcp__call-status {
+  color: var(--color-danger, #dc2626);
+  font-weight: 600;
+}
+
+.mcp__call-errmsg {
+  grid-column: 2 / -1;
+  color: var(--color-danger, #dc2626);
+  font-size: 0.7rem;
+  padding-top: 0.15rem;
+  overflow-wrap: anywhere;
+}

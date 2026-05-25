@@ -50,6 +50,25 @@
           </ul>
         </app-ui-subsection>
       }
+
+      <app-ui-subsection label="Recent calls" [hint]="recentCalls().length + (hiddenCallCount() ? ' shown · +' + hiddenCallCount() + ' older' : '')">
+        <ul class="mcp__calls" role="list">
+          @for (c of recentCalls(); track c.ts) {
+            <li class="mcp__call" [class.mcp__call--err]="!c.success">
+              <span class="mcp__call-time">{{ c.timeUtc }}</span>
+              <span class="mcp__call-tool">{{ c.tool }}</span>
+              <span class="mcp__call-duration">{{ c.duration_ms }}ms</span>
+              <span class="mcp__call-args">{{ c.argsSummary }}</span>
+              <span class="mcp__call-status" [attr.aria-label]="c.success ? 'success' : 'failure'">
+                {{ c.success ? '✓' : '✗' }}
+              </span>
+              @if (c.error) {
+                <span class="mcp__call-errmsg">{{ c.error }}</span>
+              }
+            </li>
+          }
+        </ul>
+      </app-ui-subsection>
     </app-ui-stack>
   }
 </app-ui-section>

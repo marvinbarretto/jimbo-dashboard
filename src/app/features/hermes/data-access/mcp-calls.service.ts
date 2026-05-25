@@ -20,6 +20,7 @@ export interface McpCallTailRow {
   duration_ms: number;
   success: boolean;
   error_message: string | null;
+  args: Record<string, unknown> | null;
 }
 
 @Injectable({ providedIn: 'root' })

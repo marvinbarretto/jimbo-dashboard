@@ -22,9 +22,25 @@ interface ErrorRow {
   message: string;
 }
 
+interface CallRow {
+  ts: string;
+  timeUtc: string;
+  tool: string;
+  duration_ms: number;
+  success: boolean;
+  argsSummary: string;
+  error: string | null;
+}
+
 const HOUR_LABELS: readonly string[] = Array.from({ length: 24 }, (_, i) =>
   i.toString().padStart(2, '0'),
 );
+
+// Cap the visible per-call list. The tail itself fetches up to 1000 rows;
+// the rollup and hour chart still aggregate over all of them, but rendering
+// 1000 list items would be visual noise. 100 covers most days comfortably
+// — busy spike days get a "+N more" footer.
+const MAX_CALL_ROWS = 100;
 
 @Component({
   selector: 'app-journal-mcp-section',
@@ -150,4 +166,59 @@ export class JournalMcpSection {
     const d = new Date(ts);
     return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}Z`;
   }
+
+  // Per-call rows for the "Recent calls" table. Newest-first (tail already
+  // is). We cap at MAX_CALL_ROWS for rendering and surface "+N more" so
+  // busy days don't fill the whole viewport. The args column shows a
+  // compact one-line summary (id="...", limit=5, etc.); rows pre-args
+  // migration get "—".
+  readonly recentCalls = computed<CallRow[]>(() =>
+    this.tail()
+      .slice(0, MAX_CALL_ROWS)
+      .map((r) => ({
+        ts: r.ts,
+        timeUtc: formatTimeFullUtc(r.ts),
+        tool: r.tool,
+        duration_ms: r.duration_ms,
+        success: r.success,
+        argsSummary: summariseArgs(r.args),
+        error: r.success ? null : (r.error_message ?? '(no message)'),
+      })),
+  );
+
+  readonly hiddenCallCount = computed(() => Math.max(0, this.tail().length - MAX_CALL_ROWS));
+}
+
+function formatTimeFullUtc(ts: string): string {
+  const d = new Date(ts);
+  const hh = d.getUTCHours().toString().padStart(2, '0');
+  const mm = d.getUTCMinutes().toString().padStart(2, '0');
+  const ss = d.getUTCSeconds().toString().padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
+}
+
+// Compact one-line summary of a jsonb args object. Designed to be dense
+// enough to fit on one row next to tool name + duration. Strings are
+// quoted + truncated; nested objects/arrays render as their JSON form
+// capped at 30 chars. Empty object → "(none)". Pre-migration null → "—".
+function summariseArgs(args: Record<string, unknown> | null): string {
+  if (args === null || args === undefined) return '—';
+  const entries = Object.entries(args);
+  if (entries.length === 0) return '(none)';
+
+  const parts = entries.map(([k, v]) => `${k}=${formatArgValue(v)}`);
+  const joined = parts.join(', ');
+  return joined.length > 100 ? joined.slice(0, 97) + '…' : joined;
+}
+
+function formatArgValue(v: unknown): string {
+  if (v === null) return 'null';
+  if (typeof v === 'string') {
+    const truncated = v.length > 40 ? v.slice(0, 37) + '…' : v;
+    return `"${truncated}"`;
+  }
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  // Objects / arrays — render as compact JSON, truncate aggressively.
+  const json = JSON.stringify(v);
+  return json.length > 30 ? json.slice(0, 27) + '…' : json;
 }
