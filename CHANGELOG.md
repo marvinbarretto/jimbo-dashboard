@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.67](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.66...v0.0.67) (2026-05-25)
+
+
+### Features
+
+* **journal-mcp:** "Recent calls" per-call drill-down with args ([bbf329c](https://github.com/marvinbarretto/jimbo-dashboard/commit/bbf329c1d720888c7d92b1559dc23a70abc08ab8))
+* **journal-mcp:** hourly bar chart + conditional Errors subsection ([8badb04](https://github.com/marvinbarretto/jimbo-dashboard/commit/8badb040e5827e5d66b7c0a1601704c28fb49bd2))
+* **journal:** MCP section on the day-page ([0def2c8](https://github.com/marvinbarretto/jimbo-dashboard/commit/0def2c89af717dc6e2e82b06830046426539b61a))
+
 ### [0.0.66](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.65...v0.0.66) (2026-05-21)
 
 
