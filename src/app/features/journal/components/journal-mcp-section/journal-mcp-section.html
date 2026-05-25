@@ -14,6 +14,15 @@
         <app-ui-stat-card label="Worst p95" [value]="worstP95Ms() + 'ms'" detail="slowest tool" />
       </div>
 
+      <app-ui-subsection label="Calls by hour (UTC)">
+        <app-ui-bar-chart
+          [labels]="hourLabels()"
+          [values]="hourValues()"
+          label="Calls"
+          accent="rgba(96, 165, 250, 0.7)"
+        />
+      </app-ui-subsection>
+
       <app-ui-subhead label="By tool" [count]="rows().length" />
       <ul class="mcp__list">
         @for (r of rows(); track r.tool) {
@@ -25,6 +34,22 @@
           </li>
         }
       </ul>
+
+      @if (errorRows().length) {
+        <app-ui-subsection label="Errors today" [hint]="errorRows().length + ' failed'">
+          <ul class="mcp__errors">
+            @for (e of errorRows(); track e.ts) {
+              <li class="mcp__error">
+                <span class="mcp__error-meta">
+                  <app-ui-badge tone="danger">{{ e.tool }}</app-ui-badge>
+                  <span class="mcp__error-time">{{ formatTimeUtc(e.ts) }}</span>
+                </span>
+                <span class="mcp__error-message">{{ e.message }}</span>
+              </li>
+            }
+          </ul>
+        </app-ui-subsection>
+      }
     </app-ui-stack>
   }
 </app-ui-section>

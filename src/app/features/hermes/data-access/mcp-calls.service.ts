@@ -37,9 +37,13 @@ export class McpCallsService {
     );
   }
 
-  tail(limit = 50): Observable<{ items: McpCallTailRow[] }> {
+  tail(opts: { limit?: number; since?: string; until?: string } = {}): Observable<{ items: McpCallTailRow[] }> {
+    const params = new URLSearchParams();
+    params.set('limit', String(opts.limit ?? 50));
+    if (opts.since) params.set('since', opts.since);
+    if (opts.until) params.set('until', opts.until);
     return this.http.get<{ items: McpCallTailRow[] }>(
-      `${this.base}/api/mcp-calls/tail?limit=${limit}`,
+      `${this.base}/api/mcp-calls/tail?${params.toString()}`,
     );
   }
 }
