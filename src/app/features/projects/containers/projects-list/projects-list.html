@@ -88,8 +88,30 @@
             />
           }
           <a [routerLink]="['/vault-items', epic.seq]" class="epic-row__title">{{ epic.title }}</a>
-          @if ((epic.children_count ?? 0) > 0) {
-            <span class="epic-row__children">{{ epic.children_count }} tasks</span>
+          @let total = epic.children_count ?? 0;
+          @let done = epic.children_done_count ?? 0;
+          @let active = epic.children_active_count ?? 0;
+          @let blocked = epic.children_blocked_count ?? 0;
+          @let done7d = epic.children_done_7d ?? 0;
+          @if (total > 0) {
+            <div class="epic-row__progress" [attr.aria-label]="done + ' of ' + total + ' tasks complete'">
+              <div class="epic-row__bar">
+                <div class="epic-row__bar-fill" [style.width.%]="(done / total) * 100"></div>
+              </div>
+              <span class="epic-row__count">{{ done }}/{{ total }}</span>
+            </div>
+            @if (done7d > 0) {
+              <span class="epic-row__velocity" title="Completed in last 7 days">+{{ done7d }} 7d</span>
+            }
+            @if (active > 0) {
+              <span class="epic-row__active" title="Active tasks">{{ active }} active</span>
+            }
+            @if (blocked > 0) {
+              <span class="epic-row__blocked" title="Tasks with blocked_by set">{{ blocked }} blocked</span>
+            }
+            @if (isStalled(epic)) {
+              <span class="epic-row__stalled" title="No child completion in 30 days">stalled</span>
+            }
           }
         </div>
       }

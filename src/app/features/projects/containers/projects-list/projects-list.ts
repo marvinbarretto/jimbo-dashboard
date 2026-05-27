@@ -61,6 +61,19 @@ export class ProjectsList {
     return id ? this.service.getById(id)?.color_token ?? null : null;
   }
 
+  // An epic is "stalled" when it has incomplete children but nothing has
+  // been completed in the last 30 days. Surfaces the case where the work
+  // structure exists but momentum has dropped — distinct from "blocked",
+  // which is a per-task state flag.
+  isStalled(epic: { children_count?: number; children_done_count?: number; last_child_completed_at?: string | null }): boolean {
+    const total = epic.children_count ?? 0;
+    const done = epic.children_done_count ?? 0;
+    if (total === 0 || done === total) return false;
+    if (!epic.last_child_completed_at) return true;
+    const ageDays = (Date.now() - new Date(epic.last_child_completed_at).getTime()) / 86_400_000;
+    return ageDays > 30;
+  }
+
   remove(id: ProjectId): void {
     if (confirm(`Remove project ${id}?`)) {
       this.service.remove(id);

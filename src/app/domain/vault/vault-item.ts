@@ -232,6 +232,16 @@ export interface VaultItem {
   open_questions_count?:  number;
   latest_activity_at?:    string | null;
   children_count?:        number;
+  // Per-status breakdown + recent-completion velocity for the children.
+  // Lets epic rows render done/total + stalled indicators without an N+1
+  // walk over the children. Populated by the same board-list query.
+  children_done_count?:   number;
+  children_active_count?: number;
+  children_inbox_count?:  number;
+  children_blocked_count?:number;
+  children_done_7d?:      number;
+  children_done_30d?:     number;
+  last_child_completed_at?: string | null;
   // Raw shape of latest activity event with actor display name joined; the
   // board formats this into LiveSnapshot for the expanded card view.
   latest_event?:          LiveEventEmbed | null;

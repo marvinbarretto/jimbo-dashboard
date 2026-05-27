@@ -77,7 +77,17 @@ export const ApiVaultItemSchema = z.object({
   primary_project_name: z.string().nullable(),
   open_questions_count: z.number().int().nonnegative(),
   latest_activity_at:   z.string().nullable(),
-  children_count:       z.number().int().nonnegative(),
+  children_count:           z.number().int().nonnegative(),
+  // Per-status breakdown + recent-completion velocity, computed in one
+  // LATERAL aggregate in jimbo-api's listBoardNotes. Powers the "X/Y done"
+  // and "stalled" indicators on the projects list + project-landing.
+  children_done_count:      z.number().int().nonnegative().optional().default(0),
+  children_active_count:    z.number().int().nonnegative().optional().default(0),
+  children_inbox_count:     z.number().int().nonnegative().optional().default(0),
+  children_blocked_count:   z.number().int().nonnegative().optional().default(0),
+  children_done_7d:         z.number().int().nonnegative().optional().default(0),
+  children_done_30d:        z.number().int().nonnegative().optional().default(0),
+  last_child_completed_at:  z.string().nullable().optional().default(null),
   latest_event:         LatestEventSchema.nullable(),
   latest_message:       LatestMessageSchema.nullable(),
   days_in_column:       z.number(),
