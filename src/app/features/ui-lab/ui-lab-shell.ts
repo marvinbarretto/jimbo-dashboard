@@ -68,7 +68,8 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'hybrid-edit',             name: 'Hybrid Edit',           group: 'forms-editing',                                      description: 'Inline edit for scalar fields; advanced edit for structured fields.' },
   { id: 'mention-chip-strip',      name: 'Mention Chip Strip',    group: 'forms-editing',   selector: 'app-ui-mention-chip-strip', description: 'Tags / projects / assignee / related-items chip strip with × remove.' },
   { id: 'form-actions',            name: 'Form Actions',          group: 'forms-editing',   selector: 'app-ui-form-actions',   description: 'Standardised bottom-of-form action row layout.' },
-  { id: 'tab-bar',                 name: 'Tab Bar',               group: 'forms-editing',   selector: 'app-ui-tab-bar',        description: 'Underline-style tab bar for router or signal-based tabs.' },
+  { id: 'tab-bar',                 name: 'Tab Bar',               group: 'forms-editing',   selector: 'app-ui-tab-bar',        description: 'Underline-style tab bar for router or signal-based tabs. Sticky page-level nav.' },
+  { id: 'ui-inline-tabs',          name: 'Inline Tabs',           group: 'forms-editing',   selector: 'app-ui-inline-tabs',    description: 'Lightweight in-page tabs for facet-switching inside a content section. Counts + colour dots. No page chrome.' },
   { id: 'ui-segmented',            name: 'Segmented Control',     group: 'forms-editing',   selector: 'app-ui-segmented',      description: 'Single-select one-of-N control. View-mode toggles (verbosity, message kind, density).' },
   { id: 'ui-filter-pills',         name: 'Filter Pills',          group: 'forms-editing',   selector: 'app-ui-filter-pills',   description: 'Multi-select pill row. Host owns active-set semantics (including exclusive "all").' },
 

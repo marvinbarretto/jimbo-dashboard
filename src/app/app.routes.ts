@@ -104,6 +104,7 @@ export const routes: Routes = [
       { path: 'entity-chip',             loadComponent: () => import('./features/ui-lab/sections/entity-chip-section').then(m => m.EntityChipSection) },
       { path: 'vault-detail-primitives', loadComponent: () => import('./features/ui-lab/sections/vault-detail-primitives-section').then(m => m.VaultDetailPrimitivesSection) },
       { path: 'tab-bar',                 loadComponent: () => import('./features/ui-lab/sections/tab-bar-section').then(m => m.TabBarSection) },
+      { path: 'ui-inline-tabs',          loadComponent: () => import('./features/ui-lab/sections/ui-inline-tabs-section').then(m => m.UiInlineTabsSection) },
       { path: 'ui-segmented',            loadComponent: () => import('./features/ui-lab/sections/ui-segmented-section').then(m => m.UiSegmentedSection) },
       { path: 'ui-filter-pills',         loadComponent: () => import('./features/ui-lab/sections/ui-filter-pills-section').then(m => m.UiFilterPillsSection) },
       { path: 'list-workflow',           loadComponent: () => import('./features/ui-lab/sections/list-workflow-section').then(m => m.ListWorkflowSection) },
