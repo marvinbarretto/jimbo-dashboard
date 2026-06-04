@@ -25,6 +25,7 @@ import type {
   ProjectRef,
   ParentEpicRef,
   SourceLabel,
+  Genesis,
 } from '@shared/components/vault-card/card-context';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
@@ -240,14 +241,20 @@ export class ExecutionBoard {
   // actor so the card never has to render an empty owner slot.
   cardContextFor(card: ColumnCard): CardContext {
     if (card.kind === 'dispatch') {
+      const item = this.vaultItemsService.getById(card.entry.task_id) ?? null;
       const ctx: DispatchCardContext = {
         kind: 'dispatch',
         entry: card.entry,
-        item: this.vaultItemsService.getById(card.entry.task_id) ?? null,
+        item,
         project: this.primaryProject(card.entry),
         owner: card.entry.executor,
         skillDisplayName: this.skillDisplayName(card.entry),
         parentEpic: this.parentEpicFor(card.entry.task_id as string),
+        // TODO: model_id lives on activity_event (per actors README), not on
+        // the dispatch row. Needs either a hermes-side denorm onto dispatch at
+        // run start, or a per-card activity-event join. Null for now.
+        modelId: null,
+        genesis: this.genesisFor(item),
       };
       return ctx;
     }
@@ -264,6 +271,29 @@ export class ExecutionBoard {
       sourceUrl: item.source?.url ?? null,
     };
     return ctx;
+  }
+
+  // Map an item's source + parentage into a Genesis chip descriptor. Auto wins
+  // over source when there's a parent (the parent decides this child exists),
+  // otherwise we read off the source discriminator.
+  private genesisFor(item: VaultItem | null): Genesis | null {
+    if (!item) return null;
+    if (item.parent_id) {
+      const parent = this.vaultItemsService.getById(item.parent_id);
+      const parentSeq = parent?.seq ?? null;
+      return { kind: 'auto', label: parentSeq ? `↳ #${parentSeq}` : '↳ auto', parentSeq };
+    }
+    const src = item.source;
+    if (!src) return null;
+    switch (src.kind) {
+      case 'manual':     return { kind: 'manual',   label: 'manual',         parentSeq: null };
+      case 'agent':      return { kind: 'auto',     label: `auto · @${src.ref}`, parentSeq: null };
+      case 'github':     return { kind: 'github',   label: 'github',         parentSeq: null };
+      case 'pr-comment': return { kind: 'github',   label: 'pr-comment',     parentSeq: null };
+      case 'email':      return { kind: 'external', label: 'email',          parentSeq: null };
+      case 'telegram':   return { kind: 'external', label: 'telegram',       parentSeq: null };
+      case 'url':        return { kind: 'external', label: 'url',            parentSeq: null };
+    }
   }
 
   private sourceLabelFor(item: VaultItem): SourceLabel | null {
@@ -352,9 +382,14 @@ export class ExecutionBoard {
     const entries = this.applyFilters({ skipExecutor: true });
     const counts = new Map<string, number>();
     for (const e of entries) {
-      counts.set(e.executor as string, (counts.get(e.executor as string) ?? 0) + 1);
+      if (e.executor == null) continue;
+      counts.set(e.executor, (counts.get(e.executor) ?? 0) + 1);
     }
-    const executorIds = new Set(this.dispatchService.entries().map(e => e.executor as string));
+    const executorIds = new Set<string>(
+      this.dispatchService.entries()
+        .map(e => e.executor)
+        .filter((id): id is NonNullable<typeof id> => id != null),
+    );
     const options: FilterOption<string>[] = Array.from(executorIds).map(id => ({
       value:      id,
       label:      id,
@@ -418,7 +453,7 @@ export class ExecutionBoard {
         if (!skillF.has(entry.skill as string)) return false;
       }
       if (!opts.skipExecutor && execF.size > 0) {
-        if (!execF.has(entry.executor as string)) return false;
+        if (entry.executor == null || !execF.has(entry.executor)) return false;
       }
       if (!opts.skipProject && projF.size > 0) {
         const links = this.vaultItemProjectsService.projectsFor(entry.task_id)();
