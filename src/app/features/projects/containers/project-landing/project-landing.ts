@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, TemplateRef, computed, effect, inject, viewChild } from '@angular/core';
 import { type CellContext, type ColumnDef, createColumnHelper } from '@tanstack/angular-table';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, httpResource } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -47,6 +47,16 @@ interface EpicGroup {
   readonly epic: VaultItem;
   readonly outstanding: readonly VaultItem[];
   readonly done: readonly VaultItem[];
+}
+
+interface BeliefTag { key: string; value: string }
+interface Belief { id: string; text: string; tags: BeliefTag[] }
+interface BeliefSection { name: string; letter: string; beliefs: Belief[] }
+interface ProjectUnderstanding {
+  short_code: string | null;
+  working_doc_url: string | null;
+  sections: BeliefSection[];
+  last_updated: string | null;
 }
 
 // Project landing page — the home for a project. Two-column layout on
@@ -98,6 +108,16 @@ export class ProjectLanding {
   private readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id') ?? '')));
 
   readonly project = computed(() => this.projects.getById(this.id() ?? ''));
+
+  // httpResource — signal-based; re-fetches whenever the route id changes.
+  // experimental API (Angular 19.2+) — no stability concern at Angular 21.
+  readonly understandingResource = httpResource<ProjectUnderstanding>(() => {
+    const id = this.id();
+    if (!id) return undefined;
+    return `/api/projects/${id}/understanding`;
+  });
+
+  readonly understanding = this.understandingResource.value;
 
   readonly crumbs = computed<readonly Crumb[]>(() => {
     const p = this.project();
@@ -305,6 +325,10 @@ export class ProjectLanding {
 
   statusTone(status: string): 'success' | 'neutral' {
     return status === 'active' ? 'success' : 'neutral';
+  }
+
+  beliefTag(belief: Belief, key: string): string | null {
+    return belief.tags.find(t => t.key === key)?.value ?? null;
   }
 
   // Lightweight derived helpers — used by template stat tiles for individual

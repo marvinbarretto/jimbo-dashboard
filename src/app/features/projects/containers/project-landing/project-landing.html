@@ -200,6 +200,48 @@
       <!-- RIGHT column: brief + facts ─────────────────────────────── -->
       <app-ui-stack class="project-landing__aside" gap="lg">
 
+        <!-- Understanding: belief blocks synthesised from recons + working doc -->
+        @if (understanding(); as u) {
+          <app-ui-section title="Understanding" [collapsible]="false">
+            @if (u.working_doc_url) {
+              <p class="understanding__doc-link">
+                Working doc: <a [href]="u.working_doc_url" target="_blank" rel="noopener">open</a>
+              </p>
+            }
+            @if (u.sections.length === 0) {
+              <p class="understanding__empty">No beliefs yet. Run the synthesise-understanding skill post-recon to populate.</p>
+            } @else {
+              <app-ui-stack gap="md">
+                @for (section of u.sections; track section.letter) {
+                  <div class="belief-section">
+                    <h3 class="belief-section__heading">
+                      {{ section.name }}
+                      <span class="belief-section__letter">{{ section.letter }}</span>
+                    </h3>
+                    <ul class="belief-section__list">
+                      @for (belief of section.beliefs; track belief.id) {
+                        <li class="belief" [class.belief--corrected]="beliefTag(belief, 'corrected')">
+                          <code class="belief__id">{{ belief.id }}</code>
+                          <span class="belief__text">{{ belief.text }}</span>
+                          @if (beliefTag(belief, 'corrected'); as correctedDate) {
+                            <span class="belief__badge belief__badge--corrected" [title]="'Corrected ' + correctedDate">corrected</span>
+                          }
+                          @if (beliefTag(belief, 'expires'); as expiresDate) {
+                            <span class="belief__badge belief__badge--expires" [title]="'Expires ' + expiresDate">exp {{ expiresDate }}</span>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </app-ui-stack>
+            }
+            @if (u.last_updated) {
+              <p class="understanding__updated">Last updated {{ u.last_updated }}</p>
+            }
+          </app-ui-section>
+        }
+
         <!-- Facts panel: status / owner / repo / created -->
         <app-ui-section title="Facts" [collapsible]="false">
           <app-ui-card tone="soft" [compact]="true">
