@@ -50,6 +50,79 @@
       <!-- LEFT column: work surface ─────────────────────────────────── -->
       <app-ui-stack class="project-landing__main" gap="lg">
 
+        <!-- Understanding: belief blocks synthesised from recons + working doc.
+             Placed top of main column so live state is the primary read. -->
+        @if (understanding(); as u) {
+          <app-ui-section title="Understanding" [collapsible]="true" [expanded]="true">
+            @if (u.working_doc_url) {
+              <p class="understanding__doc-link">
+                Working doc: <a [href]="u.working_doc_url" target="_blank" rel="noopener">open</a>
+              </p>
+            }
+            @if (openBeliefs().length > 0) {
+              <div class="open-flags">
+                <p class="open-flags__label">Open questions</p>
+                <ul class="open-flags__list">
+                  @for (b of openBeliefs(); track b.id) {
+                    <li class="open-flags__item">
+                      <code class="belief__id">{{ b.id }}</code>
+                      <span class="open-flags__text">{{ b.text }}</span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+            @if (u.sections.length === 0) {
+              <p class="understanding__empty">No beliefs yet. Run the synthesise-understanding skill post-recon to populate.</p>
+            } @else {
+              <div class="belief-grid">
+                @for (section of u.sections; track section.letter) {
+                  <div class="belief-section">
+                    <h3 class="belief-section__heading">
+                      <span class="belief-section__letter">{{ section.letter }}</span>
+                      {{ section.name }}
+                    </h3>
+                    <ul class="belief-section__list">
+                      @for (belief of section.beliefs; track belief.id) {
+                        <li class="belief" [class.belief--corrected]="beliefTag(belief, 'corrected')">
+                          <code class="belief__id">{{ belief.id }}</code>
+                          <span class="belief__text">{{ belief.text }}</span>
+                          @if (beliefTag(belief, 'corrected'); as correctedDate) {
+                            <span class="belief__badge belief__badge--corrected" [title]="'Corrected ' + correctedDate">corrected</span>
+                          }
+                          @if (beliefTag(belief, 'expires'); as expiresDate) {
+                            <span class="belief__badge belief__badge--expires" [title]="'Expires ' + expiresDate">exp {{ expiresDate }}</span>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </div>
+            }
+            @if (u.last_updated) {
+              <p class="understanding__updated">Last updated {{ u.last_updated }}</p>
+            }
+          </app-ui-section>
+        }
+
+        <!-- In-flight dispatch tasks — running or approved for this project -->
+        @if (inFlightTasks().length > 0) {
+          <app-ui-section [title]="'In flight (' + inFlightTasks().length + ')'" [collapsible]="true" [expanded]="true">
+            <ul class="inflight__list">
+              @for (task of inFlightTasks(); track task.id) {
+                <li class="inflight__item">
+                  <span class="inflight__status inflight__status--{{ task.status }}">{{ task.status }}</span>
+                  <span class="inflight__title">{{ task.task_title ?? task.task_id }}</span>
+                  @if (task.executor) {
+                    <span class="inflight__actor">@{{ task.executor }}</span>
+                  }
+                </li>
+              }
+            </ul>
+          </app-ui-section>
+        }
+
         <!-- Epics with their child items -->
         <app-ui-section title="Epics" [collapsible]="false">
           @if (epicGroups().length === 0) {
@@ -169,18 +242,21 @@
           }
         </app-ui-section>
 
-        <!-- Project-level activity -->
+        <!-- Project activity — note_activity rows for vault notes linked to this project -->
         <app-ui-section title="Project activity" [collapsible]="true">
-          @if (recentEvents().length === 0) {
-            <app-ui-empty-state message="No project-level activity recorded." />
+          @if (projectActivity().length === 0) {
+            <app-ui-empty-state message="No activity on project notes yet." />
           } @else {
             <app-ui-card tone="soft" [compact]="true">
               <ul class="project-landing__activity">
-                @for (event of recentEvents(); track event.id) {
+                @for (item of projectActivity(); track item.id) {
                   <li class="project-landing__activity-row">
-                    <span class="project-landing__activity-actor">{{ actorDisplay(event.actor_id) }}</span>
-                    <span class="project-landing__activity-desc">{{ eventDescription(event) }}</span>
-                    <span class="project-landing__activity-when">· {{ event.at | relativeTime }}</span>
+                    <span class="project-landing__activity-actor">@{{ item.actor }}</span>
+                    <span class="project-landing__activity-desc">{{ activityDesc(item) }}</span>
+                    @if (item.note_title) {
+                      <span class="project-landing__activity-note" [title]="item.note_id">· {{ item.note_title }}</span>
+                    }
+                    <span class="project-landing__activity-when">· {{ item.ts | relativeTime }}</span>
                   </li>
                 }
               </ul>
@@ -199,48 +275,6 @@
 
       <!-- RIGHT column: brief + facts ─────────────────────────────── -->
       <app-ui-stack class="project-landing__aside" gap="lg">
-
-        <!-- Understanding: belief blocks synthesised from recons + working doc -->
-        @if (understanding(); as u) {
-          <app-ui-section title="Understanding" [collapsible]="false">
-            @if (u.working_doc_url) {
-              <p class="understanding__doc-link">
-                Working doc: <a [href]="u.working_doc_url" target="_blank" rel="noopener">open</a>
-              </p>
-            }
-            @if (u.sections.length === 0) {
-              <p class="understanding__empty">No beliefs yet. Run the synthesise-understanding skill post-recon to populate.</p>
-            } @else {
-              <app-ui-stack gap="md">
-                @for (section of u.sections; track section.letter) {
-                  <div class="belief-section">
-                    <h3 class="belief-section__heading">
-                      {{ section.name }}
-                      <span class="belief-section__letter">{{ section.letter }}</span>
-                    </h3>
-                    <ul class="belief-section__list">
-                      @for (belief of section.beliefs; track belief.id) {
-                        <li class="belief" [class.belief--corrected]="beliefTag(belief, 'corrected')">
-                          <code class="belief__id">{{ belief.id }}</code>
-                          <span class="belief__text">{{ belief.text }}</span>
-                          @if (beliefTag(belief, 'corrected'); as correctedDate) {
-                            <span class="belief__badge belief__badge--corrected" [title]="'Corrected ' + correctedDate">corrected</span>
-                          }
-                          @if (beliefTag(belief, 'expires'); as expiresDate) {
-                            <span class="belief__badge belief__badge--expires" [title]="'Expires ' + expiresDate">exp {{ expiresDate }}</span>
-                          }
-                        </li>
-                      }
-                    </ul>
-                  </div>
-                }
-              </app-ui-stack>
-            }
-            @if (u.last_updated) {
-              <p class="understanding__updated">Last updated {{ u.last_updated }}</p>
-            }
-          </app-ui-section>
-        }
 
         <!-- Facts panel: status / owner / repo / created -->
         <app-ui-section title="Facts" [collapsible]="false">
@@ -312,7 +346,12 @@
           </app-ui-stack>
         </app-ui-section>
 
-        <app-ui-section title="Brief — state" [collapsible]="false">
+        <!-- current_state stores the belief markdown — collapse when structured
+             beliefs are rendered above so the raw store doesn't confuse. -->
+        <app-ui-section
+          title="Brief — state"
+          [collapsible]="true"
+          [expanded]="!(understanding()?.sections?.length)">
           <app-ui-stack gap="md">
             <app-project-brief-field
               label="Current state"

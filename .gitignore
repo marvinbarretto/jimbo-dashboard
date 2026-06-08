@@ -49,6 +49,7 @@ __screenshots__/
 /playwright-report
 /test-results
 /.playwright-mcp
+/playwright/.auth
 
 # Generated assets
 /public/coverage-summary.json

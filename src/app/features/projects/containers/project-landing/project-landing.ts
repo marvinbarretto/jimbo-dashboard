@@ -59,6 +59,33 @@ interface ProjectUnderstanding {
   last_updated: string | null;
 }
 
+interface DispatchTask {
+  id: number;
+  task_id: string;
+  task_title: string | null;
+  task_seq: number | null;
+  status: string;
+  executor: string | null;
+  skill: string | null;
+  flow: string;
+  started_at: string | null;
+  approved_at: string | null;
+  result_summary: string | null;
+}
+
+interface ProjectActivityItem {
+  id: number;
+  note_id: string;
+  note_title: string | null;
+  note_seq: number | null;
+  ts: string;
+  actor: string;
+  action: string;
+  from_value: string | null;
+  to_value: string | null;
+  reason: string | null;
+}
+
 // Project landing page — the home for a project. Two-column layout on
 // desktop: epics/items dominate the left, brief + facts pinned on the right.
 @Component({
@@ -118,6 +145,35 @@ export class ProjectLanding {
   });
 
   readonly understanding = this.understandingResource.value;
+
+  // Beliefs flagged {open:true} OR containing unconfirmed/open keywords.
+  // These surface as a callout at the top of the Understanding section.
+  readonly openBeliefs = computed<Belief[]>(() => {
+    const u = this.understanding();
+    if (!u) return [];
+    const OPEN_KEYWORDS = /\b(unconfirmed|not yet confirmed|not confirmed|under consideration|tbd|tbc|to be confirmed|not yet decided)\b/i;
+    return u.sections.flatMap(s => s.beliefs).filter(b => {
+      if (b.tags.some(t => t.key === 'open' && t.value === 'true')) return true;
+      if (b.tags.some(t => t.key === 'corrected')) return false;
+      return OPEN_KEYWORDS.test(b.text);
+    });
+  });
+
+  readonly dispatchResource = httpResource<{ items: DispatchTask[]; total: number }>(() => {
+    const id = this.id();
+    if (!id) return undefined;
+    return `/api/dispatch/queue?status=running,approved&project_id=${id}&limit=10`;
+  });
+
+  readonly inFlightTasks = computed(() => this.dispatchResource.value()?.items ?? []);
+
+  readonly projectActivityResource = httpResource<{ items: ProjectActivityItem[] }>(() => {
+    const id = this.id();
+    if (!id) return undefined;
+    return `/api/projects/${id}/activity?limit=20`;
+  });
+
+  readonly projectActivity = computed(() => this.projectActivityResource.value()?.items ?? []);
 
   readonly crumbs = computed<readonly Crumb[]>(() => {
     const p = this.project();
@@ -329,6 +385,27 @@ export class ProjectLanding {
 
   beliefTag(belief: Belief, key: string): string | null {
     return belief.tags.find(t => t.key === key)?.value ?? null;
+  }
+
+  activityDesc(item: ProjectActivityItem): string {
+    switch (item.action) {
+      case 'status_changed':      return `status → ${item.to_value ?? '?'}`;
+      case 'dispatch_started':    return 'dispatch started';
+      case 'commission_completed': return 'commission completed';
+      case 'submitted_analysis':  return `analysis submitted → ${item.to_value ?? '?'}`;
+      case 'submitted_decomposition': return 'decomposition submitted';
+      case 'question_raised':     return `question raised${item.to_value ? ` for @${item.to_value}` : ''}`;
+      case 'question_answered':   return 'question answered';
+      case 'reassigned':          return `reassigned → ${item.to_value ?? '?'}`;
+      case 'priority_changed':    return `priority ${item.from_value} → ${item.to_value}`;
+      case 'grooming_status_changed': return `grooming → ${item.to_value}`;
+      case 'assigned':            return `assigned to ${item.to_value ?? '?'}`;
+      case 'unassigned':          return 'unassigned';
+      case 'feedback_accept':     return 'feedback accepted';
+      case 'feedback_reject':     return 'feedback rejected';
+      case 'feedback_archive':    return 'archived via feedback';
+      default:                    return item.action;
+    }
   }
 
   // Lightweight derived helpers — used by template stat tiles for individual
