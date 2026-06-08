@@ -43,6 +43,28 @@
       @if (d.entry.retry_count > 0) {
         <span class="vault-card__retry" [attr.title]="'Attempt ' + (d.entry.retry_count + 1)">↻{{ d.entry.retry_count }}</span>
       }
+      @if (genesis(); as g) {
+        @if (g.parentSeq != null) {
+          <a class="vault-card__genesis"
+             [class.vault-card__genesis--manual]="g.kind === 'manual'"
+             [class.vault-card__genesis--auto]="g.kind === 'auto'"
+             [class.vault-card__genesis--github]="g.kind === 'github'"
+             [class.vault-card__genesis--external]="g.kind === 'external'"
+             [routerLink]="['/vault-items', g.parentSeq]"
+             [attr.title]="'Genesis: ' + g.label">
+            {{ g.label }}
+          </a>
+        } @else {
+          <span class="vault-card__genesis"
+                [class.vault-card__genesis--manual]="g.kind === 'manual'"
+                [class.vault-card__genesis--auto]="g.kind === 'auto'"
+                [class.vault-card__genesis--github]="g.kind === 'github'"
+                [class.vault-card__genesis--external]="g.kind === 'external'"
+                [attr.title]="'Genesis: ' + g.label">
+            {{ g.label }}
+          </span>
+        }
+      }
     } @else {
       <app-ui-dropdown #priorityDrop ariaHaspopup="listbox" ariaLabel="Set priority">
         @if (priority() !== null) {
@@ -135,6 +157,9 @@
     } @else if (dispatch(); as d) {
       @if (d.owner) {
         <app-actor-avatar [actor]="d.owner" size="md" />
+      }
+      @if (modelId(); as m) {
+        <span class="vault-card__model" [attr.title]="'Model used for this run: ' + m">{{ m }}</span>
       }
     }
 

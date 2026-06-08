@@ -158,6 +158,28 @@
   border-radius: var(--radius);
 }
 
+// Item-level provenance chip. Deliberately rectangular + small so it can't be
+// confused with the round actor avatar (which is run-level "who executed").
+.vault-card__genesis {
+  font-size: 0.58rem;
+  line-height: 1.4;
+  padding: 0 0.3rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-border) 35%, transparent);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+
+  &--manual   { color: var(--color-text); }
+  &--auto     { color: var(--color-accent); border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border)); }
+  &--github   { color: var(--color-text-muted); }
+  &--external { font-style: italic; }
+}
+a.vault-card__genesis:hover { background: color-mix(in srgb, var(--color-accent) 18%, transparent); }
+
 .vault-card__age {
   margin-left: auto;
   font-size: 0.6rem;
@@ -253,6 +275,15 @@
   align-self: flex-start;
   border-left: 3px solid var(--proj-tint, var(--color-border));
   font-family: var(--font-mono);
+}
+
+// Per-run model identifier — sits in the identity row next to the executor
+// avatar. Muted and monospaced; not a chip, just a label.
+.vault-card__model {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  white-space: nowrap;
 }
 
 .vault-card__rollup {

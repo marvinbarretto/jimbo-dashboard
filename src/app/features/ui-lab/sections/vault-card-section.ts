@@ -292,6 +292,8 @@ export class VaultCardSection {
         item: baseItem({ seq: 2456, title: 'extract shared kanban board layout', grooming_status: 'ready', assigned_to: actorId('ralph') }),
         project: PROJ_LOCALSHOUT, owner: actorId('ralph'),
         skillDisplayName: 'ralph/refactor-css', parentEpic: { seq: 2350, title: 'Unify kanban cards' },
+        modelId: 'ollama/llama-3.1-8b',
+        genesis: { kind: 'auto', label: '↳ #2350', parentSeq: 2350 },
       },
     },
     {
@@ -312,6 +314,8 @@ export class VaultCardSection {
           grooming_status: 'ready', assigned_to: actorId('ralph') }),
         project: PROJ_HERMES, owner: actorId('ralph'),
         skillDisplayName: 'ralph/run-typecheck', parentEpic: null,
+        modelId: 'anthropic/claude-sonnet-4-6',
+        genesis: { kind: 'manual', label: 'manual', parentSeq: null },
       },
     },
     {

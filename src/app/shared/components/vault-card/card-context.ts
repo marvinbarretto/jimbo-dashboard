@@ -45,6 +45,18 @@ export interface GroomingCardContext {
   readonly sourceUrl:          string | null;
 }
 
+// Where the vault item came from — frozen at creation, item-level. Distinct
+// from the dispatch's (actor, model, skill) signature which is per-run.
+// `parentSeq` is set when this item was spawned by another (e.g. auto-decomposed
+// from an epic) so the chip can link back.
+export type GenesisKind = 'manual' | 'auto' | 'github' | 'external';
+
+export interface Genesis {
+  readonly kind:       GenesisKind;
+  readonly label:      string;
+  readonly parentSeq?: number | null;
+}
+
 export interface DispatchCardContext {
   readonly kind:             'dispatch';
   readonly entry:            DispatchQueueEntry;
@@ -53,6 +65,12 @@ export interface DispatchCardContext {
   readonly owner:            ActorId | null;
   readonly skillDisplayName: string | null;
   readonly parentEpic:       ParentEpicRef | null;
+  // The model the executor picked for this run. Lives on the activity event
+  // (per actors README — "Boris is not Sonnet 4.6"), so it's only known once
+  // the run is in flight or done. Null until then.
+  readonly modelId:          string | null;
+  // How the vault item came to exist. Item-level, not run-level.
+  readonly genesis:          Genesis | null;
 }
 
 export interface ManualCardContext {

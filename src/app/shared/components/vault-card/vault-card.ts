@@ -307,6 +307,12 @@ export class VaultCard {
     const ctx = this.context();
     return ctx.kind === 'dispatch' ? ctx : null;
   });
+
+  // Genesis chip + model line — both live on dispatch contexts. The genesis
+  // chip surfaces how the item came to exist (manual / auto-decomposed / etc);
+  // the model line surfaces which model the executor picked for this run.
+  protected readonly genesis = computed(() => this.dispatch()?.genesis ?? null);
+  protected readonly modelId = computed(() => this.dispatch()?.modelId ?? null);
   protected readonly manual = computed(() => {
     const ctx = this.context();
     return ctx.kind === 'manual' ? ctx : null;
