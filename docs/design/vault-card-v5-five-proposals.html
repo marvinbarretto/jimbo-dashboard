@@ -1,0 +1,1545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vault card · five proposals</title>
+<style>
+  /* ── Tokens lifted directly from src/styles.scss so this feels native ── */
+  :root {
+    --color-bg:             #060b12;
+    --color-surface:        #0d1520;
+    --color-surface-raised: #101b28;
+    --color-surface-soft:   #091119;
+    --color-border:         #1f394c;
+    --color-text:           #e6f7ff;
+    --color-text-muted:     #83a6b8;
+    --color-text-soft:      #aac8d6;
+    --color-accent:         #3dd6ff;
+    --color-danger:         #ff5d7a;
+    --color-success:        #6dffb3;
+    --color-warning:        #ffd86b;
+    --color-info:           #69b8ff;
+
+    --actor-marvin: #e08850;
+    --actor-ralph:  #5fb3a1;
+    --actor-boris:  #6b95d6;
+    --actor-jimbo:  #a878d6;
+
+    --proj-jimbo:    var(--actor-ralph);
+    --proj-hermes:   var(--actor-jimbo);
+    --proj-local:    var(--actor-boris);
+    --proj-personal: var(--actor-marvin);
+
+    --font-sans: system-ui, -apple-system, sans-serif;
+    --font-mono: 'SF Mono', 'JetBrains Mono', 'Fira Code', monospace;
+
+    --radius: 2px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Page chrome ── */
+
+  .page { max-width: 1640px; margin: 0 auto; padding: 2rem 1.75rem 5rem; }
+
+  .doc__kicker {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--color-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    margin-bottom: 0.4rem;
+  }
+  .doc__title {
+    font-size: 2rem;
+    margin: 0 0 0.6rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .doc__lede {
+    color: var(--color-text-muted);
+    font-size: 1rem;
+    max-width: 80ch;
+    margin: 0 0 1.5rem;
+  }
+
+  /* ── Proposal section frame ── */
+
+  .proposal {
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    padding: 1.5rem;
+    margin-top: 2.5rem;
+  }
+  .proposal__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .proposal__id {
+    font-family: var(--font-mono);
+    color: var(--color-accent);
+    font-size: 1rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    flex: 0 0 auto;
+  }
+  .proposal__name {
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin: 0;
+    flex: 1;
+  }
+  .proposal__tagline {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    margin: 0;
+    max-width: 60ch;
+  }
+
+  .proposal__board {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .proposal__board--wide {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  .proposal__notes {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-border);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+  .proposal__notes h4 {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-text-soft);
+    margin: 0 0 0.4rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .proposal__notes p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+     PROPOSAL 01 — TERMINAL READOUT
+     The card is a stack of log lines. Mono everything. Lit-cyan accents.
+     ════════════════════════════════════════════════════════════════════ */
+
+  .p1-card {
+    background: var(--color-surface-soft);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-accent);
+    padding: 0.9rem 1rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+  .p1-card--p0 { border-left-color: var(--color-danger); }
+  .p1-card--running { border-left-color: var(--color-warning); }
+  .p1-card--failed  { border-left-color: var(--color-danger); background: color-mix(in srgb, var(--color-danger) 5%, var(--color-surface-soft)); }
+  .p1-card--stale   { opacity: 0.55; }
+
+  .p1-card__head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 0.45rem;
+  }
+  .p1-card__seq { color: var(--color-accent); font-weight: 600; }
+  .p1-card__prio--p0 { color: var(--color-danger); font-weight: 700; }
+  .p1-card__prio--p1 { color: var(--color-warning); font-weight: 700; }
+  .p1-card__prio--p2 { color: var(--color-text); }
+  .p1-card__prio--p3 { color: var(--color-text-muted); }
+  .p1-card__age { margin-left: auto; }
+  .p1-card__age--bad { color: var(--color-danger); font-weight: 600; }
+
+  .p1-card__pipe {
+    margin: 0.5rem 0 0.7rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    letter-spacing: 0.04em;
+  }
+  .p1-card__pipe-done { color: var(--color-success); }
+  .p1-card__pipe-cur { color: var(--color-warning); }
+  .p1-card__pipe-fail { color: var(--color-danger); }
+
+  .p1-card__title {
+    font-family: var(--font-sans);
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--color-text);
+    margin: 0.4rem 0 0.7rem;
+    letter-spacing: -0.005em;
+  }
+
+  .p1-card__log {
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.55rem;
+    color: var(--color-text-soft);
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+  .p1-card__log-line { display: block; }
+  .p1-card__log-line::before {
+    content: '> ';
+    color: var(--color-accent);
+  }
+  .p1-card__log-line--err::before { color: var(--color-danger); content: '! '; }
+
+  .p1-card__foot {
+    margin-top: 0.6rem;
+    padding-top: 0.55rem;
+    border-top: 1px dashed var(--color-border);
+    display: flex;
+    gap: 1.25rem;
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+  }
+  .p1-card__foot b { color: var(--color-text); font-weight: 600; }
+  .p1-card__foot--actor-boris b { color: var(--actor-boris); }
+  .p1-card__foot--actor-ralph b { color: var(--actor-ralph); }
+  .p1-card__foot--actor-marvin b { color: var(--actor-marvin); }
+
+  /* ════════════════════════════════════════════════════════════════════
+     PROPOSAL 02 — TELEMETRY WIDGET
+     Big numbers. Gauge-style confidence. Reads like a control panel.
+     ════════════════════════════════════════════════════════════════════ */
+
+  .p2-card {
+    background: var(--color-surface-soft);
+    border: 1px solid var(--color-border);
+    padding: 1rem 1.1rem 1rem;
+  }
+  .p2-card__row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+  }
+  .p2-card__seq {
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+  }
+  .p2-card__prio {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-weight: 800;
+    padding: 0.1rem 0.5rem;
+    border-radius: var(--radius);
+    letter-spacing: 0.05em;
+  }
+  .p2-card__prio--p0 { color: var(--color-bg); background: var(--color-danger); }
+  .p2-card__prio--p1 { color: var(--color-bg); background: var(--color-warning); }
+  .p2-card__prio--p2 { color: var(--color-text); background: var(--color-border); }
+  .p2-card__prio--p3 { color: var(--color-text-muted); background: transparent; border: 1px solid var(--color-border); }
+  .p2-card__status {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .p2-card__status--running { color: var(--color-warning); }
+  .p2-card__status--failed  { color: var(--color-danger); }
+
+  .p2-card__title {
+    font-size: 1.18rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0 0 0.85rem;
+  }
+
+  .p2-card__gauges {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--color-border);
+    margin-bottom: 0.85rem;
+  }
+  .p2-card__gauge {
+    padding: 0.55rem 0.7rem;
+    border-right: 1px solid var(--color-border);
+  }
+  .p2-card__gauge:last-child { border-right: none; }
+  .p2-card__gauge-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+  }
+  .p2-card__gauge-val {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--color-text);
+    font-weight: 600;
+  }
+  .p2-card__gauge-val--warn { color: var(--color-warning); }
+  .p2-card__gauge-val--bad  { color: var(--color-danger); }
+  .p2-card__gauge-bar {
+    margin-top: 0.35rem;
+    height: 4px;
+    background: var(--color-border);
+    overflow: hidden;
+  }
+  .p2-card__gauge-bar > i {
+    display: block;
+    height: 100%;
+    background: var(--color-accent);
+  }
+  .p2-card__gauge-bar--bad > i { background: var(--color-danger); }
+  .p2-card__gauge-bar--warn > i { background: var(--color-warning); }
+
+  .p2-card__foot {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+  .p2-card__actor {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .p2-card__actor-sq {
+    width: 22px; height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.78rem;
+  }
+  .p2-card__actor--boris .p2-card__actor-sq  { background: var(--actor-boris); color: var(--color-bg); }
+  .p2-card__actor--ralph .p2-card__actor-sq  { background: var(--actor-ralph); color: var(--color-bg); }
+  .p2-card__actor--marvin .p2-card__actor-sq { background: var(--actor-marvin); color: var(--color-bg); }
+  .p2-card__proj { color: var(--color-accent); }
+  .p2-card__action {
+    margin-left: auto;
+    background: var(--color-accent);
+    color: var(--color-bg);
+    border: none;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 0.4rem 0.85rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .p2-card__action--retry { background: var(--color-danger); color: var(--color-bg); }
+
+  /* ════════════════════════════════════════════════════════════════════
+     PROPOSAL 03 — STATUS BOARD (HORIZONTAL STRIPS)
+     Flight-info style. Wide rows. Huge title. List, not kanban-tiles.
+     ════════════════════════════════════════════════════════════════════ */
+
+  .p3-strip {
+    background: var(--color-surface-soft);
+    border: 1px solid var(--color-border);
+    border-left: 6px solid var(--color-accent);
+    padding: 1rem 1.5rem;
+    display: grid;
+    grid-template-columns: 100px 1fr 240px 200px;
+    gap: 1.5rem;
+    align-items: center;
+  }
+  .p3-strip--p0 { border-left-color: var(--color-danger); }
+  .p3-strip--p1 { border-left-color: var(--color-warning); }
+  .p3-strip--p2 { border-left-color: var(--color-accent); }
+  .p3-strip--p3 { border-left-color: var(--color-border); }
+  .p3-strip--failed { background: color-mix(in srgb, var(--color-danger) 6%, var(--color-surface-soft)); }
+  .p3-strip--stale  { opacity: 0.55; }
+
+  .p3-strip__id {
+    font-family: var(--font-mono);
+    font-size: 1.3rem;
+    color: var(--color-accent);
+    font-weight: 700;
+  }
+  .p3-strip__id-line {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.2rem;
+  }
+  .p3-strip__title {
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.25;
+    margin: 0 0 0.3rem;
+  }
+  .p3-strip__sub {
+    display: flex;
+    gap: 1.1rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    font-family: var(--font-mono);
+  }
+  .p3-strip__sub b { color: var(--color-text); font-weight: 500; }
+  .p3-strip__sub-warn { color: var(--color-warning); }
+  .p3-strip__sub-bad  { color: var(--color-danger); }
+
+  .p3-strip__pipe {
+    display: flex;
+    gap: 3px;
+  }
+  .p3-strip__pipe-seg {
+    flex: 1;
+    height: 18px;
+    background: var(--color-border);
+    position: relative;
+  }
+  .p3-strip__pipe-seg--done { background: var(--color-success); opacity: 0.7; }
+  .p3-strip__pipe-seg--current {
+    background: var(--color-warning);
+    box-shadow: 0 0 0 1px var(--color-warning) inset, 0 0 12px color-mix(in srgb, var(--color-warning) 50%, transparent);
+  }
+  .p3-strip__pipe-seg--fail { background: var(--color-danger); }
+  .p3-strip__pipe-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.35rem;
+  }
+
+  .p3-strip__cta {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    justify-content: flex-end;
+  }
+  .p3-strip__owner {
+    width: 36px; height: 36px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-weight: 700; font-size: 0.95rem;
+    color: var(--color-bg);
+  }
+  .p3-strip__owner--boris  { background: var(--actor-boris); }
+  .p3-strip__owner--ralph  { background: var(--actor-ralph); }
+  .p3-strip__owner--marvin { background: var(--actor-marvin); }
+  .p3-strip__btn {
+    font-family: var(--font-mono);
+    background: transparent;
+    border: 1px solid var(--color-accent);
+    color: var(--color-accent);
+    padding: 0.55rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+  .p3-strip__btn--retry { border-color: var(--color-danger); color: var(--color-danger); }
+
+  /* ════════════════════════════════════════════════════════════════════
+     PROPOSAL 04 — SPEC SHEET
+     Label/value grid. Bloomberg-row feel. Uniform structure.
+     ════════════════════════════════════════════════════════════════════ */
+
+  .p4-card {
+    background: var(--color-surface-soft);
+    border: 1px solid var(--color-border);
+  }
+  .p4-card__bar {
+    background: var(--color-accent);
+    color: var(--color-bg);
+    padding: 0.5rem 0.85rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+  }
+  .p4-card__bar--p0 { background: var(--color-danger); color: var(--color-bg); }
+  .p4-card__bar--p1 { background: var(--color-warning); color: var(--color-bg); }
+  .p4-card__bar--failed { background: var(--color-danger); }
+  .p4-card__bar--running { background: var(--color-warning); }
+  .p4-card__bar--stale { background: var(--color-border); color: var(--color-text-muted); }
+
+  .p4-card__title {
+    font-size: 1.22rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0;
+    padding: 1rem 1rem 0.9rem;
+  }
+
+  .p4-card__grid {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    border-top: 1px solid var(--color-border);
+  }
+  .p4-card__row {
+    display: contents;
+  }
+  .p4-card__k {
+    padding: 0.45rem 0.85rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-border) 30%, transparent);
+  }
+  .p4-card__v {
+    padding: 0.45rem 0.85rem;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .p4-card__v--bad  { color: var(--color-danger); font-weight: 600; }
+  .p4-card__v--warn { color: var(--color-warning); font-weight: 600; }
+  .p4-card__v--ok   { color: var(--color-success); }
+  .p4-card__row:last-child .p4-card__k,
+  .p4-card__row:last-child .p4-card__v { border-bottom: none; }
+
+  .p4-card__action {
+    display: block;
+    width: 100%;
+    background: var(--color-accent);
+    color: var(--color-bg);
+    border: none;
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 0.7rem;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .p4-card__action--retry { background: var(--color-danger); }
+
+  /* Small inline progress for confidence/etc */
+  .p4-bar {
+    display: inline-block;
+    width: 80px;
+    height: 10px;
+    background: var(--color-border);
+    vertical-align: middle;
+    margin-left: 0.5rem;
+  }
+  .p4-bar > i {
+    display: block;
+    height: 100%;
+    background: var(--color-accent);
+  }
+  .p4-bar--bad > i { background: var(--color-danger); }
+  .p4-bar--warn > i { background: var(--color-warning); }
+  .p4-pipe {
+    display: inline-flex;
+    gap: 4px;
+    vertical-align: middle;
+    margin-left: 0.5rem;
+  }
+  .p4-pipe i {
+    width: 10px; height: 10px; background: var(--color-border);
+  }
+  .p4-pipe i.done { background: var(--color-success); }
+  .p4-pipe i.now  { background: var(--color-warning); }
+  .p4-pipe i.fail { background: var(--color-danger); }
+
+  /* ════════════════════════════════════════════════════════════════════
+     PROPOSAL 05 — PIPELINE-AS-HEADLINE
+     The journey IS the card. Stages dominate. Title secondary.
+     ════════════════════════════════════════════════════════════════════ */
+
+  .p5-card {
+    background: var(--color-surface-soft);
+    border: 1px solid var(--color-border);
+    padding: 1.1rem 1.2rem 1rem;
+  }
+  .p5-card--p0 { border-color: var(--color-danger); }
+  .p5-card--failed { border-color: var(--color-danger); background: color-mix(in srgb, var(--color-danger) 6%, var(--color-surface-soft)); }
+  .p5-card--stale  { opacity: 0.55; }
+  .p5-card--running { border-color: var(--color-warning); }
+
+  .p5-card__pipe {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    margin-bottom: 0.45rem;
+  }
+  .p5-card__stage {
+    position: relative;
+    padding: 0.5rem 0.4rem;
+    text-align: center;
+    background: var(--color-border);
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .p5-card__stage--done {
+    background: color-mix(in srgb, var(--color-success) 30%, var(--color-surface));
+    color: var(--color-success);
+  }
+  .p5-card__stage--current {
+    background: var(--color-warning);
+    color: var(--color-bg);
+  }
+  .p5-card__stage--fail {
+    background: var(--color-danger);
+    color: var(--color-bg);
+  }
+  .p5-card__stage--pending { color: var(--color-text-muted); }
+
+  .p5-card__meta {
+    display: flex;
+    gap: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    margin-bottom: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .p5-card__meta b { color: var(--color-text); font-weight: 600; }
+  .p5-card__meta-bad { color: var(--color-danger); }
+
+  .p5-card__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0 0 0.7rem;
+  }
+
+  .p5-card__foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+  }
+  .p5-card__actor-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    margin-right: 0.45rem;
+    vertical-align: middle;
+  }
+  .p5-card__actor-dot--boris { background: var(--actor-boris); }
+  .p5-card__actor-dot--ralph { background: var(--actor-ralph); }
+  .p5-card__actor-dot--marvin { background: var(--actor-marvin); }
+  .p5-card__btn {
+    background: transparent;
+    border: 1px solid var(--color-accent);
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.35rem 0.85rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .p5-card__btn--retry { border-color: var(--color-danger); color: var(--color-danger); }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="doc__kicker">vault card · v5 · five proposals</div>
+  <h1 class="doc__title">Five bold directions, same six real items.</h1>
+  <p class="doc__lede">
+    Each proposal renders the same six vault items from the fixtures (#2417 P0 production outage, #2403 cross-project Wiring, #2418 priority-divergence reaper, #2456 running refactor, #2333 failed typecheck, #2429 30-day-stale UX cleanup) so you can compare like-for-like. Industrial palette pulled from <code>src/styles.scss</code>. Real text size, not prototype-pretty.
+  </p>
+
+  <!-- ═══════════════════════════ 01 · TERMINAL READOUT ═══════════════════════════ -->
+
+  <section class="proposal">
+    <header class="proposal__head">
+      <span class="proposal__id">01</span>
+      <h2 class="proposal__name">Terminal readout</h2>
+      <p class="proposal__tagline">The card looks like the tail of a log. Heavy mono. Cyan accents. The system speaks in <code>&gt;</code> lines.</p>
+    </header>
+
+    <div class="proposal__board">
+
+      <article class="p1-card p1-card--p0">
+        <div class="p1-card__head">
+          <span class="p1-card__seq">#2417</span>
+          <span class="p1-card__prio--p0">P0</span>
+          <span class="p1-card__age p1-card__age--bad">OVERDUE 06:00</span>
+        </div>
+        <div class="p1-card__pipe">
+          <span class="p1-card__pipe-done">[intake]</span>━<span class="p1-card__pipe-cur">[classify*]</span>━[decompose]━[commission]━[done]
+        </div>
+        <h3 class="p1-card__title">URGENT: Production 500s on /api/dispatch endpoint</h3>
+        <div class="p1-card__log">
+          <span class="p1-card__log-line">boris classified P0 · conf 0.45 · low</span>
+          <span class="p1-card__log-line p1-card__log-line--err">pipeline-pump backed up since 06:00 · rollback candidate</span>
+        </div>
+        <div class="p1-card__foot p1-card__foot--actor-boris">
+          owner: <b>boris</b> &nbsp;·&nbsp; proj: /hermes &nbsp;·&nbsp; src: manual
+        </div>
+      </article>
+
+      <article class="p1-card">
+        <div class="p1-card__head">
+          <span class="p1-card__seq">#2403</span>
+          <span class="p1-card__prio--p1">P1</span>
+          <span class="p1-card__age">3d</span>
+        </div>
+        <div class="p1-card__pipe">
+          <span class="p1-card__pipe-done">[intake]</span>━<span class="p1-card__pipe-cur">[classify*]</span>━[decompose]━[commission]━[done]
+        </div>
+        <h3 class="p1-card__title">Wire intake-quality verdict back into vault-classify trigger</h3>
+        <div class="p1-card__log">
+          <span class="p1-card__log-line">classify · conf 0.71 · clear</span>
+          <span class="p1-card__log-line">ralph asked: shared pipeline, or local-only?</span>
+        </div>
+        <div class="p1-card__foot p1-card__foot--actor-ralph">
+          owner: <b>ralph</b> &nbsp;·&nbsp; proj: /localshout &nbsp;·&nbsp; src: pr-comment hermes#142
+        </div>
+      </article>
+
+      <article class="p1-card">
+        <div class="p1-card__head">
+          <span class="p1-card__seq">#2418</span>
+          <span class="p1-card__prio--p1">P1</span>
+          <span class="p1-card__age">2d</span>
+        </div>
+        <div class="p1-card__pipe">
+          <span class="p1-card__pipe-done">[intake]</span>━<span class="p1-card__pipe-cur">[classify*]</span>━[decompose]━[commission]━[done]
+        </div>
+        <h3 class="p1-card__title">Refactor dispatch queue reaper to use exponential backoff</h3>
+        <div class="p1-card__log">
+          <span class="p1-card__log-line">boris classified P3 conf 0.55 · "boring tech-debt"</span>
+          <span class="p1-card__log-line">marvin overrode → P1 · boring to AI, not to me</span>
+        </div>
+        <div class="p1-card__foot p1-card__foot--actor-boris">
+          owner: <b>boris</b> &nbsp;·&nbsp; proj: /hermes &nbsp;·&nbsp; src: manual
+        </div>
+      </article>
+
+      <article class="p1-card p1-card--running">
+        <div class="p1-card__head">
+          <span class="p1-card__seq">#2456</span>
+          <span class="p1-card__prio--p2">P2</span>
+          <span class="p1-card__age" style="color: var(--color-warning);">RUNNING 5m</span>
+        </div>
+        <div class="p1-card__pipe">
+          <span class="p1-card__pipe-done">[intake]</span>━<span class="p1-card__pipe-done">[classify]</span>━<span class="p1-card__pipe-cur">[decompose*]</span>━[commission]━[done]
+        </div>
+        <h3 class="p1-card__title">Extract shared kanban board layout</h3>
+        <div class="p1-card__log">
+          <span class="p1-card__log-line">spawned by epic #2350 · 6h ago</span>
+          <span class="p1-card__log-line">ralph picked ollama/llama-3.1-8b · 5m elapsed</span>
+        </div>
+        <div class="p1-card__foot p1-card__foot--actor-ralph">
+          owner: <b>ralph</b> &nbsp;·&nbsp; proj: /localshout &nbsp;·&nbsp; src: ↳ #2350
+        </div>
+      </article>
+
+      <article class="p1-card p1-card--failed">
+        <div class="p1-card__head">
+          <span class="p1-card__seq">#2333</span>
+          <span class="p1-card__prio--p1">P1</span>
+          <span class="p1-card__age p1-card__age--bad">FAILED 4m · ↻1</span>
+        </div>
+        <div class="p1-card__pipe">
+          <span class="p1-card__pipe-done">[intake]</span>━<span class="p1-card__pipe-done">[classify]</span>━<span class="p1-card__pipe-fail">[typecheck✕]</span>━[commission]━[done]
+        </div>
+        <h3 class="p1-card__title">Port dispatch retry mutation to use new pg client</h3>
+        <div class="p1-card__log">
+          <span class="p1-card__log-line">ralph picked anthropic/claude-sonnet-4-6</span>
+          <span class="p1-card__log-line p1-card__log-line--err">ts(2304) · Cannot find name 'DispatchRetryPayload'</span>
+        </div>
+        <div class="p1-card__foot p1-card__foot--actor-ralph">
+          owner: <b>ralph</b> &nbsp;·&nbsp; proj: /hermes &nbsp;·&nbsp; src: manual
+        </div>
+      </article>
+
+      <article class="p1-card p1-card--stale">
+        <div class="p1-card__head">
+          <span class="p1-card__seq">#2429</span>
+          <span class="p1-card__prio--p2">P2</span>
+          <span class="p1-card__age">30d</span>
+        </div>
+        <div class="p1-card__pipe">
+          <span class="p1-card__pipe-done">[intake]</span>━<span class="p1-card__pipe-cur">[classify*]</span>━[decompose]━[commission]━[done]
+        </div>
+        <h3 class="p1-card__title">Tidy up status filter UX on vault list</h3>
+        <div class="p1-card__log">
+          <span class="p1-card__log-line">no activity in 30d · stale</span>
+        </div>
+        <div class="p1-card__foot p1-card__foot--actor-ralph">
+          owner: <b>ralph</b> &nbsp;·&nbsp; proj: /jimbo-core &nbsp;·&nbsp; src: manual
+        </div>
+      </article>
+
+    </div>
+
+    <div class="proposal__notes">
+      <div><h4>Strength</h4><p>Familiar to a developer. Every line is a fact. Mono everything → no visual ambiguity. Reads top-to-bottom like a deploy log.</p></div>
+      <div><h4>Weakness</h4><p>All cards look similar at a glance — the eye has to read text to differentiate. Less peripheral signal than a status board.</p></div>
+      <div><h4>Best at</h4><p>Failure triage. The narrative log lines are perfect for "what went wrong here?"</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ 02 · TELEMETRY WIDGET ═══════════════════════════ -->
+
+  <section class="proposal">
+    <header class="proposal__head">
+      <span class="proposal__id">02</span>
+      <h2 class="proposal__name">Telemetry widget</h2>
+      <p class="proposal__tagline">The card is a 3-gauge dashboard. Big numeric readouts for stage, age, confidence. Reads like instrumentation, not a ticket.</p>
+    </header>
+
+    <div class="proposal__board">
+
+      <article class="p2-card">
+        <div class="p2-card__row">
+          <span class="p2-card__seq">#2417</span>
+          <span class="p2-card__prio p2-card__prio--p0">P0</span>
+          <span class="p2-card__status p2-card__status--failed">OVERDUE</span>
+        </div>
+        <h3 class="p2-card__title">URGENT: Production 500s on /api/dispatch endpoint</h3>
+        <div class="p2-card__gauges">
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">stage</div>
+            <div class="p2-card__gauge-val">2/5</div>
+            <div class="p2-card__gauge-bar"><i style="width: 40%;"></i></div>
+          </div>
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">age</div>
+            <div class="p2-card__gauge-val p2-card__gauge-val--bad">6h</div>
+            <div class="p2-card__gauge-bar p2-card__gauge-bar--bad"><i style="width: 12%;"></i></div>
+          </div>
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">conf</div>
+            <div class="p2-card__gauge-val p2-card__gauge-val--warn">45%</div>
+            <div class="p2-card__gauge-bar p2-card__gauge-bar--warn"><i style="width: 45%;"></i></div>
+          </div>
+        </div>
+        <div class="p2-card__foot">
+          <span class="p2-card__actor p2-card__actor--boris"><span class="p2-card__actor-sq">B</span> boris</span>
+          <span class="p2-card__proj">/hermes</span>
+          <button class="p2-card__action">Decompose</button>
+        </div>
+      </article>
+
+      <article class="p2-card">
+        <div class="p2-card__row">
+          <span class="p2-card__seq">#2403</span>
+          <span class="p2-card__prio p2-card__prio--p1">P1</span>
+          <span class="p2-card__status">CLASSIFIED</span>
+        </div>
+        <h3 class="p2-card__title">Wire intake-quality verdict back into vault-classify trigger</h3>
+        <div class="p2-card__gauges">
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">stage</div>
+            <div class="p2-card__gauge-val">2/5</div>
+            <div class="p2-card__gauge-bar"><i style="width: 40%;"></i></div>
+          </div>
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">age</div>
+            <div class="p2-card__gauge-val">3d</div>
+            <div class="p2-card__gauge-bar"><i style="width: 30%;"></i></div>
+          </div>
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">conf</div>
+            <div class="p2-card__gauge-val">71%</div>
+            <div class="p2-card__gauge-bar"><i style="width: 71%;"></i></div>
+          </div>
+        </div>
+        <div class="p2-card__foot">
+          <span class="p2-card__actor p2-card__actor--ralph"><span class="p2-card__actor-sq">R</span> ralph</span>
+          <span class="p2-card__proj">/localshout</span>
+          <button class="p2-card__action">Answer Q</button>
+        </div>
+      </article>
+
+      <article class="p2-card">
+        <div class="p2-card__row">
+          <span class="p2-card__seq">#2418</span>
+          <span class="p2-card__prio p2-card__prio--p1">P1</span>
+          <span class="p2-card__status">CLASSIFIED · disagreement</span>
+        </div>
+        <h3 class="p2-card__title">Refactor dispatch queue reaper to use exponential backoff</h3>
+        <div class="p2-card__gauges">
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">stage</div>
+            <div class="p2-card__gauge-val">2/5</div>
+            <div class="p2-card__gauge-bar"><i style="width: 40%;"></i></div>
+          </div>
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">age</div>
+            <div class="p2-card__gauge-val">2d</div>
+            <div class="p2-card__gauge-bar"><i style="width: 22%;"></i></div>
+          </div>
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">conf</div>
+            <div class="p2-card__gauge-val p2-card__gauge-val--warn">55%</div>
+            <div class="p2-card__gauge-bar p2-card__gauge-bar--warn"><i style="width: 55%;"></i></div>
+          </div>
+        </div>
+        <div class="p2-card__foot">
+          <span class="p2-card__actor p2-card__actor--boris"><span class="p2-card__actor-sq">B</span> boris</span>
+          <span class="p2-card__proj">/hermes</span>
+          <button class="p2-card__action">Decompose</button>
+        </div>
+      </article>
+
+      <article class="p2-card">
+        <div class="p2-card__row">
+          <span class="p2-card__seq">#2456</span>
+          <span class="p2-card__prio p2-card__prio--p2">P2</span>
+          <span class="p2-card__status p2-card__status--running">RUNNING · 5m</span>
+        </div>
+        <h3 class="p2-card__title">Extract shared kanban board layout</h3>
+        <div class="p2-card__gauges">
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">stage</div>
+            <div class="p2-card__gauge-val p2-card__gauge-val--warn">3/5</div>
+            <div class="p2-card__gauge-bar p2-card__gauge-bar--warn"><i style="width: 60%;"></i></div>
+          </div>
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">model</div>
+            <div class="p2-card__gauge-val" style="font-size: 0.85rem;">llama-3.1-8b</div>
+          </div>
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">conf</div>
+            <div class="p2-card__gauge-val p2-card__gauge-val--ok">80%</div>
+            <div class="p2-card__gauge-bar"><i style="width: 80%;"></i></div>
+          </div>
+        </div>
+        <div class="p2-card__foot">
+          <span class="p2-card__actor p2-card__actor--ralph"><span class="p2-card__actor-sq">R</span> ralph</span>
+          <span class="p2-card__proj">/localshout · ↳ #2350</span>
+        </div>
+      </article>
+
+      <article class="p2-card">
+        <div class="p2-card__row">
+          <span class="p2-card__seq">#2333</span>
+          <span class="p2-card__prio p2-card__prio--p1">P1</span>
+          <span class="p2-card__status p2-card__status--failed">FAILED · ↻1</span>
+        </div>
+        <h3 class="p2-card__title">Port dispatch retry mutation to use new pg client</h3>
+        <div class="p2-card__gauges">
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">stage</div>
+            <div class="p2-card__gauge-val p2-card__gauge-val--bad">FAIL @3</div>
+          </div>
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">model</div>
+            <div class="p2-card__gauge-val" style="font-size: 0.85rem;">sonnet-4-6</div>
+          </div>
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">error</div>
+            <div class="p2-card__gauge-val p2-card__gauge-val--bad" style="font-size: 0.85rem;">ts(2304)</div>
+          </div>
+        </div>
+        <div class="p2-card__foot">
+          <span class="p2-card__actor p2-card__actor--ralph"><span class="p2-card__actor-sq">R</span> ralph</span>
+          <span class="p2-card__proj">/hermes</span>
+          <button class="p2-card__action p2-card__action--retry">Retry</button>
+        </div>
+      </article>
+
+      <article class="p2-card" style="opacity: 0.6;">
+        <div class="p2-card__row">
+          <span class="p2-card__seq">#2429</span>
+          <span class="p2-card__prio p2-card__prio--p2">P2</span>
+          <span class="p2-card__status">STALE</span>
+        </div>
+        <h3 class="p2-card__title">Tidy up status filter UX on vault list</h3>
+        <div class="p2-card__gauges">
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">stage</div>
+            <div class="p2-card__gauge-val">2/5</div>
+          </div>
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">age</div>
+            <div class="p2-card__gauge-val p2-card__gauge-val--bad">30d</div>
+          </div>
+          <div class="p2-card__gauge">
+            <div class="p2-card__gauge-label">conf</div>
+            <div class="p2-card__gauge-val">72%</div>
+          </div>
+        </div>
+        <div class="p2-card__foot">
+          <span class="p2-card__actor p2-card__actor--ralph"><span class="p2-card__actor-sq">R</span> ralph</span>
+          <span class="p2-card__proj">/jimbo-core</span>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="proposal__notes">
+      <div><h4>Strength</h4><p>The three-gauge strip is information-dense and instantly readable. Stage/age/conf are the three things you most want to know.</p></div>
+      <div><h4>Weakness</h4><p>The gauge grid takes vertical real-estate. Cards run ~210px tall vs ~160px for others. Fewer per column.</p></div>
+      <div><h4>Best at</h4><p>Calibration triage. When you want to know "where is the system uncertain right now?" — confidence gauge jumps out.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ 03 · STATUS BOARD STRIPS ═══════════════════════════ -->
+
+  <section class="proposal">
+    <header class="proposal__head">
+      <span class="proposal__id">03</span>
+      <h2 class="proposal__name">Status board strips</h2>
+      <p class="proposal__tagline">List, not tiles. Each card a full-width row — airline departures board. Best for "what needs me right now?" — scan vertically, decide fast.</p>
+    </header>
+
+    <div class="proposal__board proposal__board--wide">
+
+      <article class="p3-strip p3-strip--p0">
+        <div>
+          <div class="p3-strip__id">#2417</div>
+          <div class="p3-strip__id-line">P0 · ↻0</div>
+        </div>
+        <div>
+          <h3 class="p3-strip__title">URGENT: Production 500s on /api/dispatch endpoint</h3>
+          <div class="p3-strip__sub">
+            <span class="p3-strip__sub-bad">OVERDUE 6h</span>
+            <span>conf <b>45%</b></span>
+            <span>/hermes</span>
+            <span><i>“Boris classified but low conf — sanity-check.”</i></span>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;gap:3px;">
+            <div class="p3-strip__pipe-seg p3-strip__pipe-seg--done"></div>
+            <div class="p3-strip__pipe-seg p3-strip__pipe-seg--current"></div>
+            <div class="p3-strip__pipe-seg"></div>
+            <div class="p3-strip__pipe-seg"></div>
+            <div class="p3-strip__pipe-seg"></div>
+          </div>
+          <div class="p3-strip__pipe-label">CLASSIFY ▸ DECOMPOSE</div>
+        </div>
+        <div class="p3-strip__cta">
+          <span class="p3-strip__owner p3-strip__owner--boris">B</span>
+          <button class="p3-strip__btn">Decompose</button>
+        </div>
+      </article>
+
+      <article class="p3-strip p3-strip--p1">
+        <div>
+          <div class="p3-strip__id">#2403</div>
+          <div class="p3-strip__id-line">P1 · cross-proj</div>
+        </div>
+        <div>
+          <h3 class="p3-strip__title">Wire intake-quality verdict back into vault-classify trigger</h3>
+          <div class="p3-strip__sub">
+            <span class="p3-strip__sub-warn">1 open question</span>
+            <span>conf <b>71%</b></span>
+            <span>/localshout · pr-comment</span>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;gap:3px;">
+            <div class="p3-strip__pipe-seg p3-strip__pipe-seg--done"></div>
+            <div class="p3-strip__pipe-seg p3-strip__pipe-seg--current"></div>
+            <div class="p3-strip__pipe-seg"></div>
+            <div class="p3-strip__pipe-seg"></div>
+            <div class="p3-strip__pipe-seg"></div>
+          </div>
+          <div class="p3-strip__pipe-label">CLASSIFY ▸ DECOMPOSE</div>
+        </div>
+        <div class="p3-strip__cta">
+          <span class="p3-strip__owner p3-strip__owner--ralph">R</span>
+          <button class="p3-strip__btn">Answer</button>
+        </div>
+      </article>
+
+      <article class="p3-strip p3-strip--p1">
+        <div>
+          <div class="p3-strip__id">#2418</div>
+          <div class="p3-strip__id-line">P1 · disagree</div>
+        </div>
+        <div>
+          <h3 class="p3-strip__title">Refactor dispatch queue reaper to use exponential backoff</h3>
+          <div class="p3-strip__sub">
+            <span>boris said P3 · you said P1</span>
+            <span>conf <b>55%</b></span>
+            <span>/hermes</span>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;gap:3px;">
+            <div class="p3-strip__pipe-seg p3-strip__pipe-seg--done"></div>
+            <div class="p3-strip__pipe-seg p3-strip__pipe-seg--current"></div>
+            <div class="p3-strip__pipe-seg"></div>
+            <div class="p3-strip__pipe-seg"></div>
+            <div class="p3-strip__pipe-seg"></div>
+          </div>
+          <div class="p3-strip__pipe-label">CLASSIFY ▸ DECOMPOSE</div>
+        </div>
+        <div class="p3-strip__cta">
+          <span class="p3-strip__owner p3-strip__owner--boris">B</span>
+          <button class="p3-strip__btn">Decompose</button>
+        </div>
+      </article>
+
+      <article class="p3-strip p3-strip--p2">
+        <div>
+          <div class="p3-strip__id">#2456</div>
+          <div class="p3-strip__id-line">P2 · running</div>
+        </div>
+        <div>
+          <h3 class="p3-strip__title">Extract shared kanban board layout</h3>
+          <div class="p3-strip__sub">
+            <span class="p3-strip__sub-warn">RUNNING 5m</span>
+            <span>llama-3.1-8b</span>
+            <span>/localshout · ↳ #2350</span>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;gap:3px;">
+            <div class="p3-strip__pipe-seg p3-strip__pipe-seg--done"></div>
+            <div class="p3-strip__pipe-seg p3-strip__pipe-seg--done"></div>
+            <div class="p3-strip__pipe-seg p3-strip__pipe-seg--current"></div>
+            <div class="p3-strip__pipe-seg"></div>
+            <div class="p3-strip__pipe-seg"></div>
+          </div>
+          <div class="p3-strip__pipe-label">DECOMPOSE ▸ COMMISSION</div>
+        </div>
+        <div class="p3-strip__cta">
+          <span class="p3-strip__owner p3-strip__owner--ralph">R</span>
+        </div>
+      </article>
+
+      <article class="p3-strip p3-strip--failed">
+        <div>
+          <div class="p3-strip__id">#2333</div>
+          <div class="p3-strip__id-line">P1 · ↻1 FAIL</div>
+        </div>
+        <div>
+          <h3 class="p3-strip__title">Port dispatch retry mutation to use new pg client</h3>
+          <div class="p3-strip__sub">
+            <span class="p3-strip__sub-bad">ts(2304) · Cannot find DispatchRetryPayload</span>
+            <span>sonnet-4-6</span>
+            <span>/hermes</span>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;gap:3px;">
+            <div class="p3-strip__pipe-seg p3-strip__pipe-seg--done"></div>
+            <div class="p3-strip__pipe-seg p3-strip__pipe-seg--done"></div>
+            <div class="p3-strip__pipe-seg p3-strip__pipe-seg--fail"></div>
+            <div class="p3-strip__pipe-seg"></div>
+            <div class="p3-strip__pipe-seg"></div>
+          </div>
+          <div class="p3-strip__pipe-label">TYPECHECK ✕</div>
+        </div>
+        <div class="p3-strip__cta">
+          <span class="p3-strip__owner p3-strip__owner--ralph">R</span>
+          <button class="p3-strip__btn p3-strip__btn--retry">Retry</button>
+        </div>
+      </article>
+
+      <article class="p3-strip p3-strip--p2 p3-strip--stale">
+        <div>
+          <div class="p3-strip__id">#2429</div>
+          <div class="p3-strip__id-line">P2 · stale</div>
+        </div>
+        <div>
+          <h3 class="p3-strip__title">Tidy up status filter UX on vault list</h3>
+          <div class="p3-strip__sub">
+            <span class="p3-strip__sub-bad">30d in classified</span>
+            <span>conf <b>72%</b></span>
+            <span>/jimbo-core</span>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;gap:3px;">
+            <div class="p3-strip__pipe-seg p3-strip__pipe-seg--done"></div>
+            <div class="p3-strip__pipe-seg p3-strip__pipe-seg--current"></div>
+            <div class="p3-strip__pipe-seg"></div>
+            <div class="p3-strip__pipe-seg"></div>
+            <div class="p3-strip__pipe-seg"></div>
+          </div>
+          <div class="p3-strip__pipe-label">CLASSIFY (stuck)</div>
+        </div>
+        <div class="p3-strip__cta">
+          <span class="p3-strip__owner p3-strip__owner--ralph">R</span>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="proposal__notes">
+      <div><h4>Strength</h4><p>You can see twelve items on screen with full titles, no truncation. Vertical scanning is the fastest reading mode the eye has.</p></div>
+      <div><h4>Weakness</h4><p>Loses the kanban-column-as-status metaphor. Status is encoded by left-edge colour + pipeline segment instead. Hidden state-change affordance (no drag-into-column).</p></div>
+      <div><h4>Best at</h4><p>"What does today need from me?" — the over-arching daily review. Drop the kanban entirely on the execution page; keep it for grooming.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ 04 · SPEC SHEET ═══════════════════════════ -->
+
+  <section class="proposal">
+    <header class="proposal__head">
+      <span class="proposal__id">04</span>
+      <h2 class="proposal__name">Spec sheet</h2>
+      <p class="proposal__tagline">Bloomberg-row feel. Every card is a structured fact-sheet: title, then label/value rows for every field that matters. Uniform, scannable, machine-friendly.</p>
+    </header>
+
+    <div class="proposal__board">
+
+      <article class="p4-card">
+        <div class="p4-card__bar p4-card__bar--p0">
+          <span>#2417 · P0</span>
+          <span>OVERDUE</span>
+        </div>
+        <h3 class="p4-card__title">URGENT: Production 500s on /api/dispatch endpoint</h3>
+        <div class="p4-card__grid">
+          <div class="p4-card__row"><div class="p4-card__k">stage</div><div class="p4-card__v">classify <span class="p4-pipe"><i class="done"></i><i class="now"></i><i></i><i></i><i></i></span></div></div>
+          <div class="p4-card__row"><div class="p4-card__k">age</div><div class="p4-card__v p4-card__v--bad">6h · OVERDUE</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">conf</div><div class="p4-card__v p4-card__v--warn">0.45 <span class="p4-bar p4-bar--warn"><i style="width: 45%;"></i></span></div></div>
+          <div class="p4-card__row"><div class="p4-card__k">owner</div><div class="p4-card__v">@boris</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">proj</div><div class="p4-card__v">/hermes</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">source</div><div class="p4-card__v">manual · marvin-2026-04-25</div></div>
+        </div>
+        <button class="p4-card__action">Decompose →</button>
+      </article>
+
+      <article class="p4-card">
+        <div class="p4-card__bar p4-card__bar--p1">
+          <span>#2403 · P1</span>
+          <span>1 OPEN Q</span>
+        </div>
+        <h3 class="p4-card__title">Wire intake-quality verdict back into vault-classify trigger</h3>
+        <div class="p4-card__grid">
+          <div class="p4-card__row"><div class="p4-card__k">stage</div><div class="p4-card__v">classify <span class="p4-pipe"><i class="done"></i><i class="now"></i><i></i><i></i><i></i></span></div></div>
+          <div class="p4-card__row"><div class="p4-card__k">age</div><div class="p4-card__v">3d</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">conf</div><div class="p4-card__v">0.71 <span class="p4-bar"><i style="width: 71%;"></i></span></div></div>
+          <div class="p4-card__row"><div class="p4-card__k">owner</div><div class="p4-card__v">@ralph</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">proj</div><div class="p4-card__v">/localshout</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">source</div><div class="p4-card__v">pr-comment · hermes#142</div></div>
+        </div>
+        <button class="p4-card__action">Answer →</button>
+      </article>
+
+      <article class="p4-card">
+        <div class="p4-card__bar p4-card__bar--p1">
+          <span>#2418 · P1</span>
+          <span>AI↔YOU DISAGREE</span>
+        </div>
+        <h3 class="p4-card__title">Refactor dispatch queue reaper to use exponential backoff</h3>
+        <div class="p4-card__grid">
+          <div class="p4-card__row"><div class="p4-card__k">stage</div><div class="p4-card__v">classify <span class="p4-pipe"><i class="done"></i><i class="now"></i><i></i><i></i><i></i></span></div></div>
+          <div class="p4-card__row"><div class="p4-card__k">age</div><div class="p4-card__v">2d</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">conf</div><div class="p4-card__v p4-card__v--warn">0.55 <span class="p4-bar p4-bar--warn"><i style="width: 55%;"></i></span></div></div>
+          <div class="p4-card__row"><div class="p4-card__k">prio</div><div class="p4-card__v">ai: P3 · you: P1</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">owner</div><div class="p4-card__v">@boris</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">proj</div><div class="p4-card__v">/hermes</div></div>
+        </div>
+        <button class="p4-card__action">Decompose →</button>
+      </article>
+
+      <article class="p4-card">
+        <div class="p4-card__bar p4-card__bar--running">
+          <span>#2456 · P2</span>
+          <span>RUNNING 5M</span>
+        </div>
+        <h3 class="p4-card__title">Extract shared kanban board layout</h3>
+        <div class="p4-card__grid">
+          <div class="p4-card__row"><div class="p4-card__k">stage</div><div class="p4-card__v">decompose <span class="p4-pipe"><i class="done"></i><i class="done"></i><i class="now"></i><i></i><i></i></span></div></div>
+          <div class="p4-card__row"><div class="p4-card__k">model</div><div class="p4-card__v">ollama/llama-3.1-8b</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">elapsed</div><div class="p4-card__v p4-card__v--warn">5m 12s</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">owner</div><div class="p4-card__v">@ralph</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">proj</div><div class="p4-card__v">/localshout</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">parent</div><div class="p4-card__v">↳ #2350</div></div>
+        </div>
+      </article>
+
+      <article class="p4-card">
+        <div class="p4-card__bar p4-card__bar--failed">
+          <span>#2333 · P1</span>
+          <span>FAILED · ↻1</span>
+        </div>
+        <h3 class="p4-card__title">Port dispatch retry mutation to use new pg client</h3>
+        <div class="p4-card__grid">
+          <div class="p4-card__row"><div class="p4-card__k">stage</div><div class="p4-card__v p4-card__v--bad">typecheck ✕ <span class="p4-pipe"><i class="done"></i><i class="done"></i><i class="fail"></i><i></i><i></i></span></div></div>
+          <div class="p4-card__row"><div class="p4-card__k">error</div><div class="p4-card__v p4-card__v--bad">ts(2304) DispatchRetryPayload</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">model</div><div class="p4-card__v">claude-sonnet-4-6</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">elapsed</div><div class="p4-card__v">23s</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">owner</div><div class="p4-card__v">@ralph</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">proj</div><div class="p4-card__v">/hermes</div></div>
+        </div>
+        <button class="p4-card__action p4-card__action--retry">Retry →</button>
+      </article>
+
+      <article class="p4-card" style="opacity: 0.65;">
+        <div class="p4-card__bar p4-card__bar--stale">
+          <span>#2429 · P2</span>
+          <span>STALE 30D</span>
+        </div>
+        <h3 class="p4-card__title">Tidy up status filter UX on vault list</h3>
+        <div class="p4-card__grid">
+          <div class="p4-card__row"><div class="p4-card__k">stage</div><div class="p4-card__v">classify <span class="p4-pipe"><i class="done"></i><i class="now"></i><i></i><i></i><i></i></span></div></div>
+          <div class="p4-card__row"><div class="p4-card__k">age</div><div class="p4-card__v p4-card__v--bad">30d</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">conf</div><div class="p4-card__v">0.72</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">owner</div><div class="p4-card__v">@ralph</div></div>
+          <div class="p4-card__row"><div class="p4-card__k">proj</div><div class="p4-card__v">/jimbo-core</div></div>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="proposal__notes">
+      <div><h4>Strength</h4><p>Maximum information density per card without feeling crammed. Every fact has a fixed slot. Mental model becomes "scan the keys you care about today."</p></div>
+      <div><h4>Weakness</h4><p>Looks like a database admin tool. Cold. The narrative voice (Boris said this, Ralph said that) is gone — replaced with bare fields.</p></div>
+      <div><h4>Best at</h4><p>Debugging the pipeline. When something's wrong, you want every field laid out, not prose narration.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ 05 · PIPELINE AS HEADLINE ═══════════════════════════ -->
+
+  <section class="proposal">
+    <header class="proposal__head">
+      <span class="proposal__id">05</span>
+      <h2 class="proposal__name">Pipeline as headline</h2>
+      <p class="proposal__tagline">The journey isn't an indicator at the top — it IS the top, with full bold stage names. Where the item is in the pipeline is the most visually dominant fact on the card.</p>
+    </header>
+
+    <div class="proposal__board">
+
+      <article class="p5-card p5-card--p0">
+        <div class="p5-card__pipe">
+          <div class="p5-card__stage p5-card__stage--done">intake</div>
+          <div class="p5-card__stage p5-card__stage--current">classify</div>
+          <div class="p5-card__stage p5-card__stage--pending">decompose</div>
+          <div class="p5-card__stage p5-card__stage--pending">commit</div>
+          <div class="p5-card__stage p5-card__stage--pending">done</div>
+        </div>
+        <div class="p5-card__meta">
+          <span>#2417</span>
+          <span><b style="color:var(--color-danger);">P0</b></span>
+          <span class="p5-card__meta-bad">overdue 6h</span>
+          <span>conf <b>45%</b></span>
+        </div>
+        <h3 class="p5-card__title">URGENT: Production 500s on /api/dispatch endpoint</h3>
+        <div class="p5-card__foot">
+          <span><span class="p5-card__actor-dot p5-card__actor-dot--boris"></span>boris · /hermes</span>
+          <button class="p5-card__btn">Decompose</button>
+        </div>
+      </article>
+
+      <article class="p5-card">
+        <div class="p5-card__pipe">
+          <div class="p5-card__stage p5-card__stage--done">intake</div>
+          <div class="p5-card__stage p5-card__stage--current">classify</div>
+          <div class="p5-card__stage p5-card__stage--pending">decompose</div>
+          <div class="p5-card__stage p5-card__stage--pending">commit</div>
+          <div class="p5-card__stage p5-card__stage--pending">done</div>
+        </div>
+        <div class="p5-card__meta">
+          <span>#2403</span>
+          <span><b style="color:var(--color-warning);">P1</b></span>
+          <span>3d</span>
+          <span>conf <b>71%</b></span>
+          <span class="p5-card__meta-bad">1 open Q</span>
+        </div>
+        <h3 class="p5-card__title">Wire intake-quality verdict back into vault-classify trigger</h3>
+        <div class="p5-card__foot">
+          <span><span class="p5-card__actor-dot p5-card__actor-dot--ralph"></span>ralph · /localshout</span>
+          <button class="p5-card__btn">Answer</button>
+        </div>
+      </article>
+
+      <article class="p5-card">
+        <div class="p5-card__pipe">
+          <div class="p5-card__stage p5-card__stage--done">intake</div>
+          <div class="p5-card__stage p5-card__stage--current">classify</div>
+          <div class="p5-card__stage p5-card__stage--pending">decompose</div>
+          <div class="p5-card__stage p5-card__stage--pending">commit</div>
+          <div class="p5-card__stage p5-card__stage--pending">done</div>
+        </div>
+        <div class="p5-card__meta">
+          <span>#2418</span>
+          <span><b style="color:var(--color-warning);">P1</b> <span style="color:var(--color-text-muted);">(ai:P3)</span></span>
+          <span>2d</span>
+          <span>conf <b>55%</b></span>
+        </div>
+        <h3 class="p5-card__title">Refactor dispatch queue reaper to use exponential backoff</h3>
+        <div class="p5-card__foot">
+          <span><span class="p5-card__actor-dot p5-card__actor-dot--boris"></span>boris · /hermes</span>
+          <button class="p5-card__btn">Decompose</button>
+        </div>
+      </article>
+
+      <article class="p5-card p5-card--running">
+        <div class="p5-card__pipe">
+          <div class="p5-card__stage p5-card__stage--done">intake</div>
+          <div class="p5-card__stage p5-card__stage--done">classify</div>
+          <div class="p5-card__stage p5-card__stage--current">decompose</div>
+          <div class="p5-card__stage p5-card__stage--pending">commit</div>
+          <div class="p5-card__stage p5-card__stage--pending">done</div>
+        </div>
+        <div class="p5-card__meta">
+          <span>#2456</span>
+          <span><b>P2</b></span>
+          <span style="color:var(--color-warning);">running 5m</span>
+          <span>llama-3.1-8b</span>
+        </div>
+        <h3 class="p5-card__title">Extract shared kanban board layout</h3>
+        <div class="p5-card__foot">
+          <span><span class="p5-card__actor-dot p5-card__actor-dot--ralph"></span>ralph · /localshout · ↳ #2350</span>
+        </div>
+      </article>
+
+      <article class="p5-card p5-card--failed">
+        <div class="p5-card__pipe">
+          <div class="p5-card__stage p5-card__stage--done">intake</div>
+          <div class="p5-card__stage p5-card__stage--done">classify</div>
+          <div class="p5-card__stage p5-card__stage--fail">typecheck</div>
+          <div class="p5-card__stage p5-card__stage--pending">commit</div>
+          <div class="p5-card__stage p5-card__stage--pending">done</div>
+        </div>
+        <div class="p5-card__meta">
+          <span>#2333</span>
+          <span><b style="color:var(--color-warning);">P1</b></span>
+          <span class="p5-card__meta-bad">failed 4m · ↻1</span>
+          <span>sonnet-4-6</span>
+        </div>
+        <h3 class="p5-card__title">Port dispatch retry mutation to use new pg client</h3>
+        <div class="p5-card__meta" style="color:var(--color-danger);">
+          ! ts(2304) Cannot find name 'DispatchRetryPayload'
+        </div>
+        <div class="p5-card__foot">
+          <span><span class="p5-card__actor-dot p5-card__actor-dot--ralph"></span>ralph · /hermes</span>
+          <button class="p5-card__btn p5-card__btn--retry">Retry</button>
+        </div>
+      </article>
+
+      <article class="p5-card p5-card--stale">
+        <div class="p5-card__pipe">
+          <div class="p5-card__stage p5-card__stage--done">intake</div>
+          <div class="p5-card__stage p5-card__stage--current">classify</div>
+          <div class="p5-card__stage p5-card__stage--pending">decompose</div>
+          <div class="p5-card__stage p5-card__stage--pending">commit</div>
+          <div class="p5-card__stage p5-card__stage--pending">done</div>
+        </div>
+        <div class="p5-card__meta">
+          <span>#2429</span>
+          <span><b>P2</b></span>
+          <span class="p5-card__meta-bad">stuck 30d</span>
+          <span>conf <b>72%</b></span>
+        </div>
+        <h3 class="p5-card__title">Tidy up status filter UX on vault list</h3>
+        <div class="p5-card__foot">
+          <span><span class="p5-card__actor-dot p5-card__actor-dot--ralph"></span>ralph · /jimbo-core</span>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="proposal__notes">
+      <div><h4>Strength</h4><p>Where the work is in the pipeline becomes obvious in 100ms. The bold stage labels read at a glance, even from across the room. Failed stage highlighted in-place.</p></div>
+      <div><h4>Weakness</h4><p>Five 8-character cells need ~280px minimum width to stay legible — column-thin layouts struggle. Title sits below the pipeline rather than above; some readers expect title-first.</p></div>
+      <div><h4>Best at</h4><p>Watching the system run. When you want to know what's moving and what's stuck, the headline pipeline gives the answer immediately without reading words.</p></div>
+    </div>
+  </section>
+
+  <!-- ─────────────────────── Comparison footer ─────────────────────── -->
+
+  <section class="proposal" style="margin-top: 3rem; background: var(--color-bg);">
+    <h2 class="proposal__name" style="margin-bottom: 1rem;">Quick comparison</h2>
+    <table style="width:100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.92rem;">
+      <thead>
+        <tr style="border-bottom: 1px solid var(--color-border);">
+          <th style="text-align:left; padding: 0.6rem; color: var(--color-text-muted); font-weight: 600;"></th>
+          <th style="text-align:left; padding: 0.6rem; color: var(--color-accent);">01 terminal</th>
+          <th style="text-align:left; padding: 0.6rem; color: var(--color-accent);">02 telemetry</th>
+          <th style="text-align:left; padding: 0.6rem; color: var(--color-accent);">03 strips</th>
+          <th style="text-align:left; padding: 0.6rem; color: var(--color-accent);">04 spec</th>
+          <th style="text-align:left; padding: 0.6rem; color: var(--color-accent);">05 pipeline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid var(--color-border);">
+          <td style="padding: 0.55rem; color: var(--color-text-muted);">card height</td>
+          <td style="padding: 0.55rem;">~190px</td>
+          <td style="padding: 0.55rem;">~220px</td>
+          <td style="padding: 0.55rem;">~110px (strip)</td>
+          <td style="padding: 0.55rem;">~340px</td>
+          <td style="padding: 0.55rem;">~190px</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--color-border);">
+          <td style="padding: 0.55rem; color: var(--color-text-muted);">cards / screen</td>
+          <td style="padding: 0.55rem;">~5 per col</td>
+          <td style="padding: 0.55rem;">~4 per col</td>
+          <td style="padding: 0.55rem;">~12 list</td>
+          <td style="padding: 0.55rem;">~3 per col</td>
+          <td style="padding: 0.55rem;">~5 per col</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--color-border);">
+          <td style="padding: 0.55rem; color: var(--color-text-muted);">narration?</td>
+          <td style="padding: 0.55rem; color: var(--color-success);">yes · 2 lines</td>
+          <td style="padding: 0.55rem; color: var(--color-danger);">no</td>
+          <td style="padding: 0.55rem;">inline italic</td>
+          <td style="padding: 0.55rem; color: var(--color-danger);">no</td>
+          <td style="padding: 0.55rem; color: var(--color-danger);">no</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--color-border);">
+          <td style="padding: 0.55rem; color: var(--color-text-muted);">peripheral signal</td>
+          <td style="padding: 0.55rem;">edge stripe</td>
+          <td style="padding: 0.55rem; color: var(--color-success);">gauges + colour</td>
+          <td style="padding: 0.55rem; color: var(--color-success);">edge + pipe</td>
+          <td style="padding: 0.55rem; color: var(--color-success);">title bar colour</td>
+          <td style="padding: 0.55rem; color: var(--color-success);">stage cells</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--color-border);">
+          <td style="padding: 0.55rem; color: var(--color-text-muted);">best at</td>
+          <td style="padding: 0.55rem;">failure triage</td>
+          <td style="padding: 0.55rem;">calibration</td>
+          <td style="padding: 0.55rem;">daily review</td>
+          <td style="padding: 0.55rem;">pipeline debug</td>
+          <td style="padding: 0.55rem;">watching it run</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,35 @@
+@let s = state();
+
+@if (s.loading) {
+  <app-ui-loading-state message="Loading email…" />
+} @else if (s.error) {
+  <app-ui-empty-state title="Couldn't load email" [message]="s.error" />
+} @else if (s.data; as email) {
+  <app-ui-stack gap="lg">
+    <app-ui-page-header>
+      <h1 uiPageHeaderTitle>{{ email.subject ?? '(no subject)' }}</h1>
+      <p uiPageHeaderHint>
+        From {{ email.from_name ?? email.from_email }} · {{ email.discovered_at | date: 'medium' }}
+      </p>
+    </app-ui-page-header>
+
+    <app-ui-section title="Details" [collapsible]="false">
+      <app-ui-meta-list>
+        <dt>From</dt><dd>{{ email.from_name ?? '—' }} &lt;{{ email.from_email }}&gt;</dd>
+        <dt>Discovered</dt><dd>{{ email.discovered_at | date: 'medium' }}</dd>
+        <dt>Verdict</dt><dd>{{ email.verdict ?? 'Pending' }}</dd>
+        @if (email.verdict_reason) {
+          <dt>Reason</dt><dd>{{ email.verdict_reason }}</dd>
+        }
+      </app-ui-meta-list>
+    </app-ui-section>
+
+    @if (email.body_text) {
+      <app-ui-section title="Body" [collapsible]="false">
+        <p style="white-space: pre-wrap;">{{ email.body_text }}</p>
+      </app-ui-section>
+    }
+  </app-ui-stack>
+} @else {
+  <app-ui-empty-state title="Email not found" message="This email may no longer be available." />
+}

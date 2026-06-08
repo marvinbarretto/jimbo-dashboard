@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vault kanban · v4 · first principles at scale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:         #0d1117;
+    --paper-tint:    #131922;
+    --col-bg:        #11161e;
+    --ink:           #e6edf3;
+    --ink-soft:      #b5bdc9;
+    --ink-mute:      #6f7886;
+    --ink-faint:     #475061;
+    --rule:          #232b35;
+    --rule-soft:     #1a2029;
+    --ghost:         #2f3744;
+
+    --warm:          #d4a373;
+    --cool:          #7a9fc4;
+    --hot:           #d77a7a;
+    --living:        #94c4a3;
+
+    --proj-jimbo:    #8db4a4;
+    --proj-hermes:   #b39bd6;
+    --proj-local:    #7fa5d6;
+    --proj-personal: #d6b97f;
+
+    --serif:  'EB Garamond', Georgia, serif;
+    --sans:   'Inter', -apple-system, sans-serif;
+    --mono:   'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1640px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem 4rem;
+  }
+
+  header.doc {
+    margin-bottom: 2rem;
+  }
+  .doc__kicker {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 0.4rem;
+  }
+  .doc__title {
+    font-family: var(--serif);
+    font-size: 1.9rem;
+    font-weight: 500;
+    line-height: 1.2;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.005em;
+  }
+  .doc__lede {
+    font-family: var(--serif);
+    font-size: 1rem;
+    color: var(--ink-soft);
+    font-style: italic;
+    line-height: 1.5;
+    max-width: 70ch;
+    margin: 0;
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+     BOARD
+     ════════════════════════════════════════════════════════════════════ */
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(290px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .col {
+    background: var(--col-bg);
+    border-radius: 8px;
+    padding: 0.85rem 0.7rem 1rem;
+    min-height: 600px;
+    position: relative;
+  }
+
+  .col__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 0.35rem 0.85rem;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 0.85rem;
+  }
+  .col__title {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: 500;
+  }
+  .col__sub {
+    font-family: var(--serif);
+    font-size: 0.74rem;
+    color: var(--ink-faint);
+    font-style: italic;
+    margin-top: 0.15rem;
+  }
+  .col__count {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink-mute);
+  }
+  .col__cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  /* The columns themselves carry mood. Failed column is subtly distressed;
+     Running column has a faint glow at the head. */
+  .col--running .col__head { border-bottom-color: color-mix(in srgb, var(--warm) 30%, var(--rule)); }
+  .col--running .col__title { color: var(--warm); }
+  .col--failed  .col__head { border-bottom-color: color-mix(in srgb, var(--hot) 30%, var(--rule)); }
+  .col--failed  .col__title { color: var(--hot); }
+  .col--failed {
+    background:
+      repeating-linear-gradient(
+        135deg,
+        var(--col-bg) 0,
+        var(--col-bg) 80px,
+        color-mix(in srgb, var(--hot) 3%, var(--col-bg)) 80px,
+        color-mix(in srgb, var(--hot) 3%, var(--col-bg)) 82px
+      );
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+     CARD — kanban scale
+     ~120–150px tall, ~290px wide. Typographic at small size.
+     ════════════════════════════════════════════════════════════════════ */
+
+  .card {
+    --tint: var(--proj-jimbo);
+    --warmth: 0;
+    --confidence: 1;
+    --age-fade: 0;
+
+    position: relative;
+    background: var(--paper-tint);
+    padding: 0.7rem 0.85rem 0.65rem;
+    border: 1px solid color-mix(in srgb,
+      var(--tint) calc(15% + var(--confidence) * 15%),
+      var(--rule-soft));
+    border-radius: calc(2px + var(--confidence) * 3px);
+    opacity: calc(1 - var(--age-fade) * 0.35);
+    overflow: hidden;
+    transition: transform 0.15s ease;
+    cursor: pointer;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--tint) calc(5% + var(--warmth) * 10%), transparent) 0%,
+      transparent 55%
+    );
+    pointer-events: none;
+  }
+  .card:hover {
+    transform: translateY(-1px);
+  }
+
+  /* Running card breathes */
+  @keyframes breathe {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--warm) 35%, transparent); }
+    50%      { box-shadow: 0 0 0 4px color-mix(in srgb, var(--warm) 0%, transparent); }
+  }
+  .card[data-state="running"] {
+    animation: breathe 3.4s ease-in-out infinite;
+    border-color: color-mix(in srgb, var(--warm) 45%, var(--rule));
+  }
+
+  /* Failed: distressed pattern */
+  .card[data-state="failed"] {
+    background:
+      repeating-linear-gradient(
+        135deg,
+        var(--paper-tint) 0,
+        var(--paper-tint) 18px,
+        color-mix(in srgb, var(--hot) 5%, var(--paper-tint)) 18px,
+        color-mix(in srgb, var(--hot) 5%, var(--paper-tint)) 20px
+      );
+    border-color: color-mix(in srgb, var(--hot) 35%, var(--rule));
+  }
+
+  /* Low confidence: softer, watercolour edge, italic title */
+  .card[data-confidence="low"] {
+    --confidence: 0.4;
+    background:
+      radial-gradient(
+        ellipse at top left,
+        color-mix(in srgb, var(--cool) 7%, var(--paper-tint)) 0%,
+        var(--paper-tint) 65%
+      );
+  }
+  .card[data-confidence="low"] .card__title {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  /* Stale: clearly tired */
+  .card[data-state="stale"] {
+    --age-fade: 0.55;
+  }
+
+  /* ─── Journey strip — compact, no labels at rest ─── */
+
+  .journey {
+    display: grid;
+    grid-template-columns: repeat(var(--steps, 5), 1fr);
+    gap: 2px;
+    margin-bottom: 0.55rem;
+    position: relative;
+    z-index: 1;
+  }
+  .journey__step {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: 8px;
+  }
+  .journey__step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    right: -50%;
+    height: 1px;
+    background: var(--ghost);
+    transform: translateY(-50%);
+    z-index: 0;
+  }
+  .journey__step--done:not(:last-child)::after {
+    background: color-mix(in srgb, var(--tint) 55%, transparent);
+  }
+  .journey__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ghost);
+    z-index: 1;
+  }
+  .journey__step--done .journey__dot {
+    background: color-mix(in srgb, var(--tint) 75%, var(--ink-mute));
+  }
+  .journey__step--current .journey__dot {
+    background: var(--warm);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--warm) 22%, transparent);
+  }
+  .journey__step--failed .journey__dot {
+    background: var(--hot);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--hot) 25%, transparent);
+  }
+
+  /* Tooltip-style labels reveal on hover. Position: above the dot. */
+  .journey__step::before {
+    content: attr(data-label);
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    color: var(--ink-soft);
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    padding: 1px 4px;
+    border-radius: 3px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s;
+    z-index: 5;
+    letter-spacing: 0.04em;
+  }
+  .card:hover .journey__step::before {
+    opacity: 1;
+  }
+
+  /* ─── Top meta row (replaces marginalia at small scale) ─── */
+
+  .meta-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.03em;
+    margin-bottom: 0.4rem;
+    position: relative;
+    z-index: 1;
+  }
+  .meta-top__seq { color: var(--ink-mute); }
+  .meta-top__age { color: var(--ink-mute); }
+  .meta-top__age--stuck {
+    color: var(--hot);
+    background: color-mix(in srgb, var(--hot) 14%, transparent);
+    padding: 0 0.3rem;
+    border-radius: 3px;
+  }
+  .meta-top__age--overdue {
+    color: var(--hot);
+    font-weight: 600;
+  }
+
+  /* ─── Title ─── */
+
+  .card__title {
+    font-family: var(--serif);
+    font-size: 0.98rem;
+    font-weight: 500;
+    line-height: 1.22;
+    letter-spacing: -0.003em;
+    margin: 0 0 0.45rem;
+    color: var(--ink);
+    position: relative;
+    z-index: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card__title-dot {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--cool);
+    vertical-align: middle;
+    margin-left: 0.3rem;
+    margin-bottom: 2px;
+  }
+  .card__title-dot--question { background: var(--warm); }
+  .card__title-dot--error    { background: var(--hot); }
+  .card__title-dot--result   { background: var(--living); }
+  .card__title-dot--rationale { background: var(--cool); }
+
+  /* ─── Narration — single italic line ─── */
+
+  .narration {
+    font-family: var(--serif);
+    font-size: 0.82rem;
+    font-style: italic;
+    color: var(--ink-soft);
+    line-height: 1.4;
+    margin: 0 0 0.55rem;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .narration--quiet { color: var(--ink-mute); }
+  .narration strong {
+    font-weight: 500;
+    font-style: normal;
+    color: var(--ink);
+  }
+  .narration code {
+    font-family: var(--mono);
+    font-style: normal;
+    font-size: 0.85em;
+    color: var(--ink-mute);
+  }
+
+  /* ─── Foot signature ─── */
+
+  .signature {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    padding-top: 0.45rem;
+    border-top: 1px solid var(--rule-soft);
+    position: relative;
+    z-index: 1;
+  }
+  .signature__project {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+    text-transform: lowercase;
+  }
+  .signature__witness {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 0.68rem;
+    color: var(--ink-mute);
+  }
+  .avatar {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--tint) 35%, var(--paper));
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--sans);
+    font-size: 0.6rem;
+    font-weight: 600;
+  }
+  .avatar--unassigned {
+    background: transparent;
+    border: 1px dashed var(--ink-faint);
+    color: var(--ink-faint);
+  }
+
+  /* ─── Hover gesture ─── */
+
+  .gesture {
+    position: absolute;
+    bottom: 0.55rem;
+    right: 0.65rem;
+    opacity: 0;
+    transform: translateY(3px);
+    transition: all 0.16s ease-out;
+    font-family: var(--sans);
+    font-size: 0.7rem;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--tint);
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    z-index: 3;
+  }
+  .gesture--primary {
+    background: color-mix(in srgb, var(--tint) 30%, var(--paper));
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .gesture--hot {
+    border-color: var(--hot);
+    color: var(--hot);
+  }
+  .card:hover .gesture { opacity: 1; transform: translateY(0); }
+  .card:hover .signature { opacity: 0.5; }
+
+  /* ─── Annotation panel under board ─── */
+
+  .notes {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem 3rem;
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--ink-mute);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    max-width: 1200px;
+  }
+  .notes h3 {
+    margin: 0 0 0.4rem;
+    font-family: var(--mono);
+    font-style: normal;
+    font-size: 0.66rem;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: 500;
+  }
+  .notes p { margin: 0; }
+  .notes em { color: var(--ink); font-style: italic; }
+  .notes code {
+    font-family: var(--mono);
+    font-style: normal;
+    font-size: 0.82em;
+    color: var(--ink-mute);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc">
+    <div class="doc__kicker">vault kanban · v4 · first principles at scale</div>
+    <h1 class="doc__title">The journey, narration and admission of uncertainty — compressed to ~140px tall.</h1>
+    <p class="doc__lede">
+      Same design philosophy as v3, retuned for the kanban. Real titles, sources, confidences and priorities from the fixtures. Hover any card to reveal skill labels under the journey strip and the primary gesture.
+    </p>
+  </header>
+
+  <div class="board">
+
+    <!-- ════════════════ INTAKE ════════════════ -->
+
+    <div class="col">
+      <div class="col__head">
+        <div>
+          <div class="col__title">Intake</div>
+          <div class="col__sub">just captured — awaiting triage</div>
+        </div>
+        <span class="col__count">5</span>
+      </div>
+      <div class="col__cards">
+
+        <!-- Telegram capture, vague -->
+        <article class="card" data-confidence="low" style="--steps: 5; --tint: var(--proj-personal);">
+          <div class="journey">
+            <div class="journey__step journey__step--current" data-label="intake"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="classify"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="decompose"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="commission"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="done"><div class="journey__dot"></div></div>
+          </div>
+          <div class="meta-top">
+            <span class="meta-top__seq">#2401</span>
+            <span class="meta-top__age">3h</span>
+          </div>
+          <h2 class="card__title">
+            Look into that thing Sam mentioned
+            <span class="card__title-dot card__title-dot--question" title="Boris has questions"></span>
+          </h2>
+          <p class="narration narration--quiet">
+            <strong>Boris</strong> can't make sense of this — too vague to classify.
+          </p>
+          <div class="signature">
+            <span class="signature__project">/personal · via telegram</span>
+            <span class="signature__witness"><span class="avatar avatar--unassigned">?</span></span>
+          </div>
+          <button class="gesture">answer →</button>
+        </article>
+
+        <!-- Sarah email, has due date -->
+        <article class="card" style="--steps: 5; --tint: var(--proj-personal);">
+          <div class="journey">
+            <div class="journey__step journey__step--current" data-label="intake"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="classify"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="decompose"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="commission"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="done"><div class="journey__dot"></div></div>
+          </div>
+          <div class="meta-top">
+            <span class="meta-top__seq">#2405</span>
+            <span class="meta-top__age meta-top__age--overdue">due tomorrow</span>
+          </div>
+          <h2 class="card__title">
+            Email from Sarah re: speaker booking for Q3
+          </h2>
+          <p class="narration">
+            Forwarded from <strong>Gmail</strong>, 18h ago. Needs a reply by end of week.
+          </p>
+          <div class="signature">
+            <span class="signature__project">/personal · gmail</span>
+            <span class="signature__witness"><span class="avatar avatar--unassigned">?</span></span>
+          </div>
+          <button class="gesture gesture--primary">triage →</button>
+        </article>
+
+        <!-- Boris benchmark spawn -->
+        <article class="card" style="--steps: 5; --tint: var(--proj-hermes);">
+          <div class="journey">
+            <div class="journey__step journey__step--current" data-label="intake"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="classify"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="decompose"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="commission"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="done"><div class="journey__dot"></div></div>
+          </div>
+          <div class="meta-top">
+            <span class="meta-top__seq">#2411</span>
+            <span class="meta-top__age">5h</span>
+          </div>
+          <h2 class="card__title">
+            Investigate qwen2.5:14b as Sonnet-tier replacement
+          </h2>
+          <p class="narration">
+            <strong>Boris</strong> spawned this during a benchmark — passed five probes at 1/30th the cost.
+          </p>
+          <div class="signature">
+            <span class="signature__project">/hermes · by @boris</span>
+            <span class="signature__witness"><span class="avatar avatar--unassigned">?</span></span>
+          </div>
+        </article>
+
+        <!-- Camry oil light -->
+        <article class="card" style="--steps: 5; --tint: var(--proj-personal);">
+          <div class="journey">
+            <div class="journey__step journey__step--current" data-label="intake"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="classify"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="decompose"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="commission"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="done"><div class="journey__dot"></div></div>
+          </div>
+          <div class="meta-top">
+            <span class="meta-top__seq">#2408</span>
+            <span class="meta-top__age">6h</span>
+          </div>
+          <h2 class="card__title">
+            Quick note: Camry oil light came on yesterday
+          </h2>
+          <p class="narration narration--quiet">
+            Captured via <strong>telegram</strong> this morning. Untouched.
+          </p>
+          <div class="signature">
+            <span class="signature__project">/personal · telegram</span>
+            <span class="signature__witness"><span class="avatar avatar--unassigned">?</span></span>
+          </div>
+        </article>
+
+        <!-- Stale unread item -->
+        <article class="card" data-state="stale" style="--steps: 5; --tint: var(--proj-personal);">
+          <div class="journey">
+            <div class="journey__step journey__step--current" data-label="intake"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="classify"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="decompose"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="commission"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="done"><div class="journey__dot"></div></div>
+          </div>
+          <div class="meta-top">
+            <span class="meta-top__seq">#2430</span>
+            <span class="meta-top__age meta-top__age--stuck">50d</span>
+          </div>
+          <h2 class="card__title">
+            Marc said something about a board games night in March
+          </h2>
+          <p class="narration narration--quiet">
+            Sat here untouched since the equinox. Probably let it go.
+          </p>
+          <div class="signature">
+            <span class="signature__project">/personal · telegram</span>
+            <span class="signature__witness"><span class="avatar avatar--unassigned">?</span></span>
+          </div>
+        </article>
+
+      </div>
+    </div>
+
+    <!-- ════════════════ CLASSIFIED ════════════════ -->
+
+    <div class="col">
+      <div class="col__head">
+        <div>
+          <div class="col__title">Classified</div>
+          <div class="col__sub">priority set — awaiting decomposition</div>
+        </div>
+        <span class="col__count">4</span>
+      </div>
+      <div class="col__cards">
+
+        <!-- URGENT P0 -->
+        <article class="card" style="--steps: 5; --tint: var(--proj-hermes); --warmth: 0.9;">
+          <div class="journey">
+            <div class="journey__step journey__step--done" data-label="intake"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--current" data-label="classify"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="decompose"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="commission"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="done"><div class="journey__dot"></div></div>
+          </div>
+          <div class="meta-top">
+            <span class="meta-top__seq">#2417 · P0</span>
+            <span class="meta-top__age meta-top__age--overdue">overdue</span>
+          </div>
+          <h2 class="card__title">
+            URGENT: Production 500s on /api/dispatch
+            <span class="card__title-dot card__title-dot--rationale" title="Boris has rationale"></span>
+          </h2>
+          <p class="narration">
+            <strong>Boris</strong> classified P0 but only at <code>0.45</code> conf — wants you to sanity-check before retry-spam.
+          </p>
+          <div class="signature">
+            <span class="signature__project">/hermes · #2417</span>
+            <span class="signature__witness">in <strong style="color:var(--ink-soft); font-style:normal; font-weight:500;">Boris's</strong> hands <span class="avatar">B</span></span>
+          </div>
+          <button class="gesture gesture--primary">decompose →</button>
+        </article>
+
+        <!-- Priority divergence -->
+        <article class="card" style="--steps: 5; --tint: var(--proj-hermes);">
+          <div class="journey">
+            <div class="journey__step journey__step--done" data-label="intake"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--current" data-label="classify"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="decompose"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="commission"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="done"><div class="journey__dot"></div></div>
+          </div>
+          <div class="meta-top">
+            <span class="meta-top__seq">#2418 · P1</span>
+            <span class="meta-top__age">2d</span>
+          </div>
+          <h2 class="card__title">
+            Refactor dispatch reaper to exponential backoff
+            <span class="card__title-dot card__title-dot--rationale" title="ai disagreed"></span>
+          </h2>
+          <p class="narration">
+            <strong>You</strong> bumped this to P1 — Boris had it as P3, called it "boring tech-debt".
+          </p>
+          <div class="signature">
+            <span class="signature__project">/hermes · #2418</span>
+            <span class="signature__witness">@boris <span class="avatar">B</span></span>
+          </div>
+        </article>
+
+        <!-- Cross-project, blocked by question -->
+        <article class="card" style="--steps: 5; --tint: var(--proj-local);">
+          <div class="journey">
+            <div class="journey__step journey__step--done" data-label="intake"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--current" data-label="classify"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="decompose"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="commission"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="done"><div class="journey__dot"></div></div>
+          </div>
+          <div class="meta-top">
+            <span class="meta-top__seq">#2403 · P1</span>
+            <span class="meta-top__age">3d</span>
+          </div>
+          <h2 class="card__title">
+            Wire intake-quality verdict back into classify trigger
+            <span class="card__title-dot card__title-dot--question" title="open question from Ralph"></span>
+          </h2>
+          <p class="narration">
+            <strong>Ralph</strong> asked: should this update the shared pipeline, or only local preview?
+          </p>
+          <div class="signature">
+            <span class="signature__project">/localshout · cross-project</span>
+            <span class="signature__witness">@ralph <span class="avatar" style="background:color-mix(in srgb, var(--proj-local) 35%, var(--paper));">R</span></span>
+          </div>
+          <button class="gesture">answer →</button>
+        </article>
+
+        <!-- 30 days stale, mid-amber -->
+        <article class="card" data-state="stale" style="--steps: 5; --tint: var(--proj-jimbo);">
+          <div class="journey">
+            <div class="journey__step journey__step--done" data-label="intake"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--current" data-label="classify"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="decompose"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="commission"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="done"><div class="journey__dot"></div></div>
+          </div>
+          <div class="meta-top">
+            <span class="meta-top__seq">#2429 · P2</span>
+            <span class="meta-top__age meta-top__age--stuck">30d</span>
+          </div>
+          <h2 class="card__title">
+            Tidy up status filter UX on vault list
+          </h2>
+          <p class="narration narration--quiet">
+            Sat in classified for a month. Nobody is blocked.
+          </p>
+          <div class="signature">
+            <span class="signature__project">/jimbo · #2429</span>
+            <span class="signature__witness">@ralph <span class="avatar">R</span></span>
+          </div>
+        </article>
+
+      </div>
+    </div>
+
+    <!-- ════════════════ RUNNING ════════════════ -->
+
+    <div class="col col--running">
+      <div class="col__head">
+        <div>
+          <div class="col__title">Running</div>
+          <div class="col__sub">an agent is working on this</div>
+        </div>
+        <span class="col__count">3</span>
+      </div>
+      <div class="col__cards">
+
+        <!-- Ralph refactor running -->
+        <article class="card" data-state="running" style="--steps: 5; --tint: var(--proj-local); --warmth: 0.6;">
+          <div class="journey">
+            <div class="journey__step journey__step--done" data-label="intake"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--done" data-label="classify"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--current" data-label="decompose"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="commission"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="done"><div class="journey__dot"></div></div>
+          </div>
+          <div class="meta-top">
+            <span class="meta-top__seq">#2456 · P2</span>
+            <span class="meta-top__age" style="color:var(--warm);">5m elapsed</span>
+          </div>
+          <h2 class="card__title">
+            Extract shared kanban board layout
+          </h2>
+          <p class="narration">
+            <strong>Ralph</strong> is decomposing this on <code>llama-3.1-8b</code>. Spawned from epic #2350.
+          </p>
+          <div class="signature">
+            <span class="signature__project">/localshout · ↳ #2350</span>
+            <span class="signature__witness">in <strong style="color:var(--warm); font-style:normal; font-weight:500;">Ralph's</strong> hands <span class="avatar" style="background:color-mix(in srgb, var(--warm) 35%, var(--paper));">R</span></span>
+          </div>
+        </article>
+
+        <!-- Boris commission, sonnet -->
+        <article class="card" data-state="running" style="--steps: 5; --tint: var(--proj-hermes); --warmth: 0.5;">
+          <div class="journey">
+            <div class="journey__step journey__step--done" data-label="intake"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--done" data-label="classify"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--done" data-label="decompose"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--current" data-label="commission"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="done"><div class="journey__dot"></div></div>
+          </div>
+          <div class="meta-top">
+            <span class="meta-top__seq">#2421 · P2</span>
+            <span class="meta-top__age" style="color:var(--warm);">42s elapsed</span>
+          </div>
+          <h2 class="card__title">
+            Sub-task: convert /vault-items endpoint to zod schemas
+          </h2>
+          <p class="narration">
+            <strong>Boris</strong> is commissioning on <code>claude-sonnet-4-6</code> — first slice of the zod migration.
+          </p>
+          <div class="signature">
+            <span class="signature__project">/hermes · ↳ #2407</span>
+            <span class="signature__witness">in <strong style="color:var(--warm); font-style:normal; font-weight:500;">Boris's</strong> hands <span class="avatar">B</span></span>
+          </div>
+        </article>
+
+        <!-- Marvin manual track -->
+        <article class="card" data-state="running" style="--steps: 5; --tint: var(--proj-jimbo); --warmth: 0.3;">
+          <div class="journey">
+            <div class="journey__step journey__step--done" data-label="intake"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--done" data-label="classify"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--done" data-label="decompose"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--current" data-label="you"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="done"><div class="journey__dot"></div></div>
+          </div>
+          <div class="meta-top">
+            <span class="meta-top__seq">#2391 · manual</span>
+            <span class="meta-top__age">24h</span>
+          </div>
+          <h2 class="card__title">
+            Review onboarding doc with new contractor on Monday
+          </h2>
+          <p class="narration narration--quiet">
+            You're handling this one yourself — no agent dispatch.
+          </p>
+          <div class="signature">
+            <span class="signature__project">/jimbo · manual track</span>
+            <span class="signature__witness">in your hands <span class="avatar">M</span></span>
+          </div>
+          <button class="gesture gesture--primary">mark done →</button>
+        </article>
+
+      </div>
+    </div>
+
+    <!-- ════════════════ FAILED ════════════════ -->
+
+    <div class="col col--failed">
+      <div class="col__head">
+        <div>
+          <div class="col__title">Failed</div>
+          <div class="col__sub">an agent gave up — your call</div>
+        </div>
+        <span class="col__count">3</span>
+      </div>
+      <div class="col__cards">
+
+        <!-- Ralph typecheck fail -->
+        <article class="card" data-state="failed" style="--steps: 5; --tint: var(--proj-hermes);">
+          <div class="journey">
+            <div class="journey__step journey__step--done" data-label="intake"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--done" data-label="classify"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--failed" data-label="typecheck"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="commission"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="done"><div class="journey__dot"></div></div>
+          </div>
+          <div class="meta-top">
+            <span class="meta-top__seq">#2333 · ↻1</span>
+            <span class="meta-top__age" style="color:var(--hot);">4m ago</span>
+          </div>
+          <h2 class="card__title">
+            Port dispatch retry mutation to new pg client
+            <span class="card__title-dot card__title-dot--error" title="typecheck error"></span>
+          </h2>
+          <p class="narration">
+            <strong>Ralph</strong> on <code>sonnet-4-6</code> hit <code>ts(2304)</code> — missing <code>DispatchRetryPayload</code>. Stale import.
+          </p>
+          <div class="signature">
+            <span class="signature__project">/hermes · #2333</span>
+            <span class="signature__witness">@ralph <span class="avatar">R</span></span>
+          </div>
+          <button class="gesture gesture--hot">retry →</button>
+        </article>
+
+        <!-- Multi-retry classify fail -->
+        <article class="card" data-state="failed" data-confidence="low" style="--steps: 5; --tint: var(--proj-local);">
+          <div class="journey">
+            <div class="journey__step journey__step--done" data-label="intake"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--failed" data-label="classify"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="decompose"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="commission"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="done"><div class="journey__dot"></div></div>
+          </div>
+          <div class="meta-top">
+            <span class="meta-top__seq">#2499 · ↻3</span>
+            <span class="meta-top__age" style="color:var(--hot);">12m ago</span>
+          </div>
+          <h2 class="card__title">
+            Define target market: which UK sectors + buyer roles
+            <span class="card__title-dot card__title-dot--error"></span>
+          </h2>
+          <p class="narration">
+            <strong>Boris</strong> tried this <em>three times</em>. API timeouts. Something's off upstream.
+          </p>
+          <div class="signature">
+            <span class="signature__project">/localshout · #2499</span>
+            <span class="signature__witness">@boris <span class="avatar">B</span></span>
+          </div>
+          <button class="gesture gesture--hot">investigate →</button>
+        </article>
+
+        <!-- Old failure, stale -->
+        <article class="card" data-state="failed" data-confidence="low" style="--steps: 5; --tint: var(--proj-jimbo);">
+          <div class="journey">
+            <div class="journey__step journey__step--done" data-label="intake"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--done" data-label="classify"><div class="journey__dot"></div></div>
+            <div class="journey__step journey__step--failed" data-label="decompose"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="commission"><div class="journey__dot"></div></div>
+            <div class="journey__step" data-label="done"><div class="journey__dot"></div></div>
+          </div>
+          <div class="meta-top">
+            <span class="meta-top__seq">#2508 · ↻1</span>
+            <span class="meta-top__age meta-top__age--stuck">2d</span>
+          </div>
+          <h2 class="card__title">
+            Reference: Become a Key Person of Influence — Daniel Priestley
+            <span class="card__title-dot card__title-dot--error"></span>
+          </h2>
+          <p class="narration narration--quiet">
+            Decompose attempt timed out. Sat here two days.
+          </p>
+          <div class="signature">
+            <span class="signature__project">/jimbo · #2508</span>
+            <span class="signature__witness">@boris <span class="avatar">B</span></span>
+          </div>
+          <button class="gesture gesture--hot">retry →</button>
+        </article>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ──────────────────────────────────────────────────────────────── -->
+
+  <div class="notes">
+    <div>
+      <h3>What survived from v3</h3>
+      <p>
+        The journey strip — now eight pixels tall, no labels at rest, full skill names on hover. Narration as a single italic line. Project as foot-signature, not a chip. Witness as serif italic ("in Boris's hands"). Confidence as edge fidelity. Decay as visible fade. Failure as distressed wallpaper.
+      </p>
+    </div>
+    <div>
+      <h3>What's new at kanban scale</h3>
+      <p>
+        Title clamped to three lines. The "system has notes" coloured dot moved to inline-end of the title (rationale/question/error/result). Priority folded into the <code>#seq</code> line. Witness shrunk to 18px avatar + italic phrase. The whole column carries mood — Failed column has a subtle diagonal wash; Running column's header line glows.
+      </p>
+    </div>
+    <div>
+      <h3>What the eye lands on first</h3>
+      <p>
+        Title, every time. Then in a half-second: the journey strip tells you stage; the warm/hot/stale tint tells you whether you should look closer; the italic narration line tells you why. Owner is a quiet signature, not a banner. You read what the system is doing, not what the database fields say.
+      </p>
+    </div>
+    <div>
+      <h3>What's still a bet</h3>
+      <p>
+        The narration sentence needs templates per event-kind, machine-generated. Cheap to build, but it's real infrastructure. Skill labels under journey dots need short canonical names. Three-line clamp may lose nuance for long titles — alternative is letting them grow and accepting variable card height (probably right).
+      </p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

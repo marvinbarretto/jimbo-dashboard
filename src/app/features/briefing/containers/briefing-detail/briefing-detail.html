@@ -1,0 +1,74 @@
+@let s = state();
+
+@if (s.loading) {
+  <app-ui-loading-state message="Loading briefing…" />
+} @else if (s.error) {
+  <app-ui-empty-state title="Couldn't load briefing" [message]="s.error" />
+} @else if (s.data; as b) {
+  <app-ui-stack gap="lg">
+    <app-ui-page-header>
+      <h1 uiPageHeaderTitle>Briefing — {{ b.session }}</h1>
+      <p uiPageHeaderHint>Generated {{ b.generated_at | date: 'medium' }}</p>
+    </app-ui-page-header>
+
+    <app-ui-section title="Overview" [collapsible]="false">
+      <app-ui-meta-list>
+        <dt>Session</dt><dd>{{ b.session }}</dd>
+        <dt>Model</dt><dd>{{ b.model }}</dd>
+        <dt>Generated</dt><dd>{{ b.generated_at | date: 'medium' }}</dd>
+        <dt>Rating</dt><dd>{{ b.user_rating !== null ? b.user_rating + ' / 10' : 'Unrated' }}</dd>
+      </app-ui-meta-list>
+    </app-ui-section>
+
+    @if (b.analysis.day_plan.length) {
+      <app-ui-section title="Day plan" [collapsible]="false">
+        <app-ui-stack gap="md">
+          @for (entry of b.analysis.day_plan; track $index) {
+            <div>
+              <strong>{{ entry.time }} — {{ entry.suggestion }}</strong>
+              <p>{{ entry.reasoning }}</p>
+              <small>Source: {{ entry.source }}</small>
+            </div>
+          }
+        </app-ui-stack>
+      </app-ui-section>
+    }
+
+    @if (b.analysis.email_highlights.length) {
+      <app-ui-section title="Email highlights" [collapsible]="false">
+        <app-ui-stack gap="md">
+          @for (h of b.analysis.email_highlights; track $index) {
+            <div>
+              <strong>{{ h.headline }}</strong>
+              <p>{{ h.editorial }}</p>
+              <small>{{ h.source }}</small>
+            </div>
+          }
+        </app-ui-stack>
+      </app-ui-section>
+    }
+
+    @if (b.analysis.surprise; as surprise) {
+      <app-ui-section title="Surprise" [collapsible]="false">
+        <p><strong>{{ surprise.fact }}</strong></p>
+        <p>{{ surprise.strategy }}</p>
+      </app-ui-section>
+    }
+
+    @if (b.analysis.vault_tasks.length) {
+      <app-ui-section title="Vault tasks" [collapsible]="false">
+        <app-ui-stack gap="md">
+          @for (t of b.analysis.vault_tasks; track $index) {
+            <div>
+              <strong>{{ t.title }}</strong> <small>(priority {{ t.priority }})</small>
+              <p>{{ t.note }}</p>
+              <small>{{ t.actionability }}</small>
+            </div>
+          }
+        </app-ui-stack>
+      </app-ui-section>
+    }
+  </app-ui-stack>
+} @else {
+  <app-ui-empty-state title="Briefing not found" message="This briefing may have been removed." />
+}

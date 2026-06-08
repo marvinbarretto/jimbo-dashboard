@@ -1,0 +1,43 @@
+@let s = state();
+
+@if (s.loading) {
+  <app-ui-loading-state message="Loading activity…" />
+} @else if (s.error) {
+  <app-ui-empty-state title="Couldn't load activity" [message]="s.error" />
+} @else if (s.data; as a) {
+  <app-ui-stack gap="lg">
+    <app-ui-page-header>
+      <h1 uiPageHeaderTitle>{{ a.description }}</h1>
+      <p uiPageHeaderHint>{{ a.task_type }} · {{ a.timestamp | date: 'medium' }}</p>
+    </app-ui-page-header>
+
+    <app-ui-section title="Details" [collapsible]="false">
+      <app-ui-meta-list>
+        <dt>Type</dt><dd>{{ a.task_type }}</dd>
+        <dt>When</dt><dd>{{ a.timestamp | date: 'medium' }}</dd>
+        <dt>Model</dt><dd>{{ a.model_used ?? '—' }}</dd>
+        <dt>Satisfaction</dt><dd>{{ a.satisfaction !== null ? a.satisfaction + ' / 5' : 'Unrated' }}</dd>
+      </app-ui-meta-list>
+    </app-ui-section>
+
+    @if (a.outcome) {
+      <app-ui-section title="Outcome" [collapsible]="false">
+        <p>{{ a.outcome }}</p>
+      </app-ui-section>
+    }
+
+    @if (a.rationale) {
+      <app-ui-section title="Rationale" [collapsible]="false">
+        <p>{{ a.rationale }}</p>
+      </app-ui-section>
+    }
+
+    @if (a.notes) {
+      <app-ui-section title="Notes" [collapsible]="false">
+        <p>{{ a.notes }}</p>
+      </app-ui-section>
+    }
+  </app-ui-stack>
+} @else {
+  <app-ui-empty-state title="Activity not found" message="This activity may have been removed." />
+}

@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vault card · v3 · first principles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:         #0d1117;
+    --paper-tint:    #131922;
+    --ink:           #e6edf3;
+    --ink-soft:      #b5bdc9;
+    --ink-mute:      #6f7886;
+    --ink-faint:     #475061;
+    --rule:          #232b35;
+    --rule-soft:     #1a2029;
+
+    --warm:          #d4a373;   /* "alive" */
+    --cool:          #7a9fc4;   /* "idle" */
+    --hot:           #d77a7a;   /* "needs you" */
+    --ghost:         #2f3744;
+
+    --proj-jimbo:    #8db4a4;
+    --proj-hermes:   #b39bd6;
+    --proj-local:    #7fa5d6;
+    --proj-personal: #d6b97f;
+
+    --serif:  'EB Garamond', Georgia, serif;
+    --sans:   'Inter', -apple-system, sans-serif;
+    --mono:   'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 4rem 2rem 6rem;
+  }
+
+  header.doc {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .doc__kicker {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 0.5rem;
+  }
+  .doc__title {
+    font-family: var(--serif);
+    font-size: 2.4rem;
+    font-weight: 500;
+    line-height: 1.15;
+    margin: 0 0 1rem;
+    letter-spacing: -0.01em;
+  }
+  .doc__lede {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+    font-style: italic;
+    line-height: 1.5;
+    max-width: 60ch;
+  }
+
+  .principle {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    margin: 4rem 0 1.2rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.8rem;
+  }
+  .principle::before {
+    content: '';
+    flex: 0 0 24px;
+    height: 1px;
+    background: var(--ink-faint);
+  }
+  .principle::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .commentary {
+    font-family: var(--serif);
+    font-size: 1rem;
+    color: var(--ink-soft);
+    font-style: italic;
+    line-height: 1.55;
+    margin: 0.5rem 0 1.5rem;
+    max-width: 60ch;
+  }
+  .commentary code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    font-style: normal;
+    color: var(--ink-mute);
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+     THE CARD
+     One typographic composition. The journey strip is the only graphic
+     element. Everything else is text in proper typographic relation.
+     ════════════════════════════════════════════════════════════════════ */
+
+  .card {
+    --tint: var(--proj-jimbo);
+    --warmth: 0;        /* 0..1 — pipeline heat (running / approaching deadline) */
+    --confidence: 1;    /* 0..1 — sharpness of edges */
+    --age-fade: 0;      /* 0..1 — desaturation as item ages */
+
+    position: relative;
+    background: var(--paper-tint);
+    padding: 1.6rem 1.8rem 1.4rem;
+    margin-bottom: 1.2rem;
+    /* Edge fidelity encodes confidence. Wobbly when uncertain. */
+    border: 1px solid color-mix(in srgb,
+      var(--tint) calc(15% + var(--confidence) * 20%),
+      transparent);
+    border-radius: calc(2px + var(--confidence) * 4px);
+    transition: transform 0.3s ease;
+    opacity: calc(1 - var(--age-fade) * 0.35);
+    overflow: hidden;
+  }
+
+  /* Tint wash — single coloured gradient encoding project + warmth.
+     No chips needed; the card IS the chip. */
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--tint) calc(8% + var(--warmth) * 12%), transparent) 0%,
+      transparent 60%
+    );
+    pointer-events: none;
+  }
+
+  /* Pulse for running items — the card breathes. */
+  @keyframes breathe {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--warm) 30%, transparent); }
+    50%      { box-shadow: 0 0 0 6px color-mix(in srgb, var(--warm) 0%, transparent); }
+  }
+  .card[data-state="running"] {
+    animation: breathe 3.2s ease-in-out infinite;
+    border-color: color-mix(in srgb, var(--warm) 45%, transparent);
+  }
+
+  /* ─── The journey strip — primary visual element ─── */
+
+  .journey {
+    display: grid;
+    grid-template-columns: repeat(var(--steps, 5), 1fr);
+    margin-bottom: 1.2rem;
+    position: relative;
+    z-index: 1;
+  }
+  .journey__step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    position: relative;
+    padding-bottom: 0.2rem;
+  }
+  /* Connecting line between steps. */
+  .journey__step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    right: -50%;
+    height: 1px;
+    background: var(--ghost);
+    z-index: 0;
+  }
+  .journey__step--done:not(:last-child)::after {
+    background: color-mix(in srgb, var(--tint) 60%, transparent);
+  }
+  .journey__dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--ghost);
+    z-index: 1;
+    transition: all 0.2s;
+  }
+  .journey__step--done .journey__dot {
+    background: color-mix(in srgb, var(--tint) 80%, var(--ink-mute));
+  }
+  .journey__step--current .journey__dot {
+    background: var(--warm);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--warm) 18%, transparent);
+  }
+  .journey__step--failed .journey__dot {
+    background: var(--hot);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--hot) 22%, transparent);
+  }
+  .journey__step--skipped .journey__dot {
+    background: var(--ghost);
+    position: relative;
+  }
+  .journey__step--skipped .journey__dot::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-top: 1px solid var(--ink-faint);
+    transform: rotate(-45deg);
+    transform-origin: center;
+  }
+  .journey__label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .journey__step--current .journey__label {
+    color: var(--warm);
+  }
+  .journey__step--done .journey__label {
+    color: var(--ink-mute);
+  }
+  .journey__step--failed .journey__label {
+    color: var(--hot);
+  }
+
+  /* ─── Margin notes (genesis, time, witness) ─── */
+
+  .marginalia {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 0.82rem;
+    color: var(--ink-mute);
+    margin-bottom: 0.9rem;
+    position: relative;
+    z-index: 1;
+  }
+  .marginalia__genesis {
+    color: var(--ink-mute);
+  }
+  .marginalia__genesis a {
+    color: var(--ink-soft);
+    text-decoration: underline;
+    text-decoration-color: var(--rule);
+    text-underline-offset: 3px;
+  }
+  .marginalia__time {
+    font-family: var(--mono);
+    font-style: normal;
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.03em;
+  }
+  .marginalia__time--stuck {
+    color: var(--hot);
+  }
+
+  /* ─── The title — typographic anchor ─── */
+
+  .card__title {
+    font-family: var(--serif);
+    font-size: 1.32rem;
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: -0.005em;
+    margin: 0 0 0.9rem;
+    color: var(--ink);
+    position: relative;
+    z-index: 1;
+  }
+  .card__title a {
+    color: inherit;
+    text-decoration: none;
+    background-image: linear-gradient(var(--rule), var(--rule));
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    transition: background-size 0.2s;
+  }
+  .card__title a:hover {
+    background-size: 100% 1px;
+  }
+
+  /* The "system has notes" hint — a small dot under the title. */
+  .card__title-hint {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--cool);
+    vertical-align: middle;
+    margin-left: 0.4rem;
+    opacity: 0.8;
+    cursor: pointer;
+  }
+  .card__title-hint--rationale { background: var(--cool); }
+  .card__title-hint--result    { background: var(--proj-jimbo); }
+  .card__title-hint--error     { background: var(--hot); }
+  .card__title-hint--question  { background: var(--warm); }
+
+  /* ─── The narration — last activity as prose ─── */
+
+  .narration {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0 0 1rem;
+    max-width: 50ch;
+    position: relative;
+    z-index: 1;
+  }
+  .narration--quiet { color: var(--ink-mute); }
+  .narration strong {
+    font-weight: 500;
+    font-style: normal;
+    color: var(--ink);
+  }
+  .narration code {
+    font-family: var(--mono);
+    font-style: normal;
+    font-size: 0.85em;
+    color: var(--ink-mute);
+  }
+
+  /* ─── The witness (owner) — bottom-right signature ─── */
+
+  .witness {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--rule-soft);
+    position: relative;
+    z-index: 1;
+  }
+  .witness__sig {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 0.78rem;
+    color: var(--ink-mute);
+  }
+  .witness__avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--tint) 35%, var(--paper-tint));
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--sans);
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .witness__project {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+    text-transform: lowercase;
+  }
+
+  /* ─── Hover-revealed action (single gesture) ─── */
+
+  .card:hover .gesture { opacity: 1; transform: translateY(0); }
+  .gesture {
+    position: absolute;
+    bottom: 1.4rem;
+    right: 1.8rem;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: all 0.16s ease-out;
+    z-index: 2;
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--tint);
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+  }
+  .gesture--primary {
+    background: color-mix(in srgb, var(--tint) 25%, var(--paper));
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .gesture--retry {
+    border-color: var(--hot);
+    color: var(--hot);
+  }
+
+  /* ─── Aging — visible decay ─── */
+
+  .card[data-state="stale"] {
+    --age-fade: 0.6;
+  }
+  .card[data-state="stale"] .card__title {
+    text-decoration: line-through;
+    text-decoration-color: var(--ink-faint);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    /* line-through is too harsh; use opacity instead */
+    text-decoration: none;
+  }
+
+  /* ─── Failure — visibly distressed ─── */
+
+  .card[data-state="failed"] {
+    background:
+      repeating-linear-gradient(
+        135deg,
+        var(--paper-tint) 0,
+        var(--paper-tint) 22px,
+        color-mix(in srgb, var(--hot) 4%, var(--paper-tint)) 22px,
+        color-mix(in srgb, var(--hot) 4%, var(--paper-tint)) 24px
+      );
+    border-color: color-mix(in srgb, var(--hot) 35%, var(--rule));
+  }
+
+  /* ─── Low confidence — softer, more handwritten ─── */
+
+  .card[data-confidence="low"] {
+    --confidence: 0.35;
+    background:
+      radial-gradient(
+        ellipse at top left,
+        color-mix(in srgb, var(--cool) 6%, var(--paper-tint)) 0%,
+        var(--paper-tint) 70%
+      );
+  }
+  .card[data-confidence="low"] .card__title {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  /* ─── Footnote at the bottom of the page ─── */
+
+  .footnote {
+    margin-top: 5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--ink-mute);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    max-width: 60ch;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc">
+    <div class="doc__kicker">vault card · v3 · first principles</div>
+    <h1 class="doc__title">A card is a moment in a journey, not a row in a table.</h1>
+    <p class="doc__lede">
+      The card stops pretending to be a Linear ticket. The journey through skills becomes the primary visual element. Type does the work that chips were doing. Confidence and decay are visible, not hidden behind crisp UI. The system narrates itself.
+    </p>
+  </header>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       PRINCIPLE I — The journey is the protagonist
+       ════════════════════════════════════════════════════════════════ -->
+
+  <div class="principle">I · The journey is the protagonist</div>
+  <p class="commentary">
+    Every vault item passes through a sequence of skills. The card shows that sequence — where it's been, where it is, where it's going — as a small constellation of dots. The kanban column tells you the stage; the journey strip tells you the story.
+  </p>
+
+  <article class="card" style="--steps: 5; --tint: var(--proj-jimbo);">
+    <div class="journey">
+      <div class="journey__step journey__step--done">
+        <div class="journey__dot"></div>
+        <div class="journey__label">intake</div>
+      </div>
+      <div class="journey__step journey__step--done">
+        <div class="journey__dot"></div>
+        <div class="journey__label">classify</div>
+      </div>
+      <div class="journey__step journey__step--current">
+        <div class="journey__dot"></div>
+        <div class="journey__label">decompose</div>
+      </div>
+      <div class="journey__step">
+        <div class="journey__dot"></div>
+        <div class="journey__label">commission</div>
+      </div>
+      <div class="journey__step">
+        <div class="journey__dot"></div>
+        <div class="journey__label">done</div>
+      </div>
+    </div>
+
+    <div class="marginalia">
+      <span class="marginalia__genesis">— captured by hand, by Marvin</span>
+      <span class="marginalia__time">9d</span>
+    </div>
+
+    <h2 class="card__title">
+      <a href="#">migrate grooming board column order to <code style="font-family: var(--mono); font-size: 0.78em; color: var(--ink-mute); font-weight: normal;">GROOMING_STATUS_ORDER</code> const</a>
+      <span class="card__title-hint card__title-hint--rationale" title="Boris has a rationale to share"></span>
+    </h2>
+
+    <p class="narration">
+      <strong>Boris</strong> classified this as <em>P1 manual</em> yesterday — high confidence, ranked by blocked count and project priority.
+    </p>
+
+    <div class="witness">
+      <span class="witness__sig">
+        <span class="witness__avatar">M</span>
+        watched by Marvin
+      </span>
+      <span class="witness__project">/jimbo-core · #2541</span>
+    </div>
+
+    <button class="gesture gesture--primary">decompose →</button>
+  </article>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       PRINCIPLE II — The system narrates itself
+       ════════════════════════════════════════════════════════════════ -->
+
+  <div class="principle">II · The system narrates itself</div>
+  <p class="commentary">
+    No "RATIONALE" callout box. No fields. The last interesting thing that happened is told as a sentence, in the voice of the agent that did it. The system speaks; you read. A small coloured dot beside the title hints that there's more to read if you tap.
+  </p>
+
+  <article class="card" data-state="running" style="--steps: 5; --tint: var(--proj-local); --warmth: 0.7;">
+    <div class="journey">
+      <div class="journey__step journey__step--done">
+        <div class="journey__dot"></div>
+        <div class="journey__label">intake</div>
+      </div>
+      <div class="journey__step journey__step--done">
+        <div class="journey__dot"></div>
+        <div class="journey__label">classify</div>
+      </div>
+      <div class="journey__step journey__step--current">
+        <div class="journey__dot"></div>
+        <div class="journey__label">decompose</div>
+      </div>
+      <div class="journey__step">
+        <div class="journey__dot"></div>
+        <div class="journey__label">commission</div>
+      </div>
+      <div class="journey__step">
+        <div class="journey__dot"></div>
+        <div class="journey__label">done</div>
+      </div>
+    </div>
+
+    <div class="marginalia">
+      <span class="marginalia__genesis">— spawned by <a href="#">#2350</a>, the unify-kanban epic</span>
+      <span class="marginalia__time">5m elapsed</span>
+    </div>
+
+    <h2 class="card__title">
+      <a href="#">Extract shared kanban board layout</a>
+    </h2>
+
+    <p class="narration">
+      <strong>Ralph</strong> is working on this now — picking <code>ollama/llama-3.1-8b</code> for the refactor. Began five minutes ago.
+    </p>
+
+    <div class="witness">
+      <span class="witness__sig">
+        <span class="witness__avatar" style="background: color-mix(in srgb, var(--warm) 45%, var(--paper-tint));">R</span>
+        in Ralph's hands
+      </span>
+      <span class="witness__project">/localshout · #2456</span>
+    </div>
+  </article>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       PRINCIPLE III — Failure is visible, not chrome'd
+       ════════════════════════════════════════════════════════════════ -->
+
+  <div class="principle">III · Failure is felt, not styled</div>
+  <p class="commentary">
+    A failed card doesn't get a red <code>FAILED</code> chip in the corner. The whole card becomes visually distressed — a subtle diagonal texture that reads, peripherally, as wrong. The journey shows the broken step. The narration explains what happened, in prose. The single gesture offered is the one you'd want: retry.
+  </p>
+
+  <article class="card" data-state="failed" style="--steps: 5; --tint: var(--proj-hermes);">
+    <div class="journey">
+      <div class="journey__step journey__step--done">
+        <div class="journey__dot"></div>
+        <div class="journey__label">intake</div>
+      </div>
+      <div class="journey__step journey__step--done">
+        <div class="journey__dot"></div>
+        <div class="journey__label">classify</div>
+      </div>
+      <div class="journey__step journey__step--failed">
+        <div class="journey__dot"></div>
+        <div class="journey__label">typecheck</div>
+      </div>
+      <div class="journey__step">
+        <div class="journey__dot"></div>
+        <div class="journey__label">commission</div>
+      </div>
+      <div class="journey__step">
+        <div class="journey__dot"></div>
+        <div class="journey__label">done</div>
+      </div>
+    </div>
+
+    <div class="marginalia">
+      <span class="marginalia__genesis">— captured by hand, by Marvin, then dispatched</span>
+      <span class="marginalia__time">failed 4m ago · 1st retry</span>
+    </div>
+
+    <h2 class="card__title">
+      <a href="#">Port dispatch retry mutation to the new Postgres client</a>
+      <span class="card__title-hint card__title-hint--error" title="Ralph hit a typecheck error"></span>
+    </h2>
+
+    <p class="narration">
+      <strong>Ralph</strong> tried this on <code>anthropic/claude-sonnet-4-6</code> and gave up after 23 seconds — couldn't find the name <code>DispatchRetryPayload</code>. Probably a stale import; might just work on a retry.
+    </p>
+
+    <div class="witness">
+      <span class="witness__sig">
+        <span class="witness__avatar">M</span>
+        watched by Marvin
+      </span>
+      <span class="witness__project">/hermes · #2333</span>
+    </div>
+
+    <button class="gesture gesture--retry">try again →</button>
+  </article>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       PRINCIPLE IV — The system admits uncertainty
+       ════════════════════════════════════════════════════════════════ -->
+
+  <div class="principle">IV · The system admits uncertainty</div>
+  <p class="commentary">
+    When the classifier was confident, the card has crisp edges. When it wasn't, the card looks softer — almost watercoloured. The title shifts to italic, hinting "I'm not sure about this one." This is rare in software: most UIs project confidence even when the data is shaky. Here it's honest. Low confidence means look closer.
+  </p>
+
+  <article class="card" data-confidence="low" style="--steps: 5; --tint: var(--proj-personal);">
+    <div class="journey">
+      <div class="journey__step journey__step--done">
+        <div class="journey__dot"></div>
+        <div class="journey__label">intake</div>
+      </div>
+      <div class="journey__step journey__step--current">
+        <div class="journey__dot"></div>
+        <div class="journey__label">classify</div>
+      </div>
+      <div class="journey__step">
+        <div class="journey__dot"></div>
+        <div class="journey__label">decompose</div>
+      </div>
+      <div class="journey__step">
+        <div class="journey__dot"></div>
+        <div class="journey__label">commission</div>
+      </div>
+      <div class="journey__step">
+        <div class="journey__dot"></div>
+        <div class="journey__label">done</div>
+      </div>
+    </div>
+
+    <div class="marginalia">
+      <span class="marginalia__genesis">— forwarded from an email last Tuesday</span>
+      <span class="marginalia__time">2d</span>
+    </div>
+
+    <h2 class="card__title">
+      <a href="#">Probably about onboarding the new contractor on Monday?</a>
+      <span class="card__title-hint card__title-hint--question" title="Boris has a question about this"></span>
+    </h2>
+
+    <p class="narration narration--quiet">
+      <strong>Boris</strong> couldn't classify this with confidence — 0.34 — and has a question: <em>"Is this a task you'll do yourself, or should I draft a kickoff doc?"</em>
+    </p>
+
+    <div class="witness">
+      <span class="witness__sig">
+        <span class="witness__avatar">M</span>
+        unread
+      </span>
+      <span class="witness__project">/personal · #2611</span>
+    </div>
+
+    <button class="gesture">answer Boris →</button>
+  </article>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       PRINCIPLE V — Decay is visible, not hidden
+       ════════════════════════════════════════════════════════════════ -->
+
+  <div class="principle">V · Old things look old</div>
+  <p class="commentary">
+    Most kanban tools hide age behind a number. A 23-day-old card looks identical to a fresh one until you read the corner. Here, age desaturates the card — it visibly fades. You feel the staleness peripherally; the column starts to look tired in places. That's a signal to clean up, not a number to ignore.
+  </p>
+
+  <article class="card" data-state="stale" style="--steps: 3; --tint: var(--proj-jimbo);">
+    <div class="journey">
+      <div class="journey__step journey__step--done">
+        <div class="journey__dot"></div>
+        <div class="journey__label">intake</div>
+      </div>
+      <div class="journey__step journey__step--done">
+        <div class="journey__dot"></div>
+        <div class="journey__label">classify</div>
+      </div>
+      <div class="journey__step journey__step--current">
+        <div class="journey__dot"></div>
+        <div class="journey__label">archive?</div>
+      </div>
+    </div>
+
+    <div class="marginalia">
+      <span class="marginalia__genesis">— captured from a Daniel Priestley book, ages ago</span>
+      <span class="marginalia__time marginalia__time--stuck">23d in this column</span>
+    </div>
+
+    <h2 class="card__title">
+      <a href="#">Reference: Become a Key Person of Influence — Daniel Priestley</a>
+    </h2>
+
+    <p class="narration narration--quiet">
+      Hasn't moved in three weeks. <strong>Boris</strong> last touched it on the second of May. Probably either worth filing properly or letting go.
+    </p>
+
+    <div class="witness">
+      <span class="witness__sig">
+        <span class="witness__avatar">M</span>
+        watched by Marvin
+      </span>
+      <span class="witness__project">/jimbo-core · #2398</span>
+    </div>
+  </article>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       PRINCIPLE VI — The card has no chrome, only content
+       ════════════════════════════════════════════════════════════════ -->
+
+  <div class="principle">VI · No chrome, only content</div>
+  <p class="commentary">
+    No project chips, no priority chips, no type chips, no tag clouds, no button rows. Project becomes a tint and a foot-margin signature. Priority becomes the warmth of the card. Type becomes implicit in the journey (references have a short journey; tasks a longer one). Tags are gone — they live on the detail page, where there's room to take them seriously. The card is a poster, not a form.
+  </p>
+
+  <p class="footnote">
+    The risk of this design is honest: it's bigger. Each card takes more vertical space than a Linear-style row, so fewer fit on screen at once. That's a trade I'd argue is correct for your system — most of your time on this board is observation, not triage. You don't need to see 30 items; you need to <em>read</em> the four or five that matter right now. A card you read once and act on is worth more than a row you skim and forget. <br><br>
+    If density turns out to be load-bearing somewhere, the journey strip + narration are the two pieces I'd keep last; everything else is negotiable.
+  </p>
+
+</div>
+</body>
+</html>

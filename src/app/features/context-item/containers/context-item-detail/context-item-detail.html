@@ -1,0 +1,32 @@
+@let s = state();
+
+@if (s.loading) {
+  <app-ui-loading-state message="Loading context item…" />
+} @else if (s.error) {
+  <app-ui-empty-state title="Couldn't load context item" [message]="s.error" />
+} @else if (s.data; as item) {
+  <app-ui-stack gap="lg">
+    <app-ui-page-header>
+      <h1 uiPageHeaderTitle>{{ item.label ?? 'Context item' }}</h1>
+      <p uiPageHeaderHint>{{ item.file_name }} · {{ item.section_name }}</p>
+    </app-ui-page-header>
+
+    <app-ui-section title="Content" [collapsible]="false">
+      <p>{{ item.content }}</p>
+    </app-ui-section>
+
+    <app-ui-section title="Details" [collapsible]="false">
+      <app-ui-meta-list>
+        <dt>File</dt><dd>{{ item.file_name }}</dd>
+        <dt>Section</dt><dd>{{ item.section_name }}</dd>
+        <dt>Status</dt><dd>{{ item.status ?? '—' }}</dd>
+        <dt>Category</dt><dd>{{ item.category ?? '—' }}</dd>
+        <dt>Timeframe</dt><dd>{{ item.timeframe ?? '—' }}</dd>
+        <dt>Expires</dt><dd>{{ item.expires_at ? (item.expires_at | date: 'mediumDate') : '—' }}</dd>
+        <dt>Updated</dt><dd>{{ item.updated_at | date: 'medium' }}</dd>
+      </app-ui-meta-list>
+    </app-ui-section>
+  </app-ui-stack>
+} @else {
+  <app-ui-empty-state title="Context item not found" message="This item may have been removed." />
+}

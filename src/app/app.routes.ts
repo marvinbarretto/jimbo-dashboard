@@ -26,6 +26,28 @@ export const routes: Routes = [
     title: 'Mail activity',
     loadComponent: () => import('./features/mail-activity/containers/mail-activity-page/mail-activity-page').then(m => m.MailActivityPage),
   },
+  // Deep-link target for email search results (keyed by gmail_id — see
+  // jimbo-api search resolveDeepLinkKey). Sibling of the list above.
+  {
+    path: 'mail-activity/:gmailId',
+    title: 'Email',
+    loadComponent: () => import('./features/mail-activity/containers/email-detail/email-detail').then(m => m.EmailDetail),
+  },
+  {
+    path: 'briefing/:id',
+    title: 'Briefing',
+    loadComponent: () => import('./features/briefing/containers/briefing-detail/briefing-detail').then(m => m.BriefingDetail),
+  },
+  {
+    path: 'activity/:id',
+    title: 'Activity',
+    loadComponent: () => import('./features/activity/containers/activity-detail/activity-detail').then(m => m.ActivityDetail),
+  },
+  {
+    path: 'context/:id',
+    title: 'Context item',
+    loadComponent: () => import('./features/context-item/containers/context-item-detail/context-item-detail').then(m => m.ContextItemDetail),
+  },
   {
     path: 'shopping',
     loadChildren: () => import('./features/shopping/shopping.routes').then(m => m.shoppingRoutes),
