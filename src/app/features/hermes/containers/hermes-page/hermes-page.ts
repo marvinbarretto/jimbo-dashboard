@@ -33,6 +33,7 @@ import { HermesService } from '../../data-access/hermes.service';
         <a routerLink="control-room" routerLinkActive="active" class="ui-tab">Control Room</a>
         <a routerLink="timeline" routerLinkActive="active" class="ui-tab">Timeline</a>
         <a routerLink="runs" routerLinkActive="active" class="ui-tab">Runs</a>
+        <a routerLink="model-prefs" routerLinkActive="active" class="ui-tab">Model Prefs</a>
       </app-ui-tab-bar>
 
       <div class="hermes-page__body">

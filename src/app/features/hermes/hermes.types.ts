@@ -51,3 +51,15 @@ export interface HermesSnapshot {
   last_modified: string | null;
   read_at: string;
 }
+
+export interface HermesModelTiers {
+  cheap: string;
+  balanced: string;
+  capable: string;
+}
+
+export interface HermesModelPrefs {
+  tiers: HermesModelTiers;
+  default: string;
+  auxiliary: Record<string, string>;
+}

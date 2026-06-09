@@ -1,0 +1,86 @@
+@if (loadError()) {
+  <p class="mp-error">{{ loadError() }}</p>
+} @else if (!prefs()) {
+  <p class="mp-loading">Loading model preferences…</p>
+} @else {
+  <div class="mp">
+
+    <div class="mp__tiers">
+      @for (tier of tiers; track tier) {
+        @let current = prefs()!.tiers[tier];
+        @let auxSections = auxByTier()[tier];
+
+        <div class="mp__tier" [class.mp__tier--editing]="editingTier() === tier">
+          <div class="mp__tier-header">
+            <span class="mp__tier-label">{{ tierLabels[tier] }}</span>
+            <span class="mp__tier-desc">{{ tierDescriptions[tier] }}</span>
+          </div>
+
+          @if (editingTier() === tier) {
+            <div class="mp__tier-edit">
+              <select
+                class="mp__select"
+                [ngModel]="editValue()"
+                (ngModelChange)="editValue.set($event)">
+                <option value="" disabled>— select a model —</option>
+                @for (group of modelsByProvider(); track group[0]) {
+                  <optgroup [label]="group[0]">
+                    @for (m of group[1]; track m.id) {
+                      <option [value]="m.id">{{ m.name }}</option>
+                    }
+                  </optgroup>
+                }
+                @if (editValueIsUnknown()) {
+                  <optgroup label="Current (not in catalogue)">
+                    <option [value]="editValue()">{{ editValue() }}</option>
+                  </optgroup>
+                }
+              </select>
+              <div class="mp__edit-actions">
+                <button
+                  type="button"
+                  class="mp__btn mp__btn--primary"
+                  [disabled]="saveState() === 'saving' || !editValue()"
+                  (click)="save()">
+                  {{ saveState() === 'saving' ? 'Saving…' : 'Save' }}
+                </button>
+                <button type="button" class="mp__btn mp__btn--ghost" (click)="cancelEdit()">Cancel</button>
+              </div>
+              @if (saveState() === 'error') {
+                <p class="mp__save-error">{{ saveError() }}</p>
+              }
+            </div>
+          } @else {
+            <div class="mp__tier-value">
+              <code class="mp__model-id">{{ current || '—' }}</code>
+              <button type="button" class="mp__edit-btn" (click)="startEdit(tier)" title="Edit {{ tierLabels[tier] }} model">✎</button>
+            </div>
+          }
+
+          <div class="mp__tier-aux">
+            @if (auxSections.length) {
+              <span class="mp__aux-label">Used by</span>
+              @for (section of auxSections; track section) {
+                <span class="mp__aux-tag">{{ section }}</span>
+              }
+            } @else {
+              <span class="mp__aux-none">No auxiliary services assigned</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <dl class="mp__meta">
+      <div class="mp__meta-row">
+        <dt>Default (cron fallback)</dt>
+        <dd><code>{{ prefs()!.default }}</code></dd>
+      </div>
+    </dl>
+
+    @if (saveState() === 'saved') {
+      <p class="mp__saved-notice">Saved — config.yaml updated and auxiliary services synced.</p>
+    }
+
+  </div>
+}

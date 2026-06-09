@@ -1,0 +1,219 @@
+.mp {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 52rem;
+}
+
+.mp-loading,
+.mp-error {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.mp-error { color: var(--color-danger); }
+
+// ── Tier cards ──────────────────────────────────────────────────────────────
+
+.mp__tiers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+.mp__tier {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  transition: border-color 0.15s;
+
+  &--editing {
+    border-color: var(--color-primary, #4f88e0);
+  }
+}
+
+.mp__tier-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.mp__tier-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.mp__tier-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+// ── Value display ──────────────────────────────────────────────────────────
+
+.mp__tier-value {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2rem;
+}
+
+.mp__model-id {
+  font-size: 0.8rem;
+  font-family: var(--font-mono, monospace);
+  color: var(--color-text);
+  word-break: break-all;
+  flex: 1;
+}
+
+.mp__edit-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  padding: 0.2rem 0.3rem;
+  border-radius: var(--radius-sm, 3px);
+  line-height: 1;
+
+  &:hover { color: var(--color-text); background: var(--color-surface-hover, rgba(0,0,0,0.06)); }
+}
+
+// ── Inline edit ────────────────────────────────────────────────────────────
+
+.mp__tier-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mp__select {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.82rem;
+  background: var(--color-input-bg, var(--color-surface));
+  border: 1px solid var(--color-border-focus, var(--color-primary, #4f88e0));
+  border-radius: var(--radius-sm, 3px);
+  color: var(--color-text);
+  outline: none;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.mp__edit-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.mp__btn {
+  padding: 0.3rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm, 3px);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: opacity 0.12s;
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &--primary {
+    background: var(--color-primary, #4f88e0);
+    color: #fff;
+  }
+
+  &--ghost {
+    background: none;
+    border-color: var(--color-border);
+    color: var(--color-text-muted);
+  }
+}
+
+.mp__save-error {
+  font-size: 0.75rem;
+  color: var(--color-danger);
+  margin: 0;
+}
+
+// ── Auxiliary service tags ─────────────────────────────────────────────────
+
+.mp__tier-aux {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.mp__aux-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-right: 0.1rem;
+}
+
+.mp__aux-tag {
+  font-size: 0.7rem;
+  font-family: var(--font-mono, monospace);
+  padding: 0.1rem 0.45rem;
+  background: var(--color-surface-raised, rgba(0,0,0,0.04));
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+}
+
+.mp__aux-none {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+// ── Meta row ──────────────────────────────────────────────────────────────
+
+.mp__meta {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.mp__meta-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+
+  dt {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.8rem;
+
+    code {
+      font-family: var(--font-mono, monospace);
+      color: var(--color-text);
+    }
+  }
+}
+
+// ── Save notice ────────────────────────────────────────────────────────────
+
+.mp__saved-notice {
+  font-size: 0.8rem;
+  color: var(--color-success);
+  margin: 0;
+}

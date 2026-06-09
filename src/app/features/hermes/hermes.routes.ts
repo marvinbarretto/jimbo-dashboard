@@ -26,6 +26,11 @@ export const hermesRoutes: Routes = [
         title: 'Hermes — Runs',
         loadComponent: () => import('./containers/hermes-runs/hermes-runs').then(m => m.HermesRuns),
       },
+      {
+        path: 'model-prefs',
+        title: 'Hermes — Model Preferences',
+        loadComponent: () => import('./containers/hermes-model-prefs/hermes-model-prefs').then(m => m.HermesModelPrefs),
+      },
     ],
   },
 ];

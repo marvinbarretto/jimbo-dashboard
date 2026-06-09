@@ -3,7 +3,7 @@ import { Injectable, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Observable, catchError, map, of, shareReplay, switchMap, timer } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import type { HermesJob, HermesRunOutput, HermesRunsResponse, HermesSnapshot } from '../hermes.types';
+import type { HermesJob, HermesModelPrefs, HermesRunOutput, HermesRunsResponse, HermesSnapshot } from '../hermes.types';
 export type { HermesJob };
 
 interface SnapshotState {
@@ -80,5 +80,13 @@ export class HermesService {
 
   getRunOutput(jobId: string, runId: string): Observable<HermesRunOutput> {
     return this.http.get<HermesRunOutput>(`${this.base}/api/hermes/jobs/${jobId}/runs/${runId}`);
+  }
+
+  getModelPrefs(): Observable<HermesModelPrefs> {
+    return this.http.get<HermesModelPrefs>(`${this.base}/api/hermes/config`);
+  }
+
+  updateModelPrefs(tier: 'cheap' | 'balanced' | 'capable', model: string): Observable<HermesModelPrefs> {
+    return this.http.patch<HermesModelPrefs>(`${this.base}/api/hermes/config`, { tier, model });
   }
 }
