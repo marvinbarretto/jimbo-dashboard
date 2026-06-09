@@ -389,9 +389,11 @@ export class ProjectLanding {
 
   activityDesc(item: ProjectActivityItem): string {
     switch (item.action) {
+      case 'note_created':        return `${item.to_value ?? 'note'} created`;
       case 'status_changed':      return `status → ${item.to_value ?? '?'}`;
       case 'dispatch_started':    return 'dispatch started';
-      case 'commission_completed': return 'commission completed';
+      case 'commission_completed': return `commission completed${item.reason ? ` · ${item.reason}` : ''}`;
+      case 'recon_completed':     return `recon completed${item.reason ? ` · ${item.reason}` : ''}`;
       case 'submitted_analysis':  return `analysis submitted → ${item.to_value ?? '?'}`;
       case 'submitted_decomposition': return 'decomposition submitted';
       case 'question_raised':     return `question raised${item.to_value ? ` for @${item.to_value}` : ''}`;
