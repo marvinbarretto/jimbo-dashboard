@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.68](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.67...v0.0.68) (2026-06-09)
+
+
+### Features
+
+* **deep-links:** detail pages for activity, briefing, context-item, email ([1b204e4](https://github.com/marvinbarretto/jimbo-dashboard/commit/1b204e438e3352d0bbf3d487192b2c69f90a3cc6))
+* **project-activity:** add labels for note_created and recon_completed events ([40dc588](https://github.com/marvinbarretto/jimbo-dashboard/commit/40dc588ed32d9b03cc1f2a5cd2505c4080abf524))
+* **project-landing:** belief system UI, open flags, in-flight dispatch, activity feed ([0488c95](https://github.com/marvinbarretto/jimbo-dashboard/commit/0488c9589cf1b58db2403c71455b650443cb0589))
+* **projects-list:** show per-epic progress, velocity, and stalled pill ([0099245](https://github.com/marvinbarretto/jimbo-dashboard/commit/00992458a542ba6591c341d756899b726e32993b))
+* **projects-list:** tab Epics by project; add UiInlineTabs primitive ([f27909d](https://github.com/marvinbarretto/jimbo-dashboard/commit/f27909db02e2f59c8cc7116c7a330d8c40938c60))
+* understanding section on project landing page ([dfb545e](https://github.com/marvinbarretto/jimbo-dashboard/commit/dfb545eb9b8ef274ff121895630f5f3115464a87))
+* **vault-card:** genesis provenance chip and model-id line on dispatch cards ([03be316](https://github.com/marvinbarretto/jimbo-dashboard/commit/03be316a700336870405086cce7697273809f722))
+
+
+### Bug Fixes
+
+* guard null executor in execution board filter groups ([f235807](https://github.com/marvinbarretto/jimbo-dashboard/commit/f23580724298664c511549f8fb17cfe12ed0ac94))
+
 ### [0.0.67](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.66...v0.0.67) (2026-05-25)
 
 
