@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.70](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.69...v0.0.70) (2026-06-15)
+
+
+### Bug Fixes
+
+* **detail-modal:** break circular dep causing NG0919 ([7ec17c1](https://github.com/marvinbarretto/jimbo-dashboard/commit/7ec17c1acfd0bd7139a92fc20bda96cf150a6edf))
+
 ### [0.0.69](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.68...v0.0.69) (2026-06-15)
 
 
