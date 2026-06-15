@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.69](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.68...v0.0.69) (2026-06-15)
+
+
+### Features
+
+* **hermes:** add model prefs UI and promote hermes to primary nav ([f630959](https://github.com/marvinbarretto/jimbo-dashboard/commit/f6309596214ef8420488faacf99c16b27e71c937))
+* **markdown:** render vault item body as markdown ([98f7859](https://github.com/marvinbarretto/jimbo-dashboard/commit/98f78594145101b0a4b8cc571c51d1e943670d08))
+
 ### [0.0.68](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.67...v0.0.68) (2026-06-09)
 
 
