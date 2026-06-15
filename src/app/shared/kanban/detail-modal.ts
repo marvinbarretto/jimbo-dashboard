@@ -6,29 +6,12 @@ import { distinctUntilChanged, map } from 'rxjs';
 import { VaultItemDetailDialog } from '@features/vault-items/containers/vault-item-detail-dialog/vault-item-detail-dialog';
 import type { VaultItemDialogData } from '@features/vault-items/dialog/vault-item-dialog-mode';
 
-// Swaps the modal contents to a different vault item by updating the
-// `?detail=<seq>` query param. withVaultDetailModal() watches this param and
-// re-binds the dialog body when it changes.
-export function swapDetailSeq(router: Router, seq: number): void {
-  router.navigate([], {
-    queryParams: { detail: seq },
-    queryParamsHandling: 'merge',
-  });
-}
-
-// Close the modal by clearing the deep-link query params. The
-// withVaultDetailModal() observer reacts to the params disappearing and
-// closes the dialog. Clears both `detail` and the `note` alias so a
-// notification-arrived URL doesn't reopen the dialog after close. No-op
-// for `mode === 'page'` callers (they should use Router.navigate to
-// /vault-items instead).
-export function closeDetail(router: Router): void {
-  router.navigate([], {
-    queryParams: { detail: null, note: null },
-    queryParamsHandling: 'merge',
-    replaceUrl: true,
-  });
-}
+// Re-export so callers that only need navigation helpers can import from
+// detail-modal without pulling in VaultItemDetailDialog. The canonical
+// implementations live in detail-nav.ts to break the circular dependency
+// that would otherwise form: detail-modal → VaultItemDetailDialog →
+// VaultItemDetailBody → detail-modal.
+export { swapDetailSeq, closeDetail } from './detail-nav';
 
 // Wires `?detail=<seq>` ↔ a CDK Dialog of the vault-item detail. Call once
 // from a kanban board's constructor; the URL becomes the single source of

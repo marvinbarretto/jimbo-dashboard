@@ -12,7 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { swapDetailSeq, closeDetail } from '@shared/kanban/detail-modal';
+import { swapDetailSeq, closeDetail } from '@shared/kanban/detail-nav';
 import { RejectFormComponent, type RejectSubmission } from './reject-form/reject-form';
 import { ThreadView } from '../../../thread/components/thread-view/thread-view';
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
