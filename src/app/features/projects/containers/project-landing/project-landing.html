@@ -267,7 +267,7 @@
         @if (p.criteria) {
           <app-ui-section title="Criteria (legacy)" [collapsible]="true">
             <app-ui-card tone="soft" [compact]="true">
-              <pre class="project-landing__criteria">{{ p.criteria }}</pre>
+              <div class="markdown-body" [innerHTML]="p.criteria | markdown"></div>
             </app-ui-card>
           </app-ui-section>
         }

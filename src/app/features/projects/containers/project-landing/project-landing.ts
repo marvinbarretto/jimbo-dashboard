@@ -21,6 +21,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiDataTable } from '@shared/components/ui-data-table/ui-data-table';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
+import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { ProjectsService } from '../../data-access/projects.service';
 import { ProjectActivityEventsService } from '../../data-access/project-activity-events.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
@@ -103,6 +104,7 @@ interface ProjectActivityItem {
     UiSection,
     UiStack,
     RelativeTimePipe,
+    MarkdownPipe,
     ProjectStatTile,
     VaultChip,
     ProjectFocusSessionRow,
