@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, effect, input, output, signal, viewChild } from '@angular/core';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
+import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 
 // Operator-created (source.kind='manual') items get an editable scratchpad
 // because the "body" doubles as live working notes. Ingested items keep the
@@ -8,7 +9,7 @@ import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 // isn't lost.
 @Component({
   selector: 'app-vault-item-intake-block',
-  imports: [UiSubsection, RelativeTimePipe],
+  imports: [UiSubsection, RelativeTimePipe, MarkdownPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-ui-subsection
@@ -27,15 +28,16 @@ import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
           placeholder="What's the situation? Notes for yourself…"
         ></textarea>
       } @else if (body()) {
-        <pre
-          class="vault-item-intake-block__body"
+        <div
+          class="vault-item-intake-block__body markdown-body"
           [class.vault-item-intake-block__body--editable]="editable()"
           [attr.role]="editable() ? 'button' : null"
           [attr.tabindex]="editable() ? 0 : null"
           [attr.aria-label]="editable() ? 'Edit body' : null"
+          [innerHTML]="body() | markdown"
           (click)="editable() && startEdit()"
           (keydown.enter)="editable() && startEdit()"
-        >{{ body() }}</pre>
+        ></div>
       } @else if (editable()) {
         <button
           type="button"
@@ -58,12 +60,8 @@ import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
       background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-left: 2px solid var(--color-border);
-      padding: 0.4rem 0.6rem;
+      padding: 0.5rem 0.75rem;
       margin: 0;
-      font-size: 0.8rem;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-family: inherit;
     }
 
     .vault-item-intake-block__body--editable {

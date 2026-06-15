@@ -5,6 +5,7 @@
 @use 'flatpickr/dist/plugins/monthSelect/style.css';
 @use 'breakpoints' as bp;
 @use 'utilities';
+@use 'markdown';
 
 .app-shell {
   display: flex;

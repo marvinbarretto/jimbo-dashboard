@@ -15,6 +15,7 @@ import { lifecycleState, isArchived } from '@domain/vault/vault-item';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import { actorId } from '@domain/ids';
 import type { ActorId, VaultItemId } from '@domain/ids';
+import { withVaultDetailModal } from '@shared/kanban/detail-modal';
 
 // "Lifecycle" derived from completed_at + archived_at; surfaced as a single
 // pillar in the table so filters and rendering use the same vocabulary.
@@ -44,6 +45,8 @@ export class VaultItemsList {
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
   private readonly doc = inject(DOCUMENT);
+
+  constructor() { withVaultDetailModal(); }
 
   readonly isLoading = this.vaultItemsService.isLoading;
 
