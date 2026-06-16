@@ -1,5 +1,5 @@
 .skills-list {
-  padding: 2rem;
+  padding-block: 2rem;
 
   &__header h1 {
     margin: 0;
@@ -24,6 +24,6 @@
 
 @media (max-width: 768px) {
   .skills-list {
-    padding: 1rem;
+    padding-block: 1rem;
   }
 }

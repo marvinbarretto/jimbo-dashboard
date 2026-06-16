@@ -23,6 +23,31 @@
   padding: 0;
 }
 
+// Routed component hosts default to `display: inline`, which silently drops
+// width / max-width / auto-margins and mis-applies padding on the page root.
+// Force every routed host block-level so pages lay out predictably and inherit
+// the shell's gutter. (The element immediately after a <router-outlet> is the
+// rendered component's host.)
+router-outlet + * {
+  display: block;
+}
+
+// ── Page layout modes ─────────────────────────────────────────────────────
+// Two layouts:
+//   • basic  — the default. The shell (.app-main__inner) owns the horizontal
+//              gutter via --app-gutter; pages add nothing horizontal and stay
+//              aligned with the header chrome.
+//   • bleed  — full-width. A page opts out by putting `page-bleed` on its host
+//              (host: { class: 'page-bleed' }); the shell zeroes the gutter for
+//              that route so the page owns its own edges (sidebar shells, kanban
+//              boards, edge-to-edge canvases).
+// Must live in global (unencapsulated) styles so the cross-component :has()
+// can see the routed host's class. The token override cascades to the
+// container's own padding AND any gutter-aware descendants (e.g. ui-tab-bar).
+.app-main__inner:has(> router-outlet + .page-bleed) {
+  --app-gutter: 0px;
+}
+
 :root {
   --color-bg: #060b12;
   --color-black: #000000;

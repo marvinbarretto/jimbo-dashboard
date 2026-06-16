@@ -1,7 +1,7 @@
 @use 'breakpoints' as bp;
 
 .data-page {
-  padding: 1.5rem;
+  padding-block: 1.5rem;
 }
 
 .data-page__header {
@@ -31,7 +31,7 @@
 
 @include bp.tablet {
   .data-page {
-    padding: 1rem;
+    padding-block: 1rem;
   }
 
   .data-page__grid {

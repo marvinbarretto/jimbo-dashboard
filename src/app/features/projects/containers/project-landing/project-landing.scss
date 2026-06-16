@@ -10,15 +10,32 @@
   --radius-lg: 0;
   --project-accent-fallback: var(--color-accent);
 
-  padding: 2rem;
+  // ── Spacing scale ─────────────────────────────────────────────────
+  // One 4px-based rhythm for the whole page so gaps/padding/margins stop
+  // being ad-hoc rem values that almost-but-don't-quite agree. Structural
+  // spacing references these; only alignment-critical indents and chip-
+  // internal padding stay bespoke.
+  --s-1: 0.25rem;   //  4px
+  --s-2: 0.5rem;    //  8px
+  --s-3: 0.75rem;   // 12px
+  --s-4: 1rem;      // 16px
+  --s-5: 1.5rem;    // 24px
+  --s-6: 2rem;      // 32px
+  --page-inset: var(--s-6);
+
+  // Basic page: shell owns the horizontal gutter, page caps width + sets
+  // vertical rhythm, left-aligned like every other basic page. `overflow-x:
+  // clip` stops a rogue child (wide table, long URL) pushing past the viewport.
+  width: 100%;
   max-width: 1440px;
-  margin: 0 auto;
+  padding-block: var(--page-inset);
+  overflow-x: clip;
 
   // ── Header ────────────────────────────────────────────────────────
   &__title {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: var(--s-2);
     margin: 0;
   }
 
@@ -46,14 +63,14 @@
   &__stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-    gap: 0.5rem;
+    gap: var(--s-3);
   }
 
   // ── Two-column body ───────────────────────────────────────────────
   &__body {
     display: grid;
     grid-template-columns: minmax(0, 1.55fr) minmax(20rem, 1fr);
-    gap: 1.5rem;
+    gap: var(--s-5);
     align-items: start;
   }
 
@@ -63,13 +80,13 @@
 
   &__aside {
     position: sticky;
-    top: 1rem;
-    max-height: calc(100vh - 2rem);
+    top: var(--s-4);
+    max-height: calc(100vh - var(--s-6));
     overflow-y: auto;
 
     // Subtle hairline on the inner side to visually anchor the brief column.
     border-left: 1px solid var(--color-border);
-    padding-left: 1.5rem;
+    padding-left: var(--s-5);
   }
 
   // ── Section title accent strip ─────────────────────────────────────
@@ -78,7 +95,7 @@
   // the UiSection internals.
   ::ng-deep .ui-section__title {
     position: relative;
-    padding-left: 0.85rem;
+    padding-left: var(--s-3);
 
     &::before {
       content: '';
@@ -96,7 +113,7 @@
   &__facts {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 0.55rem 1rem;
+    gap: var(--s-2) var(--s-4);
     margin: 0;
     font-size: 0.9rem;
 
@@ -114,8 +131,8 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 0.4rem;
-      word-break: break-word;
+      gap: var(--s-2);
+      overflow-wrap: anywhere;
     }
   }
 
@@ -143,8 +160,8 @@
   &__activity-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
-    padding: 0.6rem 0.75rem;
+    gap: var(--s-1);
+    padding: var(--s-2) var(--s-3);
     border-bottom: 1px solid var(--color-border);
 
     &:last-child { border-bottom: none; }
@@ -155,7 +172,7 @@
 
   &__criteria {
     margin: 0;
-    padding: 0.75rem;
+    padding: var(--s-3);
     background: var(--color-surface-soft);
     border: 1px solid var(--color-border);
     white-space: pre-wrap;
@@ -171,15 +188,15 @@
 .belief-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-  gap: 1rem;
+  gap: var(--s-4);
 }
 
 .belief-section {
   &__heading {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin: 0 0 0.5rem;
+    gap: var(--s-2);
+    margin: 0 0 var(--s-2);
     font-size: 0.78rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -206,15 +223,15 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--s-1);
   }
 }
 
 .belief {
   display: flex;
   align-items: baseline;
-  gap: 0.5rem;
-  padding: 0.3rem 0;
+  gap: var(--s-2);
+  padding: var(--s-1) 0;
   border-bottom: 1px solid var(--color-border);
   font-size: 0.82rem;
   line-height: 1.45;
@@ -266,13 +283,13 @@
 // Surfaces unconfirmed / open-question beliefs prominently above the full
 // belief grid. Left border uses --color-warning to signal "needs resolution".
 .open-flags {
-  margin-bottom: 1rem;
-  padding: 0.6rem 0.8rem;
+  margin-bottom: var(--s-4);
+  padding: var(--s-2) var(--s-3);
   border-left: 3px solid var(--color-warning, #f59e0b);
   background: color-mix(in srgb, var(--color-warning, #f59e0b) 8%, var(--color-surface));
 
   &__label {
-    margin: 0 0 0.4rem;
+    margin: 0 0 var(--s-2);
     font-size: 0.68rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -286,13 +303,13 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--s-1);
   }
 
   &__item {
     display: flex;
     align-items: baseline;
-    gap: 0.5rem;
+    gap: var(--s-2);
     font-size: 0.82rem;
   }
 
@@ -310,14 +327,14 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: var(--s-1);
   }
 
   &__item {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    padding: 0.4rem 0;
+    gap: var(--s-2);
+    padding: var(--s-2) 0;
     border-bottom: 1px solid var(--color-border);
     font-size: 0.83rem;
 
@@ -361,7 +378,7 @@
 
 .understanding {
   &__doc-link {
-    margin: 0 0 0.75rem;
+    margin: 0 0 var(--s-3);
     font-size: 0.8rem;
     color: var(--color-text-muted);
 
@@ -379,7 +396,7 @@
   }
 
   &__updated {
-    margin: 0.75rem 0 0;
+    margin: var(--s-3) 0 0;
     font-size: 0.7rem;
     color: var(--color-text-muted);
     letter-spacing: 0.04em;
@@ -399,12 +416,12 @@
   --proj-tint: var(--project-accent, var(--color-accent));
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--s-2);
 
   &__header {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--s-3);
   }
 
   &__progress {
@@ -418,10 +435,15 @@
 
   &__table {
     // Indent under the epic header + nesting guide line to match the chip
-    // layout it replaces.
+    // layout it replaces. Indents stay bespoke — they're tuned to line up
+    // with the chip, not to the spacing scale.
     margin-left: 0.45rem;
     padding-left: 1.25rem;
     border-left: 1px solid var(--color-border);
+    // Let a wide table scroll within its own indent rather than pushing the
+    // whole page past the viewport and eating the right gutter.
+    min-width: 0;
+    overflow-x: auto;
   }
 
   &__empty {
@@ -477,7 +499,7 @@
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--s-2);
 
   > li { display: contents; }
 }
@@ -487,9 +509,13 @@
 .unassigned-table {
   --proj-tint: var(--project-accent, var(--color-accent));
 
+  // Scroll a wide table inside this block instead of bleeding the page right.
+  min-width: 0;
+  overflow-x: auto;
+
   ::ng-deep .ui-data-table__cell,
   ::ng-deep .ui-data-table__sort-button {
-    padding: 0.55rem 0.75rem;
+    padding: var(--s-2) var(--s-3);
   }
 
   ::ng-deep .ui-data-table__head-cell {
@@ -525,10 +551,10 @@
 .autonomy {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--s-2);
 
   &__caption {
-    margin: 0 0 0.5rem;
+    margin: 0 0 var(--s-2);
     font-size: 0.74rem;
     color: var(--color-text-muted);
     text-transform: uppercase;
@@ -539,9 +565,9 @@
     display: grid;
     grid-template-columns: 1.1rem 1fr;
     align-items: start;
-    gap: 0.7rem;
+    gap: var(--s-3);
     cursor: pointer;
-    padding: 0.55rem 0.7rem;
+    padding: var(--s-2) var(--s-3);
     border: 1px solid var(--color-border);
     background: var(--color-surface);
     transition: border-color 80ms linear, background 80ms linear;
@@ -613,6 +639,6 @@
 
 @media (max-width: 768px) {
   .project-landing {
-    padding: 1rem;
+    --page-inset: var(--s-4);
   }
 }

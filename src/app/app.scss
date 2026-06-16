@@ -10,6 +10,11 @@
   // borders). Used by sticky descendants (e.g. <app-ui-tab-bar>) to offset
   // below the header. Update if the header's vertical metrics change.
   --app-header-height: 88px;
+  // Single horizontal page gutter. The shell owns it (applied on
+  // .app-main__inner) so routed pages stay layout-agnostic and align with the
+  // header chrome by default — no page should set its own horizontal padding.
+  // One knob to retune density app-wide.
+  --app-gutter: 1.5rem;
 }
 
 .app-header {
@@ -24,7 +29,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: 0.2rem 1.5rem;
+  padding: 0.2rem var(--app-gutter);
   min-height: 1.75rem;
   border-bottom: 1px solid var(--color-border);
   background: color-mix(in srgb, var(--color-surface) 40%, var(--color-bg));
@@ -79,7 +84,7 @@
 }
 
 .app-header__inner {
-  padding-inline: 1.5rem;
+  padding-inline: var(--app-gutter);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -90,10 +95,16 @@
 
 .app-main__inner {
   min-width: 0;
+  // The container owns the horizontal gutter for every routed page. Pages
+  // declare vertical padding / max-width / centering themselves, but never the
+  // side inset — that keeps left edges aligned with the header chrome.
+  padding-inline: var(--app-gutter);
 }
 
 @media (max-width: 768px) {
-  .app-header__inner {
-    padding-inline: 0.75rem;
+  // Tighter gutter on small screens — one token retunes header chrome and all
+  // page content together.
+  .app-shell {
+    --app-gutter: 0.75rem;
   }
 }

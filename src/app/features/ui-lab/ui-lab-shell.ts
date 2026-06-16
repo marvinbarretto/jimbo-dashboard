@@ -55,6 +55,7 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'vault-card-kanban',       name: 'Vault Card · Kanban',   group: 'cards',           selector: 'app-vault-card-kanban-section', description: 'Interactive kanban board with live prop controls. Drag cards between columns; knobs update all cards simultaneously.' },
   { id: 'project-card',            name: 'Project Card',          group: 'cards',           selector: 'app-project-card',      description: 'Project card with color accent, drag handle, repo link, and actions.' },
   { id: 'epic-row',                name: 'Epic Row',              group: 'cards',           selector: 'app-epic-row',          description: 'Single-row epic with project, origin, threads, principles, progress, blocked count.' },
+  { id: 'epic-momentum-row',       name: 'Epic Momentum Row',     group: 'cards',           selector: 'app-epic-momentum-row', description: 'Momentum-oriented epic row — progress bar + velocity / active / blocked / stalled badges. Links by seq.' },
   { id: 'epic-rollup',             name: 'Epic Rollup',           group: 'cards',           selector: 'app-epic-rollup',       description: 'Per-child status strip + summary. Surfaces failures by name on the parent.' },
   { id: 'card-parent-link',        name: 'Card Parent Link',      group: 'cards',           selector: 'app-card-parent-link',  description: '"↳ ⊞ #N · title" row that sits between header and title on subtask cards.' },
   { id: 'card-callout',            name: 'Card Callout',          group: 'cards',           selector: 'app-card-callout',      description: 'Variant body slot — question / rework / draft / rationale / result / error.' },
@@ -98,6 +99,8 @@ interface GroupedSection {
   selector: 'app-ui-lab-shell',
   imports: [RouterLink, RouterLinkActive, RouterOutlet, UiBackLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Full-bleed layout — the lab owns its sidebar + content edges; opt out of the shell gutter.
+  host: { class: 'page-bleed' },
   template: `
     <div class="ui-lab">
       <nav class="ui-lab__sidenav" aria-label="Component sections">

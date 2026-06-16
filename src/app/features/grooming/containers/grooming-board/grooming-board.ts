@@ -71,6 +71,8 @@ interface ColumnView {
   templateUrl: './grooming-board.html',
   styleUrl: './grooming-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Full-bleed layout — the board owns its own edges; opt out of the shell gutter.
+  host: { class: 'page-bleed' },
 })
 export class GroomingBoard {
   private readonly vaultItemsService = inject(VaultItemsService);

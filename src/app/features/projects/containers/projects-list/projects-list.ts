@@ -1,12 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { Dialog } from '@angular/cdk/dialog';
 import { UiAddTile } from '@shared/components/ui-add-tile/ui-add-tile';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
-import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import { UiInlineTabs, type UiInlineTabOption } from '@shared/components/ui-inline-tabs/ui-inline-tabs';
+import { EpicMomentumRow, type EpicMomentumRowVM } from '@shared/components/epic-momentum-row/epic-momentum-row';
 
 const UNLINKED_TAB_KEY = '__unlinked';
 import type { Project, ProjectKind } from '@domain/projects';
@@ -19,7 +18,7 @@ import { VaultItemsService } from '../../../vault-items/data-access/vault-items.
 
 @Component({
   selector: 'app-projects-list',
-  imports: [RouterLink, CdkDrag, CdkDropList, UiAddTile, UiPageHeader, UiStack, EntityChip, ProjectCard, UiInlineTabs],
+  imports: [CdkDrag, CdkDropList, UiAddTile, UiPageHeader, UiStack, ProjectCard, UiInlineTabs, EpicMomentumRow],
   templateUrl: './projects-list.html',
   styleUrl: './projects-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -56,6 +55,11 @@ export class ProjectsList {
 
   // Top-of-page rail: small cross-project view of what moved most recently.
   readonly recentlyActiveEpics = computed(() => this.epicsByRecency().slice(0, 5));
+
+  // Cross-project rail rows — project chip shown, since these span projects.
+  readonly recentEpicRows = computed<readonly EpicMomentumRowVM[]>(() =>
+    this.recentlyActiveEpics().map(epic => this.toMomentumRow(epic, true))
+  );
 
   // Selected project tab for the "Epics by project" section. The literal
   // '__unlinked' value matches the section key for orphan epics. Tracks user
@@ -132,6 +136,33 @@ export class ProjectsList {
     if (!key) return null;
     return this.epicSections().find(s => (s.project?.id ?? UNLINKED_TAB_KEY) === key) ?? null;
   });
+
+  // Rows for the active tab — project chip omitted, since the section is already
+  // grouped under one project (or the Unlinked bucket).
+  readonly activeEpicRows = computed<readonly EpicMomentumRowVM[]>(() =>
+    (this.activeEpicSection()?.epics ?? []).map(epic => this.toMomentumRow(epic, false))
+  );
+
+  // Shape a vault-item epic into the momentum row's view-model. `withProject` drives
+  // whether the leading project chip is carried — on for the cross-project rail, off
+  // inside per-project groups where it would be redundant.
+  private toMomentumRow(epic: VaultItem, withProject: boolean): EpicMomentumRowVM {
+    const projectId = epic.primary_project_id;
+    return {
+      id: epic.id,
+      seq: epic.seq,
+      title: epic.title,
+      project: withProject && projectId && epic.primary_project_name
+        ? { id: projectId, name: epic.primary_project_name, color: this.projectColor(projectId) }
+        : null,
+      childrenTotal: epic.children_count ?? 0,
+      childrenDone: epic.children_done_count ?? 0,
+      childrenActive: epic.children_active_count ?? 0,
+      childrenBlocked: epic.children_blocked_count ?? 0,
+      done7d: epic.children_done_7d ?? 0,
+      stalled: this.isStalled(epic),
+    };
+  }
 
   onDrop(event: CdkDragDrop<Project[]>, targetKind: ProjectKind): void {
     if (event.previousContainer === event.container) return;

@@ -53,7 +53,7 @@ import { HermesService } from '../../data-access/hermes.service';
       align-items: flex-start;
       justify-content: space-between;
       gap: 1rem;
-      padding: 1.5rem 1.5rem 1rem;
+      padding-block: 1.5rem 1rem;
     }
 
     .hermes-page__title {
@@ -112,7 +112,7 @@ import { HermesService } from '../../data-access/hermes.service';
 
     .hermes-page__body {
       flex: 1;
-      padding: 1.5rem;
+      padding-block: 1.5rem;
     }
   `],
 })

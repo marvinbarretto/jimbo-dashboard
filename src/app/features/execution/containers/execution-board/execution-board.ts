@@ -73,6 +73,8 @@ interface ColumnView {
   templateUrl: './execution-board.html',
   styleUrl: './execution-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Full-bleed layout — the board owns its own edges; opt out of the shell gutter.
+  host: { class: 'page-bleed' },
 })
 export class ExecutionBoard {
   private readonly dispatchService = inject(DispatchService);

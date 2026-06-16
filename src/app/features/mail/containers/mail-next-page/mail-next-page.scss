@@ -1,5 +1,5 @@
 .mail-next-page {
-  padding: 2rem;
+  padding-block: 2rem;
 }
 
 .mail-next-page__stack {
@@ -10,6 +10,6 @@
 
 @media (max-width: 768px) {
   .mail-next-page {
-    padding: 1rem;
+    padding-block: 1rem;
   }
 }

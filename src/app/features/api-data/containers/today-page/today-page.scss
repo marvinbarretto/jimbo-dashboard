@@ -1,7 +1,7 @@
 @use 'breakpoints' as bp;
 
 .today-page {
-  padding: 1.5rem;
+  padding-block: 1.5rem;
 }
 
 .today-page__header {
@@ -25,6 +25,6 @@
 
 @include bp.mobile {
   .today-page {
-    padding: 1rem;
+    padding-block: 1rem;
   }
 }

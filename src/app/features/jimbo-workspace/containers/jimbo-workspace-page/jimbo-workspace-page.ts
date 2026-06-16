@@ -26,7 +26,7 @@ import { UiTabBar } from '@shared/components/ui-tab-bar/ui-tab-bar';
   `,
   styles: [`
     .jw { display: flex; flex-direction: column; min-height: 100%; }
-    .jw__header { padding: 1.5rem 1.5rem 1rem; }
+    .jw__header { padding-block: 1.5rem 1rem; }
     .jw__title {
       margin: 0 0 0.25rem;
       font-size: 1.25rem;
@@ -39,7 +39,7 @@ import { UiTabBar } from '@shared/components/ui-tab-bar/ui-tab-bar';
       font-size: 0.8rem;
       color: var(--color-text-muted);
     }
-    .jw__body { flex: 1; padding: 1.5rem; }
+    .jw__body { flex: 1; padding-block: 1.5rem; }
   `],
 })
 export class JimboWorkspacePage {}

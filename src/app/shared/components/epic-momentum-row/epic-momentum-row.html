@@ -1,0 +1,34 @@
+<span class="epic-momentum-row__seq">#{{ epic().seq }}</span>
+
+@if (epic().project; as proj) {
+  <app-entity-chip
+    type="project"
+    [id]="proj.id"
+    [label]="proj.name"
+    [color]="proj.color"
+  />
+}
+
+<a [routerLink]="['/vault-items', epic().seq]" class="epic-momentum-row__title">{{ epic().title }}</a>
+
+@if (epic().childrenTotal > 0) {
+  <div class="epic-momentum-row__progress" [attr.aria-label]="progressLabel()">
+    <div class="epic-momentum-row__bar">
+      <div class="epic-momentum-row__bar-fill" [style.width.%]="progressPct()"></div>
+    </div>
+    <span class="epic-momentum-row__count">{{ epic().childrenDone }}/{{ epic().childrenTotal }}</span>
+  </div>
+
+  @if (epic().done7d > 0) {
+    <app-ui-badge tone="success" [subtle]="true" [title]="'Completed in last 7 days'">+{{ epic().done7d }} 7d</app-ui-badge>
+  }
+  @if (epic().childrenActive > 0) {
+    <app-ui-badge tone="info" [subtle]="true" [title]="'Active tasks'">{{ epic().childrenActive }} active</app-ui-badge>
+  }
+  @if (epic().childrenBlocked > 0) {
+    <app-ui-badge tone="warning" [subtle]="true" [title]="'Tasks with blocked_by set'">{{ epic().childrenBlocked }} blocked</app-ui-badge>
+  }
+  @if (epic().stalled) {
+    <app-ui-badge tone="danger" [subtle]="true" [title]="'No child completion in 30 days'">stalled</app-ui-badge>
+  }
+}

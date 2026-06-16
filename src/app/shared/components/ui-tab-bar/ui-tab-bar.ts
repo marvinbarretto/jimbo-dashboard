@@ -16,6 +16,10 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       position: sticky;
       top: var(--app-header-height, 0);
       z-index: 20;
+      // Break out of the page gutter so the sticky strip + divider span the
+      // full width; the inner padding re-aligns the tabs with page content.
+      // Fallback 0px keeps it inert if used outside a gutter container.
+      margin-inline: calc(-1 * var(--app-gutter, 0px));
     }
 
     // Background hue picks up the --section-accent var set on the app shell.
@@ -25,7 +29,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     // scrolling underneath doesn't bleed through the sticky strip.
     .ui-tab-bar {
       display: flex;
-      padding: 0 1.5rem;
+      padding: 0 var(--app-gutter, 1.5rem);
       background-color: var(--color-bg);
       background-image: linear-gradient(
         color-mix(in oklch, var(--section-accent, var(--color-border)) 8%, transparent),

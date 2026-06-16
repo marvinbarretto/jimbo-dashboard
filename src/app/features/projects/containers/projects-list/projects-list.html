@@ -76,44 +76,8 @@
       <p class="projects-list__empty">No epics yet — mark a vault item as epic from its detail view.</p>
     }
     <div class="projects-list__epics">
-      @for (epic of recentlyActiveEpics(); track epic.id) {
-        <div class="epic-row">
-          <span class="epic-row__seq">#{{ epic.seq }}</span>
-          @if (epic.primary_project_name && epic.primary_project_id) {
-            <app-entity-chip
-              type="project"
-              [id]="epic.primary_project_id"
-              [label]="epic.primary_project_name"
-              [color]="projectColor(epic.primary_project_id)"
-            />
-          }
-          <a [routerLink]="['/vault-items', epic.seq]" class="epic-row__title">{{ epic.title }}</a>
-          @let total = epic.children_count ?? 0;
-          @let done = epic.children_done_count ?? 0;
-          @let active = epic.children_active_count ?? 0;
-          @let blocked = epic.children_blocked_count ?? 0;
-          @let done7d = epic.children_done_7d ?? 0;
-          @if (total > 0) {
-            <div class="epic-row__progress" [attr.aria-label]="done + ' of ' + total + ' tasks complete'">
-              <div class="epic-row__bar">
-                <div class="epic-row__bar-fill" [style.width.%]="(done / total) * 100"></div>
-              </div>
-              <span class="epic-row__count">{{ done }}/{{ total }}</span>
-            </div>
-            @if (done7d > 0) {
-              <span class="epic-row__velocity" title="Completed in last 7 days">+{{ done7d }} 7d</span>
-            }
-            @if (active > 0) {
-              <span class="epic-row__active" title="Active tasks">{{ active }} active</span>
-            }
-            @if (blocked > 0) {
-              <span class="epic-row__blocked" title="Tasks with blocked_by set">{{ blocked }} blocked</span>
-            }
-            @if (isStalled(epic)) {
-              <span class="epic-row__stalled" title="No child completion in 30 days">stalled</span>
-            }
-          }
-        </div>
+      @for (row of recentEpicRows(); track row.id) {
+        <app-epic-momentum-row [epic]="row" />
       }
     </div>
   </section>
@@ -128,39 +92,10 @@
         ariaLabel="Project filter"
         (changed)="selectedProjectTab.set($event)"
       />
-      @let activeSection = activeEpicSection();
-      @if (activeSection) {
+      @if (activeEpicSection()) {
         <div class="projects-list__epics">
-          @for (epic of activeSection.epics; track epic.id) {
-            <div class="epic-row">
-              <span class="epic-row__seq">#{{ epic.seq }}</span>
-              <a [routerLink]="['/vault-items', epic.seq]" class="epic-row__title">{{ epic.title }}</a>
-              @let total = epic.children_count ?? 0;
-              @let done = epic.children_done_count ?? 0;
-              @let active = epic.children_active_count ?? 0;
-              @let blocked = epic.children_blocked_count ?? 0;
-              @let done7d = epic.children_done_7d ?? 0;
-              @if (total > 0) {
-                <div class="epic-row__progress" [attr.aria-label]="done + ' of ' + total + ' tasks complete'">
-                  <div class="epic-row__bar">
-                    <div class="epic-row__bar-fill" [style.width.%]="(done / total) * 100"></div>
-                  </div>
-                  <span class="epic-row__count">{{ done }}/{{ total }}</span>
-                </div>
-                @if (done7d > 0) {
-                  <span class="epic-row__velocity" title="Completed in last 7 days">+{{ done7d }} 7d</span>
-                }
-                @if (active > 0) {
-                  <span class="epic-row__active" title="Active tasks">{{ active }} active</span>
-                }
-                @if (blocked > 0) {
-                  <span class="epic-row__blocked" title="Tasks with blocked_by set">{{ blocked }} blocked</span>
-                }
-                @if (isStalled(epic)) {
-                  <span class="epic-row__stalled" title="No child completion in 30 days">stalled</span>
-                }
-              }
-            </div>
+          @for (row of activeEpicRows(); track row.id) {
+            <app-epic-momentum-row [epic]="row" />
           }
         </div>
       }
