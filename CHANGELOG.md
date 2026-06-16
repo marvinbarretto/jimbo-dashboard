@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.73](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.72...v0.0.73) (2026-06-16)
+
+
+### Features
+
+* **auth:** redirect to /auth/login on API 401 ([a54b053](https://github.com/marvinbarretto/jimbo-dashboard/commit/a54b053472df71a879a0460466f9e54cf66acc25))
+
 ### [0.0.72](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.71...v0.0.72) (2026-06-16)
 
 
