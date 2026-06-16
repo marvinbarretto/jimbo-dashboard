@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.72](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.71...v0.0.72) (2026-06-16)
+
+
+### Bug Fixes
+
+* **dev-proxy:** send X-API-Key for the cookie-or-key auth model ([2e451c9](https://github.com/marvinbarretto/jimbo-dashboard/commit/2e451c9205df0fa7875ac075f3cd9882bc95b655))
+* **projects:** tolerate API omitting color_token ([ace4177](https://github.com/marvinbarretto/jimbo-dashboard/commit/ace4177eed2b48b465f8159bdf44c6d50482d1ab))
+
 ### [0.0.71](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.70...v0.0.71) (2026-06-16)
 
 
