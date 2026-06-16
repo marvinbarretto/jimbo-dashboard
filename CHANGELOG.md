@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.71](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.70...v0.0.71) (2026-06-16)
+
+
+### Features
+
+* **project-landing:** render criteria as markdown ([9f8ddb7](https://github.com/marvinbarretto/jimbo-dashboard/commit/9f8ddb767ee234c13e83928896c6b6062c269109))
+
+
+### Code Refactoring
+
+* **layout:** shell-owned page gutter via two-template system ([2dcfe2e](https://github.com/marvinbarretto/jimbo-dashboard/commit/2dcfe2e001a179ab30310b9fc3031c9c123cb509))
+
 ### [0.0.70](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.69...v0.0.70) (2026-06-15)
 
 
