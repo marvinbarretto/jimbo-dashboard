@@ -22,7 +22,10 @@ export const ApiProjectSchema = z.object({
   owner_actor_id: z.string().min(1).nullable(),
   criteria:       z.string().nullable(),
   repo_url:       z.string().nullable(),
-  color_token:    z.string().nullable(),
+  // `.nullish()` not `.nullable()` — the API may not emit this column yet
+  // (the projects_color_token migration isn't applied on every backend).
+  // Absent → null, same as the brief fields below.
+  color_token:    z.string().nullish().transform(v => v ?? null),
   created_at:     z.string(),
   updated_at:     z.string().optional(),
 
