@@ -72,16 +72,25 @@ export class VaultItemProjectsService {
   }
 
   // Optimistic insert — adds junction row locally, then POSTs to server.
+  //
+  // The FIRST project linked to an item must be its primary. Both the board's
+  // `primary_project_*` embed (drives the project chip) and epic promotion
+  // (jimbo-api `resolvesToProject`) key off `is_primary = true`. A link that
+  // never sets it leaves the item with no chip AND un-promotable to an epic —
+  // a silent false-state. Subsequent links stay secondary (the endpoint demotes
+  // any prior primary, so we must not blindly claim primary on every add).
   add(vaultItemId: VaultItemId, projectId: ProjectId): void {
+    const existing = this._projectsByItem()[vaultItemId] ?? [];
+    const isPrimary = existing.length === 0;
     const row: VaultItemProject = { vault_item_id: vaultItemId, project_id: projectId };
     this._projectsByItem.update(map => ({
       ...map,
-      [vaultItemId]: [...(map[vaultItemId] ?? []), row],
+      [vaultItemId]: [...existing, row],
     }));
 
     if (isSeedMode()) return;
 
-    this.http.post<VaultItemProject>(this.url, row).subscribe({
+    this.http.post<VaultItemProject>(this.url, { ...row, is_primary: isPrimary }).subscribe({
       error: () => {
         this._projectsByItem.update(map => ({
           ...map,
