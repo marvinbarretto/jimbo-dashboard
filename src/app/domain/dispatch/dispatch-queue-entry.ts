@@ -19,6 +19,21 @@ export type DispatchStatus =
   | 'completed'     // finished successfully; result_summary populated
   | 'failed';       // errored or reaped; error populated
 
+// The pipeline lane a dispatch belongs to. `commission` = code/PR work — the only
+// flow the execution board should surface as shippable; `groom` (intake/classify/
+// decompose) and `recon` (research) are automatic pre-work that must NOT read as
+// "completed shipped work". `(string & {})` keeps the union open if hermes adds a
+// lane without breaking the build.
+export type DispatchFlow = 'groom' | 'recon' | 'commission' | (string & {});
+
+// Which executor archetype ran it. Mirrors hermes `agent_type`. Open union.
+export type DispatchAgentType = 'coder' | 'researcher' | (string & {});
+
+// GitHub PR lifecycle for a commission dispatch. Null until a PR exists. Drives
+// the rebuilt board's "PR open"/"Merged" columns. Open union — GitHub may report
+// states we don't enumerate yet.
+export type PrState = 'open' | 'draft' | 'merged' | 'closed' | (string & {});
+
 // Canonical left-to-right column order for the execution kanban. `satisfies`
 // ensures every DispatchStatus value appears exactly once — adding a new state
 // to the union without updating this array would fail to compile.
@@ -92,6 +107,22 @@ export interface DispatchQueueEntry {
   // Optional so seed/fixture rows don't have to carry stub values.
   task_title?:    string | null;
   task_seq?:      number | null;
+
+  // ── Commission-flow fields ──────────────────────────────────────────────
+  // Always populated by the API; optional here only so seed/fixture rows don't
+  // need stubs (same precedent as task_title/task_seq above).
+  //
+  // `flow` is the discriminator the rebuilt execution board filters on — it
+  // shows commission flow only, so a groomed-but-uncoded item never appears as
+  // a "completed" card.
+  flow?:          DispatchFlow;
+  agent_type?:    DispatchAgentType;
+  // PR state + URL for commission dispatches. `pr_state` null = no PR yet.
+  // `pr_url` is currently always null server-side (the commission worker writes
+  // the URL into result_summary, not this column — hub autonomy-pilot #14), so
+  // consumers must fall back to result_summary until that lands.
+  pr_state?:      PrState | null;
+  pr_url?:        string | null;
 }
 
 // Dashboard rarely creates dispatches directly (hermes does that via pipeline-pump).

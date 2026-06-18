@@ -38,6 +38,8 @@ describe('DispatchService.retry (HTTP mode)', () => {
       status:         'failed',
       result_summary: null,
       error_message:  'something broke',
+      pr_state:       null,
+      pr_url:         null,
       retry_count:    0,
       proposed_at:    null,
       approved_at:    null,
@@ -87,6 +89,16 @@ describe('DispatchService.retry (HTTP mode)', () => {
     return ok[ok.length - 1]?.message;
   }
 
+  it('carries commission-flow fields through the mapper on load (flow/agent_type set, no-PR → null)', () => {
+    // beforeEach already loaded the default fixture: flow=commission, agent_type=
+    // claude, pr_state/pr_url=null. Assert the mapper carried all four.
+    const entry = service.getById(dispatchId('1'))!;
+    expect(entry.flow).toBe('commission');
+    expect(entry.agent_type).toBe('claude');
+    expect(entry.pr_state).toBeNull();
+    expect(entry.pr_url).toBeNull();
+  });
+
   it('flips a failed entry to approved optimistically before the request resolves', () => {
     const id = dispatchId('1');
     service.retry(id);
@@ -100,10 +112,14 @@ describe('DispatchService.retry (HTTP mode)', () => {
     // Drain the POST request and respond with the canonical updated row.
     const req = http.expectOne(r => r.method === 'POST' && r.url.endsWith('/api/dispatch/1/retry'));
     expect(req.request.body).toEqual({});
-    req.flush(fakeEntry({ id: 1, status: 'approved', error_message: null, retry_count: 1, started_at: null, completed_at: null }));
+    req.flush(fakeEntry({ id: 1, status: 'approved', error_message: null, retry_count: 1, started_at: null, completed_at: null, pr_state: 'open', pr_url: 'https://github.com/x/y/pull/9' }));
 
     expect(lastSuccessToast()).toMatch(/queued for retry/i);
-    expect(service.getById(id)!.status).toBe('approved');
+    const after = service.getById(id)!;
+    expect(after.status).toBe('approved');
+    // Non-null PR fields carry through the mapper on the retry success path too.
+    expect(after.pr_state).toBe('open');
+    expect(after.pr_url).toBe('https://github.com/x/y/pull/9');
   });
 
   it('rolls back to failed and toasts on network error', () => {

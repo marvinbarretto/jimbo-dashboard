@@ -3,7 +3,8 @@
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import type { DispatchQueueEntry, DispatchStatus } from '@domain/dispatch';
+import type { DispatchQueueEntry, DispatchStatus, CommissionItem } from '@domain/dispatch';
+import { groupCommissions } from '@domain/dispatch';
 import { ApiDispatchEntrySchema, ApiDispatchesResponseSchema, type ApiDispatchEntry } from '@domain/dispatch/dispatch.api-schema';
 import type { DispatchId, VaultItemId } from '@domain/ids';
 import { dispatchId, vaultItemId, actorId, skillId } from '@domain/ids';
@@ -33,6 +34,12 @@ export class DispatchService {
 
   readonly entries  = this._entries.asReadonly();
   readonly isLoading = this._loading.asReadonly();
+
+  // Per-item commission view — one entry per vault item, commission flow only,
+  // with current stage + history. This is what the rebuilt execution board
+  // consumes instead of the raw per-dispatch `entries`. Reactive: recomputes
+  // whenever the queue reloads or a mutation updates an entry.
+  readonly commissions = computed<CommissionItem[]>(() => groupCommissions(this._entries()));
 
   constructor() { this.load(); }
 
@@ -234,5 +241,12 @@ function toDispatchEntry(a: ApiDispatchEntry): DispatchQueueEntry {
     created_at: a.created_at,
     task_title: a.task_title ?? null,
     task_seq: a.task_seq != null ? Number(a.task_seq) : null,
+    // Commission-flow fields — carried through so the board can filter to
+    // commissions and render PR state. flow/pr_state stay open unions (the wire
+    // schema validates them as plain strings).
+    flow: a.flow,
+    agent_type: a.agent_type,
+    pr_state: a.pr_state,
+    pr_url: a.pr_url,
   };
 }

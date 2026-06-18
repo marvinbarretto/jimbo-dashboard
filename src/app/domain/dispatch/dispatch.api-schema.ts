@@ -31,6 +31,11 @@ export const ApiDispatchEntrySchema = z.object({
   status:         DbDispatchStatus,
   result_summary: z.string().nullable(),
   error_message:  z.string().nullable(),
+  // Commission-flow fields. Present on every row; pr_state/pr_url null when the
+  // dispatch isn't a commission or has no PR yet. Kept as permissive strings at
+  // the wire boundary — the domain narrows flow/pr_state to open unions.
+  pr_state:       z.string().nullable(),
+  pr_url:         z.string().nullable(),
   retry_count:    z.number().int().nonnegative(),
   proposed_at:    z.string().nullable(),
   approved_at:    z.string().nullable(),
