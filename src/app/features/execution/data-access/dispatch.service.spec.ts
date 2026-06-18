@@ -11,6 +11,36 @@ import { DispatchService } from './dispatch.service';
 import { dispatchId } from '@domain/ids';
 import type { ApiDispatchEntry } from '@domain/dispatch/dispatch.api-schema';
 
+// Minimal valid ApiDispatchEntry — schema requires every field. Helper accepts
+// overrides so each test can tweak just what matters. Module-scoped so multiple
+// describe blocks share it.
+function fakeEntry(overrides: Partial<ApiDispatchEntry> = {}): ApiDispatchEntry {
+  return {
+    id:             1,
+    task_id:        'task-1',
+    task_source:    'manual',
+    flow:           'commission',
+    agent_type:     'claude',
+    executor:       'boris',
+    skill:          'hermes/intake-quality',
+    skill_context:  null,
+    status:         'failed',
+    result_summary: null,
+    error_message:  'something broke',
+    pr_state:       null,
+    pr_url:         null,
+    retry_count:    0,
+    proposed_at:    null,
+    approved_at:    null,
+    started_at:     '2026-05-01T10:00:00Z',
+    completed_at:   '2026-05-01T10:01:00Z',
+    created_at:     '2026-05-01T09:59:00Z',
+    task_title:     'a task',
+    task_seq:       42,
+    ...overrides,
+  };
+}
+
 // HTTP-mode tests for DispatchService. The service constructor fires a GET
 // against /api/dispatch/queue on init; we drain that with a fixture array
 // before exercising the mutation methods.
@@ -22,35 +52,6 @@ describe('DispatchService.retry (HTTP mode)', () => {
   let service: DispatchService;
   let http: HttpTestingController;
   let toast: ToastService;
-
-  // Minimal valid ApiDispatchEntry — schema requires every field. Helper
-  // accepts overrides so each test can tweak just what matters.
-  function fakeEntry(overrides: Partial<ApiDispatchEntry> = {}): ApiDispatchEntry {
-    return {
-      id:             1,
-      task_id:        'task-1',
-      task_source:    'manual',
-      flow:           'commission',
-      agent_type:     'claude',
-      executor:       'boris',
-      skill:          'hermes/intake-quality',
-      skill_context:  null,
-      status:         'failed',
-      result_summary: null,
-      error_message:  'something broke',
-      pr_state:       null,
-      pr_url:         null,
-      retry_count:    0,
-      proposed_at:    null,
-      approved_at:    null,
-      started_at:     '2026-05-01T10:00:00Z',
-      completed_at:   '2026-05-01T10:01:00Z',
-      created_at:     '2026-05-01T09:59:00Z',
-      task_title:     'a task',
-      task_seq:       42,
-      ...overrides,
-    };
-  }
 
   beforeEach(() => {
     // Force HTTP mode (no ?seed=1) so retry actually fires the PATCH.
@@ -91,12 +92,14 @@ describe('DispatchService.retry (HTTP mode)', () => {
 
   it('carries commission-flow fields through the mapper on load (flow/agent_type set, no-PR → null)', () => {
     // beforeEach already loaded the default fixture: flow=commission, agent_type=
-    // claude, pr_state/pr_url=null. Assert the mapper carried all four.
+    // claude, pr_state/pr_url=null, raw status=failed. Assert the mapper carried
+    // all of them (including the raw db_status alongside the narrowed status).
     const entry = service.getById(dispatchId('1'))!;
     expect(entry.flow).toBe('commission');
     expect(entry.agent_type).toBe('claude');
     expect(entry.pr_state).toBeNull();
     expect(entry.pr_url).toBeNull();
+    expect(entry.db_status).toBe('failed');
   });
 
   it('flips a failed entry to approved optimistically before the request resolves', () => {
@@ -151,14 +154,7 @@ describe('DispatchService.retry (HTTP mode)', () => {
   });
 
   it('is a no-op when the entry is not in failed status', () => {
-    // Re-seed with an approved entry so retry should refuse it.
-    const initReq2 = http.expectNone(r => r.url.includes('/api/dispatch/queue'));
-    void initReq2;
-    // Force a fresh entries set by replaying state — easiest is a separate
-    // service instance, but constructing one risks fighting TestBed. Instead
-    // we mutate the existing one via retry against an unknown status.
-    // Simplest: call retry on an id that isn't in failed state. The fixture's
-    // sole entry is 'failed', so we use a different id and rely on the
+    // The fixture's sole entry is 'failed'; use a different id and rely on the
     // unknown-id path also being a no-op (next test).
     service.retry(dispatchId('999'));
     http.expectNone(r => r.method === 'POST' && r.url.endsWith('/retry'));
@@ -167,5 +163,46 @@ describe('DispatchService.retry (HTTP mode)', () => {
   it('is a no-op when the id is unknown', () => {
     service.retry(dispatchId('does-not-exist'));
     http.expectNone(r => r.method === 'POST' && r.url.endsWith('/retry'));
+  });
+});
+
+// T1.3 — the mapper must stop collapsing proposed/rejected. It keeps the narrowed
+// `status` (legacy board) but preserves the raw value in `db_status` (commission
+// board reads this for truthful Proposed/Rejected columns).
+describe('DispatchService mapper — db_status preserves raw status (T1.3)', () => {
+  let service: DispatchService;
+  let http: HttpTestingController;
+
+  beforeEach(() => {
+    window.history.replaceState({}, '', window.location.pathname);
+    resetSeedModeCache();
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection(), provideHttpClient(), provideHttpClientTesting()],
+    });
+    service = TestBed.inject(DispatchService);
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    http.verify();
+    resetSeedModeCache();
+  });
+
+  it('keeps proposed/rejected in db_status while status narrows them', () => {
+    http.expectOne(r => r.url.includes('/api/dispatch/queue')).flush({
+      items: [
+        fakeEntry({ id: 1, status: 'proposed' }),
+        fakeEntry({ id: 2, status: 'rejected' }),
+      ],
+      total: 2,
+    });
+
+    const proposed = service.getById(dispatchId('1'))!;
+    expect(proposed.status).toBe('approved');    // narrowed (legacy board)
+    expect(proposed.db_status).toBe('proposed'); // preserved (truthful)
+
+    const rejected = service.getById(dispatchId('2'))!;
+    expect(rejected.status).toBe('failed');      // narrowed (legacy board)
+    expect(rejected.db_status).toBe('rejected'); // preserved (truthful)
   });
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { groupCommissions, commissionStage, type CommissionStage } from './commission-view';
-import type { DispatchQueueEntry, DispatchStatus, DispatchFlow, PrState } from './dispatch-queue-entry';
+import type { DispatchQueueEntry, DispatchDbStatus, DispatchFlow, PrState } from './dispatch-queue-entry';
 import { dispatchId, vaultItemId, actorId, skillId } from '../ids';
 
 // Builder — only the fields each test cares about; sane defaults for the rest.
@@ -27,11 +27,13 @@ function entry(over: Partial<DispatchQueueEntry> & { task: string; created: stri
   };
 }
 
-describe('commissionStage — status + pr_state → honest stage', () => {
-  const cases: ReadonlyArray<[DispatchStatus, PrState | null, CommissionStage]> = [
+describe('commissionStage — db_status + pr_state → honest stage', () => {
+  const cases: ReadonlyArray<[DispatchDbStatus, PrState | null, CommissionStage]> = [
+    ['proposed',    null,     'proposed'],   // NOT collapsed into approved
     ['approved',    null,     'approved'],
     ['dispatching', null,     'approved'],
     ['running',     null,     'running'],
+    ['rejected',    null,     'rejected'],   // NOT collapsed into failed
     ['failed',      null,     'failed'],
     ['completed',   'merged', 'merged'],
     ['completed',   'open',   'pr_open'],
@@ -39,11 +41,16 @@ describe('commissionStage — status + pr_state → honest stage', () => {
     ['completed',   null,     'completed'],
     ['completed',   'closed', 'completed'],
   ];
-  for (const [status, pr, expected] of cases) {
-    it(`${status} + pr_state=${pr} → ${expected}`, () => {
-      expect(commissionStage(entry({ task: 't', created: '2026-06-01T00:00:00Z', status, pr_state: pr }))).toBe(expected);
+  for (const [db_status, pr, expected] of cases) {
+    it(`db_status=${db_status} + pr_state=${pr} → ${expected}`, () => {
+      expect(commissionStage(entry({ task: 't', created: '2026-06-01T00:00:00Z', db_status, pr_state: pr }))).toBe(expected);
     });
   }
+
+  it('falls back to the narrowed status when db_status is absent (fixtures)', () => {
+    const e = entry({ task: 't', created: '2026-06-01T00:00:00Z', status: 'running', db_status: undefined });
+    expect(commissionStage(e)).toBe('running');
+  });
 });
 
 describe('groupCommissions', () => {

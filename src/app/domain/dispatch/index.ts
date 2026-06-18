@@ -1,6 +1,7 @@
 export type {
   DispatchQueueEntry,
   DispatchStatus,
+  DispatchDbStatus,
   DispatchFlow,
   DispatchAgentType,
   PrState,
@@ -15,4 +16,9 @@ export {
 } from './dispatch-queue-entry';
 
 export type { CommissionItem, CommissionStage } from './commission-view';
-export { groupCommissions, commissionStage } from './commission-view';
+export {
+  groupCommissions,
+  commissionStage,
+  COMMISSION_STAGE_ORDER,
+  COMMISSION_STAGE_LABELS,
+} from './commission-view';

@@ -12,19 +12,44 @@ import type { DispatchQueueEntry, PrState } from './dispatch-queue-entry';
 // service wraps it in a computed signal, the board renders the result.
 
 // The honest stage of an item's commission, derived from its latest commission
-// dispatch + PR state.
-//
-// NOTE: `proposed` and `rejected` are NOT distinguished yet. The dispatch mapper
-// currently narrows the DB status (proposed→approved, rejected→failed), so those
-// collapse before they reach here. T1.3 carries the raw status and splits them
-// out — at which point this union grows and `commissionStage` gains those arms.
+// dispatch's (un-narrowed) status + PR state. Reads `db_status` so `proposed`
+// (awaiting operator approval) and `rejected` (a deliberate decline) are distinct
+// from `approved`/`failed` — the false-state the old narrowed status created.
 export type CommissionStage =
-  | 'approved'    // queued / awaiting pickup
+  | 'proposed'    // awaiting operator approval — NOT yet greenlit
+  | 'approved'    // approved / queued / dispatching — awaiting pickup
   | 'running'     // executor working
   | 'pr_open'     // PR open or draft — awaiting review + merge
   | 'merged'      // PR merged — shipped
   | 'completed'   // finished but PR state unknown (worker didn't report pr_state)
-  | 'failed';     // errored / reaped
+  | 'failed'      // errored / reaped
+  | 'rejected';   // operator declined — distinct from a crash
+
+// Left-to-right column order for the rebuilt execution board: one column per
+// stage, earliest→shipped, with the terminal-negative states last. `completed`
+// sits after `merged` as the "done, PR status unreported" bucket (common until
+// the worker populates pr_url/pr_state — hub autonomy-pilot #14).
+export const COMMISSION_STAGE_ORDER = [
+  'proposed',
+  'approved',
+  'running',
+  'pr_open',
+  'merged',
+  'completed',
+  'failed',
+  'rejected',
+] as const satisfies readonly CommissionStage[];
+
+export const COMMISSION_STAGE_LABELS: Record<CommissionStage, string> = {
+  proposed:  'Proposed',
+  approved:  'Approved',
+  running:   'Running',
+  pr_open:   'PR open',
+  merged:    'Merged',
+  completed: 'Completed',
+  failed:    'Failed',
+  rejected:  'Rejected',
+};
 
 export interface CommissionItem {
   taskId:    VaultItemId;
@@ -48,13 +73,20 @@ function stageFromPr(pr: PrState | null | undefined): CommissionStage {
   }
 }
 
-// Stage of a single commission dispatch. Exhaustive over DispatchStatus.
+// Stage of a single commission dispatch. Prefers the un-narrowed `db_status`
+// (so proposed/rejected survive); falls back to the narrowed `status` for
+// seed/fixture rows that don't carry db_status. Exhaustive over DispatchDbStatus.
 export function commissionStage(e: DispatchQueueEntry): CommissionStage {
-  switch (e.status) {
+  switch (e.db_status ?? e.status) {
+    case 'proposed':    return 'proposed';
     case 'approved':
     case 'dispatching': return 'approved';
     case 'running':     return 'running';
+    case 'rejected':    return 'rejected';
     case 'failed':      return 'failed';
+    // `removed` rows are filtered before reaching the UI; map defensively so the
+    // switch stays exhaustive over DispatchDbStatus.
+    case 'removed':     return 'failed';
     case 'completed':   return stageFromPr(e.pr_state);
   }
 }

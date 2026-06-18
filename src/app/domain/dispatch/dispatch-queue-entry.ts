@@ -19,6 +19,22 @@ export type DispatchStatus =
   | 'completed'     // finished successfully; result_summary populated
   | 'failed';       // errored or reaped; error populated
 
+// The UN-narrowed status, exactly as the DB/API report it. The legacy
+// `DispatchStatus` above collapses two meaningful distinctions the board needs:
+// `proposed` (awaiting operator approval) was folded into `approved`, and
+// `rejected` (a deliberate decline) into `failed`. The rebuilt commission board
+// reads `db_status` so those read truthfully. (`removed` is filtered out before
+// entries reach the UI, but kept here so the union matches the wire schema.)
+export type DispatchDbStatus =
+  | 'proposed'
+  | 'approved'
+  | 'dispatching'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'rejected'
+  | 'removed';
+
 // The pipeline lane a dispatch belongs to. `commission` = code/PR work — the only
 // flow the execution board should surface as shippable; `groom` (intake/classify/
 // decompose) and `recon` (research) are automatic pre-work that must NOT read as
@@ -117,6 +133,10 @@ export interface DispatchQueueEntry {
   // a "completed" card.
   flow?:          DispatchFlow;
   agent_type?:    DispatchAgentType;
+  // Un-narrowed status (see DispatchDbStatus). The rebuilt commission board reads
+  // this so `proposed`/`rejected` aren't collapsed into approved/failed. Optional
+  // only for seed/fixture rows — every API row carries it.
+  db_status?:     DispatchDbStatus;
   // PR state + URL for commission dispatches. `pr_state` null = no PR yet.
   // `pr_url` is currently always null server-side (the commission worker writes
   // the URL into result_summary, not this column — hub autonomy-pilot #14), so

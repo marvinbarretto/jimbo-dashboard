@@ -231,6 +231,9 @@ function toDispatchEntry(a: ApiDispatchEntry): DispatchQueueEntry {
     task_id: vaultItemId(a.task_id),
     skill: skillId(a.skill ?? a.agent_type),       // fall back to agent_type when skill not set
     status: narrowStatus(a.status),
+    // Raw status preserved alongside the narrowed one — the commission board
+    // needs proposed/rejected, which narrowStatus collapses into approved/failed.
+    db_status: a.status,
     executor: a.executor ? actorId(a.executor) : null,
     started_at: a.started_at,
     completed_at: a.completed_at,
