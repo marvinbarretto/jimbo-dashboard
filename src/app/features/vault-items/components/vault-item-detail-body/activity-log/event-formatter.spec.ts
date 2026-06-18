@@ -18,11 +18,18 @@ describe('formatEvent — standard line shape', () => {
     expect(r.target).toBeNull();
   });
 
-  it('formats `assigned` with from→to', () => {
+  it('formats a hand-off (`assigned` with a prior owner) as `reassigned`', () => {
     const e: VaultActivityEvent = { ...base, type: 'assigned', actor_id: wellKnownActorId('marvin'), from_actor_id: wellKnownActorId('boris'), to_actor_id: wellKnownActorId('ralph'), reason: null };
     const r = formatEvent(e);
     expect(r.verb).toBe('reassigned');
     expect(r.target).toBe('ralph');
+  });
+
+  it('formats an initial assignment (no prior owner) as `assigned`, not `reassigned`', () => {
+    const e: VaultActivityEvent = { ...base, type: 'assigned', actor_id: wellKnownActorId('jimbo'), from_actor_id: null, to_actor_id: wellKnownActorId('boris'), reason: null };
+    const r = formatEvent(e);
+    expect(r.verb).toBe('assigned');
+    expect(r.target).toBe('boris');
   });
 
   describe('grooming_status_changed — reads as `moved x to y (z)`', () => {

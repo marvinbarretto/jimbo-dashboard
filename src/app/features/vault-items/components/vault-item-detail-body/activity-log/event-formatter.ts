@@ -29,7 +29,10 @@ export function formatEvent(e: VaultActivityEvent): FormattedLine {
     case 'created':
       return { ...base, actorId: e.actor_id, verb: 'created' };
     case 'assigned':
-      return { ...base, actorId: e.actor_id, verb: 'reassigned', target: e.to_actor_id, summary: e.reason ? `— ${e.reason}` : '' };
+      // First assignment has no prior owner (from_actor_id === null). Rendering it
+      // as "reassigned" implies a previous owner that never existed — the source of
+      // the "jimbo reassigned → jimbo" confusion on freshly-ingested items.
+      return { ...base, actorId: e.actor_id, verb: e.from_actor_id ? 'reassigned' : 'assigned', target: e.to_actor_id, summary: e.reason ? `— ${e.reason}` : '' };
     case 'grooming_status_changed': {
       const noteSuffix = e.note ? ` (${e.note})` : '';
       return {
