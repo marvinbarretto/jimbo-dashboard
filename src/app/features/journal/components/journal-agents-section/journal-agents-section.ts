@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
@@ -13,6 +13,7 @@ import {
   AgentRunsService,
   type AgentRunOutcome,
   type AgentRunRollupRow,
+  type JobRatingValue,
 } from '../../../hermes/data-access/agent-runs.service';
 
 type Tone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'info';
@@ -54,6 +55,7 @@ interface JobCost {
   cost: number;
   tokens: number;
   runs: number;
+  rating: JobRatingValue | null;
 }
 
 @Component({
@@ -77,6 +79,25 @@ export class JournalAgentsSection {
 
   // YYYY-MM-DD. Treated as a UTC day window — Hermes timestamps are stored UTC.
   readonly date = input.required<string>();
+
+  // Per-job usefulness verdicts (keep/watch/cut). Loaded once; updated
+  // optimistically on click. Ratings are per-job, not per-day, so a single
+  // fetch is enough.
+  private readonly ratingsSig = signal<Record<string, JobRatingValue>>({});
+  readonly ratingValues: readonly JobRatingValue[] = ['keep', 'watch', 'cut'];
+
+  constructor() {
+    this.service.ratings().subscribe((r) => {
+      const m: Record<string, JobRatingValue> = {};
+      for (const it of r.items) m[it.job_name] = it.rating;
+      this.ratingsSig.set(m);
+    });
+  }
+
+  rate(jobName: string, rating: JobRatingValue): void {
+    this.ratingsSig.update((m) => ({ ...m, [jobName]: rating }));   // optimistic
+    this.service.setRating(jobName, rating).subscribe({ error: () => {} });
+  }
 
   // Refresh every 60s. Cheap query, view-only.
   private readonly result = toSignal(
@@ -134,12 +155,15 @@ export class JournalAgentsSection {
 
   // Per-job spend breakdown — the "what's costing money" table. Highest first.
   readonly costByJob = computed<JobCost[]>(() => {
+    const ratings = this.ratingsSig();
     const m = new Map<string, JobCost>();
     for (const r of this.items()) {
-      const j = m.get(r.job_name) ?? { job_name: r.job_name, cost: 0, tokens: 0, runs: 0 };
+      const j = m.get(r.job_name)
+        ?? { job_name: r.job_name, cost: 0, tokens: 0, runs: 0, rating: ratings[r.job_name] ?? null };
       j.cost += r.cost_usd ?? 0;
       j.tokens += r.tokens_total ?? 0;
       j.runs += r.count;
+      j.rating = ratings[r.job_name] ?? null;
       m.set(r.job_name, j);
     }
     return [...m.values()].filter((j) => j.cost > 0).sort((a, b) => b.cost - a.cost);

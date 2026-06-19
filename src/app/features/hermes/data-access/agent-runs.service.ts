@@ -38,10 +38,30 @@ export interface AgentRunTailRow {
   tokens_total: number | null;
 }
 
+export type JobRatingValue = 'keep' | 'watch' | 'cut';
+
+export interface JobRating {
+  job_name: string;
+  rating: JobRatingValue;
+  note: string | null;
+  updated_at: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AgentRunsService {
   private readonly http = inject(HttpClient);
   private readonly base = environment.dashboardApiUrl;
+
+  ratings(): Observable<{ items: JobRating[] }> {
+    return this.http.get<{ items: JobRating[] }>(`${this.base}/api/agent-runs/ratings`);
+  }
+
+  setRating(jobName: string, rating: JobRatingValue): Observable<void> {
+    return this.http.put<void>(
+      `${this.base}/api/agent-runs/ratings/${encodeURIComponent(jobName)}`,
+      { rating },
+    );
+  }
 
   rollup(opts: { days?: number; since?: string; until?: string } = {}): Observable<{ items: AgentRunRollupRow[] }> {
     const params = new URLSearchParams();

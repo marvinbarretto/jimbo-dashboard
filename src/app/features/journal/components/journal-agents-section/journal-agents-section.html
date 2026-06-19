@@ -44,11 +44,19 @@
         <app-ui-subhead label="Cost by job" [count]="costByJob().length" />
         <ul class="agents__list">
           @for (j of costByJob(); track j.job_name) {
-            <li class="agents__row">
+            <li class="agents__cost-row">
               <span class="agents__row-job">{{ j.job_name }}</span>
               <span class="agents__row-cost">{{ fmtCost(j.cost) }}</span>
-              <span class="agents__row-model">{{ fmtTokens(j.tokens) }} tok</span>
-              <span class="agents__row-count">{{ j.runs }}×</span>
+              <span class="agents__row-model">{{ fmtTokens(j.tokens) }} tok · {{ j.runs }}×</span>
+              <span class="agents__rating">
+                @for (v of ratingValues; track v) {
+                  <button
+                    type="button"
+                    class="agents__rate-btn"
+                    [class.agents__rate-btn--active]="j.rating === v"
+                    (click)="rate(j.job_name, v)">{{ v }}</button>
+                }
+              </span>
             </li>
           }
         </ul>
