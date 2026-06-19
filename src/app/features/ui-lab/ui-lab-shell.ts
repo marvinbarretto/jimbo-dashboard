@@ -59,6 +59,9 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'epic-rollup',             name: 'Epic Rollup',           group: 'cards',           selector: 'app-epic-rollup',       description: 'Per-child status strip + summary. Surfaces failures by name on the parent.' },
   { id: 'card-parent-link',        name: 'Card Parent Link',      group: 'cards',           selector: 'app-card-parent-link',  description: '"↳ ⊞ #N · title" row that sits between header and title on subtask cards.' },
   { id: 'card-callout',            name: 'Card Callout',          group: 'cards',           selector: 'app-card-callout',      description: 'Variant body slot — question / rework / draft / rationale / result / error.' },
+  { id: 'commission-stage-pill',   name: 'Commission Stage Pill', group: 'cards',           selector: 'app-commission-stage-pill', description: 'Atom — commission lifecycle stage pill (proposed → merged, + failed / rejected). Proposed/rejected stay distinct.' },
+  { id: 'commission-card',         name: 'Commission Card',       group: 'cards',           selector: 'app-commission-card',       description: 'Organism — one card per item on the execution board: stage, assignee, PR link, ×N history drill-down.' },
+  { id: 'dispatch-history-list',   name: 'Dispatch History List', group: 'cards',           selector: 'app-dispatch-history-list', description: 'Organism — per-item commission history (newest first); surfaces superseded attempts and their PRs.' },
 
   // Forms & editing — input controls and form chrome
   { id: 'ui-button',               name: 'Button',                group: 'forms-editing',   selector: 'app-ui-button',         description: 'Button primitives — UiButton (action) and UiButtonLink (navigation) sharing one visual contract.' },
