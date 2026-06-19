@@ -24,6 +24,7 @@ export const primaryNavItems: readonly NavLink[] = [
   { href: '/execution',             label: 'Execution',      accent: '#f87171' },
   { href: '/shopping',              label: 'Shopping',       accent: '#4ade80' },
   { href: '/jimbo-workspace',       label: 'Jimbo Workspace', accent: '#f472b6' },
+  { href: '/ralph',                  label: 'Ralph',          accent: '#a3e635' },
   { href: '/hermes',                label: 'Hermes',         accent: '#fb923c' },
   { href: '/stream',                label: 'Stream',         accent: '#5eead4' },
   { href: '/ui-lab',                label: 'UI Lab',         accent: '#a78bfa' },

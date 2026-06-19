@@ -1,0 +1,67 @@
+<div class="ralph-page">
+  <header class="ralph-page__header">
+    <h1>Ralph</h1>
+    <p class="ralph-page__hint">Run summaries posted by Ralph after each job. Refresh the page to pull latest.</p>
+  </header>
+
+  @if (jobs().length > 0) {
+    <section class="ralph-summary">
+      @for (job of jobs(); track job) {
+        @if (lastRunPerJob().get(job); as run) {
+          <div class="job-card" [class.job-card--error]="run.hasErrors">
+            <div class="job-card__name">{{ run.job }}</div>
+            <div class="job-card__time">{{ run.started_at | date:'d MMM, HH:mm' }}</div>
+            <div class="job-card__stats">
+              @for (pair of run.summaryPairs; track pair.key) {
+                <span class="stat">
+                  <span class="stat__key">{{ pair.key }}</span>
+                  <span class="stat__val">{{ pair.value }}</span>
+                </span>
+              }
+            </div>
+            <div class="job-card__duration">{{ run.durationSecs }}s</div>
+            <div class="job-card__badge" [class.job-card__badge--ok]="!run.hasErrors" [class.job-card__badge--err]="run.hasErrors">
+              {{ run.hasErrors ? 'ERR' : 'OK' }}
+            </div>
+          </div>
+        }
+      }
+    </section>
+
+    <section class="ralph-history">
+      <h2>Run history</h2>
+      <table class="run-table">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Job</th>
+            <th>Duration</th>
+            <th>Summary</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (run of runs(); track run.id) {
+            <tr [class.run-table__row--error]="run.hasErrors">
+              <td class="run-table__when">{{ run.started_at | date:'d MMM, HH:mm' }}</td>
+              <td class="run-table__job">{{ run.job }}</td>
+              <td class="run-table__duration">{{ run.durationSecs }}s</td>
+              <td class="run-table__summary">
+                @for (pair of run.summaryPairs; track pair.key) {
+                  <span class="inline-stat">{{ pair.key }}&thinsp;{{ pair.value }}</span>
+                }
+              </td>
+              <td>
+                <span class="badge" [class.badge--ok]="!run.hasErrors" [class.badge--err]="run.hasErrors">
+                  {{ run.hasErrors ? 'ERR' : 'OK' }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  } @else {
+    <p class="ralph-page__empty">No runs recorded yet. Run <code>python ralph.py start</code> to generate the first entry.</p>
+  }
+</div>
