@@ -2,10 +2,10 @@
   <header class="board__header">
     <h1>Execution</h1>
     <p class="board__hint">
-      Skills running on vault items. <strong>Approved</strong> are queued,
-      <strong>dispatching</strong>/<strong>running</strong> are system-managed,
-      <strong>failed</strong> can be retried. <strong>Manual</strong> tracks
-      operator-owned work that bypasses agent dispatch.
+      One card per item, following the <strong>commission</strong> (code/PR) lifecycle:
+      proposed → approved → running → PR open → merged. <strong>Failed</strong> can be
+      retried. <strong>Manual / Ready</strong> tracks operator-owned work that bypasses
+      agent dispatch. Grooming/recon passes are not shown here.
     </p>
     <app-board-create-bar
       buttonLabel="New manual A-item"
@@ -31,7 +31,7 @@
     [class.board__filters--collapsed]="!showMobileFilters()"
     [groups]="filterGroups()"
     [searchTerm]="searchTerm()"
-    searchPlaceholder="Search task / skill / executor…"
+    searchPlaceholder="Search task / executor…"
     (toggle)="onFilterToggle($event)"
     (searchChange)="onSearchChange($event)"
     (reset)="resetFilters()"
@@ -68,14 +68,16 @@
           [loading]="isLoading()"
           [dropDisabled]="col.systemManaged"
         >
-          @for (card of col.cards; track card.kind === 'dispatch' ? card.entry.id : card.item.id) {
-            @if (card.kind === 'dispatch') {
-              <app-vault-card
-                [context]="cardContextFor(card)"
-                (actionTriggered)="onDispatchAction(card.entry, $event)" />
+          @for (card of col.cards; track card.kind === 'commission' ? card.item.taskId : card.item.id) {
+            @if (card.kind === 'commission') {
+              <app-commission-card
+                [item]="card.item"
+                [project]="projectForCommission(card.item)"
+                (open)="onOpenCommission(card.item)"
+                (action)="onCommissionAction(card.item, $event)" />
             } @else {
               <app-vault-card
-                [context]="cardContextFor(card)"
+                [context]="cardContextForManual(card.item)"
                 (actionTriggered)="onManualAction(card.item, $event)" />
             }
           }

@@ -1,5 +1,5 @@
 import type { DispatchQueueEntry } from './dispatch-queue-entry';
-import { actorId, dispatchId, skillId , wellKnownActorId} from '../ids';
+import { actorId, dispatchId, skillId, vaultItemId, wellKnownActorId } from '../ids';
 import { VAULT_ITEM_IDS } from '../vault/fixtures';
 
 // Spread across all five DispatchStatus columns so the execution kanban has
@@ -164,5 +164,114 @@ export const DISPATCH_ENTRIES = [
     result_summary: null,
     error: 'AnthropicTimeoutError: request exceeded 30s budget',
     created_at: '2026-04-25T06:33:00Z',
+  },
+
+  // ── Commission-flow dispatches (flow='commission') ──────────────────────
+  // These feed the rebuilt one-card-per-item commission board. Spread across
+  // every CommissionStage so seed mode + the UI Lab demonstrate the full
+  // pipeline. The two comm-a rows share a task_id → they collapse to a single
+  // card (stage from the newest, history ×2) — the headline fix.
+  {
+    id: dispatchId('dc010101-0101-0101-0101-010101010101'),
+    task_id: vaultItemId('comm-a'),
+    skill: skillId('code/pr-from-issue'),
+    status: 'failed', db_status: 'failed', flow: 'commission', agent_type: 'coder',
+    executor: wellKnownActorId('boris'),
+    started_at: '2026-06-10T09:00:00Z', completed_at: '2026-06-10T09:03:00Z',
+    retry_count: 0, skill_context: null,
+    result_summary: null, error: 'vitest: 1 failing test in phrase.service.spec.ts',
+    pr_state: null, pr_url: null,
+    created_at: '2026-06-10T08:58:00Z', task_title: 'fix: Fisher-Yates shuffle bias', task_seq: 301,
+  },
+  {
+    id: dispatchId('dc010102-0102-0102-0102-010201020102'),
+    task_id: vaultItemId('comm-a'),
+    skill: skillId('code/pr-from-issue'),
+    status: 'running', db_status: 'running', flow: 'commission', agent_type: 'coder',
+    executor: wellKnownActorId('boris'),
+    started_at: '2026-06-10T10:00:00Z', completed_at: null,
+    retry_count: 1, skill_context: null,
+    result_summary: null, error: null, pr_state: null, pr_url: null,
+    created_at: '2026-06-10T09:59:00Z', task_title: 'fix: Fisher-Yates shuffle bias', task_seq: 301,
+  },
+  {
+    id: dispatchId('dc020202-0202-0202-0202-020202020202'),
+    task_id: vaultItemId('comm-b'),
+    skill: skillId('code/pr-from-issue'),
+    status: 'completed', db_status: 'completed', flow: 'commission', agent_type: 'coder',
+    executor: wellKnownActorId('boris'),
+    started_at: '2026-06-09T11:00:00Z', completed_at: '2026-06-09T11:04:00Z',
+    retry_count: 0, skill_context: null,
+    result_summary: 'PR merged', error: null,
+    pr_state: 'merged', pr_url: 'https://github.com/marvinbarretto/pmq-bingo/pull/22',
+    created_at: '2026-06-09T10:58:00Z', task_title: 'fix: repair stale app.spec.ts', task_seq: 302,
+  },
+  {
+    id: dispatchId('dc030303-0303-0303-0303-030303030303'),
+    task_id: vaultItemId('comm-c'),
+    skill: skillId('code/pr-from-issue'),
+    status: 'completed', db_status: 'completed', flow: 'commission', agent_type: 'coder',
+    executor: wellKnownActorId('boris'),
+    started_at: '2026-06-11T08:00:00Z', completed_at: '2026-06-11T08:05:00Z',
+    retry_count: 0, skill_context: null,
+    result_summary: 'PR opened', error: null,
+    pr_state: 'open', pr_url: 'https://github.com/marvinbarretto/pmq-bingo/pull/24',
+    created_at: '2026-06-11T07:58:00Z', task_title: 'feat: phrase category badge', task_seq: 303,
+  },
+  {
+    id: dispatchId('dc040404-0404-0404-0404-040404040404'),
+    task_id: vaultItemId('comm-d'),
+    skill: skillId('code/pr-from-issue'),
+    status: 'completed', db_status: 'completed', flow: 'commission', agent_type: 'coder',
+    executor: wellKnownActorId('boris'),
+    started_at: '2026-06-08T14:00:00Z', completed_at: '2026-06-08T14:06:00Z',
+    retry_count: 0, skill_context: null,
+    result_summary: 'done; PR url not reported', error: null,
+    pr_state: null, pr_url: null,
+    created_at: '2026-06-08T13:58:00Z', task_title: 'chore: remove orphaned files', task_seq: 304,
+  },
+  {
+    id: dispatchId('dc050505-0505-0505-0505-050505050505'),
+    task_id: vaultItemId('comm-e'),
+    skill: skillId('code/pr-from-issue'),
+    status: 'approved', db_status: 'proposed', flow: 'commission', agent_type: 'coder',
+    executor: wellKnownActorId('boris'),
+    started_at: null, completed_at: null,
+    retry_count: 0, skill_context: null,
+    result_summary: null, error: null, pr_state: null, pr_url: null,
+    created_at: '2026-06-12T09:00:00Z', task_title: 'feat: PMQ countdown', task_seq: 305,
+  },
+  {
+    id: dispatchId('dc060606-0606-0606-0606-060606060606'),
+    task_id: vaultItemId('comm-f'),
+    skill: skillId('code/pr-from-issue'),
+    status: 'approved', db_status: 'approved', flow: 'commission', agent_type: 'coder',
+    executor: wellKnownActorId('boris'),
+    started_at: null, completed_at: null,
+    retry_count: 0, skill_context: null,
+    result_summary: null, error: null, pr_state: null, pr_url: null,
+    created_at: '2026-06-12T07:00:00Z', task_title: 'chore: add GameService tests', task_seq: 306,
+  },
+  {
+    id: dispatchId('dc070707-0707-0707-0707-070707070707'),
+    task_id: vaultItemId('comm-g'),
+    skill: skillId('code/pr-from-issue'),
+    status: 'failed', db_status: 'failed', flow: 'commission', agent_type: 'coder',
+    executor: wellKnownActorId('boris'),
+    started_at: '2026-06-07T16:00:00Z', completed_at: '2026-06-07T16:02:00Z',
+    retry_count: 2, skill_context: null,
+    result_summary: null, error: 'reaped: exceeded 15m budget', pr_state: null, pr_url: null,
+    created_at: '2026-06-07T15:58:00Z', task_title: 'refactor: extract shuffle util', task_seq: 307,
+  },
+  {
+    id: dispatchId('dc080808-0808-0808-0808-080808080808'),
+    task_id: vaultItemId('comm-h'),
+    skill: skillId('code/pr-from-issue'),
+    status: 'failed', db_status: 'rejected', flow: 'commission', agent_type: 'coder',
+    executor: wellKnownActorId('boris'),
+    started_at: null, completed_at: null,
+    retry_count: 0, skill_context: null,
+    result_summary: null, error: null, pr_state: null, pr_url: null,
+    created_at: '2026-06-06T12:00:00Z', task_title: 'docs: add README tagline', task_seq: 308,
   },
 ] as const satisfies readonly DispatchQueueEntry[];
