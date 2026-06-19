@@ -46,6 +46,12 @@
   color: var(--color-text-soft);
 }
 
+.agents__row-cost {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
 .agents__quiet {
   margin: 0;
   padding: 0;

@@ -22,6 +22,8 @@ export interface AgentRunRollupRow {
   count: number;
   avg_duration_ms: number | null;
   last_ts: string;
+  cost_usd: number | null;      // SUM of estimated cost (USD) across this group
+  tokens_total: number | null;  // SUM of total tokens across this group
 }
 
 export interface AgentRunTailRow {
@@ -32,6 +34,8 @@ export interface AgentRunTailRow {
   outcome: AgentRunOutcome;
   title: string;
   session_id: string | null;
+  cost_usd: number | null;
+  tokens_total: number | null;
 }
 
 @Injectable({ providedIn: 'root' })

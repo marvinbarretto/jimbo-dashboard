@@ -12,6 +12,7 @@
         <app-ui-stat-card label="Failed" [value]="errorCount().toString()" [detail]="errorCount() ? 'see breakdown' : null" />
         <app-ui-stat-card label="Silent" [value]="silentCount().toString()" detail="polled, no work" />
         <app-ui-stat-card label="Productive" [value]="proseCount().toString()" detail="prose responses" />
+        <app-ui-stat-card label="Cost" [value]="fmtCost(totalCost())" detail="est. — reconcile vs OpenRouter" />
       </div>
 
       <app-ui-subhead label="Failing crons" [count]="failingCrons().length" />
@@ -35,6 +36,20 @@
         <ul class="agents__quiet">
           @for (j of quietCrons(); track j) {
             <li>{{ j }}</li>
+          }
+        </ul>
+      }
+
+      @if (costByJob().length) {
+        <app-ui-subhead label="Cost by job" [count]="costByJob().length" />
+        <ul class="agents__list">
+          @for (j of costByJob(); track j.job_name) {
+            <li class="agents__row">
+              <span class="agents__row-job">{{ j.job_name }}</span>
+              <span class="agents__row-cost">{{ fmtCost(j.cost) }}</span>
+              <span class="agents__row-model">{{ fmtTokens(j.tokens) }} tok</span>
+              <span class="agents__row-count">{{ j.runs }}×</span>
+            </li>
           }
         </ul>
       }

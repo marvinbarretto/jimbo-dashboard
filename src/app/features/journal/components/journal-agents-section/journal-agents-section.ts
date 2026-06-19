@@ -49,6 +49,13 @@ interface FailingCron {
   count: number;
 }
 
+interface JobCost {
+  job_name: string;
+  cost: number;
+  tokens: number;
+  runs: number;
+}
+
 @Component({
   selector: 'app-journal-agents-section',
   imports: [
@@ -117,6 +124,29 @@ export class JournalAgentsSection {
     }
     return quiet.sort();
   });
+
+  // Estimated total agent cost for the day (cost_usd is backfilled onto
+  // agent.end from the runner's per-session accounting; null on pre-backfill
+  // or zero-cost runs). This is an ESTIMATE — reconcile against OpenRouter's
+  // daily total, which also captures auxiliary (non-cron-session) calls.
+  readonly totalCost = computed(() =>
+    this.items().reduce((s, r) => s + (r.cost_usd ?? 0), 0));
+
+  // Per-job spend breakdown — the "what's costing money" table. Highest first.
+  readonly costByJob = computed<JobCost[]>(() => {
+    const m = new Map<string, JobCost>();
+    for (const r of this.items()) {
+      const j = m.get(r.job_name) ?? { job_name: r.job_name, cost: 0, tokens: 0, runs: 0 };
+      j.cost += r.cost_usd ?? 0;
+      j.tokens += r.tokens_total ?? 0;
+      j.runs += r.count;
+      m.set(r.job_name, j);
+    }
+    return [...m.values()].filter((j) => j.cost > 0).sort((a, b) => b.cost - a.cost);
+  });
+
+  fmtCost(n: number): string { return '$' + n.toFixed(n < 0.1 ? 4 : 2); }
+  fmtTokens(n: number): string { return n >= 1000 ? `${Math.round(n / 1000)}k` : String(n); }
 
   readonly sectionMeta = computed(() => {
     const t = this.totalTicks();
