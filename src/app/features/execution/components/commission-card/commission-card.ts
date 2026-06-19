@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { CommissionItem } from '@domain/dispatch';
 import type { ProjectRef } from '@shared/components/vault-card/card-context';
 import { CommissionStagePill } from '@shared/components/commission-stage-pill/commission-stage-pill';
 import { ActorAvatar } from '@shared/components/actor-avatar/actor-avatar';
+import { DispatchHistoryList } from '@features/execution/components/dispatch-history-list/dispatch-history-list';
 
 // Operator actions a commission card can emit. A subset of vault-card's ActionKey
 // (so the board's existing onDispatchAction handler accepts them unchanged).
@@ -17,7 +18,7 @@ export type CommissionAction = 'retry' | 'dismiss' | 'archive';
 @Component({
   selector: 'app-commission-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, CommissionStagePill, ActorAvatar],
+  imports: [RouterLink, CommissionStagePill, ActorAvatar, DispatchHistoryList],
   template: `
     <article class="cc">
       <header class="cc__top">
@@ -38,15 +39,27 @@ export type CommissionAction = 'retry' | 'dismiss' | 'archive';
             {{ proj.display_name }}
           </a>
         }
+        @if (item().latest.pr_url; as pr) {
+          <a class="cc__pr" [href]="pr" target="_blank" rel="noopener">PR ↗</a>
+        }
         @if (dispatchCount() > 1) {
-          <span class="cc__history" [attr.title]="dispatchCount() + ' commission dispatches'">
-            ×{{ dispatchCount() }}
-          </span>
+          <button
+            type="button"
+            class="cc__history"
+            [class.cc__history--open]="expanded()"
+            [attr.aria-expanded]="expanded()"
+            [attr.title]="dispatchCount() + ' commission dispatches'"
+            (click)="expanded.set(!expanded())"
+          >×{{ dispatchCount() }} {{ expanded() ? '▾' : '▸' }}</button>
         }
       </div>
 
       @if (item().stage === 'failed' && item().latest.error; as err) {
         <p class="cc__error">{{ err }}</p>
+      }
+
+      @if (expanded()) {
+        <app-dispatch-history-list [history]="item().history" />
       }
 
       @if (actions().length) {
@@ -96,7 +109,13 @@ export type CommissionAction = 'retry' | 'dismiss' | 'archive';
       background: var(--dot); flex: none;
     }
     .cc__project:hover { text-decoration: underline; }
-    .cc__history { font-family: var(--font-mono); font-size: 0.6rem; color: var(--color-text-muted); }
+    .cc__pr { font-size: 0.65rem; color: var(--color-accent); text-decoration: none; }
+    .cc__pr:hover { text-decoration: underline; }
+    .cc__history {
+      font-family: var(--font-mono); font-size: 0.6rem; color: var(--color-text-muted);
+      background: none; border: none; padding: 0; cursor: pointer;
+    }
+    .cc__history:hover, .cc__history--open { color: var(--color-text); }
     .cc__error {
       margin: 0; font-size: 0.65rem; color: var(--color-danger);
       font-family: var(--font-mono); word-break: break-word;
@@ -118,6 +137,7 @@ export class CommissionCard {
   readonly open = output<void>();
   readonly action = output<CommissionAction>();
 
+  readonly expanded = signal(false);
   readonly executor = computed(() => this.item().executor);
   readonly dispatchCount = computed(() => this.item().history.length);
 
