@@ -1,0 +1,52 @@
+<app-ui-stack gap="lg" class="review">
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Awaiting review</h1>
+    <div uiPageHeaderActions>
+      <app-ui-badge tone="neutral">{{ items().length }} awaiting</app-ui-badge>
+      <app-ui-button variant="ghost" size="sm" (pressed)="refresh()">Refresh</app-ui-button>
+    </div>
+  </app-ui-page-header>
+
+  @if (isLoading()) {
+    <app-ui-empty-state message="Loading…" />
+  } @else if (items().length === 0) {
+    <app-ui-empty-state
+      title="Nothing awaiting review."
+      message="Completed commission work lands here for approval before it's marked done." />
+  } @else {
+    <app-ui-stack gap="md">
+      @for (item of items(); track item.id) {
+        <app-ui-card>
+          <div class="review-card">
+            <div class="review-card__head">
+              <span class="review-card__seq">#{{ item.seq ?? '—' }}</span>
+              <span class="review-card__title">{{ item.title ?? '(untitled)' }}</span>
+              @if (item.prState) {
+                <app-ui-badge tone="info">PR {{ item.prState }}</app-ui-badge>
+              } @else {
+                <app-ui-badge tone="neutral">doc / no PR</app-ui-badge>
+              }
+            </div>
+
+            <div class="review-card__meta">
+              @if (item.assignedTo) { <span>by {{ item.assignedTo }}</span> }
+              @if (item.skill) { <span>· {{ item.skill }}</span> }
+              @if (item.prUrl) {
+                <span>· <a [href]="item.prUrl" target="_blank" rel="noopener">view PR ↗</a></span>
+              }
+            </div>
+
+            @if (item.resultSummary) {
+              <p class="review-card__summary">{{ item.resultSummary }}</p>
+            }
+
+            <div class="review-card__actions">
+              <app-ui-button variant="primary" size="sm" (pressed)="approve(item)">Approve</app-ui-button>
+              <app-ui-button variant="ghost" size="sm" (pressed)="sendBack(item)">Send back</app-ui-button>
+            </div>
+          </div>
+        </app-ui-card>
+      }
+    </app-ui-stack>
+  }
+</app-ui-stack>

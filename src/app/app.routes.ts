@@ -88,6 +88,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/execution/execution.routes').then(m => m.executionRoutes),
   },
   {
+    path: 'review',
+    loadChildren: () => import('./features/dispatch-review/dispatch-review.routes').then(m => m.dispatchReviewRoutes),
+  },
+  {
     path: 'questions',
     loadChildren: () => import('./features/questions/questions.routes').then(m => m.questionsRoutes),
   },
