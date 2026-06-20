@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.74](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.73...v0.0.74) (2026-06-20)
+
+
+### Features
+
+* add commission history drill-down + inline PR link ([3e00a26](https://github.com/marvinbarretto/jimbo-dashboard/commit/3e00a2601b9405dc8ddb164b2ef11ab0b84b40f6)), closes [#2841](https://github.com/marvinbarretto/jimbo-dashboard/issues/2841) [#14](https://github.com/marvinbarretto/jimbo-dashboard/issues/14) [#301](https://github.com/marvinbarretto/jimbo-dashboard/issues/301) [#302](https://github.com/marvinbarretto/jimbo-dashboard/issues/302) [#303](https://github.com/marvinbarretto/jimbo-dashboard/issues/303)
+* add per-item commission view-model for the execution board ([7889a1c](https://github.com/marvinbarretto/jimbo-dashboard/commit/7889a1cbec11e51cea9cc35f1ace31ac5b39be0e))
+* add Ralph run-history dashboard page ([99b0780](https://github.com/marvinbarretto/jimbo-dashboard/commit/99b0780273d4e99bc88b8e52757217a97271fab3))
+* **journal:** keep/watch/cut usefulness rating per job ([68ef759](https://github.com/marvinbarretto/jimbo-dashboard/commit/68ef7598fd6a4a340620f09a68cd0c85f00d3a88))
+* **journal:** show per-job cost + total in Agents section ([fa3c38f](https://github.com/marvinbarretto/jimbo-dashboard/commit/fa3c38f79cb0aa3bf16a9a25fca51c2c43fcd1c8))
+* rebuild execution board as one card per item (commission lifecycle) ([77b23e7](https://github.com/marvinbarretto/jimbo-dashboard/commit/77b23e7c01e896ea5b414e4dfccef0502b6e7338))
+* register commission components in the UI Lab ([fb2c91c](https://github.com/marvinbarretto/jimbo-dashboard/commit/fb2c91cd33ca9e79ad2600aec20f8b06fbf2858c)), closes [#2849](https://github.com/marvinbarretto/jimbo-dashboard/issues/2849) [#14](https://github.com/marvinbarretto/jimbo-dashboard/issues/14)
+* show run cost/tokens/model on grooming activity events ([bbaa172](https://github.com/marvinbarretto/jimbo-dashboard/commit/bbaa1729f3611416fa30b6daea28d2c133882244))
+* surface grooming agent runs in the item activity log ([63110f3](https://github.com/marvinbarretto/jimbo-dashboard/commit/63110f3bf83c2d4733d2a43e6ee80a93574b6c8d))
+* surface proposed/rejected in the commission view (stop collapsing status) ([152ba62](https://github.com/marvinbarretto/jimbo-dashboard/commit/152ba6277a3143873eb409ba5b29e0e99442abf6))
+
+
+### Bug Fixes
+
+* mark an item's first project link as primary ([0094716](https://github.com/marvinbarretto/jimbo-dashboard/commit/0094716a8621b7140ef893af055996a5c8da354a))
+* read a vault item's first assignment as "assigned" not "reassigned" ([633b3b2](https://github.com/marvinbarretto/jimbo-dashboard/commit/633b3b24fb4c616aac001b45be0cd49d5c7681a4))
+
 ### [0.0.73](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.72...v0.0.73) (2026-06-16)
 
 
