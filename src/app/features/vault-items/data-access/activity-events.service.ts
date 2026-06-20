@@ -13,7 +13,7 @@ import { isVaultEvent } from '@domain/activity/activity-event';
 import type { ActivityEvent } from '@domain/activity/activity-event';
 import type { GroomingStatus } from '@domain/vault/vault-item';
 import type { VaultItemId } from '@domain/ids';
-import { activityId, actorId, vaultItemId } from '@domain/ids';
+import { activityId, actorId, vaultItemId, skillId, dispatchId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
@@ -104,6 +104,7 @@ function toVaultEvent(row: ApiNoteActivity): VaultActivityEvent | null {
     case 'unarchived':
       return { ...base, type: 'unarchived', note: row.reason };
     case 'assigned':
+    case 'reassigned':
       if (!row.to_value) return null;
       return {
         ...base, type: 'assigned',
@@ -111,6 +112,15 @@ function toVaultEvent(row: ApiNoteActivity): VaultActivityEvent | null {
         to_actor_id: actorId(row.to_value),
         reason: row.reason,
       };
+    // Grooming agent runs that submit a result — surfaced as agent_run_completed
+    // so the deep-read disposition / decomposition / analysis shows in the item's
+    // activity timeline (under the "agent" filter) instead of being dropped.
+    case 'submitted_deepread':
+      return agentRun(base, 'dispatch/vault-deep-read', row);
+    case 'submitted_decomposition':
+      return agentRun(base, 'dispatch/vault-decompose', row);
+    case 'submitted_analysis':
+      return agentRun(base, 'dispatch/vault-analyse', row);
     case 'completion_changed':
       return {
         ...base, type: 'completion_changed',
@@ -128,5 +138,43 @@ function toVaultEvent(row: ApiNoteActivity): VaultActivityEvent | null {
     default:
       return null;
   }
+}
+
+// Base shape shared by every mapped event — derived from the id constructors so
+// we don't import the branded types just to annotate a helper param.
+type EventBase = {
+  id: ReturnType<typeof activityId>;
+  at: string;
+  vault_item_id: ReturnType<typeof vaultItemId>;
+  actor_id: ReturnType<typeof actorId>;
+};
+
+// Adapt a grooming submit audit row into an agent_run_completed event. `summary`
+// carries the disposition (e.g. "deep-read: ask — …"); model/dispatch come from
+// the row's context blob when present.
+function agentRun(base: EventBase, skill: string, row: ApiNoteActivity): VaultActivityEvent {
+  const ctx = row.context ?? {};
+  const did = ctx['dispatch_id'];
+  const model = ctx['model'];
+  return {
+    ...base,
+    type: 'agent_run_completed',
+    skill_id: skillId(skill),
+    dispatch_id: did != null ? dispatchId(String(did)) : null,
+    outcome: 'success',
+    summary: row.reason ?? '',
+    decisions: null,
+    reasoning: null,
+    from_status: null,
+    to_status: null,
+    duration_ms: null,
+    model_id: typeof model === 'string' ? model : null,
+    tokens_in: null,
+    tokens_out: null,
+    tokens_cached: null,
+    cost_usd: null,
+    error: null,
+    log_lines: null,
+  };
 }
 
