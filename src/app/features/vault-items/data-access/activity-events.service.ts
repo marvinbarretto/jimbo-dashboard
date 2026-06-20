@@ -153,9 +153,12 @@ type EventBase = {
 // carries the disposition (e.g. "deep-read: ask — …"); model/dispatch come from
 // the row's context blob when present.
 function agentRun(base: EventBase, skill: string, row: ApiNoteActivity): VaultActivityEvent {
-  const ctx = row.context ?? {};
+  // context arrives as a JSON string from the API (see ApiNoteActivity) — parse
+  // it to read the dispatch id / model and the joined cost rollup (context._run).
+  const ctx = parseContext(row.context);
+  const runRaw = ctx['_run'];
+  const run: Record<string, unknown> = (typeof runRaw === 'object' && runRaw !== null) ? runRaw as Record<string, unknown> : {};
   const did = ctx['dispatch_id'];
-  const model = ctx['model'];
   return {
     ...base,
     type: 'agent_run_completed',
@@ -167,14 +170,29 @@ function agentRun(base: EventBase, skill: string, row: ApiNoteActivity): VaultAc
     reasoning: null,
     from_status: null,
     to_status: null,
-    duration_ms: null,
-    model_id: typeof model === 'string' ? model : null,
-    tokens_in: null,
-    tokens_out: null,
-    tokens_cached: null,
-    cost_usd: null,
+    duration_ms: num(run['duration_ms']),
+    model_id: str(ctx['model']),
+    tokens_in: num(run['tokens_in']),
+    tokens_out: num(run['tokens_out']),
+    tokens_cached: num(run['tokens_cached']),
+    cost_usd: num(run['cost_usd']),
     error: null,
     log_lines: null,
   };
 }
+
+// The note-activity API serialises `context` as a JSON string. Parse defensively
+// — older rows or non-grooming actions may have no context or a bare object.
+function parseContext(c: unknown): Record<string, unknown> {
+  if (c == null) return {};
+  if (typeof c === 'string') {
+    try { const p: unknown = JSON.parse(c); return (p !== null && typeof p === 'object') ? p as Record<string, unknown> : {}; }
+    catch { return {}; }
+  }
+  if (typeof c === 'object') return c as Record<string, unknown>;
+  return {};
+}
+
+function num(v: unknown): number | null { return typeof v === 'number' ? v : null; }
+function str(v: unknown): string | null { return typeof v === 'string' ? v : null; }
 
