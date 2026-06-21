@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.75](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.74...v0.0.75) (2026-06-21)
+
+
+### Features
+
+* **review:** add Awaiting Review surface for the commission gate ([2d2a32a](https://github.com/marvinbarretto/jimbo-dashboard/commit/2d2a32afd39d0d5a200041905299e526dbdfd752))
+
 ### [0.0.74](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.73...v0.0.74) (2026-06-20)
 
 
