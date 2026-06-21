@@ -123,16 +123,26 @@ export class ExecutionBoard {
     () => new Set(this.dispatchService.commissions().map(c => c.taskId as string)),
   );
 
-  // EVERY item meeting the Definition of Ready that hasn't been picked up yet —
-  // human- and agent-owned alike (the unified gate makes them consistent; only
-  // the assigned actor differs). Excludes anything already in a commission stage
-  // so there's no double-show. Done items fall out automatically via isActive.
+  // EVERY LEAF item meeting the Definition of Ready that hasn't been picked up
+  // yet — human- and agent-owned alike (the unified gate makes them consistent;
+  // only the assigned actor differs). Excludes:
+  //  • containers (items WITH children) — an epic/mid-level node is not executable
+  //    work; its children are. This matches the commission pump's leaf rule and
+  //    the grooming board (which also hides parents), so the column only shows
+  //    what can actually be commissioned.
+  //  • anything already in a commission stage — no double-show.
+  // Done items fall out automatically via isActive.
   private readonly readyItems = computed(() => {
     const commissioned = this.commissionedTaskIds();
-    return this.vaultItemsService.items().filter(item =>
+    const items = this.vaultItemsService.items();
+    const isContainer = new Set(
+      items.map(i => i.parent_id).filter((id): id is NonNullable<typeof id> => !!id),
+    );
+    return items.filter(item =>
       item.type === 'task' &&
       isActive(item) &&
       item.grooming_status === 'ready' &&
+      !isContainer.has(item.id) &&
       !commissioned.has(item.id as string),
     ).sort((a, b) => b.created_at.localeCompare(a.created_at));
   });
