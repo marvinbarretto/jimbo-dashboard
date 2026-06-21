@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.77](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.76...v0.0.77) (2026-06-21)
+
+
+### Features
+
+* **nutrition:** dashboard view, journal widget, and page over coach_food_log ([b5e9ed6](https://github.com/marvinbarretto/jimbo-dashboard/commit/b5e9ed6c1271d53e5ae71229010ede8c66b9e0cd))
+
 ### [0.0.76](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.75...v0.0.76) (2026-06-21)
 
 
