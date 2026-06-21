@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
+import { TagChip } from '@shared/components/tag-chip/tag-chip';
 import type { Project } from '@domain/projects/project';
 import type { Actor } from '@domain/actors/actor';
 import type { VaultItemId } from '@domain/ids';
@@ -24,21 +25,20 @@ export interface MentionRelatedRef {
  */
 @Component({
   selector: 'app-ui-mention-chip-strip',
-  imports: [EntityChip],
+  imports: [EntityChip, TagChip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (hasAny()) {
       <div class="ui-mcs" role="list" aria-label="Captured metadata">
         @for (t of tags(); track t; let i = $index) {
-          <span class="ui-mcs__tag" role="listitem">
-            #{{ t }}
-            <button
-              type="button"
-              class="ui-mcs__tag-x"
-              (click)="tagRemoved.emit(i)"
-              [attr.aria-label]="'Remove tag ' + t"
-            >×</button>
-          </span>
+          <app-tag-chip
+            role="listitem"
+            [label]="t"
+            prefix="#"
+            tone="accent"
+            [removable]="true"
+            (removed)="tagRemoved.emit(i)"
+          />
         }
 
         @for (p of projects(); track p.id; let i = $index) {
@@ -85,40 +85,8 @@ export interface MentionRelatedRef {
       align-items: center;
     }
 
-    /* Tags are free-text labels (no entity backing) so they don't go through
-       EntityChip; keep a minimal pill rendering for visual parity. */
-    .ui-mcs__tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      font-size: 0.72rem;
-      font-family: var(--font-mono);
-      padding: 0.15rem 0.55rem;
-      border: 1px solid color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-      color: var(--color-text);
-      line-height: 1.4;
-    }
-
-    .ui-mcs__tag-x {
-      border: none;
-      background: none;
-      padding: 0 0.05rem;
-      cursor: pointer;
-      font: inherit;
-      font-size: 0.95em;
-      line-height: 1;
-      color: inherit;
-      opacity: 0.55;
-
-      &:hover { opacity: 1; color: var(--color-danger, #ef4444); }
-      &:focus-visible {
-        outline: 2px solid currentColor;
-        outline-offset: 1px;
-        border-radius: 2px;
-      }
-    }
+    /* Tags (free-text, no entity backing) render via <app-tag-chip>; projects /
+       assignee / related delegate to <app-entity-chip>. No tag styles live here. */
   `],
 })
 export class UiMentionChipStrip {

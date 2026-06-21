@@ -133,6 +133,7 @@ export const routes: Routes = [
       { path: 'library-surface',        loadComponent: () => import('./features/ui-lab/sections/library-surface-section').then(m => m.LibrarySurfaceSection) },
       { path: 'toggle',                  loadComponent: () => import('./features/ui-lab/sections/toggle-section').then(m => m.ToggleSection) },
       { path: 'entity-chip',             loadComponent: () => import('./features/ui-lab/sections/entity-chip-section').then(m => m.EntityChipSection) },
+      { path: 'tag-chip',                loadComponent: () => import('./features/ui-lab/sections/tag-chip-section').then(m => m.TagChipSection) },
       { path: 'vault-detail-primitives', loadComponent: () => import('./features/ui-lab/sections/vault-detail-primitives-section').then(m => m.VaultDetailPrimitivesSection) },
       { path: 'tab-bar',                 loadComponent: () => import('./features/ui-lab/sections/tab-bar-section').then(m => m.TabBarSection) },
       { path: 'ui-inline-tabs',          loadComponent: () => import('./features/ui-lab/sections/ui-inline-tabs-section').then(m => m.UiInlineTabsSection) },

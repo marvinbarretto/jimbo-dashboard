@@ -1,26 +1,24 @@
 import { ChangeDetectionStrategy, Component, ElementRef, input, output, signal, viewChild } from '@angular/core';
+import { TagChip } from '@shared/components/tag-chip/tag-chip';
 
 // Read-only by default; pass [editable]="true" to enable in-place adds/removes.
 // Emits the full next tag array via (tagsChange) so the parent owns canonical state.
 @Component({
   selector: 'app-vault-item-tag-list',
+  imports: [TagChip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="vault-item-tag-list">
+    <div class="vault-item-tag-list" role="list">
       @for (tag of tags(); track tag) {
-        <span class="vault-item-tag-list__tag">
-          {{ tag }}
-          @if (editable()) {
-            <button
-              type="button"
-              class="vault-item-tag-list__remove"
-              [attr.aria-label]="'Remove tag ' + tag"
-              (click)="remove(tag)">×</button>
-          }
-        </span>
+        <app-tag-chip
+          role="listitem"
+          [label]="tag"
+          [removable]="editable()"
+          (removed)="remove(tag)"
+        />
       } @empty {
         @if (!editable()) {
-          <span class="vault-item-tag-list__tag vault-item-tag-list__tag--empty">none yet</span>
+          <span class="vault-item-tag-list__empty">none yet</span>
         }
       }
       @if (editable()) {
@@ -47,30 +45,10 @@ import { ChangeDetectionStrategy, Component, ElementRef, input, output, signal, 
       align-items: center;
     }
 
-    .vault-item-tag-list__tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.2rem;
-      border: 1px solid var(--color-border);
+    .vault-item-tag-list__empty {
       font-size: 0.7rem;
-      padding: 1px 7px;
+      font-style: italic;
       color: var(--color-text-muted);
-    }
-
-    .vault-item-tag-list__tag--empty { font-style: italic; }
-
-    .vault-item-tag-list__remove {
-      padding: 0 0.15rem;
-      margin-left: 0.1rem;
-      background: transparent;
-      border: none;
-      border-left: 1px solid var(--color-border);
-      cursor: pointer;
-      color: var(--color-text-muted);
-      font-size: 0.75rem;
-      line-height: 1;
-
-      &:hover { color: var(--color-danger); }
     }
 
     .vault-item-tag-list__input {

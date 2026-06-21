@@ -8,7 +8,7 @@ import { EMPTY_PROJECT_BRIEF } from '@domain/projects/project';
 import type { Actor } from '@domain/actors/actor';
 
 // The strip composes two visual surfaces:
-//   - Tags    → bespoke `.ui-mcs__tag` markup (free-text labels, no entity backing)
+//   - Tags    → <app-tag-chip> (free-text labels, no entity backing)
 //   - Projects / assignee / related → delegated to <app-entity-chip>
 //     (classes: `.entity-chip--project`, `.entity-chip--actor`, `.entity-chip--vault-item`)
 //
@@ -64,7 +64,7 @@ describe('UiMentionChipStrip', () => {
     const fixture = build();
     fixture.componentRef.setInput('tags', ['urgent', 'bug']);
     fixture.detectChanges();
-    const chips = fixture.nativeElement.querySelectorAll('.ui-mcs__tag');
+    const chips = fixture.nativeElement.querySelectorAll('app-tag-chip');
     expect(chips).toHaveLength(2);
     expect(chips[0].textContent).toContain('#urgent');
     expect(chips[1].textContent).toContain('#bug');
@@ -115,7 +115,7 @@ describe('UiMentionChipStrip', () => {
     fixture.detectChanges();
     const emitted: number[] = [];
     fixture.componentInstance.tagRemoved.subscribe(i => emitted.push(i));
-    const buttons = fixture.nativeElement.querySelectorAll('.ui-mcs__tag .ui-mcs__tag-x');
+    const buttons = fixture.nativeElement.querySelectorAll('app-tag-chip .tag-chip__remove');
     (buttons[1] as HTMLButtonElement).click();
     expect(emitted).toEqual([1]);
   });
