@@ -24,8 +24,13 @@
   margin: 0.4rem 1.1rem 0.6rem;
 }
 
-// Zone 2 wraps status-chips + meta-line + overview-cards inside one shared
+// Zone 2 wraps status-chips + the read-only context block inside one shared
 // background and bottom border. The children don't know about the wrapper.
+// On wide screens it splits into two regions so the meta facts sit beside the
+// decision chips instead of stacking below them as two grey run-on lines:
+//   left  → decisions (status / owner / priority chips an operator acts on)
+//   right → context   (timeline + origin / hierarchy / queue facts)
+// Stacks to a single column on narrow viewports.
 .vault-item-detail__zone2 {
   padding: .9rem 1.1rem 1.1rem;
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 92%, transparent);
@@ -33,52 +38,87 @@
     linear-gradient(180deg,
       color-mix(in srgb, var(--color-surface) 96%, transparent),
       color-mix(in srgb, var(--color-surface-soft) 98%, transparent));
+
+  display: grid;
+  // Context track is capped (not `auto`/max-content) so an expanded rationale —
+  // meta-line renders the full ai_rationale inline — wraps inside the column
+  // instead of ballooning the track and crushing the decision chips.
+  grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
+  align-items: start;
+  gap: .6rem 1.5rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 }
 
-// Three equal columns: Body | Activity | Thread.
-// Each column is a full-height section — content is always expanded.
-// Below the breakpoint the columns stack vertically.
-.vault-item-detail__columns {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr;
-  align-items: stretch;
-  // Page-coloured band so the columns visibly sit on the page surface, not
-  // flush against the sticky-header gradient. Pairs with the sticky-header
+// Context column: meta-line stacked above overview-cards. The grid places it
+// in its own auto-width track to the right of the decision chips, so it reads
+// as a tidy fact block beside the chips rather than two grey lines below them.
+.vault-item-detail__zone2-context {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  min-width: 0;
+}
+
+// Tabbed panels: Detail | Activity | Thread. Body is the focal panel and now
+// gets the full width to breathe; Activity / Thread sit behind tabs because
+// they're frequently empty and previously ate two-thirds of the row as
+// permanent columns. All three panels stay mounted (toggled via .is-hidden)
+// so tabbing away never drops thread-composer draft text.
+.vault-item-detail__tabs {
+  // Page-coloured band so the tabbed region visibly sits on the page surface,
+  // not flush against the sticky-header gradient. Pairs with the sticky-header
   // drop-shadow above to read as a tier boundary.
   background: var(--color-bg);
-  padding-top: 0.5rem;
+}
 
-  // Sections inside columns: remove outer border/radius so they read as
-  // flush column panels rather than separate cards.
+// Tab strip sticks just below the identity/status sticky-header so the
+// section switcher stays reachable while scrolling a long Body. Section
+// headers inside panels are intentionally non-sticky now (no stickyHeader
+// input) — a single panel is visible at a time, so there's nothing to stack
+// against, and double-sticking under the tab bar is avoided.
+.vault-item-detail__tab-bar {
+  position: sticky;
+  top: var(--sticky-header-height);
+  z-index: 9;
+  display: block;
+  background: var(--color-bg);
+  padding: 0 1.1rem;
+}
+
+.vault-item-detail__panel {
+  &.is-hidden { display: none; }
+
   app-ui-section {
     border-top: none;
     border-bottom: none;
     border-radius: 0;
-    height: 100%;
-
-    &:not(:last-child) {
-      border-right: 1px solid var(--color-border);
-    }
-    &:last-child {
-      border-right: none;
-    }
-  }
-
-  @media (max-width: 1023px) {
-    grid-template-columns: 1fr;
-
-    app-ui-section {
-      border-right: none !important;
-      border-top: 1px solid var(--color-border);
-    }
   }
 }
 
-// Body column stacks intake / delivery / links vertically.
+// Detail panel now uses the full tab width: a wide primary column (the work —
+// intake + delivery) beside a narrower side column (relationships + metadata).
+// Stacks to a single column on narrow viewports.
 .vault-item-detail__body-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+.vault-item-detail__body-main,
+.vault-item-detail__body-side {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  min-width: 0;
 }
 
 // GH items age from off-white → pale yellow. Same --stale-norm / --ancient-norm

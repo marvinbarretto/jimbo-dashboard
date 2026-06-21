@@ -81,7 +81,11 @@ export function withVaultDetailModal(): void {
         restoreFocus: true,
         hasBackdrop: true,
         disableClose: false,
-        panelClass: 'vault-detail-dialog',
+        // `--item` pins a stable height so switching Detail/Activity/Thread
+        // tabs doesn't resize the modal (body scrolls internally). Draft mode
+        // opens with the base class only — its compact form shouldn't be
+        // stretched into a tall empty panel.
+        panelClass: ['vault-detail-dialog', 'vault-detail-dialog--item'],
       },
     );
     ref = opened;

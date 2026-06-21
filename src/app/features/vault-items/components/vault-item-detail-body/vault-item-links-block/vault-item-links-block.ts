@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
+import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiChipList, type UiChipListItem, type UiChipListPickerOption } from '@shared/components/ui-chip-list/ui-chip-list';
 import { UiDropdown } from '@shared/components/ui-dropdown/ui-dropdown';
+import { UiInlinePicker, type UiInlinePickerOption } from '@shared/components/ui-inline-picker/ui-inline-picker';
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
 import { VaultItemTagList } from '../vault-item-tag-list/vault-item-tag-list';
@@ -28,7 +30,7 @@ export interface VaultItemEpicOption {
 
 @Component({
   selector: 'app-vault-item-links-block',
-  imports: [EntityChip, UiChipList, UiDropdown, UiSubhead, UiSubsection, VaultItemTagList],
+  imports: [EntityChip, UiButton, UiChipList, UiDropdown, UiInlinePicker, UiSubhead, UiSubsection, VaultItemTagList],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-ui-subsection label="Links">
@@ -56,30 +58,24 @@ export interface VaultItemEpicOption {
               (clicked)="parentClicked.emit(p.seq)"
             />
             @if (editable()) {
-              <button type="button"
-                class="vault-item-links-block__inline-btn"
-                aria-label="Remove parent"
-                (click)="parentChange.emit(null)">× clear</button>
+              <app-ui-button
+                variant="ghost"
+                size="sm"
+                ariaLabel="Remove parent"
+                (pressed)="parentChange.emit(null)">× clear</app-ui-button>
             }
           </div>
         } @else {
           <div class="vault-item-links-block__parent-add">
             @if (availableEpics().length > 0) {
               <app-ui-dropdown #epicDrop ariaHaspopup="listbox" ariaLabel="Pick an epic">
-                <button trigger type="button" class="vault-item-links-block__inline-btn">
-                  + set epic
-                </button>
-                <div panel role="listbox" class="vault-item-links-block__epic-panel">
-                  @for (e of availableEpics(); track e.id) {
-                    <button
-                      class="vault-item-links-block__epic-option"
-                      role="option"
-                      (click)="parentChange.emit(e.seq); epicDrop.close()">
-                      <span class="vault-item-links-block__epic-seq">#{{ e.seq }}</span>
-                      {{ e.title }}
-                    </button>
-                  }
-                </div>
+                <span trigger>+ set epic</span>
+                <app-ui-inline-picker
+                  panel
+                  ariaLabel="Pick an epic"
+                  [options]="epicPickerOptions()"
+                  (selected)="onEpicPicked($event); epicDrop.close()"
+                />
               </app-ui-dropdown>
             }
             <label for="parent-seq-input" class="visually-hidden">Set parent by seq number</label>
@@ -90,10 +86,12 @@ export interface VaultItemEpicOption {
               [value]="parentSeqDraft()"
               (input)="onParentSeqInput($event)"
               (keydown.enter)="commitParent()" />
-            <button type="button"
-              class="vault-item-links-block__inline-btn"
+            <app-ui-button
+              variant="ghost"
+              size="sm"
+              ariaLabel="Set parent"
               [disabled]="!parentSeqDraft()"
-              (click)="commitParent()">↵</button>
+              (pressed)="commitParent()">↵</app-ui-button>
           </div>
         }
       }
@@ -126,12 +124,11 @@ export interface VaultItemEpicOption {
           class="vault-item-links-block__blocker-input"
           [value]="addBlockerSeqInput()"
           (input)="onBlockerSeqInput($event)" />
-        <button type="button"
-          class="vault-item-links-block__inline-btn"
+        <app-ui-button
+          variant="ghost"
+          size="sm"
           [disabled]="!addBlockerSeqInput()"
-          (click)="blockerAddBySeq.emit()">
-          + add blocker
-        </button>
+          (pressed)="blockerAddBySeq.emit()">+ add blocker</app-ui-button>
       </div>
 
       <app-ui-subhead label="Tags" [count]="tags().length" />
@@ -178,54 +175,6 @@ export interface VaultItemEpicOption {
 
       &::placeholder { color: var(--color-text-muted); opacity: 0.6; }
       &:focus { outline: none; border-color: var(--color-accent); }
-    }
-
-    .vault-item-links-block__inline-btn {
-      padding: 0.3rem 0.65rem;
-      background: transparent;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius, 4px);
-      font: inherit;
-      font-size: 0.72rem;
-      cursor: pointer;
-      color: var(--color-text-muted);
-      white-space: nowrap;
-      flex-shrink: 0;
-
-      &:hover { border-color: var(--color-text-muted); color: var(--color-text); }
-      &:disabled { opacity: 0.35; cursor: not-allowed; }
-    }
-
-    .vault-item-links-block__epic-panel {
-      display: flex;
-      flex-direction: column;
-      max-height: 16rem;
-      overflow-y: auto;
-    }
-
-    .vault-item-links-block__epic-option {
-      display: flex;
-      align-items: baseline;
-      gap: 0.4rem;
-      padding: 0.35rem 0.7rem;
-      background: none;
-      border: none;
-      border-bottom: 1px solid var(--color-border);
-      font: inherit;
-      font-size: 0.72rem;
-      cursor: pointer;
-      text-align: left;
-      color: var(--color-text);
-
-      &:last-child { border-bottom: none; }
-      &:hover { background: var(--color-surface); }
-      &:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
-    }
-
-    .vault-item-links-block__epic-seq {
-      color: var(--color-text-muted);
-      font-size: 0.65rem;
-      flex-shrink: 0;
     }
 
   `],
@@ -284,6 +233,16 @@ export class VaultItemLinksBlock {
       entityType: 'vault-item' as const,
     }))
   );
+
+  // Option id carries the seq so the picker's `selected` emit gives us the
+  // value parentChange wants (detail-body translates seq → vault-item id).
+  readonly epicPickerOptions = computed<readonly UiInlinePickerOption[]>(() =>
+    this.availableEpics().map(e => ({ id: e.seq.toString(), label: `#${e.seq} ${e.title}` }))
+  );
+
+  onEpicPicked(seq: string): void {
+    this.parentChange.emit(Number(seq));
+  }
 
   onSubtaskClicked(subtaskId: string): void {
     const child = this.subtasks().find(c => c.id === subtaskId);

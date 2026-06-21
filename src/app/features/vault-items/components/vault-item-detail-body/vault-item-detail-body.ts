@@ -9,6 +9,7 @@ import {
   inject,
   input,
   output,
+  signal,
   viewChild,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
@@ -19,6 +20,10 @@ import { lifecycleState, isArchived } from '@domain/vault/vault-item';
 import { staleNorm, ancientNorm } from '@domain/vault';
 import { ActivityLogComponent } from './activity-log/activity-log';
 import { UiSection } from '@shared/components/ui-section/ui-section';
+import {
+  UiInlineTabs,
+  type UiInlineTabOption,
+} from '@shared/components/ui-inline-tabs/ui-inline-tabs';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiMentionChipStrip } from '@shared/components/ui-mention-chip-strip/ui-mention-chip-strip';
 import {
@@ -58,6 +63,7 @@ import type { CreateThreadMessagePayload } from '@domain/thread';
     RejectFormComponent,
     ActivityLogComponent,
     UiSection,
+    UiInlineTabs,
     UiButton,
     UiMentionChipStrip,
     UiChipList,
@@ -98,6 +104,21 @@ export class VaultItemDetailBody {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly stickyHeaderRef = viewChild<ElementRef<HTMLDivElement>>('stickyHeader');
+
+  /** Which detail panel is showing. Body is the focal content; Activity and
+   *  Thread are tucked behind tabs because they're often empty and were eating
+   *  two-thirds of the width as permanent columns. All three panels stay
+   *  mounted (toggled via CSS) so tabbing away never drops thread-composer
+   *  draft text — the component isn't destroyed. */
+  protected readonly activeTab = signal<'detail' | 'activity' | 'thread'>('detail');
+
+  /** Tab options with live counts so an operator can see there's something in
+   *  Activity / Thread without opening them. */
+  protected readonly detailTabs = computed<readonly UiInlineTabOption[]>(() => [
+    { value: 'detail', label: 'Detail' },
+    { value: 'activity', label: 'Activity', count: this.store.events().length },
+    { value: 'thread', label: 'Thread', count: this.store.messages().length },
+  ]);
 
   // Staleness norms are non-zero only for GH items — drives the yellow-aging
   // background modifier without affecting manually-created items.

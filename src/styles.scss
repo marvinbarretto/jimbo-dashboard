@@ -236,6 +236,10 @@ button {
   }
 }
 
+select, textarea {
+  width: 100%;
+}
+
 input, select, textarea {
   font: inherit;
   background: var(--color-surface-soft);
@@ -243,7 +247,6 @@ input, select, textarea {
   border: 2px solid var(--color-border);
   border-radius: var(--radius);
   padding: 0.65rem 0.8rem;
-  width: 100%;
 
   &:focus-visible {
     outline: none;
@@ -413,17 +416,31 @@ h2 { font-size: 1.25rem; font-weight: 600; }
 // CDK Dialog panel for the vault-item detail modal. Sized to the viewport
 // with a comfortable cap so long lists scroll inside the body, not the page.
 .cdk-overlay-pane.vault-detail-dialog {
-  // Modal hosts the 3-column body grid (content / activity / thread) — the
-  // viewport cap is intentionally generous so the activity log and discussion
-  // get real estate. Older cap was 920px which forced the stream columns into
-  // a postage stamp; jumping to ~1500px lets each column breathe at ~480px.
-  width: min(1500px, calc(100vw - 2rem));
+  // Content is now tabbed (Detail / Activity / Thread) rather than three
+  // permanent columns, so the old ~1500px width is no longer needed and left
+  // dead space in the single Detail tab. ~1180px gives the Detail tab's 2-col
+  // layout room (primary ~680px + side ~400px) without the empty gutter.
+  width: min(1180px, calc(100vw - 2rem));
   max-height: calc(100vh - 4rem);
   display: flex;
 
   @include bp.mobile {
     width: 100vw;
     max-height: 100dvh;
+    height: 100dvh;
+  }
+}
+
+// Item mode is tabbed — pin a stable height so switching tabs never resizes
+// the modal; the panels overflow into the internal body scroll instead.
+// Scoped to `--item` (set by detail-modal.ts) so the compact draft form, which
+// shares the base panelClass, isn't stretched into a tall empty modal.
+.cdk-overlay-pane.vault-detail-dialog--item {
+  height: min(900px, calc(100vh - 4rem));
+
+  @include bp.mobile {
+    // Mobile pane is already full-height via the base rule; keep it so the
+    // pinned desktop height doesn't override the dvh fill.
     height: 100dvh;
   }
 }
