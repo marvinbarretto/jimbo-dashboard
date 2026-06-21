@@ -29,19 +29,23 @@ import { isActive, type VaultItem } from '@domain/vault';
 const EXECUTOR = 'executor';
 const PROJECT  = 'project';
 
-// Manual operator-owned tasks get a leading lane, kept distinct from the
-// commission pipeline (they bypass agent dispatch entirely). Columns are
-// otherwise the honest commission stages, left→shipped.
-type BoardColumn = 'manual' | CommissionStage;
-const COLUMN_ORDER: readonly BoardColumn[] = ['manual', ...COMMISSION_STAGE_ORDER];
+// The leading lane is the single "Ready" column: EVERY item that meets the
+// Definition of Ready and hasn't yet been picked up for execution. Agent-owned
+// ready items wait here for the commission pump; human-owned ready items
+// (assigned to marvin) wait here for Marvin to pick up. The only thing that
+// differs between them is the assigned actor. Once an item enters a commission
+// stage it drops out of Ready (no double-show). Columns after Ready are the
+// honest commission stages, left→shipped.
+type BoardColumn = 'ready' | CommissionStage;
+const COLUMN_ORDER: readonly BoardColumn[] = ['ready', ...COMMISSION_STAGE_ORDER];
 
 const COLUMN_LABELS: Record<BoardColumn, string> = {
-  manual: 'Manual / Ready',
+  ready: 'Ready',
   ...COMMISSION_STAGE_LABELS,
 };
 
 const COLUMN_EMPTY: Record<BoardColumn, string> = {
-  manual:    'No manual items',
+  ready:     'Nothing ready',
   proposed:  'Nothing awaiting approval',
   approved:  'Nothing queued',
   running:   'Nothing running',
@@ -52,11 +56,11 @@ const COLUMN_EMPTY: Record<BoardColumn, string> = {
   rejected:  'Nothing rejected',
 };
 
-// One card per ITEM. Commission cards come from the per-item view-model; manual
-// items reuse the unified vault-card (operator track, unchanged behaviour).
+// One card per ITEM. Commission cards come from the per-item view-model; ready
+// items (not yet commissioned) reuse the unified vault-card.
 type BoardCard =
   | { readonly kind: 'commission'; readonly item: CommissionItem }
-  | { readonly kind: 'manual';     readonly item: VaultItem };
+  | { readonly kind: 'ready';      readonly item: VaultItem };
 
 interface ColumnView {
   status:        BoardColumn;
@@ -87,7 +91,7 @@ export class ExecutionBoard {
   private readonly router = inject(Router);
 
   // Read-only board: the only mutations are operator retry/dismiss/archive on a
-  // commission, or mark-done on a manual item. No drag-drop.
+  // commission, or mark-done on a ready item. No drag-drop.
 
   // --- filter state -------------------------------------------------------
   // Skill filter dropped vs the old per-dispatch board: this board is
@@ -101,7 +105,7 @@ export class ExecutionBoard {
   readonly searchTerm = this._searchTerm.asReadonly();
 
   readonly showMobileFilters = signal(false);
-  private readonly _mobileColumn = signal<BoardColumn>('completed');
+  private readonly _mobileColumn = signal<BoardColumn>('ready');
   readonly mobileColumn = this._mobileColumn.asReadonly();
   protected readonly hasActiveFilters = this.filter.hasActive;
 
@@ -113,28 +117,36 @@ export class ExecutionBoard {
 
   readonly visibleCommissions = computed(() => this.applyCommissionFilters());
 
-  // Operator-managed tasks that bypass agent dispatch (created straight to
-  // grooming_status='ready'). Preserved as a distinct lane — they have no
-  // dispatch rows so they can never appear in `commissions()`.
-  private readonly manualItems = computed(() =>
-    this.vaultItemsService.items().filter(item =>
+  // Task IDs that already have a commission dispatch (any stage). These items
+  // render in their commission column, so they must NOT also appear in Ready.
+  private readonly commissionedTaskIds = computed(
+    () => new Set(this.dispatchService.commissions().map(c => c.taskId as string)),
+  );
+
+  // EVERY item meeting the Definition of Ready that hasn't been picked up yet —
+  // human- and agent-owned alike (the unified gate makes them consistent; only
+  // the assigned actor differs). Excludes anything already in a commission stage
+  // so there's no double-show. Done items fall out automatically via isActive.
+  private readonly readyItems = computed(() => {
+    const commissioned = this.commissionedTaskIds();
+    return this.vaultItemsService.items().filter(item =>
       item.type === 'task' &&
       isActive(item) &&
       item.grooming_status === 'ready' &&
-      item.source?.kind === 'manual',
-    ).sort((a, b) => b.created_at.localeCompare(a.created_at)),
-  );
+      !commissioned.has(item.id as string),
+    ).sort((a, b) => b.created_at.localeCompare(a.created_at));
+  });
 
-  private readonly visibleManualItems = computed(() =>
-    this.manualItems().filter(item => this.matchesManual(item)),
+  private readonly visibleReadyItems = computed(() =>
+    this.readyItems().filter(item => this.matchesReady(item)),
   );
 
   readonly columns = computed<ColumnView[]>(() => {
     const comms = this.visibleCommissions();
-    const manuals = this.visibleManualItems();
+    const ready = this.visibleReadyItems();
     return COLUMN_ORDER.map(col => {
-      const cards: BoardCard[] = col === 'manual'
-        ? manuals.map(item => ({ kind: 'manual', item }))
+      const cards: BoardCard[] = col === 'ready'
+        ? ready.map(item => ({ kind: 'ready', item }))
         : comms.filter(c => c.stage === col).map(item => ({ kind: 'commission', item }));
       return {
         status:        col,
@@ -193,7 +205,7 @@ export class ExecutionBoard {
     return this.resolveProject(item.taskId as string);
   }
 
-  cardContextForManual(item: VaultItem): CardContext {
+  cardContextForReady(item: VaultItem): CardContext {
     const ctx: ManualCardContext = {
       kind: 'manual',
       item,
@@ -243,7 +255,7 @@ export class ExecutionBoard {
     if (item.taskSeq !== null) swapDetailSeq(this.router, item.taskSeq);
   }
 
-  onManualAction(item: VaultItem, key: ActionKey): void {
+  onReadyAction(item: VaultItem, key: ActionKey): void {
     if (key === 'markDone') this.commands.complete(item.id);
   }
 
@@ -340,8 +352,8 @@ export class ExecutionBoard {
     });
   }
 
-  // Manual items honour the same facets (assigned_to as their "executor").
-  private matchesManual(item: VaultItem): boolean {
+  // Ready items honour the same facets (assigned_to as their "executor").
+  private matchesReady(item: VaultItem): boolean {
     const execF  = this.executorFilter();
     const projF  = this.projectFilter();
     const search = this._searchTerm().trim().toLowerCase();
