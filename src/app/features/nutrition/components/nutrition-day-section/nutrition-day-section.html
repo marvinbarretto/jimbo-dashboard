@@ -1,0 +1,27 @@
+<app-ui-section title="Nutrition" [meta]="sectionMeta()">
+  @if (loading()) {
+    <app-ui-loading-state message="Loading food log…" />
+  } @else if (entries().length === 0) {
+    <app-ui-empty-state message="No food or drink logged. Use /food on Telegram." />
+  } @else {
+    <app-ui-stack gap="lg">
+      <div class="nutrition-day__stats">
+        <app-ui-stat-card label="Calories" [value]="totals().kcal.toString()" detail="kcal" />
+        <app-ui-stat-card label="Protein" [value]="totals().protein_g.toString()" detail="g" />
+        <app-ui-stat-card label="Carbs" [value]="totals().carbs_g.toString()" detail="g" />
+        <app-ui-stat-card label="Fat" [value]="totals().fat_g.toString()" detail="g" />
+      </div>
+
+      <app-ui-subhead label="Entries" [count]="entries().length" />
+      <ul class="nutrition-day__list">
+        @for (e of entries(); track e.id) {
+          <li class="nutrition-day__row">
+            <span class="nutrition-day__time">{{ formatTime(e.logged_at) }}</span>
+            <span class="nutrition-day__text">{{ e.raw_text }}</span>
+            <span class="nutrition-day__kcal">{{ e.est_kcal ?? 0 }} kcal</span>
+          </li>
+        }
+      </ul>
+    </app-ui-stack>
+  }
+</app-ui-section>

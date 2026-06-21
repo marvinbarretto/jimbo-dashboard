@@ -15,6 +15,7 @@ export const primaryNavItems: readonly NavLink[] = [
   { href: '/config',                label: 'Config',         accent: '#818cf8' },
   { href: '/actors',                 label: 'Actors',         accent: '#f9a8d4' },
   { href: '/journal',               label: 'Journal',        accent: '#fde68a' },
+  { href: '/nutrition',             label: 'Nutrition',      accent: '#fda4af' },
   { href: '/pomo-reports',          label: 'Pomo reports',   accent: '#fb923c' },
   { href: '/calendar-settings',     label: 'Calendars',      accent: '#34d399' },
   { href: '/tasks',                 label: 'Tasks',          accent: '#60a5fa' },
@@ -37,13 +38,14 @@ export const navGroups: readonly NavGroup[] = [
     label: 'Archive',
     paths: [
       'today', 'shopping', 'mail-next', 'mail-activity', 'briefings', 'calendar-settings', 'tasks',
-      'jimbo-workspace',
+      'jimbo-workspace', 'nutrition',
       'config', 'actors', 'grooming', 'execution', 'review', 'vault-items', 'questions', 'activity',
       'skills', 'models', 'model-stacks', 'context', 'coach', 'interrogate',
       'hermes', 'ops', 'triage', 'stream', 'coverage', 'grooming-admin', 'pomo-reports',
     ],
     items: [
       { href: '/today', label: 'Today' },
+      { href: '/nutrition', label: 'Nutrition' },
       { href: '/shopping', label: 'Shopping' },
       { href: '/mail-next', label: 'Mail' },
       { href: '/mail-activity', label: 'Mail activity' },

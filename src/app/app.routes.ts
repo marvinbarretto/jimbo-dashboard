@@ -183,5 +183,9 @@ export const routes: Routes = [
     path: 'journal',
     loadChildren: () => import('./features/journal/journal.routes').then(m => m.journalRoutes),
   },
+  {
+    path: 'nutrition',
+    loadChildren: () => import('./features/nutrition/nutrition.routes').then(m => m.nutritionRoutes),
+  },
   { path: '', redirectTo: 'today', pathMatch: 'full' },
 ];

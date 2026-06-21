@@ -1,0 +1,53 @@
+<app-ui-stack gap="lg">
+  @if (loading()) {
+    <app-ui-loading-state message="Loading nutrition…" />
+  } @else {
+    <app-ui-section title="Today" [meta]="todayMeta()">
+      @if (todayHasData()) {
+        <app-ui-stack gap="lg">
+          <div class="nutrition__stats">
+            <app-ui-stat-card label="Calories" [value]="today().kcal.toString()" detail="kcal" />
+            <app-ui-stat-card label="Protein" [value]="today().protein_g.toString()" detail="g" />
+            <app-ui-stat-card label="Carbs" [value]="today().carbs_g.toString()" detail="g" />
+            <app-ui-stat-card label="Fat" [value]="today().fat_g.toString()" detail="g" />
+          </div>
+          <app-ui-subsection label="Macro split (today)">
+            <app-ui-donut-chart [labels]="macroLabels" [values]="macroValues()" suffix=" g" />
+          </app-ui-subsection>
+        </app-ui-stack>
+      } @else {
+        <app-ui-empty-state message="Nothing logged today yet. Use /food on Telegram." />
+      }
+    </app-ui-section>
+
+    <app-ui-section title="Calories per day" [meta]="windowMeta()">
+      @if (hasWindowData()) {
+        <app-ui-bar-chart
+          [labels]="dayLabels()"
+          [values]="caloriesByDay()"
+          label="kcal"
+          suffix=" kcal"
+          accent="rgba(52, 211, 153, 0.7)"
+        />
+      } @else {
+        <app-ui-empty-state message="No entries in the last 14 days." />
+      }
+    </app-ui-section>
+
+    <app-ui-section title="Recent entries" [meta]="recentMeta()">
+      @if (recent().length) {
+        <ul class="nutrition__list">
+          @for (e of recent(); track e.id) {
+            <li class="nutrition__row">
+              <span class="nutrition__time">{{ formatTime(e.logged_at) }}</span>
+              <span class="nutrition__text">{{ e.raw_text }}</span>
+              <span class="nutrition__kcal">{{ e.est_kcal ?? 0 }} kcal</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <app-ui-empty-state message="No entries yet. Log food with /food on Telegram." />
+      }
+    </app-ui-section>
+  }
+</app-ui-stack>

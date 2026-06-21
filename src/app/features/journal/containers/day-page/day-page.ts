@@ -20,6 +20,7 @@ import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { JournalPager } from '../../components/journal-pager/journal-pager';
 import { JournalAgentsSection } from '../../components/journal-agents-section/journal-agents-section';
 import { JournalMcpSection } from '../../components/journal-mcp-section/journal-mcp-section';
+import { NutritionDaySection } from '../../../nutrition/components/nutrition-day-section/nutrition-day-section';
 import {
   type DayKey,
   formatDayLong,
@@ -44,6 +45,7 @@ import {
     JournalPager,
     JournalAgentsSection,
     JournalMcpSection,
+    NutritionDaySection,
   ],
   templateUrl: './day-page.html',
   styleUrl: './day-page.scss',

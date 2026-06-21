@@ -247,6 +247,9 @@
     <!-- ── MCP ─────────────────────────────────────────────── -->
     <app-journal-mcp-section [date]="key()" />
 
+    <!-- ── NUTRITION ───────────────────────────────────────── -->
+    <app-nutrition-day-section [date]="key()" />
+
     <!-- ── PHONE ───────────────────────────────────────────── -->
     <app-ui-section title="Phone" [meta]="telemetryEvents().length + ' events today'">
       @if (telemetryEvents().length) {
