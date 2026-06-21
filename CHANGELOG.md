@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.76](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.75...v0.0.76) (2026-06-21)
+
+
+### Features
+
+* **execution:** Ready column shows every item meeting Definition of Ready ([b17ca08](https://github.com/marvinbarretto/jimbo-dashboard/commit/b17ca08c77b52f88b4dd473453414aa782989fc4))
+* **vault-items:** tabbed detail modal with stable sizing and 2-col Detail ([a23ae5e](https://github.com/marvinbarretto/jimbo-dashboard/commit/a23ae5e7d2742afc5c24baabf439927f58fc0bae))
+
+
+### Bug Fixes
+
+* **execution:** Ready column shows leaf work only, not epic containers ([b1952f3](https://github.com/marvinbarretto/jimbo-dashboard/commit/b1952f3282fd38b518afba1ac21a25c21a91f12f))
+
+
+### Code Refactoring
+
+* **ui:** extract shared TagChip primitive ([f362d47](https://github.com/marvinbarretto/jimbo-dashboard/commit/f362d47fcd60de7a8435e6c39b67cf64adddadc0))
+
 ### [0.0.75](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.74...v0.0.75) (2026-06-21)
 
 
