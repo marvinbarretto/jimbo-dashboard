@@ -21,8 +21,6 @@ import type { VaultItem } from '@domain/vault/vault-item';
     </header>
   `,
   styles: [`
-
-
     .vault-item-identity-header {
       display: flex;
       gap: 0.55rem;

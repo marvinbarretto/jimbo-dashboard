@@ -36,8 +36,6 @@ import { UiTimestamp } from '@shared/components/ui-timestamp/ui-timestamp';
     </div>
   `,
   styles: [`
-
-
     .vault-item-meta-line {
       display: flex;
       flex-wrap: wrap;

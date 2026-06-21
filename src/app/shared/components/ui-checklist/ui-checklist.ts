@@ -98,8 +98,6 @@ export interface UiChecklistItem {
     }
   `,
   styles: [`
-
-
     .ui-checklist {
       display: flex;
       flex-direction: column;

@@ -12,8 +12,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     </div>
   `,
   styles: [`
-
-
     .ui-subhead {
       display: flex;
       align-items: center;

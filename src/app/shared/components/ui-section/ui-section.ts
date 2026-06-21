@@ -42,8 +42,6 @@ type UiSectionTone = 'default' | 'subtle' | 'recede' | 'alert';
     </section>
   `,
   styles: [`
-
-
     .ui-section {
       border: 1px solid var(--color-border);
       background: var(--color-surface-soft);

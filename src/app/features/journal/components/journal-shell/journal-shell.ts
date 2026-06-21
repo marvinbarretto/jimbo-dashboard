@@ -49,8 +49,6 @@ interface PeerLinks {
     </div>
   `,
   styles: [`
-
-
     .journal-shell__tab {
       padding: 0.7rem 1rem;
       font-size: 0.85rem;

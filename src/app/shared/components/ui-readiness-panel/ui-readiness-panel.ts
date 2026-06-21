@@ -46,8 +46,6 @@ export interface UiReadinessData {
     </details>
   `,
   styles: [`
-
-
     .ui-readiness-panel {
       display: block;
       margin-bottom: 0.8rem;
