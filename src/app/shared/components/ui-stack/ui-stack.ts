@@ -11,9 +11,7 @@ type UiStackAlign = 'stretch' | 'start' | 'center' | 'end';
     // Host must be block-level: consumers put layout classes on the host
     // (max-width, margin-inline, padding) and an inline host silently drops
     // width/auto-margins and mis-applies padding around the inner block.
-    :host {
-      display: block;
-    }
+
 
     .ui-stack {
       display: flex;

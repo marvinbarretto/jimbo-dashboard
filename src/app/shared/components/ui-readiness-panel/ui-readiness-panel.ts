@@ -46,9 +46,7 @@ export interface UiReadinessData {
     </details>
   `,
   styles: [`
-    :host {
-      display: block;
-    }
+
 
     .ui-readiness-panel {
       display: block;

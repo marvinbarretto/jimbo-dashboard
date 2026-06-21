@@ -38,9 +38,7 @@ import type { CreateThreadMessagePayload, ThreadMessage } from '@domain/thread';
     }
   `,
   styles: [`
-    :host {
-      display: block;
-    }
+
 
     .vault-item-questions__item {
       padding: 0.4rem 0;

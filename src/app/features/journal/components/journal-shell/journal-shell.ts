@@ -49,9 +49,7 @@ interface PeerLinks {
     </div>
   `,
   styles: [`
-    :host {
-      display: block;
-    }
+
 
     .journal-shell__tab {
       padding: 0.7rem 1rem;

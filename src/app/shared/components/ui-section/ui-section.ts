@@ -42,9 +42,7 @@ type UiSectionTone = 'default' | 'subtle' | 'recede' | 'alert';
     </section>
   `,
   styles: [`
-    :host {
-      display: block;
-    }
+
 
     .ui-section {
       border: 1px solid var(--color-border);

@@ -12,9 +12,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     </div>
   `,
   styles: [`
-    :host {
-      display: block;
-    }
+
 
     .ui-subhead {
       display: flex;

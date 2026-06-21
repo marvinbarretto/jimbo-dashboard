@@ -98,9 +98,7 @@ export interface UiChecklistItem {
     }
   `,
   styles: [`
-    :host {
-      display: block;
-    }
+
 
     .ui-checklist {
       display: flex;

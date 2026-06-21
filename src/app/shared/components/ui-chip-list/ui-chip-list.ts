@@ -87,9 +87,7 @@ export interface UiChipListPickerOption {
     }
   `,
   styles: [`
-    :host {
-      display: block;
-    }
+
 
     .ui-chip-list {
       display: flex;

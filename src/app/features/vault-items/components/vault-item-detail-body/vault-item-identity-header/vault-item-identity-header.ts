@@ -21,9 +21,7 @@ import type { VaultItem } from '@domain/vault/vault-item';
     </header>
   `,
   styles: [`
-    :host {
-      display: block;
-    }
+
 
     .vault-item-identity-header {
       display: flex;
