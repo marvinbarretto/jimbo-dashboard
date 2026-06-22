@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.78](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.77...v0.0.78) (2026-06-22)
+
+
+### Features
+
+* **briefings:** archive page with ratings + journal day-page integration ([9a2b541](https://github.com/marvinbarretto/jimbo-dashboard/commit/9a2b5416a7a4e35687454b8dfaa77c442637af97))
+* **nutrition:** editable NutritionRow with inline number-field support ([361d495](https://github.com/marvinbarretto/jimbo-dashboard/commit/361d49561af4bd0c06a222b56320d02d55ada25b))
+* **vault-items:** vault-item-detail V2 comparison surface + audit ([4f4ae9e](https://github.com/marvinbarretto/jimbo-dashboard/commit/4f4ae9e603e7e2bae94ae59e0d29e490a3fc28c1)), closes [#01](https://github.com/marvinbarretto/jimbo-dashboard/issues/01) [#10](https://github.com/marvinbarretto/jimbo-dashboard/issues/10)
+
 ### [0.0.77](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.76...v0.0.77) (2026-06-21)
 
 
