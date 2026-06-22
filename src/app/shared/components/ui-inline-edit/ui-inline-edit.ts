@@ -10,7 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 
-export type UiInlineEditKind = 'text' | 'textarea' | 'select';
+export type UiInlineEditKind = 'text' | 'textarea' | 'select' | 'number';
 
 export interface UiInlineEditOption {
   readonly value: string;
@@ -65,6 +65,23 @@ export interface UiInlineEditOption {
               <option [value]="opt.value">{{ opt.label }}</option>
             }
           </select>
+        }
+        @case ('number') {
+          <input
+            #editEl
+            type="number"
+            inputmode="numeric"
+            class="ui-inline-edit__field ui-inline-edit__field--number"
+            [class.ui-inline-edit__field--lg]="size() === 'lg'"
+            [value]="draft()"
+            [attr.aria-label]="ariaLabel()"
+            [attr.min]="min()"
+            [attr.max]="max()"
+            [attr.step]="step()"
+            (input)="onInput($any($event))"
+            (keydown)="onKey($event)"
+            (blur)="commit()"
+          />
         }
         @default {
           <input
@@ -158,6 +175,10 @@ export interface UiInlineEditOption {
         min-height: 2rem;
         line-height: 1.5;
       }
+
+      &--number {
+        font-variant-numeric: tabular-nums;
+      }
     }
   `],
 })
@@ -169,6 +190,11 @@ export class UiInlineEdit {
   readonly ariaLabel = input<string | undefined>(undefined);
   readonly options = input<readonly UiInlineEditOption[]>([]);
   readonly rows = input<number>(2);
+
+  // Number-kind constraints — forwarded to the native <input type="number">.
+  readonly min = input<number | undefined>(undefined);
+  readonly max = input<number | undefined>(undefined);
+  readonly step = input<number | undefined>(undefined);
 
   /**
    * For select kind, lets the host map the raw value to a display label

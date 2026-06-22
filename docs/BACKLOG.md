@@ -72,3 +72,24 @@ What to build:
 - Refactor `execution-board.ts` `manualItems` and the grooming board's filter to consume the new function so the kanbans and the next-action line agree.
 
 Why deferred: step 1 (per-state phrasing in next-action) covered 90% of the operator-facing pain. The centralisation pays off across more surfaces but isn't blocking anything today.
+
+### Fold UiChecklist's inline text editing into UiInlineEdit
+
+`UiInlineEdit` (`shared/components/ui-inline-edit`) now covers text/textarea/select/number
+click-to-edit with autofocus, select-all, Enter-commit, Esc-cancel, blur-commit, and
+cancel-on-external-swap. `UiChecklist` (`shared/components/ui-checklist`) predates that
+consolidation and rolls its own version of the same behaviour (`startEdit`/`draft`/
+`onDraftKey`/`commitEdit`/`cancelEdit` + the cancel-on-swap `effect`, ~50 lines).
+
+What to build:
+
+- Replace the checklist row's bespoke text `<input>` + edit-state machine with an embedded
+  `<app-ui-inline-edit kind="text">`, mapping its `(saved)` to the existing `edited`/`removed`
+  (empty → remove) semantics.
+- Keep the checkbox, status chip, append-input, and index-keyed event contract unchanged.
+- Verify both existing consumers still behave: `vault-item-delivery-block` and the
+  `vault-detail-primitives` lab section.
+
+Why deferred: surfaced while building `NutritionRow` (which already uses `UiInlineEdit`).
+Pure cleanup — no behaviour change for users — and it touches a component with live
+consumers, so it shouldn't ride along with the nutrition feature work.
