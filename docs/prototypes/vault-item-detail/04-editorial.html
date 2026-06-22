@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>04 · Editorial</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#0d1219; --line:#1d2632; --line-2:#27323f;
+    --tx:#d7dee9; --tx-dim:#93a0b1; --tx-faint:#626e7e;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+    --sans:"Inter",system-ui,-apple-system,Segoe UI,sans-serif;
+    --proj:#2dd4bf; --epic:#a78bfa;
+    --ok:#3fb950; --warn:#d9a23a; --bad:#f06f6f; --info:#58a6ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased;padding:32px;}
+  .wrap{max-width:1080px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+        display:grid;grid-template-columns:1fr 230px;box-shadow:0 24px 60px -30px #000;}
+
+  /* ── Main reading column — the artifact is the hero ───────────── */
+  .read{padding:30px 38px 26px;min-width:0;}
+  .kicker{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11.5px;margin-bottom:14px;}
+  .kicker .id{color:var(--tx-faint)}
+  .kicker .type{padding:2px 7px;border:1px solid var(--line-2);border-radius:5px;color:var(--tx-dim)}
+  .kicker .proj{color:var(--proj);display:inline-flex;align-items:center;gap:6px}
+  .kicker .epic{color:var(--epic);display:inline-flex;align-items:center;gap:6px}
+  .kicker .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .kicker .sep{color:var(--tx-faint)}
+
+  h1{font-family:var(--sans);font-size:30px;line-height:1.2;font-weight:700;margin:0 0 6px;letter-spacing:-.02em;color:#f1f5fa;}
+  .standfirst{font-size:17px;color:var(--tx-dim);max-width:64ch;margin:0 0 22px;line-height:1.5;}
+
+  .rule{height:1px;background:var(--line);margin:0 0 22px;}
+
+  .prose{font-size:17px;line-height:1.75;max-width:66ch;}
+  .prose p{margin:0 0 18px}
+  .prose strong{color:#eef3f8}
+  .ref{font-family:var(--mono);font-size:14px;color:var(--proj);background:color-mix(in srgb,var(--proj) 10%,transparent);padding:1px 6px;border-radius:4px}
+
+  .exam{margin-top:26px;border-left:2px solid var(--epic);padding:2px 0 2px 18px;}
+  .exam summary{list-style:none;cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--tx-faint);display:flex;gap:8px;align-items:center;}
+  .exam summary::-webkit-details-marker{display:none}
+  .chev{transition:transform .15s} .exam[open] .chev{transform:rotate(90deg)}
+  .exam dl{margin:14px 0 0;display:grid;grid-template-columns:max-content 1fr;gap:11px 18px;}
+  .exam dt{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--tx-faint);padding-top:3px}
+  .exam dd{margin:0;font-size:15px;line-height:1.6;max-width:60ch}
+
+  /* ── Quiet margin column — facts, not noise ───────────────────── */
+  .margin{background:#0b1018;border-left:1px solid var(--line);padding:30px 22px;display:flex;flex-direction:column;gap:22px;}
+  .mblock .mlab{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx-faint);margin-bottom:9px;}
+  .status-now{display:flex;align-items:center;gap:8px;font-weight:650;font-size:13.5px;color:var(--ok)}
+  .beat{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 22%,transparent)}
+  .assignee{display:flex;align-items:center;gap:10px}
+  .avatar{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:700;color:#0a0e14;background:linear-gradient(135deg,#7cd4ff,#5b8bff)}
+  .assignee .name{font-weight:600;font-size:13.5px}
+  .assignee .role{font-size:10.5px;color:var(--tx-faint);font-family:var(--mono)}
+  .kv{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;padding:3px 0}
+  .kv .k{color:var(--tx-faint)} .kv .v{color:var(--tx-dim)}
+  .prio{color:var(--warn);font-weight:700}
+  .mactions{margin-top:auto;display:flex;flex-direction:column;gap:8px}
+  .btn{font-family:var(--mono);font-size:11.5px;padding:9px 12px;border-radius:8px;border:1px solid var(--line-2);background:transparent;color:var(--tx-dim);cursor:pointer}
+  .btn:hover{border-color:var(--info);color:var(--info)}
+  .btn.go{color:#0a0e14;background:var(--ok);border-color:var(--ok);font-weight:700;text-align:center}
+  .tag-note{font-family:var(--mono);font-size:11px;color:var(--tx-faint);text-align:center;margin:18px 0 0}
+</style>
+</head>
+<body>
+<div style="max-width:1080px;margin:0 auto">
+<div class="wrap">
+  <!-- READING COLUMN -->
+  <article class="read">
+    <div class="kicker">
+      <span class="id">#2861</span>
+      <span class="type">TASK</span>
+      <span class="sep">·</span>
+      <span class="proj"><span class="dot"></span>localshout</span>
+      <span class="sep">›</span>
+      <span class="epic"><span class="dot"></span>Weekly Digest</span>
+    </div>
+
+    <h1>Digest brief: v1 contents + curation logic</h1>
+    <p class="standfirst">Operator wants a written brief defining v1 of the LocalShout Weekly Digest — its contents, curation logic, cadence and tone, grounded in the existing codebase.</p>
+
+    <div class="rule"></div>
+
+    <div class="prose">
+      <p>Part of epic <strong>LocalShout — Weekly Digest</strong> <span class="ref">note_4d3ee7d0</span>. Ideation pass — produce a brief, not code.</p>
+      <p>Define what v1 of the digest should be: its contents, how it curates the good stuff (vs the firehose), the sending cadence, and the editorial tone. Ground every decision in the existing codebase and <span class="ref">docs/vision.md</span>, and name explicitly what v1 deliberately excludes.</p>
+    </div>
+
+    <details class="exam">
+      <summary><span class="chev">▶</span> INTAKE EXAM · confidence high</summary>
+      <dl>
+        <dt>GOAL</dt><dd>Define a concrete v1 spec for the LocalShout Weekly Digest so development can proceed from a shared understanding.</dd>
+        <dt>DONE WHEN</dt><dd>A written brief covering v1 contents, curation logic, cadence and tone, citing <span class="ref">docs/vision.md</span> and naming what v1 deliberately excludes.</dd>
+        <dt>VERDICT</dt><dd>Well-scoped with clear deliverables and specific repo references — an agent with repo access can execute directly.</dd>
+      </dl>
+    </details>
+  </article>
+
+  <!-- MARGIN -->
+  <aside class="margin">
+    <div class="mblock">
+      <div class="mlab">Status</div>
+      <div class="status-now"><span class="beat"></span>Ready to dispatch</div>
+    </div>
+    <div class="mblock">
+      <div class="mlab">Owner</div>
+      <div class="assignee"><span class="avatar">B</span><div><div class="name">boris</div><div class="role">agent</div></div></div>
+    </div>
+    <div class="mblock">
+      <div class="mlab">Facts</div>
+      <div class="kv"><span class="k">priority</span><span class="v prio">P2</span></div>
+      <div class="kv"><span class="k">parent</span><span class="v">#1865</span></div>
+      <div class="kv"><span class="k">blockers</span><span class="v">0</span></div>
+      <div class="kv"><span class="k">created</span><span class="v">4h ago</span></div>
+    </div>
+    <div class="mactions">
+      <button class="btn go">→ Dispatch</button>
+      <button class="btn">Reject · Archive</button>
+    </div>
+  </aside>
+</div>
+<p class="tag-note">Angle 04 — Editorial · body is the hero with real reading typography · metadata recedes to a quiet margin</p>
+</div>
+</body>
+</html>

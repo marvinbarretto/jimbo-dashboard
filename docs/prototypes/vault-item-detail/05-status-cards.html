@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>05 · Status Cards</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#0d1219; --card:#0e151f; --line:#1d2632; --line-2:#27323f;
+    --tx:#cdd6e3; --tx-dim:#8a96a6; --tx-faint:#5e6a7a;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+    --sans:"Inter",system-ui,-apple-system,Segoe UI,sans-serif;
+    --proj:#2dd4bf; --epic:#a78bfa;
+    --ok:#3fb950; --warn:#d9a23a; --bad:#f06f6f; --info:#58a6ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased;padding:32px;}
+  .wrap{max-width:1040px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 24px 60px -30px #000;}
+
+  .head{padding:24px 28px 20px;border-bottom:1px solid var(--line);}
+  .crumbs{font-family:var(--mono);font-size:11.5px;color:var(--tx-faint);margin-bottom:10px;}
+  .crumbs .type{padding:2px 7px;border:1px solid var(--line-2);border-radius:5px;color:var(--tx-dim);margin-left:8px;}
+  h1{font-family:var(--mono);font-size:24px;font-weight:650;margin:0;letter-spacing:-.01em;color:#eaf0f7;}
+
+  /* ── Card grid — each concern is its own scannable card ───────── */
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:22px 28px;}
+  .c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 16px;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:10px;}
+  .c::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c,var(--line-2));}
+  .c .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx-faint);}
+  .c .big{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .c .sub{font-family:var(--mono);font-size:11px;color:var(--tx-dim);}
+
+  .c-status{--c:var(--ok)} .c-status .big{color:var(--ok)}
+  .beat{width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 22%,transparent)}
+  .c-owner{--c:var(--info)}
+  .avatar{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-family:var(--mono);font-size:11px;font-weight:700;color:#0a0e14;background:linear-gradient(135deg,#7cd4ff,#5b8bff)}
+  .c-lineage{--c:var(--proj)}
+  .lin{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600}
+  .lin .sw{width:9px;height:9px;border-radius:3px}
+  .lin.p{color:var(--proj)} .lin.p .sw{background:var(--proj)}
+  .lin.e{color:var(--epic)} .lin.e .sw{background:var(--epic)}
+  .c-prio{--c:var(--warn)} .c-prio .big{color:var(--warn)}
+
+  /* actions */
+  .ribbon{display:flex;gap:10px;align-items:center;padding:0 28px 18px;}
+  .btn{font-family:var(--mono);font-size:12px;padding:9px 14px;border-radius:8px;border:1px solid var(--line-2);background:transparent;color:var(--tx-dim);cursor:pointer}
+  .btn:hover{border-color:var(--info);color:var(--info)}
+  .btn.go{color:#0a0e14;background:var(--ok);border-color:var(--ok);font-weight:700}
+  .ribbon .grow{flex:1}
+  .ribbon .danger:hover{border-color:var(--bad);color:var(--bad)}
+
+  /* body card full width */
+  .bodywrap{padding:0 28px 24px;}
+  .bodycard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 24px;}
+  .brow{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .brow h2{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--tx-faint);margin:0}
+  .imm{font-family:var(--mono);font-size:10px;color:var(--tx-faint)}
+  .tabs{margin-left:auto;display:flex;gap:4px}
+  .tab{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:6px;color:var(--tx-faint);cursor:pointer}
+  .tab.on{color:var(--tx);background:var(--line)}
+  .prose{font-size:15.5px;line-height:1.7;max-width:68ch;margin-top:12px}
+  .prose p{margin:0 0 14px}
+  .ref{font-family:var(--mono);font-size:13px;color:var(--proj);background:color-mix(in srgb,var(--proj) 10%,transparent);padding:1px 5px;border-radius:4px}
+
+  details.exam{margin-top:18px;border-top:1px dashed var(--line);padding-top:14px}
+  details.exam summary{list-style:none;cursor:pointer;display:flex;gap:9px;align-items:center;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--tx-dim)}
+  details.exam summary::-webkit-details-marker{display:none}
+  .chev{color:var(--tx-faint);transition:transform .15s} details[open] .chev{transform:rotate(90deg)}
+  .one{flex:1;font-family:var(--sans);letter-spacing:0;font-size:12.5px;color:var(--tx)}
+  .conf{font-size:11px;color:var(--ok)}
+  .exam dl{margin:14px 0 0;display:grid;grid-template-columns:max-content 1fr;gap:9px 18px}
+  .exam dt{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--tx-faint);padding-top:3px}
+  .exam dd{margin:0;font-size:13.5px;line-height:1.55;max-width:62ch}
+  .tag-note{font-family:var(--mono);font-size:11px;color:var(--tx-faint);text-align:center;margin:18px 0 0}
+</style>
+</head>
+<body>
+<div style="max-width:1040px;margin:0 auto">
+<div class="wrap">
+  <div class="head">
+    <div class="crumbs">#2861<span class="type">TASK</span></div>
+    <h1>Digest brief: v1 contents + curation logic</h1>
+  </div>
+
+  <!-- Concern cards -->
+  <div class="grid">
+    <div class="c c-status"><span class="lab">Status</span><span class="big"><span class="beat"></span>Ready</span><span class="sub">to dispatch · active</span></div>
+    <div class="c c-owner"><span class="lab">Assigned</span><span class="big"><span class="avatar">B</span>boris</span><span class="sub">agent · executor</span></div>
+    <div class="c c-lineage"><span class="lab">Lineage</span><span class="lin p"><span class="sw"></span>localshout</span><span class="lin e"><span class="sw"></span>Weekly Digest</span></div>
+    <div class="c c-prio"><span class="lab">Priority</span><span class="big">P2</span><span class="sub">parent #1865 · 0 blockers</span></div>
+  </div>
+
+  <div class="ribbon">
+    <button class="btn go">→ Dispatch to boris</button>
+    <button class="btn">Clear</button>
+    <span class="grow"></span>
+    <button class="btn">→ Note</button>
+    <button class="btn">Reject</button>
+    <button class="btn">Archive</button>
+    <button class="btn danger">Delete</button>
+  </div>
+
+  <!-- Body card -->
+  <div class="bodywrap">
+    <div class="bodycard">
+      <div class="brow">
+        <h2>BODY</h2><span class="imm">· immutable input</span>
+        <div class="tabs"><span class="tab on">Detail</span><span class="tab">Activity 5</span><span class="tab">Thread 0</span></div>
+      </div>
+      <div class="prose">
+        <p>Part of epic <strong>LocalShout — Weekly Digest</strong> <span class="ref">note_4d3ee7d0</span>. Ideation pass — produce a brief, not code.</p>
+        <p>Define what v1 of the digest should be: its contents, how it curates the good stuff (vs the firehose), the sending cadence, and the editorial tone. Ground every decision in the existing codebase and <span class="ref">docs/vision.md</span>.</p>
+      </div>
+
+      <details class="exam">
+        <summary><span class="chev">▶</span> INTAKE EXAM <span class="one">Define a concrete v1 spec so development can proceed from a shared understanding.</span><span class="conf">● high</span></summary>
+        <dl>
+          <dt>GOAL</dt><dd>Define a concrete v1 spec for the LocalShout Weekly Digest so development can proceed from a shared understanding.</dd>
+          <dt>DONE WHEN</dt><dd>A written brief covering v1 contents, curation logic, cadence and tone, citing <span class="ref">docs/vision.md</span> and naming what v1 deliberately excludes.</dd>
+          <dt>VERDICT</dt><dd>Well-scoped with clear deliverables and specific repo references — an agent with repo access can execute directly.</dd>
+        </dl>
+      </details>
+    </div>
+  </div>
+</div>
+<p class="tag-note">Angle 05 — Status Cards · each concern is its own colour-keyed tile · dashboard-style scan · full-width body card below</p>
+</div>
+</body>
+</html>

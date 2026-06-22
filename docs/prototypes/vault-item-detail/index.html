@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vault-item detail — design angles</title>
+<style>
+  :root{
+    --bg:#0a0e14;--panel:#0d1219;--line:#1d2632;--line-2:#27323f;
+    --tx:#cdd6e3;--tx-dim:#8a96a6;--tx-faint:#5e6a7a;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+    --sans:"Inter",system-ui,sans-serif;--info:#58a6ff;--proj:#2dd4bf;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);padding:0;height:100vh;display:grid;grid-template-columns:280px 1fr;}
+  .side{background:var(--panel);border-right:1px solid var(--line);padding:24px 20px;overflow:auto;}
+  h1{font-family:var(--mono);font-size:14px;letter-spacing:.04em;margin:0 0 4px;color:#eaf0f7}
+  .sub{font-size:12px;color:var(--tx-faint);margin:0 0 22px;line-height:1.5}
+  a.opt{display:block;text-decoration:none;color:var(--tx);border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:pointer;}
+  a.opt:hover,a.opt.on{border-color:var(--info);background:#0e1622}
+  a.opt .n{font-family:var(--mono);font-size:11px;color:var(--proj)}
+  a.opt .t{font-weight:650;font-size:14px;margin:3px 0 4px}
+  a.opt .d{font-size:11.5px;color:var(--tx-dim);line-height:1.45}
+  iframe{border:0;width:100%;height:100vh;background:var(--bg)}
+  .crit{margin-top:24px;font-size:11.5px;color:var(--tx-faint);line-height:1.6}
+  .crit b{color:var(--tx-dim)}
+</style>
+</head>
+<body>
+  <nav class="side">
+    <h1>Detail view · angles</h1>
+    <p class="sub">Same dark/mono DNA. <b style="color:var(--proj)">Direction B</b> = locked shell (header / glance / tabs / footer), epic colour derived from project colour, chunky + edit-in-place. Click to load.</p>
+
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:#3dd6ff;margin:0 0 8px">DIRECTION C — NATIVE TOKENS</div>
+    <a class="opt on" data-src="10-native-09.html"><span class="n">10</span><div class="t">09 → native tokens ★</div><div class="d">Real cyan/mono/sharp(2px)/flat app DNA. Sans prose only. Reshaped around answer→edit ACs→send-back (no dispatch). Try the question Answer + AC ticks.</div></a>
+
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--proj);margin:18px 0 8px">DIRECTION B — earlier (drifted from app style)</div>
+    <a class="opt on" data-src="06-washed-segmented.html"><span class="n">06</span><div class="t">Washed · Segmented</div><div class="d">Project-tinted header wash, segmented tabs, working status popover. Try editing the title.</div></a>
+    <a class="opt" data-src="07-airy-ghost.html"><span class="n">07</span><div class="t">Airy Ghost</div><div class="d">Borderless, shading-only separation, underline tabs, maximal whitespace. Blue project.</div></a>
+    <a class="opt" data-src="08-tonal-blocks.html"><span class="n">08</span><div class="t">Tonal Blocks</div><div class="d">Separation by elevation; active tab fuses into the body tone. Warm project.</div></a>
+    <a class="opt" data-src="09-color-family.html"><span class="n">09</span><div class="t">Colour-family Forward</div><div class="d">Project hue owns header band + spine + active tab + CTA; epic is the lighter sibling. Violet.</div></a>
+
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--tx-faint);margin:18px 0 8px">DIRECTION A — earlier explorations</div>
+    <a class="opt" data-src="01-spine-zones.html"><span class="n">01</span><div class="t">Spine &amp; Zones</div><div class="d">Colour spine carries project→epic. One glance strip.</div></a>
+    <a class="opt" data-src="02-sidebar-console.html"><span class="n">02</span><div class="t">Sidebar Console</div><div class="d">Persistent left rail holds every answer.</div></a>
+    <a class="opt" data-src="03-glance-bar.html"><span class="n">03</span><div class="t">Glance Bar</div><div class="d">Five colour-coded tiles in one row.</div></a>
+    <a class="opt" data-src="04-editorial.html"><span class="n">04</span><div class="t">Editorial</div><div class="d">Body as hero; metadata in a quiet margin.</div></a>
+    <a class="opt" data-src="05-status-cards.html"><span class="n">05</span><div class="t">Status Cards</div><div class="d">Each concern its own colour-keyed tile.</div></a>
+
+    <div class="crit">
+      <b>Evaluate against:</b><br>
+      · Project/epic legible in &lt;1s, colour-coded<br>
+      · Owner + immediate status obvious<br>
+      · Body prose actually readable<br>
+      · No fact repeated more than once<br>
+      · Still feels like the same product
+    </div>
+  </nav>
+  <iframe id="frame" src="10-native-09.html"></iframe>
+  <script>
+    const frame=document.getElementById('frame');
+    document.querySelectorAll('.opt').forEach(a=>a.addEventListener('click',e=>{
+      e.preventDefault();
+      document.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));
+      a.classList.add('on'); frame.src=a.dataset.src;
+    }));
+  </script>
+</body>
+</html>

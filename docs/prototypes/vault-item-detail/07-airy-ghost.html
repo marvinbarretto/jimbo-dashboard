@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>07 · Airy ghost</title>
+<style>
+  :root{
+    --bg:#090d13; --panel:#0c1119; --line:#19222e; --line-2:#232e3b;
+    --tx:#dbe2ec; --tx-dim:#909cac; --tx-faint:#5b6675;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+    --sans:"Inter",system-ui,-apple-system,Segoe UI,sans-serif;
+    --proj:#5b9dff;
+    --epic:oklch(from var(--proj) calc(l + 0.10) calc(c * 0.8) h);
+    --ok:#3fb950; --warn:#e0a83b; --bad:#f06f6f; --info:#5b9dff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased;padding:40px;}
+  .wrap{max-width:920px;margin:0 auto;background:var(--panel);border-radius:18px;overflow:hidden;
+        box-shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 30px 80px -40px #000;}
+
+  /* HEADER — no borders, just an accent line + air */
+  .head{padding:30px 34px 22px;position:relative}
+  .accent{position:absolute;left:34px;top:30px;width:34px;height:4px;border-radius:3px;background:linear-gradient(90deg,var(--proj),var(--epic))}
+  .topline{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12px;color:var(--tx-faint);margin:14px 0 14px}
+  .type{padding:2px 7px;border-radius:5px;background:#10171f;color:var(--tx-dim)}
+  .chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--sans);font-weight:600;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer}
+  .chip .sw{width:9px;height:9px;border-radius:50%}
+  .chip.p{color:var(--proj);background:color-mix(in srgb,var(--proj) 12%,transparent)} .chip.p .sw{background:var(--proj)}
+  .chip.e{color:var(--epic);background:color-mix(in srgb,var(--epic) 12%,transparent)} .chip.e .sw{background:var(--epic)}
+  .arr{color:var(--tx-faint)}
+  h1{font-family:var(--sans);font-size:27px;font-weight:720;letter-spacing:-.02em;margin:0;color:#f1f5fa;padding:2px 6px;margin-left:-6px;border-radius:8px;outline:none}
+  h1:hover{background:#10171f} h1:focus{background:#10171f;box-shadow:inset 0 0 0 1px var(--proj)}
+
+  .decide{display:flex;align-items:center;gap:22px;margin-top:20px}
+  .stat{display:inline-flex;align-items:center;gap:9px;font-weight:650;font-size:14px;color:var(--ok);cursor:pointer}
+  .beat{width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 20%,transparent)}
+  .who{display:inline-flex;align-items:center;gap:9px;cursor:pointer}
+  .who .lab{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx-faint)}
+  .avatar{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:700;color:#04110d;background:linear-gradient(135deg,#7cd4ff,#5b8bff)}
+  .prio{font-family:var(--mono);font-weight:700;font-size:12.5px;color:var(--warn);background:color-mix(in srgb,var(--warn) 13%,transparent);padding:3px 9px;border-radius:7px;cursor:pointer}
+  .grow{flex:1}
+  .go{height:42px;padding:0 20px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:14px;color:#fff;
+      background:linear-gradient(var(--proj),color-mix(in srgb,var(--proj) 82%,#000));box-shadow:0 8px 22px -8px color-mix(in srgb,var(--proj) 65%,transparent)}
+  .go:hover{filter:brightness(1.08)}
+
+  /* TABS — underline, big targets, lots of air */
+  .tabs{display:flex;gap:28px;padding:6px 34px 0}
+  .tab{padding:14px 2px;font-size:14px;font-weight:600;color:var(--tx-faint);cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:8px}
+  .tab:hover{color:var(--tx-dim)}
+  .tab.on{color:var(--tx);border-bottom-color:var(--proj)}
+  .ct{font-family:var(--mono);font-size:11px;color:var(--tx-faint)}
+  .tab.on .ct{color:var(--proj)}
+  .divider{height:1px;background:var(--line)}
+
+  .body{padding:28px 34px 34px;min-height:260px}
+  .panel{display:none} .panel.on{display:block}
+  .imm{font-family:var(--mono);font-size:10px;color:var(--tx-faint);margin-bottom:12px}
+  .prose{font-size:16.5px;line-height:1.75;max-width:64ch}
+  .prose p{margin:0 0 16px} .prose strong{color:#f1f5fa}
+  .ref{font-family:var(--mono);font-size:13px;color:var(--proj)}
+  .conf{font-family:var(--mono);font-size:11px;color:var(--ok);margin-bottom:18px}
+  .exam{display:grid;grid-template-columns:max-content 1fr;gap:15px 24px;max-width:72ch}
+  .exam dt{font-family:var(--mono);font-size:10px;letter-spacing:.09em;color:var(--tx-faint);padding-top:3px}
+  .exam dd{margin:0;font-size:15.5px;line-height:1.62}
+  .links{display:flex;flex-direction:column;gap:2px;max-width:520px}
+  .lk{display:flex;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+  .lk:hover{padding-left:10px;transition:padding .12s}
+  .lk .k{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx-faint);width:120px}
+  .lk .sw{width:9px;height:9px;border-radius:50%}
+  .lk .v{font-weight:650;font-size:14px}
+  .lk.p .v{color:var(--proj)} .lk.p .sw{background:var(--proj)}
+  .lk.e .v{color:var(--epic)} .lk.e .sw{background:var(--epic)}
+
+  .foot{display:flex;align-items:center;gap:12px;padding:18px 34px;border-top:1px solid var(--line)}
+  .btn{background:none;border:none;color:var(--tx-faint);font-family:var(--sans);font-weight:600;font-size:13.5px;cursor:pointer;padding:8px 4px}
+  .btn:hover{color:var(--info)} .btn.danger:hover{color:var(--bad)}
+  .foot .grow{flex:1}
+  .tag-note{font-family:var(--mono);font-size:11px;color:var(--tx-faint);text-align:center;margin:20px 0 0}
+</style>
+</head>
+<body>
+<div style="max-width:920px;margin:0 auto">
+<div class="wrap">
+  <div class="head">
+    <div class="accent"></div>
+    <div class="topline">
+      <span>#2861</span><span class="type">TASK</span>
+      <span class="chip p"><span class="sw"></span>localshout</span>
+      <span class="arr">›</span>
+      <span class="chip e"><span class="sw"></span>Weekly Digest</span>
+    </div>
+    <h1 contenteditable="true" spellcheck="false">Digest brief: v1 contents + curation logic</h1>
+    <div class="decide">
+      <span class="stat"><span class="beat"></span>Ready to dispatch</span>
+      <span class="who"><span class="lab">owner</span><span class="avatar">B</span>boris</span>
+      <span class="prio">P2</span>
+      <span class="grow"></span>
+      <button class="go">→ Dispatch</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on" data-p="brief">Brief</div>
+    <div class="tab" data-p="context">Context</div>
+    <div class="tab" data-p="links">Links <span class="ct">3</span></div>
+    <div class="tab" data-p="activity">Activity <span class="ct">5</span></div>
+    <div class="tab" data-p="thread">Thread <span class="ct">0</span></div>
+  </div>
+  <div class="divider"></div>
+
+  <div class="body">
+    <section class="panel on" data-p="brief">
+      <div class="imm">immutable input</div>
+      <div class="prose">
+        <p>Part of epic <strong>LocalShout — Weekly Digest</strong> <span class="ref">note_4d3ee7d0</span>. Ideation pass — produce a brief, not code.</p>
+        <p>Define what v1 of the digest should be: its contents, how it curates the good stuff (vs the firehose), the sending cadence, and the editorial tone. Ground every decision in the existing codebase and <span class="ref">docs/vision.md</span>, and name what v1 deliberately excludes.</p>
+      </div>
+    </section>
+    <section class="panel" data-p="context">
+      <div class="conf">● confidence: high</div>
+      <dl class="exam">
+        <dt>WHAT IS THIS</dt><dd>A written brief defining v1 of the Weekly Digest — contents, curation logic, cadence and tone, grounded in the codebase.</dd>
+        <dt>GOAL</dt><dd>Define a concrete v1 spec so development can proceed from a shared understanding.</dd>
+        <dt>DONE WHEN</dt><dd>A brief covering contents, curation, cadence and tone, citing <span class="ref">docs/vision.md</span> and naming exclusions.</dd>
+        <dt>VERDICT</dt><dd>Well-scoped with clear deliverables and specific repo references — executable directly.</dd>
+      </dl>
+    </section>
+    <section class="panel" data-p="links">
+      <div class="links">
+        <div class="lk p"><span class="k">project</span><span class="sw"></span><span class="v">localshout</span></div>
+        <div class="lk e"><span class="k">epic</span><span class="sw"></span><span class="v">Weekly Digest</span></div>
+        <div class="lk"><span class="k">parent</span><span class="v">#1865</span></div>
+        <div class="lk"><span class="k">blockers</span><span class="v">0</span></div>
+        <div class="lk"><span class="k">open questions</span><span class="v">0</span></div>
+      </div>
+    </section>
+    <section class="panel" data-p="activity"><div class="prose"><p style="color:var(--tx-faint)">5 activity events — log goes here.</p></div></section>
+    <section class="panel" data-p="thread"><div class="prose"><p style="color:var(--tx-faint)">No thread messages yet.</p></div></section>
+  </div>
+
+  <div class="foot">
+    <button class="btn">→ Note</button><button class="btn">Reject</button>
+    <span class="grow"></span>
+    <button class="btn">Archive</button><button class="btn danger">Delete</button>
+  </div>
+</div>
+<p class="tag-note">Angle 07 — Airy ghost · borderless, shading-only separation · underline tabs · maximal whitespace</p>
+</div>
+<script>
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.dataset.p===t.dataset.p));
+  }));
+</script>
+</body>
+</html>

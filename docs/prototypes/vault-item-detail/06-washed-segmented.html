@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>06 · Washed header · segmented tabs</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#0d131c; --panel-2:#101825; --line:#1b2531; --line-2:#26323f;
+    --tx:#d4dce8; --tx-dim:#8d99a9; --tx-faint:#5d6878;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+    --sans:"Inter",system-ui,-apple-system,Segoe UI,sans-serif;
+    /* PROJECT colour — the single source. EPIC is derived from it. */
+    --proj:#27c2a8;
+    --epic:oklch(from var(--proj) calc(l + 0.11) calc(c * 0.82) h);
+    --ok:#3fb950; --warn:#e0a83b; --bad:#f06f6f; --info:#58a6ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased;padding:34px;}
+  .wrap{max-width:1000px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 30px 70px -34px #000;}
+
+  /* ── HEADER — project-tinted wash, edit-in-place title ─────────── */
+  .head{position:relative;padding:24px 28px 20px;
+        background:
+          radial-gradient(120% 140% at 0% 0%, color-mix(in srgb,var(--proj) 16%,transparent), transparent 60%),
+          linear-gradient(var(--panel-2),var(--panel));}
+  .head::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;
+        background:linear-gradient(90deg,var(--proj),var(--epic));}
+  .topline{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .id{font-family:var(--mono);font-size:12px;color:var(--tx-faint)}
+  .type{font-family:var(--mono);font-size:10px;letter-spacing:.12em;padding:3px 8px;border-radius:6px;background:#0c121b;border:1px solid var(--line-2);color:var(--tx-dim)}
+  /* project → epic colour family, shown as a paired swatch */
+  .family{display:inline-flex;align-items:center;gap:0;margin-left:2px}
+  .fam{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;font-size:12.5px;font-weight:650;cursor:pointer;border:1px solid transparent}
+  .fam .sw{width:11px;height:11px;border-radius:4px}
+  .fam.p{color:var(--proj);background:color-mix(in srgb,var(--proj) 12%,transparent);border-color:color-mix(in srgb,var(--proj) 30%,transparent);border-radius:8px 0 0 8px}
+  .fam.p .sw{background:var(--proj)}
+  .fam.e{color:var(--epic);background:color-mix(in srgb,var(--epic) 12%,transparent);border-color:color-mix(in srgb,var(--epic) 30%,transparent);border-radius:0 8px 8px 0;border-left:none}
+  .fam.e .sw{background:var(--epic)}
+  .fam:hover{filter:brightness(1.15)}
+
+  h1{font-family:var(--mono);font-size:25px;font-weight:650;margin:0;letter-spacing:-.01em;color:#eef3f9;outline:none;border-radius:8px;padding:3px 6px;margin-left:-6px;}
+  h1:hover{background:#0c121b;box-shadow:inset 0 0 0 1px var(--line-2)}
+  h1:focus{background:#0c121b;box-shadow:inset 0 0 0 1px var(--proj)}
+
+  /* ── DECISION ROW — chunky, clickable, edit-in-place ──────────── */
+  .decide{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;}
+  .ctl{display:inline-flex;align-items:center;gap:9px;height:40px;padding:0 14px;border-radius:11px;
+       background:#0c121b;border:1px solid var(--line-2);cursor:pointer;font-size:13.5px;font-weight:600;color:var(--tx);user-select:none}
+  .ctl:hover{border-color:var(--info)}
+  .ctl .cap{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx-faint);font-weight:500}
+  .ctl .caret{color:var(--tx-faint);font-size:10px}
+  .ctl.status{background:color-mix(in srgb,var(--ok) 13%,#0c121b);border-color:color-mix(in srgb,var(--ok) 36%,transparent);color:var(--ok)}
+  .beat{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 22%,transparent)}
+  .avatar{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-family:var(--mono);font-size:11px;font-weight:700;color:#0a0e14;background:linear-gradient(135deg,#7cd4ff,#5b8bff)}
+  .ctl.prio{color:var(--warn)}
+  .grow{flex:1}
+  .primary{height:40px;padding:0 18px;border-radius:11px;border:none;cursor:pointer;font-family:var(--sans);font-weight:700;font-size:13.5px;
+           color:#04110d;background:linear-gradient(var(--proj),color-mix(in srgb,var(--proj) 80%,#000));box-shadow:0 6px 18px -6px color-mix(in srgb,var(--proj) 70%,transparent)}
+  .primary:hover{filter:brightness(1.08)}
+
+  /* tiny popover to prove "dynamic / editable" */
+  .pop{position:absolute;z-index:5;background:#0e1622;border:1px solid var(--line-2);border-radius:11px;padding:6px;box-shadow:0 18px 40px -16px #000;display:none;min-width:170px}
+  .pop.open{display:block}
+  .pop button{display:flex;width:100%;gap:9px;align-items:center;background:none;border:none;color:var(--tx);font-family:var(--sans);font-size:13px;padding:9px 10px;border-radius:8px;cursor:pointer;text-align:left}
+  .pop button:hover{background:#152031}
+  .swdot{width:9px;height:9px;border-radius:50%}
+
+  /* ── TABS — chunky segmented control ──────────────────────────── */
+  .tabs{display:flex;gap:4px;padding:14px 28px 0;background:var(--panel);border-top:1px solid var(--line)}
+  .tab{flex:0 0 auto;display:flex;align-items:center;gap:8px;height:42px;padding:0 16px;border-radius:10px 10px 0 0;cursor:pointer;
+       font-size:13.5px;font-weight:600;color:var(--tx-faint)}
+  .tab:hover{color:var(--tx-dim);background:#0c121b}
+  .tab.on{color:var(--tx);background:var(--panel-2);box-shadow:inset 0 2px 0 var(--proj)}
+  .tab .ct{font-family:var(--mono);font-size:10.5px;background:#0c121b;border:1px solid var(--line-2);border-radius:999px;padding:1px 7px;color:var(--tx-dim)}
+  .tab.on .ct{background:color-mix(in srgb,var(--proj) 16%,transparent);border-color:transparent;color:var(--proj)}
+
+  /* ── PANELS ───────────────────────────────────────────────────── */
+  .body{background:var(--panel-2);min-height:280px;padding:26px 30px}
+  .panel{display:none} .panel.on{display:block}
+  .imm{font-family:var(--mono);font-size:10px;color:var(--tx-faint);margin-bottom:10px}
+  .prose{font-size:16px;line-height:1.72;max-width:66ch}
+  .prose p{margin:0 0 15px}
+  .prose strong{color:#eef3f9}
+  .ref{font-family:var(--mono);font-size:13px;color:var(--proj);background:color-mix(in srgb,var(--proj) 11%,transparent);padding:1px 6px;border-radius:5px}
+
+  .exam{display:grid;grid-template-columns:max-content 1fr;gap:14px 22px;max-width:74ch}
+  .exam dt{font-family:var(--mono);font-size:10px;letter-spacing:.09em;color:var(--tx-faint);padding-top:3px}
+  .exam dd{margin:0;font-size:15px;line-height:1.6}
+  .conf{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--ok);margin-bottom:18px}
+
+  .links{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .lk{display:flex;align-items:center;gap:11px;height:52px;padding:0 14px;border-radius:12px;background:#0c121b;border:1px solid var(--line-2);cursor:pointer}
+  .lk:hover{border-color:var(--info)}
+  .lk .sw{width:10px;height:10px;border-radius:3px}
+  .lk .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx-faint);display:block}
+  .lk .v{font-size:13.5px;font-weight:650}
+  .lk.p .v{color:var(--proj)} .lk.p .sw{background:var(--proj)}
+  .lk.e .v{color:var(--epic)} .lk.e .sw{background:var(--epic)}
+
+  /* ── FOOTER — chunky actions ──────────────────────────────────── */
+  .foot{display:flex;gap:10px;align-items:center;padding:16px 28px;background:var(--panel);border-top:1px solid var(--line)}
+  .btn{height:38px;padding:0 16px;border-radius:10px;border:1px solid var(--line-2);background:transparent;color:var(--tx-dim);cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:600}
+  .btn:hover{border-color:var(--info);color:var(--info)}
+  .btn.danger:hover{border-color:var(--bad);color:var(--bad)}
+  .foot .grow{flex:1}
+  .tag-note{font-family:var(--mono);font-size:11px;color:var(--tx-faint);text-align:center;margin:18px 0 0}
+</style>
+</head>
+<body>
+<div style="max-width:1000px;margin:0 auto;position:relative">
+<div class="wrap">
+  <!-- HEADER -->
+  <div class="head">
+    <div class="topline">
+      <span class="id">#2861</span>
+      <span class="type">TASK</span>
+      <span class="family">
+        <span class="fam p"><span class="sw"></span>localshout</span>
+        <span class="fam e"><span class="sw"></span>Weekly Digest</span>
+      </span>
+    </div>
+    <h1 contenteditable="true" spellcheck="false">Digest brief: v1 contents + curation logic</h1>
+
+    <div class="decide">
+      <div class="ctl status" id="statusBtn"><span class="beat"></span>Ready to dispatch<span class="caret">▾</span></div>
+      <div class="ctl"><span class="cap">owner</span><span class="avatar">B</span>boris<span class="caret">▾</span></div>
+      <div class="ctl prio"><span class="cap">priority</span>P2<span class="caret">▾</span></div>
+      <span class="grow"></span>
+      <button class="primary">→ Dispatch to boris</button>
+    </div>
+    <div class="pop" id="statusPop">
+      <button><span class="swdot" style="background:var(--ok)"></span>Ready to dispatch</button>
+      <button><span class="swdot" style="background:var(--info)"></span>Active</button>
+      <button><span class="swdot" style="background:var(--warn)"></span>Needs grooming</button>
+      <button><span class="swdot" style="background:var(--tx-faint)"></span>Parked</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab on" data-p="brief">Brief</div>
+    <div class="tab" data-p="context">Context</div>
+    <div class="tab" data-p="links">Links <span class="ct">3</span></div>
+    <div class="tab" data-p="activity">Activity <span class="ct">5</span></div>
+    <div class="tab" data-p="thread">Thread <span class="ct">0</span></div>
+  </div>
+
+  <!-- PANELS -->
+  <div class="body">
+    <section class="panel on" data-p="brief">
+      <div class="imm">immutable input · the artifact</div>
+      <div class="prose">
+        <p>Part of epic <strong>LocalShout — Weekly Digest</strong> <span class="ref">note_4d3ee7d0</span>. Ideation pass — produce a brief, not code.</p>
+        <p>Define what v1 of the digest should be: its contents, how it curates the good stuff (vs the firehose), the sending cadence, and the editorial tone. Ground every decision in the existing codebase and <span class="ref">docs/vision.md</span>, and name explicitly what v1 deliberately excludes.</p>
+      </div>
+    </section>
+
+    <section class="panel" data-p="context">
+      <div class="conf">● confidence: high</div>
+      <dl class="exam">
+        <dt>WHAT IS THIS</dt><dd>Operator wants a written brief defining v1 of the LocalShout Weekly Digest — contents, curation logic, cadence and tone, grounded in the existing codebase.</dd>
+        <dt>GOAL</dt><dd>Define a concrete v1 spec so development can proceed from a shared understanding.</dd>
+        <dt>DONE WHEN</dt><dd>A written brief covering contents, curation, cadence and tone, citing <span class="ref">docs/vision.md</span> and naming what v1 excludes.</dd>
+        <dt>VERDICT</dt><dd>Well-scoped with clear deliverables and specific repo references — an agent with repo access can execute directly.</dd>
+      </dl>
+    </section>
+
+    <section class="panel" data-p="links">
+      <div class="links">
+        <div class="lk p"><span class="sw"></span><div><span class="k">project</span><span class="v">localshout</span></div></div>
+        <div class="lk e"><span class="sw"></span><div><span class="k">epic</span><span class="v">Weekly Digest</span></div></div>
+        <div class="lk"><div><span class="k">parent</span><span class="v">#1865</span></div></div>
+        <div class="lk"><div><span class="k">blockers</span><span class="v">0</span></div></div>
+        <div class="lk"><div><span class="k">open questions</span><span class="v">0</span></div></div>
+        <div class="lk"><div><span class="k">origin</span><span class="v">unknown</span></div></div>
+      </div>
+    </section>
+
+    <section class="panel" data-p="activity"><div class="prose"><p style="color:var(--tx-faint)">5 activity events — log goes here.</p></div></section>
+    <section class="panel" data-p="thread"><div class="prose"><p style="color:var(--tx-faint)">No thread messages yet — composer goes here.</p></div></section>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="foot">
+    <button class="btn">→ Note</button>
+    <button class="btn">Reject</button>
+    <span class="grow"></span>
+    <button class="btn">Archive</button>
+    <button class="btn danger">Delete</button>
+  </div>
+</div>
+<p class="tag-note">Angle 06 — Washed header · segmented tabs · epic colour = oklch(from project, lighter) · chunky edit-in-place controls</p>
+</div>
+<script>
+  // tab switching
+  const wrap=document.currentScript.closest('div');
+  wrap.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+    wrap.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
+    wrap.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.dataset.p===t.dataset.p));
+  }));
+  // chunky status popover — proves "dynamic / editable"
+  const sb=document.getElementById('statusBtn'),sp=document.getElementById('statusPop');
+  sb.addEventListener('click',e=>{e.stopPropagation();const r=sb.getBoundingClientRect(),w=sb.offsetParent.getBoundingClientRect();
+    sp.style.left=(r.left-w.left)+'px';sp.style.top=(r.bottom-w.top+6)+'px';sp.classList.toggle('open');});
+  document.addEventListener('click',()=>sp.classList.remove('open'));
+  sp.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{sb.childNodes[1].textContent=b.textContent.trim();sp.classList.remove('open');}));
+</script>
+</body>
+</html>

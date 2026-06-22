@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>10 · 09 refined to native tokens</title>
+<style>
+  :root{
+    /* ── pulled verbatim from styles.scss ─────────────────────────── */
+    --color-bg:#060b12; --color-surface:#0d1520; --color-surface-raised:#101b28; --color-surface-soft:#091119;
+    --color-border:#1f394c; --color-border-strong:#3dd6ff;
+    --color-text:#e6f7ff; --color-text-muted:#83a6b8; --color-text-soft:#aac8d6;
+    --color-accent:#3dd6ff; --color-danger:#ff5d7a; --color-success:#6dffb3; --color-warning:#ffd86b; --color-info:#69b8ff;
+    --color-accent-glow:color-mix(in srgb,var(--color-accent) 30%,transparent);
+    --actor-color-boris:#6b95d6; --actor-color-jimbo:#a878d6; --actor-color-marvin:#e08850;
+    --font-sans:system-ui,-apple-system,sans-serif;
+    --font-mono:'SF Mono','Fira Code',ui-monospace,monospace;
+    --radius:2px;
+    /* ── project identity: ONE token per project, epic derived from it ─ */
+    --proj:#b07be0;                                   /* localshout.color_token */
+    --epic:oklch(from var(--proj) calc(l + 0.12) calc(c * 0.78) h);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--color-bg);color:var(--color-text);font-family:var(--font-mono);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;padding:34px;}
+  .wrap{max-width:1040px;margin:0 auto;background:var(--color-surface);border:1px solid var(--color-border);
+        display:grid;grid-template-columns:4px 1fr}
+  .spine{background:linear-gradient(var(--proj),var(--epic))}
+  .col{min-width:0}
+
+  /* ── HEADER ────────────────────────────────────────────────────── */
+  .head{padding:18px 24px 16px;background:
+        linear-gradient(115deg, color-mix(in srgb,var(--proj) 12%,var(--color-surface-raised)), var(--color-surface-raised) 62%);
+        border-bottom:1px solid var(--color-border)}
+  .topline{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:12px}
+  .id{color:var(--color-text-muted)}
+  .type{font-size:10px;letter-spacing:.14em;padding:2px 7px;border:1px solid var(--color-border);color:var(--color-text-soft);background:var(--color-surface-soft)}
+  /* project → epic family, colour-coded, sharp */
+  .fam{display:inline-flex;border:1px solid color-mix(in srgb,var(--proj) 38%,transparent);cursor:pointer}
+  .fam span{display:inline-flex;align-items:center;gap:7px;padding:3px 10px;font-size:12px;font-weight:600}
+  .fam .p{background:color-mix(in srgb,var(--proj) 18%,transparent);color:oklch(from var(--proj) calc(l + 0.24) c h)}
+  .fam .e{background:color-mix(in srgb,var(--epic) 12%,transparent);color:oklch(from var(--epic) calc(l + 0.2) c h);border-left:1px solid color-mix(in srgb,var(--proj) 30%,transparent)}
+  .fam .d{width:8px;height:8px}.fam .p .d{background:var(--proj)}.fam .e .d{background:var(--epic)}
+
+  h1{font-family:var(--font-mono);font-size:21px;font-weight:600;letter-spacing:-.01em;color:var(--color-text);
+     padding:3px 6px;margin:0 0 14px -6px;outline:none}
+  h1:hover{background:var(--color-surface-soft);box-shadow:inset 0 0 0 1px var(--color-border)}
+  h1:focus{background:var(--color-surface-soft);box-shadow:inset 0 0 0 1px var(--color-accent)}
+
+  /* glance / decision controls — chunky, sharp, editable. NO dispatch. */
+  .glance{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .ctl{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 12px;background:var(--color-black,#000);
+       border:1px solid var(--color-border);cursor:pointer;font-family:var(--font-mono);font-size:12.5px;color:var(--color-text)}
+  .ctl:hover{border-color:var(--color-accent)}
+  .ctl .cap{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-text-muted)}
+  .ctl .car{color:var(--color-text-muted);font-size:9px}
+  .ctl.kanban{border-color:color-mix(in srgb,var(--color-info) 50%,transparent);color:var(--color-info)}
+  .ctl.owner{color:var(--actor-color-boris)} .ctl.owner .av{width:8px;height:8px;border-radius:50%;background:var(--actor-color-boris)}
+  .ctl.prio{color:var(--color-warning)}
+  .spacer{flex:1}
+  .age{font-size:11px;color:var(--color-text-muted)}
+
+  /* ── OPEN QUESTION — the hero of Marvin's job ──────────────────── */
+  .ask{display:flex;gap:13px;padding:15px 24px;background:color-mix(in srgb,var(--actor-color-jimbo) 9%,var(--color-surface));
+       border-bottom:1px solid var(--color-border);align-items:flex-start}
+  .ask .who{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--actor-color-jimbo);white-space:nowrap;padding-top:3px}
+  .ask .av{width:18px;height:18px;display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--color-bg);background:var(--actor-color-jimbo)}
+  .ask .q{flex:1;font-family:var(--font-sans);font-size:15px;line-height:1.55;color:var(--color-text)}
+  .ask .answer{height:36px;padding:0 16px;border:1px solid var(--color-accent);background:#000;color:var(--color-accent);
+       font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;box-shadow:inset 0 0 0 1px var(--color-accent-glow);white-space:nowrap}
+  .ask .answer:hover{background:color-mix(in srgb,var(--color-accent) 14%,#000)}
+  .composer{display:none;padding:0 24px 16px;background:color-mix(in srgb,var(--actor-color-jimbo) 9%,var(--color-surface));border-bottom:1px solid var(--color-border)}
+  .composer.open{display:block}
+  .composer textarea{width:100%;min-height:74px;background:var(--color-surface-soft);border:1px solid var(--color-border);color:var(--color-text);
+       font-family:var(--font-sans);font-size:14px;line-height:1.55;padding:10px 12px;resize:vertical}
+  .composer textarea:focus{outline:none;border-color:var(--color-accent)}
+  .composer .row{display:flex;gap:8px;margin-top:8px;align-items:center}
+  .composer .send{height:36px;padding:0 16px;border:1px solid var(--color-accent);background:#000;color:var(--color-accent);font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+  .composer .hint{font-size:11px;color:var(--color-text-muted);font-family:var(--font-sans)}
+
+  /* ── TABS — native .ui-tab underline; section accent = project ─── */
+  .tabs{display:flex;gap:2px;padding:0 18px;border-bottom:1px solid var(--color-border);background:var(--color-surface)}
+  .tab{display:inline-flex;align-items:center;gap:7px;padding:11px 14px;font-size:12.5px;font-weight:600;letter-spacing:.03em;
+       color:var(--color-text-muted);background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer}
+  .tab:hover{color:var(--color-text)}
+  .tab.on{color:var(--proj);border-bottom-color:var(--proj)}
+  .ct{font-size:10px;color:var(--color-text-muted)} .tab.on .ct{color:var(--proj)}
+
+  /* ── BODY ──────────────────────────────────────────────────────── */
+  .body{padding:22px 24px;min-height:240px;background:var(--color-surface)}
+  .panel{display:none} .panel.on{display:block}
+  .lab{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:11px}
+  /* THE sans-serif prose upgrade — body text only */
+  .prose{font-family:var(--font-sans);font-size:15.5px;line-height:1.68;color:var(--color-text-soft);max-width:68ch}
+  .prose p{margin:0 0 14px} .prose strong{color:var(--color-text)}
+  .ref{font-family:var(--font-mono);font-size:13px;color:var(--color-accent);background:var(--color-surface-soft);border:1px solid var(--color-border);padding:0 4px}
+
+  /* Acceptance criteria — read / add / edit, chunky checkboxes */
+  .ac{display:flex;align-items:flex-start;gap:11px;padding:11px 12px;border:1px solid var(--color-border);background:var(--color-surface-soft);margin-bottom:8px}
+  .ac:hover{border-color:color-mix(in srgb,var(--color-accent) 40%,transparent)}
+  .ac .box{width:18px;height:18px;border:1px solid var(--color-border-strong);display:grid;place-items:center;flex:0 0 auto;cursor:pointer;margin-top:1px;color:var(--color-success)}
+  .ac.done .box{background:color-mix(in srgb,var(--color-success) 18%,transparent)}
+  .ac .txt{font-family:var(--font-sans);font-size:14.5px;line-height:1.5;color:var(--color-text);flex:1;outline:none}
+  .ac.done .txt{color:var(--color-text-muted);text-decoration:line-through}
+  .ac-add{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px dashed var(--color-border);color:var(--color-text-muted);font-family:var(--font-sans);font-size:14px;cursor:text}
+  .ac-add:hover{border-color:var(--color-accent);color:var(--color-text-soft)}
+
+  /* Context references — add url / internal ref */
+  .refs{display:flex;flex-direction:column;gap:6px;margin-top:18px;max-width:560px}
+  .ref-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--color-border);background:var(--color-surface-soft);cursor:pointer}
+  .ref-row:hover{border-color:var(--color-accent)}
+  .ref-row .k{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-muted);width:84px}
+  .ref-row .v{font-family:var(--font-mono);font-size:13px;color:var(--color-accent)}
+  .ref-row .v.plain{color:var(--color-text)}
+  .ref-add{padding:10px 12px;border:1px dashed var(--color-border);color:var(--color-text-muted);font-family:var(--font-sans);font-size:13.5px;cursor:text}
+  .ref-add:hover{border-color:var(--color-accent);color:var(--color-text-soft)}
+  .exam{display:grid;grid-template-columns:max-content 1fr;gap:12px 20px;max-width:74ch}
+  .exam dt{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-muted);padding-top:3px}
+  .exam dd{font-family:var(--font-sans);font-size:14.5px;line-height:1.6;color:var(--color-text-soft)}
+  .conf{font-size:11px;color:var(--color-success);margin-bottom:16px}
+
+  /* Activity — history, refresh memory */
+  .ev{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--color-border);font-size:13px;align-items:baseline}
+  .ev .t{color:var(--color-text-muted);font-size:11px;width:74px;flex:0 0 auto}
+  .ev .a{font-weight:600}
+  .ev .a.jimbo{color:var(--actor-color-jimbo)} .ev .a.boris{color:var(--actor-color-boris)} .ev .a.marvin{color:var(--actor-color-marvin)}
+  .ev .m{color:var(--color-text-soft);font-family:var(--font-sans)}
+
+  /* ── FOOTER — Marvin's real moves ──────────────────────────────── */
+  .foot{display:flex;gap:8px;align-items:center;padding:14px 24px;border-top:1px solid var(--color-border);background:var(--color-surface)}
+  .btn{height:38px;padding:0 14px;border:1px solid var(--color-border);background:#000;color:var(--color-text-soft);
+       font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+  .btn:hover{border-color:var(--color-accent);color:var(--color-text)}
+  .btn.back{border-color:var(--color-accent);color:var(--color-accent);box-shadow:inset 0 0 0 1px var(--color-accent-glow)}
+  .btn.danger:hover{border-color:var(--color-danger);color:var(--color-danger)}
+  .foot .spacer{flex:1}
+  .tag-note{font-family:var(--font-mono);font-size:11px;color:var(--color-text-muted);text-align:center;margin:18px 0 0}
+</style>
+</head>
+<body>
+<div style="max-width:1040px;margin:0 auto">
+<div class="wrap">
+  <div class="spine"></div>
+  <div class="col">
+
+    <!-- HEADER -->
+    <div class="head">
+      <div class="topline">
+        <span class="id">#2861</span><span class="type">TASK</span>
+        <span class="fam"><span class="p"><span class="d"></span>localshout</span><span class="e"><span class="d"></span>Weekly Digest</span></span>
+      </div>
+      <h1 contenteditable="true" spellcheck="false">Digest brief: v1 contents + curation logic</h1>
+      <div class="glance">
+        <div class="ctl kanban"><span class="cap">kanban</span>In review<span class="car">▾</span></div>
+        <div class="ctl owner"><span class="cap">owner</span><span class="av"></span>boris<span class="car">▾</span></div>
+        <div class="ctl prio"><span class="cap">priority</span>P2<span class="car">▾</span></div>
+        <span class="spacer"></span>
+        <span class="age">created 4h ago · last activity 2h ago</span>
+      </div>
+    </div>
+
+    <!-- OPEN QUESTION (Marvin's #1 job) -->
+    <div class="ask">
+      <span class="who"><span class="av">J</span>jimbo asks</span>
+      <span class="q">Should v1 of the digest include ticketed/paid events, or stay free-only for the first send? The brief currently doesn't say, and it changes the curation logic.</span>
+      <button class="answer" id="answerBtn">Answer ↵</button>
+    </div>
+    <div class="composer" id="composer">
+      <textarea placeholder="Answer jimbo — type # @ ~ to reference tags / actors / vault items…"></textarea>
+      <div class="row">
+        <button class="send">Answer &amp; send back ↩</button>
+        <span class="hint">↩ returns the ticket to <strong style="color:var(--actor-color-jimbo)">@jimbo</strong> where it came from</span>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab on" data-p="brief">Brief</button>
+      <button class="tab" data-p="criteria">Criteria <span class="ct">2</span></button>
+      <button class="tab" data-p="context">Context</button>
+      <button class="tab" data-p="activity">Activity <span class="ct">5</span></button>
+      <button class="tab" data-p="thread">Thread <span class="ct">1</span></button>
+    </div>
+
+    <!-- PANELS -->
+    <div class="body">
+      <section class="panel on" data-p="brief">
+        <div class="lab">brief · immutable input</div>
+        <div class="prose">
+          <p>Part of epic <strong>LocalShout — Weekly Digest</strong> <span class="ref">note_4d3ee7d0</span>. Ideation pass — produce a brief, not code.</p>
+          <p>Define what v1 of the digest should be: its contents, how it curates the good stuff (vs the firehose), the sending cadence, and the editorial tone. Ground every decision in the existing codebase and <span class="ref">docs/vision.md</span>, and name explicitly what v1 deliberately excludes.</p>
+        </div>
+      </section>
+
+      <section class="panel" data-p="criteria">
+        <div class="lab">acceptance criteria · click to edit, ✓ to tick</div>
+        <div class="ac done"><span class="box">✓</span><span class="txt" contenteditable="true">Brief names v1 contents and the curation rule (good stuff vs firehose).</span></div>
+        <div class="ac"><span class="box"></span><span class="txt" contenteditable="true">Cadence + tone defined, citing docs/vision.md.</span></div>
+        <div class="ac-add">+ add criterion…</div>
+      </section>
+
+      <section class="panel" data-p="context">
+        <div class="conf">● intake confidence: high</div>
+        <dl class="exam">
+          <dt>What is this</dt><dd>A written brief defining v1 of the Weekly Digest — contents, curation logic, cadence and tone, grounded in the codebase.</dd>
+          <dt>Goal</dt><dd>Define a concrete v1 spec so development can proceed from a shared understanding.</dd>
+          <dt>Verdict</dt><dd>Well-scoped with clear deliverables and specific repo references — executable directly.</dd>
+        </dl>
+        <div class="lab" style="margin-top:22px">references · point to more context</div>
+        <div class="refs">
+          <div class="ref-row"><span class="k">parent</span><span class="v">#1865</span><span class="v plain">LocalShout — Weekly Digest</span></div>
+          <div class="ref-row"><span class="k">repo</span><span class="v">docs/vision.md</span></div>
+          <div class="ref-add">+ add url or ~vault reference…</div>
+        </div>
+      </section>
+
+      <section class="panel" data-p="activity">
+        <div class="lab">history · what's happened so far</div>
+        <div class="ev"><span class="t">2h ago</span><span class="a jimbo">jimbo</span><span class="m">asked a question about ticketed vs free events</span></div>
+        <div class="ev"><span class="t">3h ago</span><span class="a boris">boris</span><span class="m">picked up the ticket, marked In review</span></div>
+        <div class="ev"><span class="t">4h ago</span><span class="a jimbo">jimbo</span><span class="m">groomed → P2, assigned to boris</span></div>
+        <div class="ev"><span class="t">4h ago</span><span class="a marvin">marvin</span><span class="m">created from intake note_4d3ee7d0</span></div>
+      </section>
+
+      <section class="panel" data-p="thread">
+        <div class="lab">thread · 1 open</div>
+        <div class="prose"><p>Q&amp;A with jimbo / boris renders here — the open question above is the unresolved one.</p></div>
+      </section>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="foot">
+      <button class="btn back">↩ Send back to @jimbo</button>
+      <button class="btn">⇄ Reassign</button>
+      <span class="spacer"></span>
+      <button class="btn">→ Note</button>
+      <button class="btn">Reject</button>
+      <button class="btn">Archive</button>
+      <button class="btn danger">Delete</button>
+    </div>
+  </div>
+</div>
+<p class="tag-note">Angle 10 — 09 riffed onto native tokens · mono chrome + cyan + sharp 2px + flat · sans prose only · reshaped around answer→edit→send-back (no dispatch)</p>
+</div>
+<script>
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.dataset.p===t.dataset.p));
+  }));
+  const ab=document.getElementById('answerBtn'),cp=document.getElementById('composer');
+  ab.addEventListener('click',()=>{cp.classList.toggle('open');cp.querySelector('textarea').focus();});
+  document.querySelectorAll('.ac .box').forEach(b=>b.addEventListener('click',()=>{
+    const ac=b.closest('.ac');ac.classList.toggle('done');b.textContent=ac.classList.contains('done')?'✓':'';
+  }));
+</script>
+</body>
+</html>
