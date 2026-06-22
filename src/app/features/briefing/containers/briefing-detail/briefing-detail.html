@@ -1,10 +1,8 @@
-@let s = state();
-
-@if (s.loading) {
+@if (loading()) {
   <app-ui-loading-state message="Loading briefing…" />
-} @else if (s.error) {
-  <app-ui-empty-state title="Couldn't load briefing" [message]="s.error" />
-} @else if (s.data; as b) {
+} @else if (error()) {
+  <app-ui-empty-state title="Couldn't load briefing" [message]="error()!" />
+} @else if (briefing(); as b) {
   <app-ui-stack gap="lg">
     <app-ui-page-header>
       <h1 uiPageHeaderTitle>Briefing — {{ b.session }}</h1>
@@ -16,8 +14,15 @@
         <dt>Session</dt><dd>{{ b.session }}</dd>
         <dt>Model</dt><dd>{{ b.model }}</dd>
         <dt>Generated</dt><dd>{{ b.generated_at | date: 'medium' }}</dd>
-        <dt>Rating</dt><dd>{{ b.user_rating !== null ? b.user_rating + ' / 10' : 'Unrated' }}</dd>
       </app-ui-meta-list>
+    </app-ui-section>
+
+    <app-ui-section title="Your rating" [collapsible]="false">
+      <app-briefing-rating
+        [rating]="b.rating"
+        [note]="b.rating_note"
+        [pending]="isSaving(b.id)"
+        (rate)="onRate(b, $event)" />
     </app-ui-section>
 
     @if (b.analysis.day_plan.length) {

@@ -1,0 +1,56 @@
+<app-ui-page-header>
+  <h1 uiPageHeaderTitle>Briefings</h1>
+  <p uiPageHeaderHint>{{ headerHint() }}</p>
+  <div uiPageHeaderActions>
+    <button type="button" class="briefings__refresh" (click)="reload()">Refresh</button>
+  </div>
+</app-ui-page-header>
+
+<section class="briefings__body">
+  @if (loading() && briefings().length === 0) {
+    <app-ui-loading-state message="Loading briefings…" />
+  } @else if (error()) {
+    <app-ui-empty-state title="Couldn’t load briefings" [message]="error()!" />
+  } @else if (briefings().length === 0) {
+    <app-ui-empty-state
+      title="No briefings yet"
+      message="Briefings appear here once the morning/afternoon cron has run." />
+  } @else {
+    <div class="briefings__table-wrap">
+      <table class="briefings__table">
+        <thead>
+          <tr>
+            <th scope="col">When</th>
+            <th scope="col">Session</th>
+            <th scope="col">Model</th>
+            <th scope="col">Your rating</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (b of briefings(); track b.id) {
+            <tr>
+              <td class="briefings__when">{{ when(b) }}</td>
+              <td>
+                <span class="briefings__session" [class]="'briefings__session--' + b.session">
+                  {{ sessionLabel(b.session) }}
+                </span>
+              </td>
+              <td class="briefings__model">{{ modelShort(b.model) }}</td>
+              <td>
+                <app-briefing-rating
+                  [rating]="b.rating"
+                  [note]="b.rating_note"
+                  [pending]="isSaving(b.id)"
+                  (rate)="onRate(b, $event)" />
+              </td>
+              <td class="briefings__link">
+                <a [routerLink]="['/briefing', b.id]">View →</a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

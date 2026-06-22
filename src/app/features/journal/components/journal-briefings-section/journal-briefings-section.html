@@ -1,0 +1,34 @@
+@if (ordered().length > 0) {
+  <section class="jbriefings">
+    <app-ui-subhead label="Briefings" [count]="ordered().length" />
+
+    <ul class="jbriefings__list">
+      @for (b of ordered(); track b.id) {
+        <li class="jbriefings__item">
+          <div class="jbriefings__head">
+            <span class="jbriefings__session">{{ sessionLabel(b.session) }}</span>
+            <a class="jbriefings__link" [routerLink]="['/briefing', b.id]">View →</a>
+          </div>
+
+          @if (b.analysis.surprise; as surprise) {
+            <p class="jbriefings__surprise">💡 {{ surprise.fact }}</p>
+          }
+
+          @if (b.analysis.day_plan.length > 0) {
+            <ul class="jbriefings__plan">
+              @for (entry of b.analysis.day_plan; track entry.time) {
+                <li><span class="jbriefings__time">{{ entry.time }}</span> {{ entry.suggestion }}</li>
+              }
+            </ul>
+          }
+
+          <app-briefing-rating
+            [rating]="b.rating"
+            [note]="b.rating_note"
+            [pending]="isSaving(b.id)"
+            (rate)="onRate(b, $event)" />
+        </li>
+      }
+    </ul>
+  </section>
+}

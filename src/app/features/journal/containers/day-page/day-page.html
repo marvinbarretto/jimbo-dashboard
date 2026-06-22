@@ -10,6 +10,10 @@
   (dateChange)="onDateChange($event)"
 />
 
+<!-- Briefings are fetched independently of the focus/activity bundle, so they
+     render even on a day with no logged work. The section self-hides if empty. -->
+<app-journal-briefings-section [date]="key()" />
+
 @if (loading()) {
   <app-ui-loading-state message="Pulling the day's data…" />
 } @else if (bundle(); as b) {

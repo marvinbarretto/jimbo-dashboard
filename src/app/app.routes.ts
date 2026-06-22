@@ -34,6 +34,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/mail-activity/containers/email-detail/email-detail').then(m => m.EmailDetail),
   },
   {
+    path: 'briefings',
+    title: 'Briefings',
+    loadComponent: () => import('./features/briefings/containers/briefings-page/briefings-page').then(m => m.BriefingsPage),
+  },
+  {
     path: 'briefing/:id',
     title: 'Briefing',
     loadComponent: () => import('./features/briefing/containers/briefing-detail/briefing-detail').then(m => m.BriefingDetail),
@@ -168,6 +173,7 @@ export const routes: Routes = [
       { path: 'dispatch-history-list',   loadComponent: () => import('./features/ui-lab/sections/dispatch-history-list-section').then(m => m.DispatchHistoryListSection) },
       { path: 'vault-card',              loadComponent: () => import('./features/ui-lab/sections/vault-card-section').then(m => m.VaultCardSection) },
       { path: 'vault-card-kanban',      loadComponent: () => import('./features/ui-lab/sections/vault-card-kanban-section').then(m => m.VaultCardKanbanSection) },
+      { path: 'nutrition-row',           loadComponent: () => import('./features/ui-lab/sections/nutrition-row-section').then(m => m.NutritionRowSection) },
     ],
   },
   {
