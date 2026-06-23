@@ -70,7 +70,17 @@ export class HermesService {
     return this.http.delete<{ ok: true; jobId: string }>(`${this.base}/api/hermes/${jobId}`);
   }
 
-  update(jobId: string, patch: { name?: string; schedule_display?: string }): Observable<HermesJob> {
+  update(
+    jobId: string,
+    // model + provider are a coupled pin: pass both to pin, or both `null` to
+    // clear and inherit the global default (enforced server-side).
+    patch: {
+      name?: string;
+      schedule_display?: string;
+      model?: string | null;
+      provider?: string | null;
+    }
+  ): Observable<HermesJob> {
     return this.http.patch<HermesJob>(`${this.base}/api/hermes/${jobId}`, patch);
   }
 
