@@ -125,6 +125,19 @@
                 <dd class="cr__field-edit">
                   <select
                     class="cr__inline-input cr__inline-input--sm"
+                    (change)="applyCatalogueModel($any($event.target).value); $any($event.target).value = ''"
+                    title="Pick from the model catalogue — fills the backend + model below">
+                    <option value="">From catalogue…</option>
+                    @for (g of catalogueGroups(); track g.author) {
+                      <optgroup [label]="g.author">
+                        @for (m of g.models; track m.id) {
+                          <option [value]="m.id">{{ m.name }}</option>
+                        }
+                      </optgroup>
+                    }
+                  </select>
+                  <select
+                    class="cr__inline-input cr__inline-input--sm"
                     [ngModel]="editProviderValue()"
                     (ngModelChange)="editProviderValue.set($event)"
                     (keydown.escape)="cancelEditModel()"
