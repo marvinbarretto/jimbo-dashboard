@@ -121,12 +121,65 @@
             </div>
             <div class="cr__field">
               <dt>Model</dt>
-              <dd class="cr__model-field">
-                {{ job.model ?? '—' }}
-                @if (!job.model) {
-                  <app-ui-badge tone="warning" [subtle]="true" title="No model pinned — using Hermes default; pin a specific model per job to control cost and routing">default</app-ui-badge>
-                }
-              </dd>
+              @if (editingModel()) {
+                <dd class="cr__field-edit">
+                  <select
+                    class="cr__inline-input cr__inline-input--sm"
+                    (change)="applyCatalogueModel($any($event.target).value); $any($event.target).value = ''"
+                    title="Pick from the model catalogue — fills the backend + model below">
+                    <option value="">From catalogue…</option>
+                    @for (g of catalogueGroups(); track g.author) {
+                      <optgroup [label]="g.author">
+                        @for (m of g.models; track m.id) {
+                          <option [value]="m.id">{{ m.name }}</option>
+                        }
+                      </optgroup>
+                    }
+                  </select>
+                  <select
+                    class="cr__inline-input cr__inline-input--sm"
+                    [ngModel]="editProviderValue()"
+                    (ngModelChange)="editProviderValue.set($event)"
+                    (keydown.escape)="cancelEditModel()"
+                    title="Inference backend — empty inherits the global default">
+                    <option value="">Inherit default</option>
+                    @for (p of providers; track p) {
+                      <option [value]="p">{{ p }}</option>
+                    }
+                  </select>
+                  @if (editProviderValue() !== '') {
+                    <input
+                      class="cr__inline-input cr__inline-input--sm"
+                      type="text"
+                      list="cr-model-suggestions"
+                      [ngModel]="editModelValue()"
+                      (ngModelChange)="editModelValue.set($event)"
+                      (keydown.enter)="saveModelPin()"
+                      (keydown.escape)="cancelEditModel()"
+                      placeholder="model id, e.g. gpt-5.5 or openai/gpt-4o" />
+                    <datalist id="cr-model-suggestions">
+                      @for (m of modelSuggestions(); track m) {
+                        <option [value]="m"></option>
+                      }
+                    </datalist>
+                  }
+                  <button type="button" class="cr__btn cr__btn--primary cr__btn--sm" (click)="saveModelPin()" [disabled]="actionState() === 'loading' || !modelPinValid()">Save</button>
+                  <button type="button" class="cr__btn cr__btn--ghost cr__btn--sm" (click)="cancelEditModel()">Cancel</button>
+                </dd>
+              } @else {
+                <dd class="cr__model-field">
+                  @if (job.model) {
+                    <span>{{ job.model }}</span>
+                    @if (job.provider) {
+                      <app-ui-badge tone="info" [subtle]="true" [title]="'Pinned to the ' + job.provider + ' backend'">{{ job.provider }}</app-ui-badge>
+                    }
+                  } @else {
+                    —
+                    <app-ui-badge tone="warning" [subtle]="true" title="No model pinned — using Hermes default; pin a specific model per job to control cost and routing">default</app-ui-badge>
+                  }
+                  <button type="button" class="cr__edit-inline-btn" (click)="startEditModel()" title="Edit model pin">✎</button>
+                </dd>
+              }
             </div>
             <div class="cr__field">
               <dt>Deliver to</dt>

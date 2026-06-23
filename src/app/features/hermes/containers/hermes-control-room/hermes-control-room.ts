@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ModelsService } from '@features/models/data-access/models.service';
+import { modelRuntimeId } from '@domain/models';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { HermesService } from '../../data-access/hermes.service';
@@ -7,6 +9,26 @@ import type { HermesJob, HermesRun } from '../../hermes.types';
 import { absoluteTime, deliverLabel, formatBytes, formatDuration, relativeTime, stateBadgeTone } from '../../hermes.utils';
 
 type ActionState = 'idle' | 'loading' | 'done' | 'error';
+
+// Inference backends a job can be pinned to. Mirrors HERMES_PROVIDERS in
+// jimbo-api/src/schemas/hermes.ts — keep in sync. Empty value = inherit default.
+const HERMES_PROVIDERS = [
+  'openrouter',
+  'openai-codex',
+  'anthropic',
+  'gemini',
+  'xai',
+  'nous',
+  'copilot',
+  'ollama-cloud',
+  'huggingface',
+  'zai',
+  'kimi-coding',
+  'minimax',
+  'kilocode',
+  'xiaomi',
+  'arcee',
+] as const;
 
 interface RunDetail {
   output: string | null;
@@ -24,6 +46,7 @@ interface RunDetail {
 })
 export class HermesControlRoom {
   private readonly hermes = inject(HermesService);
+  private readonly modelsService = inject(ModelsService);
 
   readonly selectedJob = signal<HermesJob | null>(null);
 
@@ -34,6 +57,41 @@ export class HermesControlRoom {
   readonly editingSchedule = signal(false);
   readonly editNameValue = signal('');
   readonly editScheduleValue = signal('');
+
+  // ── Per-job model/provider pin ──────────────────────────────────────────────
+  readonly editingModel = signal(false);
+  readonly editModelValue = signal('');      // runtime model id ('' when inheriting)
+  readonly editProviderValue = signal('');   // inference backend ('' = inherit default)
+
+  readonly providers = HERMES_PROVIDERS;
+
+  // Catalogue model ids for the <datalist> suggestions (free-text still allowed,
+  // so a backend model not yet in the catalogue — e.g. a fresh Codex id — works).
+  readonly modelSuggestions = computed(() =>
+    this.modelsService.activeModels().map(m => m.id).sort((a, b) => a.localeCompare(b))
+  );
+
+  // Catalogue models grouped by author for the quick-pick <select>. Selecting one
+  // derives the backend (inference_provider) + runtime model id and fills the
+  // editable fields below — which remain overridable / open to off-catalogue ids.
+  readonly catalogueGroups = computed(() => {
+    const groups = new Map<string, { id: string; name: string }[]>();
+    for (const m of this.modelsService.activeModels()) {
+      const author = m.metadata.provider || m.id.split('/')[0] || 'other';
+      if (!groups.has(author)) groups.set(author, []);
+      groups.get(author)!.push({ id: m.id, name: m.name });
+    }
+    return [...groups.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([author, models]) => ({ author, models: models.sort((x, y) => x.id.localeCompare(y.id)) }));
+  });
+
+  readonly modelPinValid = computed(() => {
+    const provider = this.editProviderValue();
+    const model = this.editModelValue().trim();
+    // Inherit (no provider) is always valid; a pin requires both provider + model.
+    return provider === '' || model.length > 0;
+  });
 
   readonly runs = signal<HermesRun[]>([]);
   readonly runsTotal = signal(0);
@@ -66,6 +124,7 @@ export class HermesControlRoom {
     this.resetAction();
     this.editingName.set(false);
     this.editingSchedule.set(false);
+    this.editingModel.set(false);
     this.expandedRunIds.set(new Set());
     this.runDetails.set(new Map());
     this.loadRuns(job.id);
@@ -233,6 +292,56 @@ export class HermesControlRoom {
       next: (updated) => {
         this.selectedJob.set(updated);
         this.editingSchedule.set(false);
+        this.actionState.set('done');
+      },
+      error: (err) => this.fail(err),
+    });
+  }
+
+  startEditModel(): void {
+    const job = this.selectedJob();
+    if (!job) return;
+    this.editModelValue.set(job.model ?? '');
+    this.editProviderValue.set(job.provider ?? '');
+    this.editingModel.set(true);
+    this.editingName.set(false);
+    this.editingSchedule.set(false);
+  }
+
+  cancelEditModel(): void {
+    this.editingModel.set(false);
+  }
+
+  // Quick-pick handler: fill backend + runtime model from a chosen catalogue row.
+  applyCatalogueModel(id: string): void {
+    if (!id) return;
+    const m = this.modelsService.activeModels().find(x => x.id === id);
+    if (!m) return;
+    this.editProviderValue.set(m.metadata.inference_provider ?? 'openrouter');
+    this.editModelValue.set(modelRuntimeId(m));
+  }
+
+  saveModelPin(): void {
+    const job = this.selectedJob();
+    if (!job) return;
+    const provider = this.editProviderValue();
+    const model = this.editModelValue().trim();
+
+    // Empty provider = clear the pin and inherit the global default; both null.
+    // Otherwise pin both together (the backend rejects a half-set pin).
+    const patch =
+      provider === ''
+        ? { model: null, provider: null }
+        : { model, provider };
+
+    if (provider !== '' && model === '') return; // guarded by modelPinValid in the UI
+
+    this.resetAction();
+    this.actionState.set('loading');
+    this.hermes.update(job.id, patch).subscribe({
+      next: (updated) => {
+        this.selectedJob.set(updated);
+        this.editingModel.set(false);
         this.actionState.set('done');
       },
       error: (err) => this.fail(err),

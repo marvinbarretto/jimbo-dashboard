@@ -33,6 +33,10 @@ export interface ModelMetadata {
   classes?: SkillCapability[];
   // Free-text grouping for the catalogue — typically the OpenRouter author.
   provider: string;
+  // Hermes inference backend used to actually call this model (how to reach it),
+  // distinct from the author grouping above. Defaults to 'openrouter'. Manual rows
+  // (e.g. Codex models) set it explicitly so a per-job pin can derive the backend.
+  inference_provider?: string;
 
   // ── Mirrored from OpenRouter (verbatim names + units) ──
   // Populated on sync for source='openrouter'; can be filled manually
@@ -79,4 +83,13 @@ export function modelProvider(id: string): string | null {
 export function modelLocalName(id: string): string {
   const slash = id.indexOf('/');
   return slash === -1 ? id : id.slice(slash + 1);
+}
+
+// The exact model string Hermes passes when calling a model, derived from its
+// backend rather than stored per-row (avoids drift). OpenRouter wants the full
+// `<author>/<name>` slash-path; other backends (codex, ollama, …) want the bare
+// local name. Pair this with `metadata.inference_provider` to build a job pin.
+export function modelRuntimeId(model: Model): string {
+  const backend = model.metadata.inference_provider ?? 'openrouter';
+  return backend === 'openrouter' ? model.id : modelLocalName(model.id);
 }

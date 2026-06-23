@@ -17,6 +17,8 @@ export interface HermesJob {
   prompt: string | null;
   skills: string[] | null;
   model: string | null;
+  // Inference backend the job is pinned to (null = inherit the global default).
+  provider: string | null;
   created_at: string | null;
 }
 
