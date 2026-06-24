@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.79](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.78...v0.0.79) (2026-06-24)
+
+
+### Features
+
+* **hermes:** catalogue-driven backend in the per-job model picker ([b9c46a9](https://github.com/marvinbarretto/jimbo-dashboard/commit/b9c46a92a4ffaf3132ba115616855fc9497a4676))
+* **hermes:** editable per-job model/provider pin in control room ([77fd041](https://github.com/marvinbarretto/jimbo-dashboard/commit/77fd041ebd87add0cd136cef9c9b42f8a05afdc2))
+* **journal:** add day-page section nav + empty-collapse ([ed9600d](https://github.com/marvinbarretto/jimbo-dashboard/commit/ed9600d915493a98474de7bc24704dc9c01bf8a2))
+
 ### [0.0.78](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.77...v0.0.78) (2026-06-22)
 
 
