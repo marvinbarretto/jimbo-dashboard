@@ -26,9 +26,9 @@ const FRONTMATTER_MAP: Record<string, string> = {
   intent: 'intent',
   entry_points: 'entry_points',
   autonomy_level: 'autonomy_level',
-  conventions: 'conventions_url',
   owner: 'owner_actor_id',
 };
+// `conventions` is handled specially (resolved against repo_url), not in the map.
 const BODY_MAP: Record<string, string> = {
   Footguns: 'footguns',
   'Out of scope': 'out_of_scope',
@@ -76,7 +76,20 @@ function parseManifest(raw: string): { fm: Record<string, string>; body: Record<
   return { fm, body };
 }
 
-function buildPayload(fm: Record<string, string>, body: Record<string, string>): Record<string, string> {
+// A relative `conventions: ./AGENTS.md` is correct in the repo but useless as a
+// dashboard hyperlink. Resolve it to a GitHub blob URL against repo_url; absolute
+// URLs pass through; if there's no repo_url to resolve against, skip rather than
+// write a broken relative link.
+function resolveConventions(value: string | undefined, repoUrl: unknown): string | undefined {
+  if (!value) return undefined;
+  if (/^https?:\/\//.test(value)) return value;
+  const base = typeof repoUrl === 'string' ? repoUrl.replace(/\/+$/, '') : '';
+  if (!base) { console.warn(`  ! conventions="${value}" not synced — no repo_url to resolve against`); return undefined; }
+  const path = value.replace(/^\.?\//, '');
+  return `${base}/blob/HEAD/${path}`;
+}
+
+function buildPayload(fm: Record<string, string>, body: Record<string, string>, repoUrl: unknown): Record<string, string> {
   const payload: Record<string, string> = {};
   for (const [mk, col] of Object.entries(FRONTMATTER_MAP)) {
     if (fm[mk] == null) continue;
@@ -86,6 +99,8 @@ function buildPayload(fm: Record<string, string>, body: Record<string, string>):
     }
     payload[col] = fm[mk];
   }
+  const conv = resolveConventions(fm.conventions, repoUrl);
+  if (conv) payload.conventions_url = conv;
   for (const [section, col] of Object.entries(BODY_MAP)) {
     if (body[section]) payload[col] = body[section];
   }
@@ -132,7 +147,7 @@ async function main(): Promise<void> {
     const current = byId.get(id);
     if (!current) { console.warn(`✗ ${id}: no matching project row in jimbo_pg`); continue; }
 
-    const payload = buildPayload(parsed.fm, parsed.body);
+    const payload = buildPayload(parsed.fm, parsed.body, current.repo_url);
     const diff = Object.entries(payload).filter(([col, val]) => norm(current[col]) !== norm(val));
 
     console.log(`● ${id}`);
