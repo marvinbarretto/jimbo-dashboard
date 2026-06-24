@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
@@ -112,6 +112,10 @@ export class JournalAgentsSection {
 
   readonly loading = computed(() => this.result() === null);
   readonly items = computed<AgentRunRollupRow[]>(() => this.result()?.items ?? []);
+
+  // Collapse the section once we know there's nothing for the day; stay open
+  // while loading so a data-bearing day never flickers shut. User-toggleable.
+  readonly open = linkedSignal(() => this.loading() || this.totalTicks() > 0);
 
   readonly totalTicks = computed(() => this.items().reduce((s, r) => s + r.count, 0));
 

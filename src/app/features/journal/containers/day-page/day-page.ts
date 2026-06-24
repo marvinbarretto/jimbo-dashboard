@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, linkedSignal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
@@ -21,6 +21,7 @@ import { JournalPager } from '../../components/journal-pager/journal-pager';
 import { JournalAgentsSection } from '../../components/journal-agents-section/journal-agents-section';
 import { JournalMcpSection } from '../../components/journal-mcp-section/journal-mcp-section';
 import { JournalBriefingsSection } from '../../components/journal-briefings-section/journal-briefings-section';
+import { JournalSectionNav, type JournalNavSection } from '../../components/journal-section-nav/journal-section-nav';
 import { NutritionDaySection } from '../../../nutrition/components/nutrition-day-section/nutrition-day-section';
 import {
   type DayKey,
@@ -47,6 +48,7 @@ import {
     JournalAgentsSection,
     JournalMcpSection,
     JournalBriefingsSection,
+    JournalSectionNav,
     NutritionDaySection,
   ],
   templateUrl: './day-page.html',
@@ -80,6 +82,46 @@ export class JournalDayPage {
     if (t.activity_count) parts.push(pluralise(t.activity_count, 'activity', 'activities'));
     return parts.join(' · ') || 'Nothing logged yet';
   });
+
+  protected readonly healthMeta = computed(() =>
+    this.healthSummary() ? 'From Health Connect' : 'No data',
+  );
+
+  // ── Empty-collapse ──────────────────────────────────────────────────────
+  // Each inline section reports whether it has anything worth showing; an
+  // empty section collapses to its one-line header instead of a tall empty
+  // state. These run inside the loaded-bundle block so there's no load flicker.
+  protected readonly hasWork = computed(() => {
+    const b = this.bundle();
+    if (!b) return false;
+    const t = b.totals;
+    return Boolean(
+      t.pomos_completed || t.focus_minutes || t.activity_count ||
+      b.sessions.length || b.activities.length || b.events.length,
+    );
+  });
+  protected readonly hasHealth = computed(() => this.healthSummary() != null);
+  protected readonly hasCode = computed(() => this.commitsSummary() != null);
+  protected readonly hasPhone = computed(() => this.telemetryEvents().length > 0);
+
+  // linkedSignal so the user can still expand a collapsed section by hand;
+  // it re-syncs to the data the moment a different day loads.
+  protected readonly workOpen = linkedSignal(() => this.hasWork());
+  protected readonly healthOpen = linkedSignal(() => this.hasHealth());
+  protected readonly codeOpen = linkedSignal(() => this.hasCode());
+  protected readonly phoneOpen = linkedSignal(() => this.hasPhone());
+
+  // Chip scroll-spy targets. Ids match the anchor host elements in the
+  // template. Order mirrors the on-page section order.
+  protected readonly navSections: readonly JournalNavSection[] = [
+    { id: 'jsec-work', label: 'Work' },
+    { id: 'jsec-health', label: 'Health' },
+    { id: 'jsec-code', label: 'Code' },
+    { id: 'jsec-agents', label: 'Agents' },
+    { id: 'jsec-mcp', label: 'MCP' },
+    { id: 'jsec-nutrition', label: 'Nutrition' },
+    { id: 'jsec-phone', label: 'Phone' },
+  ];
 
   protected readonly hourlyLabels = computed(() => HOUR_LABELS);
   protected readonly hourlyValues = computed(() => this.bundle()?.hourly_minutes ?? []);

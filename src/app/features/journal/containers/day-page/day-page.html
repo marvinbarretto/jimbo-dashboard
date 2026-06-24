@@ -19,8 +19,11 @@
 } @else if (bundle(); as b) {
   <app-ui-stack gap="lg">
 
+    <app-journal-section-nav [sections]="navSections" />
+
     <!-- ── WORK ─────────────────────────────────────────────── -->
-    <app-ui-section title="Work" [meta]="workMeta()">
+    <app-ui-section id="jsec-work" title="Work" [meta]="workMeta()"
+      [expanded]="workOpen()" (toggled)="workOpen.set(!workOpen())">
       <app-ui-stack gap="lg">
         <div class="journal-day__stats">
           <app-ui-stat-card label="Pomodoros" [value]="b.totals.pomos_completed.toString()" [detail]="b.totals.pomos_abandoned ? b.totals.pomos_abandoned + ' abandoned' : null" />
@@ -142,7 +145,8 @@
     </app-ui-section>
 
     <!-- ── HEALTH ──────────────────────────────────────────── -->
-    <app-ui-section title="Health" meta="From Health Connect">
+    <app-ui-section id="jsec-health" title="Health" [meta]="healthMeta()"
+      [expanded]="healthOpen()" (toggled)="healthOpen.set(!healthOpen())">
       @if (healthSummary(); as h) {
         <app-ui-stack gap="lg">
           <div class="journal-day__stats">
@@ -204,7 +208,8 @@
     </app-ui-section>
 
     <!-- ── CODE ────────────────────────────────────────────── -->
-    <app-ui-section title="Code" [meta]="codeMeta()">
+    <app-ui-section id="jsec-code" title="Code" [meta]="codeMeta()"
+      [expanded]="codeOpen()" (toggled)="codeOpen.set(!codeOpen())">
       @let cs = commitsSummary();
       @if (cs) {
         <app-ui-stack gap="lg">
@@ -246,16 +251,17 @@
     </app-ui-section>
 
     <!-- ── AGENTS ──────────────────────────────────────────── -->
-    <app-journal-agents-section [date]="key()" />
+    <app-journal-agents-section id="jsec-agents" [date]="key()" />
 
     <!-- ── MCP ─────────────────────────────────────────────── -->
-    <app-journal-mcp-section [date]="key()" />
+    <app-journal-mcp-section id="jsec-mcp" [date]="key()" />
 
     <!-- ── NUTRITION ───────────────────────────────────────── -->
-    <app-nutrition-day-section [date]="key()" />
+    <app-nutrition-day-section id="jsec-nutrition" [date]="key()" />
 
     <!-- ── PHONE ───────────────────────────────────────────── -->
-    <app-ui-section title="Phone" [meta]="telemetryEvents().length + ' events today'">
+    <app-ui-section id="jsec-phone" title="Phone" [meta]="telemetryEvents().length + ' events today'"
+      [expanded]="phoneOpen()" (toggled)="phoneOpen.set(!phoneOpen())">
       @if (telemetryEvents().length) {
         @let s = phoneSummary();
         <app-ui-stack gap="lg">

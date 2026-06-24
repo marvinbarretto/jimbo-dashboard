@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
@@ -36,6 +36,9 @@ export class NutritionDaySection {
 
   readonly loading = computed(() => this.result() === null);
   readonly entries = computed<FoodLogEntry[]>(() => this.result()?.items ?? []);
+
+  // Collapse once we know nothing was logged; stay open while loading.
+  readonly open = linkedSignal(() => this.loading() || this.entries().length > 0);
 
   readonly totals = computed(() =>
     this.entries().reduce(

@@ -1,3 +1,11 @@
+:host {
+  // Approx rendered height of the shell's Day/Week/Month <app-ui-tab-bar>.
+  // The chip scroll-spy nav reads this to stack directly beneath it. Only the
+  // strip's resting position depends on it — scroll-spy + jump self-calibrate
+  // off the nav's own measured bottom edge, so a few px here is cosmetic.
+  --journal-tabs-height: 45px;
+}
+
 .journal-day__stats {
   display: grid;
   gap: 0.6rem;

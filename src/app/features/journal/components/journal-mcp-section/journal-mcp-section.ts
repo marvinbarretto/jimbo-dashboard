@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
@@ -95,6 +95,9 @@ export class JournalMcpSection {
   private readonly tail = computed<McpCallTailRow[]>(() => this.result()?.tail.items ?? []);
 
   readonly totalCalls = computed(() => this.items().reduce((s, r) => s + r.count, 0));
+
+  // Collapse once we know the day had no MCP traffic; stay open while loading.
+  readonly open = linkedSignal(() => this.loading() || this.totalCalls() > 0);
   readonly totalErrors = computed(() => this.items().reduce((s, r) => s + r.error_count, 0));
 
   // Calls-weighted avg across tools — gives a single "how fast was MCP today"

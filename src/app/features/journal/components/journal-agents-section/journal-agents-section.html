@@ -1,4 +1,4 @@
-<app-ui-section title="Agents" [meta]="sectionMeta()">
+<app-ui-section title="Agents" [meta]="sectionMeta()" [expanded]="open()" (toggled)="open.set(!open())">
   @if (loading()) {
     <app-ui-loading-state message="Reading agent runs…" />
   } @else if (totalTicks() === 0) {

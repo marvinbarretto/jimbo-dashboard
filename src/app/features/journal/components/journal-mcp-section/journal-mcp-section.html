@@ -1,4 +1,4 @@
-<app-ui-section title="MCP" [meta]="sectionMeta()">
+<app-ui-section title="MCP" [meta]="sectionMeta()" [expanded]="open()" (toggled)="open.set(!open())">
   @if (loading()) {
     <app-ui-loading-state message="Reading MCP calls…" />
   } @else if (totalCalls() === 0) {
