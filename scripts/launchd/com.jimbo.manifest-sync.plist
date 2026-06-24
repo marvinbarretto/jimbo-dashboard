@@ -3,14 +3,14 @@
   launchd agent: sweep project manifests → jimbo_pg every 72 hours.
 
   Install:
-    cp scripts/launchd/uk.fourfoldmedia.jimbo.manifest-sync.plist ~/Library/LaunchAgents/
-    launchctl load ~/Library/LaunchAgents/uk.fourfoldmedia.jimbo.manifest-sync.plist
+    cp scripts/launchd/com.jimbo.manifest-sync.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.jimbo.manifest-sync.plist
 
   Run once now (to test):
-    launchctl start uk.fourfoldmedia.jimbo.manifest-sync
+    launchctl start com.jimbo.manifest-sync
 
   Disable:
-    launchctl unload ~/Library/LaunchAgents/uk.fourfoldmedia.jimbo.manifest-sync.plist
+    launchctl unload ~/Library/LaunchAgents/com.jimbo.manifest-sync.plist
 
   StartInterval 259200 = 72h. On a laptop, if the interval elapses while asleep,
   launchd coalesces the missed runs into one on wake. Runs via a login zsh so
@@ -19,7 +19,7 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>uk.fourfoldmedia.jimbo.manifest-sync</string>
+  <string>com.jimbo.manifest-sync</string>
 
   <key>ProgramArguments</key>
   <array>
