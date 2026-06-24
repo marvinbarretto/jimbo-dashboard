@@ -18,6 +18,7 @@ import { JournalDataService } from '../../data-access/journal-data.service';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { JournalPager } from '../../components/journal-pager/journal-pager';
+import { JournalDaySummary } from '../../components/journal-day-summary/journal-day-summary';
 import { JournalAgentsSection } from '../../components/journal-agents-section/journal-agents-section';
 import { JournalMcpSection } from '../../components/journal-mcp-section/journal-mcp-section';
 import { JournalBriefingsSection } from '../../components/journal-briefings-section/journal-briefings-section';
@@ -46,6 +47,7 @@ import {
     UiBarChart,
     UiDonutChart,
     JournalPager,
+    JournalDaySummary,
     JournalAgentsSection,
     JournalMcpSection,
     JournalBriefingsSection,
@@ -116,6 +118,7 @@ export class JournalDayPage {
   // Chip scroll-spy targets. Ids match the anchor host elements in the
   // template. Order mirrors the on-page section order.
   protected readonly navSections: readonly JournalNavSection[] = [
+    { id: 'jsec-briefings', label: 'Briefings' },
     { id: 'jsec-work', label: 'Work' },
     { id: 'jsec-health', label: 'Health' },
     { id: 'jsec-code', label: 'Code' },

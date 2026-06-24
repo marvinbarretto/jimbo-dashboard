@@ -10,16 +10,22 @@
   (dateChange)="onDateChange($event)"
 />
 
-<!-- Briefings are fetched independently of the focus/activity bundle, so they
-     render even on a day with no logged work. The section self-hides if empty. -->
-<app-journal-briefings-section [date]="key()" />
+<!-- Dashboard-esque glance: routine ticked from actuals + what Jimbo did/cost.
+     Fed by independent feeds, so it renders regardless of the work bundle. -->
+<app-journal-day-summary [date]="key()" />
 
-@if (loading()) {
-  <app-ui-loading-state message="Pulling the day's data…" />
-} @else if (bundle(); as b) {
-  <app-ui-stack gap="lg">
+<app-ui-stack gap="lg">
 
-    <app-journal-section-nav [sections]="navSections" />
+  <app-journal-section-nav [sections]="navSections" />
+
+  <!-- Briefings are fetched independently of the focus/activity bundle, so they
+       render even on a day with no logged work (and keep the nav chip's target
+       in the DOM). The section collapses to its header when empty. -->
+  <app-journal-briefings-section id="jsec-briefings" [date]="key()" />
+
+  @if (loading()) {
+    <app-ui-loading-state message="Pulling the day's data…" />
+  } @else if (bundle(); as b) {
 
     <!-- ── WORK ─────────────────────────────────────────────── -->
     <app-ui-section id="jsec-work" title="Work" [meta]="workMeta()"
@@ -359,7 +365,8 @@
       }
     </app-ui-section>
 
-  </app-ui-stack>
-} @else {
-  <app-ui-empty-state title="No data" message="Couldn't load this day." />
-}
+  } @else {
+    <app-ui-empty-state title="No data" message="Couldn't load this day." />
+  }
+
+</app-ui-stack>

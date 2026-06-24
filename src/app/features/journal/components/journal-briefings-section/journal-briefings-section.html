@@ -1,7 +1,6 @@
-@if (ordered().length > 0) {
-  <section class="jbriefings">
-    <app-ui-subhead label="Briefings" [count]="ordered().length" />
-
+<app-ui-section title="Briefings" [meta]="sectionMeta()"
+  [expanded]="open()" (toggled)="open.set(!open())">
+  @if (ordered().length > 0) {
     <ul class="jbriefings__list">
       @for (b of ordered(); track b.id) {
         <li class="jbriefings__item">
@@ -30,5 +29,7 @@
         </li>
       }
     </ul>
-  </section>
-}
+  } @else {
+    <app-ui-empty-state message="No briefings generated for this day." />
+  }
+</app-ui-section>

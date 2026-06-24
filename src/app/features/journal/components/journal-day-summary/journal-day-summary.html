@@ -1,0 +1,16 @@
+<section class="day-summary">
+  <div class="day-summary__routine">
+    <header class="day-summary__head">
+      <span class="day-summary__label">Today's routine</span>
+      <span class="day-summary__progress">{{ routineDone() }}/{{ routineTotal() }}</span>
+    </header>
+    <app-ui-checklist [items]="routineItems()" />
+  </div>
+
+  <div class="day-summary__stats">
+    <app-ui-stat-card label="Focus" [value]="formatMinutes(focusMinutes())" [detail]="pomos() + ' pomos'" />
+    <app-ui-stat-card label="Commits" [value]="commits().toString()" />
+    <app-ui-stat-card label="Projects" [value]="projectCount().toString()" detail="worked" />
+    <app-ui-stat-card label="Jimbo" [value]="jimboCostLabel()" [detail]="jimboDetail()" />
+  </div>
+</section>

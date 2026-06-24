@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, input, output, signal, viewChild } from '@angular/core';
+import { UiProgressMeter } from '../ui-progress-meter/ui-progress-meter';
 
 export type UiChecklistTone = 'warn' | 'err';
 
@@ -8,10 +9,19 @@ export interface UiChecklistStatus {
   readonly title?: string;
 }
 
+export interface UiChecklistMeter {
+  readonly current: number;
+  readonly target: number;
+  readonly unit?: string;
+}
+
 export interface UiChecklistItem {
   readonly text: string;
   readonly done: boolean;
   readonly status?: UiChecklistStatus | null;
+  /** When set (read-only rows), the row shows a progress meter instead of plain
+   * text — the item's `text` becomes the meter label. */
+  readonly meter?: UiChecklistMeter | null;
 }
 
 // Editable mode emits granular events keyed by index so consumers don't have
@@ -19,6 +29,7 @@ export interface UiChecklistItem {
 // is responsible for pushing it onto whatever state shape it owns.
 @Component({
   selector: 'app-ui-checklist',
+  imports: [UiProgressMeter],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (items().length > 0) {
@@ -52,6 +63,14 @@ export interface UiChecklistItem {
                 (input)="onDraftInput($event)"
                 (keydown)="onDraftKey($event, i)"
                 (blur)="commitEdit(i)"
+              />
+            } @else if (!editable() && item.meter; as meter) {
+              <app-ui-progress-meter
+                class="ui-checklist__meter"
+                [label]="item.text"
+                [current]="meter.current"
+                [target]="meter.target"
+                [unit]="meter.unit ?? ''"
               />
             } @else {
               <span
@@ -149,6 +168,12 @@ export interface UiChecklistItem {
       flex: 1;
       padding: 0.1rem 0.3rem;
       border-radius: var(--radius);
+    }
+
+    .ui-checklist__meter {
+      flex: 1;
+      min-width: 0;
+      padding: 0.1rem 0.3rem;
     }
 
     .ui-checklist__text--clickable {

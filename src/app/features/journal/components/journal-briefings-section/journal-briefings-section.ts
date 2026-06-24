@@ -5,10 +5,12 @@ import {
   effect,
   inject,
   input,
+  linkedSignal,
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
+import { UiSection } from '@shared/components/ui-section/ui-section';
+import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { BriefingsService } from '../../../briefings/data-access/briefings.service';
 import { BriefingRating } from '../../../briefings/components/briefing-rating/briefing-rating';
 import type {
@@ -22,7 +24,7 @@ import { type DayKey, dateFromDayKey, shiftDay } from '../../utils/date-keys';
 // it fetches its own day-scoped list and persists ratings via BriefingsService.
 @Component({
   selector: 'app-journal-briefings-section',
-  imports: [RouterLink, UiSubhead, BriefingRating],
+  imports: [RouterLink, UiSection, UiEmptyState, BriefingRating],
   templateUrl: './journal-briefings-section.html',
   styleUrl: './journal-briefings-section.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +41,16 @@ export class JournalBriefingsSection {
   protected readonly ordered = computed(() =>
     [...this.briefings()].sort((a, b) => a.generated_at.localeCompare(b.generated_at)),
   );
+
+  // Collapse to the header once we know there's nothing; stay open while loading
+  // so a briefing-bearing day never flickers shut. Matches the sibling sections
+  // and keeps the section-nav chip's target element in the DOM on empty days.
+  protected readonly open = linkedSignal(() => this.loading() || this.ordered().length > 0);
+
+  protected readonly sectionMeta = computed(() => {
+    const n = this.ordered().length;
+    return n ? `${n} briefing${n === 1 ? '' : 's'}` : 'none yet';
+  });
 
   constructor() {
     // Re-fetch whenever the day changes. Local-midnight boundaries so the

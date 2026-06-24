@@ -17,17 +17,30 @@ import { UiCard } from '../ui-card/ui-card';
     </app-ui-card>
   `,
   styles: [`
+    /* Flex chain so the card fills its grid row's height (equal heights across a
+       row) and the body centres its contents on both axes. */
     :host {
-      display: block;
+      display: flex;
+      min-width: 0;
+    }
+
+    app-ui-card {
+      display: flex;
+      flex: 1;
       min-width: 0;
     }
 
     .ui-stat-card__body {
       display: flex;
       flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
       gap: 0.24rem;
       padding: 0.75rem 0.8rem;
       min-width: 0;
+      height: 100%;
+      box-sizing: border-box;
     }
 
     .ui-stat-card__label {
