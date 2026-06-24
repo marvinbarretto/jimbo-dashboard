@@ -192,9 +192,13 @@ async function main(): Promise<void> {
     if (repoCards.has(id)) payload.repos = repoCards.get(id);
 
     const diff = Object.entries(payload).filter(([col, val]) => norm(current[col]) !== norm(val));
+    // A manifested project whose content already matches still needs synced_at
+    // stamped once, or it never flips to repo-owned (read-only) in the UI.
+    const needsStamp = !current.synced_at;
 
     console.log(`● ${id}`);
-    if (diff.length === 0) { console.log('  up to date\n'); continue; }
+    if (diff.length === 0 && !needsStamp) { console.log('  up to date\n'); continue; }
+    if (diff.length === 0) console.log('  (content already matches — stamping synced_at)');
     for (const [col, val] of diff) {
       const after = col === 'repos'
         ? `${(val as ProjectRepo[]).length} repo(s): ${(val as ProjectRepo[]).map((r) => r.repo).join(', ')}`
