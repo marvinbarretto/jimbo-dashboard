@@ -6,32 +6,22 @@
 //
 // Run:  node --env-file=.env --import tsx scripts/sync-project-manifests.ts [--live]
 //
+// API-DRIVEN: the loop iterates the project registry (GET /api/projects), not a
+// filesystem sweep. Each project's repo_url locates its local checkout
+// (basename → <dev>/<name>); its docs/project.md is the manifest. Projects with
+// no repo_url (goals / life-admin) are skipped — they stay dashboard-owned.
+//
 // Two manifest kinds (see docs/architecture/project-manifest.md):
-//   docs/project.md — a project umbrella / single-repo project. Maps to the
-//                     project's own operating fields (intent, entry_points, …).
-//   docs/repo.md    — one member codebase of a multi-repo project. Grouped by
-//                     its `project:` field into that project's repos[] (jsonb).
+//   docs/project.md — a project umbrella / single-repo project's operating fields.
+//   docs/repo.md    — one member codebase of a multi-repo project, located via the
+//                     umbrella's declared `repos:` paths and folded into repos[].
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-const DEV = '/Users/marvinbarretto/development';
+const DEV = process.env.MANIFEST_DEV_ROOT || '/Users/marvinbarretto/development';
 
-// Single-repo projects + multi-repo umbrellas (their own operating fields).
-const PROJECT_DOCS = [
-  { repoPath: `${DEV}/localshout-next`, file: 'docs/project.md' },
-  { repoPath: `${DEV}/jimbo`,           file: 'docs/project.md' }, // jimbo umbrella
-];
-
-// Member codebases of multi-repo projects → grouped by `project:` into repos[].
-const REPO_DOCS = [
-  { repoPath: `${DEV}/jimbo/dashboard`, file: 'docs/repo.md' },
-  { repoPath: `${DEV}/jimbo/jimbo-api`, file: 'docs/repo.md' },
-  { repoPath: `${DEV}/hub/hermes`,      file: 'docs/repo.md' },
-];
-
-// project.md operating fields the sync owns. Lifecycle/identity stay
-// dashboard-managed. manifest key → ApiProject column.
+// project.md operating fields the sync owns. manifest key → ApiProject column.
 const PROJECT_FIELD_MAP: Record<string, string> = {
   intent: 'intent',
   entry_points: 'entry_points',
@@ -49,9 +39,16 @@ const PROJECTS_URL = BASE.endsWith('/api') ? `${BASE}/projects` : `${BASE}/api/p
 const API_KEY = process.env.JIMBO_API_KEY;
 const LIVE = process.argv.includes('--live');
 
-// ── minimal frontmatter + section parser ──
-// Manifest frontmatter is flat scalars; a real YAML dep is overkill (M3's repos
-// are derived from repo.md files, so we never parse the umbrella's nested list).
+// repo_url → local checkout path by basename convention (…/localshout-next →
+// <dev>/localshout-next). Null repo_url ⇒ no local repo ⇒ caller skips.
+function repoUrlToLocalPath(repoUrl: unknown): string | null {
+  if (typeof repoUrl !== 'string' || !repoUrl) return null;
+  const name = repoUrl.replace(/\.git$/, '').replace(/\/+$/, '').split('/').pop();
+  return name ? join(DEV, name) : null;
+}
+
+// ── minimal frontmatter + section parser (flat scalars; the nested repos: list
+// is parsed separately by memberPaths) ──
 function parseManifest(raw: string): { fm: Record<string, string>; body: Record<string, string> } {
   const fmMatch = raw.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
   if (!fmMatch) throw new Error('no frontmatter block');
@@ -59,7 +56,7 @@ function parseManifest(raw: string): { fm: Record<string, string>; body: Record<
 
   const fm: Record<string, string> = {};
   for (const line of fmText.split('\n')) {
-    if (!line.trim() || line.trimStart().startsWith('#')) continue;
+    if (!line.trim() || line.trimStart().startsWith('#') || line.trimStart().startsWith('-')) continue;
     const i = line.indexOf(': ');
     if (i === -1) continue;
     const key = line.slice(0, i).trim();
@@ -81,9 +78,22 @@ function parseManifest(raw: string): { fm: Record<string, string>; body: Record<
   return { fm, body };
 }
 
-// A relative `conventions: ./AGENTS.md` is correct in the repo but useless as a
-// dashboard link. Resolve to a GitHub blob URL against repo_url; absolute URLs
-// pass through; no repo_url → skip rather than write a broken relative link.
+// Member paths from an umbrella's `repos:` list (indented `- { …, path: X, … }`).
+// Relative to the dev root, so a member outside the umbrella dir (hub/hermes)
+// is still found. Returns [] for single-repo projects (no repos: block).
+function memberPaths(raw: string): string[] {
+  const paths: string[] = [];
+  let inRepos = false;
+  for (const line of raw.split('\n')) {
+    if (/^repos:\s*$/.test(line)) { inRepos = true; continue; }
+    if (!inRepos) continue;
+    if (/^\S/.test(line)) break; // next top-level key ends the block
+    const m = line.match(/path:\s*([^\s,}]+)/);
+    if (m) paths.push(m[1]);
+  }
+  return paths;
+}
+
 function resolveConventions(value: string | undefined, repoUrl: unknown): string | undefined {
   if (!value) return undefined;
   if (/^https?:\/\//.test(value)) return value;
@@ -122,16 +132,13 @@ function buildRepoCard(fm: Record<string, string>, body: Record<string, string>)
     role: fm.role ?? null,
     entry_points: fm.entry_points ?? null,
     footguns: body['Footguns'] ?? null,
-    // Member-repo conventions can't be resolved without that repo's web URL
-    // (not in the project row); left null until repo.md declares it.
     conventions_url: /^https?:\/\//.test(fm.conventions ?? '') ? fm.conventions : null,
     autonomy_level: fm.autonomy_level && AUTONOMY.has(fm.autonomy_level) ? fm.autonomy_level : null,
   };
 }
 
-// Canonical serialization with sorted keys — Postgres jsonb does NOT preserve
-// key insertion order, so a round-tripped `repos` array would diff forever
-// against the freshly-built one under a plain JSON.stringify.
+// Canonical (sorted-key) serialization — Postgres jsonb doesn't preserve key
+// order, so plain JSON.stringify would diff a round-tripped repos array forever.
 function canonical(v: unknown): string {
   if (Array.isArray(v)) return `[${v.map(canonical).join(',')}]`;
   if (v && typeof v === 'object') {
@@ -156,50 +163,52 @@ async function patchProject(id: string, payload: Record<string, unknown>): Promi
   if (!res.ok) throw new Error(`PATCH ${id} → ${res.status} ${res.statusText} ${await res.text()}`);
 }
 
-function read(src: { repoPath: string; file: string }): { fm: Record<string, string>; body: Record<string, string> } | null {
-  try {
-    return parseManifest(readFileSync(join(src.repoPath, src.file), 'utf8'));
-  } catch (e) {
-    console.warn(`✗ ${join(src.repoPath, src.file)}: ${(e as Error).message}`);
-    return null;
+// Build the repos[] cards for a multi-repo umbrella from its declared member paths.
+function buildRepos(raw: string): ProjectRepo[] | null {
+  const cards: ProjectRepo[] = [];
+  for (const mp of memberPaths(raw)) {
+    const repoMd = join(DEV, mp, 'docs/repo.md');
+    if (!existsSync(repoMd)) { console.warn(`  ! member repo.md missing: ${repoMd}`); continue; }
+    try {
+      const { fm, body } = parseManifest(readFileSync(repoMd, 'utf8'));
+      if (fm.repo) cards.push(buildRepoCard(fm, body));
+    } catch (e) { console.warn(`  ! ${repoMd}: ${(e as Error).message}`); }
   }
+  // Stable order by slug so the stored array is idempotent across runs.
+  return cards.length ? cards.sort((a, b) => a.repo.localeCompare(b.repo)) : null;
 }
 
 async function main(): Promise<void> {
   if (!API_KEY) throw new Error('JIMBO_API_KEY not set — run with `node --env-file=.env`');
   console.log(`\n${LIVE ? '🔴 LIVE' : '🟡 DRY-RUN'} — manifest sync → ${PROJECTS_URL}\n`);
 
-  // Parse project.md files keyed by id.
-  const projectDocs = new Map<string, { fm: Record<string, string>; body: Record<string, string> }>();
-  for (const src of PROJECT_DOCS) {
-    const parsed = read(src);
-    if (parsed?.fm.id) projectDocs.set(parsed.fm.id, parsed);
-    else if (parsed) console.warn(`✗ ${src.repoPath}/${src.file}: no \`id\``);
-  }
-
-  // Group repo.md cards by their declared project.
-  const repoCards = new Map<string, ProjectRepo[]>();
-  for (const src of REPO_DOCS) {
-    const parsed = read(src);
-    if (!parsed) continue;
-    const pid = parsed.fm.project;
-    if (!pid || !parsed.fm.repo) { console.warn(`✗ ${src.repoPath}/${src.file}: needs \`project\` + \`repo\``); continue; }
-    (repoCards.get(pid) ?? repoCards.set(pid, []).get(pid)!).push(buildRepoCard(parsed.fm, parsed.body));
-  }
-
   const projects = await fetchProjects();
-  const byId = new Map(projects.map((p) => [String(p.id), p]));
-  const ids = new Set([...projectDocs.keys(), ...repoCards.keys()]);
   let changedCount = 0;
+  let skippedNoRepo = 0;
+  let skippedNoManifest = 0;
 
-  for (const id of ids) {
-    const current = byId.get(id);
-    if (!current) { console.warn(`✗ ${id}: no matching project row in jimbo_pg`); continue; }
+  for (const current of projects) {
+    const id = String(current.id);
+    const localPath = repoUrlToLocalPath(current.repo_url);
+    if (!localPath) { skippedNoRepo++; continue; }            // no repo → dashboard-owned
 
-    const payload: Record<string, unknown> = {};
-    const doc = projectDocs.get(id);
-    if (doc) Object.assign(payload, buildProjectPayload(doc.fm, doc.body, current.repo_url));
-    if (repoCards.has(id)) payload.repos = repoCards.get(id);
+    const manifestPath = join(localPath, 'docs/project.md');
+    if (!existsSync(manifestPath)) { skippedNoManifest++; continue; } // repo, but no manifest yet
+
+    let raw: string;
+    try { raw = readFileSync(manifestPath, 'utf8'); } catch { continue; }
+    const { fm, body } = parseManifest(raw);
+
+    // Shared-repo guard: a manifest belongs to exactly the project whose id it
+    // declares. (munro-bagger/spoonscount share collectr's repo_url.)
+    if (fm.id && fm.id !== id) {
+      console.warn(`✗ ${id}: ${manifestPath} declares id="${fm.id}" (shared repo) — skipping`);
+      continue;
+    }
+
+    const payload = buildProjectPayload(fm, body, current.repo_url);
+    const repos = buildRepos(raw);
+    if (repos) payload.repos = repos;
 
     const diff = Object.entries(payload).filter(([col, val]) => norm(current[col]) !== norm(val));
     // A manifested project whose content already matches still needs synced_at
@@ -217,7 +226,6 @@ async function main(): Promise<void> {
     }
 
     if (LIVE) {
-      // Stamp provenance on every write; kept out of the diff so re-runs are idempotent.
       await patchProject(id, { ...Object.fromEntries(diff), synced_at: new Date().toISOString() });
       console.log('  ✓ patched (synced_at stamped)');
     }
@@ -225,7 +233,7 @@ async function main(): Promise<void> {
     console.log('');
   }
 
-  console.log(`${LIVE ? 'Patched' : 'Would patch'} ${changedCount} project(s).`);
+  console.log(`${LIVE ? 'Patched' : 'Would patch'} ${changedCount} project(s). Skipped ${skippedNoRepo} no-repo, ${skippedNoManifest} without a manifest.`);
   if (!LIVE && changedCount > 0) console.log('Re-run with --live to apply.\n');
 }
 
