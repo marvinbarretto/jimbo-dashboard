@@ -7,7 +7,8 @@ import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { catchError, of, switchMap, timer } from 'rxjs';
-import { NutritionService, type FoodLogEntry } from '../../data-access/nutrition.service';
+import { NUTRITION_READ } from '../../data-access/nutrition.read';
+import type { FoodLogEntry, SupplementLogEntry } from '../../data-access/nutrition.service';
 
 @Component({
   selector: 'app-nutrition-day-section',
@@ -17,7 +18,7 @@ import { NutritionService, type FoodLogEntry } from '../../data-access/nutrition
   styleUrl: './nutrition-day-section.scss',
 })
 export class NutritionDaySection {
-  private readonly service = inject(NutritionService);
+  private readonly service = inject(NUTRITION_READ);
 
   // London calendar day (YYYY-MM-DD). Food is bucketed by London day
   // server-side; the journal day key is treated the same way here.
@@ -34,11 +35,27 @@ export class NutritionDaySection {
     { initialValue: null },
   );
 
-  readonly loading = computed(() => this.result() === null);
-  readonly entries = computed<FoodLogEntry[]>(() => this.result()?.items ?? []);
+  private readonly suppResult = toSignal(
+    timer(0, 60_000).pipe(
+      switchMap(() =>
+        this.service.supplementLog({ date: this.date(), limit: 100 }).pipe(
+          catchError(() => of({ items: [] as SupplementLogEntry[] })),
+        ),
+      ),
+    ),
+    { initialValue: null },
+  );
 
-  // Collapse once we know nothing was logged; stay open while loading.
-  readonly open = linkedSignal(() => this.loading() || this.entries().length > 0);
+  // Loading until BOTH feeds have answered; both fire at t=0 so this is brief.
+  readonly loading = computed(() => this.result() === null || this.suppResult() === null);
+  readonly entries = computed<FoodLogEntry[]>(() => this.result()?.items ?? []);
+  readonly supplements = computed<SupplementLogEntry[]>(() => this.suppResult()?.items ?? []);
+
+  // Collapse once we know nothing (food or supplements) was logged; stay open
+  // while loading.
+  readonly open = linkedSignal(() =>
+    this.loading() || this.entries().length > 0 || this.supplements().length > 0,
+  );
 
   readonly totals = computed(() =>
     this.entries().reduce(
@@ -53,9 +70,12 @@ export class NutritionDaySection {
   );
 
   readonly sectionMeta = computed(() => {
+    const parts: string[] = [];
     const n = this.entries().length;
-    if (n === 0) return 'no entries';
-    return `${n} ${n === 1 ? 'entry' : 'entries'} · ${this.totals().kcal} kcal`;
+    if (n > 0) parts.push(`${n} ${n === 1 ? 'entry' : 'entries'} · ${this.totals().kcal} kcal`);
+    const s = this.supplements().length;
+    if (s > 0) parts.push(`${s} supplement${s === 1 ? '' : 's'}`);
+    return parts.length ? parts.join(' · ') : 'no entries';
   });
 
   // London HH:MM for an entry timestamp.
@@ -65,5 +85,10 @@ export class NutritionDaySection {
       minute: '2-digit',
       timeZone: 'Europe/London',
     });
+  }
+
+  // "5 g" / "1 tablet" — drop a redundant unit-less dose to just the number.
+  formatDose(dosage: number, unit: string): string {
+    return unit ? `${dosage} ${unit}` : `${dosage}`;
   }
 }

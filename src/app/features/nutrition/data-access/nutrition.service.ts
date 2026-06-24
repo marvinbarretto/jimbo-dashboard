@@ -35,6 +35,19 @@ export interface FoodDailyRow {
   count: number;
 }
 
+export interface SupplementLogEntry {
+  id: number;
+  taken_at: string;
+  supplement_id: string;
+  name: string;
+  type: 'protein' | 'creatine' | 'vitamin' | 'other';
+  dosage: number;
+  dose_unit: string;
+  source: string;
+  nudge_id: number | null;
+  notes: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class NutritionService {
   private readonly http = inject(HttpClient);
@@ -60,6 +73,19 @@ export class NutritionService {
     params.set('days', String(opts.days ?? 14));
     return this.http.get<{ days: FoodDailyRow[] }>(
       `${this.base}/api/coach/food-log/daily?${params.toString()}`,
+    );
+  }
+
+  // Supplement intakes, newest-first. Same date/days/limit semantics as list().
+  // Joined server-side to the catalog so each entry carries name + dose_unit.
+  supplementLog(opts: { date?: string; days?: number; limit?: number } = {}): Observable<{ items: SupplementLogEntry[] }> {
+    const params = new URLSearchParams();
+    if (opts.date) params.set('date', opts.date);
+    if (opts.days) params.set('days', String(opts.days));
+    if (opts.limit) params.set('limit', String(opts.limit));
+    const qs = params.toString();
+    return this.http.get<{ items: SupplementLogEntry[] }>(
+      `${this.base}/api/coach/supplement-log${qs ? `?${qs}` : ''}`,
     );
   }
 }
