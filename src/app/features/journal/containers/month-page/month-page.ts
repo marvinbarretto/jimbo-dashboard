@@ -14,8 +14,10 @@ import { JournalDataService } from '../../data-access/journal-data.service';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { JournalPager } from '../../components/journal-pager/journal-pager';
+import { ExerciseSummarySection } from '../../../exercise/components/exercise-summary-section/exercise-summary-section';
 import {
   type MonthKey,
+  daysInMonth,
   formatMonthLong,
   isMonthKey,
   shiftMonth,
@@ -34,6 +36,7 @@ import {
     UiBarChart,
     UiDonutChart,
     JournalPager,
+    ExerciseSummarySection,
   ],
   templateUrl: './month-page.html',
   styleUrl: './month-page.scss',
@@ -56,6 +59,11 @@ export class JournalMonthPage {
   protected readonly title = computed(() => formatMonthLong(this.key()));
   protected readonly subtitle = computed(() => this.key());
   protected readonly isThisMonth = computed(() => this.key() === thisMonthKey());
+
+  // London-day range for the exercise summary (the gym daily rollup is range-based).
+  private readonly monthDays = computed(() => daysInMonth(this.key()));
+  protected readonly exerciseFrom = computed(() => this.monthDays()[0]!);
+  protected readonly exerciseTo = computed(() => this.monthDays().at(-1)!);
 
   protected readonly dayLabels = computed(() => {
     const b = this.bundle();

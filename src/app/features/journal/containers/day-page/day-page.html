@@ -259,6 +259,9 @@
     <!-- ── NUTRITION ───────────────────────────────────────── -->
     <app-nutrition-day-section id="jsec-nutrition" [date]="key()" />
 
+    <!-- ── EXERCISE ────────────────────────────────────────── -->
+    <app-exercise-day-section id="jsec-exercise" [date]="key()" />
+
     <!-- ── PHONE ───────────────────────────────────────────── -->
     <app-ui-section id="jsec-phone" title="Phone" [meta]="telemetryEvents().length + ' events today'"
       [expanded]="phoneOpen()" (toggled)="phoneOpen.set(!phoneOpen())">

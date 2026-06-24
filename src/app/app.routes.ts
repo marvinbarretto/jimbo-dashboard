@@ -193,5 +193,9 @@ export const routes: Routes = [
     path: 'nutrition',
     loadChildren: () => import('./features/nutrition/nutrition.routes').then(m => m.nutritionRoutes),
   },
+  {
+    path: 'exercise',
+    loadChildren: () => import('./features/exercise/exercise.routes').then(m => m.exerciseRoutes),
+  },
   { path: '', redirectTo: 'today', pathMatch: 'full' },
 ];

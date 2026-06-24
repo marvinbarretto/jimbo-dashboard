@@ -1,0 +1,25 @@
+<app-ui-section title="Exercise" [meta]="sectionMeta()" [expanded]="open()" (toggled)="open.set(!open())">
+  @if (loading()) {
+    <app-ui-loading-state message="Loading workouts…" />
+  } @else if (!hasData()) {
+    <app-ui-empty-state message="No workouts logged in this period." />
+  } @else {
+    <app-ui-stack gap="lg">
+      <div class="exercise-summary__stats">
+        <app-ui-stat-card label="Sessions" [value]="totals().sessions.toString()" />
+        <app-ui-stat-card label="Sets" [value]="totals().sets.toString()" />
+        <app-ui-stat-card label="Volume" [value]="totals().volumeKg.toString()" detail="kg" />
+        <app-ui-stat-card label="Cardio" [value]="totals().cardioMin.toString()" detail="min" />
+        <app-ui-stat-card label="Distance" [value]="totals().cardioKm.toString()" detail="km" />
+      </div>
+
+      <app-ui-bar-chart
+        [labels]="dayLabels()"
+        [values]="volumeByDay()"
+        label="volume"
+        suffix=" kg"
+        accent="rgba(96, 165, 250, 0.7)"
+      />
+    </app-ui-stack>
+  }
+</app-ui-section>

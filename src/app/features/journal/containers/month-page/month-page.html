@@ -87,6 +87,8 @@
         <app-ui-empty-state message="No project activity this month." />
       }
     </app-ui-section>
+
+    <app-exercise-summary-section [from]="exerciseFrom()" [to]="exerciseTo()" />
   </app-ui-stack>
 } @else {
   <app-ui-empty-state title="No data" message="Couldn't load this month." />

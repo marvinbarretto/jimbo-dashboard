@@ -23,6 +23,7 @@ import { JournalMcpSection } from '../../components/journal-mcp-section/journal-
 import { JournalBriefingsSection } from '../../components/journal-briefings-section/journal-briefings-section';
 import { JournalSectionNav, type JournalNavSection } from '../../components/journal-section-nav/journal-section-nav';
 import { NutritionDaySection } from '../../../nutrition/components/nutrition-day-section/nutrition-day-section';
+import { ExerciseDaySection } from '../../../exercise/components/exercise-day-section/exercise-day-section';
 import {
   type DayKey,
   formatDayLong,
@@ -50,6 +51,7 @@ import {
     JournalBriefingsSection,
     JournalSectionNav,
     NutritionDaySection,
+    ExerciseDaySection,
   ],
   templateUrl: './day-page.html',
   styleUrl: './day-page.scss',
@@ -120,6 +122,7 @@ export class JournalDayPage {
     { id: 'jsec-agents', label: 'Agents' },
     { id: 'jsec-mcp', label: 'MCP' },
     { id: 'jsec-nutrition', label: 'Nutrition' },
+    { id: 'jsec-exercise', label: 'Exercise' },
     { id: 'jsec-phone', label: 'Phone' },
   ];
 

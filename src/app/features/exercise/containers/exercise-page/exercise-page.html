@@ -1,0 +1,54 @@
+<app-ui-stack gap="lg">
+  @if (loading()) {
+    <app-ui-loading-state message="Loading exercise…" />
+  } @else {
+    <app-ui-section title="Today" [meta]="todayMeta()">
+      @if (todayHasData()) {
+        <app-ui-stack gap="lg">
+          <div class="exercise__stats">
+            <app-ui-stat-card label="Sessions" [value]="today().sessions.toString()" />
+            <app-ui-stat-card label="Sets" [value]="today().sets.toString()" />
+            <app-ui-stat-card label="Volume" [value]="today().volume_kg.toString()" detail="kg" />
+            <app-ui-stat-card label="Cardio" [value]="todayCardioMin().toString()" detail="min" />
+          </div>
+          <ul class="exercise__sessions">
+            @for (s of todaySessions(); track s.id) {
+              <li class="exercise__session"><app-exercise-session-card [session]="s" /></li>
+            }
+          </ul>
+        </app-ui-stack>
+      } @else {
+        <app-ui-empty-state message="No workout logged today yet. Log a session via the gym bot or app." />
+      }
+    </app-ui-section>
+
+    <app-ui-section title="Training volume per day" [meta]="windowMeta()">
+      @if (hasWindowData()) {
+        <app-ui-bar-chart
+          [labels]="dayLabels()"
+          [values]="volumeByDay()"
+          label="volume"
+          suffix=" kg"
+          accent="rgba(96, 165, 250, 0.7)"
+        />
+      } @else {
+        <app-ui-empty-state message="No sessions in the last 14 days." />
+      }
+    </app-ui-section>
+
+    <app-ui-section title="Recent sessions" [meta]="recentMeta()">
+      @if (recent().length) {
+        <ul class="exercise__sessions">
+          @for (s of recent(); track s.id) {
+            <li class="exercise__session">
+              <span class="exercise__when">{{ sessionWhen(s.started_at) }}</span>
+              <app-exercise-session-card [session]="s" />
+            </li>
+          }
+        </ul>
+      } @else {
+        <app-ui-empty-state message="No sessions yet. Log one via the gym bot or app." />
+      }
+    </app-ui-section>
+  }
+</app-ui-stack>

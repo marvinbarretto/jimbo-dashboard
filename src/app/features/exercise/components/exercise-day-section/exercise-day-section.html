@@ -1,0 +1,25 @@
+<app-ui-section title="Exercise" [meta]="sectionMeta()" [expanded]="open()" (toggled)="open.set(!open())">
+  @if (loading()) {
+    <app-ui-loading-state message="Loading workouts…" />
+  } @else if (sessions().length === 0) {
+    <app-ui-empty-state message="No workout logged. Log a session via the gym bot or app." />
+  } @else {
+    <app-ui-stack gap="lg">
+      <div class="exercise-day__stats">
+        <app-ui-stat-card label="Sessions" [value]="sessions().length.toString()" />
+        <app-ui-stat-card label="Sets" [value]="totals().sets.toString()" />
+        <app-ui-stat-card label="Volume" [value]="totals().volumeKg.toString()" detail="kg" />
+        <app-ui-stat-card label="Cardio" [value]="totals().cardioMin.toString()" detail="min" />
+      </div>
+
+      <app-ui-subhead label="Sessions" [count]="sessions().length" />
+      <ul class="exercise-day__list">
+        @for (s of sessions(); track s.id) {
+          <li class="exercise-day__item">
+            <app-exercise-session-card [session]="s" />
+          </li>
+        }
+      </ul>
+    </app-ui-stack>
+  }
+</app-ui-section>

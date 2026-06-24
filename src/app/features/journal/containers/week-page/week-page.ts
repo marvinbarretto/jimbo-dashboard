@@ -14,8 +14,10 @@ import { JournalDataService } from '../../data-access/journal-data.service';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { JournalPager } from '../../components/journal-pager/journal-pager';
+import { ExerciseSummarySection } from '../../../exercise/components/exercise-summary-section/exercise-summary-section';
 import {
   type WeekKey,
+  daysInWeek,
   formatWeekRange,
   isWeekKey,
   shiftWeek,
@@ -37,6 +39,7 @@ const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     UiBarChart,
     UiDonutChart,
     JournalPager,
+    ExerciseSummarySection,
   ],
   templateUrl: './week-page.html',
   styleUrl: './week-page.scss',
@@ -59,6 +62,11 @@ export class JournalWeekPage {
   protected readonly title = computed(() => this.key());
   protected readonly subtitle = computed(() => formatWeekRange(this.key()));
   protected readonly isThisWeek = computed(() => this.key() === thisWeekKey());
+
+  // London-day range for the exercise summary (the gym daily rollup is range-based).
+  private readonly weekDays = computed(() => daysInWeek(this.key()));
+  protected readonly exerciseFrom = computed(() => this.weekDays()[0]!);
+  protected readonly exerciseTo = computed(() => this.weekDays().at(-1)!);
 
   protected readonly dayLabels = computed(() => DAY_LABELS);
   protected readonly minutesPerDay = computed(() => this.bundle()?.minutes_per_day ?? []);

@@ -1,0 +1,32 @@
+.exercise__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+}
+
+.exercise__sessions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.exercise__session {
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.exercise__session:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.exercise__when {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--color-text-soft);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
