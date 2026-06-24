@@ -159,9 +159,12 @@ async function main(): Promise<void> {
     }
 
     if (LIVE) {
-      const changedPayload = Object.fromEntries(diff);
+      // Stamp provenance on every write. synced_at is deliberately NOT part of
+      // the diff above, so re-runs stay idempotent ("up to date") instead of
+      // re-patching just to bump the timestamp.
+      const changedPayload = { ...Object.fromEntries(diff), synced_at: new Date().toISOString() };
       await patchProject(id, changedPayload);
-      console.log('  ✓ patched');
+      console.log('  ✓ patched (synced_at stamped)');
     }
     changedCount++;
     console.log('');

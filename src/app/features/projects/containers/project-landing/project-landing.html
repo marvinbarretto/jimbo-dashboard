@@ -276,6 +276,22 @@
       <!-- RIGHT column: brief + facts ─────────────────────────────── -->
       <app-ui-stack class="project-landing__aside" gap="lg">
 
+        <!-- Repo-synced notice: operating fields are mirrored from docs/project.md,
+             so they render read-only here. Edit happens in the repo. -->
+        @if (isRepoSynced()) {
+          <app-ui-card tone="soft" [compact]="true">
+            <p class="project-landing__synced">
+              <span aria-hidden="true">🔒</span>
+              Operating fields synced from repo · {{ p.synced_at | relativeTime }}
+              @if (p.conventions_url) {
+                · <a [href]="p.conventions_url" target="_blank" rel="noopener">edit in repo</a>
+              } @else if (p.repo_url) {
+                · <a [href]="p.repo_url" target="_blank" rel="noopener">open repo</a>
+              }
+            </p>
+          </app-ui-card>
+        }
+
         <!-- Facts panel: status / owner / repo / created -->
         <app-ui-section title="Facts" [collapsible]="false">
           <app-ui-card tone="soft" [compact]="true">
@@ -317,6 +333,7 @@
               placeholder="One-line purpose / north star"
               [rows]="2"
               [triggers]="briefTriggers"
+              [readonly]="isRepoSynced()"
               (saved)="patch(p.id, { intent: $event })"
             />
             <app-project-brief-field
@@ -341,6 +358,7 @@
               placeholder="Explicit exclusions"
               [rows]="3"
               [triggers]="briefTriggers"
+              [readonly]="isRepoSynced()"
               (saved)="patch(p.id, { out_of_scope: $event })"
             />
           </app-ui-stack>
@@ -380,6 +398,7 @@
               placeholder="Start reading here — files, docs"
               [rows]="3"
               [triggers]="briefTriggers"
+              [readonly]="isRepoSynced()"
               hint="Where a newcomer should open the codebase or docs first."
               (saved)="patch(p.id, { entry_points: $event })"
             />
@@ -389,6 +408,7 @@
               placeholder="Link to AGENTS.md / CLAUDE.md / style guide"
               [rows]="1"
               [triggers]="briefTriggers"
+              [readonly]="isRepoSynced()"
               (saved)="patch(p.id, { conventions_url: $event })"
             />
             <app-project-brief-field
@@ -397,6 +417,7 @@
               placeholder="Gotchas a newcomer would trip on"
               [rows]="4"
               [triggers]="briefTriggers"
+              [readonly]="isRepoSynced()"
               (saved)="patch(p.id, { footguns: $event })"
             />
             <app-project-brief-field
@@ -445,6 +466,7 @@
                   name="autonomy_level"
                   [value]="opt.value"
                   [checked]="(p.autonomy_level ?? '') === opt.value"
+                  [disabled]="isRepoSynced()"
                   (change)="patchAutonomy(p.id, opt.value)"
                 />
                 <span class="autonomy__body">

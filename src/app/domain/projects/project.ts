@@ -73,6 +73,10 @@ export interface Project extends ProjectBrief {
   created_at:     string;
   // `updated_at` omitted — derived from activity events when we model project-level events.
   // Principle P6: no silent field writes.
+
+  // Provenance from the manifest sync. Non-null ⇒ this project's operating fields
+  // are mirrored from an in-repo docs/project.md and are read-only in the UI.
+  synced_at:      string | null;
 }
 
 // Brief fields are optional on the wire (API treats them as nullable optional)

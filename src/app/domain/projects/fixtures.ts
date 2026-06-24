@@ -24,6 +24,7 @@ export const PROJECTS = [
     repo_url: 'https://github.com/marvinbarretto/localshout',
     color_token: '#c47a8f',
     created_at: '2026-03-12T09:00:00Z',
+    synced_at: null,
     ...EMPTY_PROJECT_BRIEF,
   },
   {
@@ -37,6 +38,7 @@ export const PROJECTS = [
     repo_url: 'https://github.com/marvinbarretto/hermes',
     color_token: '#7a8fc4',
     created_at: '2026-01-04T09:00:00Z',
+    synced_at: null,
     ...EMPTY_PROJECT_BRIEF,
   },
   {
@@ -50,6 +52,7 @@ export const PROJECTS = [
     repo_url: 'https://github.com/marvinbarretto/jimbo-dashboard',
     color_token: '#7ac4a4',
     created_at: '2026-02-01T09:00:00Z',
+    synced_at: null,
     ...EMPTY_PROJECT_BRIEF,
   },
   {
@@ -65,6 +68,7 @@ export const PROJECTS = [
     repo_url: null,
     color_token: '#c4a47a',
     created_at: '2026-02-15T09:00:00Z',
+    synced_at: null,
     ...EMPTY_PROJECT_BRIEF,
   },
 ] as const satisfies readonly Project[];

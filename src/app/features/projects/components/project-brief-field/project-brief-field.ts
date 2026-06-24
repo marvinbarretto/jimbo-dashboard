@@ -18,9 +18,11 @@ import { MentionDirective, type MentionTrigger } from '@shared/mentions';
       <span class="brief-field__label">{{ label() }}</span>
       <textarea
         class="brief-field__input"
+        [class.brief-field__input--locked]="readonly()"
         [rows]="rows()"
         [placeholder]="placeholder()"
         [value]="draft()"
+        [readonly]="readonly()"
         [appMention]="triggers()"
         (input)="onInput($any($event.target).value)"
         (blur)="onBlur()"
@@ -40,6 +42,9 @@ export class ProjectBriefField {
   readonly rows        = input<number>(3);
   readonly hint        = input<string | null>(null);
   readonly triggers    = input<MentionTrigger[]>([]);
+  // Repo-owned fields (synced from a manifest) render locked — visible + copyable
+  // but not editable, since the repo is the source of truth.
+  readonly readonly    = input<boolean>(false);
 
   readonly saved = output<string | null>();
 
@@ -53,10 +58,12 @@ export class ProjectBriefField {
   protected readonly displayed = computed(() => this.draft());
 
   protected onInput(next: string): void {
+    if (this.readonly()) return;
     this.draft.set(next);
   }
 
   protected onBlur(): void {
+    if (this.readonly()) return;
     const next = this.draft().trim();
     const current = (this.value() ?? '').trim();
     if (next === current) return;

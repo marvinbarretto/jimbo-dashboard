@@ -138,6 +138,12 @@ export class ProjectLanding {
 
   readonly project = computed(() => this.projects.getById(this.id() ?? ''));
 
+  // Repo-owned when a manifest sync has stamped synced_at. The operating fields
+  // the sync writes (intent, entry_points, conventions_url, footguns,
+  // out_of_scope, autonomy) then render read-only — the repo is the source of
+  // truth. Manifest-less projects keep full inline-edit.
+  readonly isRepoSynced = computed(() => !!this.project()?.synced_at);
+
   // httpResource — signal-based; re-fetches whenever the route id changes.
   // experimental API (Angular 19.2+) — no stability concern at Angular 21.
   readonly understandingResource = httpResource<ProjectUnderstanding>(() => {

@@ -38,6 +38,18 @@
       color: var(--color-text-muted);
       opacity: 0.65;
     }
+
+    // Repo-owned: visible + copyable, but clearly not an edit surface.
+    &--locked {
+      background: var(--color-surface-sunken, color-mix(in srgb, var(--color-surface) 92%, var(--color-text)));
+      color: var(--color-text-muted);
+      cursor: default;
+      resize: none;
+
+      &:hover:not(:focus) {
+        border-color: var(--color-border);
+      }
+    }
   }
 
   &__hint {

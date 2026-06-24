@@ -28,6 +28,8 @@ export const ApiProjectSchema = z.object({
   color_token:    z.string().nullish().transform(v => v ?? null),
   created_at:     z.string(),
   updated_at:     z.string().optional(),
+  // Manifest-sync provenance; absent on older API builds → null.
+  synced_at:      z.string().nullish().transform(v => v ?? null),
 
   // Brief fields — `.nullish()` so older API builds that don't yet emit the
   // column (null vs absent) parse cleanly. Normalised to `null` on the

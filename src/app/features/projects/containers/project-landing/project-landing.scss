@@ -110,6 +110,16 @@
 
   // ── Facts panel ───────────────────────────────────────────────────
   // `auto` on the label column so values stay on one line.
+  &__synced {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+
+    a {
+      color: var(--project-accent, var(--color-accent));
+    }
+  }
+
   &__facts {
     display: grid;
     grid-template-columns: auto 1fr;
