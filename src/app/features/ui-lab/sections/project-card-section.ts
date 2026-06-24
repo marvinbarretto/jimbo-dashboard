@@ -60,7 +60,7 @@ export class ProjectCardSection {
       repo_url: 'https://github.com/example/localshout',
       color_token: '#c47a8f',
       created_at: '2026-01-10T09:00:00.000Z',
-      ...EMPTY_PROJECT_BRIEF,
+      synced_at: null, repos: null, ...EMPTY_PROJECT_BRIEF,
     },
     {
       id: 'hermes' as any,
@@ -73,7 +73,7 @@ export class ProjectCardSection {
       repo_url: null,
       color_token: '#7a8fc4',
       created_at: '2026-02-01T09:00:00.000Z',
-      ...EMPTY_PROJECT_BRIEF,
+      synced_at: null, repos: null, ...EMPTY_PROJECT_BRIEF,
     },
     {
       id: 'personal' as any,
@@ -86,7 +86,7 @@ export class ProjectCardSection {
       repo_url: null,
       color_token: '#c4a47a',
       created_at: '2025-11-15T09:00:00.000Z',
-      ...EMPTY_PROJECT_BRIEF,
+      synced_at: null, repos: null, ...EMPTY_PROJECT_BRIEF,
     },
   ];
   protected labRemovedId = signal<string | null>(null);

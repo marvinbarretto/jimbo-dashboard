@@ -652,3 +652,51 @@
     --page-inset: var(--s-4);
   }
 }
+
+.repo-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+  }
+
+  &__name {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  &__link {
+    margin-left: auto;
+    font-size: 0.78rem;
+    color: var(--project-accent, var(--color-accent));
+  }
+
+  &__role {
+    margin: 0;
+    color: var(--color-text);
+  }
+
+  &__field {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  &__label {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.7rem;
+    margin-right: 0.4rem;
+  }
+
+  &__footguns summary {
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+}

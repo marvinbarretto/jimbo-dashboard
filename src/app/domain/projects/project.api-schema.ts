@@ -10,6 +10,17 @@ import { z } from 'zod';
 
 export const ApiProjectAutonomyLevelSchema = z.enum(['none', 'propose', 'ship']);
 
+// Per-repo card for multi-repo projects (jsonb `repos`). Absent on older API
+// builds → null.
+export const ApiProjectRepoSchema = z.object({
+  repo:            z.string(),
+  role:            z.string().nullish().transform(v => v ?? null),
+  entry_points:    z.string().nullish().transform(v => v ?? null),
+  footguns:        z.string().nullish().transform(v => v ?? null),
+  conventions_url: z.string().nullish().transform(v => v ?? null),
+  autonomy_level:  ApiProjectAutonomyLevelSchema.nullish().transform(v => v ?? null),
+});
+
 export const ApiProjectSchema = z.object({
   id:             z.string().min(1),
   display_name:   z.string().min(1),
@@ -30,6 +41,7 @@ export const ApiProjectSchema = z.object({
   updated_at:     z.string().optional(),
   // Manifest-sync provenance; absent on older API builds → null.
   synced_at:      z.string().nullish().transform(v => v ?? null),
+  repos:          z.array(ApiProjectRepoSchema).nullish().transform(v => v ?? null),
 
   // Brief fields — `.nullish()` so older API builds that don't yet emit the
   // column (null vs absent) parse cleanly. Normalised to `null` on the

@@ -50,6 +50,40 @@
       <!-- LEFT column: work surface ─────────────────────────────────── -->
       <app-ui-stack class="project-landing__main" gap="lg">
 
+        <!-- Member repos (multi-repo projects). Synced from each repo's
+             docs/repo.md; one operating card per codebase. -->
+        @if (p.repos?.length) {
+          <app-ui-section [title]="'Repos (' + (p.repos?.length ?? 0) + ')'" [collapsible]="false">
+            <app-ui-stack gap="md">
+              @for (r of (p.repos ?? []); track r.repo) {
+                <app-ui-card tone="soft" [compact]="true">
+                  <div class="repo-card">
+                    <div class="repo-card__head">
+                      <code class="repo-card__name">{{ r.repo }}</code>
+                      @if (r.autonomy_level) {
+                        <app-ui-badge tone="neutral" [subtle]="true">{{ r.autonomy_level }}</app-ui-badge>
+                      }
+                      @if (r.conventions_url) {
+                        <a class="repo-card__link" [href]="r.conventions_url" target="_blank" rel="noopener">conventions ↗</a>
+                      }
+                    </div>
+                    @if (r.role) { <p class="repo-card__role">{{ r.role }}</p> }
+                    @if (r.entry_points) {
+                      <p class="repo-card__field"><span class="repo-card__label">Entry points</span> {{ r.entry_points }}</p>
+                    }
+                    @if (r.footguns) {
+                      <details class="repo-card__footguns">
+                        <summary>Footguns</summary>
+                        <div class="markdown-body" [innerHTML]="r.footguns | markdown"></div>
+                      </details>
+                    }
+                  </div>
+                </app-ui-card>
+              }
+            </app-ui-stack>
+          </app-ui-section>
+        }
+
         <!-- Understanding: belief blocks synthesised from recons + working doc.
              Placed top of main column so live state is the primary read. -->
         @if (understanding(); as u) {

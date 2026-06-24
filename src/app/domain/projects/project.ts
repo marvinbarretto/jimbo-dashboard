@@ -43,6 +43,17 @@ export interface ProjectBrief {
   common_tasks:     string | null;  // templated entry points (markdown list)
 }
 
+// Per-repo operating card for multi-repo projects, denormalised from each member
+// repo's docs/repo.md by the manifest sync. Null/empty for single-repo projects.
+export interface ProjectRepo {
+  repo:            string;
+  role:            string | null;
+  entry_points:    string | null;
+  footguns:        string | null;
+  conventions_url: string | null;
+  autonomy_level:  ProjectAutonomyLevel | null;
+}
+
 export interface Project extends ProjectBrief {
   id:             ProjectId;                // slug: 'localshout', 'jimbo-hermes', 'nz-passport'
   display_name:   string;
@@ -77,14 +88,19 @@ export interface Project extends ProjectBrief {
   // Provenance from the manifest sync. Non-null ⇒ this project's operating fields
   // are mirrored from an in-repo docs/project.md and are read-only in the UI.
   synced_at:      string | null;
+
+  // Member repos for multi-repo projects (e.g. jimbo = dashboard + jimbo-api +
+  // hermes). Null/empty for single-repo projects.
+  repos:          ProjectRepo[] | null;
 }
 
 // Brief fields are optional on the wire (API treats them as nullable optional)
 // and stay optional here so callers don't have to spread defaults for every
 // project they create. The service fills missing brief slots with null when
 // building the optimistic Project record.
+// synced_at / repos are sync-managed (like created_at) — never set on create.
 export type CreateProjectPayload =
-  & Omit<Project, 'created_at' | keyof ProjectBrief>
+  & Omit<Project, 'created_at' | 'synced_at' | 'repos' | keyof ProjectBrief>
   & Partial<ProjectBrief>;
 
 export type UpdateProjectPayload = Partial<Omit<Project, 'id' | 'created_at'>>;

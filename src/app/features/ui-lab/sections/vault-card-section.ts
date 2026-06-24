@@ -134,10 +134,10 @@ export class VaultCardSection {
   // Fixture options for the inline backfill pickers — so the dashed CTAs in
   // the gallery actually open a dropdown with real-looking choices.
   readonly projectOptions: readonly Project[] = [
-    { id: projectId('localshout'), display_name: 'LocalShout', description: '',  status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#c47a8f', created_at: '2026-01-01T00:00:00Z', ...EMPTY_PROJECT_BRIEF },
-    { id: projectId('hermes'),     display_name: 'Hermes',     description: '',  status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#7a8fc4', created_at: '2026-01-01T00:00:00Z', ...EMPTY_PROJECT_BRIEF },
-    { id: projectId('dashboard'),  display_name: 'Dashboard',  description: '',  status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#7ac4a4', created_at: '2026-01-01T00:00:00Z', ...EMPTY_PROJECT_BRIEF },
-    { id: projectId('personal'),   display_name: 'Personal',   description: '',  status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#c4a47a', created_at: '2026-01-01T00:00:00Z', ...EMPTY_PROJECT_BRIEF },
+    { id: projectId('localshout'), display_name: 'LocalShout', description: '',  status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#c47a8f', created_at: '2026-01-01T00:00:00Z', synced_at: null, repos: null, ...EMPTY_PROJECT_BRIEF },
+    { id: projectId('hermes'),     display_name: 'Hermes',     description: '',  status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#7a8fc4', created_at: '2026-01-01T00:00:00Z', synced_at: null, repos: null, ...EMPTY_PROJECT_BRIEF },
+    { id: projectId('dashboard'),  display_name: 'Dashboard',  description: '',  status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#7ac4a4', created_at: '2026-01-01T00:00:00Z', synced_at: null, repos: null, ...EMPTY_PROJECT_BRIEF },
+    { id: projectId('personal'),   display_name: 'Personal',   description: '',  status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#c4a47a', created_at: '2026-01-01T00:00:00Z', synced_at: null, repos: null, ...EMPTY_PROJECT_BRIEF },
   ];
   readonly epicOptions: readonly VaultItem[] = [
     baseItem({ seq: 2350, title: 'Unify kanban card components', is_epic: true, grooming_status: 'ready' }),
