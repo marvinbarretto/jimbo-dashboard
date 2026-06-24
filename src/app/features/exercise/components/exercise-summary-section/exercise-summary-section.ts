@@ -6,8 +6,8 @@ import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
-import { catchError, of, switchMap, timer } from 'rxjs';
-import { ExerciseService, type GymDailyRow } from '../../data-access/exercise.service';
+import { catchError, combineLatest, of, switchMap, timer } from 'rxjs';
+import { ExerciseService, type GymActivityRow, type GymDailyRow } from '../../data-access/exercise.service';
 import { shiftIsoDay } from '../../utils/exercise-format';
 
 const EMPTY = (date: string): GymDailyRow => ({
@@ -34,16 +34,33 @@ export class ExerciseSummarySection {
   private readonly result = toSignal(
     timer(0, 60_000).pipe(
       switchMap(() =>
-        this.service.daily({ from: this.from(), to: this.to() }).pipe(
-          catchError(() => of({ days: [] as GymDailyRow[] })),
-        ),
+        combineLatest({
+          workouts: this.service.daily({ from: this.from(), to: this.to() }).pipe(
+            catchError(() => of({ days: [] as GymDailyRow[] })),
+          ),
+          activity: this.service.activityDaily({ from: this.from(), to: this.to() }).pipe(
+            catchError(() => of({ days: [] as GymActivityRow[] })),
+          ),
+        }),
       ),
     ),
     { initialValue: null },
   );
 
   readonly loading = computed(() => this.result() === null);
-  private readonly rows = computed<GymDailyRow[]>(() => this.result()?.days ?? []);
+  private readonly rows = computed<GymDailyRow[]>(() => this.result()?.workouts.days ?? []);
+  private readonly activityRows = computed<GymActivityRow[]>(() => this.result()?.activity.days ?? []);
+
+  readonly activityTotals = computed(() =>
+    this.activityRows().reduce(
+      (acc, d) => ({
+        steps: acc.steps + d.steps,
+        distanceKm: Math.round((acc.distanceKm + d.distance_km) * 100) / 100,
+      }),
+      { steps: 0, distanceKm: 0 },
+    ),
+  );
+  readonly hasActivity = computed(() => this.activityRows().some((d) => d.steps > 0));
 
   // Continuous day axis across the range, filling the zero days the API omits.
   private readonly axis = computed<GymDailyRow[]>(() => {
@@ -60,7 +77,8 @@ export class ExerciseSummarySection {
   });
 
   readonly hasData = computed(() => this.rows().some((d) => d.sessions > 0));
-  readonly open = linkedSignal(() => this.loading() || this.hasData());
+  readonly hasAny = computed(() => this.hasData() || this.hasActivity());
+  readonly open = linkedSignal(() => this.loading() || this.hasAny());
 
   readonly dayLabels = computed(() => this.axis().map((d) => d.date.slice(5))); // MM-DD
   readonly volumeByDay = computed(() => this.axis().map((d) => d.volume_kg));
@@ -80,7 +98,9 @@ export class ExerciseSummarySection {
 
   readonly sectionMeta = computed(() => {
     const t = this.totals();
-    if (t.sessions === 0) return 'no sessions';
-    return `${t.sessions} ${t.sessions === 1 ? 'session' : 'sessions'} · ${t.volumeKg} kg`;
+    const parts: string[] = [];
+    if (t.sessions > 0) parts.push(`${t.sessions} ${t.sessions === 1 ? 'workout' : 'workouts'}`);
+    if (this.activityTotals().steps > 0) parts.push(`${this.activityTotals().steps.toLocaleString()} steps`);
+    return parts.join(' · ') || 'no activity';
   });
 }

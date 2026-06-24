@@ -56,6 +56,15 @@ export interface GymDailyRow {
   cardio_distance_km: number;
 }
 
+// Passive daily activity (steps/distance/calories) from Health Connect —
+// separate from deliberate workouts above.
+export interface GymActivityRow {
+  date: string;
+  steps: number;
+  distance_km: number;
+  kcal: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ExerciseService {
   private readonly http = inject(HttpClient);
@@ -87,6 +96,20 @@ export class ExerciseService {
     }
     return this.http.get<{ days: GymDailyRow[] }>(
       `${this.base}/api/gym/sessions/daily?${params.toString()}`,
+    );
+  }
+
+  // Passive daily activity (steps/distance/calories), same windowing as daily().
+  activityDaily(opts: { days?: number; from?: string; to?: string } = {}): Observable<{ days: GymActivityRow[] }> {
+    const params = new URLSearchParams();
+    if (opts.from && opts.to) {
+      params.set('from', opts.from);
+      params.set('to', opts.to);
+    } else {
+      params.set('days', String(opts.days ?? 14));
+    }
+    return this.http.get<{ days: GymActivityRow[] }>(
+      `${this.base}/api/gym/activity/daily?${params.toString()}`,
     );
   }
 }

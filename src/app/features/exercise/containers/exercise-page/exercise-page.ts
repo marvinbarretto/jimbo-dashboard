@@ -7,7 +7,7 @@ import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { catchError, combineLatest, of, switchMap, timer } from 'rxjs';
-import { ExerciseService, type GymDailyRow, type SessionDetailed } from '../../data-access/exercise.service';
+import { ExerciseService, type GymActivityRow, type GymDailyRow, type SessionDetailed } from '../../data-access/exercise.service';
 import { ExerciseSessionCard } from '../../components/exercise-session-card/exercise-session-card';
 import { londonDateTime, londonToday, shiftIsoDay } from '../../utils/exercise-format';
 
@@ -17,6 +17,8 @@ const EMPTY = (date: string): GymDailyRow => ({
   date, sessions: 0, sets: 0, total_reps: 0, volume_kg: 0,
   cardio_count: 0, cardio_duration_s: 0, cardio_distance_km: 0,
 });
+
+const EMPTY_ACTIVITY = (date: string): GymActivityRow => ({ date, steps: 0, distance_km: 0, kcal: 0 });
 
 @Component({
   selector: 'app-exercise-page',
@@ -37,6 +39,9 @@ export class ExercisePage {
           ),
           recent: this.service.listDetailed({ days: WINDOW_DAYS, limit: 50 }).pipe(
             catchError(() => of({ items: [] as SessionDetailed[] })),
+          ),
+          activity: this.service.activityDaily({ days: WINDOW_DAYS }).pipe(
+            catchError(() => of({ days: [] as GymActivityRow[] })),
           ),
         }),
       ),
@@ -82,6 +87,29 @@ export class ExercisePage {
     return `last ${WINDOW_DAYS} days · ${active} active`;
   });
   readonly recentMeta = computed(() => `${this.recent().length} shown`);
+
+  // ── Daily activity (passive: steps/distance/calories) ──────────
+  private readonly activityRows = computed<GymActivityRow[]>(() => this.result()?.activity.days ?? []);
+
+  private readonly activityAxis = computed<GymActivityRow[]>(() => {
+    const byDate = new Map(this.activityRows().map((d) => [d.date, d]));
+    const today = londonToday();
+    const out: GymActivityRow[] = [];
+    for (let i = WINDOW_DAYS - 1; i >= 0; i--) {
+      const date = shiftIsoDay(today, -i);
+      out.push(byDate.get(date) ?? EMPTY_ACTIVITY(date));
+    }
+    return out;
+  });
+
+  readonly activityLabels = computed(() => this.activityAxis().map((d) => d.date.slice(5)));
+  readonly stepsByDay = computed(() => this.activityAxis().map((d) => d.steps));
+  readonly hasActivity = computed(() => this.activityRows().some((d) => d.steps > 0));
+  readonly todayActivity = computed<GymActivityRow>(() => this.activityAxis()[this.activityAxis().length - 1]!);
+  readonly activityMeta = computed(() => {
+    const a = this.todayActivity();
+    return a.steps > 0 ? `${a.steps.toLocaleString()} steps today` : 'no activity yet';
+  });
 
   sessionWhen(ts: string): string {
     return londonDateTime(ts);
