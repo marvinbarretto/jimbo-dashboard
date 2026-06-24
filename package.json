@@ -24,6 +24,8 @@
     "build:api": "tsc -p tsconfig.api.json",
     "start:api": "node dist-api/api/server.js",
     "gen:api-types": "openapi-typescript ${JIMBO_API_OPENAPI_URL:-https://jimbo.fourfoldmedia.uk/docs/openapi.json} -o src/app/domain/api-types.generated.ts",
+    "manifests:sync": "node --env-file=.env --import tsx scripts/sync-project-manifests.ts",
+    "manifests:sync:live": "node --env-file=.env --import tsx scripts/sync-project-manifests.ts --live",
     "release": "standard-version",
     "release:minor": "standard-version --release-as minor",
     "release:major": "standard-version --release-as major",
