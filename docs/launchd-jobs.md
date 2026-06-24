@@ -11,13 +11,17 @@ Last surveyed: 2026-06-24.
 | Label | Runs | Cadence | Log | Source plist | Status |
 |---|---|---|---|---|---|
 | `com.jimbo.manifest-sync` | `dashboard/scripts/manifest-sync-cron.sh` (sweep project manifests → jimbo_pg) | every 72h | `~/Library/Logs/jimbo-manifest-sync.log` | ✅ `dashboard/scripts/launchd/` | ✓ 0 |
-| `com.hermes.cron-snapshot` | `hub/hermes/cron/snapshot.sh` (VPS→local snapshot) | hourly (`RunAtLoad`) | `hub/hermes/cron/snapshot.log` | `hub/hermes/cron/` (verify tracked) | ✓ 0 |
-| `com.ralph.email` | `ralph.py start --job email` | hourly | `ralph/logs/launchd-email.log` | `ralph/` (verify tracked) | ✓ 0 |
-| `com.ralph.vault-groom` | `ralph.py start --job vault-groom` | hourly (`RunAtLoad`) | `ralph/logs/launchd-vault-groom.log` | `ralph/` (verify tracked) | ✓ 0 |
+| `com.hermes.cron-snapshot` | `hub/hermes/cron/snapshot.sh` (VPS→local snapshot) | hourly (`RunAtLoad`) | `hub/hermes/cron/snapshot.log` | ✅ `hub/hermes/cron/` | ✓ 0 |
+| `com.ralph.email` | `ralph.py start --job email` | hourly | `ralph/logs/launchd-email.log` | ✅ `ralph/setup/` | ✓ 0 |
+| `com.ralph.vault-groom` | `ralph.py start --job vault-groom` | hourly (`RunAtLoad`) | `ralph/logs/launchd-vault-groom.log` | ✅ `ralph/setup/` | ✓ 0 |
 
 **Status** = last exit code from `launchctl list` (0 = OK; non-zero = last run failed).
 All current jobs are green. `vault-groom` occasionally exits 1 as a soft guard
 ("another ralph instance running / no items queued") — benign, not a failure.
+
+**Source plist** ✅ = verified committed in-repo and identical to the installed copy
+(2026-06-24). Every active agent's plist is now version-controlled, so re-installing
+after a wipe is `cp <source> ~/Library/LaunchAgents/ && launchctl load …`.
 
 ## Conventions
 
