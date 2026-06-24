@@ -129,7 +129,17 @@ function buildRepoCard(fm: Record<string, string>, body: Record<string, string>)
   };
 }
 
-const norm = (v: unknown) => (v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v).trim());
+// Canonical serialization with sorted keys — Postgres jsonb does NOT preserve
+// key insertion order, so a round-tripped `repos` array would diff forever
+// against the freshly-built one under a plain JSON.stringify.
+function canonical(v: unknown): string {
+  if (Array.isArray(v)) return `[${v.map(canonical).join(',')}]`;
+  if (v && typeof v === 'object') {
+    return `{${Object.keys(v as object).sort().map(k => `${JSON.stringify(k)}:${canonical((v as Record<string, unknown>)[k])}`).join(',')}}`;
+  }
+  return JSON.stringify(v ?? null);
+}
+const norm = (v: unknown) => (v == null ? '' : typeof v === 'object' ? canonical(v) : String(v).trim());
 
 async function fetchProjects(): Promise<Array<Record<string, unknown>>> {
   const res = await fetch(PROJECTS_URL, { headers: { 'X-API-Key': API_KEY ?? '' } });
