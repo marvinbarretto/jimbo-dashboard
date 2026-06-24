@@ -13,13 +13,11 @@ Last surveyed: 2026-06-24.
 | `com.jimbo.manifest-sync` | `dashboard/scripts/manifest-sync-cron.sh` (sweep project manifests → jimbo_pg) | every 72h | `~/Library/Logs/jimbo-manifest-sync.log` | ✅ `dashboard/scripts/launchd/` | ✓ 0 |
 | `com.hermes.cron-snapshot` | `hub/hermes/cron/snapshot.sh` (VPS→local snapshot) | hourly (`RunAtLoad`) | `hub/hermes/cron/snapshot.log` | `hub/hermes/cron/` (verify tracked) | ✓ 0 |
 | `com.ralph.email` | `ralph.py start --job email` | hourly | `ralph/logs/launchd-email.log` | `ralph/` (verify tracked) | ✓ 0 |
-| `com.ralph.vault-groom` | `ralph.py start --job vault-groom` | hourly (`RunAtLoad`) | `ralph/logs/launchd-vault-groom.log` | `ralph/` (verify tracked) | ✗ **1** |
-| `com.openclaw.sift-cron` | `openclaw/scripts/sift-cron.sh` | daily 04:00 | `openclaw/data/sift-cron-{stdout,stderr}.log` | `openclaw/scripts/` (verify tracked) | ✗ **78** |
-| `com.marvin.opus-briefing.morning` | `openclaw/scripts/opus-briefing.sh morning` | daily 06:35 | `/tmp/opus-briefing-morning.log` | `openclaw/scripts/` (verify tracked) | ✗ **78** |
-| `com.marvin.opus-briefing.afternoon` | `openclaw/scripts/opus-briefing.sh afternoon` | daily 14:35 | `/tmp/opus-briefing-afternoon.log` | `openclaw/scripts/` (verify tracked) | ✗ **78** |
+| `com.ralph.vault-groom` | `ralph.py start --job vault-groom` | hourly (`RunAtLoad`) | `ralph/logs/launchd-vault-groom.log` | `ralph/` (verify tracked) | ✓ 0 |
 
 **Status** = last exit code from `launchctl list` (0 = OK; non-zero = last run failed).
-Four jobs are currently red — see *Needs attention* below.
+All current jobs are green. `vault-groom` occasionally exits 1 as a soft guard
+("another ralph instance running / no items queued") — benign, not a failure.
 
 ## Conventions
 
@@ -52,14 +50,15 @@ launchctl start <label>
 launchctl unload ~/Library/LaunchAgents/<label>.plist
 ```
 
-## Needs attention
+## Removed (2026-06-24)
 
-These exited non-zero on their last run (surfaced 2026-06-24) — investigate via
-their logs:
+Three agents were orphaned when **openclaw was archived** to `_archive/openclaw`
+(~May 4) — they pointed at scripts no longer at `development/openclaw/scripts/`
+and had been exiting 78 every scheduled run since. Unloaded + removed from
+`~/Library/LaunchAgents/`:
 
-- `com.openclaw.sift-cron` — **78** (often a config/exec error). Log: `openclaw/data/sift-cron-stderr.log`
-- `com.marvin.opus-briefing.morning` / `.afternoon` — **78**. Logs in `/tmp` (may be gone after reboot).
-- `com.ralph.vault-groom` — **1**. Log: `ralph/logs/launchd-vault-groom.log`
-
-For each: confirm the source plist is committed in its repo, then move its log out
-of `/tmp` if applicable.
+- `com.openclaw.sift-cron` — openclaw's sift classify/push pipeline, retired with the project.
+- `com.marvin.opus-briefing.morning` / `.afternoon` — twice-daily Opus briefing
+  (pulled VPS `briefing-input.json` → Opus analysis → jimbo-api + Telegram).
+  Superseded by the dashboard's Today/briefings surface. Scripts + prompts
+  preserved in `_archive/openclaw/scripts/` if a jimbo-native rebuild is ever wanted.
