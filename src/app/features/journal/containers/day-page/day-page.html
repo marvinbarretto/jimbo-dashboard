@@ -156,8 +156,8 @@
             @if (h.distanceKm) {
               <app-ui-stat-card label="Distance" [value]="((h.distanceKm | number:'1.1-1') ?? '0') + ' km'" />
             }
-            @if (h.caloriesActive) {
-              <app-ui-stat-card label="Active cal" [value]="h.caloriesActive.toString()" detail="kcal" />
+            @if (h.energyKcal) {
+              <app-ui-stat-card label="Energy" [value]="h.energyKcal.toString()" detail="kcal" />
             }
             @if (h.sleepMin) {
               <app-ui-stat-card label="Sleep" [value]="formatMinutes(h.sleepMin)"

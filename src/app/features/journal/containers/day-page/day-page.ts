@@ -271,7 +271,9 @@ export class JournalDayPage {
 
     const steps = Math.round(sum('steps'));
     const distanceKm = sum('distance') / 1000;
-    const caloriesActive = Math.round(sum('calories_active'));
+    // Health Connect emits `calories_total` (total daily burn), not an
+    // `calories_active` type — summing the latter always yielded 0.
+    const energyKcal = Math.round(sum('calories_total'));
     const floors = Math.round(sum('floors'));
 
     // Heart rate — aggregate across all hourly summary events
@@ -304,7 +306,7 @@ export class JournalDayPage {
     const deepMin = Math.round(sleepStages.filter(s => s.stage_type === 'deep').reduce((a, s) => a + s.duration_min, 0));
     const remMin = Math.round(sleepStages.filter(s => s.stage_type === 'rem').reduce((a, s) => a + s.duration_min, 0));
 
-    return { steps, distanceKm, caloriesActive, floors, hr, exercises, sleepMin, deepMin, remMin };
+    return { steps, distanceKm, energyKcal, floors, hr, exercises, sleepMin, deepMin, remMin };
   });
 
   protected readonly Math = Math;

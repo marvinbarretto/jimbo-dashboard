@@ -28,7 +28,7 @@
           <div class="exercise__stats">
             <app-ui-stat-card label="Steps" [value]="todayActivity().steps.toLocaleString()" />
             <app-ui-stat-card label="Distance" [value]="todayActivity().distance_km.toString()" detail="km" />
-            <app-ui-stat-card label="Calories" [value]="todayActivity().kcal.toString()" detail="kcal" />
+            <app-ui-stat-card label="Energy" [value]="todayActivity().kcal.toString()" detail="kcal" />
           </div>
           <app-ui-bar-chart
             [labels]="activityLabels()"
