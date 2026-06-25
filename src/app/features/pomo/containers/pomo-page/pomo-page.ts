@@ -15,6 +15,7 @@ import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
+import { UiTypeahead, type TypeaheadOption } from '@shared/components/ui-typeahead/ui-typeahead';
 import { FocusSessionsService } from '../../data-access/focus-sessions.service';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import type { FocusSession } from '@domain/focus-sessions';
@@ -33,6 +34,7 @@ const PRESETS = [15, 25, 45, 90] as const;
     UiCluster,
     UiButton,
     UiSubhead,
+    UiTypeahead,
   ],
   templateUrl: './pomo-page.html',
   styleUrl: './pomo-page.scss',
@@ -46,6 +48,9 @@ export class PomoPage {
   readonly active = this.sessions.active;
   readonly recent = this.sessions.recent;
   readonly activeProjects = this.projects.activeProjects;
+  readonly projectOptions = computed<TypeaheadOption[]>(() =>
+    this.activeProjects().map(p => ({ id: p.id, label: p.display_name })),
+  );
 
   readonly presets = PRESETS;
 

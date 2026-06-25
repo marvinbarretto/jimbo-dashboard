@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, input, output, computed, inject } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { UiTypeahead, type TypeaheadOption } from '@shared/components/ui-typeahead/ui-typeahead';
 import type { ActorId, VaultItemId } from '@domain/ids';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
 
@@ -16,7 +17,7 @@ export interface RejectActorOption {
 
 @Component({
   selector: 'app-reject-form',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, UiTypeahead],
   templateUrl: './reject-form.html',
   styleUrl: './reject-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,6 +29,9 @@ export class RejectFormComponent {
   readonly currentOwner    = input<ActorId | null>(null);
   readonly recentEvents    = input<readonly VaultActivityEvent[]>([]);
   readonly availableActors = input<readonly RejectActorOption[]>([]);
+  readonly actorOptions = computed<TypeaheadOption[]>(() =>
+    this.availableActors().map(a => ({ id: a.id, label: a.label, hint: a.kind })),
+  );
 
   readonly cancelled = output<void>();
   readonly submitted = output<RejectSubmission>();

@@ -36,12 +36,12 @@
 
     <div class="field">
       <label for="pfd-owner">Owner</label>
-      <select id="pfd-owner" formControlName="owner_actor_id">
-        <option value="">— select an owner —</option>
-        @for (a of actors(); track a.id) {
-          <option [value]="a.id">{{ a.display_name }} ({{ a.id }})</option>
-        }
-      </select>
+      <app-ui-typeahead
+        inputId="pfd-owner"
+        [options]="ownerOptions()"
+        placeholder="search owners…"
+        ariaLabel="Owner"
+        formControlName="owner_actor_id" />
       @if (form.controls.owner_actor_id.touched && form.controls.owner_actor_id.errors?.['required']) {
         <p class="field-error" role="alert">Owner is required.</p>
       }

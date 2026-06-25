@@ -125,7 +125,8 @@ type SetField = 'sets' | 'reps' | 'weight_kg';
           @if (editable()) {
             <app-ui-quick-add-row class="session__add"
               [options]="exerciseOptions()" [measures]="addSetMeasures"
-              placeholder="add an exercise — pick…" addLabel="Add"
+              [allowCreate]="true"
+              placeholder="search or add an exercise…" addLabel="Add"
               (add)="onAddSet($event)" />
           }
         </div>

@@ -5,6 +5,7 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { VaultItemsService } from '../../data-access/vault-items.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
+import { UiTypeahead, type TypeaheadOption } from '@shared/components/ui-typeahead/ui-typeahead';
 import { actorId, vaultItemId } from '@domain/ids';
 import type { VaultItemType, GroomingStatus, Priority, Actionability, SourceKind, AcceptanceCriterion, Source } from '@domain/vault/vault-item';
 
@@ -13,7 +14,7 @@ const PRIORITY_OPTIONS: Array<Priority | null> = [null, 0, 1, 2, 3];
 
 @Component({
   selector: 'app-vault-item-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, UiTypeahead],
   templateUrl: './vault-item-form.html',
   styleUrl: './vault-item-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +39,9 @@ export class VaultItemForm {
 
   // Actor dropdown — only active actors can be assigned on create/edit.
   readonly actors = this.actorsService.activeActors;
+  readonly ownerOptions = computed<TypeaheadOption[]>(() =>
+    this.actors().map(a => ({ id: a.id, label: a.display_name, hint: a.id })),
+  );
 
   // Static option lists
   readonly types: VaultItemType[] = ['task', 'bookmark', 'note'];

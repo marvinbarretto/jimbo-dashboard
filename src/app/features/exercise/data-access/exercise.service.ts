@@ -175,6 +175,13 @@ export class ExerciseService {
     return this.http.get<ExerciseCatalogItem[]>(`${this.base}/api/gym/exercises${qs}`);
   }
 
+  // Create a user-defined exercise on the fly (get-or-create lives in the page:
+  // the picker only offers this for names not already in the catalogue). Returns
+  // the new row — its id feeds straight into the set that triggered the create.
+  createExercise(name: string): Observable<ExerciseCatalogItem> {
+    return this.http.post<ExerciseCatalogItem>(`${this.base}/api/gym/exercises`, { name });
+  }
+
   // ── Writes (CRUD) ──────────────────────────────────────────────
   createSession(body: SessionCreate): Observable<SessionDetailed> {
     return this.http.post<SessionDetailed>(`${this.base}/api/gym/sessions`, body);

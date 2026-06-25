@@ -114,16 +114,14 @@
           <button type="button" class="bulk-bar__btn" (click)="bulkArchive()">Archive</button>
           <button type="button" class="bulk-bar__btn" (click)="bulkConvertToNote()">Convert to note</button>
           <span class="bulk-bar__reassign">
-            <select
+            <app-ui-typeahead
               class="bulk-bar__select"
+              [options]="actorOptions()"
+              [clearable]="true"
+              placeholder="Reassign to…"
+              ariaLabel="Reassign to actor"
               [ngModel]="reassignTarget()"
-              (ngModelChange)="setReassignTarget($event)"
-              aria-label="Reassign to actor">
-              <option value="">Reassign to…</option>
-              @for (a of actorOptions(); track a.id) {
-                <option [value]="a.id">{{ a.label }}</option>
-              }
-            </select>
+              (ngModelChange)="setReassignTarget($event)" />
             <button
               type="button"
               class="bulk-bar__btn"

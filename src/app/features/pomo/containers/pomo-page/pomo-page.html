@@ -49,12 +49,14 @@
         <app-ui-stack gap="md">
           <div class="pomo__field-group">
             <label class="pomo__label" for="pomo-project">Project</label>
-            <select id="pomo-project" class="pomo__field" formControlName="project_id">
-              <option value="">— Unassigned —</option>
-              @for (p of activeProjects(); track p.id) {
-                <option [value]="p.id">{{ p.display_name }}</option>
-              }
-            </select>
+            <app-ui-typeahead
+              inputId="pomo-project"
+              class="pomo__field"
+              [options]="projectOptions()"
+              [clearable]="true"
+              placeholder="search projects — unassigned if empty…"
+              ariaLabel="Project"
+              formControlName="project_id" />
           </div>
 
           <div class="pomo__field-group">

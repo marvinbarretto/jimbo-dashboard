@@ -14,17 +14,13 @@
       <!-- In-reply-to dropdown: visible only when kind=answer -->
       @if (form.controls.kind.value === 'answer') {
         <label class="composer__lbl" for="in_reply_to">in reply to</label>
-        <select
-          id="in_reply_to"
-          formControlName="in_reply_to"
+        <app-ui-typeahead
+          inputId="in_reply_to"
           class="composer__reply-select"
-          aria-required="true"
-        >
-          <option value="">— select question —</option>
-          @for (q of availableQuestions(); track q.id) {
-            <option [value]="q.id">{{ q.id }} · {{ q.body | slice:0:60 }}{{ q.body.length > 60 ? '…' : '' }}</option>
-          }
-        </select>
+          [options]="questionOptions()"
+          placeholder="search the question…"
+          ariaLabel="In reply to"
+          formControlName="in_reply_to" />
 
         @if (form.controls.in_reply_to.touched && form.controls.in_reply_to.errors?.['required']) {
           <p class="composer__error" role="alert">Select the question this answers.</p>

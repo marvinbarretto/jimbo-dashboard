@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ModelsService } from '@features/models/data-access/models.service';
+import { UiTypeahead, type TypeaheadOption } from '@shared/components/ui-typeahead/ui-typeahead';
 import { HermesService } from '../../data-access/hermes.service';
 import type { HermesModelPrefs as ModelPrefsData } from '../../hermes.types';
 
@@ -21,7 +22,7 @@ const TIER_DESCRIPTIONS: Record<Tier, string> = {
 
 @Component({
   selector: 'app-hermes-model-prefs',
-  imports: [FormsModule],
+  imports: [FormsModule, UiTypeahead],
   templateUrl: './hermes-model-prefs.html',
   styleUrl: './hermes-model-prefs.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,21 +47,16 @@ export class HermesModelPrefs {
     this.modelsService.activeModels().sort((a, b) => a.id.localeCompare(b.id))
   );
 
-  readonly modelsByProvider = computed(() => {
-    const groups = new Map<string, { id: string; name: string }[]>();
-    for (const m of this.activeModels()) {
-      const provider = m.metadata.provider || m.id.split('/')[0] || 'other';
-      if (!groups.has(provider)) groups.set(provider, []);
-      groups.get(provider)!.push({ id: m.id, name: m.name });
-    }
-    return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b));
-  });
-
-  // True when the current edit value isn't in the catalogue (manual entry fallback)
-  readonly editValueIsUnknown = computed(() => {
-    const v = this.editValue();
-    return v.length > 0 && !this.activeModels().some(m => m.id === v);
-  });
+  // Flat typeahead options; the provider rides along as a muted hint (search
+  // replaces the old provider optgroups), and `allowCreate` keeps the manual
+  // off-catalogue entry the optgroup fallback used to provide.
+  readonly modelOptions = computed<TypeaheadOption[]>(() =>
+    this.activeModels().map((m) => ({
+      id: m.id,
+      label: m.name,
+      hint: m.metadata.provider || m.id.split('/')[0] || undefined,
+    })),
+  );
 
   // Map each auxiliary section to a tier name based on model value match
   readonly auxByTier = computed(() => {

@@ -37,12 +37,13 @@
 
     <div class="field">
       <label for="assigned_to">Owner</label>
-      <select id="assigned_to" formControlName="assigned_to">
-        <option value="">— unassigned —</option>
-        @for (a of actors(); track a.id) {
-          <option [value]="a.id">{{ a.display_name }} (@{{ a.id }})</option>
-        }
-      </select>
+      <app-ui-typeahead
+        inputId="assigned_to"
+        [options]="ownerOptions()"
+        [clearable]="true"
+        placeholder="search actors — unassigned if empty…"
+        ariaLabel="Owner"
+        formControlName="assigned_to" />
     </div>
 
     <div class="field">

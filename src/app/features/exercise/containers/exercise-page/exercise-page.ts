@@ -66,9 +66,40 @@ export class ExercisePage {
   private readonly sessions = computed<SessionDetailed[]>(() => this.sessionsRes.value()?.items ?? []);
   private readonly dailyRows = computed<GymDailyRow[]>(() => this.dailyRes.value()?.days ?? []);
 
-  protected readonly exerciseOptions = computed<QuickAddOption[]>(() =>
-    (this.catalogRes.value() ?? []).map((e) => ({ id: e.id, label: e.name })),
-  );
+  // Picker options ranked "yours first": exercises you've logged in the loaded
+  // window float to the top (boosted, with a "you · N×" hint), the rest of the
+  // catalogue sits below alphabetically. Union catalogue ∪ exercises-from-sets
+  // so a just-created exercise is reusable immediately — its set carries the
+  // name even though the (uncached) catalogue fetch hasn't seen it yet.
+  protected readonly exerciseOptions = computed<QuickAddOption[]>(() => {
+    const used = new Map<string, { name: string; count: number }>();
+    for (const session of this.sessions()) {
+      for (const set of session.sets) {
+        const cur = used.get(set.exercise_id);
+        if (cur) cur.count++;
+        else used.set(set.exercise_id, { name: set.exercise_name ?? set.exercise_id, count: 1 });
+      }
+    }
+
+    const byId = new Map<string, { id: string; label: string; count: number }>();
+    for (const e of this.catalogRes.value() ?? []) {
+      byId.set(e.id, { id: e.id, label: e.name, count: used.get(e.id)?.count ?? 0 });
+    }
+    for (const [id, { name, count }] of used) {
+      const existing = byId.get(id);
+      if (existing) existing.count = count;
+      else byId.set(id, { id, label: name, count });
+    }
+
+    return [...byId.values()]
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+      .map((e) => ({
+        id: e.id,
+        label: e.label,
+        boosted: e.count > 0,
+        hint: e.count > 0 ? `you · ${e.count}×` : undefined,
+      }));
+  });
 
   // ── Period totals + trend ────────────────────────────────────────
   protected readonly dailyTotals = computed<TrackerDailyTotal[]>(() =>
@@ -180,16 +211,30 @@ export class ExercisePage {
   }
 
   protected onAddSet(e: { sessionId: string; draft: TrackerDraft }): void {
-    if (!e.draft.ref) return;
-    const session = this.sessions().find((s) => s.id === e.sessionId);
+    // A draft with a ref picked an existing exercise; a ref-less draft is a new
+    // free-text exercise — create it first, then add the set against its id.
+    if (e.draft.ref) {
+      this.addSet(e.sessionId, e.draft.ref, e.draft);
+      return;
+    }
+    const name = e.draft.label.trim();
+    if (!name) return;
+    this.service.createExercise(name).subscribe({
+      next: (ex) => this.addSet(e.sessionId, ex.id, e.draft),
+      error: () => this.toast.error('Could not create exercise'),
+    });
+  }
+
+  private addSet(sessionId: string, exerciseId: string, draft: TrackerDraft): void {
+    const session = this.sessions().find((s) => s.id === sessionId);
     const setNumber = (session?.sets.length ?? 0) + 1;
     this.service
-      .createSet(e.sessionId, {
-        exercise_id: e.draft.ref,
+      .createSet(sessionId, {
+        exercise_id: exerciseId,
         set_number: setNumber,
-        sets: e.draft.values['sets'],
-        reps: e.draft.values['reps'],
-        weight_kg: e.draft.values['weight_kg'],
+        sets: draft.values['sets'],
+        reps: draft.values['reps'],
+        weight_kg: draft.values['weight_kg'],
       })
       .subscribe({ next: () => this.reload(), error: () => this.toast.error('Could not add set') });
   }

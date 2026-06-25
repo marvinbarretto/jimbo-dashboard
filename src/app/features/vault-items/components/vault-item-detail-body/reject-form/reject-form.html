@@ -16,11 +16,12 @@
 
   <label class="reject-form__field">
     <span class="reject-form__label">Reassign to</span>
-    <select formControlName="newOwner" class="reject-form__select">
-      @for (actor of availableActors(); track actor.id) {
-        <option [value]="actor.id">&#64;{{ actor.label }} ({{ actor.kind }})</option>
-      }
-    </select>
+    <app-ui-typeahead
+      class="reject-form__select"
+      [options]="actorOptions()"
+      placeholder="search actors…"
+      ariaLabel="Reassign to"
+      formControlName="newOwner" />
   </label>
 
   <div class="reject-form__actions">

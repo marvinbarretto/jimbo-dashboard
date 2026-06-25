@@ -18,24 +18,14 @@
 
           @if (editingTier() === tier) {
             <div class="mp__tier-edit">
-              <select
+              <app-ui-typeahead
                 class="mp__select"
+                [options]="modelOptions()"
+                [allowCreate]="true"
+                placeholder="search models…"
+                ariaLabel="Model"
                 [ngModel]="editValue()"
-                (ngModelChange)="editValue.set($event)">
-                <option value="" disabled>— select a model —</option>
-                @for (group of modelsByProvider(); track group[0]) {
-                  <optgroup [label]="group[0]">
-                    @for (m of group[1]; track m.id) {
-                      <option [value]="m.id">{{ m.name }}</option>
-                    }
-                  </optgroup>
-                }
-                @if (editValueIsUnknown()) {
-                  <optgroup label="Current (not in catalogue)">
-                    <option [value]="editValue()">{{ editValue() }}</option>
-                  </optgroup>
-                }
-              </select>
+                (ngModelChange)="editValue.set($event)" />
               <div class="mp__edit-actions">
                 <button
                   type="button"

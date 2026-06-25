@@ -4,6 +4,7 @@ import {
   DestroyRef,
   ElementRef,
   ViewChild,
+  computed,
   inject,
   input,
   output,
@@ -11,11 +12,11 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { SlicePipe } from '@angular/common';
 import type { ThreadMessage, ThreadMessageKind, CreateThreadMessagePayload } from '@domain/thread';
 import type { VaultItemId, ActorId, ThreadMessageId } from '@domain/ids';
 import { threadMessageId } from '@domain/ids';
 import { UiSegmented, type UiSegmentedOption } from '@shared/components/ui-segmented/ui-segmented';
+import { UiTypeahead, type TypeaheadOption } from '@shared/components/ui-typeahead/ui-typeahead';
 import { AttachmentsService } from '../../data-access/attachments.service';
 
 const KIND_OPTIONS: readonly UiSegmentedOption[] = [
@@ -26,7 +27,7 @@ const KIND_OPTIONS: readonly UiSegmentedOption[] = [
 
 @Component({
   selector: 'app-message-composer',
-  imports: [ReactiveFormsModule, SlicePipe, UiSegmented],
+  imports: [ReactiveFormsModule, UiSegmented, UiTypeahead],
   templateUrl: './message-composer.html',
   styleUrl: './message-composer.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,6 +41,12 @@ export class MessageComposer {
   readonly currentActor = input.required<ActorId>();
   // Only open (unanswered) questions are offered in the reply-to dropdown.
   readonly availableQuestions = input<ThreadMessage[]>([]);
+  readonly questionOptions = computed<TypeaheadOption[]>(() =>
+    this.availableQuestions().map(q => ({
+      id: q.id,
+      label: `${q.id} · ${q.body.slice(0, 60)}${q.body.length > 60 ? '…' : ''}`,
+    })),
+  );
 
   readonly posted = output<CreateThreadMessagePayload>();
 

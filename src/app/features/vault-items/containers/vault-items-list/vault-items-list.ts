@@ -13,6 +13,7 @@ import { effectivePriority } from '@domain/vault/readiness';
 import type { VaultItem, VaultItemType, Priority } from '@domain/vault/vault-item';
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
+import { UiTypeahead } from '@shared/components/ui-typeahead/ui-typeahead';
 import { actorId } from '@domain/ids';
 import type { ActorId, VaultItemId } from '@domain/ids';
 import { withVaultDetailModal } from '@shared/kanban/detail-modal';
@@ -32,7 +33,7 @@ interface CountedOption<T> {
 
 @Component({
   selector: 'app-vault-items-list',
-  imports: [RouterLink, FormsModule, TableShell, EntityChip, RelativeTimePipe],
+  imports: [RouterLink, FormsModule, TableShell, EntityChip, RelativeTimePipe, UiTypeahead],
   templateUrl: './vault-items-list.html',
   styleUrl: './vault-items-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
