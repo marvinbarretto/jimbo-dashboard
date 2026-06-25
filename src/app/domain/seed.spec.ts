@@ -136,7 +136,11 @@ describe('domain seed', () => {
       // don't assert d.skill resolves here. Filesystem gating happens in
       // jimbo-api at enqueue time.
       for (const d of SEED.dispatch_entries) {
-        expect(vaultItemIds).toContain(d.task_id);
+        // commission-flow dispatches denormalise task_title/task_seq and
+        // reference synthetic commission ids (comm-*) that intentionally live
+        // outside the seed vault graph — same soft-reference status as skill.
+        const isCommission = 'flow' in d && d.flow === 'commission';
+        if (!isCommission) expect(vaultItemIds).toContain(d.task_id);
         expect(actorIds).toContain(d.executor);
       }
     });

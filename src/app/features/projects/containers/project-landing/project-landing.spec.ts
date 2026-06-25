@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { ProjectLanding } from './project-landing';
 import { ProjectsService } from '../../data-access/projects.service';
@@ -28,6 +28,8 @@ function makeProject(overrides: Partial<Project> = {}): Project {
     repo_url: null,
     color_token: '#7a8fc4',
     created_at: '2025-01-01T00:00:00Z',
+    synced_at: null,
+    repos: null,
     ...EMPTY_PROJECT_BRIEF,
     ...overrides,
   };
@@ -146,6 +148,14 @@ describe('ProjectLanding', () => {
 
     fixture = TestBed.createComponent(ProjectLanding);
     component = fixture.componentInstance;
+
+    // ProjectLanding issues httpResource() reads on init (understanding /
+    // dispatch / activity) that the fakes don't serve. Flush them so
+    // whenStable() doesn't hang on perpetually-pending requests.
+    const httpMock = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    httpMock.match(() => true).forEach((req) => req.flush(null));
+
     await fixture.whenStable();
   }
 

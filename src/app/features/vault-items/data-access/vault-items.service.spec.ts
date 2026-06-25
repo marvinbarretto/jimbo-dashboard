@@ -113,6 +113,8 @@ describe('VaultItemsService.createWithRelations (HTTP mode)', () => {
     repo_url: null,
     color_token: null,
     created_at: '2026-01-01T00:00:00Z',
+    synced_at: null,
+    repos: null,
     ...EMPTY_PROJECT_BRIEF,
   });
 
