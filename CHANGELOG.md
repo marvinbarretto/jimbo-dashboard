@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.83](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.82...v0.0.83) (2026-06-25)
+
+
+### Features
+
+* **nutrition:** common-foods autocomplete (self-growing, instant repeats) ([c11c86a](https://github.com/marvinbarretto/jimbo-dashboard/commit/c11c86a03e1cd42e4f4828102c45c89dab8eac98))
+
 ### [0.0.82](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.81...v0.0.82) (2026-06-25)
 
 
