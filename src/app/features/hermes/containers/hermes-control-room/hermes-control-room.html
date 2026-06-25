@@ -30,8 +30,8 @@
               <span class="cr__job-badge cr__job-badge--warning">paused</span>
             }
             @if (job.script) {
-              <span class="cr__job-badge cr__job-badge--gated"
-                    [title]="'Gated by ' + job.script + ' — runs are skipped (no model call) when there is no work'">⏭ gated</span>
+              <span class="cr__job-badge cr__job-badge--script"
+                    [title]="'Pre-run script: ' + job.script + '. Gate scripts (e.g. dispatch_gate_boris.py, orchestrate-cap.py) skip the run with no model call when there is no work; others just inject context.'">⏵ script</span>
             }
             <span class="cr__job-time">{{ relativeTime(job.last_run_at) }}</span>
           </span>
@@ -125,10 +125,10 @@
             </div>
             @if (job.script) {
               <div class="cr__field">
-                <dt>Pre-run gate</dt>
+                <dt>Pre-run script</dt>
                 <dd>
-                  <app-ui-badge tone="success" [subtle]="true"
-                    title="Runs are skipped before any model call when this script prints [SKIP]">⏭ {{ job.script }}</app-ui-badge>
+                  <app-ui-badge tone="info" [subtle]="true"
+                    title="Runs before the agent. Gate scripts (dispatch_gate_boris.py, orchestrate-cap.py) print [SKIP] to abort the run with no model call when there is no work; others inject context.">⏵ {{ job.script }}</app-ui-badge>
                 </dd>
               </div>
             }
