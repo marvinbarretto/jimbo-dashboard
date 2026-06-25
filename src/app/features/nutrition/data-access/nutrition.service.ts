@@ -48,6 +48,29 @@ export interface SupplementLogEntry {
   notes: string | null;
 }
 
+/** Manual food create — caller owns macros; `logged_at` backdates. */
+export interface FoodManualInput {
+  raw_text: string;
+  logged_at?: string;
+  est_kcal?: number | null;
+  est_protein_g?: number | null;
+  est_carbs_g?: number | null;
+  est_fat_g?: number | null;
+  notes?: string | null;
+}
+export type FoodPatch = Partial<FoodManualInput>;
+
+/** Manual supplement intake — `taken_at` backdates. */
+export interface SupplementManualInput {
+  supplement_id: string;
+  dosage: number;
+  taken_at?: string;
+  notes?: string | null;
+}
+export type SupplementPatch = Partial<Omit<SupplementManualInput, 'supplement_id'>> & {
+  supplement_id?: string;
+};
+
 @Injectable({ providedIn: 'root' })
 export class NutritionService {
   private readonly http = inject(HttpClient);
@@ -87,5 +110,33 @@ export class NutritionService {
     return this.http.get<{ items: SupplementLogEntry[] }>(
       `${this.base}/api/coach/supplement-log${qs ? `?${qs}` : ''}`,
     );
+  }
+
+  // ── Writes (CRUD) ──────────────────────────────────────────────
+  // Manual create bypasses the LLM estimator and accepts a backdated timestamp,
+  // so the dashboard can add/correct entries that weren't captured in the moment.
+
+  createFood(body: FoodManualInput): Observable<FoodLogEntry> {
+    return this.http.post<FoodLogEntry>(`${this.base}/api/coach/food-log/manual`, body);
+  }
+
+  patchFood(id: string, changes: FoodPatch): Observable<FoodLogEntry> {
+    return this.http.patch<FoodLogEntry>(`${this.base}/api/coach/food-log/${id}`, changes);
+  }
+
+  deleteFood(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/coach/food-log/${id}`);
+  }
+
+  createSupplement(body: SupplementManualInput): Observable<SupplementLogEntry> {
+    return this.http.post<SupplementLogEntry>(`${this.base}/api/coach/supplement-log/manual`, body);
+  }
+
+  patchSupplement(id: number, changes: SupplementPatch): Observable<SupplementLogEntry> {
+    return this.http.patch<SupplementLogEntry>(`${this.base}/api/coach/supplement-log/${id}`, changes);
+  }
+
+  deleteSupplement(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/coach/supplement-log/${id}`);
   }
 }

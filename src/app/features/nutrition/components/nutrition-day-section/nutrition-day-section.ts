@@ -7,6 +7,7 @@ import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { catchError, of, switchMap, timer } from 'rxjs';
+import { formatLondonTime } from '@shared/utils/datetime.utils';
 import { NUTRITION_READ } from '../../data-access/nutrition.read';
 import type { FoodLogEntry, SupplementLogEntry } from '../../data-access/nutrition.service';
 
@@ -80,11 +81,7 @@ export class NutritionDaySection {
 
   // London HH:MM for an entry timestamp.
   formatTime(ts: string): string {
-    return new Date(ts).toLocaleTimeString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'Europe/London',
-    });
+    return formatLondonTime(ts);
   }
 
   // "5 g" / "1 tablet" — drop a redundant unit-less dose to just the number.

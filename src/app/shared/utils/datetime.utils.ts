@@ -5,6 +5,44 @@
  * @param value - ISO 8601 timestamp string, or null/undefined
  * @returns e.g. "2 May 14:18:00" or "2 May 2024 14:18:00"; "—" for null/empty/invalid input
  */
+// ── London-zone calendar helpers ─────────────────────────────────
+// Several domains (nutrition, exercise) bucket entries by the London calendar
+// day server-side, so the dashboard must read/format in Europe/London too —
+// not the browser zone — to stay aligned across the day boundary. Centralised
+// here so the four hand-rolled copies collapse to one.
+
+const LONDON = 'Europe/London';
+
+/** HH:MM of a timestamp in Europe/London (e.g. "08:05"). */
+export function formatLondonTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: LONDON,
+  });
+}
+
+/** Today's London calendar day as YYYY-MM-DD. */
+export function londonToday(now: Date = new Date()): string {
+  // en-CA renders as YYYY-MM-DD.
+  return now.toLocaleDateString('en-CA', { timeZone: LONDON });
+}
+
+/** The London calendar day (YYYY-MM-DD) a timestamp falls on. */
+export function londonDay(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-CA', { timeZone: LONDON });
+}
+
+/**
+ * Shift a YYYY-MM-DD day by whole days. Parsed as UTC midnight and shifted in
+ * UTC so the date arithmetic itself never drifts across DST.
+ */
+export function shiftIsoDay(iso: string, deltaDays: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + deltaDays);
+  return d.toISOString().slice(0, 10);
+}
+
 export function formatDatetime(value: string | null | undefined): string {
   if (!value) return '—';
   const d = new Date(value);

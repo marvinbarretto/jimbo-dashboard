@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { AppIcon } from '@shared/components/app-icon/app-icon';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiInlineEdit } from '@shared/components/ui-inline-edit/ui-inline-edit';
+import { formatLondonTime } from '@shared/utils/datetime.utils';
 import type { FoodLogEntry } from '../../data-access/nutrition.service';
 
 /** A single field-level change emitted when a row edit commits. */
@@ -188,12 +189,3 @@ const MACRO_FIELDS: readonly MacroFieldDef[] = [
   { field: 'est_carbs_g', label: 'carbs', unit: 'c' },
   { field: 'est_fat_g', label: 'fat', unit: 'f' },
 ];
-
-// London HH:MM for an entry timestamp. Mirrors NutritionDaySection.formatTime.
-function formatLondonTime(ts: string): string {
-  return new Date(ts).toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'Europe/London',
-  });
-}

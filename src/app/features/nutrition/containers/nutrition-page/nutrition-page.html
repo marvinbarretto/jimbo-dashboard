@@ -1,53 +1,63 @@
-<app-ui-stack gap="lg">
-  @if (loading()) {
-    <app-ui-loading-state message="Loading nutrition…" />
-  } @else {
-    <app-ui-section title="Today" [meta]="todayMeta()">
-      @if (todayHasData()) {
-        <app-ui-stack gap="lg">
-          <div class="nutrition__stats">
-            <app-ui-stat-card label="Calories" [value]="today().kcal.toString()" detail="kcal" />
-            <app-ui-stat-card label="Protein" [value]="today().protein_g.toString()" detail="g" />
-            <app-ui-stat-card label="Carbs" [value]="today().carbs_g.toString()" detail="g" />
-            <app-ui-stat-card label="Fat" [value]="today().fat_g.toString()" detail="g" />
-          </div>
-          <app-ui-subsection label="Macro split (today)">
-            <app-ui-donut-chart [labels]="macroLabels" [values]="macroValues()" suffix=" g" />
-          </app-ui-subsection>
-        </app-ui-stack>
-      } @else {
-        <app-ui-empty-state message="Nothing logged today yet. Use /food on Telegram." />
-      }
+@if (loading()) {
+  <app-ui-loading-state message="Loading nutrition…" />
+} @else {
+  <app-ui-stack gap="lg">
+    <!-- Patterns over time: day / week / month totals with targets -->
+    <app-ui-section title="Totals">
+      <app-ui-period-totals
+        [measures]="totalsMeasures"
+        [daily]="dailyTotals()"
+        [targets]="targets"
+        [anchor]="today"
+      />
     </app-ui-section>
 
-    <app-ui-section title="Calories per day" [meta]="windowMeta()">
-      @if (hasWindowData()) {
+    <!-- Trend: calories per day across the window -->
+    <app-ui-section title="Calories per day">
+      @if (hasTrend()) {
         <app-ui-bar-chart
-          [labels]="dayLabels()"
-          [values]="caloriesByDay()"
+          [labels]="trendLabels()"
+          [values]="trendValues()"
           label="kcal"
           suffix=" kcal"
-          accent="rgba(52, 211, 153, 0.7)"
         />
       } @else {
         <app-ui-empty-state message="No entries in the last 14 days." />
       }
     </app-ui-section>
 
-    <app-ui-section title="Recent entries" [meta]="recentMeta()">
-      @if (recent().length) {
-        <ul class="nutrition__list">
-          @for (e of recent(); track e.id) {
-            <li class="nutrition__row">
-              <span class="nutrition__time">{{ formatTime(e.logged_at) }}</span>
-              <span class="nutrition__text">{{ e.raw_text }}</span>
-              <span class="nutrition__kcal">{{ e.est_kcal ?? 0 }} kcal</span>
-            </li>
-          }
-        </ul>
-      } @else {
-        <app-ui-empty-state message="No entries yet. Log food with /food on Telegram." />
-      }
-    </app-ui-section>
-  }
-</app-ui-stack>
+    <!-- Quick supplement log (catalog pick → today) -->
+    @if (supplementOptions().length) {
+      <app-ui-section title="Log a supplement">
+        <app-ui-quick-add-row
+          [options]="supplementOptions()"
+          [measures]="suppQuickAdd"
+          placeholder="pick a supplement…"
+          labelAria="Supplement"
+          addLabel="Log"
+          kind="supplement"
+          (add)="onAddSupplement($event)"
+        />
+      </app-ui-section>
+    }
+
+    <!-- The unified day ledger: food + supplements, edit-in-place + quick-add -->
+    @for (d of days(); track d.date) {
+      <app-ui-tracker-day-group
+        [date]="d.date"
+        [entries]="d.entries"
+        [measures]="ledgerMeasures"
+        [editable]="true"
+        [expanded]="d.date === today"
+        [quickAddMeasures]="foodQuickAdd"
+        quickAddPlaceholder="what did you eat or drink?"
+        quickAddLabel="Add"
+        quickAddKind="food"
+        emptyMessage="Nothing logged this day yet."
+        (add)="onAddFood($event)"
+        (patch)="onPatch($event)"
+        (remove)="onRemove($event)"
+      />
+    }
+  </app-ui-stack>
+}

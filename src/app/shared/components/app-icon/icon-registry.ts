@@ -9,6 +9,7 @@ import {
   GripVertical,
   MessageSquare,
   Pencil,
+  Plus,
   RotateCcw,
   Trash2,
   X,
@@ -20,6 +21,7 @@ import {
 export const ICONS = {
   edit:           Pencil,
   delete:         Trash2,
+  add:            Plus,
   clock:          Clock,
   'external-link': ExternalLink,
   'grip-vertical': GripVertical,

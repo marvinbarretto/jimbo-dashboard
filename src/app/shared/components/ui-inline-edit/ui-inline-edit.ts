@@ -10,7 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 
-export type UiInlineEditKind = 'text' | 'textarea' | 'select' | 'number';
+export type UiInlineEditKind = 'text' | 'textarea' | 'select' | 'number' | 'datetime';
 
 export interface UiInlineEditOption {
   readonly value: string;
@@ -78,6 +78,19 @@ export interface UiInlineEditOption {
             [attr.min]="min()"
             [attr.max]="max()"
             [attr.step]="step()"
+            (input)="onInput($any($event))"
+            (keydown)="onKey($event)"
+            (blur)="commit()"
+          />
+        }
+        @case ('datetime') {
+          <input
+            #editEl
+            type="datetime-local"
+            class="ui-inline-edit__field ui-inline-edit__field--datetime"
+            [class.ui-inline-edit__field--lg]="size() === 'lg'"
+            [value]="draft()"
+            [attr.aria-label]="ariaLabel()"
             (input)="onInput($any($event))"
             (keydown)="onKey($event)"
             (blur)="commit()"
@@ -179,6 +192,11 @@ export interface UiInlineEditOption {
       &--number {
         font-variant-numeric: tabular-nums;
       }
+
+      &--datetime {
+        font-variant-numeric: tabular-nums;
+        color-scheme: dark;
+      }
     }
   `],
 })
@@ -231,7 +249,9 @@ export class UiInlineEdit {
       const el = this.editEl()?.nativeElement;
       el?.focus();
       if (el && 'select' in el && typeof (el as HTMLInputElement).select === 'function') {
-        (el as HTMLInputElement).select();
+        // select() throws InvalidStateError on some input types (e.g.
+        // datetime-local) — focus is enough there, so swallow it.
+        try { (el as HTMLInputElement).select(); } catch { /* not selectable */ }
       }
     });
   }
