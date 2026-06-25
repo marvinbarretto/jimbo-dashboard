@@ -100,15 +100,35 @@ export class FocusSessionsService {
     }
   }
 
-  async start(payload: StartFocusSessionPayload): Promise<void> {
+  async start(payload: StartFocusSessionPayload): Promise<FocusSession | null> {
     try {
       const created = await firstValueFrom(
         this.http.post<ApiFocusSession>(this.url, payload),
       );
-      this._active.set(toSession(created));
+      const session = toSession(created);
+      this._active.set(session);
       this.toast.success('Focus session started');
+      return session;
     } catch {
       this.toast.error('Could not start session');
+      return null;
+    }
+  }
+
+  /**
+   * Link a vault item (the session's chosen story) so the declared intention is
+   * a real edge in the graph, not just free text in `notes`. Best-effort.
+   */
+  async linkNote(sessionId: string, vaultNoteId: string): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.http.post(
+          `${this.url}/${encodeURIComponent(sessionId)}/notes`,
+          { vault_note_id: vaultNoteId },
+        ),
+      );
+    } catch {
+      this.toast.error('Could not link the story to the session');
     }
   }
 

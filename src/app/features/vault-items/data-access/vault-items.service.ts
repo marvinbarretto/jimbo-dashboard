@@ -94,6 +94,10 @@ export class VaultItemsService {
     type?: 'task' | 'note' | 'bookmark';
     grooming_status?: GroomingStatus;
     manual_priority?: Priority;
+    // Optional hierarchy/project placement — used by the guided pomo flow to
+    // create a story directly under an epic and inside the active project.
+    parent_id?: string | null;
+    primary_project_id?: string | null;
   }, onCreated?: (item: VaultItem) => void): void {
     const trimmed = input.title.trim();
     if (!trimmed) return;
@@ -110,11 +114,11 @@ export class VaultItemsService {
       grooming_status: groomingStatus,
       ai_priority: null, manual_priority: input.manual_priority ?? null,
       ai_rationale: null, priority_confidence: null,
-      actionability: null, parent_id: null, is_epic: false,
+      actionability: null, parent_id: input.parent_id ? vaultItemId(input.parent_id) : null, is_epic: false,
       archived_at: null, due_at: null, completed_at: null,
       source: { kind: 'manual', ref: 'board', url: null },
       created_at: now,
-      primary_project_id: null, primary_project_name: null,
+      primary_project_id: input.primary_project_id ?? null, primary_project_name: null,
       open_questions_count: 0, latest_activity_at: null,
       children_count: 0, latest_event: null, latest_message: null,
       days_in_column: 0,
@@ -134,6 +138,9 @@ export class VaultItemsService {
       source_ref: 'board',
     };
     if (input.manual_priority != null) body['manual_priority'] = input.manual_priority;
+    // parent_id is accepted by the create endpoint; the project link is reflected
+    // optimistically and reconciled on the next board reload.
+    if (input.parent_id) body['parent_id'] = input.parent_id;
 
     withOptimisticCreate(this._items, this.toast, {
       optimistic,

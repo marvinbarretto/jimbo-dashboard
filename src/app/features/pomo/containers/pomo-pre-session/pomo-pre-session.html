@@ -7,9 +7,9 @@
   <app-ui-card>
     <app-ui-stack gap="md">
 
-      <!-- Project -->
+      <!-- Step 1 · Project -->
       <div class="pre-session__field-group">
-        <span class="pre-session__label">Project</span>
+        <span class="pre-session__label">1 · Project</span>
 
         @if (majorProjects().length) {
           <p class="pre-session__group-label">Major</p>
@@ -18,11 +18,11 @@
               <button
                 type="button"
                 class="pre-session__project-tile"
-                [class.pre-session__project-tile--selected]="isSelected(p.id)"
+                [class.pre-session__project-tile--selected]="isProjectSelected(p.id)"
                 [style.--tile-color]="projectColor(p)"
                 (click)="selectProject(p.id)">
                 {{ p.display_name }}
-                @if (isSelected(p.id)) { <span class="pre-session__check">✓</span> }
+                @if (isProjectSelected(p.id)) { <span class="pre-session__check">✓</span> }
               </button>
             }
           </div>
@@ -35,11 +35,11 @@
               <button
                 type="button"
                 class="pre-session__project-tile"
-                [class.pre-session__project-tile--selected]="isSelected(p.id)"
+                [class.pre-session__project-tile--selected]="isProjectSelected(p.id)"
                 [style.--tile-color]="projectColor(p)"
                 (click)="selectProject(p.id)">
                 {{ p.display_name }}
-                @if (isSelected(p.id)) { <span class="pre-session__check">✓</span> }
+                @if (isProjectSelected(p.id)) { <span class="pre-session__check">✓</span> }
               </button>
             }
           </div>
@@ -48,47 +48,79 @@
         <button
           type="button"
           class="pre-session__project-tile pre-session__project-tile--none"
-          [class.pre-session__project-tile--selected]="isSelected(null)"
+          [class.pre-session__project-tile--selected]="isProjectSelected(null)"
           (click)="selectProject(null)">
           No project
-          @if (isSelected(null)) { <span class="pre-session__check">✓</span> }
+          @if (isProjectSelected(null)) { <span class="pre-session__check">✓</span> }
         </button>
       </div>
 
-      <!-- Task scope — clickable to auto-fill intention -->
-      @if (selectedProjectId() !== null && (projectEpics().length || projectItems().length)) {
-        <div class="pre-session__scope">
+      <!-- Step 2 · Epic (optional) -->
+      @if (selectedProjectId() !== null) {
+        <div class="pre-session__field-group">
+          <span class="pre-session__label">2 · Epic <span class="pre-session__hint">optional</span></span>
           @if (projectEpics().length) {
-            <span class="pre-session__label">Epics in scope</span>
             <ul class="pre-session__scope-list">
-              @for (item of projectEpics(); track item.id) {
-                <li class="pre-session__scope-epic-item">
-                  <span class="pre-session__scope-seq">#{{ item.seq }}</span>
-                  <span class="pre-session__scope-title">{{ item.title }}</span>
-                </li>
-              }
-            </ul>
-          }
-          @if (projectItems().length) {
-            <span class="pre-session__label">Pick a task</span>
-            <ul class="pre-session__scope-list">
-              @for (item of projectItems(); track item.id) {
+              @for (epic of projectEpics(); track epic.id) {
                 <li>
                   <button
                     type="button"
                     class="pre-session__task-btn"
-                    [class.pre-session__task-btn--selected]="isVaultItemSelected(item.id)"
-                    (click)="selectVaultItem(item)">
-                    <span class="pre-session__scope-seq">#{{ item.seq }}</span>
-                    <span class="pre-session__task-title">{{ item.title }}</span>
-                    @if (isVaultItemSelected(item.id)) {
-                      <span class="pre-session__task-check">→</span>
-                    }
+                    [class.pre-session__task-btn--selected]="isEpicSelected(epic.id)"
+                    (click)="selectEpic(epic.id)">
+                    <span class="pre-session__scope-seq">#{{ epic.seq }}</span>
+                    <span class="pre-session__task-title">{{ epic.title }}</span>
+                    @if (isEpicSelected(epic.id)) { <span class="pre-session__task-check">▾</span> }
                   </button>
                 </li>
               }
             </ul>
+          } @else {
+            <p class="pre-session__empty">No epics in this project yet.</p>
           }
+        </div>
+      }
+
+      <!-- Step 3 · Story (optional, under the chosen epic) -->
+      @if (selectedEpicId() !== null) {
+        <div class="pre-session__field-group">
+          <span class="pre-session__label">3 · Story <span class="pre-session__hint">optional</span></span>
+          @if (epicStories().length) {
+            <ul class="pre-session__scope-list">
+              @for (story of epicStories(); track story.id) {
+                <li>
+                  <button
+                    type="button"
+                    class="pre-session__task-btn"
+                    [class.pre-session__task-btn--selected]="isStorySelected(story.id)"
+                    (click)="selectStory(story)">
+                    <span class="pre-session__scope-seq">#{{ story.seq }}</span>
+                    <span class="pre-session__task-title">{{ story.title }}</span>
+                    @if (isStorySelected(story.id)) { <span class="pre-session__task-check">→</span> }
+                  </button>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="pre-session__empty">No stories under this epic yet — add one below.</p>
+          }
+
+          <div class="pre-session__new-story">
+            <input
+              type="text"
+              class="pre-session__field"
+              placeholder="+ New story under this epic"
+              [ngModel]="newStoryTitle()"
+              (ngModelChange)="newStoryTitle.set($event)"
+              (keyup.enter)="createStory()" />
+            <app-ui-button
+              variant="secondary"
+              size="sm"
+              [disabled]="!newStoryTitle().trim()"
+              (pressed)="createStory()">
+              Add
+            </app-ui-button>
+          </div>
         </div>
       }
 
@@ -128,7 +160,7 @@
     size="md"
     [disabled]="starting()"
     (pressed)="start()">
-    {{ starting() ? 'Starting…' : 'Start pomo' }}
+    {{ starting() ? 'Starting…' : 'Start focus' }}
   </app-ui-button>
 
 </app-ui-stack>

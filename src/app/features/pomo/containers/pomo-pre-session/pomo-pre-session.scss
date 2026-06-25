@@ -230,3 +230,21 @@
     background: color-mix(in srgb, var(--color-accent) 12%, transparent);
   }
 }
+
+.pre-session__empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-soft);
+  opacity: 0.8;
+}
+
+// Inline "+ new story" row: text field + Add button.
+.pre-session__new-story {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+
+  .pre-session__field {
+    flex: 1;
+  }
+}

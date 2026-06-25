@@ -19,6 +19,12 @@ import type { VaultItem } from '@domain/vault';
 
 const PRESETS = [15, 25, 45, 90] as const;
 
+/**
+ * Guided-but-skippable start flow: pick a project, then (optionally) an epic,
+ * then (optionally) a story under it — or create one. The chosen story is linked
+ * to the focus session so each pomo is bound to a concrete intention, but you can
+ * start at any level without drilling all the way down.
+ */
 @Component({
   selector: 'app-pomo-pre-session',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,58 +43,86 @@ export class PomoPreSession {
   readonly minorProjects = computed(() => this.projects.activeProjects().filter(p => p.kind === 'minor'));
 
   readonly selectedProjectId = signal<string | null>(null);
-  readonly selectedVaultItemId = signal<string | null>(null);
+  readonly selectedEpicId = signal<string | null>(null);
+  readonly selectedStoryId = signal<string | null>(null);
 
-  readonly projectItems = computed(() =>
-    this.vaultItems.activeItems()
-      .filter(i => i.primary_project_id === this.selectedProjectId() && !i.is_epic)
-      .slice(0, 8),
-  );
+  // Step 2: epics belonging to the selected project.
+  readonly projectEpics = computed(() => {
+    const pid = this.selectedProjectId();
+    if (pid === null) return [];
+    return this.vaultItems.activeItems()
+      .filter(i => i.primary_project_id === pid && i.is_epic)
+      .slice(0, 12);
+  });
 
-  readonly projectEpics = computed(() =>
-    this.vaultItems.activeItems()
-      .filter(i => i.primary_project_id === this.selectedProjectId() && i.is_epic)
-      .slice(0, 3),
-  );
+  // Step 3: stories (non-epic children) under the selected epic.
+  readonly epicStories = computed(() => {
+    const eid = this.selectedEpicId();
+    if (eid === null) return [];
+    return this.vaultItems.activeItems()
+      .filter(i => i.parent_id === eid && !i.is_epic)
+      .slice(0, 20);
+  });
 
+  readonly newStoryTitle = signal('');
   readonly minutes = signal(25);
   readonly intention = signal('');
   readonly starting = signal(false);
 
+  isProjectSelected(id: string | null): boolean { return this.selectedProjectId() === id; }
+  isEpicSelected(id: string): boolean { return this.selectedEpicId() === id; }
+  isStorySelected(id: string): boolean { return this.selectedStoryId() === id; }
+
+  projectColor(p: Project): string { return p.color_token ?? 'var(--color-accent)'; }
+
   selectProject(id: string | null): void {
     this.selectedProjectId.set(id);
-    this.selectedVaultItemId.set(null);
+    this.selectedEpicId.set(null);
+    this.selectedStoryId.set(null);
+    this.intention.set('');
   }
 
-  isSelected(id: string | null): boolean {
-    return this.selectedProjectId() === id;
+  selectEpic(id: string): void {
+    this.selectedEpicId.set(this.selectedEpicId() === id ? null : id);
+    this.selectedStoryId.set(null);
   }
 
-  projectColor(p: Project): string {
-    return p.color_token ?? 'var(--color-accent)';
-  }
-
-  selectVaultItem(item: VaultItem): void {
-    if (this.selectedVaultItemId() === item.id) {
-      this.selectedVaultItemId.set(null);
+  selectStory(item: VaultItem): void {
+    if (this.selectedStoryId() === item.id) {
+      this.selectedStoryId.set(null);
       this.intention.set('');
     } else {
-      this.selectedVaultItemId.set(item.id);
+      this.selectedStoryId.set(item.id);
       this.intention.set(item.title);
     }
   }
 
-  isVaultItemSelected(id: string): boolean {
-    return this.selectedVaultItemId() === id;
+  createStory(): void {
+    const title = this.newStoryTitle().trim();
+    const epicId = this.selectedEpicId();
+    if (!title || !epicId) return;
+    this.vaultItems.createOnBoard(
+      { title, type: 'task', parent_id: epicId, primary_project_id: this.selectedProjectId() },
+      (real) => {
+        // Select the freshly-created story so starting links it to the session.
+        this.selectedStoryId.set(real.id);
+        this.intention.set(real.title);
+      },
+    );
+    this.newStoryTitle.set('');
   }
 
   async start(): Promise<void> {
     this.starting.set(true);
-    await this.sessions.start({
+    const session = await this.sessions.start({
       project_id: this.selectedProjectId(),
       planned_seconds: this.minutes() * 60,
       notes: this.intention().trim() || undefined,
     });
+    const storyId = this.selectedStoryId();
+    if (session && storyId) {
+      await this.sessions.linkNote(session.id, storyId);
+    }
     void this.router.navigate(['/pomo/running']);
   }
 }
