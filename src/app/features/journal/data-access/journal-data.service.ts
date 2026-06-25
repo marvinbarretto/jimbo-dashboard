@@ -298,7 +298,7 @@ export class JournalDataService {
       // falls before local midnight. Fetch health_connect from the prior evening.
       const eveningSince = dateFromDayKey(shiftDay(date, -1)).toISOString();
 
-      const [dayRes, usageRes, sleepRes, githubRes] = await Promise.all([
+      const [dayRes, usageRes, sleepRes, githubRes, youtubeRes] = await Promise.all([
         firstValueFrom(
           this.http.get<{ events: ApiTelemetryEvent[] }>(
             `${this.base}/api/telemetry/events?since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}&limit=500`,
@@ -322,6 +322,14 @@ export class JournalDataService {
             `${this.base}/api/telemetry/events?collector=github&type=push&since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}&limit=100`,
           ),
         ),
+        // YouTube watch segments — pulled separately for the same reason as github:
+        // a heavy-viewing day can exceed the 500-event main window. Many short
+        // segments per day, so the limit is generous.
+        firstValueFrom(
+          this.http.get<{ events: ApiTelemetryEvent[] }>(
+            `${this.base}/api/telemetry/events?collector=youtube&type=watch_session&since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}&limit=500`,
+          ),
+        ),
       ]);
 
       const dayEvents = (dayRes.events ?? []).map(toTelemetryEventLite);
@@ -329,6 +337,7 @@ export class JournalDataService {
         ...(usageRes.events ?? []).map(toTelemetryEventLite),
         ...(sleepRes.events ?? []).map(toTelemetryEventLite),
         ...(githubRes.events ?? []).map(toTelemetryEventLite),
+        ...(youtubeRes.events ?? []).map(toTelemetryEventLite),
       ];
       const dayIds = new Set(dayEvents.map(e => e.id));
       return [...dayEvents, ...extraEvents.filter(e => !dayIds.has(e.id))];

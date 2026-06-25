@@ -12,5 +12,6 @@
     <app-ui-stat-card label="Commits" [value]="commits().toString()" />
     <app-ui-stat-card label="Projects" [value]="projectCount().toString()" detail="worked" />
     <app-ui-stat-card label="Jimbo" [value]="jimboCostLabel()" [detail]="jimboDetail()" />
+    <app-ui-stat-card label="YouTube" [value]="formatMinutes(youtube().minutes)" [detail]="youtubeDetail()" />
   </div>
 </section>

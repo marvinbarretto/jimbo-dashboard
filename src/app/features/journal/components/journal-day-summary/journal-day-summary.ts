@@ -123,6 +123,34 @@ export class JournalDaySummary {
     (this.bundle()?.telemetry ?? []).filter(e => e.collector === 'health_connect' && e.type === 'exercise_session').length,
   );
 
+  // YouTube watch time, summed from the Chrome extension's watch segments. Many
+  // short segments per day (one per pause/navigation) sum into real minutes
+  // watched — the one number Google's own exports can't give you.
+  protected readonly youtube = computed(() => {
+    const sessions = (this.bundle()?.telemetry ?? []).filter(
+      e => e.collector === 'youtube' && e.type === 'watch_session',
+    );
+    const totalSeconds = sessions.reduce((s, e) => s + (e.value ?? 0), 0);
+    const byVideo = new Map<string, number>();
+    const byChannel = new Map<string, number>();
+    for (const e of sessions) {
+      const p = e.payload ?? {};
+      const videoKey = (p['videoId'] as string) || (p['url'] as string) || 'unknown';
+      byVideo.set(videoKey, (byVideo.get(videoKey) ?? 0) + (e.value ?? 0));
+      const channel = (p['channel'] as string) || '';
+      if (channel) byChannel.set(channel, (byChannel.get(channel) ?? 0) + (e.value ?? 0));
+    }
+    const topChannel = [...byChannel.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+    return { minutes: Math.round(totalSeconds / 60), videoCount: byVideo.size, topChannel };
+  });
+
+  protected readonly youtubeDetail = computed(() => {
+    const y = this.youtube();
+    if (y.videoCount === 0) return 'nothing watched';
+    const videos = `${y.videoCount} ${y.videoCount === 1 ? 'video' : 'videos'}`;
+    return y.topChannel ? `${videos} · ${y.topChannel}` : videos;
+  });
+
   // ── Jimbo (agent activity + cost) ────────────────────────────────────────
   private readonly agentRows = computed(() => this.agentRuns()?.items ?? []);
   protected readonly jimboRuns = computed(() => this.agentRows().reduce((s, r) => s + r.count, 0));
