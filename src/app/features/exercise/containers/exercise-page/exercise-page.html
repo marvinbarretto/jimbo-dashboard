@@ -1,75 +1,45 @@
-<app-ui-stack gap="lg">
-  @if (loading()) {
-    <app-ui-loading-state message="Loading exercise…" />
-  } @else {
-    <app-ui-section title="Today" [meta]="todayMeta()">
-      @if (todayHasData()) {
-        <app-ui-stack gap="lg">
-          <div class="exercise__stats">
-            <app-ui-stat-card label="Sessions" [value]="today().sessions.toString()" />
-            <app-ui-stat-card label="Sets" [value]="today().sets.toString()" />
-            <app-ui-stat-card label="Volume" [value]="today().volume_kg.toString()" detail="kg" />
-            <app-ui-stat-card label="Cardio" [value]="todayCardioMin().toString()" detail="min" />
-          </div>
-          <ul class="exercise__sessions">
-            @for (s of todaySessions(); track s.id) {
-              <li class="exercise__session"><app-exercise-session-card [session]="s" /></li>
-            }
-          </ul>
-        </app-ui-stack>
-      } @else {
-        <app-ui-empty-state message="No workout logged today yet. Log a session via the gym bot or app." />
-      }
+@if (loading()) {
+  <app-ui-loading-state message="Loading training…" />
+} @else {
+  <app-ui-stack gap="lg">
+    <!-- Patterns over time: day / week / month -->
+    <app-ui-section title="Totals">
+      <app-ui-period-totals [measures]="totalsMeasures" [daily]="dailyTotals()" [anchor]="today" />
     </app-ui-section>
 
-    <app-ui-section title="Daily activity" [meta]="activityMeta()">
-      @if (hasActivity()) {
-        <app-ui-stack gap="lg">
-          <div class="exercise__stats">
-            <app-ui-stat-card label="Steps" [value]="todayActivity().steps.toLocaleString()" />
-            <app-ui-stat-card label="Distance" [value]="todayActivity().distance_km.toString()" detail="km" />
-            <app-ui-stat-card label="Energy" [value]="todayActivity().kcal.toString()" detail="kcal" />
-          </div>
-          <app-ui-bar-chart
-            [labels]="activityLabels()"
-            [values]="stepsByDay()"
-            label="steps"
-            suffix=" steps"
-            accent="rgba(52, 211, 153, 0.7)"
-          />
-        </app-ui-stack>
-      } @else {
-        <app-ui-empty-state message="No step/distance data from Health Connect in the last 14 days." />
-      }
-    </app-ui-section>
-
-    <app-ui-section title="Training volume per day" [meta]="windowMeta()">
-      @if (hasWindowData()) {
-        <app-ui-bar-chart
-          [labels]="dayLabels()"
-          [values]="volumeByDay()"
-          label="volume"
-          suffix=" kg"
-          accent="rgba(96, 165, 250, 0.7)"
-        />
+    <!-- Trend: training volume per day -->
+    <app-ui-section title="Volume per day">
+      @if (hasTrend()) {
+        <app-ui-bar-chart [labels]="trendLabels()" [values]="trendValues()" label="volume" suffix=" kg" />
       } @else {
         <app-ui-empty-state message="No sessions in the last 14 days." />
       }
     </app-ui-section>
 
-    <app-ui-section title="Recent sessions" [meta]="recentMeta()">
-      @if (recent().length) {
-        <ul class="exercise__sessions">
-          @for (s of recent(); track s.id) {
-            <li class="exercise__session">
-              <span class="exercise__when">{{ sessionWhen(s.started_at) }}</span>
-              <app-exercise-session-card [session]="s" />
-            </li>
+    <!-- Day-grouped workout ledger: sessions expand to editable sets/cardio -->
+    @for (d of days(); track d.date) {
+      <app-ui-section [title]="d.label" [meta]="dayMeta(d)" [expanded]="isDayOpen(d.date)" (toggled)="toggleDay(d.date)">
+        <div class="exercise-ledger">
+          @for (s of d.sessions; track s.id) {
+            <app-exercise-session-row
+              [session]="s"
+              [editable]="true"
+              [exerciseOptions]="exerciseOptions()"
+              (sessionPatch)="onSessionPatch($event)"
+              (sessionRemove)="onSessionRemove($event)"
+              (childPatch)="onChildPatch($event)"
+              (childRemove)="onChildRemove($event)"
+              (addSet)="onAddSet($event)"
+            />
+          } @empty {
+            <p class="exercise-ledger__empty">No workout logged this day.</p>
           }
-        </ul>
-      } @else {
-        <app-ui-empty-state message="No sessions yet. Log one via the gym bot or app." />
-      }
-    </app-ui-section>
-  }
-</app-ui-stack>
+
+          <app-ui-button class="exercise-ledger__add" variant="secondary" size="sm" (pressed)="addSession(d.date)">
+            + Log a workout
+          </app-ui-button>
+        </div>
+      </app-ui-section>
+    }
+  </app-ui-stack>
+}

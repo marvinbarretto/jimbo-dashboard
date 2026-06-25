@@ -34,11 +34,13 @@ export interface SessionStats {
 
 // Raw sums for one session — no derived "scores", just what was captured.
 export function sessionStats(s: SessionDetailed): SessionStats {
-  const volumeKg = s.sets.reduce((acc, x) => acc + (x.reps ?? 0) * (x.weight_kg ?? 0), 0);
+  // Each row carries a `sets` count (e.g. "2 × 10 × 25kg"), so volume and the
+  // set tally weight by that count rather than the number of rows.
+  const volumeKg = s.sets.reduce((acc, x) => acc + (x.reps ?? 0) * (x.weight_kg ?? 0) * (x.sets ?? 1), 0);
   const cardioSec = s.cardio.reduce((acc, c) => acc + (c.duration_s ?? 0), 0);
   const cardioKm = s.cardio.reduce((acc, c) => acc + (c.distance_km ?? 0), 0);
   return {
-    sets: s.sets.length,
+    sets: s.sets.reduce((acc, x) => acc + (x.sets ?? 1), 0),
     volumeKg: Math.round(volumeKg),
     cardioMin: Math.round(cardioSec / 60),
     cardioKm: Math.round(cardioKm * 100) / 100,
@@ -47,7 +49,7 @@ export function sessionStats(s: SessionDetailed): SessionStats {
 
 export interface ExerciseGroup {
   name: string;
-  sets: { reps: number | null; weight_kg: number | null; rpe: number | null }[];
+  sets: { sets: number; reps: number | null; weight_kg: number | null; rpe: number | null }[];
 }
 
 // Group a session's sets by exercise, preserving first-seen order, so the raw
@@ -63,7 +65,7 @@ export function groupSetsByExercise(s: SessionDetailed): ExerciseGroup[] {
       byName.set(name, g);
       order.push(name);
     }
-    g.sets.push({ reps: set.reps, weight_kg: set.weight_kg, rpe: set.rpe });
+    g.sets.push({ sets: set.sets ?? 1, reps: set.reps, weight_kg: set.weight_kg, rpe: set.rpe });
   }
   return order.map((n) => byName.get(n)!);
 }

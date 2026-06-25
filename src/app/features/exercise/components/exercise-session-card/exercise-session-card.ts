@@ -22,7 +22,7 @@ import { groupSetsByExercise, londonTime, sessionStats } from '../../utils/exerc
               <span class="xsc__sets">
                 @for (s of g.sets; track $index) {
                   <span class="xsc__set">
-                    {{ s.reps ?? '?' }}&times;{{ s.weight_kg ?? 0 }}kg@if (s.rpe) {<span class="xsc__rpe"> · RPE {{ s.rpe }}</span>}
+                    @if (s.sets > 1) {{{ s.sets }}&times;}{{ s.reps ?? '?' }}&times;{{ s.weight_kg ?? 0 }}kg@if (s.rpe) {<span class="xsc__rpe"> · RPE {{ s.rpe }}</span>}
                   </span>
                 }
               </span>

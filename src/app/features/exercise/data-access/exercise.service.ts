@@ -13,6 +13,7 @@ export interface SetDetailed {
   exercise_id: string;
   exercise_name: string | null;
   set_number: number;
+  sets: number; // how many identical sets this row represents (e.g. 2 = "2 × 10 × 25kg")
   reps: number | null;
   weight_kg: number | null;
   rpe: number | null;
@@ -65,6 +66,61 @@ export interface GymActivityRow {
   kcal: number;
 }
 
+// Catalogue entry for the set/cardio exercise picker.
+export interface ExerciseCatalogItem {
+  id: string;
+  name: string;
+}
+
+// ── Write inputs (mirror jimbo-api gym write bodies) ──────────────
+export interface SessionCreate {
+  started_at?: string;
+  pre_energy?: number;
+  notes?: string;
+}
+export type SessionPatch = Partial<{
+  started_at: string;
+  ended_at: string | null;
+  pre_energy: number | null;
+  notes: string | null;
+}>;
+
+export interface SetCreate {
+  exercise_id: string;
+  set_number: number;
+  sets?: number;
+  reps?: number;
+  weight_kg?: number;
+  rpe?: number;
+  duration_s?: number;
+  notes?: string;
+}
+export type SetPatch = Partial<{
+  exercise_id: string;
+  set_number: number;
+  sets: number;
+  reps: number | null;
+  weight_kg: number | null;
+  rpe: number | null;
+  duration_s: number | null;
+  notes: string | null;
+}>;
+
+export interface CardioCreate {
+  exercise_id: string;
+  duration_s?: number;
+  distance_km?: number;
+  avg_heart_rate?: number;
+  notes?: string;
+}
+export type CardioPatch = Partial<{
+  exercise_id: string;
+  duration_s: number | null;
+  distance_km: number | null;
+  avg_heart_rate: number | null;
+  notes: string | null;
+}>;
+
 @Injectable({ providedIn: 'root' })
 export class ExerciseService {
   private readonly http = inject(HttpClient);
@@ -111,5 +167,42 @@ export class ExerciseService {
     return this.http.get<{ days: GymActivityRow[] }>(
       `${this.base}/api/gym/activity/daily?${params.toString()}`,
     );
+  }
+
+  // Exercise catalogue for the set/cardio picker (fuzzy name search optional).
+  listExercises(q?: string): Observable<ExerciseCatalogItem[]> {
+    const qs = q ? `?q=${encodeURIComponent(q)}&limit=100` : '?limit=100';
+    return this.http.get<ExerciseCatalogItem[]>(`${this.base}/api/gym/exercises${qs}`);
+  }
+
+  // ── Writes (CRUD) ──────────────────────────────────────────────
+  createSession(body: SessionCreate): Observable<SessionDetailed> {
+    return this.http.post<SessionDetailed>(`${this.base}/api/gym/sessions`, body);
+  }
+  patchSession(id: string, changes: SessionPatch): Observable<SessionDetailed> {
+    return this.http.patch<SessionDetailed>(`${this.base}/api/gym/sessions/${id}`, changes);
+  }
+  deleteSession(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/gym/sessions/${id}`);
+  }
+
+  createSet(sessionId: string, body: SetCreate): Observable<SetDetailed> {
+    return this.http.post<SetDetailed>(`${this.base}/api/gym/sessions/${sessionId}/sets`, body);
+  }
+  patchSet(id: string, changes: SetPatch): Observable<SetDetailed> {
+    return this.http.patch<SetDetailed>(`${this.base}/api/gym/sets/${id}`, changes);
+  }
+  deleteSet(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/gym/sets/${id}`);
+  }
+
+  createCardio(sessionId: string, body: CardioCreate): Observable<CardioDetailed> {
+    return this.http.post<CardioDetailed>(`${this.base}/api/gym/sessions/${sessionId}/cardio`, body);
+  }
+  patchCardio(id: string, changes: CardioPatch): Observable<CardioDetailed> {
+    return this.http.patch<CardioDetailed>(`${this.base}/api/gym/cardio/${id}`, changes);
+  }
+  deleteCardio(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/gym/cardio/${id}`);
   }
 }
