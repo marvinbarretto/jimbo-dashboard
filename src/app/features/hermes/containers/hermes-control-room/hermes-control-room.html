@@ -29,6 +29,10 @@
             @if (job.state === 'paused') {
               <span class="cr__job-badge cr__job-badge--warning">paused</span>
             }
+            @if (job.script) {
+              <span class="cr__job-badge cr__job-badge--gated"
+                    [title]="'Gated by ' + job.script + ' — runs are skipped (no model call) when there is no work'">⏭ gated</span>
+            }
             <span class="cr__job-time">{{ relativeTime(job.last_run_at) }}</span>
           </span>
         </button>
@@ -119,6 +123,15 @@
               <dt>Skill</dt>
               <dd>{{ job.skill ?? '—' }}</dd>
             </div>
+            @if (job.script) {
+              <div class="cr__field">
+                <dt>Pre-run gate</dt>
+                <dd>
+                  <app-ui-badge tone="success" [subtle]="true"
+                    title="Runs are skipped before any model call when this script prints [SKIP]">⏭ {{ job.script }}</app-ui-badge>
+                </dd>
+              </div>
+            }
             <div class="cr__field">
               <dt>Model</dt>
               @if (editingModel()) {

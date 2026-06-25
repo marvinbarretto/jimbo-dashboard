@@ -13,6 +13,9 @@ export interface HermesJob {
   last_delivery_error: string | null;
   runs_completed: number | null;
   skill: string | null;
+  // Pre-run script. When set it often acts as a skip-gate: if it prints
+  // "[SKIP]" the scheduler aborts the run before any model call.
+  script: string | null;
   deliver: string | null;
   prompt: string | null;
   skills: string[] | null;

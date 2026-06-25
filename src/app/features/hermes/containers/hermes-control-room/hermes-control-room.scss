@@ -111,6 +111,7 @@
 
   &--danger  { background: color-mix(in srgb, var(--color-danger) 15%, transparent); color: var(--color-danger); }
   &--warning { background: color-mix(in srgb, var(--color-warning) 15%, transparent); color: var(--color-warning); }
+  &--gated   { background: color-mix(in srgb, var(--color-success) 15%, transparent); color: var(--color-success); text-transform: none; letter-spacing: 0.02em; }
 }
 
 .cr__job-time {
