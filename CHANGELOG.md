@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.80](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.79...v0.0.80) (2026-06-25)
+
+
+### Features
+
+* **exercise:** add exercise dashboard feature + journal widgets ([e812e5a](https://github.com/marvinbarretto/jimbo-dashboard/commit/e812e5a9bd2f10ea612e004a09d374a6408699ce))
+* **exercise:** split workouts vs daily activity; surface steps ([0fb5a76](https://github.com/marvinbarretto/jimbo-dashboard/commit/0fb5a7638d803b01dc9c992853fa3b686735f093))
+* **journal:** dashboard-esque day summary with routine progress meters ([0da0c6a](https://github.com/marvinbarretto/jimbo-dashboard/commit/0da0c6a6bfa814a764ae3264a9b34029fdf2cb06))
+* **nutrition:** generic tracker primitives + unified day ledger with CRUD ([9f5db82](https://github.com/marvinbarretto/jimbo-dashboard/commit/9f5db82c78a3af507b2b0052ac672947c4747344))
+* **nutrition:** show supplements in journal day section ([b7d00c7](https://github.com/marvinbarretto/jimbo-dashboard/commit/b7d00c76830a9829d551dc23609b009558ad3905))
+* **projects:** multi-repo per-repo cards + repo.md aggregation (M3) ([ee81d3e](https://github.com/marvinbarretto/jimbo-dashboard/commit/ee81d3ef8f9b58f41e6ed71f3fe4d288429df172))
+* **projects:** read-only operating fields for repo-synced projects (M2) ([09d9cec](https://github.com/marvinbarretto/jimbo-dashboard/commit/09d9cec124ce49f0fbaa095f2fe8155f44cbc33d))
+* **scripts:** 72h launchd agent for the manifest sweep (M4) ([d7e4ecf](https://github.com/marvinbarretto/jimbo-dashboard/commit/d7e4ecf924eb44ec2f011c710f8a0e4e6a435c52))
+* **scripts:** add project-manifest sync (dry-run default) ([c071848](https://github.com/marvinbarretto/jimbo-dashboard/commit/c07184849cd49cbb0a8f8b21494a685d328fe1c8))
+* **scripts:** API-driven manifest sync (drive from project registry, not filesystem sweep) ([a4418dd](https://github.com/marvinbarretto/jimbo-dashboard/commit/a4418dd1b4c082e0353811ce0e16556b24d3a97f))
+* **scripts:** resolve relative conventions against repo_url in manifest sync ([6a6657d](https://github.com/marvinbarretto/jimbo-dashboard/commit/6a6657d265e6ab23629c0d2050ba0ac584cdbdaa))
+
+
+### Bug Fixes
+
+* **exercise,journal:** label total energy correctly ([dded383](https://github.com/marvinbarretto/jimbo-dashboard/commit/dded383472ed3f1fc03919675145f32f652c5e0f))
+* **scripts:** order-insensitive repos comparison (jsonb reorders keys) ([8e8376d](https://github.com/marvinbarretto/jimbo-dashboard/commit/8e8376dda1509df021729290b43a3ab4ef21f5a1))
+* **scripts:** stamp synced_at even when manifest content already matches ([b6d3a64](https://github.com/marvinbarretto/jimbo-dashboard/commit/b6d3a64857c0149e2471599ea283e3f4dacb8a4e))
+
 ### [0.0.79](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.78...v0.0.79) (2026-06-24)
 
 
