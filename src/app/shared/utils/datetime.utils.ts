@@ -43,6 +43,18 @@ export function shiftIsoDay(iso: string, deltaDays: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** "Today" / "Yesterday" / "Wed 25 Jun" for a YYYY-MM-DD day, relative to now. */
+export function relativeDayLabel(date: string): string {
+  const today = londonToday();
+  if (date === today) return 'Today';
+  if (date === shiftIsoDay(today, -1)) return 'Yesterday';
+  return new Date(`${date}T12:00:00Z`).toLocaleDateString('en-GB', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+  });
+}
+
 export function formatDatetime(value: string | null | undefined): string {
   if (!value) return '—';
   const d = new Date(value);

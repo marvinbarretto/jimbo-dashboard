@@ -144,13 +144,15 @@ export interface UiInlineEditOption {
     }
 
     .ui-inline-edit__display {
-      cursor: text;
+      cursor: pointer;
       background: transparent;
       border: 1px solid transparent;
+      transition: background 0.1s ease, border-color 0.1s ease;
 
+      /* Clear "click to edit" affordance: accent-tinted fill + border on hover. */
       &:hover {
-        background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-        border-color: color-mix(in srgb, var(--color-border) 60%, transparent);
+        background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+        border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
       }
 
       &:focus-visible {

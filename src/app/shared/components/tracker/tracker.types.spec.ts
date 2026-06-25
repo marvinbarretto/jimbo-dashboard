@@ -48,12 +48,21 @@ describe('roundForMeasure', () => {
   });
 });
 
-describe('iso <-> datetime-local round trip', () => {
-  it('round-trips an instant through the local-input representation', () => {
-    const iso = '2026-06-25T08:05:00.000Z';
-    const local = isoToLocalInput(iso);
-    // local string has no zone; converting back yields the same instant.
-    expect(localInputToIso(local)).toBe(iso);
+describe('iso <-> datetime-local (Europe/London)', () => {
+  it('formats the input in London wall-clock — BST in summer, GMT in winter', () => {
+    expect(isoToLocalInput('2026-06-25T08:05:00Z')).toBe('2026-06-25T09:05'); // BST = UTC+1
+    expect(isoToLocalInput('2026-01-15T08:05:00Z')).toBe('2026-01-15T08:05'); // GMT = UTC+0
+  });
+
+  it('round-trips an instant through the London-input representation (both seasons)', () => {
+    for (const iso of ['2026-06-25T08:05:00.000Z', '2026-01-15T08:05:00.000Z']) {
+      expect(localInputToIso(isoToLocalInput(iso))).toBe(iso);
+    }
+  });
+
+  it('interprets the typed wall-clock as London, not UTC', () => {
+    // 09:05 on a summer day is BST → 08:05Z, not 09:05Z.
+    expect(localInputToIso('2026-06-25T09:05')).toBe('2026-06-25T08:05:00.000Z');
   });
 
   it('returns null for empty or invalid local input', () => {

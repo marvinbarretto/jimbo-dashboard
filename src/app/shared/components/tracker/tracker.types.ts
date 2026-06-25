@@ -97,19 +97,32 @@ export function roundForMeasure(m: TrackerMeasure, value: number): number {
 }
 
 // ── Time helpers ─────────────────────────────────────────────────
-// datetime-local has no timezone; we treat its wall-clock as the browser's
-// local zone (London for this app's user), which is the conventional handling.
+// datetime-local has no timezone; this app pins its wall-clock to Europe/London
+// (BST/GMT, DST-correct) regardless of the browser's zone, so edited times match
+// the London-bucketed data and read-only displays (formatLondonTime).
 
-/** ISO instant → `YYYY-MM-DDTHH:mm` for an <input type="datetime-local">. */
+const LONDON_TZ = 'Europe/London';
+
+/** ISO instant → `YYYY-MM-DDTHH:mm` (Europe/London wall-clock) for datetime-local. */
 export function isoToLocalInput(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: LONDON_TZ,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(new Date(iso));
+  const v = (t: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === t)?.value ?? '';
+  return `${v('year')}-${v('month')}-${v('day')}T${v('hour')}:${v('minute')}`;
 }
 
-/** `YYYY-MM-DDTHH:mm` (browser-local) → ISO instant. Empty/invalid → null. */
+/** `YYYY-MM-DDTHH:mm` (Europe/London wall-clock) → ISO instant. Empty/invalid → null. */
 export function localInputToIso(local: string): string | null {
-  if (!local) return null;
-  const d = new Date(local);
-  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  // datetime-local emits `YYYY-MM-DDTHH:mm`; reject anything else outright.
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(local)) return null;
+  // Treat the input as UTC to get a provisional instant, then correct by the
+  // London offset *at that instant* (so BST vs GMT is handled per-date).
+  const naive = Date.parse(`${local}:00Z`);
+  if (Number.isNaN(naive)) return null;
+  const londonWallOfNaive = isoToLocalInput(new Date(naive).toISOString());
+  const offsetMs = naive - Date.parse(`${londonWallOfNaive}:00Z`);
+  return new Date(naive + offsetMs).toISOString();
 }

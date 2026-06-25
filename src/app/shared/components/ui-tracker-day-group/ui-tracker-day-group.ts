@@ -9,7 +9,7 @@ import {
   type TrackerMeasure,
   type TrackerPatch,
 } from '@shared/components/tracker/tracker.types';
-import { londonToday, shiftIsoDay } from '@shared/utils/datetime.utils';
+import { londonToday, relativeDayLabel } from '@shared/utils/datetime.utils';
 
 /**
  * A single day's slice of a tracker: a collapsible section headed by the day +
@@ -128,13 +128,3 @@ export class UiTrackerDayGroup {
   });
 }
 
-function relativeDayLabel(date: string): string {
-  const today = londonToday();
-  if (date === today) return 'Today';
-  if (date === shiftIsoDay(today, -1)) return 'Yesterday';
-  return new Date(`${date}T12:00:00Z`).toLocaleDateString('en-GB', {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-  });
-}

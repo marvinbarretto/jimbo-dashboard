@@ -31,18 +31,21 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tracker-row" [class.tracker-row--editable]="editable()">
-      <span class="tracker-row__time">
-        @if (editable() && rowEditable()) {
-          <app-ui-inline-edit
-            kind="datetime"
-            [value]="timeInput()"
-            ariaLabel="Edit time"
-            (saved)="saveTime($event)"
-          />
-        } @else {
-          {{ entry().at | londonTime }}
-        }
-      </span>
+      @if (showTime()) {
+        <span class="tracker-row__time">
+          @if (editable() && rowEditable()) {
+            <app-ui-inline-edit
+              kind="datetime"
+              [value]="timeInput()"
+              [displayFor]="displayTime"
+              ariaLabel="Edit time"
+              (saved)="saveTime($event)"
+            />
+          } @else {
+            {{ entry().at | londonTime }}
+          }
+        </span>
+      }
 
       @if (entry().kind; as k) {
         <span class="tracker-row__kind" [attr.data-kind]="k">{{ k }}</span>
@@ -177,11 +180,17 @@ export class UiTrackerRow {
   readonly measures = input.required<readonly TrackerMeasure[]>();
   readonly editable = input<boolean>(false);
   readonly labelPlaceholder = input<string>('label…');
+  /** Show the leading time column. Off for sub-entries that aren't independently timed (e.g. a set within a session). */
+  readonly showTime = input<boolean>(true);
 
   readonly patch = output<TrackerPatch>();
   readonly remove = output<string>();
 
   protected readonly timeInput = computed(() => isoToLocalInput(this.entry().at));
+
+  // The day group shows the date — the row only needs HH:MM. The picker still
+  // edits the full London datetime when clicked.
+  protected readonly displayTime = (v: string): string => (v.length >= 16 ? v.slice(11, 16) : v);
   protected readonly rowEditable = computed(() => this.entry().editable ?? true);
   protected readonly labelEditable = computed(() => this.entry().labelEditable ?? true);
   protected readonly shownMeasures = computed(() => measuresFor(this.entry(), this.measures()));

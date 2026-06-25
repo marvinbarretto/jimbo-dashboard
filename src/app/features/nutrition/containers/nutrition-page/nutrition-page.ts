@@ -95,9 +95,9 @@ export class NutritionPage {
     () => `/api/coach/protocol`,
   );
 
-  // Gate on the primary feed's load only — isLoading() also clears on error, so
-  // a failed read renders an empty ledger rather than hanging on a spinner.
-  protected readonly loading = computed(() => this.foodRes.isLoading());
+  // Spinner only on the FIRST load — reload-after-write keeps hasValue() true so
+  // the ledger isn't torn down (otherwise every edit would collapse the day groups).
+  protected readonly loading = computed(() => this.foodRes.isLoading() && !this.foodRes.hasValue());
 
   private readonly dailyRows = computed<FoodDailyRow[]>(() => this.dailyRes.value()?.days ?? []);
   private readonly foodEntries = computed<FoodLogEntry[]>(() => this.foodRes.value()?.items ?? []);
