@@ -35,6 +35,16 @@ export interface FoodDailyRow {
   count: number;
 }
 
+/** A frequently-logged food + its latest macros — the self-growing catalog. */
+export interface FrequentFood {
+  label: string;
+  est_kcal: number | null;
+  est_protein_g: number | null;
+  est_carbs_g: number | null;
+  est_fat_g: number | null;
+  count: number;
+}
+
 export interface SupplementLogEntry {
   id: number;
   taken_at: string;
@@ -98,6 +108,13 @@ export class NutritionService {
     params.set('days', String(opts.days ?? 14));
     return this.http.get<{ days: FoodDailyRow[] }>(
       `${this.base}/api/coach/food-log/daily?${params.toString()}`,
+    );
+  }
+
+  // Most-logged foods + latest macros — the self-growing autocomplete catalog.
+  frequentFoods(limit = 40): Observable<{ items: FrequentFood[] }> {
+    return this.http.get<{ items: FrequentFood[] }>(
+      `${this.base}/api/coach/food-log/frequent?limit=${limit}`,
     );
   }
 

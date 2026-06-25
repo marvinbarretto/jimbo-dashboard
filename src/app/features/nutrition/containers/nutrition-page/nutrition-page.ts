@@ -22,6 +22,7 @@ import {
   type FoodDailyRow,
   type FoodLogEntry,
   type FoodPatch,
+  type FrequentFood,
   type SupplementLogEntry,
   type SupplementPatch,
 } from '../../data-access/nutrition.service';
@@ -94,6 +95,9 @@ export class NutritionPage {
   private readonly catalogRes = httpResource<{ items: { id: string; name: string }[] }>(
     () => `/api/coach/protocol`,
   );
+  private readonly frequentRes = httpResource<{ items: FrequentFood[] }>(
+    () => `/api/coach/food-log/frequent?limit=40`,
+  );
 
   // Spinner only on the FIRST load — reload-after-write keeps hasValue() true so
   // the ledger isn't torn down (otherwise every edit would collapse the day groups).
@@ -102,6 +106,10 @@ export class NutritionPage {
   private readonly dailyRows = computed<FoodDailyRow[]>(() => this.dailyRes.value()?.days ?? []);
   private readonly foodEntries = computed<FoodLogEntry[]>(() => this.foodRes.value()?.items ?? []);
   private readonly supplements = computed<SupplementLogEntry[]>(() => this.suppRes.value()?.items ?? []);
+
+  protected readonly foodSuggestions = computed<string[]>(() =>
+    (this.frequentRes.value()?.items ?? []).map((f) => f.label),
+  );
 
   protected readonly supplementOptions = computed<QuickAddOption[]>(() =>
     (this.catalogRes.value()?.items ?? []).map((s) => ({ id: s.id, label: s.name })),
@@ -219,6 +227,7 @@ export class NutritionPage {
   private reloadFood(): void {
     this.foodRes.reload();
     this.dailyRes.reload();
+    this.frequentRes.reload(); // a new/edited food may change the suggestions
   }
 }
 

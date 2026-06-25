@@ -14,6 +14,8 @@ export interface QuickAddOption {
   readonly label: string;
 }
 
+let nextQuickAddId = 0;
+
 /**
  * Todo-style inline capture: a label (free text, or a catalog select) plus a
  * compact number field per quick-add measure, committed on Enter or the add
@@ -53,9 +55,17 @@ export interface QuickAddOption {
           [value]="label()"
           [placeholder]="placeholder()"
           [attr.aria-label]="labelAria()"
+          [attr.list]="suggestions().length ? listId : null"
           (input)="label.set($any($event.target).value)"
           (keydown.enter)="commit()"
         />
+        @if (suggestions().length) {
+          <datalist [id]="listId">
+            @for (s of suggestions(); track s) {
+              <option [value]="s"></option>
+            }
+          </datalist>
+        }
       }
 
       @for (m of measures(); track m.key) {
@@ -149,6 +159,8 @@ export class UiQuickAddRow {
   readonly measures = input<readonly TrackerMeasure[]>([]);
   /** When non-empty, the label becomes a select over this catalog (e.g. supplements). */
   readonly options = input<readonly QuickAddOption[]>([]);
+  /** Native autocomplete suggestions for the text label (e.g. your frequent foods). */
+  readonly suggestions = input<readonly string[]>([]);
   readonly placeholder = input<string>('add an entry…');
   readonly labelAria = input<string>('New entry');
   readonly addLabel = input<string>('Add');
@@ -159,6 +171,7 @@ export class UiQuickAddRow {
 
   readonly add = output<TrackerDraft>();
 
+  protected readonly listId = `quick-add-list-${nextQuickAddId++}`;
   protected readonly label = signal('');
   protected readonly ref = signal('');
   protected readonly values = signal<Record<string, number>>({});

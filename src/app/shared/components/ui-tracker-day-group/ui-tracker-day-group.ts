@@ -49,6 +49,7 @@ import { londonToday, relativeDayLabel } from '@shared/utils/datetime.utils';
             class="day-group__add"
             [measures]="quickAddMeasures()"
             [options]="quickAddOptions()"
+            [suggestions]="quickAddSuggestions()"
             [placeholder]="quickAddPlaceholder()"
             [addLabel]="quickAddLabel()"
             [kind]="quickAddKind()"
@@ -92,6 +93,7 @@ export class UiTrackerDayGroup {
   readonly showQuickAdd = input<boolean>(true);
   readonly quickAddMeasures = input<readonly TrackerMeasure[]>([]);
   readonly quickAddOptions = input<readonly QuickAddOption[]>([]);
+  readonly quickAddSuggestions = input<readonly string[]>([]);
   readonly quickAddPlaceholder = input<string>('add an entry…');
   readonly quickAddLabel = input<string>('Add');
   readonly quickAddKind = input<string | undefined>(undefined);
