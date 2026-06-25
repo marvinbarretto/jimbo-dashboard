@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.81](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.80...v0.0.81) (2026-06-25)
+
+
+### Features
+
+* **exercise:** rebuild gym page as an editable day-grouped session ledger ([946c95a](https://github.com/marvinbarretto/jimbo-dashboard/commit/946c95afa3836fd5228f849e4f8665d57b6ad4c8))
+* **hermes:** flag gated cron jobs in the control room ([6635433](https://github.com/marvinbarretto/jimbo-dashboard/commit/6635433904d119722b4decec990a6dd65144b113))
+* **tracker:** London-aware time editing, inline-edit polish, no teardown on write ([67f89d7](https://github.com/marvinbarretto/jimbo-dashboard/commit/67f89d777decdb889370da84812c438efcd775f6))
+
+
+### Bug Fixes
+
+* **hermes:** label pre-run scripts accurately, not all as "gated" ([7a6dcc3](https://github.com/marvinbarretto/jimbo-dashboard/commit/7a6dcc305f45fb312457ce11cc96b4924148545d))
+
 ### [0.0.80](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.79...v0.0.80) (2026-06-25)
 
 
