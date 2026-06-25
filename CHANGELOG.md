@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.84](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.83...v0.0.84) (2026-06-25)
+
+
+### Features
+
+* **journal:** surface YouTube watch time on the day summary ([56a58ec](https://github.com/marvinbarretto/jimbo-dashboard/commit/56a58ec8f6a06c6c7fce32d23263c1fc77768997))
+* **pomo:** guided project → epic → story start flow ([32fbdb1](https://github.com/marvinbarretto/jimbo-dashboard/commit/32fbdb125638ea7a0105a7f37f80a78ca9b72986))
+* **ui:** UiTypeahead picker replacing native selects for catalog/entity fields ([b760bd8](https://github.com/marvinbarretto/jimbo-dashboard/commit/b760bd85e3df71d6f429b58ab6a193ccbba384d7)), closes [#10](https://github.com/marvinbarretto/jimbo-dashboard/issues/10)
+
 ### [0.0.83](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.82...v0.0.83) (2026-06-25)
 
 
