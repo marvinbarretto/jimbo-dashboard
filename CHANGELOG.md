@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.82](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.81...v0.0.82) (2026-06-25)
+
+
+### Features
+
+* **nutrition:** guess calories on quick-add via the LLM estimator ([c89e40f](https://github.com/marvinbarretto/jimbo-dashboard/commit/c89e40f9f9f08b8593ee350d187a34ed4bbb260d))
+
 ### [0.0.81](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.80...v0.0.81) (2026-06-25)
 
 
