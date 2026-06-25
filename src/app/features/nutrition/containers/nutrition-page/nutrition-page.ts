@@ -158,8 +158,17 @@ export class NutritionPage {
 
   // ── Write handlers (reload-on-write) ─────────────────────────────
   protected onAddFood(draft: TrackerDraft): void {
+    const kcal = draft.values['kcal'];
+    const estimating = kcal == null;
+    // The LLM estimate adds ~1–2s before the entry appears — acknowledge the add.
+    if (estimating) this.toast.info(`Estimating “${draft.label}”…`);
     this.service
-      .createFood({ raw_text: draft.label, logged_at: draft.at, est_kcal: draft.values['kcal'] ?? null })
+      .createFood({
+        raw_text: draft.label,
+        logged_at: draft.at,
+        est_kcal: kcal ?? null,
+        estimate: estimating,
+      })
       .subscribe({
         next: () => this.reloadFood(),
         error: () => this.toast.error('Could not add entry'),

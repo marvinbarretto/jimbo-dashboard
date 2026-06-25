@@ -57,6 +57,8 @@ export interface FoodManualInput {
   est_carbs_g?: number | null;
   est_fat_g?: number | null;
   notes?: string | null;
+  /** When true and no macros supplied, the server fills them via the LLM estimator. */
+  estimate?: boolean;
 }
 export type FoodPatch = Partial<FoodManualInput>;
 
