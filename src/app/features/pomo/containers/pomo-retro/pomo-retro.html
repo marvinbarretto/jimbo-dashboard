@@ -27,11 +27,11 @@
                 {{ (isItemDone(it.id) || it.alreadyDone) ? '✓' : '○' }}
               </button>
               <app-vault-chip
+                size="lg"
                 [kind]="it.kind"
                 [seq]="it.seq"
                 [title]="it.title"
-                [creator]="it.creator"
-                [openInModal]="false" />
+                [creator]="it.creator" />
             </li>
           }
         </ul>
@@ -217,11 +217,11 @@
                 {{ isItemDone(it.id) ? '✓' : '○' }}
               </button>
               <app-vault-chip
+                size="lg"
                 [kind]="it.kind"
                 [seq]="it.seq"
                 [title]="it.title"
-                [creator]="it.creator"
-                [openInModal]="false" />
+                [creator]="it.creator" />
             </li>
           }
         </ul>

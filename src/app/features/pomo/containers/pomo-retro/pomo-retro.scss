@@ -261,22 +261,32 @@
 .retro__linked-row {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.65rem;
+
+  // Let the (lg) chip take the row width so long titles ellipsise at the edge
+  // rather than the chip's content width.
+  app-vault-chip {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 }
 
 .retro__linked-check {
   flex: 0 0 auto;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.6rem;
+  height: 1.6rem;
   display: grid;
   place-items: center;
-  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1;
   border: 1.5px solid var(--color-border);
   border-radius: 50%;
   background: var(--color-surface);
   color: var(--color-text-soft);
   cursor: pointer;
+  transition: border-color 80ms ease, color 80ms ease;
 
+  &:hover { border-color: var(--color-text-soft); color: var(--color-text); }
   &--on {
     border-color: var(--color-success, #34d399);
     color: var(--color-success, #34d399);

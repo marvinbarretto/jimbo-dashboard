@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 export type VaultChipKind = 'task' | 'subtask' | 'epic';
 export type VaultChipCreator = 'agent' | 'human';
+export type VaultChipSize = 'sm' | 'lg';
 
 @Component({
   selector: 'app-vault-chip',
@@ -25,6 +26,10 @@ export type VaultChipCreator = 'agent' | 'human';
     </a>
   `,
   styles: [`
+    /* Participate in flex layouts so a host row can stretch the chip and let long
+       titles ellipsise at the available width rather than the chip's content width. */
+    :host { display: inline-flex; max-width: 100%; min-width: 0; }
+
     .vault-chip {
       display: inline-flex;
       align-items: center;
@@ -43,6 +48,17 @@ export type VaultChipCreator = 'agent' | 'human';
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
     }
+
+    /* Larger, more tappable variant — for picker / list contexts where the item
+       is the primary content (e.g. the pomo retro), not an inline reference. */
+    .vault-chip--lg {
+      font-size: 0.88rem;
+      line-height: 1.5;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem 0.4rem 0.5rem;
+      border-left-width: 4px;
+    }
+    .vault-chip--lg .vault-chip__prefix { font-size: 0.85rem; }
     .vault-chip:hover {
       border-color: var(--color-border-strong);
       border-left-color: var(--proj-tint, var(--color-border-strong));
@@ -100,6 +116,7 @@ export class VaultChip {
   readonly creator     = input<VaultChipCreator>('agent');
   readonly epicSeq     = input<number | null>(null);
   readonly href        = input<string | null>(null);
+  readonly size        = input<VaultChipSize>('sm');
   // When true (default), plain clicks push ?detail=<seq> so a host page that
   // mounted withVaultDetailModal() opens the modal. Middle/cmd-click still
   // honours the rendered href and opens the full /vault-items route.
@@ -118,7 +135,7 @@ export class VaultChip {
     }
   });
   protected readonly cls = computed(() => {
-    const parts = ['vault-chip', `vault-chip--${this.kind()}`];
+    const parts = ['vault-chip', `vault-chip--${this.kind()}`, `vault-chip--${this.size()}`];
     if (this.kind() === 'epic' && this.creator() === 'human') parts.push('vault-chip--human');
     return parts.join(' ');
   });

@@ -28,6 +28,14 @@ import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
         </div>
 
         <div>
+          <p class="ui-lab__subhead">Sizes · sm (default) / lg — lg for picker / list contexts where the item is the primary content</p>
+          <app-ui-cluster gap="md" align="center">
+            <span style="--proj-tint: #6b95d6;"><app-vault-chip kind="task" [seq]="2417" title="wire up dispatch retry button" /></span>
+            <span style="--proj-tint: #6b95d6;"><app-vault-chip size="lg" kind="task" [seq]="2417" title="wire up dispatch retry button" /></span>
+          </app-ui-cluster>
+        </div>
+
+        <div>
           <p class="ui-lab__subhead">Subtask · ↳ prefix · optional epic-marker</p>
           <app-ui-cluster gap="sm">
             <span style="--proj-tint: #6b95d6;"><app-vault-chip kind="subtask" [seq]="2417" title="wire up retry" [epicSeq]="2350" /></span>

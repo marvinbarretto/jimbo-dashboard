@@ -22,6 +22,7 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { UiProgressMeter } from '@shared/components/ui-progress-meter/ui-progress-meter';
 import { VaultChip, type VaultChipKind, type VaultChipCreator } from '@shared/components/vault-chip/vault-chip';
+import { withVaultDetailModal } from '@shared/kanban/detail-modal';
 import type { FocusSessionCommit, SessionMood } from '@domain/focus-sessions';
 import type { VaultItem } from '@domain/vault';
 import { environment } from '../../../../../environments/environment';
@@ -63,6 +64,11 @@ export class PomoRetro implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly http = inject(HttpClient);
+
+  // Clicking a vault-chip pushes ?detail=<seq>; this opens the item detail modal.
+  constructor() {
+    withVaultDetailModal();
+  }
 
   readonly moodOptions = MOOD_OPTIONS;
 
