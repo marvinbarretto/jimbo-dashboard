@@ -138,19 +138,6 @@
                 <dd class="cr__field-edit">
                   <select
                     class="cr__inline-input cr__inline-input--sm"
-                    (change)="applyCatalogueModel($any($event.target).value); $any($event.target).value = ''"
-                    title="Pick from the model catalogue — fills the backend + model below">
-                    <option value="">From catalogue…</option>
-                    @for (g of catalogueGroups(); track g.author) {
-                      <optgroup [label]="g.author">
-                        @for (m of g.models; track m.id) {
-                          <option [value]="m.id">{{ m.name }}</option>
-                        }
-                      </optgroup>
-                    }
-                  </select>
-                  <select
-                    class="cr__inline-input cr__inline-input--sm"
                     [ngModel]="editProviderValue()"
                     (ngModelChange)="editProviderValue.set($event)"
                     (keydown.escape)="cancelEditModel()"
@@ -160,22 +147,26 @@
                       <option [value]="p">{{ p }}</option>
                     }
                   </select>
-                  @if (editProviderValue() !== '') {
-                    <input
-                      class="cr__inline-input cr__inline-input--sm"
-                      type="text"
-                      list="cr-model-suggestions"
-                      [ngModel]="editModelValue()"
-                      (ngModelChange)="editModelValue.set($event)"
-                      (keydown.enter)="saveModelPin()"
-                      (keydown.escape)="cancelEditModel()"
-                      placeholder="model id, e.g. gpt-5.5 or openai/gpt-4o" />
-                    <datalist id="cr-model-suggestions">
-                      @for (m of modelSuggestions(); track m) {
-                        <option [value]="m"></option>
-                      }
-                    </datalist>
-                  }
+                  <!--
+                    Single picker for catalogue + off-catalogue ids. Always shown now
+                    (no longer gated on a provider being set): picking a catalogue row
+                    cross-fills the backend via applyCatalogueModel; a manual provider
+                    pick above still works, and allowCreate handles off-catalogue ids
+                    (e.g. gpt-5.5 / openai/gpt-4o). One-way [ngModel] only — view
+                    changes flow through (pick)/(create) so applyCatalogueModel's
+                    runtime-id semantics aren't clobbered by a raw option-id write.
+                  -->
+                  <app-ui-typeahead
+                    class="cr__model-typeahead"
+                    [options]="modelOptions()"
+                    [allowCreate]="true"
+                    placeholder="search or type a model id…"
+                    ariaLabel="Model"
+                    [ngModel]="editModelValue()"
+                    (pick)="applyCatalogueModel($event.id)"
+                    (create)="editModelValue.set($event)"
+                    (keydown.enter)="saveModelPin()"
+                    (keydown.escape)="cancelEditModel()" />
                   <button type="button" class="cr__btn cr__btn--primary cr__btn--sm" (click)="saveModelPin()" [disabled]="actionState() === 'loading' || !modelPinValid()">Save</button>
                   <button type="button" class="cr__btn cr__btn--ghost cr__btn--sm" (click)="cancelEditModel()">Cancel</button>
                 </dd>

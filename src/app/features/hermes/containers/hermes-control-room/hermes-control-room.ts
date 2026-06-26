@@ -4,6 +4,7 @@ import { ModelsService } from '@features/models/data-access/models.service';
 import { modelRuntimeId } from '@domain/models';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiSection } from '@shared/components/ui-section/ui-section';
+import { UiTypeahead, type TypeaheadOption } from '@shared/components/ui-typeahead/ui-typeahead';
 import { HermesService } from '../../data-access/hermes.service';
 import type { HermesJob, HermesRun } from '../../hermes.types';
 import { absoluteTime, deliverLabel, formatBytes, formatDuration, relativeTime, stateBadgeTone } from '../../hermes.utils';
@@ -39,7 +40,7 @@ interface RunDetail {
 
 @Component({
   selector: 'app-hermes-control-room',
-  imports: [FormsModule, UiBadge, UiSection],
+  imports: [FormsModule, UiBadge, UiSection, UiTypeahead],
   templateUrl: './hermes-control-room.html',
   styleUrl: './hermes-control-room.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -65,26 +66,20 @@ export class HermesControlRoom {
 
   readonly providers = HERMES_PROVIDERS;
 
-  // Catalogue model ids for the <datalist> suggestions (free-text still allowed,
-  // so a backend model not yet in the catalogue — e.g. a fresh Codex id — works).
-  readonly modelSuggestions = computed(() =>
-    this.modelsService.activeModels().map(m => m.id).sort((a, b) => a.localeCompare(b))
+  // Flat typeahead options for the catalogue picker; the backend author rides
+  // along as a muted hint (search replaces the old provider optgroups) and
+  // `allowCreate` keeps manual off-catalogue ids (a fresh Codex/OpenRouter id)
+  // working. Mirrors hermes-model-prefs. Picking a row cross-fills the provider
+  // + runtime model id via applyCatalogueModel().
+  readonly modelOptions = computed<TypeaheadOption[]>(() =>
+    this.modelsService.activeModels()
+      .map((m) => ({
+        id: m.id,
+        label: m.name,
+        hint: m.metadata.provider || m.id.split('/')[0] || undefined,
+      }))
+      .sort((a, b) => a.id.localeCompare(b.id)),
   );
-
-  // Catalogue models grouped by author for the quick-pick <select>. Selecting one
-  // derives the backend (inference_provider) + runtime model id and fills the
-  // editable fields below — which remain overridable / open to off-catalogue ids.
-  readonly catalogueGroups = computed(() => {
-    const groups = new Map<string, { id: string; name: string }[]>();
-    for (const m of this.modelsService.activeModels()) {
-      const author = m.metadata.provider || m.id.split('/')[0] || 'other';
-      if (!groups.has(author)) groups.set(author, []);
-      groups.get(author)!.push({ id: m.id, name: m.name });
-    }
-    return [...groups.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([author, models]) => ({ author, models: models.sort((x, y) => x.id.localeCompare(y.id)) }));
-  });
 
   readonly modelPinValid = computed(() => {
     const provider = this.editProviderValue();

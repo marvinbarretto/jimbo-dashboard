@@ -295,6 +295,14 @@
   &--sm { font-size: 0.78rem; font-weight: 400; }
 }
 
+// Catalogue model picker sits inline next to the provider select; let it grow
+// to fill the row. The typeahead renders its own input chrome, so this only
+// handles flex sizing (not borders/padding like .cr__inline-input).
+.cr__model-typeahead {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
 .cr__edit-inline-btn {
   display: inline-flex;
   align-items: center;
