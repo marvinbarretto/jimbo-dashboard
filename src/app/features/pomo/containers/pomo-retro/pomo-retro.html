@@ -24,7 +24,7 @@
                 class="retro__linked-check"
                 [class.retro__linked-check--on]="isItemDone(it.id) || it.alreadyDone"
                 (click)="toggleItemDone(it.id)">
-                {{ (isItemDone(it.id) || it.alreadyDone) ? '✓' : '○' }}
+                {{ (isItemDone(it.id) || it.alreadyDone) ? '✓' : '' }}
               </button>
               <app-vault-chip
                 size="lg"
@@ -214,7 +214,7 @@
                 [class.retro__linked-check--on]="isItemDone(it.id)"
                 title="Mark done"
                 (click)="toggleItemDone(it.id)">
-                {{ isItemDone(it.id) ? '✓' : '○' }}
+                {{ isItemDone(it.id) ? '✓' : '' }}
               </button>
               <app-vault-chip
                 size="lg"
