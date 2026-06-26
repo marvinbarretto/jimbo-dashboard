@@ -208,14 +208,6 @@
         <ul class="retro__linked">
           @for (it of nextSteps(); track it.id) {
             <li class="retro__linked-row">
-              <button
-                type="button"
-                class="retro__linked-check"
-                [class.retro__linked-check--on]="isItemDone(it.id)"
-                title="Mark done"
-                (click)="toggleItemDone(it.id)">
-                {{ isItemDone(it.id) ? '✓' : '' }}
-              </button>
               <app-vault-chip
                 size="lg"
                 [kind]="it.kind"
