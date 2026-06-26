@@ -6,6 +6,8 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FocusSessionsService } from '../../data-access/focus-sessions.service';
@@ -18,8 +20,28 @@ import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
+import { UiProgressMeter } from '@shared/components/ui-progress-meter/ui-progress-meter';
+import { VaultChip, type VaultChipKind, type VaultChipCreator } from '@shared/components/vault-chip/vault-chip';
 import type { FocusSessionCommit, SessionMood } from '@domain/focus-sessions';
+import type { VaultItem } from '@domain/vault';
+import { environment } from '../../../../../environments/environment';
 import { vaultItemId } from '@domain/ids';
+
+interface LinkedItemVM {
+  readonly id: string;
+  readonly seq: number;
+  readonly title: string;
+  readonly kind: VaultChipKind;
+  readonly creator: VaultChipCreator;
+  readonly alreadyDone: boolean;
+}
+
+interface YoutubeWatchVM {
+  readonly title: string;
+  readonly channel: string;
+  readonly seconds: number;
+  readonly url: string;
+}
 
 const MOOD_OPTIONS: { value: SessionMood; icon: string; label: string }[] = [
   { value: -1, icon: '👎', label: 'Bad' },
@@ -30,7 +52,7 @@ const MOOD_OPTIONS: { value: SessionMood; icon: string; label: string }[] = [
 @Component({
   selector: 'app-pomo-retro',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, UiStack, UiCard, UiButton, UiCluster, UiStatCard, UiEmptyState, UiDonutChart],
+  imports: [FormsModule, UiStack, UiCard, UiButton, UiCluster, UiStatCard, UiEmptyState, UiDonutChart, UiProgressMeter, VaultChip],
   templateUrl: './pomo-retro.html',
   styleUrl: './pomo-retro.scss',
 })
@@ -40,6 +62,7 @@ export class PomoRetro implements OnInit {
   private readonly vaultItems = inject(VaultItemsService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly http = inject(HttpClient);
 
   readonly moodOptions = MOOD_OPTIONS;
 
@@ -62,10 +85,33 @@ export class PomoRetro implements OnInit {
     Math.round((this.session()?.planned_seconds ?? 0) / 60),
   );
 
+  readonly actualMins = computed(() =>
+    Math.round((this.session()?.actual_seconds ?? 0) / 60),
+  );
+
+  // The story / sub-task this pomo was for (the intention contract), and the
+  // YouTube watched during the session window — loaded in ngOnInit.
+  readonly linkedItems = signal<LinkedItemVM[]>([]);
+  readonly youtube = signal<YoutubeWatchVM[]>([]);
+  readonly youtubeMins = computed(() =>
+    Math.round(this.youtube().reduce((s, v) => s + v.seconds, 0) / 60),
+  );
+
   readonly activity = computed(() => this.session()?.activity ?? null);
+
+  // Extra activity facets we have but didn't surface before.
+  readonly distinctDomains = computed(() => this.activity()?.distinct_domains ?? 0);
+  readonly unfocusedLabel = computed(() => {
+    const s = this.activity()?.unfocused_seconds ?? 0;
+    return s < 60 ? '<1m' : `${Math.round(s / 60)}m`;
+  });
 
   readonly focusPct = computed(() =>
     Math.round((this.activity()?.focus_ratio ?? 0) * 100),
+  );
+
+  readonly focusTopMins = computed(() =>
+    Math.round((this.activity()?.top_domain_seconds ?? 0) / 60),
   );
 
   readonly switchesLabel = computed(() => String(this.activity()?.tab_switches ?? 0));
@@ -110,13 +156,32 @@ export class PomoRetro implements OnInit {
     return `across ${repos.size} repos`;
   });
 
-  readonly projectItems = computed(() => {
-    const id = this.session()?.project_id;
-    if (!id) return [];
-    return this.vaultItems.activeItems()
-      .filter(i => i.primary_project_id === id && !i.is_epic)
-      .slice(0, 10);
+  // The primary focus item (the linked story / sub-task), resolved to a full item.
+  readonly focusItem = computed<VaultItem | null>(() => {
+    const first = this.linkedItems()[0];
+    if (!first || !first.seq) return null;
+    return this.vaultItems.getById(vaultItemId(first.id)) ?? null;
   });
+
+  // "Next steps" — real candidates for the next pomo: sibling sub-tasks, other
+  // open tasks in the same epic (incl. GH issues synced as vault items), most
+  // recent first. Falls back to the project when there's no epic.
+  readonly nextSteps = computed<LinkedItemVM[]>(() => {
+    const focus = this.focusItem();
+    const projectId = this.session()?.project_id ?? null;
+    const focusIds = new Set(this.linkedItems().map(i => i.id));
+    const epicId = focus ? this.epicAncestorId(focus) : null;
+
+    return this.vaultItems.activeItems()
+      .filter(i => !i.is_epic && i.completed_at == null && !focusIds.has(i.id))
+      .filter(i => epicId ? this.epicAncestorId(i) === epicId : i.primary_project_id === projectId)
+      .sort(byRecency)
+      .slice(0, 8)
+      .map(i => this.toItemVM(i));
+  });
+
+  readonly newSubtaskTitle = signal('');
+  readonly newNextStepTitle = signal('');
 
   readonly completedItemIds = signal<Set<string>>(new Set());
 
@@ -136,6 +201,95 @@ export class PomoRetro implements OnInit {
     if (s) {
       const commits = await this.sessions.loadCommits(s.id);
       this.commits.set(commits);
+
+      // The linked story / sub-task (intention), resolved to full items so the
+      // shared vault-chip can render them with seq + type.
+      const notes = await this.sessions.loadNotes(s.id);
+      this.linkedItems.set(notes.map(n => this.resolveLinked(n.vault_note_id, n.title)));
+
+      // YouTube watched within the session window.
+      const until = s.ended_at ?? this.nowIso();
+      this.youtube.set(await this.loadYoutube(s.started_at, until));
+    }
+  }
+
+  private nowIso(): string {
+    return new Date().toISOString();
+  }
+
+  private resolveLinked(id: string, fallbackTitle: string): LinkedItemVM {
+    const item = this.vaultItems.getById(vaultItemId(id));
+    if (!item) {
+      return { id, seq: 0, title: fallbackTitle, kind: 'task', creator: 'human', alreadyDone: false };
+    }
+    return this.toItemVM(item);
+  }
+
+  private toItemVM(item: VaultItem): LinkedItemVM {
+    const parent = item.parent_id ? this.vaultItems.getById(item.parent_id) : undefined;
+    const kind: VaultChipKind = item.is_epic ? 'epic' : (parent && !parent.is_epic ? 'subtask' : 'task');
+    const creator: VaultChipCreator = item.source?.kind === 'manual' ? 'human' : 'agent';
+    return { id: item.id, seq: item.seq, title: item.title, kind, creator, alreadyDone: item.completed_at != null };
+  }
+
+  // Walk the parent chain to the owning epic (the focus's epic, or any item's).
+  private epicAncestorId(item: VaultItem): string | null {
+    let cur: VaultItem | undefined = item;
+    let guard = 0;
+    while (cur && guard++ < 12) {
+      if (cur.is_epic) return cur.id;
+      cur = cur.parent_id ? this.vaultItems.getById(cur.parent_id) : undefined;
+    }
+    return null;
+  }
+
+  // The focus was too big / needs another pomo — break it into a sub-task now.
+  breakIntoSubtask(): void {
+    const title = this.newSubtaskTitle().trim();
+    const focus = this.focusItem();
+    if (!title || !focus) return;
+    this.vaultItems.createOnBoard({
+      title,
+      type: 'task',
+      parent_id: focus.id,
+      primary_project_id: this.session()?.project_id ?? null,
+    });
+    this.newSubtaskTitle.set('');
+  }
+
+  // Capture a fresh next step into the focus's epic (or the project).
+  captureNextStep(): void {
+    const title = this.newNextStepTitle().trim();
+    if (!title) return;
+    const focus = this.focusItem();
+    this.vaultItems.createOnBoard({
+      title,
+      type: 'task',
+      parent_id: focus ? this.epicAncestorId(focus) : null,
+      primary_project_id: this.session()?.project_id ?? null,
+    });
+    this.newNextStepTitle.set('');
+  }
+
+  private async loadYoutube(sinceIso: string, untilIso: string): Promise<YoutubeWatchVM[]> {
+    try {
+      const url =
+        `${environment.dashboardApiUrl}/api/telemetry/events?collector=youtube&type=watch_session` +
+        `&since=${encodeURIComponent(sinceIso)}&until=${encodeURIComponent(untilIso)}&limit=200`;
+      const res = await firstValueFrom(
+        this.http.get<{ events: Array<{ value: number | null; payload: Record<string, unknown> | null }> }>(url),
+      );
+      return (res.events ?? []).map((e) => {
+        const p = e.payload ?? {};
+        return {
+          title: (p['title'] as string) || 'YouTube video',
+          channel: (p['channel'] as string) || '',
+          seconds: e.value ?? 0,
+          url: (p['url'] as string) || '',
+        };
+      });
+    } catch {
+      return [];
     }
   }
 
@@ -206,4 +360,12 @@ export class PomoRetro implements OnInit {
   formatMins(seconds: number): string {
     return `${Math.round(seconds / 60)}m`;
   }
+}
+
+// "Most recent worked on" = latest activity, falling back to creation.
+function recencyMs(i: VaultItem): number {
+  return new Date(i.latest_activity_at ?? i.created_at).getTime();
+}
+function byRecency(a: VaultItem, b: VaultItem): number {
+  return recencyMs(b) - recencyMs(a);
 }

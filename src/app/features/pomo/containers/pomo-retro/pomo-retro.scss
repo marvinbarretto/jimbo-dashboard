@@ -247,3 +247,90 @@
   cursor: pointer;
   padding-bottom: 0.5rem;
 }
+
+/* Linked story / sub-task (intention) */
+.retro__linked {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.retro__linked-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.retro__linked-check {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: grid;
+  place-items: center;
+  font: inherit;
+  border: 1.5px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text-soft);
+  cursor: pointer;
+
+  &--on {
+    border-color: var(--color-success, #34d399);
+    color: var(--color-success, #34d399);
+  }
+}
+
+/* Time / focus meters row */
+.retro__meters {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+/* YouTube watched */
+.retro__yt {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.retro__yt-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.retro__yt-title {
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.retro__yt-meta {
+  font-size: 0.75rem;
+  color: var(--color-text-soft);
+}
+
+.retro__hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text-soft);
+}
+
+/* Inline quick-add (break into sub-task / capture next step) */
+.retro__quickadd {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.5rem;
+
+  .retro__field {
+    flex: 1;
+    min-height: 0;
+  }
+}

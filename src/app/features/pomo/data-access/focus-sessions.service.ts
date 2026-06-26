@@ -196,4 +196,25 @@ export class FocusSessionsService {
       return [];
     }
   }
+
+  /** Vault notes linked to the session — the story / sub-task it was for. */
+  async loadNotes(id: string): Promise<SessionVaultNote[]> {
+    try {
+      const { items } = await firstValueFrom(
+        this.http.get<{ items: SessionVaultNote[] }>(
+          `${this.url}/${encodeURIComponent(id)}/notes`,
+        ),
+      );
+      return items ?? [];
+    } catch {
+      return [];
+    }
+  }
+}
+
+export interface SessionVaultNote {
+  vault_note_id: string;
+  title: string;
+  status: string;
+  type: string;
 }

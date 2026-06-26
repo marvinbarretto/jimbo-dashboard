@@ -4,20 +4,72 @@
   <header class="retro__header">
     <h1 class="retro__title">Session complete</h1>
     @if (session()) {
-      <p class="retro__meta">{{ plannedMins() }}m · {{ projectName() }}</p>
+      <p class="retro__meta">{{ actualMins() }} of {{ plannedMins() }} min · {{ projectName() }}</p>
     }
     @if (session().notes) {
       <p class="retro__intention">"{{ session().notes }}"</p>
     }
   </header>
 
+  <!-- WORKED ON — the linked story / sub-task (intention contract) -->
+  @if (linkedItems().length) {
+    <app-ui-card>
+      <div class="retro__field-group">
+        <span class="retro__label">Worked on</span>
+        <ul class="retro__linked">
+          @for (it of linkedItems(); track it.id) {
+            <li class="retro__linked-row">
+              <button
+                type="button"
+                class="retro__linked-check"
+                [class.retro__linked-check--on]="isItemDone(it.id) || it.alreadyDone"
+                (click)="toggleItemDone(it.id)">
+                {{ (isItemDone(it.id) || it.alreadyDone) ? '✓' : '○' }}
+              </button>
+              <app-vault-chip
+                [kind]="it.kind"
+                [seq]="it.seq"
+                [title]="it.title"
+                [creator]="it.creator"
+                [openInModal]="false" />
+            </li>
+          }
+        </ul>
+        @if (focusItem()) {
+          <div class="retro__quickadd">
+            <input
+              type="text"
+              class="retro__field"
+              placeholder="Not finished? Break it into a sub-task…"
+              [ngModel]="newSubtaskTitle()"
+              (ngModelChange)="newSubtaskTitle.set($event)"
+              (keyup.enter)="breakIntoSubtask()" />
+            <app-ui-button variant="secondary" size="sm" [disabled]="!newSubtaskTitle().trim()" (pressed)="breakIntoSubtask()">
+              Add
+            </app-ui-button>
+          </div>
+        }
+      </div>
+    </app-ui-card>
+  }
+
   <!-- AT-A-GLANCE STATS (above the fold) -->
   <div class="retro__stats">
     <app-ui-stat-card label="Focus" [value]="focusPct() + '%'" [detail]="topDomainDetail()" />
     <app-ui-stat-card label="Commits" [value]="commitsCount().toString()" [detail]="commitsDetail()" />
     <app-ui-stat-card label="Switches" [value]="switchesLabel()" />
-    <app-ui-stat-card label="Idle" [value]="idleLabel()" />
+    <app-ui-stat-card label="Idle" [value]="idleLabel()" [detail]="unfocusedLabel() + ' unfocused'" />
   </div>
+
+  <!-- TIME + FOCUS METERS (shared ui-progress-meter) -->
+  @if (session()) {
+    <div class="retro__meters">
+      <app-ui-progress-meter label="Time on task" [current]="actualMins()" [target]="plannedMins()" unit="min" />
+      @if (activity()) {
+        <app-ui-progress-meter label="On top site" [current]="focusTopMins()" [target]="plannedMins()" unit="min" />
+      }
+    </div>
+  }
 
   <!-- REFLECTION (above the fold — the action) -->
   <app-ui-card>
@@ -119,32 +171,76 @@
         } @else {
           <app-ui-empty-state message="No browsing activity recorded for this session." />
         }
+        @if (distinctDomains() > 0) {
+          <p class="retro__hint">{{ distinctDomains() }} sites visited</p>
+        }
       </div>
     </app-ui-card>
   }
 
-  <!-- VAULT ITEMS — tap to mark done -->
-  @if (projectItems().length) {
+  <!-- WATCHED ON YOUTUBE — the actual videos, during the session window -->
+  @if (youtube().length) {
     <app-ui-card>
       <div class="retro__field-group">
-        <span class="retro__label">Tap any items you completed</span>
-        <ul class="retro__task-list">
-          @for (item of projectItems(); track item.id) {
-            <li>
-              <button
-                type="button"
-                class="retro__task-btn"
-                [class.retro__task-btn--done]="isItemDone(item.id)"
-                (click)="toggleItemDone(item.id)">
-                <span class="retro__task-check">{{ isItemDone(item.id) ? '✓' : '○' }}</span>
-                <span class="retro__task-seq">#{{ item.seq }}</span>
-                <span class="retro__task-title">{{ item.title }}</span>
-              </button>
+        <span class="retro__label">
+          Watched on YouTube
+          <span class="retro__count">· {{ youtubeMins() }}m</span>
+        </span>
+        <ul class="retro__yt">
+          @for (v of youtube(); track v.url) {
+            <li class="retro__yt-row">
+              <span class="retro__yt-title">{{ v.title }}</span>
+              <span class="retro__yt-meta">
+                @if (v.channel) { {{ v.channel }} · }{{ formatMins(v.seconds) }}
+              </span>
             </li>
           }
         </ul>
       </div>
     </app-ui-card>
   }
+
+  <!-- NEXT STEPS — sibling sub-tasks, other open tasks in the epic, project issues -->
+  <app-ui-card>
+    <div class="retro__field-group">
+      <span class="retro__label">Next steps</span>
+      @if (nextSteps().length) {
+        <ul class="retro__linked">
+          @for (it of nextSteps(); track it.id) {
+            <li class="retro__linked-row">
+              <button
+                type="button"
+                class="retro__linked-check"
+                [class.retro__linked-check--on]="isItemDone(it.id)"
+                title="Mark done"
+                (click)="toggleItemDone(it.id)">
+                {{ isItemDone(it.id) ? '✓' : '○' }}
+              </button>
+              <app-vault-chip
+                [kind]="it.kind"
+                [seq]="it.seq"
+                [title]="it.title"
+                [creator]="it.creator"
+                [openInModal]="false" />
+            </li>
+          }
+        </ul>
+      } @else {
+        <app-ui-empty-state message="No other open tasks here yet — capture the next one below." />
+      }
+      <div class="retro__quickadd">
+        <input
+          type="text"
+          class="retro__field"
+          placeholder="+ Capture the next task…"
+          [ngModel]="newNextStepTitle()"
+          (ngModelChange)="newNextStepTitle.set($event)"
+          (keyup.enter)="captureNextStep()" />
+        <app-ui-button variant="secondary" size="sm" [disabled]="!newNextStepTitle().trim()" (pressed)="captureNextStep()">
+          Add
+        </app-ui-button>
+      </div>
+    </div>
+  </app-ui-card>
 
 </app-ui-stack>
