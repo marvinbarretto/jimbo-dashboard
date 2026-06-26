@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.85](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.84...v0.0.85) (2026-06-26)
+
+
+### Features
+
+* **pomo:** broadcast session lifecycle to the extension countdown bridge ([53e1b69](https://github.com/marvinbarretto/jimbo-dashboard/commit/53e1b69563dc17ef71c59a8ac5ac748d1cd42210))
+* **pomo:** intention-centric retro with real Next Steps ([afc5f27](https://github.com/marvinbarretto/jimbo-dashboard/commit/afc5f2730b856b6e01e121ee5223d9f45bf69855))
+* **pomo:** redesign pre-session as an auto-advancing wizard ([3c7d7f1](https://github.com/marvinbarretto/jimbo-dashboard/commit/3c7d7f102be665b9c821767caf747fb3f1d59830))
+* **vault-chip:** add lg size; retro items open in modal + bigger ([2abded7](https://github.com/marvinbarretto/jimbo-dashboard/commit/2abded796cfd0441ccb1e0275e04f36b1d403635))
+
+
+### Bug Fixes
+
+* **pomo:** drop done-checkboxes from retro Next Steps ([a3179d4](https://github.com/marvinbarretto/jimbo-dashboard/commit/a3179d45fc9503ba5abe4a171d01786031b6a204))
+* **pomo:** retro done-check is an empty circle, not a circle-in-a-circle ([7e9627c](https://github.com/marvinbarretto/jimbo-dashboard/commit/7e9627c3353bd1732d0c9c7a2754e5b7d627269f))
+
+
+### Code Refactoring
+
+* **hermes:** convert control-room model editor to UiTypeahead ([56a9465](https://github.com/marvinbarretto/jimbo-dashboard/commit/56a9465c3dbaf58adb12e73221011aff615baf3f)), closes [#10](https://github.com/marvinbarretto/jimbo-dashboard/issues/10)
+* **ui-lab:** promote ui-stepper + ui-select-chip; reuse progress-meter ([0fdd21c](https://github.com/marvinbarretto/jimbo-dashboard/commit/0fdd21c2fec87ae2931167617d44bcfd6557ccd4))
+
 ### [0.0.84](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.83...v0.0.84) (2026-06-25)
 
 
