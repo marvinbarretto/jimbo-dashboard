@@ -144,6 +144,8 @@ export const routes: Routes = [
       { path: 'ui-inline-tabs',          loadComponent: () => import('./features/ui-lab/sections/ui-inline-tabs-section').then(m => m.UiInlineTabsSection) },
       { path: 'ui-segmented',            loadComponent: () => import('./features/ui-lab/sections/ui-segmented-section').then(m => m.UiSegmentedSection) },
       { path: 'ui-filter-pills',         loadComponent: () => import('./features/ui-lab/sections/ui-filter-pills-section').then(m => m.UiFilterPillsSection) },
+      { path: 'ui-select-chip',          loadComponent: () => import('./features/ui-lab/sections/ui-select-chip-section').then(m => m.UiSelectChipSection) },
+      { path: 'ui-stepper',              loadComponent: () => import('./features/ui-lab/sections/ui-stepper-section').then(m => m.UiStepperSection) },
       { path: 'list-workflow',           loadComponent: () => import('./features/ui-lab/sections/list-workflow-section').then(m => m.ListWorkflowSection) },
       { path: 'detail-workflow',         loadComponent: () => import('./features/ui-lab/sections/detail-workflow-section').then(m => m.DetailWorkflowSection) },
       { path: 'hybrid-edit',             loadComponent: () => import('./features/ui-lab/sections/hybrid-edit-section').then(m => m.HybridEditSection) },

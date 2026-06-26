@@ -22,57 +22,6 @@
   letter-spacing: -0.015em;
 }
 
-.wiz__steps {
-  display: flex;
-  align-items: center;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.wiz__pip {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--color-text-soft);
-
-  /* connector line to the next pip */
-  &:not(:last-child)::after {
-    content: '';
-    flex: 1;
-    height: 2px;
-    min-width: 1.5rem;
-    margin: 0 0.85rem;
-    background: var(--color-border);
-  }
-
-  &[data-state='active'],
-  &[data-state='done'] {
-    color: var(--color-text);
-  }
-  &[data-state='active'] .wiz__pip-n,
-  &[data-state='done'] .wiz__pip-n {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
-  }
-}
-
-.wiz__pip-n {
-  display: grid;
-  place-items: center;
-  width: 1.65rem;
-  height: 1.65rem;
-  border: 2px solid var(--color-border);
-  border-radius: 50%;
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.wiz__pip-label {
-  font-size: 0.82rem;
-  font-weight: 600;
-}
-
 /* ── Body sections ───────────────────────────────────────────────────────── */
 
 .wiz__body {
@@ -115,32 +64,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-}
-
-.wiz__chip {
-  --chip: var(--color-accent);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.4rem 0.9rem 0.4rem 0.5rem;
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  border: 1.5px solid var(--color-border);
-  border-radius: 2rem;
-  background: var(--color-surface);
-  color: var(--color-text);
-  cursor: pointer;
-  transition: border-color 80ms ease, background 80ms ease;
-
-  &:hover { border-color: var(--chip); }
-  &--muted { --chip: var(--color-text-soft); }
-  &--on {
-    border-color: var(--chip);
-    background: color-mix(in srgb, var(--chip) 16%, transparent);
-    box-shadow: inset 0 0 0 1px var(--chip);
-  }
-  &:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 }
 
 /* ── Card grid (epics + stories) ─────────────────────────────────────────── */
@@ -200,27 +123,6 @@
 .wiz__card-when {
   flex: 0 0 auto;
   font-size: 0.72rem;
-  color: var(--color-text-soft);
-}
-
-.wiz__bar {
-  display: block;
-  height: 5px;
-  border-radius: 3px;
-  background: var(--color-border);
-  overflow: hidden;
-}
-
-.wiz__bar-fill {
-  display: block;
-  height: 100%;
-  background: var(--color-accent);
-  border-radius: 3px;
-  transition: width 220ms ease;
-}
-
-.wiz__card-sub {
-  font-size: 0.75rem;
   color: var(--color-text-soft);
 }
 

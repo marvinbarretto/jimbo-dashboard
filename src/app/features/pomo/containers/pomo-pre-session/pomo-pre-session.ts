@@ -12,6 +12,9 @@ import { FocusSessionsService } from '../../data-access/focus-sessions.service';
 import { VaultItemsService } from '../../../vault-items/data-access/vault-items.service';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { ProjectAvatar } from '@shared/components/project-avatar/project-avatar';
+import { UiStepper, type UiStepperStep } from '@shared/components/ui-stepper/ui-stepper';
+import { UiSelectChip } from '@shared/components/ui-select-chip/ui-select-chip';
+import { UiProgressMeter } from '@shared/components/ui-progress-meter/ui-progress-meter';
 import type { Project } from '@domain/projects';
 import type { VaultItem } from '@domain/vault';
 
@@ -32,11 +35,6 @@ interface StoryVM {
   readonly title: string;
   readonly recency: string;
 }
-interface StepVM {
-  readonly n: number;
-  readonly label: string;
-  readonly state: 'done' | 'active' | 'todo';
-}
 
 /**
  * Auto-advancing start wizard: pick a project and its epics reveal (most recent
@@ -47,7 +45,7 @@ interface StepVM {
 @Component({
   selector: 'app-pomo-pre-session',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, UiButton, ProjectAvatar],
+  imports: [FormsModule, UiButton, ProjectAvatar, UiStepper, UiSelectChip, UiProgressMeter],
   templateUrl: './pomo-pre-session.html',
   styleUrl: './pomo-pre-session.scss',
 })
@@ -103,14 +101,14 @@ export class PomoPreSession {
       .map(toStoryVM);
   });
 
-  readonly steps = computed<StepVM[]>(() => {
+  readonly steps = computed<UiStepperStep[]>(() => {
     const p = this.projectTouched();
     const e = this.selectedEpicId() !== null;
     const s = this.selectedStoryId() !== null;
     return [
-      { n: 1, label: 'Project', state: p ? 'done' : 'active' },
-      { n: 2, label: 'Epic', state: e ? 'done' : p ? 'active' : 'todo' },
-      { n: 3, label: 'Story', state: s ? 'done' : e ? 'active' : 'todo' },
+      { label: 'Project', state: p ? 'done' : 'active' },
+      { label: 'Epic', state: e ? 'done' : p ? 'active' : 'todo' },
+      { label: 'Story', state: s ? 'done' : e ? 'active' : 'todo' },
     ];
   });
 

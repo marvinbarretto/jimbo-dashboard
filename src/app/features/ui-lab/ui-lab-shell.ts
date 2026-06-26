@@ -50,6 +50,7 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'project-avatar',          name: 'Project Avatar',        group: 'identity',        selector: 'app-project-avatar',    description: 'Project initials in a colour-filled rounded square. Actor=circle, project=rounded-square — shape disambiguates identity.' },
   { id: 'actor-chip',              name: 'Actor Chip',            group: 'identity',        selector: 'app-actor-chip',        description: 'Actor name in a monochrome pill. Pair with actor-avatar for the dense / icon-only treatment.' },
   { id: 'vault-chip',              name: 'Vault Chip',            group: 'identity',        selector: 'app-vault-chip',        description: 'Task / subtask / epic — same shell, different prefix. Epic encodes creator class via border.' },
+  { id: 'ui-select-chip',          name: 'Select Chip',           group: 'identity',        selector: 'app-ui-select-chip',    description: 'Prominent selectable picker pill with optional colour + leading swatch. Fills the gap between app-chip (colour, no select) and filter-pills (select, no colour).' },
 
   // Cards — kanban surface and the slot primitives that compose into it
   { id: 'vault-card',              name: 'Vault Card',            group: 'cards',           selector: 'app-vault-card',        description: 'Unified kanban card driven by CardContext (grooming / dispatch / manual).' },
@@ -79,6 +80,7 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'ui-inline-tabs',          name: 'Inline Tabs',           group: 'forms-editing',   selector: 'app-ui-inline-tabs',    description: 'Lightweight in-page tabs for facet-switching inside a content section. Counts + colour dots. No page chrome.' },
   { id: 'ui-segmented',            name: 'Segmented Control',     group: 'forms-editing',   selector: 'app-ui-segmented',      description: 'Single-select one-of-N control. View-mode toggles (verbosity, message kind, density).' },
   { id: 'ui-filter-pills',         name: 'Filter Pills',          group: 'forms-editing',   selector: 'app-ui-filter-pills',   description: 'Multi-select pill row. Host owns active-set semantics (including exclusive "all").' },
+  { id: 'ui-stepper',              name: 'Stepper',               group: 'forms-editing',   selector: 'app-ui-stepper',        description: 'Horizontal step indicator for wizards. Host owns each step state (todo / active / done) so non-linear flows work.' },
 
   // Detail surfaces — patterns specific to the vault item detail modal
   { id: 'vault-detail-primitives', name: 'Vault Detail Primitives', group: 'detail-surfaces',                                  description: 'Stat card, chip list, inline picker, dropdown, readiness panel, checklist, sticky action bar, subsection.' },

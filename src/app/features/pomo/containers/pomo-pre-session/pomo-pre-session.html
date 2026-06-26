@@ -2,14 +2,7 @@
 
   <header class="wiz__head">
     <h1 class="wiz__title">Start a pomo</h1>
-    <ol class="wiz__steps">
-      @for (s of steps(); track s.n) {
-        <li class="wiz__pip" [attr.data-state]="s.state">
-          <span class="wiz__pip-n">{{ s.state === 'done' ? '✓' : s.n }}</span>
-          <span class="wiz__pip-label">{{ s.label }}</span>
-        </li>
-      }
-    </ol>
+    <app-ui-stepper [steps]="steps()" />
   </header>
 
   <div class="wiz__body">
@@ -19,23 +12,18 @@
       <span class="wiz__section-label">Project</span>
       <div class="wiz__chips">
         @for (p of projectChips(); track p.id) {
-          <button
-            type="button"
-            class="wiz__chip"
-            [class.wiz__chip--on]="isProjectSelected(p.id)"
-            [style.--chip]="projectColor(p)"
-            (click)="selectProject(p.id)">
-            <app-project-avatar size="sm" variant="filled" [name]="p.display_name" [color]="projectColor(p)" />
-            {{ p.display_name }}
-          </button>
+          <app-ui-select-chip
+            [label]="p.display_name"
+            [color]="projectColor(p)"
+            [selected]="isProjectSelected(p.id)"
+            (toggle)="selectProject(p.id)">
+            <app-project-avatar chipLead size="sm" variant="filled" [name]="p.display_name" [color]="projectColor(p)" />
+          </app-ui-select-chip>
         }
-        <button
-          type="button"
-          class="wiz__chip wiz__chip--muted"
-          [class.wiz__chip--on]="isProjectSelected(null)"
-          (click)="selectProject(null)">
-          No project
-        </button>
+        <app-ui-select-chip
+          label="No project"
+          [selected]="isProjectSelected(null)"
+          (toggle)="selectProject(null)" />
       </div>
     </section>
 
@@ -55,8 +43,7 @@
                   <span class="wiz__card-title">{{ e.title }}</span>
                   @if (e.recency) { <span class="wiz__card-when">{{ e.recency }}</span> }
                 </span>
-                <span class="wiz__bar"><span class="wiz__bar-fill" [style.width.%]="e.pct"></span></span>
-                <span class="wiz__card-sub">{{ e.done }}/{{ e.total }} done</span>
+                <app-ui-progress-meter label="" [current]="e.done" [target]="e.total" unit="done" />
               </button>
             }
           </div>
