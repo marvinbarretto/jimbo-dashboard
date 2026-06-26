@@ -1,166 +1,177 @@
-<app-ui-stack class="pre-session" gap="lg">
+<section class="wiz">
 
-  <header class="pre-session__header">
-    <h1 class="pre-session__title">Start a pomo</h1>
+  <header class="wiz__head">
+    <h1 class="wiz__title">Start a pomo</h1>
+    <ol class="wiz__steps">
+      @for (s of steps(); track s.n) {
+        <li class="wiz__pip" [attr.data-state]="s.state">
+          <span class="wiz__pip-n">{{ s.state === 'done' ? '✓' : s.n }}</span>
+          <span class="wiz__pip-label">{{ s.label }}</span>
+        </li>
+      }
+    </ol>
   </header>
 
-  <app-ui-card>
-    <app-ui-stack gap="md">
+  <div class="wiz__body">
 
-      <!-- Step 1 · Project -->
-      <div class="pre-session__field-group">
-        <span class="pre-session__label">1 · Project</span>
-
-        @if (majorProjects().length) {
-          <p class="pre-session__group-label">Major</p>
-          <div class="pre-session__project-list">
-            @for (p of majorProjects(); track p.id) {
-              <button
-                type="button"
-                class="pre-session__project-tile"
-                [class.pre-session__project-tile--selected]="isProjectSelected(p.id)"
-                [style.--tile-color]="projectColor(p)"
-                (click)="selectProject(p.id)">
-                {{ p.display_name }}
-                @if (isProjectSelected(p.id)) { <span class="pre-session__check">✓</span> }
-              </button>
-            }
-          </div>
+    <!-- Project -->
+    <section class="wiz__section">
+      <span class="wiz__section-label">Project</span>
+      <div class="wiz__chips">
+        @for (p of projectChips(); track p.id) {
+          <button
+            type="button"
+            class="wiz__chip"
+            [class.wiz__chip--on]="isProjectSelected(p.id)"
+            [style.--chip]="projectColor(p)"
+            (click)="selectProject(p.id)">
+            <app-project-avatar size="sm" variant="filled" [name]="p.display_name" [color]="projectColor(p)" />
+            {{ p.display_name }}
+          </button>
         }
-
-        @if (minorProjects().length) {
-          <p class="pre-session__group-label">Minor</p>
-          <div class="pre-session__project-list">
-            @for (p of minorProjects(); track p.id) {
-              <button
-                type="button"
-                class="pre-session__project-tile"
-                [class.pre-session__project-tile--selected]="isProjectSelected(p.id)"
-                [style.--tile-color]="projectColor(p)"
-                (click)="selectProject(p.id)">
-                {{ p.display_name }}
-                @if (isProjectSelected(p.id)) { <span class="pre-session__check">✓</span> }
-              </button>
-            }
-          </div>
-        }
-
         <button
           type="button"
-          class="pre-session__project-tile pre-session__project-tile--none"
-          [class.pre-session__project-tile--selected]="isProjectSelected(null)"
+          class="wiz__chip wiz__chip--muted"
+          [class.wiz__chip--on]="isProjectSelected(null)"
           (click)="selectProject(null)">
           No project
-          @if (isProjectSelected(null)) { <span class="pre-session__check">✓</span> }
         </button>
       </div>
+    </section>
 
-      <!-- Step 2 · Epic (optional) -->
-      @if (selectedProjectId() !== null) {
-        <div class="pre-session__field-group">
-          <span class="pre-session__label">2 · Epic <span class="pre-session__hint">optional</span></span>
-          @if (projectEpics().length) {
-            <ul class="pre-session__scope-list">
-              @for (epic of projectEpics(); track epic.id) {
-                <li>
-                  <button
-                    type="button"
-                    class="pre-session__task-btn"
-                    [class.pre-session__task-btn--selected]="isEpicSelected(epic.id)"
-                    (click)="selectEpic(epic.id)">
-                    <span class="pre-session__scope-seq">#{{ epic.seq }}</span>
-                    <span class="pre-session__task-title">{{ epic.title }}</span>
-                    @if (isEpicSelected(epic.id)) { <span class="pre-session__task-check">▾</span> }
-                  </button>
-                </li>
-              }
-            </ul>
-          } @else {
-            <p class="pre-session__empty">No epics in this project yet.</p>
-          }
-        </div>
-      }
-
-      <!-- Step 3 · Story (optional, under the chosen epic) -->
-      @if (selectedEpicId() !== null) {
-        <div class="pre-session__field-group">
-          <span class="pre-session__label">3 · Story <span class="pre-session__hint">optional</span></span>
-          @if (epicStories().length) {
-            <ul class="pre-session__scope-list">
-              @for (story of epicStories(); track story.id) {
-                <li>
-                  <button
-                    type="button"
-                    class="pre-session__task-btn"
-                    [class.pre-session__task-btn--selected]="isStorySelected(story.id)"
-                    (click)="selectStory(story)">
-                    <span class="pre-session__scope-seq">#{{ story.seq }}</span>
-                    <span class="pre-session__task-title">{{ story.title }}</span>
-                    @if (isStorySelected(story.id)) { <span class="pre-session__task-check">→</span> }
-                  </button>
-                </li>
-              }
-            </ul>
-          } @else {
-            <p class="pre-session__empty">No stories under this epic yet — add one below.</p>
-          }
-
-          <div class="pre-session__new-story">
-            <input
-              type="text"
-              class="pre-session__field"
-              placeholder="+ New story under this epic"
-              [ngModel]="newStoryTitle()"
-              (ngModelChange)="newStoryTitle.set($event)"
-              (keyup.enter)="createStory()" />
-            <app-ui-button
-              variant="secondary"
-              size="sm"
-              [disabled]="!newStoryTitle().trim()"
-              (pressed)="createStory()">
-              Add
-            </app-ui-button>
+    <!-- Epics (revealed once a real project is chosen) -->
+    @if (projectTouched() && selectedProjectId() !== null) {
+      <section class="wiz__section">
+        <span class="wiz__section-label">Epics <em>· most recent first</em></span>
+        @if (epics().length) {
+          <div class="wiz__cards">
+            @for (e of epics(); track e.id) {
+              <button
+                type="button"
+                class="wiz__card"
+                [class.wiz__card--on]="isEpicSelected(e.id)"
+                (click)="selectEpic(e.id)">
+                <span class="wiz__card-head">
+                  <span class="wiz__card-title">{{ e.title }}</span>
+                  @if (e.recency) { <span class="wiz__card-when">{{ e.recency }}</span> }
+                </span>
+                <span class="wiz__bar"><span class="wiz__bar-fill" [style.width.%]="e.pct"></span></span>
+                <span class="wiz__card-sub">{{ e.done }}/{{ e.total }} done</span>
+              </button>
+            }
           </div>
+        } @else {
+          <p class="wiz__empty">No epics in this project yet.</p>
+        }
+      </section>
+    }
+
+    <!-- Stories (revealed once an epic is chosen) -->
+    @if (selectedEpicId() !== null) {
+      <section class="wiz__section">
+        <span class="wiz__section-label">Story <em>· most recent first</em></span>
+        @if (stories().length) {
+          <div class="wiz__cards">
+            @for (st of stories(); track st.id) {
+              <button
+                type="button"
+                class="wiz__card wiz__card--story"
+                [class.wiz__card--on]="isStorySelected(st.id)"
+                (click)="selectStory(st.id, st.title)">
+                <span class="wiz__card-title">#{{ st.seq }} {{ st.title }}</span>
+                @if (st.recency) { <span class="wiz__card-when">{{ st.recency }}</span> }
+              </button>
+            }
+          </div>
+        } @else {
+          <p class="wiz__empty">No stories under this epic yet — add one below.</p>
+        }
+
+        <div class="wiz__new">
+          <input
+            type="text"
+            class="wiz__input"
+            placeholder="+ New story under this epic"
+            [ngModel]="newStoryTitle()"
+            (ngModelChange)="newStoryTitle.set($event)"
+            (keyup.enter)="createStory()" />
+          <app-ui-button
+            variant="secondary"
+            size="sm"
+            [disabled]="!newStoryTitle().trim()"
+            (pressed)="createStory()">
+            Add
+          </app-ui-button>
         </div>
-      }
+      </section>
+    }
 
-      <!-- Intention -->
-      <div class="pre-session__field-group">
-        <label class="pre-session__label" for="intention">Intention</label>
-        <input
-          id="intention"
-          type="text"
-          class="pre-session__field"
-          placeholder="What will you get done?"
-          [ngModel]="intention()"
-          (ngModelChange)="intention.set($event)" />
+    <!-- Sub-task (optional): narrow the pomo's focus to a piece of the story -->
+    @if (selectedStoryId() !== null) {
+      <section class="wiz__section">
+        <span class="wiz__section-label">Focus <em>· optional sub-task</em></span>
+        @if (subtasks().length) {
+          <div class="wiz__cards">
+            @for (sub of subtasks(); track sub.id) {
+              <button
+                type="button"
+                class="wiz__card wiz__card--story"
+                [class.wiz__card--on]="isSubtaskSelected(sub.id)"
+                (click)="selectSubtask(sub.id, sub.title)">
+                <span class="wiz__card-title">#{{ sub.seq }} {{ sub.title }}</span>
+                @if (sub.recency) { <span class="wiz__card-when">{{ sub.recency }}</span> }
+              </button>
+            }
+          </div>
+        }
+        <div class="wiz__new">
+          <input
+            type="text"
+            class="wiz__input"
+            placeholder="+ New sub-task as this pomo's focus"
+            [ngModel]="newSubtaskTitle()"
+            (ngModelChange)="newSubtaskTitle.set($event)"
+            (keyup.enter)="createSubtask()" />
+          <app-ui-button
+            variant="secondary"
+            size="sm"
+            [disabled]="!newSubtaskTitle().trim()"
+            (pressed)="createSubtask()">
+            Add
+          </app-ui-button>
+        </div>
+      </section>
+    }
+
+  </div>
+
+  <footer class="wiz__foot">
+    <input
+      type="text"
+      class="wiz__input"
+      placeholder="What will you get done?"
+      [ngModel]="intention()"
+      (ngModelChange)="intention.set($event)" />
+    <div class="wiz__foot-row">
+      <div class="wiz__durations">
+        @for (m of presets; track m) {
+          <button
+            type="button"
+            class="wiz__dur"
+            [class.wiz__dur--on]="minutes() === m"
+            (click)="minutes.set(m)">
+            {{ m }}m
+          </button>
+        }
       </div>
+      <app-ui-button
+        variant="primary"
+        size="md"
+        [disabled]="starting()"
+        (pressed)="start()">
+        {{ starting() ? 'Starting…' : 'Start focus' }}
+      </app-ui-button>
+    </div>
+  </footer>
 
-      <!-- Duration -->
-      <div class="pre-session__field-group">
-        <span class="pre-session__label">Duration</span>
-        <app-ui-cluster gap="sm">
-          @for (m of presets; track m) {
-            <button
-              type="button"
-              class="pre-session__preset"
-              [class.pre-session__preset--active]="minutes() === m"
-              (click)="minutes.set(m)">
-              {{ m }}m
-            </button>
-          }
-        </app-ui-cluster>
-      </div>
-
-    </app-ui-stack>
-  </app-ui-card>
-
-  <app-ui-button
-    variant="primary"
-    size="md"
-    [disabled]="starting()"
-    (pressed)="start()">
-    {{ starting() ? 'Starting…' : 'Start focus' }}
-  </app-ui-button>
-
-</app-ui-stack>
+</section>
