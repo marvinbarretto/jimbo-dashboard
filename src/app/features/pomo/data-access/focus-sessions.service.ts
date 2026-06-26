@@ -100,6 +100,15 @@ export class FocusSessionsService {
     }
   }
 
+  // Broadcast pomo lifecycle to the Chrome extension's content-script bridge so
+  // the toolbar countdown animates for web-started sessions (the extension SW
+  // otherwise never learns a session began here). Decoupled: a plain DOM event,
+  // no extension id. No-op when the bridge/extension isn't present.
+  private signalExtension(kind: 'started' | 'stopped'): void {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent(`jimbo:pomo-${kind}`));
+  }
+
   async start(payload: StartFocusSessionPayload): Promise<FocusSession | null> {
     try {
       const created = await firstValueFrom(
@@ -107,6 +116,7 @@ export class FocusSessionsService {
       );
       const session = toSession(created);
       this._active.set(session);
+      this.signalExtension('started');
       this.toast.success('Focus session started');
       return session;
     } catch {
@@ -139,6 +149,7 @@ export class FocusSessionsService {
       );
       this._active.set(null);
       this._recent.update(rs => [toSession(updated), ...rs]);
+      this.signalExtension('stopped');
       this.toast.success('Session complete');
     } catch {
       this.toast.error('Could not complete session');
@@ -165,6 +176,7 @@ export class FocusSessionsService {
       );
       this._active.set(null);
       this._recent.update(rs => [toSession(updated), ...rs]);
+      this.signalExtension('stopped');
       this.toast.info('Session abandoned');
     } catch {
       this.toast.error('Could not abandon session');
