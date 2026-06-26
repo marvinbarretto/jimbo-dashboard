@@ -365,6 +365,11 @@
       }
     </app-ui-section>
 
+    <!-- ── CONSUMPTION ─────────────────────────────────────── -->
+    <!-- YouTube watch data is already in the bundle's telemetry; the section
+         summarises it client-side (no extra fetch). -->
+    <app-journal-consumption-section id="jsec-consumption" [events]="telemetryEvents()" />
+
   } @else {
     <app-ui-empty-state title="No data" message="Couldn't load this day." />
   }

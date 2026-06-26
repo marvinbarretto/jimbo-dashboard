@@ -1,0 +1,61 @@
+<app-ui-section title="Consumption" [meta]="sectionMeta()" [expanded]="open()" (toggled)="open.set(!open())">
+  @let s = summary();
+  @if (s.videoCount === 0) {
+    <app-ui-empty-state
+      title="Nothing watched"
+      message="No YouTube watch segments for this day. The Jimbo Pomo extension records what you watch once it's installed and the API key is set." />
+  } @else {
+    <app-ui-stack gap="lg">
+      <div class="consume__stats">
+        <app-ui-stat-card label="Watch time" [value]="formatMinutes(totalMinutes())"
+          [detail]="s.capped ? 'at least — capped' : null" />
+        <app-ui-stat-card label="Videos" [value]="s.videoCount.toString()" />
+        <app-ui-stat-card label="Channels" [value]="s.channelCount.toString()" />
+      </div>
+
+      <app-ui-subsection label="Watch time by hour">
+        <app-ui-bar-chart
+          [labels]="hourLabels"
+          [values]="hourValues()"
+          label="Minutes"
+          suffix=" min"
+          accent="rgba(239, 68, 68, 0.7)"
+        />
+      </app-ui-subsection>
+
+      <!-- By channel: the "what am I consuming" view. Future: a quality signal per
+           channel (curated tag / LLM classification) renders alongside the time so
+           low-value channels stand out — that's the steer-toward-quality goal. -->
+      <app-ui-subhead label="By channel" [count]="s.channels.length" />
+      <ul class="consume__channels">
+        @for (c of s.channels; track c.channel) {
+          <li class="consume__channel">
+            <span class="consume__channel-name">{{ c.channel }}</span>
+            <app-ui-badge tone="neutral">{{ c.videos }}</app-ui-badge>
+            <span class="consume__channel-time">{{ channelTime(c) }}</span>
+          </li>
+        }
+      </ul>
+
+      <app-ui-subhead label="Watched" [count]="s.videoCount" />
+      <ul class="consume__videos">
+        @for (v of videoRows(); track v.videoId) {
+          <li class="consume__video">
+            <span class="consume__video-title">
+              @if (v.url) {
+                <a [href]="v.url" target="_blank" rel="noopener noreferrer">{{ v.title }}</a>
+              } @else {
+                {{ v.title }}
+              }
+            </span>
+            <span class="consume__video-channel">{{ v.channel ?? '—' }}</span>
+            <span class="consume__video-time">{{ videoDuration(v) }}</span>
+          </li>
+        }
+      </ul>
+      @if (hiddenVideoCount()) {
+        <p class="consume__more">+{{ hiddenVideoCount() }} more not shown</p>
+      }
+    </app-ui-stack>
+  }
+</app-ui-section>

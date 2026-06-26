@@ -22,6 +22,7 @@ import { JournalDaySummary } from '../../components/journal-day-summary/journal-
 import { JournalAgentsSection } from '../../components/journal-agents-section/journal-agents-section';
 import { JournalMcpSection } from '../../components/journal-mcp-section/journal-mcp-section';
 import { JournalBriefingsSection } from '../../components/journal-briefings-section/journal-briefings-section';
+import { JournalConsumptionSection } from '../../components/journal-consumption-section/journal-consumption-section';
 import { JournalSectionNav, type JournalNavSection } from '../../components/journal-section-nav/journal-section-nav';
 import { NutritionDaySection } from '../../../nutrition/components/nutrition-day-section/nutrition-day-section';
 import { ExerciseDaySection } from '../../../exercise/components/exercise-day-section/exercise-day-section';
@@ -51,6 +52,7 @@ import {
     JournalAgentsSection,
     JournalMcpSection,
     JournalBriefingsSection,
+    JournalConsumptionSection,
     JournalSectionNav,
     NutritionDaySection,
     ExerciseDaySection,
@@ -127,6 +129,7 @@ export class JournalDayPage {
     { id: 'jsec-nutrition', label: 'Nutrition' },
     { id: 'jsec-exercise', label: 'Exercise' },
     { id: 'jsec-phone', label: 'Phone' },
+    { id: 'jsec-consumption', label: 'Consumption' },
   ];
 
   protected readonly hourlyLabels = computed(() => HOUR_LABELS);
