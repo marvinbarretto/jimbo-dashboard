@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.86](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.85...v0.0.86) (2026-06-27)
+
+
+### Features
+
+* **journal:** add Consumption section for YouTube watch data ([d6ed4a4](https://github.com/marvinbarretto/jimbo-dashboard/commit/d6ed4a489ec2786880342df14b46c25115526a4a))
+* **pomo:** create epics from pre-session, show all + wider grid ([60bbf05](https://github.com/marvinbarretto/jimbo-dashboard/commit/60bbf0537414e75f48361bd7945c28b97901889b))
+
 ### [0.0.85](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.84...v0.0.85) (2026-06-26)
 
 
