@@ -37,8 +37,11 @@
   }
 
   &__col-wrap {
-    flex: 0 0 320px;
-    min-width: 0;
+    // Count-adaptive width: grow to fill when a board has few columns (e.g. the
+    // 3-lane execution board), but never shrink below 320px — so a many-column
+    // board (e.g. grooming) keeps readable columns and the row scrolls instead.
+    flex: 1 1 320px;
+    min-width: 320px;
     min-height: 0;
     display: flex;
   }
@@ -54,7 +57,7 @@
 
     &__header h1 { font-size: 1.1rem; }
     &__hint      { display: none; }
-    &__col-wrap  { flex: 1 1 auto; }
+    &__col-wrap  { flex: 1 1 auto; min-width: 0; }
   }
 
   .board__filter-toggle {

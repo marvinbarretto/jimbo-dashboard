@@ -395,33 +395,40 @@ export class ExecutionBoard {
     this.buildProjectGroup(),
   ]);
 
+  // Owner facet spans BOTH tracks now the board is unified: a commission's
+  // executor (agent) and a manual card's assigned_to (human). Building it from
+  // commissions alone is why "only boris" showed when every Ready card is a
+  // human-owned manual task.
   private buildExecutorGroup(): FilterGroup<string> {
-    const items = this.applyCommissionFilters({ skipExecutor: true });
     const counts = new Map<string, number>();
-    for (const c of items) {
-      if (c.executor == null) continue;
-      counts.set(c.executor, (counts.get(c.executor) ?? 0) + 1);
+    for (const c of this.applyCommissionFilters({ skipExecutor: true })) {
+      if (c.executor != null) counts.set(c.executor, (counts.get(c.executor) ?? 0) + 1);
     }
-    const executorIds = new Set<string>(
-      this.dispatchService.commissions()
-        .map(c => c.executor)
-        .filter((id): id is NonNullable<typeof id> => id != null),
-    );
-    const options: FilterOption<string>[] = Array.from(executorIds).map(id => ({
+    for (const m of this.applyManualFilters({ skipExecutor: true })) {
+      if (m.assigned_to != null) counts.set(m.assigned_to as string, (counts.get(m.assigned_to as string) ?? 0) + 1);
+    }
+    // Options = every actor that owns a manual card or a commission on this board.
+    const ids = new Set<string>();
+    for (const c of this.dispatchService.commissions()) if (c.executor != null) ids.add(c.executor as string);
+    for (const m of this.manualItems()) if (m.assigned_to != null) ids.add(m.assigned_to as string);
+    const options: FilterOption<string>[] = Array.from(ids).map(id => ({
       value:      id,
       label:      id,
       count:      counts.get(id) ?? 0,
       entityType: 'actor' as const,
     })).sort((a, b) => a.label.localeCompare(b.label));
-    return { id: EXECUTOR, label: 'Executor', options, active: this.executorFilter() };
+    return { id: EXECUTOR, label: 'Owner', options, active: this.executorFilter() };
   }
 
   private buildProjectGroup(): FilterGroup<string> {
-    const items = this.applyCommissionFilters({ skipProject: true });
     const counts = new Map<string, number>();
-    for (const c of items) {
-      const links = this.vaultItemProjectsService.projectsFor(c.taskId)();
-      for (const l of links) {
+    for (const c of this.applyCommissionFilters({ skipProject: true })) {
+      for (const l of this.vaultItemProjectsService.projectsFor(c.taskId)()) {
+        counts.set(l.project_id as string, (counts.get(l.project_id as string) ?? 0) + 1);
+      }
+    }
+    for (const m of this.applyManualFilters({ skipProject: true })) {
+      for (const l of this.vaultItemProjectsService.projectsFor(m.id)()) {
         counts.set(l.project_id as string, (counts.get(l.project_id as string) ?? 0) + 1);
       }
     }
@@ -470,8 +477,14 @@ export class ExecutionBoard {
     });
   }
 
-  // Manual cards honour the same facets (assigned_to as their "executor").
-  private matchesManual(item: VaultItem): boolean {
+  private applyManualFilters(opts: { skipExecutor?: boolean; skipProject?: boolean } = {}): VaultItem[] {
+    return this.manualItems().filter(item => this.matchesManual(item, opts));
+  }
+
+  // Manual cards honour the same facets (assigned_to as their "owner"). Skips
+  // mirror applyCommissionFilters so a facet's own counts don't collapse to its
+  // active selection.
+  private matchesManual(item: VaultItem, opts: { skipExecutor?: boolean; skipProject?: boolean } = {}): boolean {
     const execF  = this.executorFilter();
     const projF  = this.projectFilter();
     const search = this._searchTerm().trim().toLowerCase();
@@ -480,11 +493,11 @@ export class ExecutionBoard {
       const haystack = [item.seq, item.title, item.assigned_to ?? ''].join(' ').toLowerCase();
       if (!haystack.includes(search)) return false;
     }
-    if (execF.size > 0) {
+    if (!opts.skipExecutor && execF.size > 0) {
       const owner: ActorId | null = item.assigned_to ?? null;
       if (owner == null || !execF.has(owner)) return false;
     }
-    if (projF.size > 0) {
+    if (!opts.skipProject && projF.size > 0) {
       const links = this.vaultItemProjectsService.projectsFor(item.id)();
       if (!links.some(l => projF.has(l.project_id as string))) return false;
     }
