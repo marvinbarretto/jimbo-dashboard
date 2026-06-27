@@ -1,14 +1,17 @@
 $accent-hot: #d96520;
 
 :host {
-  flex: 0 0 320px;
+  // Fill the .board__col-wrap that sizes us — the wrap (in _board-layout.scss)
+  // owns the grow-to-fill + 320px-floor behaviour (flex: 1 1 320px; min-width:
+  // 320px). Pinning the host to `flex: 0 0 320px` here used to override that, so
+  // columns never widened to fill a board with only a few lanes.
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  // Without this, flex items default to min-width: auto (= content min-content),
-  // letting long unbreakable card content (titles, live-text) push the column
-  // past its 280px basis. Lock width so columns stay rigid; content overflow is
-  // handled inside the card.
+  // Flex items default to min-width: auto (= min-content), letting long
+  // unbreakable card content push the column wider. min-width: 0 lets the wrap's
+  // own min-width be the real floor; content overflow is handled inside the card.
   min-width: 0;
 
   // On mobile, the board shows one column at a time — fill the available space.
