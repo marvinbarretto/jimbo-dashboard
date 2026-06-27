@@ -46,9 +46,15 @@ export class VaultItemDependenciesService {
       return;
     }
     const params = new HttpParams().set('blocked_id', vaultItemId);
-    this.http.get<{ items: VaultItemDependency[] }>(this.url, { params }).subscribe({
-      next: ({ items }) => this._depsByItem.update(map => ({ ...map, [vaultItemId]: items })),
-      error: ()         => this._depsByItem.update(map => ({ ...map, [vaultItemId]: [] })),
+    // The endpoint returns a bare array (`[{...}]`); tolerate a `{ items }`
+    // envelope too in case the contract changes. Destructuring `{ items }` off a
+    // bare array silently yields undefined — that's the bug this guards against.
+    this.http.get<VaultItemDependency[] | { items: VaultItemDependency[] }>(this.url, { params }).subscribe({
+      next: (res) => {
+        const items = Array.isArray(res) ? res : (res.items ?? []);
+        this._depsByItem.update(map => ({ ...map, [vaultItemId]: items }));
+      },
+      error: () => this._depsByItem.update(map => ({ ...map, [vaultItemId]: [] })),
     });
   }
 
