@@ -70,12 +70,26 @@ export class PomoRunning implements OnInit {
       .slice(0, 5);
   });
 
+  // Guards the auto-finish effect so it fires exactly once — the `now` signal
+  // ticks every second, so without this the effect would re-enter on every tick.
+  private autoFinished = false;
+
   constructor() {
     // Tick while session is active.
     effect((onCleanup) => {
       if (!this.session()) return;
       const handle = setInterval(() => this.now.set(Date.now()), 1000);
       onCleanup(() => clearInterval(handle));
+    });
+
+    // The clock reached zero — complete the session and drop the user on the
+    // retro page automatically, so you don't have to sit and watch 00:00. This
+    // is the deterministic path when the tab is open; the extension's expiry
+    // tick is the fallback for when no dashboard tab is around.
+    effect(() => {
+      if (!this.isExpired() || this.autoFinished) return;
+      this.autoFinished = true; // set before the await so we don't re-enter
+      void this.autoFinish();
     });
 
     // Keep tab title in sync.
@@ -96,6 +110,16 @@ export class PomoRunning implements OnInit {
   }
 
   async finishEarly(): Promise<void> {
+    const s = this.session();
+    if (!s) return;
+    await this.sessions.complete(s.id);
+    void this.router.navigate(['/pomo/retro']);
+  }
+
+  // Fired automatically when the countdown hits zero. Completes the session and
+  // navigates to retro. The extension may race us to complete the same session
+  // (its expiry tick); whichever wins, we still want to land on retro.
+  private async autoFinish(): Promise<void> {
     const s = this.session();
     if (!s) return;
     await this.sessions.complete(s.id);
