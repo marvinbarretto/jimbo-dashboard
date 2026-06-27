@@ -213,6 +213,12 @@ export interface VaultItem {
   // (done but still in the live list). Setting completed_at emits a CompletionChangedEvent.
   completed_at:        string | null;
 
+  // Manual-track "in progress" marker. Set when a human-owned card is dragged
+  // from Ready into In Progress on the execution board; cleared (null) on a drag
+  // back to Ready. Automated/commission cards derive their lane from the dispatch
+  // stage instead and never set this. Optional: legacy/manual construction omits it.
+  started_at?:         string | null;
+
   // Where this item came from. See `Source` comment above. Nullable for legacy / unknown.
   source:              Source | null;
 

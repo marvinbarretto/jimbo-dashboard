@@ -895,6 +895,7 @@ function toApiUpdateBody(p: UpdateVaultItemPayload): Record<string, unknown> {
   if (p.parent_id !== undefined) body['parent_id'] = p.parent_id;
   if (p.due_at !== undefined) body['due_at'] = p.due_at;
   if (p.completed_at !== undefined) body['completed_at'] = p.completed_at;
+  if (p.started_at !== undefined) body['started_at'] = p.started_at;
   if (p.grooming_status !== undefined) body['grooming_status'] = p.grooming_status;
   if (p.is_epic !== undefined) body['is_epic'] = p.is_epic;
   if (p.source !== undefined) {
@@ -952,6 +953,7 @@ function toVaultItem(a: ApiVaultItem): VaultItem {
     archived_at: a.status === 'archived' ? a.updated_at : null,
     due_at: a.due_at,
     completed_at: a.completed_at,
+    started_at: a.started_at,
     source: buildSource(a.source_kind, a.source_ref, a.source_url),
     created_at: a.created_at,
 

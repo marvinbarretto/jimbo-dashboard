@@ -71,6 +71,33 @@ export class VaultItemCommands {
   }
 
   /**
+   * Start manual work — stamps started_at so the card moves into the In Progress
+   * lane on the execution board. Reopens the item first if it was completed (so a
+   * drag Done → In Progress works). No-op when already active + started.
+   *
+   * started_at is the manual-track analogue of a commission entering 'running':
+   * agents derive their lane from the dispatch stage, humans from this marker.
+   */
+  startWork(id: VaultItemId): void {
+    const item = this.vaultItems.getById(id);
+    if (!item) return;
+    if (item.completed_at) this.vaultItems.setCompleted(id, false, null);
+    if (item.started_at) return; // already in progress
+    this.vaultItems.update(id, { started_at: new Date().toISOString() });
+  }
+
+  /**
+   * Move a manual card back to Ready — clears started_at and reopens it if it was
+   * completed. The inverse of startWork() / complete().
+   */
+  moveToReady(id: VaultItemId): void {
+    const item = this.vaultItems.getById(id);
+    if (!item) return;
+    if (item.completed_at) this.vaultItems.setCompleted(id, false, null);
+    if (item.started_at) this.vaultItems.update(id, { started_at: null });
+  }
+
+  /**
    * Approve an item for dispatch — moves grooming_status to 'ready'.
    *
    * THIS IS THE GATE. The screenshot's "expected ungroomed, got intake_rejected"

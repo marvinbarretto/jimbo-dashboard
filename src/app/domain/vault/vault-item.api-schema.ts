@@ -67,6 +67,9 @@ export const ApiVaultItemSchema = z.object({
   completed_at:         z.string().nullable(),
   grooming_status:      z.string(),
   grooming_started_at:  z.string().nullable(),
+  // Manual-track in-progress marker. Optional+default so a pre-deploy API that
+  // doesn't yet return the column still validates.
+  started_at:           z.string().nullable().optional().default(null),
   source_kind:          z.string().nullable(),
   source_ref:           z.string().nullable(),
   source_url:           z.string().nullable(),

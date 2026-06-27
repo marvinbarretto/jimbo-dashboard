@@ -2,11 +2,11 @@
   <header class="board__header">
     <h1>Execution</h1>
     <p class="board__hint">
-      <strong>Ready</strong> holds every item that meets the Definition of Ready and is
-      waiting to be picked up — agent-owned items by the commission pump, human-owned
-      items (assigned to you) by hand. Once picked up, an item follows the
-      <strong>commission</strong> lifecycle: proposed → approved → running → PR open →
-      merged. <strong>Failed</strong> can be retried. Grooming/recon passes aren't shown here.
+      One board for everything in flight — human and agent. <strong>Ready</strong> holds
+      whatever's waiting to be picked up (groomed-ready agent tasks + your own tasks,
+      no grooming required). Drag your cards into <strong>In Progress</strong> and
+      <strong>Done</strong>; agent cards move themselves and show their commission
+      stage as a pill. Sorted P0 → P3. Blocked cards are greyed until their blocker clears.
     </p>
     <app-board-create-bar
       buttonLabel="New manual A-item"
@@ -38,38 +38,42 @@
     (reset)="resetFilters()"
   />
 
-  <div class="board__mobile-switcher" role="tablist" aria-label="Select column">
-    @for (col of columns(); track col.status) {
+  <div class="board__mobile-switcher" role="tablist" aria-label="Select lane">
+    @for (lane of lanes(); track lane.lane) {
       <button
         type="button"
         class="board__col-chip"
-        [class.board__col-chip--active]="mobileColumn() === col.status"
+        [class.board__col-chip--active]="mobileLane() === lane.lane"
         role="tab"
-        [attr.aria-selected]="mobileColumn() === col.status"
-        (click)="setMobileColumn(col.status)"
+        [attr.aria-selected]="mobileLane() === lane.lane"
+        (click)="setMobileLane(lane.lane)"
       >
-        {{ col.label }}
-        <span class="board__col-count">{{ col.cards.length }}</span>
+        {{ lane.label }}
+        <span class="board__col-count">{{ lane.cards.length }}</span>
       </button>
     }
   </div>
 
   <div class="board__columns">
-    @for (col of columns(); track col.status) {
+    @for (lane of lanes(); track lane.lane) {
       <div
         class="board__col-wrap"
-        [class.board__col-wrap--active]="mobileColumn() === col.status"
+        [class.board__col-wrap--active]="mobileLane() === lane.lane"
         data-testid="kanban-column"
-        [attr.data-status]="col.status"
+        [attr.data-status]="lane.lane"
       >
         <app-kanban-column
-          [label]="col.label"
-          [count]="col.cards.length"
-          [emptyLabel]="col.emptyLabel"
+          [label]="lane.label"
+          [count]="lane.cards.length"
+          [emptyLabel]="lane.emptyLabel"
           [loading]="isLoading()"
-          [dropDisabled]="col.systemManaged"
+          [dropEligible]="drag.isEligibleDropTarget(lane.lane)"
+          [dropActive]="drag.dropTarget() === lane.lane"
+          (dragover)="onLaneDragOver($event, lane.lane)"
+          (dragleave)="onLaneDragLeave(lane.lane)"
+          (drop)="onLaneDrop($event, lane.lane)"
         >
-          @for (card of col.cards; track card.kind === 'commission' ? card.item.taskId : card.item.id) {
+          @for (card of lane.cards; track cardKey(card)) {
             @if (card.kind === 'commission') {
               <app-commission-card
                 [item]="card.item"
@@ -77,17 +81,29 @@
                 (open)="onOpenCommission(card.item)"
                 (action)="onCommissionAction(card.item, $event)" />
             } @else {
-              <app-vault-card
-                [context]="cardContextForReady(card.item)"
-                (actionTriggered)="onReadyAction(card.item, $event)" />
+              <div
+                class="board__card-wrap"
+                [class.board__card-wrap--dragging]="isDragging(card)"
+                [class.board__card-wrap--blocked]="card.blocked"
+                draggable="true"
+                (dragstart)="onCardDragStart($event, card.item)"
+                (dragend)="onCardDragEnd()"
+              >
+                @if (card.blocked) {
+                  <span class="board__chip board__chip--blocked">{{ card.blockerLabel }}</span>
+                }
+                <app-vault-card
+                  [context]="cardContextForManual(card.item)"
+                  (actionTriggered)="onManualAction(card.item, $event)" />
+              </div>
             }
           }
-          @if (col.status === 'completed' && col.cards.length > 0) {
+          @if (lane.lane === 'done' && doneCommissionCount() > 0) {
             <button
               col-header-action
               type="button"
               class="board__sweep"
-              (click)="onClearCompleted(col.cards.length)"
+              (click)="onClearCompleted()"
             >
               dismiss all
             </button>

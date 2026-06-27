@@ -6,15 +6,11 @@ import { VaultItemsService } from '@features/vault-items/data-access/vault-items
 import { VaultItemCommands } from '@features/vault-items/commands/vault-item-commands';
 import { DispatchCommands } from '@features/execution/commands/dispatch-commands';
 import { VaultItemProjectsService } from '@features/vault-items/data-access/vault-item-projects.service';
+import { VaultItemDependenciesService } from '@features/vault-items/data-access/vault-item-dependencies.service';
 import { ProjectsService } from '@features/projects/data-access/projects.service';
 import { ActorsService } from '@features/actors/data-access/actors.service';
-import {
-  COMMISSION_STAGE_ORDER,
-  COMMISSION_STAGE_LABELS,
-  type CommissionItem,
-  type CommissionStage,
-} from '@domain/dispatch';
-import type { ActorId } from '@domain/ids';
+import { type CommissionItem, type CommissionStage } from '@domain/dispatch';
+import type { ActorId, VaultItemId } from '@domain/ids';
 import { VaultCard, type ActionKey } from '@shared/components/vault-card/vault-card';
 import { CommissionCard, type CommissionAction } from '@features/execution/components/commission-card/commission-card';
 import type { CardContext, ManualCardContext, ProjectRef, SourceLabel } from '@shared/components/vault-card/card-context';
@@ -22,52 +18,80 @@ import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
 import { BoardCreateBar } from '@shared/components/board-create-bar/board-create-bar';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
+import { createKanbanDragState } from '@shared/kanban/drag-state';
 import { withVaultDetailModal, swapDetailSeq } from '@shared/kanban/detail-modal';
 import { CommandShortcutsService } from '@shared/services/command-shortcuts.service';
-import { isActive, type VaultItem } from '@domain/vault';
+import { effectivePriority, isActive, isDone, type VaultItem } from '@domain/vault';
 
 const EXECUTOR = 'executor';
 const PROJECT  = 'project';
 
-// The leading lane is the single "Ready" column: EVERY item that meets the
-// Definition of Ready and hasn't yet been picked up for execution. Agent-owned
-// ready items wait here for the commission pump; human-owned ready items
-// (assigned to marvin) wait here for Marvin to pick up. The only thing that
-// differs between them is the assigned actor. Once an item enters a commission
-// stage it drops out of Ready (no double-show). Columns after Ready are the
-// honest commission stages, left→shipped.
-type BoardColumn = 'ready' | CommissionStage;
-const COLUMN_ORDER: readonly BoardColumn[] = ['ready', ...COMMISSION_STAGE_ORDER];
+// The board collapsed from "Ready + 8 commission-stage columns" into three
+// workflow lanes that BOTH manual (human-owned) and automated (agent-commission)
+// cards share. The fine-grained commission lifecycle (proposed/running/pr_open/
+// merged/…) no longer gets a column each — a card flashes through those too fast
+// for a column to be meaningful — it shows as a pill ON the card instead. The
+// lane a card sits in is the coarse "where is this in my flow" signal:
+//   ready       — waiting to be picked up / started (incl. groomed-ready agent
+//                 tasks and proposed commissions awaiting approval)
+//   in_progress — actively being worked (manual: started_at set; agent:
+//                 approved/running/pr_open)
+//   done        — finished (manual: completed; agent: merged/completed, plus the
+//                 terminal-negative failed/rejected, which carry a red pill)
+type BoardLane = 'ready' | 'in_progress' | 'done';
+const LANE_ORDER: readonly BoardLane[] = ['ready', 'in_progress', 'done'];
 
-const COLUMN_LABELS: Record<BoardColumn, string> = {
-  ready: 'Ready',
-  ...COMMISSION_STAGE_LABELS,
+const LANE_LABELS: Record<BoardLane, string> = {
+  ready:       'Ready',
+  in_progress: 'In Progress',
+  done:        'Done',
 };
 
-const COLUMN_EMPTY: Record<BoardColumn, string> = {
-  ready:     'Nothing ready',
-  proposed:  'Nothing awaiting approval',
-  approved:  'Nothing queued',
-  running:   'Nothing running',
-  pr_open:   'No open PRs',
-  merged:    'Nothing merged',
-  completed: 'Nothing completed',
-  failed:    'No failures',
-  rejected:  'Nothing rejected',
+const LANE_EMPTY: Record<BoardLane, string> = {
+  ready:       'Nothing ready',
+  in_progress: 'Nothing in progress',
+  done:        'Nothing done',
 };
 
-// One card per ITEM. Commission cards come from the per-item view-model; ready
-// items (not yet commissioned) reuse the unified vault-card.
+// Map a commission's stage onto a lane. Agent cards are system-driven: their lane
+// follows the dispatch, so they're not draggable.
+function laneForStage(stage: CommissionStage): BoardLane {
+  switch (stage) {
+    case 'proposed':  return 'ready';        // awaiting operator approval
+    case 'approved':
+    case 'running':
+    case 'pr_open':   return 'in_progress';  // greenlit and moving
+    case 'merged':
+    case 'completed':
+    case 'failed':
+    case 'rejected':  return 'done';         // terminal (failed/rejected = red pill)
+  }
+}
+
+// Map a manual (human-track) item onto a lane from its own state. started_at is
+// the only thing distinguishing Ready from In Progress for a human task — the
+// vault status model has no native "in progress".
+function laneForManual(item: VaultItem): BoardLane {
+  if (isDone(item))      return 'done';
+  if (item.started_at)   return 'in_progress';
+  return 'ready';
+}
+
+// Lowest-integer-wins priority for sort; null (no priority) sinks to the bottom.
+const PRIORITY_FLOOR = 99;
+
+// One card per ITEM. Commission cards come from the per-item dispatch view-model;
+// manual cards reuse the unified vault-card. `lane`, `priority` and `createdAt`
+// are precomputed so the column grouping + sort stay cheap and pure.
 type BoardCard =
-  | { readonly kind: 'commission'; readonly item: CommissionItem }
-  | { readonly kind: 'ready';      readonly item: VaultItem };
+  | { readonly kind: 'commission'; readonly item: CommissionItem; readonly lane: BoardLane; readonly priority: number; readonly createdAt: string }
+  | { readonly kind: 'manual'; readonly item: VaultItem; readonly lane: BoardLane; readonly blocked: boolean; readonly blockerLabel: string | null; readonly priority: number; readonly createdAt: string };
 
-interface ColumnView {
-  status:        BoardColumn;
-  label:         string;
-  emptyLabel:    string;
-  cards:         BoardCard[];
-  systemManaged: boolean;
+interface LaneView {
+  lane:       BoardLane;
+  label:      string;
+  emptyLabel: string;
+  cards:      BoardCard[];
 }
 
 @Component({
@@ -84,19 +108,25 @@ export class ExecutionBoard {
   private readonly commands = inject(VaultItemCommands);
   private readonly dispatchCommands = inject(DispatchCommands);
   private readonly vaultItemProjectsService = inject(VaultItemProjectsService);
+  private readonly dependenciesService = inject(VaultItemDependenciesService);
   private readonly projectsService = inject(ProjectsService);
   private readonly actorsService = inject(ActorsService);
   private readonly shortcuts = inject(CommandShortcutsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
-  // Read-only board: the only mutations are operator retry/dismiss/archive on a
-  // commission, or mark-done on a ready item. No drag-drop.
+  // --- drag state ---------------------------------------------------------
+  // Only MANUAL cards drag (a human owns their lane); commission cards are
+  // system-driven and stay put. getCurrentStatus reads a manual item's lane so
+  // same-lane drops are refused.
+  protected readonly drag = createKanbanDragState<VaultItemId, BoardLane>(
+    id => {
+      const item = this.vaultItemsService.getById(id);
+      return item ? laneForManual(item) : undefined;
+    },
+  );
 
   // --- filter state -------------------------------------------------------
-  // Skill filter dropped vs the old per-dispatch board: this board is
-  // commission-only, so skill is ~always code/pr-from-issue and the facet is
-  // dead weight. Executor + project remain.
   private readonly filter = createKanbanFilterState([EXECUTOR, PROJECT]);
   private readonly executorFilter = this.filter.active<string>(EXECUTOR);
   private readonly projectFilter  = this.filter.active<string>(PROJECT);
@@ -105,34 +135,33 @@ export class ExecutionBoard {
   readonly searchTerm = this._searchTerm.asReadonly();
 
   readonly showMobileFilters = signal(false);
-  private readonly _mobileColumn = signal<BoardColumn>('ready');
-  readonly mobileColumn = this._mobileColumn.asReadonly();
+  private readonly _mobileLane = signal<BoardLane>('ready');
+  readonly mobileLane = this._mobileLane.asReadonly();
   protected readonly hasActiveFilters = this.filter.hasActive;
 
-  setMobileColumn(status: BoardColumn): void {
-    this._mobileColumn.set(status);
+  setMobileLane(lane: BoardLane): void {
+    this._mobileLane.set(lane);
   }
 
   // --- sources ------------------------------------------------------------
 
   readonly visibleCommissions = computed(() => this.applyCommissionFilters());
 
-  // Task IDs that already have a commission dispatch (any stage). These items
-  // render in their commission column, so they must NOT also appear in Ready.
+  // Task IDs that already have a commission dispatch (any stage). These render as
+  // commission cards, so they must NOT also appear as a manual card (no double-show).
   private readonly commissionedTaskIds = computed(
     () => new Set(this.dispatchService.commissions().map(c => c.taskId as string)),
   );
 
-  // EVERY LEAF item meeting the Definition of Ready that hasn't been picked up
-  // yet — human- and agent-owned alike (the unified gate makes them consistent;
-  // only the assigned actor differs). Excludes:
-  //  • containers (items WITH children) — an epic/mid-level node is not executable
-  //    work; its children are. This matches the commission pump's leaf rule and
-  //    the grooming board (which also hides parents), so the column only shows
-  //    what can actually be commissioned.
-  //  • anything already in a commission stage — no double-show.
-  // Done items fall out automatically via isActive.
-  private readonly readyItems = computed(() => {
+  // Every LEAF item that belongs on the board as a MANUAL card — across all three
+  // lanes (a manual card can be ready/in-progress/done). Two ways to qualify:
+  //   • groomed-ready (any owner) — the agent-track holding pen the user asked to
+  //     keep in Ready: a ready-but-not-yet-commissioned task.
+  //   • human-owned — bypasses the grooming gate entirely (a person controls it
+  //     manually, no Definition-of-Ready / acceptance-criteria required).
+  // Excludes containers (epics — their children are the executable work) and
+  // anything already commissioned (shown as a commission card instead).
+  private readonly manualItems = computed(() => {
     const commissioned = this.commissionedTaskIds();
     const items = this.vaultItemsService.items();
     const isContainer = new Set(
@@ -140,44 +169,30 @@ export class ExecutionBoard {
     );
     return items.filter(item =>
       item.type === 'task' &&
-      isActive(item) &&
-      item.grooming_status === 'ready' &&
       !isContainer.has(item.id) &&
-      !commissioned.has(item.id as string),
-    ).sort((a, b) => b.created_at.localeCompare(a.created_at));
+      !commissioned.has(item.id as string) &&
+      (
+        (isActive(item) && item.grooming_status === 'ready') ||
+        (this.isHumanOwned(item) && (isActive(item) || isDone(item)))
+      ),
+    );
   });
 
-  private readonly visibleReadyItems = computed(() =>
-    this.readyItems().filter(item => this.matchesReady(item)),
-  );
-
-  readonly columns = computed<ColumnView[]>(() => {
-    const comms = this.visibleCommissions();
-    const ready = this.visibleReadyItems();
-    return COLUMN_ORDER.map(col => {
-      const cards: BoardCard[] = col === 'ready'
-        ? ready.map(item => ({ kind: 'ready', item }))
-        : comms.filter(c => c.stage === col).map(item => ({ kind: 'commission', item }));
-      return {
-        status:        col,
-        label:         COLUMN_LABELS[col],
-        emptyLabel:    COLUMN_EMPTY[col],
-        systemManaged: col === 'running',
-        cards,
-      };
-    });
-  });
-
-  protected readonly isLoading = this.dispatchService.isLoading;
-
+  // Load dependency edges for every manual card so blocked ones can be greyed.
+  // Bounded to the board's own item set (small) — mirrors the grooming board's
+  // per-item parallel loads.
   constructor() {
     withVaultDetailModal();
 
-    // Pre-load project junctions for every commission so the project chip
-    // resolves synchronously.
     effect(() => {
       for (const c of this.dispatchService.commissions()) {
         this.vaultItemProjectsService.loadFor(c.taskId);
+      }
+    });
+
+    effect(() => {
+      for (const item of this.manualItems()) {
+        this.dependenciesService.loadFor(item.id);
       }
     });
 
@@ -209,13 +224,60 @@ export class ExecutionBoard {
     });
   }
 
+  private readonly visibleManualItems = computed(() =>
+    this.manualItems().filter(item => this.matchesManual(item)),
+  );
+
+  // Build every card (manual + commission) with its lane/priority/createdAt
+  // precomputed, then group by lane and sort P0→P3 (lowest int first), newest
+  // first on ties.
+  readonly lanes = computed<LaneView[]>(() => {
+    const cards: BoardCard[] = [];
+
+    for (const item of this.visibleManualItems()) {
+      const blockers = this.dependenciesService.blockersFor(item.id)();
+      const blocked  = laneForManual(item) === 'ready' && blockers.length > 0;
+      cards.push({
+        kind:        'manual',
+        item,
+        lane:        laneForManual(item),
+        blocked,
+        blockerLabel: blocked ? `blocked · #${blockers[0].blocker_seq}` : null,
+        priority:    effectivePriority(item) ?? PRIORITY_FLOOR,
+        createdAt:   item.created_at,
+      });
+    }
+
+    for (const c of this.visibleCommissions()) {
+      const vi = this.vaultItemsService.getById(c.taskId);
+      cards.push({
+        kind:      'commission',
+        item:      c,
+        lane:      laneForStage(c.stage),
+        priority:  (vi ? effectivePriority(vi) : null) ?? PRIORITY_FLOOR,
+        createdAt: c.latest.created_at,
+      });
+    }
+
+    return LANE_ORDER.map(lane => ({
+      lane,
+      label:      LANE_LABELS[lane],
+      emptyLabel: LANE_EMPTY[lane],
+      cards: cards
+        .filter(card => card.lane === lane)
+        .sort((a, b) => a.priority - b.priority || b.createdAt.localeCompare(a.createdAt)),
+    }));
+  });
+
+  protected readonly isLoading = this.dispatchService.isLoading;
+
   // --- per-card derived data ---------------------------------------------
 
   projectForCommission(item: CommissionItem): ProjectRef | null {
     return this.resolveProject(item.taskId as string);
   }
 
-  cardContextForReady(item: VaultItem): CardContext {
+  cardContextForManual(item: VaultItem): CardContext {
     const ctx: ManualCardContext = {
       kind: 'manual',
       item,
@@ -228,6 +290,16 @@ export class ExecutionBoard {
       sourceUrl: item.source?.url ?? null,
     };
     return ctx;
+  }
+
+  // Track key for the @for — stable per card regardless of lane moves.
+  cardKey(card: BoardCard): string {
+    return card.kind === 'commission' ? `c:${card.item.taskId}` : `m:${card.item.id}`;
+  }
+
+  private isHumanOwned(item: VaultItem): boolean {
+    if (!item.assigned_to) return false;
+    return this.actorsService.getById(item.assigned_to)?.kind === 'human';
   }
 
   private resolveProject(id: string): ProjectRef | null {
@@ -250,8 +322,6 @@ export class ExecutionBoard {
 
   // --- mutations ----------------------------------------------------------
 
-  // Commission actions target the item's latest dispatch — the same handlers the
-  // old per-dispatch board used, so retry/dismiss/archive behaviour is unchanged.
   onCommissionAction(item: CommissionItem, key: CommissionAction): void {
     const entry = item.latest;
     switch (key) {
@@ -265,7 +335,7 @@ export class ExecutionBoard {
     if (item.taskSeq !== null) swapDetailSeq(this.router, item.taskSeq);
   }
 
-  onReadyAction(item: VaultItem, key: ActionKey): void {
+  onManualAction(item: VaultItem, key: ActionKey): void {
     if (key === 'markDone') this.commands.complete(item.id);
   }
 
@@ -273,11 +343,49 @@ export class ExecutionBoard {
     this.shortcuts.openManualCapture();
   }
 
-  // Column-level "dismiss all completed": hard-deletes completed dispatch rows.
-  onClearCompleted(count: number): void {
+  // Column-level "dismiss all completed" on the Done lane: hard-deletes completed
+  // dispatch rows. Count is the terminal commissions in the lane.
+  onClearCompleted(): void {
+    const count = this.lanes()
+      .find(l => l.lane === 'done')?.cards
+      .filter(c => c.kind === 'commission').length ?? 0;
     if (count === 0) return;
     if (!window.confirm(`Dismiss all ${count} completed commissions? This cannot be undone.`)) return;
     this.dispatchCommands.clearCompleted();
+  }
+
+  doneCommissionCount(): number {
+    return this.lanes()
+      .find(l => l.lane === 'done')?.cards
+      .filter(c => c.kind === 'commission').length ?? 0;
+  }
+
+  // --- drag & drop --------------------------------------------------------
+  // Only manual cards bind these. Dropping into a lane translates to the matching
+  // manual-track command: Ready clears progress/completion, In Progress stamps
+  // started_at, Done marks complete.
+
+  onCardDragStart(event: DragEvent, item: VaultItem): void {
+    this.drag.onDragStart(event, item.id);
+  }
+  onCardDragEnd(): void { this.drag.onDragEnd(); }
+  onLaneDragOver(event: DragEvent, lane: BoardLane): void {
+    this.drag.onDragOver(event, lane);
+  }
+  onLaneDragLeave(lane: BoardLane): void { this.drag.onDragLeave(lane); }
+
+  onLaneDrop(event: DragEvent, lane: BoardLane): void {
+    const id = this.drag.onDrop(event, lane);
+    if (!id) return;
+    switch (lane) {
+      case 'ready':       this.commands.moveToReady(id); return;
+      case 'in_progress': this.commands.startWork(id);   return;
+      case 'done':        this.commands.complete(id);    return;
+    }
+  }
+
+  isDragging(card: BoardCard): boolean {
+    return card.kind === 'manual' && this.drag.dragging() === card.item.id;
   }
 
   // --- filter groups ------------------------------------------------------
@@ -362,8 +470,8 @@ export class ExecutionBoard {
     });
   }
 
-  // Ready items honour the same facets (assigned_to as their "executor").
-  private matchesReady(item: VaultItem): boolean {
+  // Manual cards honour the same facets (assigned_to as their "executor").
+  private matchesManual(item: VaultItem): boolean {
     const execF  = this.executorFilter();
     const projF  = this.projectFilter();
     const search = this._searchTerm().trim().toLowerCase();

@@ -8,6 +8,41 @@
   strong { color: var(--color-text); font-weight: 500; }
 }
 
+// Draggable wrapper around a manual (human-owned) vault-card. Commission cards
+// are system-driven and rendered without this wrapper, so they aren't grabbable.
+.board__card-wrap {
+  position: relative;
+  cursor: grab;
+  margin-bottom: 0.4rem;
+
+  &:active { cursor: grabbing; }
+}
+.board__card-wrap--dragging { opacity: 0.4; }
+
+// A blocked card (an unresolved dependency upstream) is greyed and not really
+// pickable yet — the dependency chain says "don't start this". Still shown so
+// the operator sees the whole picture, just visually demoted.
+.board__card-wrap--blocked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+// Small inline status pill the board owns (vs the commission card's own stage
+// pill). Currently only the blocked marker — sits above the card body.
+.board__chip {
+  display: inline-block;
+  margin-bottom: 0.25rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+.board__chip--blocked {
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning);
+}
+
 // Column-header sweep button — projected into the kanban-column header via
 // `[col-header-action]`. Small, secondary affordance; the per-card dismiss is
 // the primary path. Only shown when count > 0 so the column header doesn't
