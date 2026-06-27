@@ -98,6 +98,12 @@ export class VaultItemsService {
     // create a story directly under an epic and inside the active project.
     parent_id?: string | null;
     primary_project_id?: string | null;
+    // Mark the new item as an epic. The create endpoint doesn't accept is_epic,
+    // so it's applied via the same follow-up PATCH as grooming_status. Callers
+    // creating an epic inside a project must ALSO add a primary project junction
+    // (VaultItemProjectsService.add) — an epic has no parent to inherit from, so
+    // the junction is what makes it persist + promotable. See that service's add().
+    is_epic?: boolean;
   }, onCreated?: (item: VaultItem) => void): void {
     const trimmed = input.title.trim();
     if (!trimmed) return;
@@ -114,7 +120,7 @@ export class VaultItemsService {
       grooming_status: groomingStatus,
       ai_priority: null, manual_priority: input.manual_priority ?? null,
       ai_rationale: null, priority_confidence: null,
-      actionability: null, parent_id: input.parent_id ? vaultItemId(input.parent_id) : null, is_epic: false,
+      actionability: null, parent_id: input.parent_id ? vaultItemId(input.parent_id) : null, is_epic: input.is_epic ?? false,
       archived_at: null, due_at: null, completed_at: null,
       source: { kind: 'manual', ref: 'board', url: null },
       created_at: now,
@@ -159,6 +165,8 @@ export class VaultItemsService {
         // any drift in a follow-up so the UI sees what we asked for.
         const patch: Record<string, unknown> = {};
         if (groomingStatus !== 'ungroomed') patch['grooming_status'] = groomingStatus;
+        // is_epic isn't accepted by the create endpoint — apply it here.
+        if (input.is_epic) patch['is_epic'] = true;
         // Server sets assigned_to from session; we asked for currentActorId. If
         // they differ, push the override.
         const realRow = this.getById(real.id);
@@ -166,7 +174,7 @@ export class VaultItemsService {
         if (Object.keys(patch).length === 0) return;
         this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${real.seq}`, patch).subscribe({
           next: () => this._items.update(items => items.map(i => i.id === real.id
-            ? { ...i, grooming_status: groomingStatus, assigned_to: this.currentActorId }
+            ? { ...i, grooming_status: groomingStatus, assigned_to: this.currentActorId, is_epic: input.is_epic ?? i.is_epic }
             : i)),
           error: () => this.toast.error('Created but status/owner follow-up failed'),
         });

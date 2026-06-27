@@ -30,9 +30,13 @@
     <!-- Epics (revealed once a real project is chosen) -->
     @if (projectTouched() && selectedProjectId() !== null) {
       <section class="wiz__section">
-        <span class="wiz__section-label">Epics <em>· most recent first</em></span>
+        <span class="wiz__section-label">Epics
+          @if (epics().length) {
+            <em>· all {{ epics().length }}, most recent first</em>
+          }
+        </span>
         @if (epics().length) {
-          <div class="wiz__cards">
+          <div class="wiz__cards wiz__cards--epics">
             @for (e of epics(); track e.id) {
               <button
                 type="button"
@@ -48,8 +52,25 @@
             }
           </div>
         } @else {
-          <p class="wiz__empty">No epics in this project yet.</p>
+          <p class="wiz__empty">No epics in this project yet — create the first one below.</p>
         }
+
+        <div class="wiz__new">
+          <input
+            type="text"
+            class="wiz__input"
+            placeholder="+ New epic in this project"
+            [ngModel]="newEpicTitle()"
+            (ngModelChange)="newEpicTitle.set($event)"
+            (keyup.enter)="createEpic()" />
+          <app-ui-button
+            variant="secondary"
+            size="sm"
+            [disabled]="!newEpicTitle().trim()"
+            (pressed)="createEpic()">
+            Add epic
+          </app-ui-button>
+        </div>
       </section>
     }
 

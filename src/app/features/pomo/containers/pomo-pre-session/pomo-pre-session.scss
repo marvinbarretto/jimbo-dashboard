@@ -1,7 +1,7 @@
 .wiz {
-  max-width: 52rem;
+  max-width: 72rem;
   margin: 0 auto;
-  padding: 2rem 1.5rem 3rem;
+  padding: 2rem 2rem 3rem;
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
@@ -72,6 +72,15 @@
 .wiz__cards {
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Epics fan out into a responsive grid to use the wider viewport. minmax keeps
+   each card wide enough that title + progress meter never cramp; titles still
+   wrap (overflow-wrap: anywhere on .wiz__card-title) rather than truncate. */
+.wiz__cards--epics {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
   gap: 0.5rem;
 }
 
