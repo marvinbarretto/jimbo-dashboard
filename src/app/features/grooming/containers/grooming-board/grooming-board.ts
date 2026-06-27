@@ -39,24 +39,19 @@ function groomingToRollup(item: VaultItem): ChildState {
   return 'grooming';
 }
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
-import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
+import { KanbanFilterBar, type FilterGroup } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
+import {
+  projectFilterGroup, ownerFilterGroup, priorityFilterGroup,
+  PROJECT, OWNER, PRIORITY, UNASSIGNED, NO_PRIORITY,
+} from '@shared/kanban/filter-groups';
 import { createKanbanDragState } from '@shared/kanban/drag-state';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
 import { withVaultDetailModal, swapDetailSeq } from '@shared/kanban/detail-modal';
 import { CommandShortcutsService } from '@shared/services/command-shortcuts.service';
 import { isSeedMode } from '@shared/seed-mode';
 
-// "Unassigned" is its own filter token alongside actor IDs. Using a sentinel string
-// keeps the Set<string> simple — branded ActorId values are still strings at runtime.
-const UNASSIGNED = '__unassigned__';
-// Priority filter sentinel for "no priority set". Distinct from 0 so set membership works.
-const NO_PRIORITY = -1;
-
-// Filter dimension ids — declared here so the composable, the chip groups, and
-// the toggle handler all reference the same source of truth.
-const PROJECT  = 'project';
-const OWNER    = 'owner';
-const PRIORITY = 'priority';
+// Filter dimension ids + sentinels (UNASSIGNED / NO_PRIORITY) come from the shared
+// kanban facet module, so the grooming and execution boards stay in lockstep.
 
 interface ColumnView {
   status:     GroomingStatus;
@@ -367,9 +362,21 @@ export class GroomingBoard {
   // clicking @ralph doesn't make @ralph's own count drop to zero.
 
   readonly filterGroups = computed<FilterGroup[]>(() => [
-    this.buildProjectGroup(),
-    this.buildOwnerGroup(),
-    this.buildPriorityGroup(),
+    projectFilterGroup(
+      this.applyFilters({ skipProject: true }),
+      this.projectFilter(),
+      this.projectsService.activeProjects(),
+      item => this.vaultItemProjectsService.projectsFor(item.id)(),
+    ),
+    ownerFilterGroup(
+      this.applyFilters({ skipOwner: true }),
+      this.ownerFilter(),
+      this.actorsService.activeActors().map(a => a.id as string),
+    ),
+    priorityFilterGroup(
+      this.applyFilters({ skipPriority: true }),
+      this.priorityFilter(),
+    ),
   ]);
 
   readonly assignableActors = computed<readonly ActorId[]>(() =>
@@ -414,64 +421,6 @@ export class GroomingBoard {
   onAssignEpic(item: VaultItem, epicId: VaultItemId): void {
     if (epicId === item.id) return;  // never self-parent
     this.vaultItemsService.update(item.id, { parent_id: epicId });
-  }
-
-  private buildProjectGroup(): FilterGroup<string> {
-    const items = this.applyFilters({ skipProject: true });
-    const counts = new Map<string, number>();
-    for (const item of items) {
-      const links = this.vaultItemProjectsService.projectsFor(item.id)();
-      for (const l of links) {
-        counts.set(l.project_id as string, (counts.get(l.project_id as string) ?? 0) + 1);
-      }
-    }
-    const options: FilterOption<string>[] = this.projectsService.activeProjects().map(p => ({
-      value:      p.id as string,
-      label:      p.display_name,
-      count:      counts.get(p.id as string) ?? 0,
-      entityType: 'project' as const,
-      color:      p.color_token,
-    }));
-    return { id: PROJECT, label: 'Project', options, active: this.projectFilter() };
-  }
-
-  private buildOwnerGroup(): FilterGroup<string> {
-    const items = this.applyFilters({ skipOwner: true });
-    const counts = new Map<string, number>();
-    let unassigned = 0;
-    for (const item of items) {
-      if (item.assigned_to) {
-        counts.set(item.assigned_to as string, (counts.get(item.assigned_to as string) ?? 0) + 1);
-      } else {
-        unassigned++;
-      }
-    }
-    const options: FilterOption<string>[] = this.actorsService.activeActors().map(a => ({
-      value:      a.id as string,
-      label:      a.id as string,
-      count:      counts.get(a.id as string) ?? 0,
-      entityType: 'actor' as const,
-    }));
-    options.push({ value: UNASSIGNED, label: 'unassigned', count: unassigned });
-    return { id: OWNER, label: 'Owner', options, active: this.ownerFilter() };
-  }
-
-  private buildPriorityGroup(): FilterGroup<number> {
-    const items = this.applyFilters({ skipPriority: true });
-    const counts = new Map<number, number>();
-    for (const item of items) {
-      const eff = effectivePriority(item);
-      const key = eff === null ? NO_PRIORITY : eff;
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    const options: FilterOption<number>[] = [
-      { value: 0,  label: 'P0', count: counts.get(0)  ?? 0, tone: 'P0' },
-      { value: 1,  label: 'P1', count: counts.get(1)  ?? 0, tone: 'P1' },
-      { value: 2,  label: 'P2', count: counts.get(2)  ?? 0, tone: 'P2' },
-      { value: 3,  label: 'P3', count: counts.get(3)  ?? 0, tone: 'P3' },
-      { value: NO_PRIORITY, label: 'no priority', count: counts.get(NO_PRIORITY) ?? 0 },
-    ];
-    return { id: PRIORITY, label: 'Priority', options, active: this.priorityFilter() };
   }
 
   // Single toggle handler — generic filter bar emits (groupId, value); we route

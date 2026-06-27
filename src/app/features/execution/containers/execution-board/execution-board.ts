@@ -10,21 +10,22 @@ import { VaultItemDependenciesService } from '@features/vault-items/data-access/
 import { ProjectsService } from '@features/projects/data-access/projects.service';
 import { ActorsService } from '@features/actors/data-access/actors.service';
 import { type CommissionItem, type CommissionStage } from '@domain/dispatch';
-import type { ActorId, VaultItemId } from '@domain/ids';
+import type { VaultItemId } from '@domain/ids';
 import { VaultCard, type ActionKey } from '@shared/components/vault-card/vault-card';
 import { CommissionCard, type CommissionAction } from '@features/execution/components/commission-card/commission-card';
 import type { CardContext, ManualCardContext, ProjectRef, SourceLabel } from '@shared/components/vault-card/card-context';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
-import { KanbanFilterBar, type FilterGroup, type FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
+import { KanbanFilterBar, type FilterGroup } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
 import { BoardCreateBar } from '@shared/components/board-create-bar/board-create-bar';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
 import { createKanbanDragState } from '@shared/kanban/drag-state';
+import {
+  projectFilterGroup, ownerFilterGroup, priorityFilterGroup,
+  PROJECT, OWNER, PRIORITY, UNASSIGNED, NO_PRIORITY,
+} from '@shared/kanban/filter-groups';
 import { withVaultDetailModal, swapDetailSeq } from '@shared/kanban/detail-modal';
 import { CommandShortcutsService } from '@shared/services/command-shortcuts.service';
 import { effectivePriority, isActive, isDone, type VaultItem } from '@domain/vault';
-
-const EXECUTOR = 'executor';
-const PROJECT  = 'project';
 
 // The board collapsed from "Ready + 8 commission-stage columns" into three
 // workflow lanes that BOTH manual (human-owned) and automated (agent-commission)
@@ -94,6 +95,10 @@ interface LaneView {
   cards:      BoardCard[];
 }
 
+// Which facets a count should ignore (so a facet's own selection doesn't collapse
+// its counts to its active set).
+interface FacetSkip { skipOwner?: boolean; skipProject?: boolean; skipPriority?: boolean }
+
 @Component({
   selector: 'app-execution-board',
   imports: [VaultCard, CommissionCard, KanbanColumn, KanbanFilterBar, BoardCreateBar],
@@ -127,9 +132,11 @@ export class ExecutionBoard {
   );
 
   // --- filter state -------------------------------------------------------
-  private readonly filter = createKanbanFilterState([EXECUTOR, PROJECT]);
-  private readonly executorFilter = this.filter.active<string>(EXECUTOR);
+  // Same three facets as the grooming board (built via @shared/kanban/filter-groups).
+  private readonly filter = createKanbanFilterState([PROJECT, OWNER, PRIORITY]);
   private readonly projectFilter  = this.filter.active<string>(PROJECT);
+  private readonly ownerFilter    = this.filter.active<string>(OWNER);
+  private readonly priorityFilter = this.filter.active<number>(PRIORITY);
 
   private readonly _searchTerm = signal<string>('');
   readonly searchTerm = this._searchTerm.asReadonly();
@@ -145,7 +152,11 @@ export class ExecutionBoard {
 
   // --- sources ------------------------------------------------------------
 
-  readonly visibleCommissions = computed(() => this.applyCommissionFilters());
+  readonly visibleCommissions = computed(() =>
+    this.dispatchService.commissions().filter(c =>
+      this.commissionMatchesSearch(c) && this.matchesFacets(this.vaultItemsService.getById(c.taskId)),
+    ),
+  );
 
   // Task IDs that already have a commission dispatch (any stage). These render as
   // commission cards, so they must NOT also appear as a manual card (no double-show).
@@ -178,9 +189,6 @@ export class ExecutionBoard {
     );
   });
 
-  // Load dependency edges for every manual card so blocked ones can be greyed.
-  // Bounded to the board's own item set (small) — mirrors the grooming board's
-  // per-item parallel loads.
   constructor() {
     withVaultDetailModal();
 
@@ -190,6 +198,7 @@ export class ExecutionBoard {
       }
     });
 
+    // Load dependency edges for every manual card so blocked ones can be greyed.
     effect(() => {
       for (const item of this.manualItems()) {
         this.dependenciesService.loadFor(item.id);
@@ -197,25 +206,31 @@ export class ExecutionBoard {
     });
 
     this.route.queryParamMap.pipe(take(1)).subscribe(params => {
-      for (const id of (params.get(EXECUTOR)?.split(',').filter(Boolean) ?? [])) {
-        this.filter.toggle(EXECUTOR, id);
-      }
       for (const id of (params.get(PROJECT)?.split(',').filter(Boolean) ?? [])) {
         this.filter.toggle(PROJECT, id);
+      }
+      for (const id of (params.get(OWNER)?.split(',').filter(Boolean) ?? [])) {
+        this.filter.toggle(OWNER, id);
+      }
+      for (const raw of (params.get(PRIORITY)?.split(',').filter(Boolean) ?? [])) {
+        const n = Number(raw);
+        if (!Number.isNaN(n)) this.filter.toggle(PRIORITY, n);
       }
       const q = params.get('q');
       if (q) this._searchTerm.set(q);
     });
 
     effect(() => {
-      const executors = Array.from(this.executorFilter());
-      const projects  = Array.from(this.projectFilter());
+      const projects   = Array.from(this.projectFilter());
+      const owners     = Array.from(this.ownerFilter());
+      const priorities = Array.from(this.priorityFilter());
       const q = this._searchTerm();
       this.router.navigate([], {
         relativeTo: this.route,
         queryParams: {
-          [EXECUTOR]: executors.length ? executors.join(',') : null,
-          [PROJECT]:  projects.length  ? projects.join(',')  : null,
+          [PROJECT]:  projects.length   ? projects.join(',')   : null,
+          [OWNER]:    owners.length     ? owners.join(',')     : null,
+          [PRIORITY]: priorities.length ? priorities.join(',') : null,
           q:          q || null,
         },
         queryParamsHandling: 'merge',
@@ -225,7 +240,7 @@ export class ExecutionBoard {
   }
 
   private readonly visibleManualItems = computed(() =>
-    this.manualItems().filter(item => this.matchesManual(item)),
+    this.manualItems().filter(item => this.manualMatchesSearch(item) && this.matchesFacets(item)),
   );
 
   // Build every card (manual + commission) with its lane/priority/createdAt
@@ -346,9 +361,7 @@ export class ExecutionBoard {
   // Column-level "dismiss all completed" on the Done lane: hard-deletes completed
   // dispatch rows. Count is the terminal commissions in the lane.
   onClearCompleted(): void {
-    const count = this.lanes()
-      .find(l => l.lane === 'done')?.cards
-      .filter(c => c.kind === 'commission').length ?? 0;
+    const count = this.doneCommissionCount();
     if (count === 0) return;
     if (!window.confirm(`Dismiss all ${count} completed commissions? This cannot be undone.`)) return;
     this.dispatchCommands.clearCompleted();
@@ -389,58 +402,26 @@ export class ExecutionBoard {
   }
 
   // --- filter groups ------------------------------------------------------
-
+  // Same Project / Owner / Priority facets as the grooming board — built by the
+  // shared @shared/kanban/filter-groups helpers. Each facet's counts come from
+  // the board's vault items filtered by every OTHER facet (the skip flag).
   readonly filterGroups = computed<FilterGroup[]>(() => [
-    this.buildExecutorGroup(),
-    this.buildProjectGroup(),
+    projectFilterGroup(
+      this.facetItems({ skipProject: true }),
+      this.projectFilter(),
+      this.projectsService.activeProjects(),
+      item => this.vaultItemProjectsService.projectsFor(item.id)(),
+    ),
+    ownerFilterGroup(
+      this.facetItems({ skipOwner: true }),
+      this.ownerFilter(),
+      this.actorsService.activeActors().map(a => a.id as string),
+    ),
+    priorityFilterGroup(
+      this.facetItems({ skipPriority: true }),
+      this.priorityFilter(),
+    ),
   ]);
-
-  // Owner facet spans BOTH tracks now the board is unified: a commission's
-  // executor (agent) and a manual card's assigned_to (human). Building it from
-  // commissions alone is why "only boris" showed when every Ready card is a
-  // human-owned manual task.
-  private buildExecutorGroup(): FilterGroup<string> {
-    const counts = new Map<string, number>();
-    for (const c of this.applyCommissionFilters({ skipExecutor: true })) {
-      if (c.executor != null) counts.set(c.executor, (counts.get(c.executor) ?? 0) + 1);
-    }
-    for (const m of this.applyManualFilters({ skipExecutor: true })) {
-      if (m.assigned_to != null) counts.set(m.assigned_to as string, (counts.get(m.assigned_to as string) ?? 0) + 1);
-    }
-    // Options = every actor that owns a manual card or a commission on this board.
-    const ids = new Set<string>();
-    for (const c of this.dispatchService.commissions()) if (c.executor != null) ids.add(c.executor as string);
-    for (const m of this.manualItems()) if (m.assigned_to != null) ids.add(m.assigned_to as string);
-    const options: FilterOption<string>[] = Array.from(ids).map(id => ({
-      value:      id,
-      label:      id,
-      count:      counts.get(id) ?? 0,
-      entityType: 'actor' as const,
-    })).sort((a, b) => a.label.localeCompare(b.label));
-    return { id: EXECUTOR, label: 'Owner', options, active: this.executorFilter() };
-  }
-
-  private buildProjectGroup(): FilterGroup<string> {
-    const counts = new Map<string, number>();
-    for (const c of this.applyCommissionFilters({ skipProject: true })) {
-      for (const l of this.vaultItemProjectsService.projectsFor(c.taskId)()) {
-        counts.set(l.project_id as string, (counts.get(l.project_id as string) ?? 0) + 1);
-      }
-    }
-    for (const m of this.applyManualFilters({ skipProject: true })) {
-      for (const l of this.vaultItemProjectsService.projectsFor(m.id)()) {
-        counts.set(l.project_id as string, (counts.get(l.project_id as string) ?? 0) + 1);
-      }
-    }
-    const options: FilterOption<string>[] = this.projectsService.activeProjects().map(p => ({
-      value:      p.id as string,
-      label:      p.display_name,
-      count:      counts.get(p.id as string) ?? 0,
-      entityType: 'project' as const,
-      color:      p.color_token,
-    }));
-    return { id: PROJECT, label: 'Project', options, active: this.projectFilter() };
-  }
 
   onFilterToggle(event: { groupId: string; value: string | number }): void {
     this.filter.toggle(event.groupId, event.value);
@@ -455,52 +436,55 @@ export class ExecutionBoard {
 
   // --- internal: filtering -----------------------------------------------
 
-  private applyCommissionFilters(opts: { skipExecutor?: boolean; skipProject?: boolean } = {}): CommissionItem[] {
-    const execF  = this.executorFilter();
-    const projF  = this.projectFilter();
-    const search = this._searchTerm().trim().toLowerCase();
-
-    return this.dispatchService.commissions().filter(c => {
-      if (search) {
-        const haystack = [c.taskSeq ?? '', c.taskTitle ?? '', c.executor ?? '', c.latest.skill]
-          .join(' ').toLowerCase();
-        if (!haystack.includes(search)) return false;
-      }
-      if (!opts.skipExecutor && execF.size > 0) {
-        if (c.executor == null || !execF.has(c.executor)) return false;
-      }
-      if (!opts.skipProject && projF.size > 0) {
-        const links = this.vaultItemProjectsService.projectsFor(c.taskId)();
-        if (!links.some(l => projF.has(l.project_id as string))) return false;
-      }
-      return true;
-    });
+  // The vault items represented on the board — manual cards plus each commission's
+  // underlying task — passed to the shared facet builders. Filtered by search and
+  // every facet except the one whose counts we're computing. Manual and commission
+  // task ids never overlap (commissioned items are excluded from manualItems).
+  private facetItems(skip: FacetSkip): VaultItem[] {
+    const out: VaultItem[] = [];
+    for (const m of this.manualItems()) {
+      if (this.manualMatchesSearch(m) && this.matchesFacets(m, skip)) out.push(m);
+    }
+    for (const c of this.dispatchService.commissions()) {
+      const vi = this.vaultItemsService.getById(c.taskId);
+      if (vi && this.commissionMatchesSearch(c) && this.matchesFacets(vi, skip)) out.push(vi);
+    }
+    return out;
   }
 
-  private applyManualFilters(opts: { skipExecutor?: boolean; skipProject?: boolean } = {}): VaultItem[] {
-    return this.manualItems().filter(item => this.matchesManual(item, opts));
-  }
-
-  // Manual cards honour the same facets (assigned_to as their "owner"). Skips
-  // mirror applyCommissionFilters so a facet's own counts don't collapse to its
-  // active selection.
-  private matchesManual(item: VaultItem, opts: { skipExecutor?: boolean; skipProject?: boolean } = {}): boolean {
-    const execF  = this.executorFilter();
+  // Owner / priority / project facet predicate over a vault item — the unit both
+  // boards filter on (a commission passes its underlying task). Owner = assigned_to,
+  // matching grooming; the agent executor still shows on the commission card pill.
+  private matchesFacets(item: VaultItem | null | undefined, skip: FacetSkip = {}): boolean {
+    const ownerF = this.ownerFilter();
     const projF  = this.projectFilter();
-    const search = this._searchTerm().trim().toLowerCase();
+    const priF   = this.priorityFilter();
 
-    if (search) {
-      const haystack = [item.seq, item.title, item.assigned_to ?? ''].join(' ').toLowerCase();
-      if (!haystack.includes(search)) return false;
+    if (!skip.skipOwner && ownerF.size > 0) {
+      const key = (item?.assigned_to ?? UNASSIGNED) as string;
+      if (!ownerF.has(key)) return false;
     }
-    if (!opts.skipExecutor && execF.size > 0) {
-      const owner: ActorId | null = item.assigned_to ?? null;
-      if (owner == null || !execF.has(owner)) return false;
+    if (!skip.skipPriority && priF.size > 0) {
+      const eff = item ? effectivePriority(item) : null;
+      const key = eff === null ? NO_PRIORITY : eff;
+      if (!priF.has(key)) return false;
     }
-    if (!opts.skipProject && projF.size > 0) {
-      const links = this.vaultItemProjectsService.projectsFor(item.id)();
+    if (!skip.skipProject && projF.size > 0) {
+      const links = item ? this.vaultItemProjectsService.projectsFor(item.id)() : [];
       if (!links.some(l => projF.has(l.project_id as string))) return false;
     }
     return true;
+  }
+
+  private manualMatchesSearch(item: VaultItem): boolean {
+    const search = this._searchTerm().trim().toLowerCase();
+    if (!search) return true;
+    return [item.seq, item.title, item.assigned_to ?? ''].join(' ').toLowerCase().includes(search);
+  }
+
+  private commissionMatchesSearch(c: CommissionItem): boolean {
+    const search = this._searchTerm().trim().toLowerCase();
+    if (!search) return true;
+    return [c.taskSeq ?? '', c.taskTitle ?? '', c.executor ?? '', c.latest.skill].join(' ').toLowerCase().includes(search);
   }
 }
