@@ -42,6 +42,10 @@ Rationale and philosophy live in `docs/conventions.md` — read it when a rule b
 ### Comments
 - WHY, not what. Skip anything the code already says.
 
+### Commits
+- Conventional Commits (drives `standard-version`); release via `npm run release` then `git push --follow-tags`.
+- Link work to the vault: bare `LOC-3062` (project short_code + seq) in a message logs to that item's history; `Closes: LOC-3062` marks it done. Picked up within ~15 min of pushing. Full convention: `jimbo-api/docs/commit-vault-linking.md`.
+
 ## Experimental APIs
 
 Welcomed. Tag with a short comment marking the risk surface.
