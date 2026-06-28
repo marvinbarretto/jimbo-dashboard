@@ -273,6 +273,16 @@ export class VaultCard {
     return ctx.item.seq;
   });
 
+  // Operator-facing handle. Prefixes the seq with the project short code
+  // (`LOC-3062`) when one exists, else the bare `#3062`. The seq remains the
+  // routing key — only the label changes — so `/vault-items/<seq>` is unaffected.
+  protected readonly seqLabel = computed(() => {
+    const s = this.seq();
+    if (s === null) return null;
+    const code = this.context().project?.short_code;
+    return code ? `${code}-${s}` : `#${s}`;
+  });
+
   protected readonly title = computed(() => {
     const ctx = this.context();
     if (ctx.kind === 'dispatch') return ctx.item?.title ?? `task #${ctx.entry.task_id}`;

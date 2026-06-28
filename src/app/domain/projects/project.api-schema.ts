@@ -37,6 +37,7 @@ export const ApiProjectSchema = z.object({
   // (the projects_color_token migration isn't applied on every backend).
   // Absent → null, same as the brief fields below.
   color_token:    z.string().nullish().transform(v => v ?? null),
+  short_code:     z.string().nullish().transform(v => v ?? null),
   created_at:     z.string(),
   updated_at:     z.string().optional(),
   // Manifest-sync provenance; absent on older API builds → null.

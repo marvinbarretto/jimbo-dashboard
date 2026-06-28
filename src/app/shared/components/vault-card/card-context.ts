@@ -10,6 +10,9 @@ export interface ProjectRef {
   readonly id:           string;
   readonly display_name: string;
   readonly color_token:  string | null;
+  // Short project key (e.g. 'LOC') used to prefix the card's seq handle as
+  // `LOC-3062`. Null ⇒ card falls back to `#3062`.
+  readonly short_code:   string | null;
 }
 
 // Pre-formatted source attribution. Board resolves the wording so the card

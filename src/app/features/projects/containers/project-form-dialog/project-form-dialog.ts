@@ -71,6 +71,9 @@ export class ProjectFormDialog {
       criteria:       null,
       repo_url:       v.repo_url,
       color_token:    v.color_token,
+      // short_code is now required on the payload (WIP); default to null until
+      // this form grows a field for it. Adjust to your intended design.
+      short_code:     null,
     });
     this.dialogRef.close(id);
   }

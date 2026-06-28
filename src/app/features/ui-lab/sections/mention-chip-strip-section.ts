@@ -19,6 +19,7 @@ const HERMES: Project = {
   criteria: null,
   repo_url: null,
   color_token: '#7c3aed',
+  short_code: 'HRM',
   created_at: '2026-01-01T00:00:00Z',
   synced_at: null, repos: null, ...EMPTY_PROJECT_BRIEF,
 };

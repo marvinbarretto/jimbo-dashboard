@@ -35,7 +35,7 @@
   <div class="vault-card__body">
   <header class="vault-card__head">
     @if (seq() !== null) {
-      <a class="vault-card__seq" [routerLink]="['/vault-items', seq()]">#{{ seq() }}</a>
+      <a class="vault-card__seq" [routerLink]="['/vault-items', seq()]">{{ seqLabel() }}</a>
     }
 
     @if (dispatch(); as d) {

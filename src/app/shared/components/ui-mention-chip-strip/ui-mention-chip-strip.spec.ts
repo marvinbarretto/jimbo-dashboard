@@ -25,6 +25,7 @@ const proj = (id: string, color: string | null = null): Project => ({
   criteria: null,
   repo_url: null,
   color_token: color,
+  short_code: null,
   created_at: '2026-01-01T00:00:00Z',
   synced_at: null,
   repos: null,

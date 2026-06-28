@@ -27,6 +27,7 @@ function makeProject(overrides: Partial<Project> = {}): Project {
     criteria: null,
     repo_url: null,
     color_token: '#7a8fc4',
+    short_code: null,
     created_at: '2025-01-01T00:00:00Z',
     synced_at: null,
     repos: null,

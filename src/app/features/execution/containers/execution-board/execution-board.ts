@@ -318,12 +318,37 @@ export class ExecutionBoard {
   }
 
   private resolveProject(id: string): ProjectRef | null {
+    // Prefer the board API's resolved primary project. It already walks the
+    // parent chain server-side, so an inherited subtask (one with no junction
+    // row of its own) still shows its epic's project bar. Junction links are a
+    // fallback for items the board embed doesn't carry (e.g. commission lookups
+    // by taskId not present in the board set).
+    const item = this.vaultItemsService.getById(id as never);
+    if (item?.primary_project_id && item.primary_project_name) {
+      const proj = this.projectsService.getById(item.primary_project_id as never);
+      return {
+        id: item.primary_project_id as string,
+        display_name: item.primary_project_name as string,
+        color_token: proj?.color_token ?? null,
+        short_code: proj?.short_code ?? null,
+      };
+    }
     const links = this.vaultItemProjectsService.projectsFor(id as never)();
     if (!links.length) return null;
     const project = this.projectsService.getById(links[0].project_id);
     return project
-      ? { id: project.id as string, display_name: project.display_name, color_token: project.color_token }
+      ? { id: project.id as string, display_name: project.display_name, color_token: project.color_token, short_code: project.short_code }
       : null;
+  }
+
+  // Project membership for the facet count + filter. Unions the item's direct
+  // junction links with its resolved primary project (the board API has already
+  // walked the parent chain), so an inherited subtask matches a project filter
+  // and counts toward that facet — the same project the card bar now shows.
+  private projectLinksFor(item: VaultItem): { project_id: string }[] {
+    const ids = new Set(this.vaultItemProjectsService.projectsFor(item.id)().map(l => l.project_id as string));
+    if (item.primary_project_id) ids.add(item.primary_project_id as string);
+    return [...ids].map(project_id => ({ project_id }));
   }
 
   private sourceLabelFor(item: VaultItem): SourceLabel | null {
@@ -410,7 +435,7 @@ export class ExecutionBoard {
       this.facetItems({ skipProject: true }),
       this.projectFilter(),
       this.projectsService.activeProjects(),
-      item => this.vaultItemProjectsService.projectsFor(item.id)(),
+      item => this.projectLinksFor(item),
     ),
     ownerFilterGroup(
       this.facetItems({ skipOwner: true }),
@@ -470,7 +495,7 @@ export class ExecutionBoard {
       if (!priF.has(key)) return false;
     }
     if (!skip.skipProject && projF.size > 0) {
-      const links = item ? this.vaultItemProjectsService.projectsFor(item.id)() : [];
+      const links = item ? this.projectLinksFor(item) : [];
       if (!links.some(l => projF.has(l.project_id as string))) return false;
     }
     return true;

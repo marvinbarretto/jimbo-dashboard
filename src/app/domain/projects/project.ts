@@ -81,6 +81,11 @@ export interface Project extends ProjectBrief {
   // Auto-assigned from PROJECT_PALETTE on create; operator can override via project form.
   color_token:    string | null;
 
+  // Short uppercase project key (e.g. 'LOC' for Localshout). Prefixes the
+  // operator-facing item handle on cards — `LOC-3062` instead of `#3062`.
+  // Nullable: items in projects without a code fall back to `#<seq>`.
+  short_code:     string | null;
+
   created_at:     string;
   // `updated_at` omitted — derived from activity events when we model project-level events.
   // Principle P6: no silent field writes.

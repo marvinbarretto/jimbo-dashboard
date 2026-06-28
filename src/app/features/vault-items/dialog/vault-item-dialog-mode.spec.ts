@@ -25,6 +25,7 @@ const fakeProject: Project = {
   id: projectId('hermes'),
   display_name: 'Hermes',
   is_active: true,
+  short_code: null,
 } as unknown as Project;
 
 describe('stageFor', () => {

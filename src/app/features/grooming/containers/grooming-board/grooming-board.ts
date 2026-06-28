@@ -222,6 +222,7 @@ export class GroomingBoard {
         id: item.primary_project_id,
         display_name: item.primary_project_name,
         color_token: proj?.color_token ?? null,
+        short_code: proj?.short_code ?? null,
       };
     }
     const links = this.vaultItemProjectsService.projectsFor(item.id)();
@@ -231,6 +232,7 @@ export class GroomingBoard {
       id: project.id as string,
       display_name: project.display_name,
       color_token: project.color_token,
+      short_code: project.short_code,
     } : null;
   }
 
@@ -366,7 +368,7 @@ export class GroomingBoard {
       this.applyFilters({ skipProject: true }),
       this.projectFilter(),
       this.projectsService.activeProjects(),
-      item => this.vaultItemProjectsService.projectsFor(item.id)(),
+      item => this.projectLinksFor(item),
     ),
     ownerFilterGroup(
       this.applyFilters({ skipOwner: true }),
@@ -412,6 +414,16 @@ export class GroomingBoard {
     if (epic.primary_project_id) return epic.primary_project_id;
     const links = this.vaultItemProjectsService.projectsFor(epic.id)();
     return (links[0]?.project_id as string | undefined) ?? null;
+  }
+
+  // Project membership for the facet count + filter. Unions the item's direct
+  // junction links with its resolved primary project (the board API has already
+  // walked the parent chain), so an inherited subtask matches a project filter
+  // and counts toward that facet — the same project the card bar shows.
+  private projectLinksFor(item: VaultItem): { project_id: string }[] {
+    const ids = new Set(this.vaultItemProjectsService.projectsFor(item.id)().map(l => l.project_id as string));
+    if (item.primary_project_id) ids.add(item.primary_project_id as string);
+    return [...ids].map(project_id => ({ project_id }));
   }
 
   onAssignProject(item: VaultItem, id: string): void {
@@ -514,7 +526,7 @@ export class GroomingBoard {
         if (!priF.has(key)) return false;
       }
       if (!opts.skipProject && projF.size > 0) {
-        const links = this.vaultItemProjectsService.projectsFor(item.id)();
+        const links = this.projectLinksFor(item);
         const matches = links.some(l => projF.has(l.project_id as string));
         if (!matches) return false;
       }
