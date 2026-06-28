@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.87](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.86...v0.0.87) (2026-06-28)
+
+
+### Features
+
+* auto-open retro when the pomo countdown hits zero ([5b856c8](https://github.com/marvinbarretto/jimbo-dashboard/commit/5b856c89c0c47ac8dd074382c9d0b206d9b0749b))
+* **execution:** owner/project facets span manual cards; lanes fill width ([954aadd](https://github.com/marvinbarretto/jimbo-dashboard/commit/954aadddb4fda4999741db4a1263163170d07d69))
+* **execution:** unify board into Ready/In Progress/Done lanes ([a55f4ea](https://github.com/marvinbarretto/jimbo-dashboard/commit/a55f4eae9e3461475c1df69e43e0c16c057549cb))
+* **nutrition:** split calories into food vs alcohol ([052f35e](https://github.com/marvinbarretto/jimbo-dashboard/commit/052f35e2af7874616ad91f2732e760475deddbbb))
+
+
+### Bug Fixes
+
+* **kanban:** let column fill its wrap instead of pinning to 320px ([b022b67](https://github.com/marvinbarretto/jimbo-dashboard/commit/b022b675e24f3b3420c58274fa135f92d727c95f))
+* **vault:** tolerate bare-array response in dependency loadFor ([ed746d4](https://github.com/marvinbarretto/jimbo-dashboard/commit/ed746d4d1945b45e5a7a20757ef6f617b734485a))
+
+
+### Code Refactoring
+
+* **kanban:** share Project/Owner/Priority facets across boards ([501f219](https://github.com/marvinbarretto/jimbo-dashboard/commit/501f219afdd1b15aa3d6c8bbe39d1d627f33caf1))
+
 ### [0.0.86](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.85...v0.0.86) (2026-06-27)
 
 
