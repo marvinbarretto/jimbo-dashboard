@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.88](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.87...v0.0.88) (2026-06-28)
+
+
+### Features
+
+* **vault:** render LOC-NNNN operator handles on cards ([956829a](https://github.com/marvinbarretto/jimbo-dashboard/commit/956829a28e6c4faaa85f6a6b72656e743720b611)), closes [#3062](https://github.com/marvinbarretto/jimbo-dashboard/issues/3062) [#3087](https://github.com/marvinbarretto/jimbo-dashboard/issues/3087)
+
 ### [0.0.87](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.86...v0.0.87) (2026-06-28)
 
 
