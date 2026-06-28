@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.89](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.88...v0.0.89) (2026-06-28)
+
+
+### Features
+
+* **projects:** add short_code field to project create/edit forms ([40b9fa7](https://github.com/marvinbarretto/jimbo-dashboard/commit/40b9fa7e9515cb4ad99f715ea5c5c4555366eae9)), closes [#3087](https://github.com/marvinbarretto/jimbo-dashboard/issues/3087)
+
 ### [0.0.88](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.87...v0.0.88) (2026-06-28)
 
 
