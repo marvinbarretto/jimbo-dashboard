@@ -105,12 +105,29 @@ export class UiPeriodTotals {
     const { start, end, elapsedDays } = this.window();
     const rows = this.daily().filter((r) => r.date >= start && r.date <= end);
     const targets = this.targets();
+    const sumKey = (key: string) => rows.reduce((s, r) => s + (r.values[key] ?? 0), 0);
 
     return this.measures().map((m) => {
-      const total = Math.round(rows.reduce((s, r) => s + (r.values[m.key] ?? 0), 0));
+      const total = Math.round(sumKey(m.key));
+      const unit = m.unit ?? '';
+
+      // Share measures read as "X% of <other>", with the absolute as detail.
+      if (m.share) {
+        const ofTotal = sumKey(m.share.of);
+        const pct = ofTotal > 0 ? Math.round((total / ofTotal) * 100) : 0;
+        return {
+          key: m.key,
+          label: m.label,
+          unit,
+          total,
+          target: null,
+          value: `${pct}%`,
+          detail: `${total}${unit ? ` ${unit}` : ''}`,
+        };
+      }
+
       const dailyTarget = targets[m.key];
       const target = typeof dailyTarget === 'number' ? Math.round(dailyTarget * elapsedDays) : null;
-      const unit = m.unit ?? '';
       const avg = elapsedDays > 1 ? Math.round(total / elapsedDays) : null;
       return {
         key: m.key,

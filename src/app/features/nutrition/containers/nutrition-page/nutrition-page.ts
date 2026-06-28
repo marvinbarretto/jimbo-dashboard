@@ -2,7 +2,7 @@ import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiSection } from '@shared/components/ui-section/ui-section';
-import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
+import { UiBarChart, type BarSeries } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiPeriodTotals } from '@shared/components/ui-period-totals/ui-period-totals';
@@ -20,6 +20,7 @@ import { londonDay, londonToday, shiftIsoDay } from '@shared/utils/datetime.util
 import {
   NutritionService,
   type FoodDailyRow,
+  type FoodItem,
   type FoodLogEntry,
   type FoodPatch,
   type FrequentFood,
@@ -36,8 +37,11 @@ const DAILY_WINDOW = 90;
 const TARGETS: Readonly<Record<string, number>> = { kcal: 2200, protein_g: 150 };
 
 // Headline measures for totals + trend (macros only — dose units don't sum).
+// `alcohol_kcal` renders as a share of total calories — the empty-calorie load
+// the user is trying to cut (see alcoholByDay + isAlcoholicDrink below).
 const TOTALS_MEASURES: readonly TrackerMeasure[] = [
   { key: 'kcal', label: 'Calories', unit: 'kcal', primary: true },
+  { key: 'alcohol_kcal', label: 'Alcohol', unit: 'kcal', share: { of: 'kcal' } },
   { key: 'protein_g', label: 'Protein', unit: 'g' },
   { key: 'carbs_g', label: 'Carbs', unit: 'g' },
   { key: 'fat_g', label: 'Fat', unit: 'g' },
@@ -115,30 +119,72 @@ export class NutritionPage {
     (this.catalogRes.value()?.items ?? []).map((s) => ({ id: s.id, label: s.name })),
   );
 
+  // Whole-drink alcohol calories per London day, from the per-item food log.
+  // A drink is "alcoholic" when its calories exceed what its macros explain (the
+  // Atwater residual flags ethanol — Coke/juice/coffee read ~0, beer/wine large);
+  // we then count the WHOLE drink, since beer's sugar is just as empty as the
+  // alcohol for a fat-loss goal. Spans the food-log window (LEDGER_DAYS) — older
+  // days fall back to 0, so the Month totals tab under-counts beyond that.
+  private readonly alcoholByDay = computed<Map<string, number>>(() => {
+    const map = new Map<string, number>();
+    for (const f of this.foodEntries()) {
+      const day = londonDay(f.logged_at);
+      for (const it of f.items) {
+        if (isAlcoholicDrink(it)) map.set(day, (map.get(day) ?? 0) + it.kcal);
+      }
+    }
+    return map;
+  });
+
   // ── Period totals + trend ────────────────────────────────────────
-  protected readonly dailyTotals = computed<TrackerDailyTotal[]>(() =>
-    this.dailyRows().map((d) => ({
+  protected readonly dailyTotals = computed<TrackerDailyTotal[]>(() => {
+    const alcByDay = this.alcoholByDay();
+    return this.dailyRows().map((d) => ({
       date: d.date,
       count: d.count,
-      values: { kcal: d.kcal, protein_g: d.protein_g, carbs_g: d.carbs_g, fat_g: d.fat_g },
-    })),
-  );
+      values: {
+        kcal: d.kcal,
+        alcohol_kcal: Math.min(d.kcal, alcByDay.get(d.date) ?? 0),
+        protein_g: d.protein_g,
+        carbs_g: d.carbs_g,
+        fat_g: d.fat_g,
+      },
+    }));
+  });
 
   // Continuous LEDGER_DAYS axis (London), filling the zero days the API omits.
   private readonly axis = computed(() => {
-    const byDate = new Map(this.dailyRows().map((d) => [d.date, d.kcal]));
+    const byDate = new Map(this.dailyRows().map((d) => [d.date, d]));
     const today = londonToday();
-    const out: { date: string; kcal: number }[] = [];
+    const out: { date: string; row: FoodDailyRow | null }[] = [];
     for (let i = LEDGER_DAYS - 1; i >= 0; i--) {
       const date = shiftIsoDay(today, -i);
-      out.push({ date, kcal: byDate.get(date) ?? 0 });
+      out.push({ date, row: byDate.get(date) ?? null });
     }
     return out;
   });
 
   protected readonly trendLabels = computed(() => this.axis().map((d) => d.date.slice(5)));
-  protected readonly trendValues = computed(() => this.axis().map((d) => d.kcal));
   protected readonly hasTrend = computed(() => this.dailyRows().some((d) => d.count > 0));
+
+  // Alcohol is listed first so it stacks on the BOTTOM — a fixed baseline makes
+  // the "empty calories" segment directly comparable day-to-day (the metric the
+  // user is trying to cut). It also carries the louder colour; food is muted.
+  protected readonly trendSeries = computed<BarSeries[]>(() => {
+    const alcByDay = this.alcoholByDay();
+    const food: number[] = [];
+    const alcohol: number[] = [];
+    for (const { date, row } of this.axis()) {
+      const kcal = row?.kcal ?? 0;
+      const alc = Math.min(kcal, alcByDay.get(date) ?? 0); // never exceed the day's total
+      alcohol.push(alc);
+      food.push(Math.max(0, kcal - alc));
+    }
+    return [
+      { label: 'Alcohol', values: alcohol, accent: 'rgba(244, 114, 71, 0.9)' },
+      { label: 'Food', values: food, accent: 'rgba(100, 116, 139, 0.55)' },
+    ];
+  });
 
   // ── Unified day ledger (food + supplements interleaved) ──────────
   protected readonly days = computed<{ date: string; entries: TrackerEntry[] }[]>(() => {
@@ -229,6 +275,20 @@ export class NutritionPage {
     this.dailyRes.reload();
     this.frequentRes.reload(); // a new/edited food may change the suggestions
   }
+}
+
+// Whether a drink counts as alcohol (we then count its whole kcal). Hybrid:
+// trust the LLM's `alcoholic` flag when present — it read the name at ingest and
+// correctly handles 0.0%/alcohol-free drinks a heuristic would misjudge. Fall
+// back to the Atwater residual (kcal − 4·P − 4·C − 9·F isolates ethanol) only for
+// older/manual entries that predate the flag; soft drinks sit near 0, beer/wine
+// clear the margin comfortably.
+const ALCOHOL_RESIDUAL_MIN = 30;
+function isAlcoholicDrink(it: FoodItem): boolean {
+  if (it.kind !== 'drink') return false;
+  if (typeof it.alcoholic === 'boolean') return it.alcoholic;
+  const macroKcal = 4 * it.protein_g + 4 * it.carbs_g + 9 * it.fat_g;
+  return it.kcal - macroKcal > ALCOHOL_RESIDUAL_MIN;
 }
 
 // ── Mapping: domain shapes → generic tracker entries ───────────────

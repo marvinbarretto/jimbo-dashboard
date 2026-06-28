@@ -13,12 +13,11 @@
     </app-ui-section>
 
     <!-- Trend: calories per day across the window -->
-    <app-ui-section title="Calories per day">
+    <app-ui-section title="Calories per day — food vs alcohol">
       @if (hasTrend()) {
         <app-ui-bar-chart
           [labels]="trendLabels()"
-          [values]="trendValues()"
-          label="kcal"
+          [series]="trendSeries()"
           suffix=" kcal"
         />
       } @else {

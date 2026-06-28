@@ -17,6 +17,12 @@ export interface TrackerMeasure {
   readonly editable?: boolean;
   /** The headline measure (e.g. kcal) — rendered with emphasis. Default false. */
   readonly primary?: boolean;
+  /**
+   * Render this measure as a percentage of another measure's window total
+   * rather than a raw sum — e.g. alcohol kcal as a share of total kcal. `of` is
+   * the measure key to divide by. Shown as a stat card ("31%"); ignores targets.
+   */
+  readonly share?: { readonly of: string };
 }
 
 /** One timestamped entry: a label plus a value per measure key. */

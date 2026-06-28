@@ -12,6 +12,8 @@ export interface FoodItem {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
+  /** Set by the LLM for alcoholic drinks; absent on entries logged before the field. */
+  alcoholic?: boolean;
 }
 
 export interface FoodLogEntry {
