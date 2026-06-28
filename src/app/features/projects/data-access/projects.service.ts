@@ -80,8 +80,8 @@ export class ProjectsService {
     const withColor = { ...payload, color_token };
     // Fill brief slots the caller didn't provide so the optimistic row is a
     // complete Project (brief fields are required on the domain type).
-    // short_code is server-assigned; null until the create response reconciles.
-    const optimistic: Project = { ...EMPTY_PROJECT_BRIEF, ...withColor, created_at: now, synced_at: null, repos: null, short_code: null };
+    // short_code rides in via the payload (spread through withColor).
+    const optimistic: Project = { ...EMPTY_PROJECT_BRIEF, ...withColor, created_at: now, synced_at: null, repos: null };
     this._projects.update(ps => [...ps, optimistic]);
 
     if (isSeedMode()) {

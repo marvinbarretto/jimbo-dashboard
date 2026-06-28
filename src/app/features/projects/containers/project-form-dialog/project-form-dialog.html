@@ -53,6 +53,15 @@
     </div>
 
     <div class="field">
+      <label for="pfd-short-code">Short code <span class="hint">(2–6 letters, e.g. LOC)</span></label>
+      <input id="pfd-short-code" formControlName="short_code" maxlength="6"
+             placeholder="LOC" style="text-transform: uppercase" />
+      @if (form.controls.short_code.touched && form.controls.short_code.errors?.['pattern']) {
+        <p class="field-error" role="alert">Use 2–6 letters only (e.g. LOC).</p>
+      }
+    </div>
+
+    <div class="field">
       <label>Accent color</label>
       <div class="color-picker">
         @if (selectedColor(); as color) {

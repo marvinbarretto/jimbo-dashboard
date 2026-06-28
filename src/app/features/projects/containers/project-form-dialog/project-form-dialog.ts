@@ -48,6 +48,8 @@ export class ProjectFormDialog {
     owner_actor_id: ['', Validators.required],
     repo_url:       [null as string | null],
     color_token:    [null as string | null],
+    // Short project key (e.g. LOC) — optional; 2–6 letters. See project-form.
+    short_code:     [null as string | null, Validators.pattern(/^[A-Za-z]{2,6}$/)],
   });
 
   readonly selectedColor = toSignal(
@@ -71,9 +73,7 @@ export class ProjectFormDialog {
       criteria:       null,
       repo_url:       v.repo_url,
       color_token:    v.color_token,
-      // short_code is now required on the payload (WIP); default to null until
-      // this form grows a field for it. Adjust to your intended design.
-      short_code:     null,
+      short_code:     v.short_code?.trim() ? v.short_code.trim().toUpperCase() : null,
     });
     this.dialogRef.close(id);
   }

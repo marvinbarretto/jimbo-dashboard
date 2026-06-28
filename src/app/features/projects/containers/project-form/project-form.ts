@@ -58,6 +58,9 @@ export class ProjectForm {
     criteria:       [null as string | null],
     repo_url:       [null as string | null],
     color_token:    [null as string | null],
+    // Short project key (e.g. LOC) — prefixes item handles as LOC-3062 and is
+    // checksum-verified against commit trailers. Optional; 2–6 letters.
+    short_code:     [null as string | null, Validators.pattern(/^[A-Za-z]{2,6}$/)],
   });
 
   // Must be declared after `form` — reads form.controls at class field init time.
@@ -100,9 +103,7 @@ export class ProjectForm {
       criteria:       v.criteria,
       repo_url:       v.repo_url,
       color_token:    v.color_token,
-      // short_code is now required on the payload (WIP); default to null until
-      // this form grows a field for it. Adjust to your intended design.
-      short_code:     null,
+      short_code:     v.short_code?.trim() ? v.short_code.trim().toUpperCase() : null,
     };
     if (this.isEdit()) {
       this.service.update(v.id, payload);
