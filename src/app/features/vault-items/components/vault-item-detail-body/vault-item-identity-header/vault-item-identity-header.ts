@@ -10,7 +10,11 @@ import type { VaultItem } from '@domain/vault/vault-item';
   template: `
     <header class="vault-item-identity-header">
       <span class="vault-item-identity-header__seq">#{{ item().seq }}</span>
-      <app-ui-badge tone="info" [subtle]="true">{{ item().type }}</app-ui-badge>
+      @if (item().is_epic) {
+        <app-ui-badge tone="accent">EPIC</app-ui-badge>
+      } @else {
+        <app-ui-badge tone="info" [subtle]="true">{{ item().type }}</app-ui-badge>
+      }
       <app-ui-inline-edit
         class="vault-item-identity-header__title"
         [value]="item().title"

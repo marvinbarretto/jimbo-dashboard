@@ -165,6 +165,10 @@ export class VaultItemDialogStore {
     const i = this.item();
     const r = this.readiness();
     if (!i || !r) return undefined;
+    // Epics are containers, not dispatchable work — they carry no readiness
+    // pipeline (no AC, no grooming, no priority gate), so suppress the
+    // "Waiting on …" banner that those task-only checks would produce.
+    if (i.is_epic) return undefined;
     return computeNextAction(i, r);
   });
 
@@ -277,10 +281,21 @@ export class VaultItemDialogStore {
       };
     }
 
+    // "Epic" is the deliberate `is_epic` flag, never derived from child count —
+    // see vault-item.ts. A plain task can own children (subtasks) without being
+    // an epic, so key the label off the flag and describe the rest as a parent.
+    if (item?.is_epic) {
+      return {
+        label: 'Hierarchy',
+        value: `Epic · ${childCount} task${childCount === 1 ? '' : 's'}`,
+        detail: 'This epic owns tasks.',
+      };
+    }
+
     if (childCount > 0) {
       return {
         label: 'Hierarchy',
-        value: `Epic root · ${childCount} child${childCount === 1 ? '' : 'ren'}`,
+        value: `Parent · ${childCount} subtask${childCount === 1 ? '' : 's'}`,
         detail: 'This item owns sub-items.',
       };
     }

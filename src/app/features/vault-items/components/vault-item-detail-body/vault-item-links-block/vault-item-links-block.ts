@@ -35,7 +35,9 @@ export interface VaultItemEpicOption {
   template: `
     <app-ui-subsection label="Links">
       @if (subtasks().length > 0) {
-        <app-ui-subhead label="Subtasks" [count]="subtasks().length" />
+        <!-- Children of an epic are first-class tasks, not subtasks; a plain
+             task's children remain subtasks. Label follows the parent's role. -->
+        <app-ui-subhead [label]="parentIsEpic() ? 'Tasks' : 'Subtasks'" [count]="subtasks().length" />
         <app-ui-chip-list
           [items]="subtaskChips()"
           [pickerOptions]="[]"
@@ -189,6 +191,9 @@ export class VaultItemLinksBlock {
   readonly availableEpics = input<readonly VaultItemEpicOption[]>([]);
   readonly parent = input<VaultItemParentRef | null>(null);
   readonly editable = input<boolean>(false);
+  /** When the current item is an epic, its children are labelled "Tasks" rather
+   *  than "Subtasks" — see template. */
+  readonly parentIsEpic = input<boolean>(false);
 
   readonly subtaskClicked = output<number>();
   readonly projectClicked = output<string>();

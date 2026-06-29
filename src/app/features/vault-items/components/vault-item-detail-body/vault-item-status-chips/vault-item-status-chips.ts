@@ -56,29 +56,33 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
           </div>
         </app-ui-dropdown>
 
-        <app-ui-dropdown
-          #priorityDrop
-          ariaHaspopup="listbox"
-          ariaLabel="Set manual priority">
-          @if (effectivePriority(); as p) {
-            <app-ui-badge trigger [tone]="priorityTone(p)" [title]="priorityTitle()">
-              {{ priorityLabel(p) }}{{ priorityDiverges() ? ' *' : '' }}
-            </app-ui-badge>
-          } @else {
-            <app-ui-badge trigger tone="neutral" [subtle]="true" title="No priority set">—</app-ui-badge>
-          }
-          <div panel role="listbox" class="vault-item-status-chips__panel">
-            @for (opt of priorityOptions; track opt.value) {
-              <button
-                class="vault-item-status-chips__option"
-                role="option"
-                [attr.aria-selected]="item().manual_priority === opt.value"
-                (click)="priorityChange.emit(opt.value); priorityDrop.close()">
-                {{ opt.label }}
-              </button>
+        <!-- Priority is a task-only concern. Epics are bodies of work that
+             aren't scored or dispatched, so they show no priority control. -->
+        @if (!item().is_epic) {
+          <app-ui-dropdown
+            #priorityDrop
+            ariaHaspopup="listbox"
+            ariaLabel="Set manual priority">
+            @if (effectivePriority(); as p) {
+              <app-ui-badge trigger [tone]="priorityTone(p)" [title]="priorityTitle()">
+                {{ priorityLabel(p) }}{{ priorityDiverges() ? ' *' : '' }}
+              </app-ui-badge>
+            } @else {
+              <app-ui-badge trigger tone="neutral" [subtle]="true" title="No priority set">—</app-ui-badge>
             }
-          </div>
-        </app-ui-dropdown>
+            <div panel role="listbox" class="vault-item-status-chips__panel">
+              @for (opt of priorityOptions; track opt.value) {
+                <button
+                  class="vault-item-status-chips__option"
+                  role="option"
+                  [attr.aria-selected]="item().manual_priority === opt.value"
+                  (click)="priorityChange.emit(opt.value); priorityDrop.close()">
+                  {{ opt.label }}
+                </button>
+              }
+            </div>
+          </app-ui-dropdown>
+        }
 
         @if (firstProject(); as p) {
           <a class="chip-link" [routerLink]="['/projects', p.id]">
@@ -98,10 +102,14 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
 
       <!-- Secondary tier: classification metadata -->
       <app-ui-cluster gap="sm" align="center" class="vault-item-status-chips__secondary">
-        <app-ui-badge [tone]="groomingTone()">{{ groomingLabel() }}</app-ui-badge>
+        <!-- Grooming + actionability are intake-pipeline state for tasks. An epic
+             isn't groomed or classified, so these read as noise on it. -->
+        @if (!item().is_epic) {
+          <app-ui-badge [tone]="groomingTone()">{{ groomingLabel() }}</app-ui-badge>
 
-        @if (item().actionability !== null) {
-          <app-ui-badge [tone]="actionabilityTone()">{{ item().actionability }}</app-ui-badge>
+          @if (item().actionability !== null) {
+            <app-ui-badge [tone]="actionabilityTone()">{{ item().actionability }}</app-ui-badge>
+          }
         }
 
         @if (isGitHubItem()) {

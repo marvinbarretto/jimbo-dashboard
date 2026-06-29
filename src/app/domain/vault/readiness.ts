@@ -109,7 +109,11 @@ export function effectivePriority(item: VaultItem) {
   return item.manual_priority ?? item.ai_priority;
 }
 
+// NOTE: this is a "has children" predicate, NOT the canonical epic test.
+// Epic-ness is the deliberate `is_epic` flag on the item (see vault-item.ts) —
+// a task can own subtasks without being an epic. Read `item.is_epic` to decide
+// whether something is an epic; use this only when you literally mean "has any
+// children". Named `isEpic` for historical reasons; do not extend its use.
 export function isEpic(childCount: number): boolean {
-  // `is_epic` is not stored — derived from having any children. Caller supplies the count.
   return childCount > 0;
 }

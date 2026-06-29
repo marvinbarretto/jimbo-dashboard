@@ -216,6 +216,7 @@
           <aside class="vault-item-detail__body-side">
           <app-vault-item-links-block
             [subtasks]="store.children()"
+            [parentIsEpic]="item.is_epic"
             [projects]="store.projects()"
             [activeProjects]="store.activeProjects()"
             [openBlockers]="store.openBlockers()"
