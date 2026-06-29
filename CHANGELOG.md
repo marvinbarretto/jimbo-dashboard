@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.91](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.90...v0.0.91) (2026-06-29)
+
+
+### Bug Fixes
+
+* **vault-items:** render epics distinctly from tasks in detail modal ([4d30e82](https://github.com/marvinbarretto/jimbo-dashboard/commit/4d30e82045b6bc957994d1e338978aa87685e2f8))
+
 ### [0.0.90](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.89...v0.0.90) (2026-06-29)
 
 ### [0.0.89](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.88...v0.0.89) (2026-06-28)
