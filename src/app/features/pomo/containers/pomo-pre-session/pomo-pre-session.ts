@@ -60,11 +60,14 @@ export class PomoPreSession {
 
   readonly presets = PRESETS;
 
-  // Major projects first, then minor.
-  readonly projectChips = computed<Project[]>(() => {
-    const active = this.projects.activeProjects();
-    return [...active.filter(p => p.kind === 'major'), ...active.filter(p => p.kind === 'minor')];
-  });
+  // All active projects, sorted alphabetically by display name. The old
+  // major/minor-only spread silently hid admin projects — sorting the full
+  // active set keeps every kind.
+  readonly projectChips = computed<Project[]>(() =>
+    [...this.projects.activeProjects()].sort((a, b) =>
+      a.display_name.localeCompare(b.display_name),
+    ),
+  );
 
   // `projectTouched` distinguishes "explicitly chose No project" (id null) from
   // "haven't chosen yet" (also id null) — the epic step only reveals for a real one.
