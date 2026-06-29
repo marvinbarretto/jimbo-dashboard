@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.92](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.91...v0.0.92) (2026-06-29)
+
+
+### Bug Fixes
+
+* **pomo:** show all active projects in pre-session picker ([d9623d8](https://github.com/marvinbarretto/jimbo-dashboard/commit/d9623d89f33ee6b376aded43a603345bc9553c07))
+
 ### [0.0.91](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.90...v0.0.91) (2026-06-29)
 
 
