@@ -1,0 +1,44 @@
+.feedback-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.5rem 0;
+}
+
+.feedback-composer__comment {
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.feedback-composer__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.feedback-composer__accurate,
+.feedback-composer__inaccurate {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.feedback-composer__accurate:hover {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.feedback-composer__inaccurate:hover {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}

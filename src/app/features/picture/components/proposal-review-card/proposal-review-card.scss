@@ -1,0 +1,57 @@
+.proposal-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.proposal-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.proposal-card__confidence {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.proposal-card__rationale {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.proposal-card__payload {
+  margin: 0;
+  padding: 0.5rem;
+  font-size: 0.72rem;
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  color: var(--color-text-muted);
+}
+
+.proposal-card__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.proposal-card__accept,
+.proposal-card__reject {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.proposal-card__accept:hover { border-color: var(--color-success); color: var(--color-success); }
+.proposal-card__reject:hover { border-color: var(--color-danger); color: var(--color-danger); }

@@ -1,0 +1,95 @@
+<div class="beliefs-tab">
+  @if (loading()) {
+    <app-ui-loading-state message="Loading the picture…" />
+  } @else {
+    @if (pendingProposals().length > 0) {
+      <app-ui-section title="Pending review" [meta]="pendingProposals().length + ' proposal(s)'" tone="alert">
+        <div class="beliefs-tab__list">
+          @for (p of pendingProposals(); track p.id) {
+            <app-proposal-review-card [proposal]="p" (decided)="onProposalDecided($event)" />
+          }
+        </div>
+      </app-ui-section>
+    }
+
+    <app-ui-section title="Values" [meta]="valueEntities().length + ''">
+      <div class="beliefs-tab__list">
+        @for (e of valueEntities(); track e.id) {
+          <app-belief-card [entity]="e" (edited)="onEdited($event)" (feedbackGiven)="onFeedback($event)" />
+        } @empty {
+          <app-ui-empty-state title="No values" message="Nothing recorded yet." />
+        }
+      </div>
+    </app-ui-section>
+
+    <app-ui-section title="Priorities" [meta]="priorityEntities().length + ''">
+      <div class="beliefs-tab__list">
+        @for (e of priorityEntities(); track e.id) {
+          <app-belief-card [entity]="e" (edited)="onEdited($event)" (feedbackGiven)="onFeedback($event)" />
+        } @empty {
+          <app-ui-empty-state title="No priorities" message="Nothing recorded yet." />
+        }
+      </div>
+    </app-ui-section>
+
+    <app-ui-section title="Goals" [meta]="goalEntities().length + ''">
+      <div class="beliefs-tab__list">
+        @for (e of goalEntities(); track e.id) {
+          <app-belief-card [entity]="e" (edited)="onEdited($event)" (feedbackGiven)="onFeedback($event)" />
+        } @empty {
+          <app-ui-empty-state title="No goals" message="Nothing recorded yet." />
+        }
+      </div>
+    </app-ui-section>
+
+    <app-ui-section title="Interests" [meta]="interestEntities().length + ''">
+      <div class="beliefs-tab__list">
+        @for (e of interestEntities(); track e.id) {
+          <app-belief-card [entity]="e" (edited)="onEdited($event)" (feedbackGiven)="onFeedback($event)" />
+        } @empty {
+          <app-ui-empty-state title="No interests" message="Nothing recorded yet." />
+        }
+      </div>
+    </app-ui-section>
+
+    <app-ui-section title="Experiments" [meta]="experimentEntities().length + ''">
+      <div class="beliefs-tab__list">
+        @for (e of experimentEntities(); track e.id) {
+          <app-belief-card [entity]="e" (edited)="onEdited($event)" (feedbackGiven)="onFeedback($event)" />
+        } @empty {
+          <app-ui-empty-state title="No experiments" message="Nothing recorded yet." />
+        }
+      </div>
+    </app-ui-section>
+
+    <app-ui-section title="No-gos" [meta]="nogoEntities().length + ''">
+      <div class="beliefs-tab__list">
+        @for (e of nogoEntities(); track e.id) {
+          <app-belief-card [entity]="e" (edited)="onEdited($event)" (feedbackGiven)="onFeedback($event)" />
+        } @empty {
+          <app-ui-empty-state title="No no-gos" message="Nothing recorded yet." />
+        }
+      </div>
+    </app-ui-section>
+
+    <app-ui-section title="Tensions" [meta]="tensionEntities().length + ''">
+      <div class="beliefs-tab__list">
+        @for (e of tensionEntities(); track e.id) {
+          <app-belief-card [entity]="e" (edited)="onEdited($event)" (feedbackGiven)="onFeedback($event)" />
+        } @empty {
+          <app-ui-empty-state title="No tensions" message="Nothing recorded yet." />
+        }
+      </div>
+    </app-ui-section>
+
+    <app-ui-section title="Open Questions" [meta]="openQuestionEntities().length + ''">
+      <div class="beliefs-tab__list">
+        @for (e of openQuestionEntities(); track e.id) {
+          <app-belief-card [entity]="e" (edited)="onEdited($event)" (feedbackGiven)="onFeedback($event)" />
+        } @empty {
+          <app-ui-empty-state title="No open questions" message="Nothing recorded yet." />
+        }
+      </div>
+    </app-ui-section>
+  }
+</div>

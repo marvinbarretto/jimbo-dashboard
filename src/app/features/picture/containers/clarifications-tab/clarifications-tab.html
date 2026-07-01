@@ -1,0 +1,23 @@
+<div class="clarifications-tab">
+  <app-kanban-filter-bar
+    [groups]="filterGroups()"
+    (toggle)="onFilterToggle($event)"
+    (reset)="onFilterReset()"
+  />
+
+  @if (loading()) {
+    <app-ui-loading-state message="Loading clarifications…" />
+  } @else if (filtered().length === 0) {
+    <app-ui-empty-state title="Nothing here" message="No clarifications match the current filters." />
+  } @else {
+    <div class="clarifications-tab__list">
+      @for (c of filtered(); track c.id) {
+        <app-clarification-card
+          [clarification]="c"
+          (dismissed)="onDismiss($event)"
+          (answered)="onAnswered($event)"
+        />
+      }
+    </div>
+  }
+</div>

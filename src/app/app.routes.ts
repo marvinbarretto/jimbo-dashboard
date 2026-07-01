@@ -101,6 +101,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/questions/questions.routes').then(m => m.questionsRoutes),
   },
   {
+    path: 'picture',
+    loadChildren: () => import('./features/picture/picture.routes').then(m => m.pictureRoutes),
+  },
+  {
     path: 'ralph',
     title: 'Ralph',
     loadComponent: () => import('./features/ralph/ralph-page').then(m => m.RalphPage),

@@ -1,0 +1,26 @@
+<div class="context-tab">
+  @for (file of files(); track file.id) {
+    <app-ui-section [title]="file.display_name">
+      @for (section of file.sections; track section.id) {
+        <div class="context-tab__section">
+          <h4 class="context-tab__section-name">{{ section.name }}</h4>
+          <ul class="context-tab__items">
+            @for (item of section.items; track item.id) {
+              <li class="context-tab__item">
+                @if (item.label) {
+                  <strong>{{ item.label }}:</strong>
+                }
+                {{ item.content }}
+                @if (item.timeframe) {
+                  <span class="context-tab__item-meta">({{ item.timeframe }})</span>
+                }
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </app-ui-section>
+  } @empty {
+    <app-ui-empty-state title="No context" message="No context files found." />
+  }
+</div>

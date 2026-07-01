@@ -1,0 +1,13 @@
+<div class="feedback-composer">
+  <input
+    type="text"
+    class="feedback-composer__comment"
+    [formControl]="commentControl"
+    placeholder="Optional comment…"
+    aria-label="Feedback comment"
+  />
+  <div class="feedback-composer__actions">
+    <button type="button" class="feedback-composer__accurate" (click)="submit('supports')">accurate</button>
+    <button type="button" class="feedback-composer__inaccurate" (click)="submit('contradicts')">not quite right</button>
+  </div>
+</div>

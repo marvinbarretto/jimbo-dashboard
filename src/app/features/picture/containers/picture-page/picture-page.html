@@ -1,0 +1,28 @@
+<app-ui-stack gap="lg">
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>The Picture</h1>
+    <p uiPageHeaderHint>
+      What Jimbo currently believes about you — edit it, tell it what's accurate or not, and review
+      what it's asking about.
+    </p>
+  </app-ui-page-header>
+
+  <app-ui-inline-tabs
+    [options]="tabOptions"
+    [value]="activeTab()"
+    ariaLabel="Picture sections"
+    (changed)="onTabChange($event)"
+  />
+
+  @switch (activeTab()) {
+    @case ('beliefs') {
+      <app-beliefs-tab />
+    }
+    @case ('clarifications') {
+      <app-clarifications-tab />
+    }
+    @case ('context') {
+      <app-context-tab />
+    }
+  }
+</app-ui-stack>

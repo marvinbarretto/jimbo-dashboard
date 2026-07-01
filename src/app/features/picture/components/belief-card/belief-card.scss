@@ -1,0 +1,103 @@
+.belief-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.belief-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.belief-card__reviewed {
+  margin-left: auto;
+}
+
+.belief-card__content {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.belief-card__edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.belief-card__edit-input {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text);
+  resize: vertical;
+}
+
+.belief-card__edit-actions,
+.belief-card__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.belief-card__actions button,
+.belief-card__edit-actions button {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font-family: inherit;
+
+  &:disabled { opacity: 0.4; cursor: default; }
+  &:hover:not(:disabled) { border-color: var(--color-border-strong); }
+}
+
+.belief-card__history {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.78rem;
+}
+
+.belief-card__history-item {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  color: var(--color-text-muted);
+}
+
+.belief-card__history-stance {
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.belief-card__history-stance--contradicts {
+  color: var(--color-danger);
+}
+
+.belief-card__history-date {
+  margin-left: auto;
+}
+
+.belief-card__history-empty {
+  color: var(--color-text-muted);
+  font-style: italic;
+}

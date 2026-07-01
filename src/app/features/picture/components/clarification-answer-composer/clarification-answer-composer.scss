@@ -1,0 +1,25 @@
+.answer-composer {
+  padding: 8px 0;
+}
+
+.answer-composer__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.answer-composer__send {
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--color-text, #111);
+  color: var(--color-bg, #fff);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}

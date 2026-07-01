@@ -1,0 +1,11 @@
+.clarifications-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.clarifications-tab__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}

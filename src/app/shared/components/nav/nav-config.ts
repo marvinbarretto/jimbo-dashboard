@@ -12,6 +12,7 @@ export interface NavGroup {
 }
 
 export const primaryNavItems: readonly NavLink[] = [
+  { href: '/picture',               label: 'Picture',        accent: '#2dd4bf' },
   { href: '/config',                label: 'Config',         accent: '#818cf8' },
   { href: '/actors',                 label: 'Actors',         accent: '#f9a8d4' },
   { href: '/journal',               label: 'Journal',        accent: '#fde68a' },

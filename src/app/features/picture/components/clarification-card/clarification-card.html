@@ -1,0 +1,39 @@
+<article class="clarification-card">
+  <header class="clarification-card__header">
+    <app-ui-badge [tone]="statusTone()">{{ clarification().status }}</app-ui-badge>
+    <app-tag-chip [label]="clarification().kind" />
+    <app-tag-chip [label]="clarification().source_kind" />
+    <span class="clarification-card__age">{{ askedLabel() }}</span>
+  </header>
+
+  <p class="clarification-card__content">{{ clarification().content }}</p>
+
+  @switch (clarification().status) {
+    @case ('open') {
+      <div class="clarification-card__actions">
+        <button type="button" class="clarification-card__answer-toggle" (click)="toggleAnswer()">
+          {{ showAnswer() ? 'cancel' : 'answer' }}
+        </button>
+        <button type="button" class="clarification-card__dismiss" (click)="onDismiss()">dismiss</button>
+      </div>
+      @if (showAnswer()) {
+        <app-clarification-answer-composer (posted)="onAnswerPosted($event)" />
+      }
+    }
+    @case ('answered') {
+      <app-ui-meta-list>
+        <dt>Answer</dt>
+        <dd>{{ clarification().answer_text }}</dd>
+        @if (result(); as r) {
+          <dt>Result</dt>
+          <dd>
+            {{ r.summary }}
+            @if (r.detail) {
+              <span class="clarification-card__result-detail">— {{ r.detail }}</span>
+            }
+          </dd>
+        }
+      </app-ui-meta-list>
+    }
+  }
+</article>

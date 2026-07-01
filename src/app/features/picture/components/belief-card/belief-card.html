@@ -1,0 +1,52 @@
+<article class="belief-card">
+  <header class="belief-card__header">
+    <app-ui-badge [tone]="confidenceTone()">{{ confidencePct() }}%</app-ui-badge>
+    @if (entity().status !== 'active') {
+      <app-ui-badge tone="neutral">{{ entity().status }}</app-ui-badge>
+    }
+    <span class="belief-card__source">{{ entity().source }}</span>
+    <span class="belief-card__reviewed">reviewed {{ reviewedLabel() }}</span>
+  </header>
+
+  @if (editing()) {
+    <div class="belief-card__edit">
+      <textarea class="belief-card__edit-input" [formControl]="editControl" rows="3"></textarea>
+      <div class="belief-card__edit-actions">
+        <button type="button" (click)="saveEdit()" [disabled]="editControl.invalid">save</button>
+        <button type="button" (click)="cancelEdit()">cancel</button>
+      </div>
+    </div>
+  } @else {
+    <p class="belief-card__content">{{ entity().content }}</p>
+  }
+
+  <div class="belief-card__actions">
+    @if (!editing()) {
+      <button type="button" (click)="startEdit()">edit</button>
+    }
+    <button type="button" (click)="toggleFeedback()">{{ showFeedback() ? 'cancel' : 'give feedback' }}</button>
+    <button type="button" (click)="toggleHistory()">{{ showHistory() ? 'hide history' : 'history' }}</button>
+  </div>
+
+  @if (showFeedback()) {
+    <app-belief-feedback-composer (feedback)="onFeedback($event)" />
+  }
+
+  @if (showHistory()) {
+    <ul class="belief-card__history">
+      @for (e of history(); track e.id) {
+        <li class="belief-card__history-item">
+          <span class="belief-card__history-stance" [class.belief-card__history-stance--contradicts]="e.stance === 'contradicts'">
+            {{ e.stance === 'supports' ? 'accurate' : 'not quite right' }}
+          </span>
+          @if (e.snippet) {
+            <span class="belief-card__history-snippet">— {{ e.snippet }}</span>
+          }
+          <span class="belief-card__history-date">{{ e.discovered_at | date: 'medium' }}</span>
+        </li>
+      } @empty {
+        <li class="belief-card__history-empty">No feedback recorded yet.</li>
+      }
+    </ul>
+  }
+</article>

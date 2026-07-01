@@ -1,0 +1,18 @@
+<article class="proposal-card">
+  <header class="proposal-card__header">
+    <app-ui-badge tone="accent">{{ entityLabel() }}</app-ui-badge>
+    <app-ui-badge tone="neutral">{{ proposal().action }}</app-ui-badge>
+    <span class="proposal-card__confidence">{{ (proposal().confidence * 100) | number: '1.0-0' }}% confidence</span>
+  </header>
+
+  @if (proposal().rationale) {
+    <p class="proposal-card__rationale">{{ proposal().rationale }}</p>
+  }
+
+  <pre class="proposal-card__payload">{{ payloadJson() }}</pre>
+
+  <div class="proposal-card__actions">
+    <button type="button" class="proposal-card__accept" (click)="accept()">accept</button>
+    <button type="button" class="proposal-card__reject" (click)="reject()">reject</button>
+  </div>
+</article>
