@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.93](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.92...v0.0.93) (2026-07-01)
+
+
+### Features
+
+* **picture:** add self-model + clarifications review page ([2bed4bd](https://github.com/marvinbarretto/jimbo-dashboard/commit/2bed4bd21a36f78603d7a58e05fa72dfdbb87db6))
+
 ### [0.0.92](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.91...v0.0.92) (2026-06-29)
 
 
