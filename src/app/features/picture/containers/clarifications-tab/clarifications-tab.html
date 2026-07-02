@@ -14,6 +14,7 @@
       @for (c of filtered(); track c.id) {
         <app-clarification-card
           [clarification]="c"
+          [highlighted]="highlightId() === c.id"
           (dismissed)="onDismiss($event)"
           (answered)="onAnswered($event)"
         />

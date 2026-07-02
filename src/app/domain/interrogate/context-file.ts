@@ -1,8 +1,10 @@
 // Mirrors jimbo-api/src/schemas/context.ts — context_files/sections/items.
-// Rendered read-only within the Picture page's Context tab (no
-// confidence/evidence/audit machinery exists for these, unlike belief
-// entities — see picture.routes.ts plan notes).
-export type ContextItemStatus = 'active' | 'paused' | 'completed' | 'deferred';
+// Editable (content/label/timeframe + add/remove) within the Picture page's
+// Context tab via full CRUD endpoints, but there's no confidence/evidence
+// machinery here, unlike belief entities — no accuracy feedback loop.
+// 'archived' is server-set only (the context-expire cron flips expired items
+// to it) — never sent on a create/update request.
+export type ContextItemStatus = 'active' | 'paused' | 'completed' | 'deferred' | 'archived';
 export type ContextItemCategory = 'project' | 'life-area' | 'habit' | 'one-off';
 export type ContextSectionFormat = 'list' | 'prose';
 
@@ -15,6 +17,10 @@ export interface ContextItem {
   status: ContextItemStatus | null;
   category: ContextItemCategory | null;
   expires_at: string | null;
+  // Set when this item was auto-created from an answered clarification (see
+  // clarification-interpret.ts's ephemeral_context action) — null for
+  // hand-curated items and anything predating this column.
+  source_clarification_id: string | null;
   sort_order: number;
   updated_at: string;
 }

@@ -1,26 +1,52 @@
 <div class="context-tab">
-  @for (file of files(); track file.id) {
-    <app-ui-section [title]="file.display_name">
-      @for (section of file.sections; track section.id) {
+  @if (fileTabs().length) {
+    <app-ui-inline-tabs
+      [options]="fileTabs()"
+      [value]="activeFile()?.slug ?? ''"
+      ariaLabel="Context files"
+      (changed)="onFileChange($event)"
+    />
+
+    @if (activeFile()) {
+      <div class="context-tab__widgets">
+        <app-ui-stat-card label="Sections" [value]="sectionsTotal().toString()" />
+        <app-ui-stat-card label="Items" [value]="itemsTotal().toString()" />
+        @if (needsAttention() > 0) {
+          <app-ui-stat-card label="Needs attention" [value]="needsAttention().toString()" detail="paused or deferred" />
+        }
+      </div>
+
+      @if (categoryOptions().length) {
+        <app-ui-filter-pills
+          [options]="categoryOptions()"
+          [active]="activeCategoryList()"
+          ariaLabel="Filter by category"
+          (toggled)="onCategoryToggle($event)"
+        />
+      }
+
+      @for (section of visibleSections(); track section.id) {
         <div class="context-tab__section">
           <h4 class="context-tab__section-name">{{ section.name }}</h4>
           <ul class="context-tab__items">
             @for (item of section.items; track item.id) {
-              <li class="context-tab__item">
-                @if (item.label) {
-                  <strong>{{ item.label }}:</strong>
-                }
-                {{ item.content }}
-                @if (item.timeframe) {
-                  <span class="context-tab__item-meta">({{ item.timeframe }})</span>
-                }
-              </li>
+              <app-context-item-row
+                [item]="item"
+                [format]="section.format"
+                (edited)="onEdited(section.id, $event)"
+                (deleted)="onDeleted(section.id, $event)"
+              />
+            } @empty {
+              <li class="context-tab__empty">Nothing here yet.</li>
             }
           </ul>
+          @if (!activeCategoryList().length) {
+            <app-context-item-composer (added)="onAdded(section.id, $event)" />
+          }
         </div>
       }
-    </app-ui-section>
-  } @empty {
+    }
+  } @else {
     <app-ui-empty-state title="No context" message="No context files found." />
   }
 </div>

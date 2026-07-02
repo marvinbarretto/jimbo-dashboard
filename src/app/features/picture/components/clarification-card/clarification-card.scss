@@ -6,6 +6,13 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+// Target of a ?clarification=<id> deep-link — scrolled into view on load.
+.clarification-card--highlighted {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
 }
 
 .clarification-card__header {

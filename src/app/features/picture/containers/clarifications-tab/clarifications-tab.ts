@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { take } from 'rxjs';
 import type { Clarification } from '@domain/clarifications';
 import { clarificationId } from '@domain/ids';
 import type { FilterGroup } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
@@ -25,12 +27,19 @@ interface SkipOpts {
 })
 export class ClarificationsTab {
   private readonly service = inject(ClarificationsService);
+  private readonly route = inject(ActivatedRoute);
   private readonly filter = createKanbanFilterState([STATUS, KIND, SOURCE_KIND]);
+  private hasScrolledToHighlight = false;
 
   readonly loading = this.service.loading;
   readonly statusActive = this.filter.active<string>(STATUS);
   readonly kindActive = this.filter.active<string>(KIND);
   readonly sourceKindActive = this.filter.active<string>(SOURCE_KIND);
+
+  // Set from a ?clarification=<id> deep-link (e.g. a Context item's "from a
+  // clarification" link). The target is definitionally answered, so it must
+  // bypass the default open-only filter below.
+  readonly highlightId = signal<string | null>(null);
 
   readonly filtered = computed(() => this.service.clarifications().filter(c => this.matches(c)));
 
@@ -42,8 +51,30 @@ export class ClarificationsTab {
 
   constructor() {
     this.service.load();
-    // Default view is the open queue; clearing/adding chips pulls in history.
-    this.filter.toggle(STATUS, 'open');
+
+    this.route.queryParamMap.pipe(take(1)).subscribe(params => {
+      const target = params.get('clarification');
+      if (target) {
+        this.highlightId.set(target);
+      } else {
+        // Default view is the open queue; clearing/adding chips pulls in
+        // history. Skipped when deep-linking to a specific (likely answered)
+        // clarification so it isn't filtered out from under the link.
+        this.filter.toggle(STATUS, 'open');
+      }
+    });
+
+    // Scrolls the highlighted card into view once it's actually in the
+    // filtered/rendered list — runs once, guarded by hasScrolledToHighlight.
+    effect(() => {
+      const target = this.highlightId();
+      if (!target || this.hasScrolledToHighlight) return;
+      if (!this.filtered().some(c => c.id === target)) return;
+      this.hasScrolledToHighlight = true;
+      queueMicrotask(() => {
+        document.getElementById(`clarification-${target}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      });
+    });
   }
 
   onFilterToggle(event: { groupId: string; value: string | number }): void {

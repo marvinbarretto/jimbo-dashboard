@@ -25,6 +25,9 @@ const STATUS_TONE: Record<Clarification['status'], BadgeTone> = {
 })
 export class ClarificationCard {
   readonly clarification = input.required<Clarification>();
+  // Set by ClarificationsTab when this card is the target of a
+  // ?clarification=<id> deep-link (e.g. from a Context item's source link).
+  readonly highlighted = input<boolean>(false);
 
   readonly dismissed = output<string>();
   readonly answered = output<{ id: string; text: string }>();

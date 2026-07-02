@@ -1,0 +1,49 @@
+<li class="context-item-row" [class.context-item-row--prose]="format() === 'prose'">
+  <div class="context-item-row__main">
+    @if (format() === 'list') {
+      <span class="context-item-row__bullet" aria-hidden="true">&bull;</span>
+    }
+    <div class="context-item-row__body">
+      @if (item().label) {
+        <strong class="context-item-row__label">{{ item().label }}:</strong>
+      }
+      <app-ui-inline-edit
+        class="context-item-row__content"
+        [value]="item().content"
+        kind="textarea"
+        [rows]="2"
+        ariaLabel="Edit context"
+        placeholder="(empty)"
+        (saved)="onSaved($event)"
+      />
+    </div>
+    <button type="button" class="context-item-row__delete" aria-label="Remove this item" (click)="onDelete()">&times;</button>
+  </div>
+
+  @if (item().timeframe || item().category || (item().status && item().status !== 'active') || item().source_clarification_id) {
+    <div class="context-item-row__meta">
+      @if (item().timeframe; as timeframe) {
+        <span class="context-item-row__timeframe">{{ timeframe }}</span>
+        <span class="context-item-row__timing">{{ capturedLabel() }}</span>
+        @if (expiresLabel(); as expires) {
+          <span class="context-item-row__timing">{{ expires }}</span>
+        }
+      }
+      @if (item().category; as category) {
+        <app-ui-badge [tone]="categoryTone()" [subtle]="true">{{ category }}</app-ui-badge>
+      }
+      @if (item().status; as status) {
+        @if (status !== 'active') {
+          <app-ui-badge [tone]="statusTone()" [subtle]="true">{{ status }}</app-ui-badge>
+        }
+      }
+      @if (item().source_clarification_id; as clarificationId) {
+        <a
+          class="context-item-row__source"
+          [routerLink]="['/picture']"
+          [queryParams]="{ tab: 'clarifications', clarification: clarificationId }"
+        >from a clarification</a>
+      }
+    </div>
+  }
+</li>

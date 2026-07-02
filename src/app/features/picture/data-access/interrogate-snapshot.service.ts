@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import type { AnyInterrogateEntity, InterrogateEntityType, InterrogateSnapshot } from '@domain/interrogate';
+import type { AnyInterrogateEntity, ContextItem, InterrogateEntityType, InterrogateSnapshot } from '@domain/interrogate';
 import { ENTITY_TYPE_SNAPSHOT_KEY } from '@domain/interrogate';
 import { environment } from '../../../../environments/environment';
 import { ToastService } from '@shared/components/toast/toast.service';
@@ -32,6 +32,38 @@ export class InterrogateSnapshotService {
       if (!snapshot) return snapshot;
       const list = (snapshot[key] as AnyInterrogateEntity[]).map(e => e.id === updated.id ? updated : e);
       return { ...snapshot, [key]: list };
+    });
+  }
+
+  // Context items are nested three levels deep (file -> section -> item) and
+  // keyed by file slug rather than a flat array, so — unlike patchEntity —
+  // these walk every file's sections to find the one holding `sectionId`.
+  patchContextItem(sectionId: number, updated: ContextItem): void {
+    this.updateSectionItems(sectionId, items => items.map(i => i.id === updated.id ? updated : i));
+  }
+
+  removeContextItem(sectionId: number, itemId: number): void {
+    this.updateSectionItems(sectionId, items => items.filter(i => i.id !== itemId));
+  }
+
+  addContextItem(sectionId: number, created: ContextItem): void {
+    this.updateSectionItems(sectionId, items => [...items, created]);
+  }
+
+  private updateSectionItems(sectionId: number, updateItems: (items: ContextItem[]) => ContextItem[]): void {
+    this._snapshot.update(snapshot => {
+      if (!snapshot) return snapshot;
+      const context = { ...snapshot.context };
+      for (const [slug, file] of Object.entries(context)) {
+        const sectionIndex = file.sections.findIndex(s => s.id === sectionId);
+        if (sectionIndex === -1) continue;
+        const sections = [...file.sections];
+        const section = sections[sectionIndex];
+        sections[sectionIndex] = { ...section, items: updateItems(section.items) };
+        context[slug] = { ...file, sections };
+        break;
+      }
+      return { ...snapshot, context };
     });
   }
 

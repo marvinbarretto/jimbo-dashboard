@@ -1,4 +1,8 @@
-<article class="clarification-card">
+<article
+  class="clarification-card"
+  [class.clarification-card--highlighted]="highlighted()"
+  [attr.id]="'clarification-' + clarification().id"
+>
   <header class="clarification-card__header">
     <app-ui-badge [tone]="statusTone()">{{ clarification().status }}</app-ui-badge>
     <app-tag-chip [label]="clarification().kind" />

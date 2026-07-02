@@ -1,0 +1,12 @@
+<div class="context-item-composer">
+  <span class="context-item-composer__bullet" aria-hidden="true">+</span>
+  <input
+    type="text"
+    class="context-item-composer__input"
+    [formControl]="control"
+    placeholder="Add context…"
+    aria-label="Add a new context item"
+    (keydown.enter)="submit()"
+  />
+  <button type="button" class="context-item-composer__submit" [disabled]="control.invalid" (click)="submit()">add</button>
+</div>
