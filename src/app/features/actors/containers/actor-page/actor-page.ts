@@ -76,7 +76,7 @@ export class ActorPage {
   readonly crumbs = computed<readonly Crumb[]>(() => {
     const a = this.actor();
     return [
-      { label: 'Actors', link: ['/actors'] },
+      { label: 'Actors', link: ['/config/actors'] },
       { label: a?.display_name ?? '…' },
     ];
   });

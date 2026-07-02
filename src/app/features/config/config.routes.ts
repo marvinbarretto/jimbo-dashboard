@@ -22,6 +22,10 @@ export const configRoutes: Routes = [
         path: 'model-stacks',
         loadChildren: () => import('../model-stacks/model-stacks.routes').then(m => m.modelStacksRoutes),
       },
+      {
+        path: 'actors',
+        loadChildren: () => import('../actors/actors.routes').then(m => m.actorsRoutes),
+      },
     ],
   },
 ];

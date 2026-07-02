@@ -14,7 +14,6 @@ export interface NavGroup {
 export const primaryNavItems: readonly NavLink[] = [
   { href: '/picture',               label: 'Picture',        accent: '#2dd4bf' },
   { href: '/config',                label: 'Config',         accent: '#818cf8' },
-  { href: '/actors',                 label: 'Actors',         accent: '#f9a8d4' },
   { href: '/journal',               label: 'Journal',        accent: '#fde68a' },
   { href: '/nutrition',             label: 'Nutrition',      accent: '#fda4af' },
   { href: '/exercise',              label: 'Exercise',       accent: '#38bdf8' },
@@ -41,7 +40,7 @@ export const navGroups: readonly NavGroup[] = [
     paths: [
       'today', 'shopping', 'mail-next', 'mail-activity', 'briefings', 'calendar-settings', 'tasks',
       'jimbo-workspace', 'nutrition', 'exercise',
-      'config', 'actors', 'grooming', 'execution', 'review', 'vault-items', 'questions', 'activity',
+      'config', 'grooming', 'execution', 'review', 'vault-items', 'questions', 'activity',
       'skills', 'models', 'model-stacks', 'context', 'coach', 'interrogate',
       'hermes', 'ops', 'triage', 'stream', 'coverage', 'grooming-admin', 'pomo-reports',
     ],
@@ -63,6 +62,7 @@ export const navGroups: readonly NavGroup[] = [
       { href: '/config/skills', label: 'Skills' },
       { href: '/config/models', label: 'Models' },
       { href: '/config/model-stacks', label: 'Stacks' },
+      { href: '/config/actors', label: 'Actors' },
       { href: '/context', label: 'Context' },
       { href: '/coach', label: 'Coach' },
       { href: '/interrogate', label: 'Interrogate' },

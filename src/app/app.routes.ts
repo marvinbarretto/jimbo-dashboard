@@ -74,10 +74,7 @@ export const routes: Routes = [
     path: 'config',
     loadChildren: () => import('./features/config/config.routes').then(m => m.configRoutes),
   },
-  {
-    path: 'actors',
-    loadChildren: () => import('./features/actors/actors.routes').then(m => m.actorsRoutes),
-  },
+  { path: 'actors', redirectTo: 'config/actors', pathMatch: 'full' },
   {
     path: 'projects/:id',
     title: 'Project',
