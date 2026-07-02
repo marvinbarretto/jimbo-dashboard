@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, TemplateRef, computed, effect, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, TemplateRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { type CellContext, type ColumnDef, createColumnHelper } from '@tanstack/angular-table';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -20,6 +20,8 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiDataTable } from '@shared/components/ui-data-table/ui-data-table';
+import { UiButton } from '@shared/components/ui-button/ui-button';
+import { ToastService } from '@shared/components/toast/toast.service';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { ProjectsService } from '../../data-access/projects.service';
@@ -74,6 +76,17 @@ interface DispatchTask {
   result_summary: string | null;
 }
 
+interface GithubIssueRow {
+  number: number;
+  title: string;
+  html_url: string;
+  state: string;
+  labels: string[];
+  created_at: string;
+  updated_at: string;
+  linked: { note_id: string; seq: number | null; status: string; grooming_status: string | null } | null;
+}
+
 interface ProjectActivityItem {
   id: number;
   note_id: string;
@@ -112,6 +125,7 @@ interface ProjectActivityItem {
     ActorChip,
     UiDataTable,
     PriorityBadge,
+    UiButton,
   ],
   templateUrl: './project-landing.html',
   styleUrl: './project-landing.scss',
@@ -133,6 +147,7 @@ export class ProjectLanding {
   private readonly route = inject(ActivatedRoute);
   private readonly titleService = inject(Title);
   private readonly http = inject(HttpClient);
+  private readonly toast = inject(ToastService);
 
   private readonly id = toSignal(this.route.paramMap.pipe(map(p => p.get('id') ?? '')));
 
@@ -174,6 +189,44 @@ export class ProjectLanding {
   });
 
   readonly inFlightTasks = computed(() => this.dispatchResource.value()?.items ?? []);
+
+  // Open GitHub issues for this project's repo, annotated with vault sync
+  // status — surfaces the backlog GitHub already owns without reinventing it,
+  // and lets an unlinked issue be promoted into the jimbo pipeline in one click.
+  readonly githubIssuesResource = httpResource<{ repo: string; issues: GithubIssueRow[] }>(() => {
+    const id = this.id();
+    const p = this.project();
+    if (!id || !p?.repo_url) return undefined;
+    return `/api/github-issues?project_id=${id}`;
+  });
+
+  readonly githubIssues = computed(() => this.githubIssuesResource.value()?.issues ?? []);
+
+  // Issue numbers currently being promoted — local-only so the button
+  // disables instantly; the linked vault item itself arrives via webhook a
+  // moment later, not synchronously with this request.
+  private readonly _promotingIssues = signal<ReadonlySet<number>>(new Set());
+
+  isPromoting(issueNumber: number): boolean {
+    return this._promotingIssues().has(issueNumber);
+  }
+
+  promoteIssue(issueNumber: number): void {
+    const p = this.project();
+    if (!p) return;
+    this._promotingIssues.update(s => new Set(s).add(issueNumber));
+    this.http.post('/api/github-issues/promote', { project_id: p.id, issue_number: issueNumber }).subscribe({
+      next: () => this.toast.success(`Applied jimbo label to #${issueNumber} — Jimbo will pick it up shortly`),
+      error: () => {
+        this.toast.error(`Failed to promote #${issueNumber}`);
+        this._promotingIssues.update(s => {
+          const next = new Set(s);
+          next.delete(issueNumber);
+          return next;
+        });
+      },
+    });
+  }
 
   readonly projectActivityResource = httpResource<{ items: ProjectActivityItem[] }>(() => {
     const id = this.id();

@@ -157,6 +157,41 @@
           </app-ui-section>
         }
 
+        <!-- GitHub issues — open issues on this project's repo, with vault sync
+             status. GitHub stays the feature backlog; this just gives visibility
+             and a one-click way to bring an issue into the jimbo pipeline. -->
+        @if (p.repo_url) {
+          <app-ui-section [title]="'GitHub issues (' + githubIssues().length + ')'" [collapsible]="true" [expanded]="true">
+            @if (githubIssues().length === 0) {
+              <app-ui-empty-state message="No open issues on this repo." />
+            } @else {
+              <ul class="github-issues__list">
+                @for (issue of githubIssues(); track issue.number) {
+                  <li class="github-issues__item">
+                    <a class="github-issues__title" [href]="issue.html_url" target="_blank" rel="noopener">
+                      #{{ issue.number }} {{ issue.title }}
+                    </a>
+                    @if (issue.linked; as linked) {
+                      @if (linked.seq !== null) {
+                        <app-vault-chip kind="task" [seq]="linked.seq" />
+                      }
+                      <app-ui-badge tone="neutral" [subtle]="true">{{ linked.status }}</app-ui-badge>
+                    } @else {
+                      <app-ui-button
+                        size="sm"
+                        variant="secondary"
+                        [disabled]="isPromoting(issue.number)"
+                        (pressed)="promoteIssue(issue.number)">
+                        {{ isPromoting(issue.number) ? 'Promoted' : 'Promote to Jimbo' }}
+                      </app-ui-button>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </app-ui-section>
+        }
+
         <!-- Epics with their child items -->
         <app-ui-section title="Epics" [collapsible]="false">
           @if (epicGroups().length === 0) {
