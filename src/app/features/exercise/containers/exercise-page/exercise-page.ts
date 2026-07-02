@@ -17,6 +17,7 @@ import {
 } from '@shared/components/tracker/tracker.types';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { londonDay, londonToday, relativeDayLabel, shiftIsoDay } from '@shared/utils/datetime.utils';
+import { sessionStats } from '../../utils/exercise-format';
 import { ExerciseSessionRow } from '../../components/exercise-session-row/exercise-session-row';
 import {
   ExerciseService,
@@ -153,10 +154,7 @@ export class ExercisePage {
   protected dayMeta(day: { sessions: SessionDetailed[] }): string {
     const n = day.sessions.length;
     if (!n) return 'rest day';
-    const volume = day.sessions.reduce(
-      (acc, s) => acc + s.sets.reduce((v, x) => v + (x.reps ?? 0) * (x.weight_kg ?? 0), 0),
-      0,
-    );
+    const volume = day.sessions.reduce((acc, s) => acc + sessionStats(s).volumeKg, 0);
     return `${n} session${n === 1 ? '' : 's'}${volume > 0 ? ` · ${Math.round(volume)} kg` : ''}`;
   }
 
