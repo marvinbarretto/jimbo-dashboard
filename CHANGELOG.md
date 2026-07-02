@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.94](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.93...v0.0.94) (2026-07-02)
+
+
+### Features
+
+* **picture:** make Context tab editable with tab panels, widgets, provenance ([1ff341f](https://github.com/marvinbarretto/jimbo-dashboard/commit/1ff341ff0cde43f0da4f55cef70ee087c027a33b))
+
 ### [0.0.93](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.92...v0.0.93) (2026-07-01)
 
 
