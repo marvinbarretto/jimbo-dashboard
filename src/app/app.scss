@@ -102,9 +102,11 @@
 }
 
 @media (max-width: 768px) {
-  // Tighter gutter on small screens — one token retunes header chrome and all
-  // page content together.
   .app-shell {
     --app-gutter: 0.75rem;
+  }
+
+  .app-topbar__cmd--hide-mobile {
+    display: none;
   }
 }
