@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.97](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.96...v0.0.97) (2026-07-02)
+
+
+### Features
+
+* **ui:** adopt ui-prose for text-heavy content areas ([2dd8104](https://github.com/marvinbarretto/jimbo-dashboard/commit/2dd8104a4c0f9f426d196ff6e33fea01b1b11680))
+* **ui:** adopt ui-prose in remaining text-heavy components ([36bcee2](https://github.com/marvinbarretto/jimbo-dashboard/commit/36bcee27c841a216625a0c8364ba3cdb9e0a1b1b))
+
 ### [0.0.96](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.95...v0.0.96) (2026-07-02)
 
 
