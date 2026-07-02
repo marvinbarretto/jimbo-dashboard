@@ -147,6 +147,18 @@ export class NutritionPage {
   // treatment).
   protected readonly showPatterns = computed(() => this.granularity !== 'day');
 
+  // The top-level supplement quick-add (unlike food's, which lives per-day
+  // inside each UiTrackerDayGroup) isn't naturally tied to a day — so it
+  // logs to "now" by default. On a specific, non-today day page, silently
+  // backdate it to that day instead — same mechanism UiTrackerDayGroup
+  // already uses for food (see its `backdate` computed), so browsing to a
+  // past day and logging a supplement lands it on the day you're looking
+  // at rather than today. No such single day exists on week/month, so it
+  // stays "now" there.
+  protected readonly supplementDefaultDate = computed(() =>
+    this.granularity === 'day' && this.key() !== this.todayIso ? this.key() : undefined,
+  );
+
   // ── Reads (signal-native; reloaded explicitly after each write) ──
   private readonly dailyRes = httpResource<{ days: FoodDailyRow[] }>(
     () => `/api/coach/food-log/daily?from=${this.window().start}&to=${this.window().end}`,

@@ -42,12 +42,14 @@
       </app-ui-section>
     }
 
-    <!-- Quick supplement log (catalog pick → today) -->
+    <!-- Quick supplement log: today by default; silently backdated to the
+         viewed day when browsing a specific past day (see supplementDefaultDate) -->
     @if (supplementOptions().length) {
       <app-ui-section title="Log a supplement" [collapsible]="false">
         <app-ui-quick-add-row
           [options]="supplementOptions()"
           [measures]="suppQuickAdd"
+          [defaultDate]="supplementDefaultDate()"
           placeholder="pick a supplement…"
           labelAria="Supplement"
           addLabel="Log"
