@@ -10,8 +10,6 @@ import { Router } from '@angular/router';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { FocusSessionsService } from '../../data-access/focus-sessions.service';
 import { VaultItemsService } from '../../../vault-items/data-access/vault-items.service';
-import { VaultItemProjectsService } from '../../../vault-items/data-access/vault-item-projects.service';
-import { projectId as toProjectId } from '@domain/ids';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { ProjectAvatar } from '@shared/components/project-avatar/project-avatar';
 import { UiStepper, type UiStepperStep } from '@shared/components/ui-stepper/ui-stepper';
@@ -55,7 +53,6 @@ export class PomoPreSession {
   private readonly projects = inject(ProjectsService);
   private readonly sessions = inject(FocusSessionsService);
   private readonly vaultItems = inject(VaultItemsService);
-  private readonly vaultItemProjects = inject(VaultItemProjectsService);
   private readonly router = inject(Router);
 
   readonly presets = PRESETS;
@@ -176,14 +173,12 @@ export class PomoPreSession {
     // input is already gated on a non-null project, but guard anyway.
     if (!title || projectId === null) return;
     this.vaultItems.createOnBoard(
+      // is_epic + primary_project_id are sent in the same POST — the server
+      // writes the note and its primary project junction in one transaction,
+      // so there's no separate add() call (and no window where the epic
+      // exists without its project link) the way a create-then-link pair had.
       { title, type: 'task', is_epic: true, primary_project_id: projectId },
-      (real) => {
-        // An epic has no parent to inherit a project from, so the project link
-        // must be added explicitly. The first junction is is_primary, which is
-        // what surfaces the epic under this project on the next board reload.
-        this.vaultItemProjects.add(real.id, toProjectId(projectId));
-        this.selectEpic(real.id);
-      },
+      (real) => this.selectEpic(real.id),
     );
     this.newEpicTitle.set('');
   }

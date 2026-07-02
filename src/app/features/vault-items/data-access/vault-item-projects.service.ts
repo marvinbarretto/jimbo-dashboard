@@ -101,6 +101,20 @@ export class VaultItemProjectsService {
     });
   }
 
+  // Local-cache-only update for a junction row the SERVER already created —
+  // e.g. an epic created via createOnBoard({ is_epic: true, primary_project_id })
+  // links atomically in the same POST, so there's nothing left to send here.
+  // Without this, the epic's project chip wouldn't appear until the next
+  // bulk reload even though the link genuinely exists.
+  markLinked(vaultItemId: VaultItemId, projectId: ProjectId): void {
+    const existing = this._projectsByItem()[vaultItemId] ?? [];
+    if (existing.some(r => r.project_id === projectId)) return;
+    this._projectsByItem.update(map => ({
+      ...map,
+      [vaultItemId]: [...existing, { vault_item_id: vaultItemId, project_id: projectId }],
+    }));
+  }
+
   // Optimistic delete — removes junction row locally, then DELETEs on server.
   remove(vaultItemId: VaultItemId, projectId: ProjectId): void {
     const prior = this._projectsByItem()[vaultItemId] ?? [];
