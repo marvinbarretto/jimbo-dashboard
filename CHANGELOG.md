@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.98](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.97...v0.0.98) (2026-07-02)
+
+
+### Features
+
+* **exercise:** add period-scoped day/week/month routes ([852311a](https://github.com/marvinbarretto/jimbo-dashboard/commit/852311a82275691b63aeb6e849afee908a8c9139))
+* **nutrition:** add period-scoped day/week/month routes ([7facbf1](https://github.com/marvinbarretto/jimbo-dashboard/commit/7facbf1f663e356b8bc29de274e30cac01844b7c))
+* **projects:** surface GitHub issues + promote-to-jimbo on project page ([cda08e4](https://github.com/marvinbarretto/jimbo-dashboard/commit/cda08e40481dfc49ddcead9bbd0c01d02bfb9754))
+
+
+### Bug Fixes
+
+* **nutrition:** backdate supplement quick-add to the viewed day ([4b17416](https://github.com/marvinbarretto/jimbo-dashboard/commit/4b174168dda002dbb13342f37f6a040472424dc7))
+
+
+### Code Refactoring
+
+* **nav:** fold actors into config sub-nav ([e06b67d](https://github.com/marvinbarretto/jimbo-dashboard/commit/e06b67dc51938108683a66c37747e8ae917abd0f))
+
 ### [0.0.97](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.96...v0.0.97) (2026-07-02)
 
 
