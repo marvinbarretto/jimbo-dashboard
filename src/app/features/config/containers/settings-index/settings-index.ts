@@ -1,0 +1,45 @@
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
+import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
+import { UiSection } from '@shared/components/ui-section/ui-section';
+import { UiStack } from '@shared/components/ui-stack/ui-stack';
+
+// Each settings domain keeps its own page (different shapes — toggle grids vs
+// scalar fields vs whatever comes next), so this stays a plain link-out index
+// rather than a generic settings renderer. Fixes discoverability (calendar
+// settings in particular lives outside /config entirely) without forcing
+// every domain into one shared form.
+interface SettingsEntry {
+  readonly title: string;
+  readonly description: string;
+  readonly link: string;
+}
+
+const SETTINGS_ENTRIES: readonly SettingsEntry[] = [
+  {
+    title: 'Automation',
+    description: 'GitHub issue assessment routing (executor + skill) and execution board Done-lane auto-clear.',
+    link: '/config/automation',
+  },
+  {
+    title: 'Calendar',
+    description: 'Which calendars Jimbo reads when fetching events.',
+    link: '/calendar-settings',
+  },
+  {
+    title: 'Tasks',
+    description: 'Which Google Tasks lists feed into triage.',
+    link: '/tasks/settings',
+  },
+];
+
+@Component({
+  selector: 'app-settings-index',
+  imports: [UiButtonLink, UiPageHeader, UiSection, UiStack],
+  templateUrl: './settings-index.html',
+  styleUrl: './settings-index.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class SettingsIndex {
+  readonly entries = SETTINGS_ENTRIES;
+}

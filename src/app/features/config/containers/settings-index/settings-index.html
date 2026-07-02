@@ -1,0 +1,20 @@
+<app-ui-stack gap="lg">
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Settings</h1>
+    <p uiPageHeaderHint>Every tunable value, one place to find it — each domain keeps its own page.</p>
+  </app-ui-page-header>
+
+  <app-ui-section title="All settings" [collapsible]="false">
+    <ul class="settings-index__list">
+      @for (entry of entries; track entry.link) {
+        <li class="settings-index__item">
+          <div class="settings-index__info">
+            <span class="settings-index__title">{{ entry.title }}</span>
+            <span class="settings-index__desc">{{ entry.description }}</span>
+          </div>
+          <app-ui-button-link [routerLink]="entry.link" size="sm">Open</app-ui-button-link>
+        </li>
+      }
+    </ul>
+  </app-ui-section>
+</app-ui-stack>

@@ -26,6 +26,7 @@ import {
 import { withVaultDetailModal, swapDetailSeq } from '@shared/kanban/detail-modal';
 import { CommandShortcutsService } from '@shared/services/command-shortcuts.service';
 import { effectivePriority, isActive, isDone, type VaultItem } from '@domain/vault';
+import { AutomationSettingsService } from '@features/automation-settings/automation-settings.service';
 
 // The board collapsed from "Ready + 8 commission-stage columns" into three
 // workflow lanes that BOTH manual (human-owned) and automated (agent-commission)
@@ -85,8 +86,8 @@ const PRIORITY_FLOOR = 99;
 // manual cards reuse the unified vault-card. `lane`, `priority` and `createdAt`
 // are precomputed so the column grouping + sort stay cheap and pure.
 type BoardCard =
-  | { readonly kind: 'commission'; readonly item: CommissionItem; readonly lane: BoardLane; readonly priority: number; readonly createdAt: string }
-  | { readonly kind: 'manual'; readonly item: VaultItem; readonly lane: BoardLane; readonly blocked: boolean; readonly blockerLabel: string | null; readonly priority: number; readonly createdAt: string };
+  | { readonly kind: 'commission'; readonly item: CommissionItem; readonly lane: BoardLane; readonly priority: number; readonly createdAt: string; readonly doneAt: string | null }
+  | { readonly kind: 'manual'; readonly item: VaultItem; readonly lane: BoardLane; readonly blocked: boolean; readonly blockerLabel: string | null; readonly priority: number; readonly createdAt: string; readonly doneAt: string | null };
 
 interface LaneView {
   lane:       BoardLane;
@@ -119,6 +120,12 @@ export class ExecutionBoard {
   private readonly shortcuts = inject(CommandShortcutsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly automationSettings = inject(AutomationSettingsService);
+
+  // null = never auto-clear (default — matches pre-feature behavior).
+  private readonly doneLaneAutoClearDays = computed(
+    () => this.automationSettings.config()?.done_lane_auto_clear_days ?? null,
+  );
 
   // --- drag state ---------------------------------------------------------
   // Only MANUAL cards drag (a human owns their lane); commission cards are
@@ -260,6 +267,7 @@ export class ExecutionBoard {
         blockerLabel: blocked ? `blocked · #${blockers[0].blocker_seq}` : null,
         priority:    effectivePriority(item) ?? PRIORITY_FLOOR,
         createdAt:   item.created_at,
+        doneAt:      item.completed_at,
       });
     }
 
@@ -271,8 +279,16 @@ export class ExecutionBoard {
         lane:      laneForStage(c.stage),
         priority:  (vi ? effectivePriority(vi) : null) ?? PRIORITY_FLOOR,
         createdAt: c.latest.created_at,
+        // Not every terminal stage guarantees completed_at (e.g. a rejected
+        // commission never completes) — fall back through started_at to
+        // created_at so every done/terminal card still gets a housekeeping
+        // reference point for auto-clear.
+        doneAt:    c.latest.completed_at ?? c.latest.started_at ?? c.latest.created_at,
       });
     }
+
+    const autoClearDays = this.doneLaneAutoClearDays();
+    const doneCutoffMs = autoClearDays !== null ? Date.now() - autoClearDays * 24 * 60 * 60 * 1000 : null;
 
     return LANE_ORDER.map(lane => ({
       lane,
@@ -280,6 +296,14 @@ export class ExecutionBoard {
       emptyLabel: LANE_EMPTY[lane],
       cards: cards
         .filter(card => card.lane === lane)
+        // Auto-clear: hide (not delete) Done cards older than the configured
+        // threshold. `doneCutoffMs === null` means the setting is unset —
+        // nothing auto-clears, matching pre-feature behavior.
+        .filter(card => {
+          if (lane !== 'done' || doneCutoffMs === null) return true;
+          if (!card.doneAt) return true;
+          return new Date(card.doneAt).getTime() >= doneCutoffMs;
+        })
         .sort((a, b) => a.priority - b.priority || b.createdAt.localeCompare(a.createdAt)),
     }));
   });

@@ -1,0 +1,67 @@
+<app-ui-stack gap="lg">
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Automation</h1>
+    <p uiPageHeaderHint>
+      Tunable dispatch behavior — previously env vars requiring an SSH + restart
+      to change. Edits here take effect immediately, no redeploy.
+    </p>
+  </app-ui-page-header>
+
+  @if (loading()) {
+    <app-ui-loading-state message="Loading automation settings…" />
+  } @else {
+    <app-ui-section title="GitHub issue assessment" [collapsible]="false">
+      <p class="automation-hint">
+        When a GitHub issue is promoted (labeled <code>jimbo</code>), it's queued for a
+        grooming assessment. This controls who runs that assessment and with which skill.
+      </p>
+      <app-ui-stack gap="md" class="automation-form">
+        <label class="automation-field">
+          <span class="automation-field__label">Assessment executor</span>
+          <select class="automation-field__select" [value]="executor()" (change)="onExecutorChange($event)">
+            @for (opt of executorOptions; track opt) {
+              <option [value]="opt">{{ opt }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="automation-field">
+          <span class="automation-field__label">Assessment skill</span>
+          <input
+            class="automation-field__input"
+            type="text"
+            [value]="skill()"
+            (change)="onSkillChange($event)"
+            placeholder="vault-grooming/analyse"
+          />
+        </label>
+      </app-ui-stack>
+    </app-ui-section>
+
+    <app-ui-section title="Execution board" [collapsible]="false">
+      <p class="automation-hint">
+        Auto-clear cards from the Done lane after this many days — applies to every card
+        (manual and agent commission alike). The underlying vault item / dispatch record is
+        untouched; this only hides it from the board. Leave empty to never auto-clear.
+      </p>
+      <app-ui-stack gap="md" class="automation-form">
+        <label class="automation-field">
+          <span class="automation-field__label">Done-lane auto-clear (days)</span>
+          <input
+            class="automation-field__input automation-field__input--narrow"
+            type="number"
+            min="1"
+            step="1"
+            [value]="autoClearDays()"
+            (change)="onAutoClearDaysChange($event)"
+            placeholder="never"
+          />
+        </label>
+      </app-ui-stack>
+    </app-ui-section>
+
+    <app-ui-button variant="primary" [disabled]="!dirty() || saving()" (pressed)="save()">
+      {{ saving() ? 'Saving…' : 'Save' }}
+    </app-ui-button>
+  }
+</app-ui-stack>

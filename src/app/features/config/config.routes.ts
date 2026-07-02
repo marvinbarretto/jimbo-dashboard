@@ -26,6 +26,14 @@ export const configRoutes: Routes = [
         path: 'actors',
         loadChildren: () => import('../actors/actors.routes').then(m => m.actorsRoutes),
       },
+      {
+        path: 'automation',
+        loadComponent: () => import('../automation-settings/automation-settings-page').then(m => m.AutomationSettingsPage),
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./containers/settings-index/settings-index').then(m => m.SettingsIndex),
+      },
     ],
   },
 ];
