@@ -12,7 +12,7 @@
     </app-ui-page-header>
 
     <app-ui-section title="Content" [collapsible]="false">
-      <p>{{ item.content }}</p>
+      <app-ui-prose [text]="item.content" />
     </app-ui-section>
 
     <app-ui-section title="Details" [collapsible]="false">

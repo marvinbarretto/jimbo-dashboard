@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ModelsService } from '@features/models/data-access/models.service';
 import { modelRuntimeId } from '@domain/models';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiTypeahead, type TypeaheadOption } from '@shared/components/ui-typeahead/ui-typeahead';
 import { HermesService } from '../../data-access/hermes.service';
@@ -40,7 +41,7 @@ interface RunDetail {
 
 @Component({
   selector: 'app-hermes-control-room',
-  imports: [FormsModule, UiBadge, UiSection, UiTypeahead],
+  imports: [FormsModule, UiBadge, UiProse, UiSection, UiTypeahead],
   templateUrl: './hermes-control-room.html',
   styleUrl: './hermes-control-room.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

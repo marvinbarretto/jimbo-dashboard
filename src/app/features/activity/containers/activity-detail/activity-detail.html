@@ -22,19 +22,19 @@
 
     @if (a.outcome) {
       <app-ui-section title="Outcome" [collapsible]="false">
-        <p>{{ a.outcome }}</p>
+        <app-ui-prose [text]="a.outcome" />
       </app-ui-section>
     }
 
     @if (a.rationale) {
       <app-ui-section title="Rationale" [collapsible]="false">
-        <p>{{ a.rationale }}</p>
+        <app-ui-prose [text]="a.rationale" />
       </app-ui-section>
     }
 
     @if (a.notes) {
       <app-ui-section title="Notes" [collapsible]="false">
-        <p>{{ a.notes }}</p>
+        <app-ui-prose [text]="a.notes" />
       </app-ui-section>
     }
   </app-ui-stack>
