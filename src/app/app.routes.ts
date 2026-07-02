@@ -160,6 +160,7 @@ export const routes: Routes = [
       { path: 'side-panel-inspector',    loadComponent: () => import('./features/ui-lab/sections/side-panel-inspector-section').then(m => m.SidePanelInspectorSection) },
       { path: 'loading-states',          loadComponent: () => import('./features/ui-lab/sections/loading-states-section').then(m => m.LoadingStatesSection) },
       { path: 'datetime-pipes',          loadComponent: () => import('./features/ui-lab/sections/datetime-pipes-section').then(m => m.DatetimePipesSection) },
+      { path: 'ui-prose',                loadComponent: () => import('./features/ui-lab/sections/ui-prose-section').then(m => m.UiProseSection) },
       { path: 'form-actions',            loadComponent: () => import('./features/ui-lab/sections/form-actions-section').then(m => m.FormActionsSection) },
       { path: 'ui-button',               loadComponent: () => import('./features/ui-lab/sections/ui-button-section').then(m => m.UiButtonSection) },
       { path: 'app-icon',                loadComponent: () => import('./features/ui-lab/sections/app-icon-section').then(m => m.AppIconSection) },

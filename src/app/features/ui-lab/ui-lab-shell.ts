@@ -91,6 +91,7 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'loading-states',          name: 'Loading States',        group: 'utilities',       selector: 'app-ui-loading-state',  description: 'Labelled loading spinner for async content.' },
   { id: 'refresh-control',         name: 'Refresh Control',       group: 'utilities',       selector: 'app-ui-refresh-control', description: 'Freshness timestamp + reload button for activity-style polling pages.' },
   { id: 'datetime-pipes',          name: 'Date & Time Pipes',     group: 'utilities',                                          description: 'datetime and relativeTime pipes for ISO string formatting.' },
+  { id: 'ui-prose',                name: 'Prose',                 group: 'utilities',       selector: 'app-ui-prose',           description: 'Renders a plain-text field as a paragraph, splitting an inline enumerated list ("(1) foo, (2) bar") into a real <ol> — display-only, source string untouched.' },
 
   // Workflows — page-level patterns
   { id: 'list-workflow',           name: 'List Workflow',         group: 'workflows',                                          description: 'Typical page header + table pattern for browsable lists.' },
