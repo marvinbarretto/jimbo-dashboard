@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.99](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.98...v0.0.99) (2026-07-02)
+
+
+### Features
+
+* **config:** add Settings index + Automation page, auto-clear Done lane ([1ae8da0](https://github.com/marvinbarretto/jimbo-dashboard/commit/1ae8da0d7a0b211dc3d82ea36bf648d0f871766c))
+* **projects:** filter + CSS hooks for the GitHub issues panel ([89b862d](https://github.com/marvinbarretto/jimbo-dashboard/commit/89b862d872a85ae47ea3654a96d0fc8af68fd154))
+
 ### [0.0.98](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.97...v0.0.98) (2026-07-02)
 
 
