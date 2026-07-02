@@ -1,5 +1,8 @@
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
+import { map } from 'rxjs';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiButton } from '@shared/components/ui-button/ui-button';
@@ -8,6 +11,8 @@ import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiPeriodTotals } from '@shared/components/ui-period-totals/ui-period-totals';
+import { periodWindow, type TrackerPeriod } from '@shared/components/ui-period-totals/period-window';
+import { UiPeriodPager } from '@shared/components/ui-period-pager/ui-period-pager';
 import { type QuickAddOption } from '@shared/components/ui-quick-add-row/ui-quick-add-row';
 import {
   type TrackerDailyTotal,
@@ -17,6 +22,23 @@ import {
 } from '@shared/components/tracker/tracker.types';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { londonDay, londonToday, relativeDayLabel, shiftIsoDay } from '@shared/utils/datetime.utils';
+import {
+  type DayKey,
+  type MonthKey,
+  type WeekKey,
+  dayKeyFromDate,
+  isDayKey,
+  isMonthKey,
+  isWeekKey,
+  monthRange,
+  shiftDay,
+  shiftMonth,
+  shiftWeek,
+  thisMonthKey,
+  thisWeekKey,
+  todayKey,
+  weekStartFromKey,
+} from '@shared/utils/date-keys';
 import { sessionStats } from '../../utils/exercise-format';
 import { ExerciseSessionRow } from '../../components/exercise-session-row/exercise-session-row';
 import {
@@ -30,18 +52,24 @@ import {
 } from '../../data-access/exercise.service';
 import { bodyPartBreakdown, lastTrainedByRegion, type ExerciseMeta } from '../../utils/muscle-region';
 
-const LEDGER_DAYS = 14;
-const DAILY_WINDOW = 90;
-
 const TOTALS_MEASURES: readonly TrackerMeasure[] = [
   { key: 'volume_kg', label: 'Volume', unit: 'kg', primary: true },
   { key: 'sessions', label: 'Sessions', unit: '' },
   { key: 'cardio_min', label: 'Cardio', unit: 'min' },
 ];
 
+const COVERAGE_LABEL: Record<TrackerPeriod, string> = {
+  day: 'not today',
+  week: 'not this week',
+  month: 'not this month',
+};
+
 @Component({
   selector: 'app-exercise-page',
-  imports: [UiStack, UiSection, UiButton, UiBarChart, UiDonutChart, UiEmptyState, UiLoadingState, UiPeriodTotals, ExerciseSessionRow],
+  imports: [
+    UiStack, UiSection, UiButton, UiBarChart, UiDonutChart, UiEmptyState, UiLoadingState,
+    UiPeriodTotals, UiPeriodPager, ExerciseSessionRow,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './exercise-page.html',
   styleUrl: './exercise-page.scss',
@@ -49,15 +77,52 @@ const TOTALS_MEASURES: readonly TrackerMeasure[] = [
 export class ExercisePage {
   private readonly service = inject(ExerciseService);
   private readonly toast = inject(ToastService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   protected readonly totalsMeasures = TOTALS_MEASURES;
-  protected readonly today = londonToday();
+
+  // Granularity is fixed per route config (day/:date vs week/:week vs
+  // month/:month) — a real change of granularity always navigates to a
+  // different route, which Angular tears down and recreates, so a
+  // constructor-time read is safe (never goes stale within one instance).
+  protected readonly granularity = this.route.snapshot.data['granularity'] as TrackerPeriod;
+
+  protected readonly todayIso = londonToday();
+
+  // The raw route key, in the format that route param uses (DayKey / WeekKey
+  // / MonthKey) — what previous/next/today navigate with.
+  protected readonly key = toSignal(
+    this.route.paramMap.pipe(map((p) => sanitiseKey(this.granularity, p))),
+    { initialValue: defaultKey(this.granularity) },
+  );
+
+  // The same period, expressed as a plain anchor date (YYYY-MM-DD) for the
+  // date-arithmetic-only `periodWindow`.
+  private readonly anchorIso = computed(() => anchorIsoOf(this.granularity, this.key()));
+
+  protected readonly window = computed(() => periodWindow(this.granularity, this.anchorIso(), this.todayIso));
+  protected readonly isAtToday = computed(() => {
+    const w = this.window();
+    return w.start <= this.todayIso && this.todayIso <= w.end;
+  });
+
+  private readonly windowDays = computed<string[]>(() => {
+    const { start, end } = this.window();
+    const out: string[] = [];
+    let cur = start;
+    for (let i = 0; i < 31 && cur <= end; i++) {
+      out.push(cur);
+      cur = shiftIsoDay(cur, 1);
+    }
+    return out;
+  });
 
   private readonly sessionsRes = httpResource<{ items: SessionDetailed[] }>(
-    () => `/api/gym/sessions/detailed?days=${LEDGER_DAYS}&limit=200`,
+    () => `/api/gym/sessions/detailed?from=${this.window().start}&to=${this.window().end}&limit=200`,
   );
   private readonly dailyRes = httpResource<{ days: GymDailyRow[] }>(
-    () => `/api/gym/sessions/daily?days=${DAILY_WINDOW}`,
+    () => `/api/gym/sessions/daily?from=${this.window().start}&to=${this.window().end}`,
   );
   private readonly catalogRes = httpResource<ExerciseCatalogItem[]>(() => `/api/gym/exercises?limit=100`);
 
@@ -105,6 +170,10 @@ export class ExercisePage {
   });
 
   // ── Period totals + trend ────────────────────────────────────────
+  // Both scoped strictly to the selected window, same as everything else on
+  // the page — the totals tile no longer owns its own day/week/month toggle
+  // (see [showToggle]="false" in the template), it just renders whatever
+  // window the pager above has navigated to.
   protected readonly dailyTotals = computed<TrackerDailyTotal[]>(() =>
     this.dailyRows().map((d) => ({
       date: d.date,
@@ -113,21 +182,22 @@ export class ExercisePage {
     })),
   );
 
+  // Trend + body-parts are multi-day pattern views ("how am I trending",
+  // "what have I neglected") — on a single day they'd just restate the
+  // ledger below with extra noise (a 7-region coverage table that's mostly
+  // "not today"), so both stay week/month-only. A day view sticks to that
+  // day's totals + ledger.
+  protected readonly showPatterns = computed(() => this.granularity !== 'day');
   private readonly axis = computed(() => {
     const byDate = new Map(this.dailyRows().map((d) => [d.date, d.volume_kg]));
-    const out: { date: string; volume: number }[] = [];
-    for (let i = LEDGER_DAYS - 1; i >= 0; i--) {
-      const date = shiftIsoDay(this.today, -i);
-      out.push({ date, volume: byDate.get(date) ?? 0 });
-    }
-    return out;
+    return this.windowDays().map((date) => ({ date, volume: byDate.get(date) ?? 0 }));
   });
 
   protected readonly trendLabels = computed(() => this.axis().map((d) => d.date.slice(5)));
   protected readonly trendValues = computed(() => this.axis().map((d) => d.volume));
   protected readonly hasTrend = computed(() => this.dailyRows().some((d) => d.sessions > 0));
 
-  // ── Body parts worked (last LEDGER_DAYS days) ─────────────────────
+  // ── Body parts worked (within the selected window) ────────────────
   private readonly exerciseIndex = computed<ReadonlyMap<string, ExerciseMeta>>(
     () => new Map((this.catalogRes.value() ?? []).map((e) => [e.id, e])),
   );
@@ -135,16 +205,24 @@ export class ExercisePage {
   protected readonly bodyPartLabels = computed(() => this.bodyPartChart().map((r) => r.label));
   protected readonly bodyPartValues = computed(() => this.bodyPartChart().map((r) => r.count));
   protected readonly hasBodyPartData = computed(() => this.bodyPartChart().some((r) => r.count > 0));
-  protected readonly bodyPartCoverage = computed(() => lastTrainedByRegion(this.sessions(), this.exerciseIndex(), this.today));
+  // "Days since" is measured against real today regardless of which window is
+  // being browsed, but only sessions loaded into that window can ever be
+  // found — see lastTrainedByRegion's own doc comment.
+  protected readonly bodyPartCoverage = computed(() =>
+    lastTrainedByRegion(this.sessions(), this.exerciseIndex(), this.todayIso),
+  );
+  protected readonly coverageEmptyLabel = computed(() => COVERAGE_LABEL[this.granularity]);
 
   // ── Day-grouped session ledger ───────────────────────────────────
+  // Seeded with every day in the window (not just days with sessions) so a
+  // week/month view shows rest days too, matching the journal's day-links.
   protected readonly days = computed<{ date: string; label: string; sessions: SessionDetailed[] }[]>(() => {
     const groups = new Map<string, SessionDetailed[]>();
     for (const s of this.sessions()) {
       const day = londonDay(s.started_at);
       (groups.get(day) ?? groups.set(day, []).get(day)!).push(s);
     }
-    if (!groups.has(this.today)) groups.set(this.today, []);
+    for (const d of this.windowDays()) if (!groups.has(d)) groups.set(d, []);
     for (const arr of groups.values()) arr.sort((a, b) => b.started_at.localeCompare(a.started_at));
     return [...groups.entries()]
       .sort((a, b) => b[0].localeCompare(a[0]))
@@ -158,9 +236,10 @@ export class ExercisePage {
     return `${n} session${n === 1 ? '' : 's'}${volume > 0 ? ` · ${Math.round(volume)} kg` : ''}`;
   }
 
-  // UiSection is controlled — own the open state. Today starts open; past days
-  // collapse to their summary until the user expands them.
-  private readonly openDays = signal<Set<string>>(new Set([this.today]));
+  // UiSection is controlled — own the open state. Today starts open (when
+  // it's in the viewed window); past days collapse to their summary until
+  // the user expands them.
+  private readonly openDays = signal<Set<string>>(new Set([this.todayIso]));
   protected isDayOpen(date: string): boolean {
     return this.openDays().has(date);
   }
@@ -173,9 +252,26 @@ export class ExercisePage {
     });
   }
 
+  // ── Pager navigation ──────────────────────────────────────────────
+  protected previous(): void {
+    this.navigateTo(shiftKey(this.granularity, this.key(), -1));
+  }
+  protected next(): void {
+    this.navigateTo(shiftKey(this.granularity, this.key(), 1));
+  }
+  protected today(): void {
+    this.navigateTo(defaultKey(this.granularity));
+  }
+  protected onDateChange(value: string): void {
+    if (isValidKey(this.granularity, value)) this.navigateTo(value);
+  }
+  private navigateTo(key: string): void {
+    this.router.navigate(['/exercise', this.granularity, key]);
+  }
+
   // ── Write handlers (reload-on-write) ─────────────────────────────
   protected addSession(date: string): void {
-    const started_at = date === this.today ? undefined : (toNoonIso(date) ?? undefined);
+    const started_at = date === this.todayIso ? undefined : (toNoonIso(date) ?? undefined);
     this.service.createSession({ started_at }).subscribe({
       next: () => this.reload(),
       error: () => this.toast.error('Could not start workout'),
@@ -263,4 +359,40 @@ function splitId(id: string): { kind: 'set' | 'cardio'; id: string } {
 function toNoonIso(date: string): string | null {
   const d = new Date(`${date}T12:00`);
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+// ── Route key ↔ period-window plumbing ──────────────────────────────
+// The route param format (DayKey / WeekKey / MonthKey) is what previous/next/
+// today navigate with; `periodWindow` wants a plain anchor date. These bridge
+// the two per granularity.
+
+function sanitiseKey(granularity: TrackerPeriod, params: { get(name: string): string | null }): string {
+  if (granularity === 'day') { const v = params.get('date'); return isDayKey(v) ? v : todayKey(); }
+  if (granularity === 'week') { const v = params.get('week'); return isWeekKey(v) ? v : thisWeekKey(); }
+  const v = params.get('month');
+  return isMonthKey(v) ? v : thisMonthKey();
+}
+
+function defaultKey(granularity: TrackerPeriod): string {
+  if (granularity === 'day') return todayKey();
+  if (granularity === 'week') return thisWeekKey();
+  return thisMonthKey();
+}
+
+function isValidKey(granularity: TrackerPeriod, value: string): boolean {
+  if (granularity === 'day') return isDayKey(value);
+  if (granularity === 'week') return isWeekKey(value);
+  return isMonthKey(value);
+}
+
+function shiftKey(granularity: TrackerPeriod, key: string, delta: number): string {
+  if (granularity === 'day') return shiftDay(key as DayKey, delta);
+  if (granularity === 'week') return shiftWeek(key as WeekKey, delta);
+  return shiftMonth(key as MonthKey, delta);
+}
+
+function anchorIsoOf(granularity: TrackerPeriod, key: string): string {
+  if (granularity === 'day') return key;
+  if (granularity === 'week') return dayKeyFromDate(weekStartFromKey(key as WeekKey));
+  return dayKeyFromDate(monthRange(key as MonthKey).start);
 }

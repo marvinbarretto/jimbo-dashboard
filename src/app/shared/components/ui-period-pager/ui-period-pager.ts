@@ -1,28 +1,35 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { UiButton } from '@shared/components/ui-button/ui-button';
-import { JournalDatePicker } from '../journal-date-picker/journal-date-picker';
+import { UiPeriodDatePicker } from './ui-period-date-picker';
 
+/**
+ * Header for a day/week/month-scoped page: title + prev/today/next controls +
+ * a granularity-aware date picker. Generic over the feature — journal,
+ * exercise, nutrition (and future trackers) all navigate periods the same
+ * way, so this owns only the chrome; each page supplies its own title/value
+ * and reacts to the outputs by navigating its own routes.
+ */
 @Component({
-  selector: 'app-journal-pager',
-  imports: [UiButton, JournalDatePicker],
+  selector: 'app-ui-period-pager',
+  imports: [UiButton, UiPeriodDatePicker],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <header class="journal-pager">
-      <div class="journal-pager__main">
-        <p class="journal-pager__eyebrow">{{ eyebrow() }}</p>
-        <h1 class="journal-pager__title">{{ title() }}</h1>
+    <header class="period-pager">
+      <div class="period-pager__main">
+        <p class="period-pager__eyebrow">{{ eyebrow() }}</p>
+        <h1 class="period-pager__title">{{ title() }}</h1>
         @if (subtitle(); as s) {
-          <p class="journal-pager__subtitle">{{ s }}</p>
+          <p class="period-pager__subtitle">{{ s }}</p>
         }
       </div>
 
-      <div class="journal-pager__controls">
+      <div class="period-pager__controls">
         <app-ui-button variant="ghost" size="sm" ariaLabel="Previous" (pressed)="previous.emit()">‹</app-ui-button>
         @if (!isAtToday()) {
           <app-ui-button variant="ghost" size="sm" (pressed)="today.emit()">Today</app-ui-button>
         }
         <app-ui-button variant="ghost" size="sm" [disabled]="!canGoNext()" ariaLabel="Next" (pressed)="next.emit()">›</app-ui-button>
-        <app-journal-date-picker
+        <app-ui-period-date-picker
           [granularity]="granularity()"
           [value]="value()"
           (dateChange)="dateChange.emit($event)"
@@ -31,7 +38,7 @@ import { JournalDatePicker } from '../journal-date-picker/journal-date-picker';
     </header>
   `,
   styles: [`
-    .journal-pager {
+    .period-pager {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
@@ -42,7 +49,7 @@ import { JournalDatePicker } from '../journal-date-picker/journal-date-picker';
       margin-bottom: 1rem;
     }
 
-    .journal-pager__eyebrow {
+    .period-pager__eyebrow {
       margin: 0;
       font-size: 0.65rem;
       letter-spacing: 0.12em;
@@ -50,20 +57,20 @@ import { JournalDatePicker } from '../journal-date-picker/journal-date-picker';
       color: var(--color-text-muted);
     }
 
-    .journal-pager__title {
+    .period-pager__title {
       margin: 0.15rem 0 0;
       font-size: 1.6rem;
       font-weight: 600;
       line-height: 1.15;
     }
 
-    .journal-pager__subtitle {
+    .period-pager__subtitle {
       margin: 0.25rem 0 0;
       font-size: 0.85rem;
       color: var(--color-text-soft);
     }
 
-    .journal-pager__controls {
+    .period-pager__controls {
       display: flex;
       align-items: center;
       gap: 0.4rem;
@@ -71,11 +78,11 @@ import { JournalDatePicker } from '../journal-date-picker/journal-date-picker';
     }
   `],
 })
-export class JournalPager {
+export class UiPeriodPager {
   readonly granularity = input.required<'day' | 'week' | 'month'>();
   readonly title = input.required<string>();
   readonly subtitle = input<string | null>(null);
-  readonly eyebrow = input<string>('Journal');
+  readonly eyebrow = input<string>('');
   readonly isAtToday = input<boolean>(false);
   readonly canGoNext = input<boolean>(true);
   readonly value = input<string>('');

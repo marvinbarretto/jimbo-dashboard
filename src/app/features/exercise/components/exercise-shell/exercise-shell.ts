@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { UiPeriodShell } from '@shared/components/ui-period-shell/ui-period-shell';
 
 @Component({
-  selector: 'app-journal-shell',
+  selector: 'app-exercise-shell',
   imports: [UiPeriodShell],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<app-ui-period-shell basePath="journal" label="Journal" />`,
+  template: `<app-ui-period-shell basePath="exercise" label="Exercise" />`,
 })
-export class JournalShell {}
+export class ExerciseShell {}

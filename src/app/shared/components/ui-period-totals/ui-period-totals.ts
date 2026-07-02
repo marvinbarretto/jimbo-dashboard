@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output } from '@angular/core';
 import { UiSegmented, type UiSegmentedOption } from '@shared/components/ui-segmented/ui-segmented';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiProgressMeter } from '@shared/components/ui-progress-meter/ui-progress-meter';
@@ -20,6 +20,11 @@ const PERIODS: readonly UiSegmentedOption[] = [
  *
  * Pure presentation over a generic `daily` rollup — no coupling to nutrition's
  * endpoint shape, so any tracker can surface "how am I trending" the same way.
+ *
+ * Period defaults to self-managed (own segmented toggle, `day` initially) for
+ * standalone use. A route-driven page that already has its own day/week/month
+ * navigation (see `UiPeriodPager`) should pass `[period]` explicitly and
+ * `[showToggle]="false"` so the two controls don't fight each other.
  */
 @Component({
   selector: 'app-ui-period-totals',
@@ -28,12 +33,14 @@ const PERIODS: readonly UiSegmentedOption[] = [
   template: `
     <div class="period-totals">
       <header class="period-totals__head">
-        <app-ui-segmented
-          [options]="periods"
-          [value]="period()"
-          ariaLabel="Totals window"
-          (changed)="period.set($any($event))"
-        />
+        @if (showToggle()) {
+          <app-ui-segmented
+            [options]="periods"
+            [value]="resolvedPeriod()"
+            ariaLabel="Totals window"
+            (changed)="setPeriod($any($event))"
+          />
+        }
         <span class="period-totals__range">{{ rangeLabel() }}</span>
       </header>
 
@@ -93,11 +100,25 @@ export class UiPeriodTotals {
   readonly targets = input<Readonly<Record<string, number>>>({});
   /** Anchor day (YYYY-MM-DD) defining the current day/week/month. */
   readonly anchor = input<string>(londonToday());
+  /** Real "today" for elapsed-days maths — matters when `anchor` is a past period. Defaults to `anchor`. */
+  readonly today = input<string | null>(null);
+  /** Externally-controlled period; omit to self-manage via the built-in toggle. */
+  readonly period = input<TrackerPeriod | null>(null);
+  /** Hide the built-in day/week/month toggle — for pages with their own period nav. */
+  readonly showToggle = input<boolean>(true);
+  readonly periodChange = output<TrackerPeriod>();
 
   protected readonly periods = PERIODS;
-  protected readonly period = signal<TrackerPeriod>('day');
+  protected readonly resolvedPeriod = linkedSignal<TrackerPeriod>(() => this.period() ?? 'day');
 
-  private readonly window = computed(() => periodWindow(this.period(), this.anchor()));
+  protected setPeriod(p: TrackerPeriod): void {
+    this.resolvedPeriod.set(p);
+    this.periodChange.emit(p);
+  }
+
+  private readonly window = computed(() =>
+    periodWindow(this.resolvedPeriod(), this.anchor(), this.today() ?? this.anchor()),
+  );
 
   protected readonly rangeLabel = computed(() => this.window().label);
 

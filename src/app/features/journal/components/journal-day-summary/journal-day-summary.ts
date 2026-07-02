@@ -8,7 +8,7 @@ import { AgentRunsService, type AgentRunRollupRow } from '../../../hermes/data-a
 import { ExerciseService, type SessionDetailed } from '../../../exercise/data-access/exercise.service';
 import { NutritionService, type FoodLogEntry, type SupplementLogEntry } from '../../../nutrition/data-access/nutrition.service';
 import { JournalDataService } from '../../data-access/journal-data.service';
-import type { DayKey } from '../../utils/date-keys';
+import type { DayKey } from '@shared/utils/date-keys';
 
 // The daily things we expect to do, each measured against a target and ticked
 // from real logged data. Adding a row is a one-liner: give it a label, a target,

@@ -1,6 +1,7 @@
 // Local-time keys for day/week/month. The Jimbo API returns UTC ISO timestamps;
-// the journal shows them in the user's local calendar so date arithmetic and
-// bucketing all happens in local time and we never call toISOString() on a key.
+// period-scoped pages (journal, exercise, nutrition, …) show them in the
+// user's local calendar so date arithmetic and bucketing all happens in local
+// time and we never call toISOString() on a key.
 
 export type DayKey = string;   // YYYY-MM-DD
 export type WeekKey = string;  // YYYY-Www (ISO week)

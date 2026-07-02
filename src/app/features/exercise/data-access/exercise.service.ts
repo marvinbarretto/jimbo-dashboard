@@ -131,11 +131,20 @@ export class ExerciseService {
   private readonly base = environment.dashboardApiUrl;
 
   // Sessions with their sets + cardio. `date` (YYYY-MM-DD) is a London calendar
-  // day; otherwise a trailing `days` window, else the most recent `limit` rows.
-  listDetailed(opts: { date?: string; days?: number; limit?: number } = {}): Observable<{ items: SessionDetailed[] }> {
+  // day; `from`/`to` (YYYY-MM-DD, inclusive) an explicit range — used by
+  // period-scoped week/month views that can show past periods; otherwise a
+  // trailing `days` window, else the most recent `limit` rows.
+  listDetailed(
+    opts: { date?: string; from?: string; to?: string; days?: number; limit?: number } = {},
+  ): Observable<{ items: SessionDetailed[] }> {
     const params = new URLSearchParams();
     if (opts.date) params.set('date', opts.date);
-    if (opts.days) params.set('days', String(opts.days));
+    if (opts.from && opts.to) {
+      params.set('from', opts.from);
+      params.set('to', opts.to);
+    } else if (opts.days) {
+      params.set('days', String(opts.days));
+    }
     if (opts.limit) params.set('limit', String(opts.limit));
     const qs = params.toString();
     return this.http.get<{ items: SessionDetailed[] }>(

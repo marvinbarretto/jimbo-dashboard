@@ -1,39 +1,59 @@
+<app-ui-period-pager
+  [granularity]="granularity"
+  eyebrow="Exercise"
+  [title]="window().label"
+  [isAtToday]="isAtToday()"
+  [value]="key()"
+  (previous)="previous()"
+  (next)="next()"
+  (today)="today()"
+  (dateChange)="onDateChange($event)"
+/>
+
 @if (loading()) {
   <app-ui-loading-state message="Loading training…" />
 } @else {
   <app-ui-stack gap="lg">
     <!-- Patterns over time: day / week / month -->
-    <app-ui-section title="Totals">
-      <app-ui-period-totals [measures]="totalsMeasures" [daily]="dailyTotals()" [anchor]="today" />
+    <app-ui-section title="Totals" [collapsible]="false">
+      <app-ui-period-totals
+        [measures]="totalsMeasures"
+        [daily]="dailyTotals()"
+        [period]="granularity"
+        [anchor]="window().start"
+        [today]="todayIso"
+        [showToggle]="false"
+      />
     </app-ui-section>
 
-    <!-- Trend: training volume per day -->
-    <app-ui-section title="Volume per day">
-      @if (hasTrend()) {
-        <app-ui-bar-chart [labels]="trendLabels()" [values]="trendValues()" label="volume" suffix=" kg" />
-      } @else {
-        <app-ui-empty-state message="No sessions in the last 14 days." />
-      }
-    </app-ui-section>
+    <!-- Trend + body-parts: multi-day pattern views, not shown on a single day -->
+    @if (showPatterns()) {
+      <app-ui-section title="Volume per day" [collapsible]="false">
+        @if (hasTrend()) {
+          <app-ui-bar-chart [labels]="trendLabels()" [values]="trendValues()" label="volume" suffix=" kg" />
+        } @else {
+          <app-ui-empty-state message="No sessions in this window." />
+        }
+      </app-ui-section>
 
-    <!-- Body-part split: which regions got trained, and how long since each -->
-    <app-ui-section title="Body parts worked" meta="last 14 days">
-      @if (hasBodyPartData()) {
-        <app-ui-donut-chart [labels]="bodyPartLabels()" [values]="bodyPartValues()" suffix=" sets" />
-        <ul class="body-part-coverage">
-          @for (c of bodyPartCoverage(); track c.region) {
-            <li class="body-part-coverage__row" [class.body-part-coverage__row--stale]="c.daysSince === null || c.daysSince > 7">
-              <span class="body-part-coverage__label">{{ c.label }}</span>
-              <span class="body-part-coverage__status">
-                {{ c.daysSince === null ? 'not trained in 14d' : c.daysSince === 0 ? 'today' : c.daysSince + 'd ago' }}
-              </span>
-            </li>
-          }
-        </ul>
-      } @else {
-        <app-ui-empty-state message="No sets logged in the last 14 days." />
-      }
-    </app-ui-section>
+      <app-ui-section title="Body parts worked" [meta]="window().label" [collapsible]="false">
+        @if (hasBodyPartData()) {
+          <app-ui-donut-chart [labels]="bodyPartLabels()" [values]="bodyPartValues()" suffix=" sets" />
+          <ul class="body-part-coverage">
+            @for (c of bodyPartCoverage(); track c.region) {
+              <li class="body-part-coverage__row" [class.body-part-coverage__row--stale]="c.daysSince === null || c.daysSince > 7">
+                <span class="body-part-coverage__label">{{ c.label }}</span>
+                <span class="body-part-coverage__status">
+                  {{ c.daysSince === null ? coverageEmptyLabel() : c.daysSince === 0 ? 'today' : c.daysSince + 'd ago' }}
+                </span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <app-ui-empty-state message="No sets logged in this window." />
+        }
+      </app-ui-section>
+    }
 
     <!-- Day-grouped workout ledger: sessions expand to editable sets/cardio -->
     @for (d of days(); track d.date) {

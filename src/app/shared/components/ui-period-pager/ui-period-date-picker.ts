@@ -25,7 +25,7 @@ import {
   isWeekKey,
   weekKeyFromDate,
   weekStartFromKey,
-} from '../../utils/date-keys';
+} from '@shared/utils/date-keys';
 
 type Granularity = 'day' | 'week' | 'month';
 
@@ -33,18 +33,18 @@ type Granularity = 'day' | 'week' | 'month';
 type WeekInstance = Instance & { weekStartDay?: Date; weekEndDay?: Date };
 
 @Component({
-  selector: 'app-journal-date-picker',
+  selector: 'app-ui-period-date-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<input
     #picker
-    class="journal-date-picker__input"
+    class="period-date-picker__input"
     readonly
     [attr.aria-label]="'Pick a ' + granularity()"
   />`,
   styles: [`
     :host { display: inline-block; }
 
-    .journal-date-picker__input {
+    .period-date-picker__input {
       height: 2rem;
       padding: 0 0.5rem;
       border: 1px solid var(--color-border);
@@ -65,7 +65,7 @@ type WeekInstance = Instance & { weekStartDay?: Date; weekEndDay?: Date };
     }
   `],
 })
-export class JournalDatePicker {
+export class UiPeriodDatePicker {
   readonly granularity = input.required<Granularity>();
   readonly value = input<string>('');
   readonly dateChange = output<string>();

@@ -17,7 +17,7 @@ import type {
   BriefingAnalysis,
   BriefingRating as Rating,
 } from '../../../briefings/data-access/briefing.types';
-import { type DayKey, dateFromDayKey, shiftDay } from '../../utils/date-keys';
+import { type DayKey, dateFromDayKey, shiftDay } from '@shared/utils/date-keys';
 
 // The morning/afternoon briefings that belong to the journal day, with the same
 // rating control as the archive. Self-contained (mirrors journal-agents-section):

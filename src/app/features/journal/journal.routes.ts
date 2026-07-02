@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { thisMonthKey, thisWeekKey, todayKey } from './utils/date-keys';
+import { thisMonthKey, thisWeekKey, todayKey } from '@shared/utils/date-keys';
 
 export const journalRoutes: Routes = [
   {

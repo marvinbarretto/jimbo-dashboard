@@ -17,7 +17,7 @@ import { ProjectsService } from '../../../projects/data-access/projects.service'
 import { JournalDataService } from '../../data-access/journal-data.service';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
-import { JournalPager } from '../../components/journal-pager/journal-pager';
+import { UiPeriodPager } from '@shared/components/ui-period-pager/ui-period-pager';
 import { JournalDaySummary } from '../../components/journal-day-summary/journal-day-summary';
 import { JournalAgentsSection } from '../../components/journal-agents-section/journal-agents-section';
 import { JournalMcpSection } from '../../components/journal-mcp-section/journal-mcp-section';
@@ -32,7 +32,7 @@ import {
   isDayKey,
   shiftDay,
   todayKey,
-} from '../../utils/date-keys';
+} from '@shared/utils/date-keys';
 
 @Component({
   selector: 'app-journal-day-page',
@@ -47,7 +47,7 @@ import {
     UiLoadingState,
     UiBarChart,
     UiDonutChart,
-    JournalPager,
+    UiPeriodPager,
     JournalDaySummary,
     JournalAgentsSection,
     JournalMcpSection,

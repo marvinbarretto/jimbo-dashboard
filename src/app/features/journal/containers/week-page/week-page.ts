@@ -13,7 +13,7 @@ import { ProjectsService } from '../../../projects/data-access/projects.service'
 import { JournalDataService } from '../../data-access/journal-data.service';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
-import { JournalPager } from '../../components/journal-pager/journal-pager';
+import { UiPeriodPager } from '@shared/components/ui-period-pager/ui-period-pager';
 import { ExerciseSummarySection } from '../../../exercise/components/exercise-summary-section/exercise-summary-section';
 import {
   type WeekKey,
@@ -22,7 +22,7 @@ import {
   isWeekKey,
   shiftWeek,
   thisWeekKey,
-} from '../../utils/date-keys';
+} from '@shared/utils/date-keys';
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -38,7 +38,7 @@ const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     UiLoadingState,
     UiBarChart,
     UiDonutChart,
-    JournalPager,
+    UiPeriodPager,
     ExerciseSummarySection,
   ],
   templateUrl: './week-page.html',

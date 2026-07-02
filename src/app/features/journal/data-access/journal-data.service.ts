@@ -22,7 +22,7 @@ import {
   monthRange,
   shiftDay,
   weekStartFromKey,
-} from '../utils/date-keys';
+} from '@shared/utils/date-keys';
 
 export interface FocusSessionLite {
   readonly id: string;
