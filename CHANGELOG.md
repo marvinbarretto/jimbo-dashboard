@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.95](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.94...v0.0.95) (2026-07-02)
+
+
+### Features
+
+* **exercise:** add body-parts-worked chart to /exercise page ([c87adf6](https://github.com/marvinbarretto/jimbo-dashboard/commit/c87adf6c113fab14db7faa81989859eda1a1964b))
+* **picture:** add Horizons Lab exploration + ui-prose primitive ([99bd5f6](https://github.com/marvinbarretto/jimbo-dashboard/commit/99bd5f6ea5d69fe3eb26501fb773bfa0458c2d4b))
+* **picture:** add Horizons Lab static prototype gallery ([58195da](https://github.com/marvinbarretto/jimbo-dashboard/commit/58195da3280fffc6b1386a6f4108b7cfb17ee5d3))
+
+
+### Bug Fixes
+
+* **exercise:** count the sets multiplier in the day-ledger volume total ([bf3f860](https://github.com/marvinbarretto/jimbo-dashboard/commit/bf3f860b1dece4911e8eacadd11bb1e74694c43a))
+* **hermes:** note that control room job configs reflect live VPS state ([dd6b49b](https://github.com/marvinbarretto/jimbo-dashboard/commit/dd6b49b638c4774457e36dc37b0ffba14dfe9955))
+
 ### [0.0.94](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.93...v0.0.94) (2026-07-02)
 
 
