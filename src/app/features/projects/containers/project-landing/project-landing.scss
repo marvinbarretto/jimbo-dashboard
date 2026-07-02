@@ -390,22 +390,34 @@
 .github-issues {
   &__list {
     list-style: none;
-    margin: 0;
+    margin: var(--s-3) 0 0;
     padding: 0;
     display: flex;
     flex-direction: column;
     gap: var(--s-1);
   }
 
+  // Modifier classes are the CSS hook — every row carries exactly one, so
+  // future styling (or a future "recently updated" / "stale" pass) can target
+  // them directly instead of re-deriving linked-ness in a template.
   &__item {
     display: flex;
     align-items: center;
     gap: var(--s-2);
-    padding: var(--s-2) 0;
+    padding: var(--s-2) var(--s-2) var(--s-2) var(--s-3);
     border-bottom: 1px solid var(--color-border);
+    border-left: 3px solid transparent;
     font-size: 0.83rem;
 
     &:last-child { border-bottom: none; }
+
+    &--linked {
+      border-left-color: color-mix(in srgb, var(--color-success, #22c55e) 60%, transparent);
+    }
+
+    &--unlinked {
+      border-left-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+    }
   }
 
   &__title {

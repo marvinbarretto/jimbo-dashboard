@@ -22,6 +22,8 @@ import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiDataTable } from '@shared/components/ui-data-table/ui-data-table';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { ToastService } from '@shared/components/toast/toast.service';
+import { KanbanFilterBar, type FilterGroup } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
+import { createKanbanFilterState } from '@shared/kanban/filter-state';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { ProjectsService } from '../../data-access/projects.service';
@@ -76,6 +78,14 @@ interface DispatchTask {
   result_summary: string | null;
 }
 
+// Filter dimension ids for the GitHub issues panel — page-scoped, not shared
+// with the vault-item filter-groups (@shared/kanban/filter-groups), since
+// GithubIssueRow isn't a VaultItem.
+const GH_STATUS = 'gh_status';
+const GH_LABEL = 'gh_label';
+const GH_LINKED = 'linked';
+const GH_UNLINKED = 'unlinked';
+
 interface GithubIssueRow {
   number: number;
   title: string;
@@ -126,6 +136,7 @@ interface ProjectActivityItem {
     UiDataTable,
     PriorityBadge,
     UiButton,
+    KanbanFilterBar,
   ],
   templateUrl: './project-landing.html',
   styleUrl: './project-landing.scss',
@@ -226,6 +237,69 @@ export class ProjectLanding {
         });
       },
     });
+  }
+
+  // Filters for the GitHub issues panel — same shared bar/state composable the
+  // kanban boards use (@shared/components/kanban-filter-bar,
+  // @shared/kanban/filter-state), with facets built for GithubIssueRow instead
+  // of VaultItem. Defaults to "not yet in Jimbo" so a big backlog (e.g. 148
+  // open issues) doesn't drown the actionable subset on first load.
+  private readonly githubFilter = createKanbanFilterState([GH_STATUS, GH_LABEL]);
+  private readonly ghStatusFilter = this.githubFilter.active<string>(GH_STATUS);
+  private readonly ghLabelFilter  = this.githubFilter.active<string>(GH_LABEL);
+  private readonly _ghSearchTerm = signal('');
+  readonly ghSearchTerm = this._ghSearchTerm.asReadonly();
+
+  readonly githubFilterGroups = computed<FilterGroup[]>(() => {
+    const issues = this.githubIssues();
+    let linkedCount = 0;
+    const labelCounts = new Map<string, number>();
+    for (const issue of issues) {
+      if (issue.linked) linkedCount++;
+      for (const label of issue.labels) labelCounts.set(label, (labelCounts.get(label) ?? 0) + 1);
+    }
+    return [
+      {
+        id: GH_STATUS,
+        label: 'Status',
+        active: this.ghStatusFilter(),
+        options: [
+          { value: GH_UNLINKED, label: 'Not in Jimbo', count: issues.length - linkedCount },
+          { value: GH_LINKED,   label: 'In Jimbo',     count: linkedCount },
+        ],
+      },
+      {
+        id: GH_LABEL,
+        label: 'Label',
+        active: this.ghLabelFilter(),
+        options: Array.from(labelCounts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .map(([value, count]) => ({ value, label: value, count })),
+      },
+    ];
+  });
+
+  readonly visibleGithubIssues = computed(() => {
+    const statusF = this.ghStatusFilter();
+    const labelF  = this.ghLabelFilter();
+    const search  = this._ghSearchTerm().trim().toLowerCase();
+    return this.githubIssues().filter(issue => {
+      if (statusF.size > 0) {
+        const key = issue.linked ? GH_LINKED : GH_UNLINKED;
+        if (!statusF.has(key)) return false;
+      }
+      if (labelF.size > 0 && !issue.labels.some(l => labelF.has(l))) return false;
+      if (search && !`${issue.number} ${issue.title}`.toLowerCase().includes(search)) return false;
+      return true;
+    });
+  });
+
+  onGithubFilterToggle(event: { groupId: string; value: string | number }): void {
+    this.githubFilter.toggle(event.groupId, event.value);
+  }
+
+  onGithubSearchChange(term: string): void {
+    this._ghSearchTerm.set(term);
   }
 
   readonly projectActivityResource = httpResource<{ items: ProjectActivityItem[] }>(() => {
@@ -379,6 +453,10 @@ export class ProjectLanding {
 
 
   constructor() {
+    // Default the GitHub issues panel to "not yet in Jimbo" — the actionable
+    // subset — so a large backlog doesn't bury it under already-linked rows.
+    this.githubFilter.toggle(GH_STATUS, GH_UNLINKED);
+
     // Open vault items in a CDK Dialog when a row is clicked; URL ?detail=
     // becomes the source of truth so back-button closes the modal.
     withVaultDetailModal();

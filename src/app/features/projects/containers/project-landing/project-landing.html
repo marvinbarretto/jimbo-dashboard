@@ -161,33 +161,47 @@
              status. GitHub stays the feature backlog; this just gives visibility
              and a one-click way to bring an issue into the jimbo pipeline. -->
         @if (p.repo_url) {
-          <app-ui-section [title]="'GitHub issues (' + githubIssues().length + ')'" [collapsible]="true" [expanded]="true">
+          <app-ui-section [title]="'GitHub issues (' + visibleGithubIssues().length + ' of ' + githubIssues().length + ')'" [collapsible]="true" [expanded]="true">
             @if (githubIssues().length === 0) {
               <app-ui-empty-state message="No open issues on this repo." />
             } @else {
-              <ul class="github-issues__list">
-                @for (issue of githubIssues(); track issue.number) {
-                  <li class="github-issues__item">
-                    <a class="github-issues__title" [href]="issue.html_url" target="_blank" rel="noopener">
-                      #{{ issue.number }} {{ issue.title }}
-                    </a>
-                    @if (issue.linked; as linked) {
-                      @if (linked.seq !== null) {
-                        <app-vault-chip kind="task" [seq]="linked.seq" />
+              <app-kanban-filter-bar
+                [groups]="githubFilterGroups()"
+                [searchTerm]="ghSearchTerm()"
+                searchPlaceholder="Search issues…"
+                (toggle)="onGithubFilterToggle($event)"
+                (searchChange)="onGithubSearchChange($event)" />
+
+              @if (visibleGithubIssues().length === 0) {
+                <app-ui-empty-state message="No issues match the current filters." />
+              } @else {
+                <ul class="github-issues__list">
+                  @for (issue of visibleGithubIssues(); track issue.number) {
+                    <li
+                      class="github-issues__item"
+                      [class.github-issues__item--linked]="!!issue.linked"
+                      [class.github-issues__item--unlinked]="!issue.linked">
+                      <a class="github-issues__title" [href]="issue.html_url" target="_blank" rel="noopener">
+                        #{{ issue.number }} {{ issue.title }}
+                      </a>
+                      @if (issue.linked; as linked) {
+                        @if (linked.seq !== null) {
+                          <app-vault-chip kind="task" [seq]="linked.seq" />
+                        }
+                        <app-ui-badge tone="neutral" [subtle]="true">{{ linked.status }}</app-ui-badge>
+                      } @else {
+                        <app-ui-button
+                          size="sm"
+                          variant="secondary"
+                          [disabled]="isPromoting(issue.number)"
+                          (pressed)="promoteIssue(issue.number)">
+                          {{ isPromoting(issue.number) ? 'Promoted' : 'Promote to Jimbo' }}
+                        </app-ui-button>
                       }
-                      <app-ui-badge tone="neutral" [subtle]="true">{{ linked.status }}</app-ui-badge>
-                    } @else {
-                      <app-ui-button
-                        size="sm"
-                        variant="secondary"
-                        [disabled]="isPromoting(issue.number)"
-                        (pressed)="promoteIssue(issue.number)">
-                        {{ isPromoting(issue.number) ? 'Promoted' : 'Promote to Jimbo' }}
-                      </app-ui-button>
-                    }
-                  </li>
-                }
-              </ul>
+                    </li>
+                  }
+                </ul>
+              }
             }
           </app-ui-section>
         }
