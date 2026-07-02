@@ -12,7 +12,6 @@ import { firstValueFrom } from 'rxjs';
 import type {
   ActivitySummary,
   FocusSession,
-  FocusSessionCommit,
   FocusSessionStatus,
   SessionMood,
   StartFocusSessionPayload,
@@ -180,20 +179,6 @@ export class FocusSessionsService {
       this.toast.info('Session abandoned');
     } catch {
       this.toast.error('Could not abandon session');
-    }
-  }
-
-  // Commits captured by the client-side git hook during the session.
-  async loadCommits(id: string): Promise<FocusSessionCommit[]> {
-    try {
-      const { items } = await firstValueFrom(
-        this.http.get<{ items: FocusSessionCommit[] }>(
-          `${this.url}/${encodeURIComponent(id)}/commits`,
-        ),
-      );
-      return items;
-    } catch {
-      return [];
     }
   }
 

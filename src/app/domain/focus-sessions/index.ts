@@ -6,6 +6,4 @@ export type {
   StartFocusSessionPayload,
   CompleteFocusSessionPayload,
   UpdateFocusSessionPayload,
-  FocusSessionCommit,
-  FocusSessionCommitEvent,
 } from './focus-session';

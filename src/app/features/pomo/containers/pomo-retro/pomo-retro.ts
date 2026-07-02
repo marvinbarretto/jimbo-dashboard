@@ -23,7 +23,7 @@ import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { UiProgressMeter } from '@shared/components/ui-progress-meter/ui-progress-meter';
 import { VaultChip, type VaultChipKind, type VaultChipCreator } from '@shared/components/vault-chip/vault-chip';
 import { withVaultDetailModal } from '@shared/kanban/detail-modal';
-import type { FocusSessionCommit, SessionMood } from '@domain/focus-sessions';
+import type { SessionMood } from '@domain/focus-sessions';
 import type { VaultItem } from '@domain/vault';
 import { environment } from '../../../../../environments/environment';
 import { vaultItemId } from '@domain/ids';
@@ -42,6 +42,16 @@ interface YoutubeWatchVM {
   readonly channel: string;
   readonly seconds: number;
   readonly url: string;
+}
+
+// Flattened from device_events (collector='github', type='push') — pushed
+// commits polled from GitHub's events feed, not a session-scoped API resource.
+interface CommitVM {
+  readonly id: string;
+  readonly commit_sha: string;
+  readonly message: string;
+  readonly repo: string | null;
+  readonly branch: string | null;
 }
 
 const MOOD_OPTIONS: { value: SessionMood; icon: string; label: string }[] = [
@@ -150,7 +160,7 @@ export class PomoRetro implements OnInit {
     return { shown, otherSecs };
   }
 
-  readonly commits = signal<FocusSessionCommit[]>([]);
+  readonly commits = signal<CommitVM[]>([]);
 
   readonly commitsCount = computed(() => this.commits().length);
 
@@ -205,8 +215,11 @@ export class PomoRetro implements OnInit {
     if (s?.mood != null) this.mood.set(s.mood);
     if (s?.interrupted) this.interrupted.set(s.interrupted);
     if (s) {
-      const commits = await this.sessions.loadCommits(s.id);
-      this.commits.set(commits);
+      const until = s.ended_at ?? this.nowIso();
+
+      // Commits pushed during the session window (polled from GitHub, may lag
+      // up to ~15 min behind a push — see loadCommits).
+      this.commits.set(await this.loadCommits(s.started_at, until));
 
       // The linked story / sub-task (intention), resolved to full items so the
       // shared vault-chip can render them with seq + type.
@@ -214,7 +227,6 @@ export class PomoRetro implements OnInit {
       this.linkedItems.set(notes.map(n => this.resolveLinked(n.vault_note_id, n.title)));
 
       // YouTube watched within the session window.
-      const until = s.ended_at ?? this.nowIso();
       this.youtube.set(await this.loadYoutube(s.started_at, until));
     }
   }
@@ -275,6 +287,56 @@ export class PomoRetro implements OnInit {
       primary_project_id: this.session()?.project_id ?? null,
     });
     this.newNextStepTitle.set('');
+  }
+
+  // Commits shipped during the session: pushed commits, not local ones — the
+  // old design (a client-side git hook POSTing to a since-dropped
+  // focus_session_commits table) never shipped. GitHub pushes are polled
+  // server-side every ~15 min and land in device_events (collector='github'),
+  // the same source day-page.ts reads for its commit summary.
+  //
+  // The push event's `ts` is push time (github-events.ts passes ev.created_at),
+  // not when the work happened — the common case is pushing right at the end
+  // of a pomo, after `sessionEndIso`. So we query pushes over a wide window (up
+  // to "now") and instead scope to the session by each commit's own
+  // `author_date`, same as day-page.ts's commitsSummary.
+  private async loadCommits(sessionStartIso: string, sessionEndIso: string): Promise<CommitVM[]> {
+    try {
+      const url =
+        `${environment.dashboardApiUrl}/api/telemetry/events?collector=github&type=push` +
+        `&since=${encodeURIComponent(sessionStartIso)}&until=${encodeURIComponent(this.nowIso())}&limit=200`;
+      const res = await firstValueFrom(
+        this.http.get<{
+          events: Array<{
+            id: string;
+            source: string | null;
+            payload: {
+              branch?: string;
+              commits?: Array<{ sha: string; subject: string; author_date: string }>;
+            } | null;
+          }>;
+        }>(url),
+      );
+      const start = new Date(sessionStartIso).getTime();
+      const end = new Date(sessionEndIso).getTime();
+      return (res.events ?? []).flatMap((e) => {
+        const commits = e.payload?.commits ?? [];
+        return commits
+          .filter((c) => {
+            const authored = new Date(c.author_date).getTime();
+            return authored >= start && authored <= end;
+          })
+          .map((c) => ({
+            id: `${e.id}:${c.sha}`,
+            commit_sha: c.sha,
+            message: c.subject,
+            repo: e.source,
+            branch: e.payload?.branch ?? null,
+          }));
+      });
+    } catch {
+      return [];
+    }
   }
 
   private async loadYoutube(sinceIso: string, untilIso: string): Promise<YoutubeWatchVM[]> {

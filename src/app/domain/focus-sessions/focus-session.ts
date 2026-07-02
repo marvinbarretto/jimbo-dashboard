@@ -55,20 +55,3 @@ export interface UpdateFocusSessionPayload {
   mood?:        SessionMood | null;
   interrupted?: boolean;
 }
-
-// A git commit (or push) captured against the session by a client-side hook,
-// surfaced on the /pomo retro page so you can see what actually shipped.
-export type FocusSessionCommitEvent = 'commit' | 'push';
-
-export interface FocusSessionCommit {
-  id:           string;
-  session_id:   FocusSessionId;
-  commit_sha:   string;
-  message:      string;
-  author:       string | null;
-  repo:         string | null;
-  branch:       string | null;
-  event_type:   FocusSessionCommitEvent;
-  committed_at: string;
-  recorded_at:  string;
-}
