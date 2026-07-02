@@ -1,33 +1,50 @@
+<app-ui-period-pager
+  [granularity]="granularity"
+  eyebrow="Nutrition"
+  [title]="window().label"
+  [isAtToday]="isAtToday()"
+  [value]="key()"
+  (previous)="previous()"
+  (next)="next()"
+  (today)="today()"
+  (dateChange)="onDateChange($event)"
+/>
+
 @if (loading()) {
   <app-ui-loading-state message="Loading nutrition…" />
 } @else {
   <app-ui-stack gap="lg">
     <!-- Patterns over time: day / week / month totals with targets -->
-    <app-ui-section title="Totals">
+    <app-ui-section title="Totals" [collapsible]="false">
       <app-ui-period-totals
         [measures]="totalsMeasures"
         [daily]="dailyTotals()"
         [targets]="targets"
-        [anchor]="today"
+        [period]="granularity"
+        [anchor]="window().start"
+        [today]="todayIso"
+        [showToggle]="false"
       />
     </app-ui-section>
 
-    <!-- Trend: calories per day across the window -->
-    <app-ui-section title="Calories per day — food vs alcohol">
-      @if (hasTrend()) {
-        <app-ui-bar-chart
-          [labels]="trendLabels()"
-          [series]="trendSeries()"
-          suffix=" kcal"
-        />
-      } @else {
-        <app-ui-empty-state message="No entries in the last 14 days." />
-      }
-    </app-ui-section>
+    <!-- Trend: calories per day — food vs alcohol (not shown for a single-day window) -->
+    @if (showPatterns()) {
+      <app-ui-section title="Calories per day — food vs alcohol" [collapsible]="false">
+        @if (hasTrend()) {
+          <app-ui-bar-chart
+            [labels]="trendLabels()"
+            [series]="trendSeries()"
+            suffix=" kcal"
+          />
+        } @else {
+          <app-ui-empty-state message="No entries in this window." />
+        }
+      </app-ui-section>
+    }
 
     <!-- Quick supplement log (catalog pick → today) -->
     @if (supplementOptions().length) {
-      <app-ui-section title="Log a supplement">
+      <app-ui-section title="Log a supplement" [collapsible]="false">
         <app-ui-quick-add-row
           [options]="supplementOptions()"
           [measures]="suppQuickAdd"
@@ -47,7 +64,7 @@
         [entries]="d.entries"
         [measures]="ledgerMeasures"
         [editable]="true"
-        [expanded]="d.date === today"
+        [expanded]="d.date === todayIso"
         [quickAddMeasures]="foodQuickAdd"
         [quickAddSuggestions]="foodSuggestions()"
         [quickAddAllowCreate]="true"

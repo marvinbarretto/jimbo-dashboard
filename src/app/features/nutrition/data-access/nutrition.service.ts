@@ -91,11 +91,20 @@ export class NutritionService {
   private readonly base = environment.dashboardApiUrl;
 
   // Entries newest-first. `date` (YYYY-MM-DD) is a London calendar day;
-  // otherwise a trailing `days` window or the most recent `limit` rows.
-  list(opts: { date?: string; days?: number; limit?: number } = {}): Observable<{ items: FoodLogEntry[] }> {
+  // `from`/`to` (YYYY-MM-DD, inclusive) an explicit range — used by
+  // period-scoped week/month views that can show past periods; otherwise a
+  // trailing `days` window or the most recent `limit` rows.
+  list(
+    opts: { date?: string; from?: string; to?: string; days?: number; limit?: number } = {},
+  ): Observable<{ items: FoodLogEntry[] }> {
     const params = new URLSearchParams();
     if (opts.date) params.set('date', opts.date);
-    if (opts.days) params.set('days', String(opts.days));
+    if (opts.from && opts.to) {
+      params.set('from', opts.from);
+      params.set('to', opts.to);
+    } else if (opts.days) {
+      params.set('days', String(opts.days));
+    }
     if (opts.limit) params.set('limit', String(opts.limit));
     const qs = params.toString();
     return this.http.get<{ items: FoodLogEntry[] }>(
@@ -104,10 +113,17 @@ export class NutritionService {
   }
 
   // Per-day macro totals bucketed by London calendar day. Only days with
-  // entries are returned — callers fill a continuous axis.
-  daily(opts: { days?: number } = {}): Observable<{ days: FoodDailyRow[] }> {
+  // entries are returned — callers fill a continuous axis. `from`/`to`
+  // (YYYY-MM-DD, inclusive) an explicit range; otherwise a trailing `days`
+  // window (default 14).
+  daily(opts: { days?: number; from?: string; to?: string } = {}): Observable<{ days: FoodDailyRow[] }> {
     const params = new URLSearchParams();
-    params.set('days', String(opts.days ?? 14));
+    if (opts.from && opts.to) {
+      params.set('from', opts.from);
+      params.set('to', opts.to);
+    } else {
+      params.set('days', String(opts.days ?? 14));
+    }
     return this.http.get<{ days: FoodDailyRow[] }>(
       `${this.base}/api/coach/food-log/daily?${params.toString()}`,
     );
@@ -120,12 +136,20 @@ export class NutritionService {
     );
   }
 
-  // Supplement intakes, newest-first. Same date/days/limit semantics as list().
-  // Joined server-side to the catalog so each entry carries name + dose_unit.
-  supplementLog(opts: { date?: string; days?: number; limit?: number } = {}): Observable<{ items: SupplementLogEntry[] }> {
+  // Supplement intakes, newest-first. Same date/from/to/days/limit semantics
+  // as list(). Joined server-side to the catalog so each entry carries name +
+  // dose_unit.
+  supplementLog(
+    opts: { date?: string; from?: string; to?: string; days?: number; limit?: number } = {},
+  ): Observable<{ items: SupplementLogEntry[] }> {
     const params = new URLSearchParams();
     if (opts.date) params.set('date', opts.date);
-    if (opts.days) params.set('days', String(opts.days));
+    if (opts.from && opts.to) {
+      params.set('from', opts.from);
+      params.set('to', opts.to);
+    } else if (opts.days) {
+      params.set('days', String(opts.days));
+    }
     if (opts.limit) params.set('limit', String(opts.limit));
     const qs = params.toString();
     return this.http.get<{ items: SupplementLogEntry[] }>(
