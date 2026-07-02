@@ -43,10 +43,10 @@
       </h1>
 
       @if (card.task.notes) {
-        <p class="card-notes">{{ card.task.notes }}</p>
+        <app-ui-prose class="card-notes" [text]="card.task.notes" />
       }
 
-      <p class="card-rationale">{{ card.proposal.ai_rationale }}</p>
+      <app-ui-prose class="card-rationale" [text]="card.proposal.ai_rationale" />
 
       @if (card.proposal.tags.length) {
         <div class="card-tags">

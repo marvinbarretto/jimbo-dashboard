@@ -32,7 +32,7 @@
     }
   </div>
 
-  <p class="qcard__body">{{ question().body }}</p>
+  <app-ui-prose class="qcard__body" [text]="question().body" />
 
   @if (showReply()) {
     <app-question-reply-composer

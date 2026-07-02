@@ -5,6 +5,7 @@ import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiRefreshControl } from '@shared/components/ui-refresh-control/ui-refresh-control';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { relativeTime } from '@shared/utils/datetime.utils';
 import { vaultItemId } from '@domain/ids';
@@ -20,7 +21,7 @@ interface PipelineStage {
 
 @Component({
   selector: 'app-mail-activity-page',
-  imports: [RouterLink, UiBadge, UiCluster, UiEmptyState, UiPageHeader, UiRefreshControl, UiStack],
+  imports: [RouterLink, UiBadge, UiCluster, UiEmptyState, UiPageHeader, UiProse, UiRefreshControl, UiStack],
   templateUrl: './mail-activity-page.html',
   styleUrl: './mail-activity-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

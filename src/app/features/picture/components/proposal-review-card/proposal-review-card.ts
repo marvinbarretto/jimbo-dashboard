@@ -3,6 +3,7 @@ import { DecimalPipe } from '@angular/common';
 import type { InterrogateProposal } from '@domain/interrogate';
 import { ENTITY_TYPE_LABEL } from '@domain/interrogate';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
 
 // Accept/reject only for v1 — proposal payloads vary per action type
 // (create/update/archive/adjust_confidence), so a generic "edit the payload"
@@ -11,7 +12,7 @@ import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 // existing PATCH /api/interrogate/proposals/{id} { decision: 'edit' } path.
 @Component({
   selector: 'app-proposal-review-card',
-  imports: [DecimalPipe, UiBadge],
+  imports: [DecimalPipe, UiBadge, UiProse],
   templateUrl: './proposal-review-card.html',
   styleUrl: './proposal-review-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

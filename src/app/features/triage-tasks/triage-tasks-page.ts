@@ -6,6 +6,7 @@ import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { FormatTagPipe } from '@shared/pipes/format-tag.pipe';
 import { ProjectLabelPipe } from '@shared/pipes/project-label.pipe';
@@ -27,6 +28,7 @@ interface TaskRow {
     UiEmptyState,
     UiLoadingState,
     UiPageHeader,
+    UiProse,
     UiStack,
     FormatTagPipe,
     ProjectLabelPipe,

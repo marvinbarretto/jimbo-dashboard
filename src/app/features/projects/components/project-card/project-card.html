@@ -14,7 +14,7 @@
 </div>
 
 @if (project().description) {
-  <p class="project-card__desc">{{ project().description }}</p>
+  <app-ui-prose class="project-card__desc" [text]="project().description!" />
 }
 
 <div class="project-card__footer">

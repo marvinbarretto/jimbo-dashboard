@@ -37,7 +37,7 @@
             </div>
 
             @if (item.resultSummary) {
-              <p class="review-card__summary">{{ item.resultSummary }}</p>
+              <app-ui-prose class="review-card__summary" [text]="item.resultSummary" />
             }
 
             <div class="review-card__actions">

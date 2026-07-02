@@ -6,7 +6,7 @@
   </header>
 
   @if (proposal().rationale) {
-    <p class="proposal-card__rationale">{{ proposal().rationale }}</p>
+    <app-ui-prose class="proposal-card__rationale" [text]="proposal().rationale!" />
   }
 
   <pre class="proposal-card__payload">{{ payloadJson() }}</pre>

@@ -42,7 +42,7 @@
 
       <h3 class="epic-card__title epic-card__title--display">{{ epic().title }}</h3>
 
-      <p class="epic-card__excerpt">{{ epic().bodyExcerpt }}</p>
+      <app-ui-prose class="epic-card__excerpt" [text]="epic().bodyExcerpt" />
 
       @if (epic().threads.length) {
         <div class="epic-card__thread-chips">
@@ -172,7 +172,7 @@
 
       <h3 class="epic-card__title">{{ epic().title }}</h3>
 
-      <p class="epic-card__excerpt">{{ epic().bodyExcerpt }}</p>
+      <app-ui-prose class="epic-card__excerpt" [text]="epic().bodyExcerpt" />
 
       @if (epic().threads.length) {
         <ul class="epic-card__threads" role="list">
