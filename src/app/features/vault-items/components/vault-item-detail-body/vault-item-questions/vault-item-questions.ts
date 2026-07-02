@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import { QuestionReplyComposer } from '@shared/components/question-reply-composer/question-reply-composer';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import type { ActorId, VaultItemId } from '@domain/ids';
@@ -9,7 +10,7 @@ import type { CreateThreadMessagePayload, ThreadMessage } from '@domain/thread';
 
 @Component({
   selector: 'app-vault-item-questions',
-  imports: [EntityChip, QuestionReplyComposer, UiCluster, UiSection, RelativeTimePipe],
+  imports: [EntityChip, QuestionReplyComposer, UiCluster, UiProse, UiSection, RelativeTimePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (questions().length > 0) {
@@ -25,7 +26,7 @@ import type { CreateThreadMessagePayload, ThreadMessage } from '@domain/thread';
               <span class="vault-item-questions__kind">open question</span>
               <span class="vault-item-questions__age">{{ q.created_at | relativeTime }}</span>
             </app-ui-cluster>
-            <p class="vault-item-questions__body">{{ q.body }}</p>
+            <app-ui-prose class="vault-item-questions__body" [text]="q.body" />
             <app-question-reply-composer
               [question]="q"
               [vaultItemId]="vaultItemId()"

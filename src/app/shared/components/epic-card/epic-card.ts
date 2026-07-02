@@ -13,6 +13,7 @@ import {
 } from 'lucide-angular';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { AppChip } from '@shared/components/app-chip/app-chip';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import type {
   EpicOrigin,
   EpicProjectRef,
@@ -58,7 +59,7 @@ export type EpicCardVariant = 'compact' | 'detail' | 'narrative' | 'status';
 
 @Component({
   selector: 'app-epic-card',
-  imports: [RouterLink, RelativeTimePipe, LucideAngularModule, AppChip],
+  imports: [RouterLink, RelativeTimePipe, LucideAngularModule, AppChip, UiProse],
   templateUrl: './epic-card.html',
   styleUrl: './epic-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

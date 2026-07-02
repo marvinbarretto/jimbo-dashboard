@@ -17,7 +17,7 @@
       </div>
     </div>
   } @else {
-    <p class="belief-card__content">{{ entity().content }}</p>
+    <app-ui-prose class="belief-card__content" [text]="entity().content" />
   }
 
   <div class="belief-card__actions">

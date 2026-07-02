@@ -81,7 +81,7 @@
               @if (item.verdict_reason) {
                 <div class="detail-section">
                   <h3 class="detail-heading">Verdict reason</h3>
-                  <p class="rationale">{{ item.verdict_reason }}</p>
+                  <app-ui-prose class="rationale" [text]="item.verdict_reason" />
                   @if (item.verdict_model) {
                     <p class="muted detail-meta">model: <code>{{ item.verdict_model }}</code></p>
                   }

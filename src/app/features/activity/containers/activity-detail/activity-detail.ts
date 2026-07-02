@@ -10,6 +10,7 @@ import { UiMetaList } from '@shared/components/ui-meta-list/ui-meta-list';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { loadOne } from '@shared/data-access/load-one';
 
 // Mirrors ActivitySchema from jimbo-api/schemas/activity.ts.
@@ -28,7 +29,7 @@ interface Activity {
 
 @Component({
   selector: 'app-activity-detail',
-  imports: [DatePipe, UiPageHeader, UiSection, UiMetaList, UiStack, UiLoadingState, UiEmptyState],
+  imports: [DatePipe, UiPageHeader, UiSection, UiMetaList, UiStack, UiLoadingState, UiEmptyState, UiProse],
   templateUrl: './activity-detail.html',
   styles: [':host { display: block; max-width: 60rem; }'],
   changeDetection: ChangeDetectionStrategy.OnPush,

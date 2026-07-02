@@ -63,7 +63,7 @@
                 @if (task.due) { · due {{ task.due | relativeTime }} }
               </div>
               @if (task.notes) {
-                <div class="task-card-mini__notes">{{ task.notes }}</div>
+                <app-ui-prose class="task-card-mini__notes" [text]="task.notes" />
               }
             </div>
           </section>
@@ -110,7 +110,7 @@
             }
 
             @if (proposal(); as p) {
-              <div class="proposal-rationale">{{ p.ai_rationale }}</div>
+              <app-ui-prose class="proposal-rationale" [text]="p.ai_rationale" />
 
               @if (p.questions.length) {
                 <div class="proposal-questions">
@@ -213,7 +213,7 @@
                 </header>
                 <div class="vault-preview__title">{{ task.title }}</div>
                 @if (task.notes) {
-                  <div class="vault-preview__body">{{ task.notes }}</div>
+                  <app-ui-prose class="vault-preview__body" [text]="task.notes" />
                 }
                 @if (p.tags.length) {
                   <div class="vault-preview__tags">

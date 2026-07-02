@@ -13,6 +13,7 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiMetaList } from '@shared/components/ui-meta-list/ui-meta-list';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { DatetimePipe } from '@shared/pipes/datetime.pipe';
 import { ActorsService } from '../../data-access/actors.service';
@@ -40,6 +41,7 @@ import type { Crumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
     UiEmptyState,
     UiMetaList,
     UiPageHeader,
+    UiProse,
     UiSection,
     UiStack,
     DatetimePipe,

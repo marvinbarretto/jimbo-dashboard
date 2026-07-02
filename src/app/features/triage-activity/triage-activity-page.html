@@ -83,7 +83,7 @@
               @if (item.proposal; as p) {
                 <div class="detail-section">
                   <h3 class="detail-heading">Rationale</h3>
-                  <p class="rationale">{{ p.ai_rationale }}</p>
+                  <app-ui-prose class="rationale" [text]="p.ai_rationale" />
 
                   @if (p.tags.length) {
                     <div class="tag-list">

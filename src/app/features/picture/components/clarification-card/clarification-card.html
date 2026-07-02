@@ -10,7 +10,7 @@
     <span class="clarification-card__age">{{ askedLabel() }}</span>
   </header>
 
-  <p class="clarification-card__content">{{ clarification().content }}</p>
+  <app-ui-prose class="clarification-card__content" [text]="clarification().content" />
 
   @switch (clarification().status) {
     @case ('open') {

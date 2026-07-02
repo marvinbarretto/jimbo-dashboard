@@ -31,7 +31,7 @@
           @for (entry of b.analysis.day_plan; track $index) {
             <div>
               <strong>{{ entry.time }} — {{ entry.suggestion }}</strong>
-              <p>{{ entry.reasoning }}</p>
+              <app-ui-prose [text]="entry.reasoning" />
               <small>Source: {{ entry.source }}</small>
             </div>
           }
@@ -45,7 +45,7 @@
           @for (h of b.analysis.email_highlights; track $index) {
             <div>
               <strong>{{ h.headline }}</strong>
-              <p>{{ h.editorial }}</p>
+              <app-ui-prose [text]="h.editorial" />
               <small>{{ h.source }}</small>
             </div>
           }
@@ -56,7 +56,7 @@
     @if (b.analysis.surprise; as surprise) {
       <app-ui-section title="Surprise" [collapsible]="false">
         <p><strong>{{ surprise.fact }}</strong></p>
-        <p>{{ surprise.strategy }}</p>
+        <app-ui-prose [text]="surprise.strategy" />
       </app-ui-section>
     }
 
@@ -66,7 +66,7 @@
           @for (t of b.analysis.vault_tasks; track $index) {
             <div>
               <strong>{{ t.title }}</strong> <small>(priority {{ t.priority }})</small>
-              <p>{{ t.note }}</p>
+              <app-ui-prose [text]="t.note" />
               <small>{{ t.actionability }}</small>
             </div>
           }

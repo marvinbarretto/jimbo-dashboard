@@ -6,6 +6,7 @@ import type { Attachment } from '@domain/attachments';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { formatBytes } from '@shared/utils/datetime.utils';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
 
 // A grouped message row: a top-level message plus any answers nested under it.
 // Questions and comments float at top level; answers only appear nested under their question.
@@ -16,7 +17,7 @@ export interface MessageGroup {
 
 @Component({
   selector: 'app-message-list',
-  imports: [RelativeTimePipe, EntityChip],
+  imports: [RelativeTimePipe, EntityChip, UiProse],
   templateUrl: './message-list.html',
   styleUrl: './message-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

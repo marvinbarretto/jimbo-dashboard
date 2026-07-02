@@ -34,7 +34,7 @@
         </time>
       </header>
 
-      <p class="msg__body">{{ group.message.body }}</p>
+      <app-ui-prose class="msg__body" [text]="group.message.body" />
 
       @if (attachmentsFor(group.message).length > 0) {
         <div class="msg__attachments">
@@ -99,7 +99,7 @@
           </time>
         </header>
 
-        <p class="msg__body">{{ answer.body }}</p>
+        <app-ui-prose class="msg__body" [text]="answer.body" />
 
         @if (attachmentsFor(answer).length > 0) {
           <div class="msg__attachments">

@@ -6,11 +6,12 @@ import { ActorsService } from '@features/actors/data-access/actors.service';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
 import { QuestionReplyComposer } from '@shared/components/question-reply-composer/question-reply-composer';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { relativeTime } from '@shared/utils/datetime.utils';
 
 @Component({
   selector: 'app-question-card',
-  imports: [RouterLink, QuestionReplyComposer, EntityChip],
+  imports: [RouterLink, QuestionReplyComposer, EntityChip, UiProse],
   templateUrl: './question-card.html',
   styleUrl: './question-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

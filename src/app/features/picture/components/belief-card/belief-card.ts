@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import type { BeliefEntity, EvidenceStance, InterrogateEvidence } from '@domain/interrogate';
 import type { InterrogateEntityId } from '@domain/ids';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { relativeTime } from '@shared/utils/datetime.utils';
 import { InterrogateEntityService } from '../../data-access/interrogate-entity.service';
 import { BeliefFeedbackComposer, type BeliefFeedback } from '../belief-feedback-composer/belief-feedback-composer';
@@ -31,7 +32,7 @@ export interface BeliefFeedbackEvent {
 
 @Component({
   selector: 'app-belief-card',
-  imports: [ReactiveFormsModule, DatePipe, UiBadge, BeliefFeedbackComposer],
+  imports: [ReactiveFormsModule, DatePipe, UiBadge, UiProse, BeliefFeedbackComposer],
   templateUrl: './belief-card.html',
   styleUrl: './belief-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -6,12 +6,13 @@ import { AppIcon } from '@shared/components/app-icon/app-icon';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import type { Project } from '@domain/projects';
 import type { ProjectId } from '@domain/ids';
 
 @Component({
   selector: 'app-project-card',
-  imports: [RouterLink, CdkDragHandle, ActorChip, AppIcon, UiButton, UiButtonLink, UiCluster],
+  imports: [RouterLink, CdkDragHandle, ActorChip, AppIcon, UiButton, UiButtonLink, UiCluster, UiProse],
   templateUrl: './project-card.html',
   styleUrl: './project-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

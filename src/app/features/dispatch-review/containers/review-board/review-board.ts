@@ -5,11 +5,12 @@ import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { ReviewService, type ReviewItem } from '../../data-access/review.service';
 
 @Component({
   selector: 'app-review-board',
-  imports: [UiStack, UiPageHeader, UiCard, UiButton, UiBadge, UiEmptyState],
+  imports: [UiStack, UiPageHeader, UiCard, UiButton, UiBadge, UiEmptyState, UiProse],
   templateUrl: './review-board.html',
   styleUrl: './review-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

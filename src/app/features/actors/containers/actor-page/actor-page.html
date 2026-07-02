@@ -18,7 +18,7 @@
     </app-ui-page-header>
 
     @if (a.description) {
-      <p class="actor-page__desc">{{ a.description }}</p>
+      <app-ui-prose class="actor-page__desc" [text]="a.description" />
     }
 
     <app-ui-section title="At a glance" [collapsible]="false">
