@@ -697,6 +697,7 @@ describe('VaultItemsService mutations (HTTP mode, withOptimistic-backed)', () =>
         actionability: null,
         parent_id: null,
         is_epic: false,
+        grooming_override: false,
         due_at: null,
         completed_at: null,
         source: null,

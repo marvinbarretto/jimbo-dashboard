@@ -115,7 +115,10 @@
               [readiness]="store.readiness()"
               [criteria]="item.acceptance_criteria"
               [editable]="true"
+              [groomingOverridable]="store.groomingOverridable()"
+              [groomingOverride]="item.grooming_override"
               (criteriaChange)="store.updateCriteria($event)"
+              (groomingOverrideChange)="store.setGroomingOverride($event)"
             />
           </section>
         }

@@ -9,7 +9,7 @@ import { isActive } from '@domain/vault/vault-item';
 import type { Source, ManualSource, GitHubSource } from '@domain/vault/source';
 import type { ActorId, VaultItemId } from '@domain/ids';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
-import { vaultItemId, actorId, threadMessageId } from '@domain/ids';
+import { vaultItemId, actorId, threadMessageId, projectId as toProjectId } from '@domain/ids';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { ApiVaultItemsResponseSchema, type ApiVaultItem } from '@domain/vault/vault-item.api-schema';
 import { environment } from '../../../../environments/environment';
@@ -98,11 +98,12 @@ export class VaultItemsService {
     // create a story directly under an epic and inside the active project.
     parent_id?: string | null;
     primary_project_id?: string | null;
-    // Mark the new item as an epic. The create endpoint doesn't accept is_epic,
-    // so it's applied via the same follow-up PATCH as grooming_status. Callers
-    // creating an epic inside a project must ALSO add a primary project junction
-    // (VaultItemProjectsService.add) — an epic has no parent to inherit from, so
-    // the junction is what makes it persist + promotable. See that service's add().
+    // Mark the new item as an epic. Sent in the SAME POST as primary_project_id
+    // (server writes the note + the vault_item_projects junction row in one
+    // transaction) — the two can't drift apart the way a create-then-PATCH pair
+    // could. An epic has no parent to inherit a project from, so primary_project_id
+    // is required here unless parent_id already resolves to one; the server
+    // rejects with EPIC_PROJECT_REQUIRED (400) otherwise.
     is_epic?: boolean;
   }, onCreated?: (item: VaultItem) => void): void {
     const trimmed = input.title.trim();
@@ -121,6 +122,7 @@ export class VaultItemsService {
       ai_priority: null, manual_priority: input.manual_priority ?? null,
       ai_rationale: null, priority_confidence: null,
       actionability: null, parent_id: input.parent_id ? vaultItemId(input.parent_id) : null, is_epic: input.is_epic ?? false,
+      grooming_override: false,
       archived_at: null, due_at: null, completed_at: null,
       source: { kind: 'manual', ref: 'board', url: null },
       created_at: now,
@@ -147,6 +149,14 @@ export class VaultItemsService {
     // parent_id is accepted by the create endpoint; the project link is reflected
     // optimistically and reconciled on the next board reload.
     if (input.parent_id) body['parent_id'] = input.parent_id;
+    // is_epic + primary_project_id travel together atomically — only send
+    // primary_project_id here when creating an epic. A story/subtask create
+    // that happened to pass primary_project_id (it inherits from its parent
+    // instead) would otherwise get a redundant, unwanted own junction row.
+    if (input.is_epic) {
+      body['is_epic'] = 1;
+      if (input.primary_project_id) body['primary_project_id'] = input.primary_project_id;
+    }
 
     withOptimisticCreate(this._items, this.toast, {
       optimistic,
@@ -160,13 +170,19 @@ export class VaultItemsService {
         // straight into the detail dialog for in-place editing.
         onCreated?.(real);
 
+        // The server already wrote the project junction row atomically with
+        // the note (see the is_epic/primary_project_id block above) — mirror
+        // it into the local cache so the project chip shows immediately
+        // instead of waiting for the next bulk reload.
+        if (input.is_epic && input.primary_project_id) {
+          this.projectsJunction.markLinked(real.id, toProjectId(input.primary_project_id));
+        }
+
         // CreateNoteBody doesn't accept grooming_status or assigned_to overrides
         // for board-driven flows — the server defaults to ungroomed/jimbo. PATCH
         // any drift in a follow-up so the UI sees what we asked for.
         const patch: Record<string, unknown> = {};
         if (groomingStatus !== 'ungroomed') patch['grooming_status'] = groomingStatus;
-        // is_epic isn't accepted by the create endpoint — apply it here.
-        if (input.is_epic) patch['is_epic'] = true;
         // Server sets assigned_to from session; we asked for currentActorId. If
         // they differ, push the override.
         const realRow = this.getById(real.id);
@@ -174,7 +190,7 @@ export class VaultItemsService {
         if (Object.keys(patch).length === 0) return;
         this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${real.seq}`, patch).subscribe({
           next: () => this._items.update(items => items.map(i => i.id === real.id
-            ? { ...i, grooming_status: groomingStatus, assigned_to: this.currentActorId, is_epic: input.is_epic ?? i.is_epic }
+            ? { ...i, grooming_status: groomingStatus, assigned_to: this.currentActorId }
             : i)),
           error: () => this.toast.error('Created but status/owner follow-up failed'),
         });
@@ -570,13 +586,24 @@ export class VaultItemsService {
           vault_item_id: item.id,
           actor_id: this.currentActorId,
         });
-        for (const project of dedupeById(draft.projects)) {
-          this.projectsJunction.add(item.id, project.id);
+        const dedupedProjects = dedupeById(draft.projects);
+        if (draft.is_epic && dedupedProjects.length > 0) {
+          // The first project already linked atomically in the same POST as
+          // is_epic (see toApiCreateBodyFromDraft) — mirror it into the local
+          // cache, then link any remaining projects as secondary as before.
+          this.projectsJunction.markLinked(item.id, toProjectId(dedupedProjects[0].id));
+          for (const project of dedupedProjects.slice(1)) {
+            this.projectsJunction.add(item.id, project.id);
+          }
+        } else {
+          for (const project of dedupedProjects) {
+            this.projectsJunction.add(item.id, project.id);
+          }
         }
-        // Follow-up PATCH: API create endpoint doesn't accept is_epic or
-        // grooming_status directly — mirror createOnBoard's deferred-patch pattern.
+        // Follow-up PATCH: API create endpoint doesn't accept grooming_status
+        // directly — mirror createOnBoard's deferred-patch pattern. is_epic is
+        // NOT here — it travels atomically in the initial POST above.
         const followUp: Record<string, unknown> = {};
-        if (draft.is_epic) followUp['is_epic'] = true;
         if (opts?.destination === 'manual') followUp['grooming_status'] = 'ready';
         if (Object.keys(followUp).length) {
           this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${item.seq}`, followUp).subscribe();
@@ -613,6 +640,7 @@ export class VaultItemsService {
       actionability: null,
       parent_id: null,
       is_epic: draft.is_epic,
+      grooming_override: false,
       archived_at: null,
       due_at: null,
       completed_at: null,
@@ -849,6 +877,16 @@ function toApiCreateBodyFromDraft(
   if (related.length) {
     body['links'] = related.map(r => ({ target_type: 'vault_note' as const, target_id: r.id }));
   }
+
+  // is_epic + primary_project_id travel together atomically (server writes
+  // the note and its primary project junction in one transaction). The first
+  // deduped project becomes primary — mirrors VaultItemProjectsService.add()'s
+  // "first link is_primary" rule for any remaining projects linked afterward.
+  if (draft.is_epic) {
+    body['is_epic'] = 1;
+    const [primaryProject] = dedupeById(draft.projects);
+    if (primaryProject) body['primary_project_id'] = primaryProject.id;
+  }
   return body;
 }
 
@@ -897,6 +935,7 @@ function toApiUpdateBody(p: UpdateVaultItemPayload): Record<string, unknown> {
   if (p.completed_at !== undefined) body['completed_at'] = p.completed_at;
   if (p.started_at !== undefined) body['started_at'] = p.started_at;
   if (p.grooming_status !== undefined) body['grooming_status'] = p.grooming_status;
+  if (p.grooming_override !== undefined) body['grooming_override'] = p.grooming_override;
   if (p.is_epic !== undefined) body['is_epic'] = p.is_epic;
   if (p.source !== undefined) {
     if (p.source === null) {
@@ -937,6 +976,7 @@ function toVaultItem(a: ApiVaultItem): VaultItem {
           .map(text => ({ text, done: false }))
       : [],
     grooming_status: narrowGroomingStatus(a.grooming_status),
+    grooming_override: a.grooming_override,
     ai_priority: narrowPriority(a.ai_priority),
     manual_priority: narrowPriority(a.manual_priority),
     ai_rationale: a.ai_rationale,

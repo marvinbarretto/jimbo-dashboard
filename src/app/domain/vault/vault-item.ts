@@ -164,6 +164,12 @@ export interface VaultItem {
 
   grooming_status:     GroomingStatus;
 
+  // Human-owner readiness override — "groomed enough for me, not for Jimbo".
+  // Set by the operator when assigned_to is a human and grooming isn't
+  // finished; only ever consulted by computeReadiness() for a human-owned
+  // item. Never changes grooming_status, never affects agent dispatch.
+  grooming_override:   boolean;
+
   // Two sources, kept separate. `effective_priority` is derived (manual ?? ai).
   ai_priority:         Priority | null;
   manual_priority:     Priority | null;

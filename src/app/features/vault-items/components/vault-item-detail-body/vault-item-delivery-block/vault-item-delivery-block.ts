@@ -25,6 +25,15 @@ import { acceptanceCriterionStatus } from '@shared/validation/acceptance-criteri
         <app-ui-readiness-panel [data]="r" />
       }
 
+      @if (groomingOverridable()) {
+        <button
+          type="button"
+          class="vault-item-delivery-block__grooming-override"
+          (click)="groomingOverrideChange.emit(!groomingOverride())">
+          {{ groomingOverride() ? 'Undo manual override' : "Not groomed — mark good enough for me" }}
+        </button>
+      }
+
       <app-ui-subhead label="Acceptance criteria" [count]="criteria().length" />
 
       @if (editable() || criteria().length > 0) {
@@ -55,6 +64,25 @@ import { acceptanceCriterionStatus } from '@shared/validation/acceptance-criteri
       color: var(--color-danger);
       font-size: 0.7rem;
     }
+
+    .vault-item-delivery-block__grooming-override {
+      display: inline-flex;
+      margin: -0.3rem 0 0.8rem;
+      padding: 0.15rem 0.5rem;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      border: 1px dashed var(--color-border);
+      border-radius: var(--radius);
+      background: none;
+      color: var(--color-text-muted);
+      cursor: pointer;
+
+      &:hover {
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+      }
+    }
   `],
 })
 export class VaultItemDeliveryBlock {
@@ -62,6 +90,13 @@ export class VaultItemDeliveryBlock {
   readonly criteria       = input.required<readonly AcceptanceCriterion[]>();
   readonly editable       = input<boolean>(false);
   readonly criteriaChange = output<readonly AcceptanceCriterion[]>();
+
+  // Human-owner readiness override — see readiness.ts. groomingOverridable
+  // gates visibility (only shown while genuinely ungroomed and human-owned);
+  // groomingOverride reflects the item's current flag.
+  readonly groomingOverridable   = input<boolean>(false);
+  readonly groomingOverride      = input<boolean>(false);
+  readonly groomingOverrideChange = output<boolean>();
 
   readonly checklistItems = computed<readonly UiChecklistItem[]>(() =>
     this.criteria().map(ac => {

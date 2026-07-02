@@ -70,6 +70,9 @@ export const ApiVaultItemSchema = z.object({
   // Manual-track in-progress marker. Optional+default so a pre-deploy API that
   // doesn't yet return the column still validates.
   started_at:           z.string().nullable().optional().default(null),
+  // Human-owner readiness override. Optional+default for the same pre-deploy
+  // reason as started_at above.
+  grooming_override:    z.boolean().optional().default(false),
   source_kind:          z.string().nullable(),
   source_ref:           z.string().nullable(),
   source_url:           z.string().nullable(),

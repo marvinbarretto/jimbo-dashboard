@@ -85,6 +85,29 @@ describe('computeReadiness', () => {
       expect(computeReadiness(ready).checks.find(c => c.key === 'grooming_complete')?.ok).toBe(true);
       expect(computeReadiness(other).checks.find(c => c.key === 'grooming_complete')?.ok).toBe(false);
     });
+
+    it('grooming_override passes the check only when the owner is human', () => {
+      const item = buildVaultItem({ grooming_status: 'ungroomed', grooming_override: true });
+      expect(computeReadiness(item, [], [], true).checks.find(c => c.key === 'grooming_complete')?.ok).toBe(true);
+      expect(computeReadiness(item, [], [], false).checks.find(c => c.key === 'grooming_complete')?.ok).toBe(false);
+    });
+
+    it('grooming_override is ignored without ownerIsHuman (defaults false)', () => {
+      const item = buildVaultItem({ grooming_status: 'ungroomed', grooming_override: true });
+      expect(computeReadiness(item).checks.find(c => c.key === 'grooming_complete')?.ok).toBe(false);
+    });
+
+    it('grooming_override label flags the check as a manual override', () => {
+      const item = buildVaultItem({ grooming_status: 'ungroomed', grooming_override: true });
+      const check = computeReadiness(item, [], [], true).checks.find(c => c.key === 'grooming_complete');
+      expect(check?.label).toContain('override');
+    });
+
+    it('grooming_override does nothing once the item is genuinely ready', () => {
+      const item = buildVaultItem({ grooming_status: 'ready', grooming_override: true });
+      const check = computeReadiness(item, [], [], true).checks.find(c => c.key === 'grooming_complete');
+      expect(check?.label).toBe('Grooming complete');
+    });
   });
 
   describe('conditional checks', () => {

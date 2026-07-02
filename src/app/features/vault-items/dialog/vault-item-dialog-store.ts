@@ -158,7 +158,17 @@ export class VaultItemDialogStore {
   readonly readiness = computed(() => {
     const i = this.item();
     if (!i) return undefined;
-    return computeReadiness(i, this.messages(), this.openBlockers());
+    const ownerIsHuman = this.owner()?.kind === 'human';
+    return computeReadiness(i, this.messages(), this.openBlockers(), ownerIsHuman);
+  });
+
+  /** Grooming-override control is only offered while the item is genuinely
+   *  ungroomed (nothing to override once the real gate passes) and owned by
+   *  a human — an agent can't make the "good enough for me" call. */
+  readonly groomingOverridable = computed(() => {
+    const i = this.item();
+    if (!i || i.grooming_status === 'ready') return false;
+    return this.owner()?.kind === 'human';
   });
 
   readonly nextAction = computed(() => {
@@ -512,6 +522,11 @@ export class VaultItemDialogStore {
   updateManualPriority(p: Priority | null): void {
     const i = this.item(); if (!i) return;
     this.vaultItemsService.update(i.id, { manual_priority: p });
+  }
+
+  setGroomingOverride(next: boolean): void {
+    const i = this.item(); if (!i) return;
+    this.vaultItemsService.update(i.id, { grooming_override: next });
   }
 
   updateTags(next: readonly string[]): void {

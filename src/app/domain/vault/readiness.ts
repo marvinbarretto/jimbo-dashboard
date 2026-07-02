@@ -40,7 +40,14 @@ export function computeReadiness(
   item: VaultItem,
   messages: ThreadMessage[] = [],
   openBlockers: OpenBlocker[] = [],
+  ownerIsHuman = false,
 ): Readiness {
+  const groomingReady = item.grooming_status === 'ready';
+  // `grooming_override` lets a human owner accept an item ahead of the full
+  // grooming pipeline ("groomed enough for me, not for Jimbo"). It only
+  // takes effect while the current owner is human — reassigning to an agent
+  // reinstates the real gate, since the override was never that agent's call.
+  const groomingOverridden = !groomingReady && item.grooming_override && ownerIsHuman;
   const checks: ReadinessCheck[] = [
     {
       key: 'acceptance_criteria',
@@ -64,9 +71,9 @@ export function computeReadiness(
     },
     {
       key: 'grooming_complete',
-      label: 'Grooming complete',
-      ok: item.grooming_status === 'ready',
-      blocker: item.grooming_status === 'ready' ? null : `currently ${item.grooming_status.replace('_', ' ')}`,
+      label: groomingOverridden ? 'Grooming complete (manual override)' : 'Grooming complete',
+      ok: groomingReady || groomingOverridden,
+      blocker: (groomingReady || groomingOverridden) ? null : `currently ${item.grooming_status.replace('_', ' ')}`,
     },
   ];
 
