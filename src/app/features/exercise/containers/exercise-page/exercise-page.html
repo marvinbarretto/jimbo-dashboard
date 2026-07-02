@@ -16,6 +16,25 @@
       }
     </app-ui-section>
 
+    <!-- Body-part split: which regions got trained, and how long since each -->
+    <app-ui-section title="Body parts worked" meta="last 14 days">
+      @if (hasBodyPartData()) {
+        <app-ui-donut-chart [labels]="bodyPartLabels()" [values]="bodyPartValues()" suffix=" sets" />
+        <ul class="body-part-coverage">
+          @for (c of bodyPartCoverage(); track c.region) {
+            <li class="body-part-coverage__row" [class.body-part-coverage__row--stale]="c.daysSince === null || c.daysSince > 7">
+              <span class="body-part-coverage__label">{{ c.label }}</span>
+              <span class="body-part-coverage__status">
+                {{ c.daysSince === null ? 'not trained in 14d' : c.daysSince === 0 ? 'today' : c.daysSince + 'd ago' }}
+              </span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <app-ui-empty-state message="No sets logged in the last 14 days." />
+      }
+    </app-ui-section>
+
     <!-- Day-grouped workout ledger: sessions expand to editable sets/cardio -->
     @for (d of days(); track d.date) {
       <app-ui-section [title]="d.label" [meta]="dayMeta(d)" [expanded]="isDayOpen(d.date)" (toggled)="toggleDay(d.date)">

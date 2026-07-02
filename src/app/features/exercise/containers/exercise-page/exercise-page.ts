@@ -4,6 +4,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
+import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiPeriodTotals } from '@shared/components/ui-period-totals/ui-period-totals';
@@ -26,6 +27,7 @@ import {
   type SetPatch,
   type CardioPatch,
 } from '../../data-access/exercise.service';
+import { bodyPartBreakdown, lastTrainedByRegion, type ExerciseMeta } from '../../utils/muscle-region';
 
 const LEDGER_DAYS = 14;
 const DAILY_WINDOW = 90;
@@ -38,7 +40,7 @@ const TOTALS_MEASURES: readonly TrackerMeasure[] = [
 
 @Component({
   selector: 'app-exercise-page',
-  imports: [UiStack, UiSection, UiButton, UiBarChart, UiEmptyState, UiLoadingState, UiPeriodTotals, ExerciseSessionRow],
+  imports: [UiStack, UiSection, UiButton, UiBarChart, UiDonutChart, UiEmptyState, UiLoadingState, UiPeriodTotals, ExerciseSessionRow],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './exercise-page.html',
   styleUrl: './exercise-page.scss',
@@ -123,6 +125,16 @@ export class ExercisePage {
   protected readonly trendLabels = computed(() => this.axis().map((d) => d.date.slice(5)));
   protected readonly trendValues = computed(() => this.axis().map((d) => d.volume));
   protected readonly hasTrend = computed(() => this.dailyRows().some((d) => d.sessions > 0));
+
+  // ── Body parts worked (last LEDGER_DAYS days) ─────────────────────
+  private readonly exerciseIndex = computed<ReadonlyMap<string, ExerciseMeta>>(
+    () => new Map((this.catalogRes.value() ?? []).map((e) => [e.id, e])),
+  );
+  private readonly bodyPartChart = computed(() => bodyPartBreakdown(this.sessions(), this.exerciseIndex()));
+  protected readonly bodyPartLabels = computed(() => this.bodyPartChart().map((r) => r.label));
+  protected readonly bodyPartValues = computed(() => this.bodyPartChart().map((r) => r.count));
+  protected readonly hasBodyPartData = computed(() => this.bodyPartChart().some((r) => r.count > 0));
+  protected readonly bodyPartCoverage = computed(() => lastTrainedByRegion(this.sessions(), this.exerciseIndex(), this.today));
 
   // ── Day-grouped session ledger ───────────────────────────────────
   protected readonly days = computed<{ date: string; label: string; sessions: SessionDetailed[] }[]>(() => {

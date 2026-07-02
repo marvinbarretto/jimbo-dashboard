@@ -66,10 +66,14 @@ export interface GymActivityRow {
   kcal: number;
 }
 
-// Catalogue entry for the set/cardio exercise picker.
+// Catalogue entry for the set/cardio exercise picker. Mirrors jimbo-api's
+// ExerciseSchema (src/schemas/gym.ts) — primary_muscle_group/equipment_type
+// feed the body-part breakdown on the exercise page.
 export interface ExerciseCatalogItem {
   id: string;
   name: string;
+  primary_muscle_group: number | null;
+  equipment_type: 'machine' | 'free_weight' | 'cable' | 'bodyweight' | 'cardio' | null;
 }
 
 // ── Write inputs (mirror jimbo-api gym write bodies) ──────────────
