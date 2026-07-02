@@ -6,6 +6,10 @@
   <div class="cr">
 
     <!-- Job list -->
+    <p class="cr__list-note">
+      * Job configs shown here reflect live VPS state — not tracked in the hub/hermes
+      repo's <code>cron/jobs.json</code> (excluded from git sync by design).
+    </p>
     <div class="cr__list">
       @for (job of sortedJobs(); track job.id) {
         <button

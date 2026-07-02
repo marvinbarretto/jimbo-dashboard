@@ -20,6 +20,16 @@
 
 // --- Job list ---
 
+.cr__list-note {
+  margin: 0 0 0.5rem;
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+
+  code {
+    font-size: inherit;
+  }
+}
+
 .cr__list {
   display: flex;
   flex-direction: column;
