@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.96](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.95...v0.0.96) (2026-07-02)
+
+
+### Features
+
+* **vault:** let a human owner override the grooming-complete check ([da166ad](https://github.com/marvinbarretto/jimbo-dashboard/commit/da166adda97305cf5703e3bd3e4cbec5b0099c3a))
+
+
+### Bug Fixes
+
+* **pomo:** create epics atomically instead of create-then-link ([30e1b38](https://github.com/marvinbarretto/jimbo-dashboard/commit/30e1b38292bd1d984ddd073e2529b0f6e438a8ae))
+* **pomo:** read session commits from github push telemetry, not a dropped endpoint ([ba03594](https://github.com/marvinbarretto/jimbo-dashboard/commit/ba035940c81dd3fc01004d03c9b31b500491db2c))
+
 ### [0.0.95](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.94...v0.0.95) (2026-07-02)
 
 
