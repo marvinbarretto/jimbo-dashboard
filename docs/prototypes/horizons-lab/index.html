@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Horizons Lab — reframing angles</title>
+<style>
+  :root{
+    --bg:#0a0e14;--panel:#0d1219;--line:#1d2632;--line-2:#27323f;
+    --tx:#cdd6e3;--tx-dim:#8a96a6;--tx-faint:#5e6a7a;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+    --sans:"Inter",system-ui,sans-serif;--info:#58a6ff;--proj:#2dd4bf;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);padding:0;height:100vh;display:grid;grid-template-columns:300px 1fr;}
+  .side{background:var(--panel);border-right:1px solid var(--line);padding:24px 20px;overflow:auto;}
+  h1{font-family:var(--mono);font-size:14px;letter-spacing:.04em;margin:0 0 4px;color:#eaf0f7}
+  .sub{font-size:12px;color:var(--tx-faint);margin:0 0 22px;line-height:1.5}
+  a.opt{display:block;text-decoration:none;color:var(--tx);border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;margin-bottom:10px;cursor:pointer;}
+  a.opt:hover,a.opt.on{border-color:var(--info);background:#0e1622}
+  a.opt .n{font-family:var(--mono);font-size:11px;color:var(--proj)}
+  a.opt .t{font-weight:650;font-size:14px;margin:3px 0 4px}
+  a.opt .d{font-size:11.5px;color:var(--tx-dim);line-height:1.45}
+  iframe{border:0;width:100%;height:100vh;background:var(--bg)}
+  .crit{margin-top:24px;font-size:11.5px;color:var(--tx-faint);line-height:1.6}
+  .crit b{color:var(--tx-dim)}
+</style>
+</head>
+<body>
+  <nav class="side">
+    <h1>Horizons Lab · angles</h1>
+    <p class="sub">Same Priorities + Ambient data (real content, real ages) rendered five different ways. The brief: see the time-immediate stuff at a glance, and see the long tail — and how long it's been sitting there — without it turning into a wall of text. Click to load.</p>
+
+    <a class="opt on" data-src="01-focus-and-table.html"><span class="n">01</span><div class="t">Focus &amp; Table</div><div class="d">Tiny "touched recently" strip up top; everything else in one dense, sortable table with age as a real column.</div></a>
+    <a class="opt" data-src="02-orbit.html"><span class="n">02</span><div class="t">Orbit</div><div class="d">Radial chart — distance from centre is staleness, angle is horizon bucket. The cluster's shape tells the story before you read anything.</div></a>
+    <a class="opt" data-src="03-staleness-heatmap.html"><span class="n">03</span><div class="t">Staleness Heatmap</div><div class="d">Kanban-shaped, but text opacity fades with age — stale items visibly recede without needing a chart at all.</div></a>
+    <a class="opt" data-src="04-collapsed-digest.html"><span class="n">04</span><div class="t">Collapsed Digest</div><div class="d">Everything closed by default — one line per bucket (freshest item + stale% flag). True hide/show; expand only what you want.</div></a>
+    <a class="opt" data-src="05-age-histogram.html"><span class="n">05</span><div class="t">Age Histogram</div><div class="d">Zooms all the way out — a stacked bar chart of the whole collection by age band. Click a bar to drill into what's in it.</div></a>
+
+    <div class="crit">
+      <b>Evaluate against:</b><br>
+      · What's time-immediate is obvious in &lt;1s<br>
+      · The long tail is scannable, not a wall of text<br>
+      · Staleness ("how long has this sat here") is visible, not something you infer<br>
+      · Still feels like the same product (mono chrome, sans prose — see app-ui-prose)
+    </div>
+  </nav>
+  <iframe id="frame" src="01-focus-and-table.html"></iframe>
+  <script>
+    const frame=document.getElementById('frame');
+    document.querySelectorAll('.opt').forEach(a=>a.addEventListener('click',e=>{
+      e.preventDefault();
+      document.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));
+      a.classList.add('on'); frame.src=a.dataset.src;
+    }));
+  </script>
+</body>
+</html>

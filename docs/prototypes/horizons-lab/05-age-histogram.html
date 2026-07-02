@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>05 · Age Histogram</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#0d1219; --panel-2:#0b1018; --line:#1d2632; --line-2:#27323f;
+    --tx:#cdd6e3; --tx-dim:#8a96a6; --tx-faint:#5e6a7a;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+    --sans:"Inter",system-ui,-apple-system,Segoe UI,sans-serif;
+    --now:#f0a35e; --ongoing:#2dd4bf; --recurring:#a78bfa; --someday:#5e6a7a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);line-height:1.5;padding:32px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto}
+  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--tx-faint);text-transform:uppercase}
+  h1{font-family:var(--mono);font-size:20px;margin:6px 0 4px;color:#eaf0f7;font-weight:650}
+  .sub{font-size:13px;color:var(--tx-dim);margin:0 0 26px;max-width:62ch}
+
+  .chart{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 22px 12px;margin-bottom:22px}
+  .bars{display:flex;align-items:flex-end;gap:14px;height:200px;border-bottom:1px solid var(--line-2)}
+  .band{flex:1;display:flex;flex-direction:column-reverse;cursor:pointer;border-radius:4px 4px 0 0;overflow:hidden;min-width:0}
+  .band:hover{outline:1px solid var(--tx-faint)}
+  .band.active{outline:1.5px solid #fff}
+  .seg{width:100%}
+  .b-now{background:var(--now)} .b-ongoing{background:var(--ongoing)} .b-recurring{background:var(--recurring)} .b-someday{background:var(--someday)}
+  .labels{display:flex;gap:14px;margin-top:8px}
+  .labels span{flex:1;text-align:center;font-family:var(--mono);font-size:10px;color:var(--tx-faint)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;font-family:var(--mono);font-size:10.5px;color:var(--tx-dim)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:8px;height:8px;border-radius:2px;display:inline-block}
+
+  .drill-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+  .drill-head h2{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--tx-faint);text-transform:uppercase;margin:0}
+  .hint{font-size:11.5px;color:var(--tx-faint)}
+  .drill{background:var(--panel);border:1px solid var(--line);border-radius:10px;min-height:60px}
+  .row{padding:11px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:16px}
+  .row:last-child{border-bottom:none}
+  .row .txt{font-size:13.5px}
+  .row .meta{font-family:var(--mono);font-size:10.5px;color:var(--tx-faint);white-space:nowrap}
+  .empty{padding:20px 16px;color:var(--tx-faint);font-size:13px;text-align:center}
+  .tag-note{font-family:var(--mono);font-size:11px;color:var(--tx-faint);text-align:center;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tag">Horizons Lab · Angle 05</div>
+  <h1>Age Histogram</h1>
+  <p class="sub">Zooms all the way out: one stacked bar chart shows the shape of the whole collection by age band, coloured by horizon. It answers "how long has this stuff been sitting there" as a single aggregate glance — a tall bar at 90–120d means a lot has gone stale — before you ever look at an individual item. Click a band to drill into what's actually in it.</p>
+
+  <div class="chart">
+    <div class="bars" id="bars"></div>
+    <div class="labels" id="labels"></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--now)"></i>Now</span>
+      <span><i class="sw" style="background:var(--ongoing)"></i>Ongoing</span>
+      <span><i class="sw" style="background:var(--recurring)"></i>Recurring</span>
+      <span><i class="sw" style="background:var(--someday)"></i>Someday</span>
+    </div>
+  </div>
+
+  <div class="drill-head"><h2 id="drillTitle">All items</h2><span class="hint">click a bar to filter</span></div>
+  <div class="drill" id="drill"></div>
+
+  <p class="tag-note">Angle 05 — Age Histogram · the shape of the whole set, one bar chart at a time</p>
+</div>
+<script src="data.js"></script>
+<script>
+  const BANDS = [
+    { key: '0-7', label: '0–7d', test: a => a <= 7 },
+    { key: '8-30', label: '8–30d', test: a => a > 7 && a <= 30 },
+    { key: '31-60', label: '31–60d', test: a => a > 30 && a <= 60 },
+    { key: '61-90', label: '61–90d', test: a => a > 60 && a <= 90 },
+    { key: '91+', label: '91d+', test: a => a > 90 },
+  ];
+  const BUCKET_ORDER = ['now', 'ongoing', 'recurring', 'someday'];
+  const MAX_COUNT = Math.max(...BANDS.map(b => ITEMS.filter(i => b.test(i.age)).length));
+
+  const barsEl = document.getElementById('bars');
+  const labelsEl = document.getElementById('labels');
+  let activeBand = null;
+
+  BANDS.forEach(band => {
+    const items = ITEMS.filter(i => band.test(i.age));
+    const heightPx = Math.max(4, Math.round(items.length / MAX_COUNT * 190));
+    const segs = BUCKET_ORDER.map(bk => {
+      const n = items.filter(i => i.bucket === bk).length;
+      if (!n) return '';
+      const segH = Math.round(n / items.length * heightPx);
+      return `<div class="seg b-${bk}" style="height:${segH}px" title="${bk}: ${n}"></div>`;
+    }).join('');
+    const col = document.createElement('div');
+    col.className = 'band';
+    col.dataset.key = band.key;
+    col.style.height = heightPx + 'px';
+    col.innerHTML = segs;
+    col.addEventListener('click', () => selectBand(band));
+    barsEl.appendChild(col);
+  });
+  labelsEl.innerHTML = BANDS.map(b => `<span>${b.label}<br>${ITEMS.filter(i => b.test(i.age)).length}</span>`).join('');
+
+  function renderDrill(items, title) {
+    document.getElementById('drillTitle').textContent = title;
+    const drill = document.getElementById('drill');
+    if (!items.length) { drill.innerHTML = '<div class="empty">Nothing in this range.</div>'; return; }
+    drill.innerHTML = items.sort((a, b) => a.age - b.age).map(i => `
+      <div class="row">
+        <span class="txt">${i.label ? '<strong>' + i.label + '</strong> — ' : ''}${i.content}</span>
+        <span class="meta">${i.bucket} · ${i.age === 0 ? 'today' : i.age + 'd'}</span>
+      </div>`).join('');
+  }
+
+  function selectBand(band) {
+    document.querySelectorAll('.band').forEach(b => b.classList.toggle('active', b.dataset.key === band.key));
+    activeBand = band;
+    renderDrill(ITEMS.filter(i => band.test(i.age)), band.label + ' · ' + ITEMS.filter(i => band.test(i.age)).length + ' items');
+  }
+
+  renderDrill(ITEMS, 'All items · ' + ITEMS.length);
+</script>
+</body>
+</html>

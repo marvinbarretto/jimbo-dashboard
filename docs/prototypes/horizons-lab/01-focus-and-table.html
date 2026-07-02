@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>01 · Focus &amp; Table</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#0d1219; --panel-2:#0b1018; --line:#1d2632; --line-2:#27323f;
+    --tx:#cdd6e3; --tx-dim:#8a96a6; --tx-faint:#5e6a7a;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+    --sans:"Inter",system-ui,-apple-system,Segoe UI,sans-serif;
+    --now:#f0a35e; --ongoing:#2dd4bf; --recurring:#a78bfa; --someday:#5e6a7a;
+    --ok:#3fb950; --warn:#d9a23a; --bad:#f06f6f; --info:#58a6ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);line-height:1.5;padding:32px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px;margin:0 auto}
+  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--tx-faint);text-transform:uppercase}
+  h1{font-family:var(--mono);font-size:20px;margin:6px 0 4px;color:#eaf0f7;font-weight:650}
+  .sub{font-size:13px;color:var(--tx-dim);margin:0 0 28px;max-width:60ch}
+
+  /* ── Focus strip: only what's genuinely fresh (<10d) ── */
+  h2{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--tx-faint);text-transform:uppercase;margin:0 0 10px}
+  .focus{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:34px}
+  .fcard{background:var(--panel);border:1px solid var(--line-2);border-left:3px solid var(--now);border-radius:10px;padding:14px 16px;}
+  .fcard .meta{font-family:var(--mono);font-size:10.5px;color:var(--tx-faint);display:flex;justify-content:space-between;margin-bottom:6px}
+  .fcard .age{color:var(--ok)}
+  .fcard p{margin:0;font-size:14px;line-height:1.55}
+
+  /* ── Everything table ── */
+  .table-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+  .hint{font-size:11.5px;color:var(--tx-faint)}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  thead th{text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx-faint);padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;}
+  thead th:hover{color:var(--tx-dim)}
+  thead th.sorted::after{content:" ▾";color:var(--info)}
+  tbody tr{border-bottom:1px solid var(--line)}
+  tbody tr:last-child{border-bottom:none}
+  tbody tr:hover{background:var(--panel-2)}
+  td{padding:9px 14px;font-size:13px;vertical-align:middle}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:8px;vertical-align:middle}
+  .b-now{background:var(--now)} .b-ongoing{background:var(--ongoing)} .b-recurring{background:var(--recurring)} .b-someday{background:var(--someday)}
+  .item-cell{max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .section-cell{color:var(--tx-faint);font-family:var(--mono);font-size:11.5px}
+  .age-cell{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11.5px;color:var(--tx-dim);white-space:nowrap}
+  .age-bar{width:56px;height:5px;border-radius:3px;background:var(--line-2);overflow:hidden}
+  .age-bar i{display:block;height:100%;background:var(--warn)}
+  .status-pill{font-family:var(--mono);font-size:10px;padding:2px 7px;border:1px solid var(--line-2);border-radius:5px;color:var(--tx-faint)}
+  .tag-note{font-family:var(--mono);font-size:11px;color:var(--tx-faint);text-align:center;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tag">Horizons Lab · Angle 01</div>
+  <h1>Focus &amp; Table</h1>
+  <p class="sub">Splits the "at a glance" problem in two: a tiny Focus strip surfaces only what's genuinely fresh (touched in the last ~10 days). Everything else — the long tail — collapses into one dense, sortable table where age is a first-class column, not something you infer from a timestamp string.</p>
+
+  <h2>Focus — touched recently</h2>
+  <div class="focus" id="focus"></div>
+
+  <div class="table-head">
+    <h2 style="margin:0">Everything · sorted by age</h2>
+    <span class="hint">click a column to re-sort</span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th data-key="bucket">Horizon</th>
+        <th data-key="content">Item</th>
+        <th data-key="section">Section</th>
+        <th data-key="age" class="sorted">Age</th>
+        <th data-key="status">Status</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <p class="tag-note">Angle 01 — Focus &amp; Table · glanceable now-strip up top, sortable long-tail below</p>
+</div>
+<script src="data.js"></script>
+<script>
+  const BUCKET_LABEL = { now: 'Now', ongoing: 'Ongoing', recurring: 'Recurring', someday: 'Someday' };
+  const MAX_AGE = Math.max(...ITEMS.map(i => i.age));
+
+  const focus = document.getElementById('focus');
+  ITEMS.filter(i => i.age <= 10).forEach(i => {
+    const el = document.createElement('div');
+    el.className = 'fcard';
+    el.innerHTML = `<div class="meta"><span>${i.section}</span><span class="age">${i.age === 0 ? 'today' : i.age + 'd ago'}</span></div><p>${(i.label ? i.label + ' — ' : '') + i.content}</p>`;
+    focus.appendChild(el);
+  });
+
+  let sortKey = 'age', sortDir = -1;
+  function render() {
+    const rows = [...ITEMS].sort((a, b) => {
+      const va = a[sortKey], vb = b[sortKey];
+      if (typeof va === 'number') return (va - vb) * sortDir;
+      return String(va).localeCompare(String(vb)) * sortDir;
+    });
+    document.getElementById('rows').innerHTML = rows.map(i => `
+      <tr>
+        <td><span class="dot b-${i.bucket}"></span>${BUCKET_LABEL[i.bucket]}</td>
+        <td class="item-cell">${(i.label ? '<strong>' + i.label + '</strong> — ' : '') + i.content}</td>
+        <td class="section-cell">${i.section}</td>
+        <td><div class="age-cell">${i.age}d<div class="age-bar"><i style="width:${Math.round(i.age / MAX_AGE * 100)}%"></i></div></div></td>
+        <td>${i.status ? `<span class="status-pill">${i.status}</span>` : ''}</td>
+      </tr>`).join('');
+    document.querySelectorAll('th').forEach(th => th.classList.toggle('sorted', th.dataset.key === sortKey));
+  }
+  document.querySelectorAll('th').forEach(th => th.addEventListener('click', () => {
+    if (sortKey === th.dataset.key) sortDir *= -1; else { sortKey = th.dataset.key; sortDir = 1; }
+    render();
+  }));
+  render();
+</script>
+</body>
+</html>

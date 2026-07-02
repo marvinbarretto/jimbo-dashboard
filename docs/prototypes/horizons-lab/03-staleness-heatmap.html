@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>03 · Staleness Heatmap</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#0d1219; --panel-2:#0b1018; --line:#1d2632; --line-2:#27323f;
+    --tx:#cdd6e3; --tx-dim:#8a96a6; --tx-faint:#5e6a7a;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+    --sans:"Inter",system-ui,-apple-system,Segoe UI,sans-serif;
+    --now:#f0a35e; --ongoing:#2dd4bf; --recurring:#a78bfa; --someday:#5e6a7a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);line-height:1.5;padding:32px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1180px;margin:0 auto}
+  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--tx-faint);text-transform:uppercase}
+  h1{font-family:var(--mono);font-size:20px;margin:6px 0 4px;color:#eaf0f7;font-weight:650}
+  .sub{font-size:13px;color:var(--tx-dim);margin:0 0 28px;max-width:64ch}
+
+  .cols{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .col{background:var(--panel)}
+  .col-head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+  .col-head .name{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+  .col-head .count{font-family:var(--mono);font-size:11px;color:var(--tx-faint)}
+  .col.now .name{color:var(--now)} .col.ongoing .name{color:var(--ongoing)}
+  .col.recurring .name{color:var(--recurring)} .col.someday .name{color:var(--someday)}
+
+  .row{padding:11px 14px;border-bottom:1px solid var(--line-2);display:flex;flex-direction:column;gap:5px}
+  .row:last-child{border-bottom:none}
+  .row .txt{font-size:13px}
+  .row .foot{display:flex;align-items:center;gap:8px}
+  .agebar{flex:1;height:4px;border-radius:2px;background:var(--panel-2);overflow:hidden}
+  .agebar i{display:block;height:100%}
+  .agenum{font-family:var(--mono);font-size:10px;color:var(--tx-faint);white-space:nowrap}
+
+  .key{display:flex;align-items:center;gap:10px;margin-top:20px;font-family:var(--mono);font-size:10.5px;color:var(--tx-faint)}
+  .grad{width:160px;height:8px;border-radius:4px;background:linear-gradient(90deg,#fff,#5e6a7a)}
+  .tag-note{font-family:var(--mono);font-size:11px;color:var(--tx-faint);text-align:center;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tag">Horizons Lab · Angle 03</div>
+  <h1>Staleness Heatmap</h1>
+  <p class="sub">Same bucket columns as a kanban, but no card chrome — text opacity itself carries the age. Freshest items read bright and confident; the ones that have quietly sat for 100+ days fade toward the background, so staleness is visible before you read a single word. A thin bar under each row gives the exact number for when a glance isn't enough.</p>
+
+  <div class="cols" id="cols"></div>
+
+  <div class="key"><span>freshest</span><div class="grad"></div><span>120d+ untouched</span></div>
+  <p class="tag-note">Angle 03 — Staleness Heatmap · opacity is the staleness signal, the age bar is the receipt</p>
+</div>
+<script src="data.js"></script>
+<script>
+  const BUCKETS = [
+    { key: 'now', label: 'Now / This Week' },
+    { key: 'ongoing', label: 'Ongoing' },
+    { key: 'recurring', label: 'Recurring' },
+    { key: 'someday', label: 'Someday' },
+  ];
+  const MAX_AGE = 120;
+  const barColor = { now: 'var(--now)', ongoing: 'var(--ongoing)', recurring: 'var(--recurring)', someday: 'var(--someday)' };
+
+  const cols = document.getElementById('cols');
+  cols.innerHTML = BUCKETS.map(b => {
+    const items = ITEMS.filter(i => i.bucket === b.key).sort((a, c) => a.age - c.age);
+    const rows = items.map(i => {
+      const fade = Math.max(0.32, 1 - (i.age / MAX_AGE) * 0.72);
+      return `<div class="row">
+        <div class="txt" style="opacity:${fade.toFixed(2)}">${i.label ? '<strong>' + i.label + '</strong> — ' : ''}${i.content}</div>
+        <div class="foot"><div class="agebar"><i style="width:${Math.round(i.age / MAX_AGE * 100)}%;background:${barColor[b.key]}"></i></div><span class="agenum">${i.age === 0 ? 'today' : i.age + 'd'}</span></div>
+      </div>`;
+    }).join('');
+    return `<div class="col ${b.key}">
+      <div class="col-head"><span class="name">${b.label}</span><span class="count">${items.length}</span></div>
+      ${rows}
+    </div>`;
+  }).join('');
+</script>
+</body>
+</html>

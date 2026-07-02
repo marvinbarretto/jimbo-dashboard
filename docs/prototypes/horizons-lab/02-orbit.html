@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>02 · Orbit</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#0d1219; --panel-2:#0b1018; --line:#1d2632; --line-2:#27323f;
+    --tx:#cdd6e3; --tx-dim:#8a96a6; --tx-faint:#5e6a7a;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+    --sans:"Inter",system-ui,-apple-system,Segoe UI,sans-serif;
+    --now:#f0a35e; --ongoing:#2dd4bf; --recurring:#a78bfa; --someday:#5e6a7a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);line-height:1.5;padding:32px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 320px;gap:28px}
+  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--tx-faint);text-transform:uppercase}
+  h1{font-family:var(--mono);font-size:20px;margin:6px 0 4px;color:#eaf0f7;font-weight:650}
+  .sub{font-size:13px;color:var(--tx-dim);margin:0 0 20px;max-width:60ch;grid-column:1/-1}
+
+  .chart-panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;}
+  svg{width:100%;height:auto;display:block}
+  .ring{fill:none;stroke:var(--line);stroke-width:1}
+  .ring-label{font-family:var(--mono);font-size:9px;fill:var(--tx-faint)}
+  .spoke{stroke:var(--line);stroke-width:1}
+  .quad-label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;fill:var(--tx-faint);text-transform:uppercase}
+  .dot{cursor:pointer;transition:r .1s}
+  .dot:hover{stroke:#fff;stroke-width:1.5}
+  .core{fill:var(--tx);font-family:var(--mono);font-size:10px;letter-spacing:.1em}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-family:var(--mono);font-size:10.5px;color:var(--tx-dim)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+  .detail{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;align-self:start;position:sticky;top:32px}
+  .detail h3{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--tx-faint);text-transform:uppercase;margin:0 0 10px}
+  .d-meta{font-family:var(--mono);font-size:11px;color:var(--tx-faint);margin-bottom:8px;display:flex;gap:10px}
+  .d-empty{color:var(--tx-faint);font-size:13px}
+  .d-body{font-size:14px;line-height:1.6}
+  .tag-note{font-family:var(--mono);font-size:11px;color:var(--tx-faint);text-align:center;margin-top:22px;grid-column:1/-1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="grid-column:1/-1">
+    <div class="tag">Horizons Lab · Angle 02</div>
+    <h1>Orbit</h1>
+  </div>
+  <p class="sub">A literal chart: radius = days since last touched (today at the centre, staler items drift outward), angle = which horizon bucket it belongs to. The shape of the whole cluster tells you something in one glance — a tight core means things are current, a cloud pushed to the rim means the whole set has gone stale.</p>
+
+  <div class="chart-panel">
+    <svg id="orbit" viewBox="0 0 640 560"></svg>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--now)"></i>Now / This Week</span>
+      <span><i class="sw" style="background:var(--ongoing)"></i>Ongoing</span>
+      <span><i class="sw" style="background:var(--recurring)"></i>Recurring</span>
+      <span><i class="sw" style="background:var(--someday)"></i>Someday / Deferred</span>
+    </div>
+  </div>
+
+  <div class="detail" id="detail">
+    <h3>Selected</h3>
+    <p class="d-empty">Click any dot to read it here.</p>
+  </div>
+
+  <p class="tag-note">Angle 02 — Orbit · distance from today reads as staleness; angle reads as category</p>
+</div>
+<script src="data.js"></script>
+<script>
+  const CX = 300, CY = 280, R_MIN = 30, R_MAX = 260;
+  const MAX_AGE = 120;
+  const QUAD = {
+    now:       { from: -55, to: 55,   color: 'var(--now)',       label: 'NOW',       lx: 300, ly: 20  },
+    ongoing:   { from: 55,  to: 165,  color: 'var(--ongoing)',   label: 'ONGOING',   lx: 560, ly: 280 },
+    recurring: { from: 165, to: 275,  color: 'var(--recurring)', label: 'RECURRING', lx: 300, ly: 540 },
+    someday:   { from: 275, to: 385,  color: 'var(--someday)',   label: 'SOMEDAY',   lx: 40,  ly: 280 },
+  };
+
+  const svg = document.getElementById('orbit');
+  const rings = [7, 30, 60, 90, 120];
+  let ringHtml = '';
+  rings.forEach(d => {
+    const r = R_MIN + Math.sqrt(d / MAX_AGE) * (R_MAX - R_MIN);
+    ringHtml += `<circle class="ring" cx="${CX}" cy="${CY}" r="${r}" />`;
+    // Offset 25° off vertical so labels sit clear of the "NOW" quadrant label at 12 o'clock.
+    const lx = CX + r * Math.sin(25 * Math.PI / 180);
+    const ly = CY - r * Math.cos(25 * Math.PI / 180);
+    ringHtml += `<text class="ring-label" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}">${d}d</text>`;
+  });
+  Object.values(QUAD).forEach(q => {
+    ringHtml += `<text class="quad-label" x="${q.lx}" y="${q.ly}" text-anchor="middle">${q.label}</text>`;
+  });
+  ringHtml += `<circle class="core" cx="${CX}" cy="${CY}" r="2.5" fill="#fff" />`;
+  ringHtml += `<text class="core" x="${CX + 8}" y="${CY - 8}">TODAY</text>`;
+
+  let dotsHtml = '';
+  ITEMS.forEach((item, idx) => {
+    const q = QUAD[item.bucket];
+    const angle = (q.from + Math.random() * (q.to - q.from)) * Math.PI / 180;
+    const r = R_MIN + Math.sqrt(item.age / MAX_AGE) * (R_MAX - R_MIN);
+    const x = CX + r * Math.cos(angle);
+    const y = CY + r * Math.sin(angle);
+    const opacity = Math.max(0.35, 1 - (item.age / MAX_AGE) * 0.65);
+    dotsHtml += `<circle class="dot" data-idx="${idx}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="${q.color}" opacity="${opacity.toFixed(2)}" />`;
+  });
+
+  svg.innerHTML = ringHtml + dotsHtml;
+
+  const detail = document.getElementById('detail');
+  svg.querySelectorAll('.dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+      const item = ITEMS[+dot.dataset.idx];
+      detail.innerHTML = `
+        <h3>Selected</h3>
+        <div class="d-meta"><span>${item.section}</span><span>${item.age === 0 ? 'today' : item.age + 'd ago'}</span>${item.status ? `<span>${item.status}</span>` : ''}</div>
+        <div class="d-body">${item.label ? '<strong>' + item.label + '</strong> — ' : ''}${item.content}</div>`;
+    });
+  });
+</script>
+</body>
+</html>
