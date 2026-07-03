@@ -79,4 +79,8 @@
       <span class="hint">—</span>
     }
   </ng-template>
+
+  <ng-template #descriptionCell let-context>
+    <app-ui-prose [text]="context.getValue()" />
+  </ng-template>
 </app-ui-stack>

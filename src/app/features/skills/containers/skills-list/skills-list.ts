@@ -8,6 +8,7 @@ import { UiDataTable } from '@shared/components/ui-data-table/ui-data-table';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { SkillsService } from '../../data-access/skills.service';
 import { skillNamespace, skillLocalName, type Skill } from '@domain/skills';
@@ -23,6 +24,7 @@ import { skillNamespace, skillLocalName, type Skill } from '@domain/skills';
     UiEmptyState,
     UiLoadingState,
     UiPageHeader,
+    UiProse,
     UiStack,
   ],
   templateUrl: './skills-list.html',
@@ -65,6 +67,8 @@ export class SkillsList {
     viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, number | undefined> }>>('potentialCell');
   private readonly statusCell =
     viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, Skill['metadata']['status']> }>>('statusCell');
+  private readonly descriptionCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, string> }>>('descriptionCell');
 
   readonly columns: ColumnDef<Skill, any>[] = [
     this.columnHelper.accessor(row => this.namespace(row.id), {
@@ -106,6 +110,7 @@ export class SkillsList {
     }),
     this.columnHelper.accessor('description', {
       header: 'Description',
+      cell: () => this.descriptionCell(),
     }),
     this.columnHelper.accessor(row => row.metadata.requires, {
       id: 'requires',
