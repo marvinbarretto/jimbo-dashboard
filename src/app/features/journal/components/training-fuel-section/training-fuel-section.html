@@ -1,0 +1,26 @@
+<app-ui-section title="Fueling by training day" meta="Avg kcal/protein per day type">
+  @if (loading()) {
+    <app-ui-loading-state message="Crunching training days…" />
+  } @else if (!hasData()) {
+    <app-ui-empty-state message="No overlapping nutrition and exercise data in this period." />
+  } @else {
+    <app-ui-stack gap="lg">
+      <app-ui-bar-chart
+        [labels]="bucketLabels()"
+        [values]="avgKcalByBucket()"
+        label="Avg kcal"
+        suffix=" kcal"
+        accent="rgba(251, 146, 60, 0.7)"
+        [height]="200"
+      />
+      <app-ui-bar-chart
+        [labels]="bucketLabels()"
+        [values]="avgProteinByBucket()"
+        label="Avg protein"
+        suffix=" g"
+        accent="rgba(52, 211, 153, 0.7)"
+        [height]="200"
+      />
+    </app-ui-stack>
+  }
+</app-ui-section>

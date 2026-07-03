@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { bodyPartBreakdown, lastTrainedByRegion, regionForExercise, type ExerciseMeta } from './muscle-region';
+import {
+  bodyPartBreakdown,
+  lastTrainedByRegion,
+  regionForExercise,
+  trainingDayTypeByDate,
+  type ExerciseMeta,
+} from './muscle-region';
 import type { SessionDetailed } from '../data-access/exercise.service';
 
 const chest: ExerciseMeta = { primary_muscle_group: 1, equipment_type: 'machine' };
@@ -114,5 +120,33 @@ describe('lastTrainedByRegion', () => {
     const sessions = [session('2026-06-30T10:00:00Z', [], [cardio('ex_unknown')])];
     const coverage = lastTrainedByRegion(sessions, new Map(), '2026-07-02');
     expect(coverage.find((c) => c.region === 'cardio')?.daysSince).toBe(2);
+  });
+});
+
+describe('trainingDayTypeByDate', () => {
+  const exerciseIndex = new Map([['ex_chest', chest], ['ex_biceps', biceps], ['ex_quads', quads]]);
+
+  it('labels a day with a clear winner by its dominant region', () => {
+    const sessions = [session('2026-06-25T10:00:00Z', [set('ex_chest', 3), set('ex_biceps', 1)])];
+    expect(trainingDayTypeByDate(sessions, exerciseIndex).get('2026-06-25')).toBe('chest');
+  });
+
+  it('labels a tied day as mixed', () => {
+    const sessions = [session('2026-06-25T10:00:00Z', [set('ex_chest', 2), set('ex_biceps', 2)])];
+    expect(trainingDayTypeByDate(sessions, exerciseIndex).get('2026-06-25')).toBe('mixed');
+  });
+
+  it('combines multiple sessions on the same day before picking a winner', () => {
+    const sessions = [
+      session('2026-06-25T08:00:00Z', [set('ex_chest', 1)]),
+      session('2026-06-25T18:00:00Z', [set('ex_quads', 3)]),
+    ];
+    expect(trainingDayTypeByDate(sessions, exerciseIndex).get('2026-06-25')).toBe('legs');
+  });
+
+  it('omits days with no sessions rather than guessing rest', () => {
+    const sessions = [session('2026-06-25T10:00:00Z', [set('ex_chest')])];
+    const byDate = trainingDayTypeByDate(sessions, exerciseIndex);
+    expect(byDate.has('2026-06-26')).toBe(false);
   });
 });

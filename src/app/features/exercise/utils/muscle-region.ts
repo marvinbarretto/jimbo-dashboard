@@ -116,3 +116,34 @@ export function lastTrainedByRegion(
     return { region, label: REGION_LABELS[region], daysSince };
   });
 }
+
+export type TrainingDayType = BodyPartRegion | 'mixed';
+
+// Per-day dominant region: group sessions by calendar day, run bodyPartBreakdown
+// on just that day's sessions, and take the region with the highest set count. A
+// day with two (or more) regions tied for the top count is ambiguous (e.g. a
+// combined push/pull day) and gets 'mixed' rather than an arbitrary pick. Days
+// with no sessions are simply absent from the returned map — callers treat that
+// as rest.
+export function trainingDayTypeByDate(
+  sessions: readonly SessionDetailed[],
+  exerciseIndex: ReadonlyMap<string, ExerciseMeta>,
+): Map<string, TrainingDayType> {
+  const byDate = new Map<string, SessionDetailed[]>();
+  for (const s of sessions) {
+    const date = s.started_at.slice(0, 10);
+    const arr = byDate.get(date);
+    if (arr) arr.push(s);
+    else byDate.set(date, [s]);
+  }
+
+  const out = new Map<string, TrainingDayType>();
+  for (const [date, daySessions] of byDate) {
+    const counts = bodyPartBreakdown(daySessions, exerciseIndex);
+    if (!counts.length) continue;
+    const top = Math.max(...counts.map((c) => c.count));
+    const winners = counts.filter((c) => c.count === top);
+    out.set(date, winners.length > 1 ? 'mixed' : winners[0]!.region);
+  }
+  return out;
+}
