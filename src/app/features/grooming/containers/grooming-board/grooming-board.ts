@@ -41,8 +41,9 @@ function groomingToRollup(item: VaultItem): ChildState {
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
 import {
-  projectFilterGroup, ownerFilterGroup, priorityFilterGroup,
-  PROJECT, OWNER, PRIORITY, UNASSIGNED, NO_PRIORITY,
+  projectFilterGroup, ownerFilterGroup, priorityFilterGroup, epicFilterGroup,
+  epicsForProjects, effectiveEpicSelection, epicKeyOf,
+  PROJECT, OWNER, PRIORITY, EPIC, UNASSIGNED, NO_PRIORITY,
 } from '@shared/kanban/filter-groups';
 import { createKanbanDragState } from '@shared/kanban/drag-state';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
@@ -107,12 +108,13 @@ export class GroomingBoard {
   // --- filter state -------------------------------------------------------
   // Composable: signals + toggle/reset. Per-dimension predicates live below
   // because they know about VaultItem shape; the composable doesn't.
-  private readonly filter = createKanbanFilterState([PROJECT, OWNER, PRIORITY]);
+  private readonly filter = createKanbanFilterState([PROJECT, OWNER, PRIORITY, EPIC]);
   protected readonly hasActiveFilters = this.filter.hasActive;
 
   private readonly projectFilter  = this.filter.active<string>(PROJECT);
   private readonly ownerFilter    = this.filter.active<string>(OWNER);
   private readonly priorityFilter = this.filter.active<number>(PRIORITY);
+  private readonly epicFilter     = this.filter.active<string>(EPIC);
 
   // Free-text search — matches title or seq, case-insensitive substring.
   private readonly _searchTerm = signal<string>('');
@@ -175,6 +177,9 @@ export class GroomingBoard {
         const n = Number(raw);
         if (!Number.isNaN(n)) this.filter.toggle(PRIORITY, n);
       }
+      for (const id of (params.get(EPIC)?.split(',').filter(Boolean) ?? [])) {
+        this.filter.toggle(EPIC, id);
+      }
       const q = params.get('q');
       if (q) this._searchTerm.set(q);
       const sort = params.get('sort');
@@ -190,6 +195,7 @@ export class GroomingBoard {
       const projects   = Array.from(this.projectFilter());
       const owners     = Array.from(this.ownerFilter());
       const priorities = Array.from(this.priorityFilter());
+      const epics      = Array.from(this.epicFilter());
       const q    = this._searchTerm();
       const sort = this._sortMode();
 
@@ -199,6 +205,7 @@ export class GroomingBoard {
           [PROJECT]:  projects.length   ? projects.join(',')   : null,
           [OWNER]:    owners.length     ? owners.join(',')     : null,
           [PRIORITY]: priorities.length ? priorities.join(',') : null,
+          [EPIC]:     epics.length      ? epics.join(',')      : null,
           q:          q || null,
           sort:       sort !== 'priority' ? sort : null,
         },
@@ -364,23 +371,56 @@ export class GroomingBoard {
   // Each dimension's counts reflect items filtered by all OTHER dimensions, so
   // clicking @ralph doesn't make @ralph's own count drop to zero.
 
-  readonly filterGroups = computed<FilterGroup[]>(() => [
-    projectFilterGroup(
-      this.applyFilters({ skipProject: true }),
+  readonly filterGroups = computed<FilterGroup[]>(() => {
+    const groups: FilterGroup[] = [
+      projectFilterGroup(
+        this.applyFilters({ skipProject: true }),
+        this.projectFilter(),
+        this.projectsService.activeProjects(),
+        item => this.projectLinksFor(item),
+      ),
+      ownerFilterGroup(
+        this.applyFilters({ skipOwner: true }),
+        this.ownerFilter(),
+        this.actorsService.activeActors().map(a => a.id as string),
+      ),
+      priorityFilterGroup(
+        this.applyFilters({ skipPriority: true }),
+        this.priorityFilter(),
+      ),
+    ];
+    // Epic facet is a drill-down of the project selection — it only appears
+    // once a project is chosen, and only if that project actually has epics.
+    // With nothing selected in it, the skip-epic pass equals visibleItems —
+    // reuse the cached computed instead of a redundant full filter pass.
+    const epics = this.selectableEpics();
+    if (epics.length > 0) {
+      const items = this.effectiveEpicFilter().size === 0
+        ? this.visibleItems()
+        : this.applyFilters({ skipEpic: true });
+      groups.push(epicFilterGroup(items, this.epicFilter(), epics));
+    }
+    return groups;
+  });
+
+  private readonly selectableEpics = computed(() =>
+    epicsForProjects(
+      this.vaultItemsService.items(),
       this.projectFilter(),
-      this.projectsService.activeProjects(),
       item => this.projectLinksFor(item),
     ),
-    ownerFilterGroup(
-      this.applyFilters({ skipOwner: true }),
-      this.ownerFilter(),
-      this.actorsService.activeActors().map(a => a.id as string),
-    ),
-    priorityFilterGroup(
-      this.applyFilters({ skipPriority: true }),
-      this.priorityFilter(),
-    ),
-  ]);
+  );
+
+  private readonly selectableEpicIds = computed(
+    () => new Set(this.selectableEpics().map(e => e.id as string)),
+  );
+
+  // The selection that actually filters — raw ∩ offered options. Derived, so a
+  // hidden facet (no project selected, epic archived, stale URL param) never
+  // silently filters the board; the raw set survives to be restored later.
+  private readonly effectiveEpicFilter = computed(
+    () => effectiveEpicSelection(this.epicFilter(), this.selectableEpics()),
+  );
 
   readonly assignableActors = computed<readonly ActorId[]>(() =>
     this.actorsService.activeActors()
@@ -437,7 +477,9 @@ export class GroomingBoard {
   }
 
   // Single toggle handler — generic filter bar emits (groupId, value); we route
-  // to the composable, which knows nothing about the dimensions.
+  // to the composable, which knows nothing about the dimensions. The epic
+  // facet's dependence on the project selection is handled by derivation
+  // (effectiveEpicFilter), not by pruning here.
   onFilterToggle(event: { groupId: string; value: string | number }): void {
     this.filter.toggle(event.groupId, event.value);
   }
@@ -497,10 +539,11 @@ export class GroomingBoard {
   // Predicates live here because they know about VaultItem shape — the
   // composable owns signal state, the board owns the entity-aware logic.
 
-  private applyFilters(opts: { skipProject?: boolean; skipOwner?: boolean; skipPriority?: boolean } = {}): VaultItem[] {
+  private applyFilters(opts: { skipProject?: boolean; skipOwner?: boolean; skipPriority?: boolean; skipEpic?: boolean } = {}): VaultItem[] {
     const projF  = this.projectFilter();
     const ownerF = this.ownerFilter();
     const priF   = this.priorityFilter();
+    const epicF  = this.effectiveEpicFilter();
     const search = this._searchTerm().trim().toLowerCase();
 
     return this.vaultItemsService.items().filter(item => {
@@ -530,6 +573,9 @@ export class GroomingBoard {
         const links = this.projectLinksFor(item);
         const matches = links.some(l => projF.has(l.project_id as string));
         if (!matches) return false;
+      }
+      if (!opts.skipEpic && epicF.size > 0) {
+        if (!epicF.has(epicKeyOf(item, this.selectableEpicIds()))) return false;
       }
 
       return true;

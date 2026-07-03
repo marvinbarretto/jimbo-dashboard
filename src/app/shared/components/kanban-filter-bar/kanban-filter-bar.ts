@@ -13,11 +13,14 @@ export interface FilterOption<TValue extends string | number> {
 
 // One filter group = one labelled row of chips that share a state Set.
 // `id` lets the parent identify which group emitted a toggle event.
+// `wide` groups get a full-width row of their own (chips wrap); the rest share
+// the compact controls row with the search box.
 export interface FilterGroup<TValue extends string | number = string | number> {
   id:      string;
   label:   string;
   options: FilterOption<TValue>[];
   active:  Set<TValue>;
+  wide?:   boolean;
 }
 
 // Single sort option — value is a string key, label is the display name.
@@ -27,16 +30,91 @@ export interface SortOption {
   label: string;
 }
 
+// One labelled row of filter chips. Extracted from the bar so the inline
+// (controls-row) and wide (own-row) placements render identical markup.
+@Component({
+  selector: 'app-kanban-filter-group',
+  imports: [Chip, EntityChip],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '[attr.data-testid]': '"filter-group"',
+    '[attr.data-group]': 'group().id',
+  },
+  template: `
+    <span class="group__label">{{ group().label }}</span>
+    @for (opt of group().options; track opt.value) {
+      @if (opt.entityType) {
+        <button type="button" class="group__entity-btn"
+          data-testid="filter-chip"
+          [attr.data-value]="opt.value"
+          [disabled]="opt.count === 0 && !group().active.has(opt.value)"
+          (click)="toggled.emit(opt.value)">
+          <app-entity-chip
+            [type]="opt.entityType"
+            [id]="opt.value.toString()"
+            [label]="opt.label"
+            [count]="opt.count"
+            [active]="group().active.has(opt.value)"
+            [disabled]="opt.count === 0 && !group().active.has(opt.value)"
+            [color]="opt.color ?? null" />
+        </button>
+      } @else {
+        <app-chip
+          data-testid="filter-chip"
+          [attr.data-value]="opt.value"
+          [active]="group().active.has(opt.value)"
+          [disabled]="opt.count === 0 && !group().active.has(opt.value)"
+          [count]="opt.count"
+          [tone]="opt.tone ?? null"
+          (toggle)="toggled.emit(opt.value)"
+        >{{ opt.label }}</app-chip>
+      }
+    }
+  `,
+  styles: [`
+    :host {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .group__label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      margin-right: 0.2rem;
+    }
+
+    .group__entity-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      font: inherit;
+      cursor: pointer;
+
+      &:disabled { cursor: not-allowed; }
+      &:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 999px; }
+    }
+  `],
+})
+export class KanbanFilterGroup {
+  readonly group   = input.required<FilterGroup>();
+  readonly toggled = output<string | number>();
+}
+
 // Generic kanban filter bar. The board passes in a list of named groups; this
 // component renders a labelled row of chips per group with active/disabled state
 // and counts. A single `(toggle)` event reports `(groupId, value)` so the parent
 // handles updates; a `(reset)` event clears everything.
 //
-// Used by both grooming (project/owner/priority) and execution (skill/executor/
-// project) — same chrome, different inputs.
+// Used by both grooming (project/owner/priority/epic) and execution (same) —
+// same chrome, different inputs.
 @Component({
   selector: 'app-kanban-filter-bar',
-  imports: [Chip, EntityChip],
+  imports: [Chip, KanbanFilterGroup],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './kanban-filter-bar.html',
   styleUrl: './kanban-filter-bar.scss',
@@ -57,6 +135,11 @@ export class KanbanFilterBar {
   readonly searchChange = output<string>();
   readonly sortChange   = output<string>();
   readonly reset        = output<void>();
+
+  // Compact groups flow on the controls row next to the search box; wide groups
+  // (project, epic) each take a full-width wrapping row below it.
+  readonly inlineGroups = computed(() => this.groups().filter(g => !g.wide));
+  readonly wideGroups   = computed(() => this.groups().filter(g => g.wide));
 
   readonly hasActive = computed(() =>
     this.groups().some(g => g.active.size > 0) || this.searchTerm().length > 0,

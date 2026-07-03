@@ -33,7 +33,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
       transition: border-color 0.1s, color 0.1s, background 0.1s;
       line-height: 1.4;
     }
-    .chip:hover:not(:disabled) {
+    .chip:hover:not(:disabled):not(.chip--active) {
       color: var(--color-text);
       border-color: var(--color-text-muted);
     }
@@ -41,11 +41,16 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
       opacity: 0.35;
       cursor: not-allowed;
     }
-    /* Active = part of the current selection. */
+    /* Active = part of the current selection. Solid fill, not a tint — the
+       selected state has to read at a glance across a row of chips. Active
+       chips stay click-to-deselect targets, so keep a hover affordance. */
     .chip--active {
-      background: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface));
+      background: var(--color-accent);
       border-color: var(--color-accent);
-      color: var(--color-text);
+      color: var(--color-bg);
+    }
+    .chip--active:hover:not(:disabled) {
+      filter: brightness(1.12);
     }
     .chip__count {
       margin-left: 0.3rem;

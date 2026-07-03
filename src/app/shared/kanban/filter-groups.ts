@@ -7,7 +7,7 @@
 // gets a FilterGroup back. The board still owns its own item-filtering + the
 // per-facet "skip" counting; this only builds the option list + counts.
 
-import { effectivePriority, type VaultItem } from '@domain/vault';
+import { effectivePriority, isActive, type VaultItem } from '@domain/vault';
 import type { FilterGroup, FilterOption } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
 
 // Filter dimension ids — one source of truth for createKanbanFilterState, the
@@ -15,11 +15,14 @@ import type { FilterGroup, FilterOption } from '@shared/components/kanban-filter
 export const PROJECT  = 'project';
 export const OWNER    = 'owner';
 export const PRIORITY = 'priority';
+export const EPIC     = 'epic';
 
 // "Unassigned" owner token alongside actor ids — a sentinel keeps Set<string>
-// membership simple. "No priority set" is distinct from 0 for the same reason.
+// membership simple. "No priority set" is distinct from 0 for the same reason,
+// as is "not under any epic".
 export const UNASSIGNED = '__unassigned__';
 export const NO_PRIORITY = -1;
+export const NO_EPIC = '__no_epic__';
 
 // Minimal project shape the project facet needs — Project structurally satisfies it.
 export interface ProjectMeta {
@@ -49,7 +52,9 @@ export function projectFilterGroup(
     entityType: 'project' as const,
     color:      p.color_token,
   }));
-  return { id: PROJECT, label: 'Project', options, active };
+  // wide: the project list is the biggest facet — it gets a full-width row so
+  // it can wrap instead of clipping, leaving the controls row to the compact facets.
+  return { id: PROJECT, label: 'Project', options, active, wide: true };
 }
 
 export function ownerFilterGroup(
@@ -91,4 +96,72 @@ export function priorityFilterGroup(
     { value: NO_PRIORITY, label: 'no priority', count: counts.get(NO_PRIORITY) ?? 0 },
   ];
   return { id: PRIORITY, label: 'Priority', options, active };
+}
+
+// Which epic option an item belongs to. parent_id can point at a non-epic
+// parent (synthesize/debrief link children without setting is_epic), so
+// anything not parented to a LISTED epic collapses to NO_EPIC — otherwise those
+// items would match no chip at all and silently vanish under any epic selection.
+export function epicKeyOf(item: VaultItem, epicIds: ReadonlySet<string>): string {
+  const pid = item.parent_id as string | null;
+  return pid && epicIds.has(pid) ? pid : NO_EPIC;
+}
+
+// Epic facet — a drill-down of the project facet, not a top-level dimension.
+// Boards only build it when ≥1 project is selected, over that project's epics.
+// The NO_EPIC sentinel keeps "tasks directly on the project" selectable
+// alongside the epics.
+export function epicFilterGroup(
+  items: readonly VaultItem[],
+  active: Set<string>,
+  epics: readonly VaultItem[],
+): FilterGroup<string> {
+  const epicIds = new Set(epics.map(e => e.id as string));
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    const key = epicKeyOf(item, epicIds);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const options: FilterOption<string>[] = epics.map(e => ({
+    value:      e.id as string,
+    label:      e.title,
+    count:      counts.get(e.id as string) ?? 0,
+    entityType: 'vault-item' as const,
+  }));
+  options.push({ value: NO_EPIC, label: 'no epic', count: counts.get(NO_EPIC) ?? 0 });
+  return { id: EPIC, label: 'Epic', options, active, wide: true };
+}
+
+// The epics eligible for the epic facet: active, flagged epics belonging to at
+// least one selected project. Empty when no project is selected — the facet
+// doesn't exist without a project context. Membership is union (any project
+// link), matching the project facet — deliberately looser than the card epic
+// picker, which parents by primary project only.
+export function epicsForProjects(
+  items: readonly VaultItem[],
+  selectedProjects: ReadonlySet<string>,
+  projectsFor: ProjectLinks,
+): VaultItem[] {
+  if (selectedProjects.size === 0) return [];
+  return items.filter(epic =>
+    epic.is_epic
+    && isActive(epic)
+    && projectsFor(epic).some(l => selectedProjects.has(l.project_id)),
+  );
+}
+
+// The epic selections that actually filter the board: the raw selection
+// intersected with the currently offered options. Derived — not pruned on
+// events — so every path (URL restore, project toggles, an epic archived
+// mid-session, late-loading project links) converges on the same invariant:
+// a facet that isn't rendered can't silently filter the board. The raw
+// selection is kept intact, so re-selecting the project restores it.
+export function effectiveEpicSelection(
+  active: ReadonlySet<string>,
+  epics: readonly VaultItem[],
+): Set<string> {
+  if (active.size === 0 || epics.length === 0) return new Set();
+  const valid = new Set(epics.map(e => e.id as string));
+  valid.add(NO_EPIC);
+  return new Set([...active].filter(id => valid.has(id)));
 }

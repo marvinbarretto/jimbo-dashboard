@@ -20,8 +20,9 @@ import { BoardCreateBar } from '@shared/components/board-create-bar/board-create
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
 import { createKanbanDragState } from '@shared/kanban/drag-state';
 import {
-  projectFilterGroup, ownerFilterGroup, priorityFilterGroup,
-  PROJECT, OWNER, PRIORITY, UNASSIGNED, NO_PRIORITY,
+  projectFilterGroup, ownerFilterGroup, priorityFilterGroup, epicFilterGroup,
+  epicsForProjects, effectiveEpicSelection, epicKeyOf,
+  PROJECT, OWNER, PRIORITY, EPIC, UNASSIGNED, NO_PRIORITY,
 } from '@shared/kanban/filter-groups';
 import { withVaultDetailModal, swapDetailSeq } from '@shared/kanban/detail-modal';
 import { CommandShortcutsService } from '@shared/services/command-shortcuts.service';
@@ -99,7 +100,7 @@ interface LaneView {
 
 // Which facets a count should ignore (so a facet's own selection doesn't collapse
 // its counts to its active set).
-interface FacetSkip { skipOwner?: boolean; skipProject?: boolean; skipPriority?: boolean }
+interface FacetSkip { skipOwner?: boolean; skipProject?: boolean; skipPriority?: boolean; skipEpic?: boolean }
 
 @Component({
   selector: 'app-execution-board',
@@ -140,11 +141,12 @@ export class ExecutionBoard {
   );
 
   // --- filter state -------------------------------------------------------
-  // Same three facets as the grooming board (built via @shared/kanban/filter-groups).
-  private readonly filter = createKanbanFilterState([PROJECT, OWNER, PRIORITY]);
+  // Same facets as the grooming board (built via @shared/kanban/filter-groups).
+  private readonly filter = createKanbanFilterState([PROJECT, OWNER, PRIORITY, EPIC]);
   private readonly projectFilter  = this.filter.active<string>(PROJECT);
   private readonly ownerFilter    = this.filter.active<string>(OWNER);
   private readonly priorityFilter = this.filter.active<number>(PRIORITY);
+  private readonly epicFilter     = this.filter.active<string>(EPIC);
 
   private readonly _searchTerm = signal<string>('');
   readonly searchTerm = this._searchTerm.asReadonly();
@@ -224,6 +226,9 @@ export class ExecutionBoard {
         const n = Number(raw);
         if (!Number.isNaN(n)) this.filter.toggle(PRIORITY, n);
       }
+      for (const id of (params.get(EPIC)?.split(',').filter(Boolean) ?? [])) {
+        this.filter.toggle(EPIC, id);
+      }
       const q = params.get('q');
       if (q) this._searchTerm.set(q);
     });
@@ -232,6 +237,7 @@ export class ExecutionBoard {
       const projects   = Array.from(this.projectFilter());
       const owners     = Array.from(this.ownerFilter());
       const priorities = Array.from(this.priorityFilter());
+      const epics      = Array.from(this.epicFilter());
       const q = this._searchTerm();
       this.router.navigate([], {
         relativeTo: this.route,
@@ -239,6 +245,7 @@ export class ExecutionBoard {
           [PROJECT]:  projects.length   ? projects.join(',')   : null,
           [OWNER]:    owners.length     ? owners.join(',')     : null,
           [PRIORITY]: priorities.length ? priorities.join(',') : null,
+          [EPIC]:     epics.length      ? epics.join(',')      : null,
           q:          q || null,
         },
         queryParamsHandling: 'merge',
@@ -455,23 +462,51 @@ export class ExecutionBoard {
   // Same Project / Owner / Priority facets as the grooming board — built by the
   // shared @shared/kanban/filter-groups helpers. Each facet's counts come from
   // the board's vault items filtered by every OTHER facet (the skip flag).
-  readonly filterGroups = computed<FilterGroup[]>(() => [
-    projectFilterGroup(
-      this.facetItems({ skipProject: true }),
+  readonly filterGroups = computed<FilterGroup[]>(() => {
+    const groups: FilterGroup[] = [
+      projectFilterGroup(
+        this.facetItems({ skipProject: true }),
+        this.projectFilter(),
+        this.projectsService.activeProjects(),
+        item => this.projectLinksFor(item),
+      ),
+      ownerFilterGroup(
+        this.facetItems({ skipOwner: true }),
+        this.ownerFilter(),
+        this.actorsService.activeActors().map(a => a.id as string),
+      ),
+      priorityFilterGroup(
+        this.facetItems({ skipPriority: true }),
+        this.priorityFilter(),
+      ),
+    ];
+    // Epic facet is a drill-down of the project selection — it only appears
+    // once a project is chosen, and only if that project actually has epics.
+    const epics = this.selectableEpics();
+    if (epics.length > 0) {
+      groups.push(epicFilterGroup(this.facetItems({ skipEpic: true }), this.epicFilter(), epics));
+    }
+    return groups;
+  });
+
+  private readonly selectableEpics = computed(() =>
+    epicsForProjects(
+      this.vaultItemsService.items(),
       this.projectFilter(),
-      this.projectsService.activeProjects(),
       item => this.projectLinksFor(item),
     ),
-    ownerFilterGroup(
-      this.facetItems({ skipOwner: true }),
-      this.ownerFilter(),
-      this.actorsService.activeActors().map(a => a.id as string),
-    ),
-    priorityFilterGroup(
-      this.facetItems({ skipPriority: true }),
-      this.priorityFilter(),
-    ),
-  ]);
+  );
+
+  private readonly selectableEpicIds = computed(
+    () => new Set(this.selectableEpics().map(e => e.id as string)),
+  );
+
+  // The selection that actually filters — raw ∩ offered options. Derived, so a
+  // hidden facet (no project selected, epic archived, stale URL param) never
+  // silently filters the board; the raw set survives to be restored later.
+  private readonly effectiveEpicFilter = computed(
+    () => effectiveEpicSelection(this.epicFilter(), this.selectableEpics()),
+  );
 
   onFilterToggle(event: { groupId: string; value: string | number }): void {
     this.filter.toggle(event.groupId, event.value);
@@ -509,6 +544,7 @@ export class ExecutionBoard {
     const ownerF = this.ownerFilter();
     const projF  = this.projectFilter();
     const priF   = this.priorityFilter();
+    const epicF  = this.effectiveEpicFilter();
 
     if (!skip.skipOwner && ownerF.size > 0) {
       const key = (item?.assigned_to ?? UNASSIGNED) as string;
@@ -522,6 +558,9 @@ export class ExecutionBoard {
     if (!skip.skipProject && projF.size > 0) {
       const links = item ? this.projectLinksFor(item) : [];
       if (!links.some(l => projF.has(l.project_id as string))) return false;
+    }
+    if (!skip.skipEpic && epicF.size > 0) {
+      if (!item || !epicF.has(epicKeyOf(item, this.selectableEpicIds()))) return false;
     }
     return true;
   }

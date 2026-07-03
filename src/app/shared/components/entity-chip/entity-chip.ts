@@ -105,12 +105,6 @@ const PREFIX: Record<EntityType, string> = {
       }
     }
 
-    .entity-chip--active {
-      background: color-mix(in srgb, currentColor 15%, var(--color-surface));
-      border-color: currentColor;
-      opacity: 1;
-    }
-
     .entity-chip--disabled {
       opacity: 0.35;
     }
@@ -147,10 +141,25 @@ const PREFIX: Record<EntityType, string> = {
       border-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-border));
     }
 
+    /* Selected = solid fill with bg-coloured text — mirrors the 'solid' variant
+       so an active filter chip reads instantly. Defined after the type styles
+       (and doubled up for specificity) so it wins their color declarations:
+       project → project colour, actor → monochrome invert, vault-item → accent. */
+    .entity-chip.entity-chip--active {
+      background: var(--chip-color, var(--color-text));
+      border-color: var(--chip-color, var(--color-text));
+      color: var(--color-bg);
+      opacity: 1;
+    }
+    .entity-chip--vault-item.entity-chip--active {
+      background: var(--color-accent);
+      border-color: var(--color-accent);
+    }
+
     .entity-chip--clickable {
       cursor: pointer;
 
-      &:hover {
+      &:hover:not(.entity-chip--active) {
         border-color: color-mix(in srgb, var(--chip-color, var(--color-accent)) 60%, var(--color-border));
         color: var(--chip-color, var(--color-accent));
       }
