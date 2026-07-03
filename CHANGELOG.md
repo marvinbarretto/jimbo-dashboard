@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.100](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.99...v0.0.100) (2026-07-03)
+
+
+### Code Refactoring
+
+* **settings:** relocate GitHub/execution settings out of Config ([ecd0603](https://github.com/marvinbarretto/jimbo-dashboard/commit/ecd0603208306e2a2ea394deb2edf5ef3eeefe7b))
+
 ### [0.0.99](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.98...v0.0.99) (2026-07-02)
 
 
