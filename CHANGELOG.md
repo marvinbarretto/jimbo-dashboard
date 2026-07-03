@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.101](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.100...v0.0.101) (2026-07-03)
+
+
+### Features
+
+* **journal:** surface fueling-by-training-day insight on month page ([33cc261](https://github.com/marvinbarretto/jimbo-dashboard/commit/33cc2615501fa160891e2cb427bbe381dbe272fa))
+
 ### [0.0.100](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.99...v0.0.100) (2026-07-03)
 
 
