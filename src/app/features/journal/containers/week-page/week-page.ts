@@ -15,6 +15,7 @@ import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { UiPeriodPager } from '@shared/components/ui-period-pager/ui-period-pager';
 import { ExerciseSummarySection } from '../../../exercise/components/exercise-summary-section/exercise-summary-section';
+import { TrainingFuelSection } from '../../components/training-fuel-section/training-fuel-section';
 import {
   type WeekKey,
   daysInWeek,
@@ -40,6 +41,7 @@ const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     UiDonutChart,
     UiPeriodPager,
     ExerciseSummarySection,
+    TrainingFuelSection,
   ],
   templateUrl: './week-page.html',
   styleUrl: './week-page.scss',
