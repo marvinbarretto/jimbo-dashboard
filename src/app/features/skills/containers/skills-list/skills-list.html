@@ -63,4 +63,20 @@
       {{ context.getValue() ? 'Yes' : 'No' }}
     </app-ui-badge>
   </ng-template>
+
+  <ng-template #potentialCell let-context>
+    @if (context.getValue() != null) {
+      <span class="potential">{{ context.getValue() }}<span class="potential__max">/5</span></span>
+    } @else {
+      <span class="hint">—</span>
+    }
+  </ng-template>
+
+  <ng-template #statusCell let-context>
+    @if (context.getValue(); as status) {
+      <app-ui-badge [tone]="statusTone(status)">{{ status }}</app-ui-badge>
+    } @else {
+      <span class="hint">—</span>
+    }
+  </ng-template>
 </app-ui-stack>

@@ -32,6 +32,13 @@ export interface SkillMetadata {
   trigger?: string;
   argument_hint?: string;
   deprecated?: boolean;
+  // Operator assessment fields (Marvin's skills-map verdict). Source: SKILL.md
+  // frontmatter under metadata, served by jimbo-api. Optional — most skills
+  // carry them, infra/sub-skills may not.
+  potential?: number;
+  status?: 'keep' | 'refine' | 'wire-ambient' | 'shelve' | 'infra';
+  fires_via?: 'reactive' | 'ambient' | 'ritual' | 'cron' | 'hermes' | 'sub-skill';
+  verdict?: string;
 }
 
 export interface Skill {

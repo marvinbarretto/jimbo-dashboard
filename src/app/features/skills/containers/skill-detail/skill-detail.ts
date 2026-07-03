@@ -66,4 +66,16 @@ export class SkillDetail {
   readonly isActive = computed(() => this.skill()?.metadata.is_active !== false);
 
   readonly statusLabel = computed(() => this.isActive() ? 'Active' : 'Inactive');
+
+  // Skills-map lifecycle verdict → badge tone (mirrors skills-list).
+  statusTone(
+    status: 'keep' | 'refine' | 'wire-ambient' | 'shelve' | 'infra' | undefined,
+  ): 'success' | 'warning' | 'info' | 'neutral' {
+    switch (status) {
+      case 'keep': return 'success';
+      case 'refine': return 'warning';
+      case 'wire-ambient': return 'info';
+      default: return 'neutral';
+    }
+  }
 }

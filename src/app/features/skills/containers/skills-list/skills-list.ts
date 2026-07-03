@@ -61,6 +61,10 @@ export class SkillsList {
     viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, string | undefined> }>>('lastUsedCell');
   private readonly activeCell =
     viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, boolean> }>>('activeCell');
+  private readonly potentialCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, number | undefined> }>>('potentialCell');
+  private readonly statusCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, Skill['metadata']['status']> }>>('statusCell');
 
   readonly columns: ColumnDef<Skill, any>[] = [
     this.columnHelper.accessor(row => this.namespace(row.id), {
@@ -74,6 +78,26 @@ export class SkillsList {
       header: 'Name',
       cell: () => this.nameCell(),
       sortingFn: 'alphanumeric',
+    }),
+    this.columnHelper.accessor(row => row.metadata.potential, {
+      id: 'potential',
+      header: 'Potential',
+      cell: () => this.potentialCell(),
+      // Higher potential first; unscored (undefined) sinks to the bottom.
+      sortingFn: (a, b, columnId) => {
+        const left = a.getValue<number | undefined>(columnId);
+        const right = b.getValue<number | undefined>(columnId);
+        if (left == null && right == null) return 0;
+        if (left == null) return 1;
+        if (right == null) return -1;
+        return right - left;
+      },
+    }),
+    this.columnHelper.accessor(row => row.metadata.status, {
+      id: 'status',
+      header: 'Status',
+      cell: () => this.statusCell(),
+      enableSorting: false,
     }),
     this.columnHelper.accessor('type', {
       header: 'Type',
@@ -128,6 +152,17 @@ export class SkillsList {
     if (type === 'interactive') return 'info';
     if (type === 'agent') return 'warning';
     return 'neutral';
+  }
+
+  // Skills-map lifecycle verdict → badge tone. keep=good, refine=needs work,
+  // wire-ambient=right skill wrong trigger, shelve/infra=off the menu.
+  statusTone(status: Skill['metadata']['status']): 'success' | 'warning' | 'info' | 'neutral' {
+    switch (status) {
+      case 'keep': return 'success';
+      case 'refine': return 'warning';
+      case 'wire-ambient': return 'info';
+      default: return 'neutral'; // shelve, infra, undefined
+    }
   }
 
   // Coarse relative time so the table doesn't churn while the user reads it.
