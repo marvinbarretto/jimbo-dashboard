@@ -26,7 +26,8 @@ import {
 import { withVaultDetailModal, swapDetailSeq } from '@shared/kanban/detail-modal';
 import { CommandShortcutsService } from '@shared/services/command-shortcuts.service';
 import { effectivePriority, isActive, isDone, type VaultItem } from '@domain/vault';
-import { AutomationSettingsService } from '@features/automation-settings/automation-settings.service';
+import { ExecutionConfigService } from '@features/execution/data-access/execution-config.service';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 
 // The board collapsed from "Ready + 8 commission-stage columns" into three
 // workflow lanes that BOTH manual (human-owned) and automated (agent-commission)
@@ -102,7 +103,7 @@ interface FacetSkip { skipOwner?: boolean; skipProject?: boolean; skipPriority?:
 
 @Component({
   selector: 'app-execution-board',
-  imports: [VaultCard, CommissionCard, KanbanColumn, KanbanFilterBar, BoardCreateBar],
+  imports: [VaultCard, CommissionCard, KanbanColumn, KanbanFilterBar, BoardCreateBar, UiButtonLink],
   templateUrl: './execution-board.html',
   styleUrl: './execution-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -120,11 +121,11 @@ export class ExecutionBoard {
   private readonly shortcuts = inject(CommandShortcutsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly automationSettings = inject(AutomationSettingsService);
+  private readonly executionConfig = inject(ExecutionConfigService);
 
   // null = never auto-clear (default — matches pre-feature behavior).
   private readonly doneLaneAutoClearDays = computed(
-    () => this.automationSettings.config()?.done_lane_auto_clear_days ?? null,
+    () => this.executionConfig.config()?.done_lane_auto_clear_days ?? null,
   );
 
   // --- drag state ---------------------------------------------------------

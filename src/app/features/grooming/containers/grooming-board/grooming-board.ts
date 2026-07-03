@@ -49,6 +49,7 @@ import { createKanbanFilterState } from '@shared/kanban/filter-state';
 import { withVaultDetailModal, swapDetailSeq } from '@shared/kanban/detail-modal';
 import { CommandShortcutsService } from '@shared/services/command-shortcuts.service';
 import { isSeedMode } from '@shared/seed-mode';
+import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 
 // Filter dimension ids + sentinels (UNASSIGNED / NO_PRIORITY) come from the shared
 // kanban facet module, so the grooming and execution boards stay in lockstep.
@@ -62,7 +63,7 @@ interface ColumnView {
 
 @Component({
   selector: 'app-grooming-board',
-  imports: [VaultCard, KanbanColumn, KanbanFilterBar],
+  imports: [VaultCard, KanbanColumn, KanbanFilterBar, UiButtonLink],
   templateUrl: './grooming-board.html',
   styleUrl: './grooming-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

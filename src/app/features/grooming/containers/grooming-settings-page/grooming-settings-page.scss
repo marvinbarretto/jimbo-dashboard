@@ -1,4 +1,4 @@
-.automation-hint {
+.grooming-settings-hint {
   margin: 0 0 var(--s-3);
   font-size: 0.85rem;
   color: var(--color-text-muted);
@@ -10,11 +10,11 @@
   }
 }
 
-.automation-form {
+.grooming-settings-form {
   max-width: 28rem;
 }
 
-.automation-field {
+.grooming-settings-field {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -33,9 +33,5 @@
     background: var(--color-surface);
     color: var(--color-text);
     font-size: 0.85rem;
-  }
-
-  &__input--narrow {
-    max-width: 8rem;
   }
 }

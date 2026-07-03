@@ -8,6 +8,11 @@
   code { font-size: 0.7rem; }
 }
 
+.board__toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
 // Wrapper around <app-vault-card> that owns drag behaviour. The card itself
 // stays drag-agnostic; the wrapper is the draggable host element.
 .board__card-wrap {

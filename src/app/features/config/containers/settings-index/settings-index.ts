@@ -17,9 +17,14 @@ interface SettingsEntry {
 
 const SETTINGS_ENTRIES: readonly SettingsEntry[] = [
   {
-    title: 'Automation',
-    description: 'GitHub issue assessment routing (executor + skill) and execution board Done-lane auto-clear.',
-    link: '/config/automation',
+    title: 'Grooming',
+    description: 'GitHub issue assessment routing — who runs it (executor) and with which skill.',
+    link: '/grooming/settings',
+  },
+  {
+    title: 'Execution',
+    description: 'Execution board Done-lane auto-clear threshold.',
+    link: '/execution/settings',
   },
   {
     title: 'Calendar',

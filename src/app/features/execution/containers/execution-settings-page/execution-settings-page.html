@@ -1,0 +1,34 @@
+<app-ui-stack gap="lg">
+  <app-ui-page-header>
+    <app-ui-back-link uiPageHeaderLead [to]="['/execution']">← Execution</app-ui-back-link>
+    <h1 uiPageHeaderTitle>Execution settings</h1>
+  </app-ui-page-header>
+
+  @if (loading()) {
+    <app-ui-loading-state message="Loading…" />
+  } @else {
+    <app-ui-section title="Done lane" [collapsible]="false">
+      <p class="execution-settings-hint">
+        Auto-clear cards from the Done lane after this many days — applies to every card
+        (manual and agent commission alike). The underlying vault item / dispatch record is
+        untouched; this only hides it from the board. Leave empty to never auto-clear.
+      </p>
+      <label class="execution-settings-field">
+        <span class="execution-settings-field__label">Auto-clear (days)</span>
+        <input
+          class="execution-settings-field__input"
+          type="number"
+          min="1"
+          step="1"
+          [value]="autoClearDays()"
+          (change)="onAutoClearDaysChange($event)"
+          placeholder="never"
+        />
+      </label>
+    </app-ui-section>
+
+    <app-ui-button variant="primary" [disabled]="!dirty() || saving()" (pressed)="save()">
+      {{ saving() ? 'Saving…' : 'Save' }}
+    </app-ui-button>
+  }
+</app-ui-stack>
