@@ -31,6 +31,7 @@
           suffix=" min"
           accent="rgba(251, 146, 60, 0.7)"
           [height]="240"
+          [showTrend]="true"
         />
       } @else {
         <app-ui-empty-state title="Quiet month" message="No focus sessions recorded." />
@@ -45,6 +46,7 @@
           label="Pomodoros"
           accent="rgba(96, 165, 250, 0.7)"
           [height]="180"
+          [showTrend]="true"
         />
       } @else {
         <app-ui-empty-state message="No completed pomodoros this month." />
