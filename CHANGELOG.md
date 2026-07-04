@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.102](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.101...v0.0.102) (2026-07-04)
+
+
+### Features
+
+* **exercise,nutrition:** cardio quick-add, rolling-median trends, logical day ([e93cb4c](https://github.com/marvinbarretto/jimbo-dashboard/commit/e93cb4cc21c802f832295c37049c328aeecfec38))
+* **journal:** show fueling-by-training-day chart on week page too ([4fe1a65](https://github.com/marvinbarretto/jimbo-dashboard/commit/4fe1a658e6238df362ddf43728b6e6736955cd40))
+* **kanban:** epic drill-down facet, solid selected chips, denser bar ([a8f25d8](https://github.com/marvinbarretto/jimbo-dashboard/commit/a8f25d81cb9e1ad8b73790f4fa68413ec7f8c733))
+* **skills:** render description column via app-ui-prose ([d71a6dd](https://github.com/marvinbarretto/jimbo-dashboard/commit/d71a6dd1c3bcfb156627248988bfbba2d7c793e8))
+* **skills:** show potential + status columns on the skills page ([fa9130e](https://github.com/marvinbarretto/jimbo-dashboard/commit/fa9130ef157f4bccd4bc2be2ab7e12c439cc0c21))
+
 ### [0.0.101](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.100...v0.0.101) (2026-07-03)
 
 
