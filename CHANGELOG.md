@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.103](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.102...v0.0.103) (2026-07-04)
+
+
+### Features
+
+* **journal:** show 7-day rolling-median trend on week/month charts ([b418b16](https://github.com/marvinbarretto/jimbo-dashboard/commit/b418b16a3f41f8db8db7fe25664e909bc807bf98))
+
 ### [0.0.102](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.101...v0.0.102) (2026-07-04)
 
 
