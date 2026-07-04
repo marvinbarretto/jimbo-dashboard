@@ -21,7 +21,7 @@ import {
   type TrackerPatch,
 } from '@shared/components/tracker/tracker.types';
 import { ToastService } from '@shared/components/toast/toast.service';
-import { londonDay, londonToday, shiftIsoDay } from '@shared/utils/datetime.utils';
+import { logicalDay, logicalToday, shiftIsoDay } from '@shared/utils/datetime.utils';
 import {
   type DayKey,
   type MonthKey,
@@ -36,7 +36,6 @@ import {
   shiftWeek,
   thisMonthKey,
   thisWeekKey,
-  todayKey,
   weekStartFromKey,
 } from '@shared/utils/date-keys';
 import {
@@ -112,7 +111,7 @@ export class NutritionPage {
   // constructor-time read is safe (never goes stale within one instance).
   protected readonly granularity = this.route.snapshot.data['granularity'] as TrackerPeriod;
 
-  protected readonly todayIso = londonToday();
+  protected readonly todayIso = logicalToday();
 
   // The raw route key, in the format the route param uses (DayKey / WeekKey /
   // MonthKey) — what previous/next/today navigate with.
@@ -201,7 +200,7 @@ export class NutritionPage {
   private readonly alcoholByDay = computed<Map<string, number>>(() => {
     const map = new Map<string, number>();
     for (const f of this.foodEntries()) {
-      const day = londonDay(f.logged_at);
+      const day = logicalDay(f.logged_at);
       for (const it of f.items) {
         if (isAlcoholicDrink(it)) map.set(day, (map.get(day) ?? 0) + it.kcal);
       }
@@ -264,8 +263,8 @@ export class NutritionPage {
       groups.set(day, arr);
     };
 
-    for (const f of this.foodEntries()) push(londonDay(f.logged_at), foodToEntry(f));
-    for (const s of this.supplements()) push(londonDay(s.taken_at), suppToEntry(s));
+    for (const f of this.foodEntries()) push(logicalDay(f.logged_at), foodToEntry(f));
+    for (const s of this.supplements()) push(logicalDay(s.taken_at), suppToEntry(s));
 
     for (const d of this.windowDays()) if (!groups.has(d)) groups.set(d, []);
 
@@ -432,14 +431,17 @@ function splitId(id: string): { kind: 'food' | 'supp'; id: string } {
 // the two per granularity. (Mirrors ExercisePage.)
 
 function sanitiseKey(granularity: TrackerPeriod, params: { get(name: string): string | null }): string {
-  if (granularity === 'day') { const v = params.get('date'); return isDayKey(v) ? v : todayKey(); }
+  // 'day' falls back to the logical day (04:00 Europe/London cutover), not
+  // the plain calendar day — must agree with `todayIso` below, or "Today"
+  // and the default route land on different days in the 00:00-04:00 window.
+  if (granularity === 'day') { const v = params.get('date'); return isDayKey(v) ? v : logicalToday(); }
   if (granularity === 'week') { const v = params.get('week'); return isWeekKey(v) ? v : thisWeekKey(); }
   const v = params.get('month');
   return isMonthKey(v) ? v : thisMonthKey();
 }
 
 function defaultKey(granularity: TrackerPeriod): string {
-  if (granularity === 'day') return todayKey();
+  if (granularity === 'day') return logicalToday();
   if (granularity === 'week') return thisWeekKey();
   return thisMonthKey();
 }

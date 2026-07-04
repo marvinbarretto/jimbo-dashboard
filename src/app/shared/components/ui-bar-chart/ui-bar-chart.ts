@@ -6,10 +6,21 @@
 // Pass `series` instead of `values` to render stacked segments per bar (e.g.
 // food vs alcohol calories). `values`/`series` are mutually exclusive — when
 // `series` is set the x/y axes stack and a legend appears.
+//
+// Set `showTrend` on day-ordered charts to overlay a 7-day rolling-median
+// line — a median (not a mean) shrugs off single outlier days (a big night
+// out, a misattributed late entry) instead of smearing their effect across
+// the whole window, so the underlying trend reads clearly. Only meaningful
+// when bars are consecutive days; skip it on categorical charts (e.g.
+// "switches per domain").
 
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import type { ChartConfiguration, TooltipItem } from 'chart.js';
+import type { ChartConfiguration, ChartDataset, TooltipItem } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
+import { rollingMedian } from '@shared/utils/rolling-median';
+
+const TREND_WINDOW_DAYS = 7;
+const TREND_LINE_COLOR = 'rgba(148, 163, 184, 0.9)'; // neutral slate — reads as "trend", not another data series
 
 /** One stacked segment across all bars. */
 export interface BarSeries {
@@ -58,30 +69,63 @@ export class UiBarChart {
   readonly height = input<number>(220);
   readonly suffix = input<string>('');
   readonly accent = input<string | null>(null);
+  readonly showTrend = input<boolean>(false);
 
   /** True once `series` is supplied — switches the chart to stacked mode. */
   readonly stacked = computed(() => this.series().length > 0);
 
-  readonly chartData = computed<ChartConfiguration<'bar'>['data']>(() => {
+  // The trend line tracks the total per bar — for stacked charts that's the
+  // sum across series (e.g. food + alcohol calories), not any one segment.
+  private readonly dailyTotals = computed<readonly number[]>(() => {
+    const series = this.series();
+    if (series.length) {
+      const days = series[0]?.values.length ?? 0;
+      return Array.from({ length: days }, (_, i) => series.reduce((sum, s) => sum + (s.values[i] ?? 0), 0));
+    }
+    return this.values();
+  });
+
+  private readonly trendLine = computed<readonly number[] | null>(() =>
+    this.showTrend() ? rollingMedian(this.dailyTotals(), TREND_WINDOW_DAYS) : null,
+  );
+
+  readonly chartData = computed<ChartConfiguration<'bar' | 'line'>['data']>(() => {
     const labels = [...this.labels()];
     const series = this.series();
+    const trend = this.trendLine();
+
+    const trendDataset: ChartDataset<'line'> | null = trend && {
+      type: 'line',
+      data: [...trend],
+      label: `${TREND_WINDOW_DAYS}-day median`,
+      borderColor: TREND_LINE_COLOR,
+      backgroundColor: TREND_LINE_COLOR,
+      borderWidth: 2,
+      borderDash: [4, 3],
+      pointRadius: 0,
+      tension: 0.3,
+      order: 0,
+    };
 
     if (series.length) {
       return {
         labels,
-        datasets: series.map((s, i) => {
-          const fill = s.accent ?? SERIES_PALETTE[i % SERIES_PALETTE.length];
-          return {
-            data: [...s.values],
-            label: s.label,
-            backgroundColor: fill,
-            borderColor: fill,
-            borderWidth: 1,
-            borderRadius: 4,
-            maxBarThickness: 36,
-            stack: 'total',
-          };
-        }),
+        datasets: [
+          ...series.map((s, i): ChartDataset<'bar'> => {
+            const fill = s.accent ?? SERIES_PALETTE[i % SERIES_PALETTE.length];
+            return {
+              data: [...s.values],
+              label: s.label,
+              backgroundColor: fill,
+              borderColor: fill,
+              borderWidth: 1,
+              borderRadius: 4,
+              maxBarThickness: 36,
+              stack: 'total',
+            };
+          }),
+          ...(trendDataset ? [trendDataset] : []),
+        ],
       };
     }
 
@@ -97,24 +141,27 @@ export class UiBarChart {
           borderRadius: 4,
           maxBarThickness: 36,
         },
+        ...(trendDataset ? [trendDataset] : []),
       ],
     };
   });
 
-  readonly chartOptions = computed<ChartConfiguration<'bar'>['options']>(() => {
+  readonly chartOptions = computed<ChartConfiguration<'bar' | 'line'>['options']>(() => {
     const suffix = this.suffix();
     const stacked = this.stacked();
+    const showLegend = stacked || this.showTrend();
     return {
       responsive: true,
       maintainAspectRatio: false,
       animation: false,
       plugins: {
-        legend: { display: stacked, position: 'bottom' },
+        legend: { display: showLegend, position: 'bottom' },
         tooltip: {
           callbacks: {
-            label: (ctx: TooltipItem<'bar'>) => {
+            label: (ctx: TooltipItem<'bar' | 'line'>) => {
               const y = ctx.parsed.y ?? 0;
-              return stacked ? `${ctx.dataset.label}: ${Math.round(y)}${suffix}` : `${y}${suffix}`;
+              const prefix = stacked || ctx.dataset.type === 'line' ? `${ctx.dataset.label}: ` : '';
+              return `${prefix}${Math.round(y)}${suffix}`;
             },
           },
         },

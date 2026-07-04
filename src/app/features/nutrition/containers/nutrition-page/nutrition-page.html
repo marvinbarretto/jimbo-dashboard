@@ -35,6 +35,7 @@
             [labels]="trendLabels()"
             [series]="trendSeries()"
             suffix=" kcal"
+            [showTrend]="true"
           />
         } @else {
           <app-ui-empty-state message="No entries in this window." />

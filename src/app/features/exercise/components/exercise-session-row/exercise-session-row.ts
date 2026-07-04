@@ -28,12 +28,29 @@ const ADD_SET_MEASURES: readonly TrackerMeasure[] = [
 
 type SetField = 'sets' | 'reps' | 'weight_kg';
 
+interface CardioPreset {
+  readonly label: string;
+  readonly duration_min: number;
+  readonly distance_km?: number;
+}
+
+// The handful of activities that cover almost every backdated cardio guess.
+// One tap logs a sensible estimate; edit the row inline after if it's off.
+// Grow this list only if a new activity keeps recurring.
+const CARDIO_PRESETS: readonly CardioPreset[] = [
+  { label: '5k run', duration_min: 30, distance_km: 5 },
+  { label: '10k run', duration_min: 60, distance_km: 10 },
+  { label: '5k walk', duration_min: 60, distance_km: 5 },
+  { label: '10k walk', duration_min: 120, distance_km: 10 },
+  { label: '5-a-side football', duration_min: 60 },
+];
+
 /**
  * One gym session as an expandable, editable ledger row. Collapsed it's a
  * summary (time · focus · volume/sets); expanded it lists each set as
- * `sets × reps × weight kg` (every number edits in place), its cardio, and an
- * add-set picker. The session header (time, notes) edits in place; delete
- * removes the whole workout.
+ * `sets × reps × weight kg` (every number edits in place), its cardio, and
+ * add-set / add-cardio pickers. The session header (time, notes) edits in
+ * place; delete removes the whole workout.
  *
  * Presentational: set/cardio edits bubble as {@link TrackerPatch}/remove with
  * `set:`/`cardio:`-prefixed ids so the page routes them to the right endpoint.
@@ -128,6 +145,16 @@ type SetField = 'sets' | 'reps' | 'weight_kg';
               [allowCreate]="true"
               placeholder="search or add an exercise…" addLabel="Add"
               (add)="onAddSet($event)" />
+            <div class="session__presets">
+              @for (p of cardioPresets; track p.label) {
+                <button type="button" class="session__preset" (click)="addPreset(p)">{{ p.label }}</button>
+              }
+            </div>
+            <app-ui-quick-add-row class="session__add"
+              [options]="exerciseOptions()" [measures]="cardioMeasures"
+              [allowCreate]="true"
+              placeholder="or search / add another cardio activity…" addLabel="Add cardio"
+              (add)="onAddCardio($event)" />
           }
         </div>
       }
@@ -213,6 +240,27 @@ type SetField = 'sets' | 'reps' | 'weight_kg';
       padding-top: 0.45rem;
       border-top: 1px dashed color-mix(in srgb, var(--color-border) 50%, transparent);
     }
+
+    .session__presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.35rem;
+      padding-top: 0.45rem;
+      border-top: 1px dashed color-mix(in srgb, var(--color-border) 50%, transparent);
+    }
+    .session__preset {
+      font: inherit;
+      font-size: 0.78rem;
+      color: var(--color-text);
+      background: var(--color-surface-soft, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+      border-radius: 999px;
+      padding: 0.22rem 0.6rem;
+      cursor: pointer;
+
+      &:hover { border-color: var(--color-accent); }
+    }
   `],
 })
 export class ExerciseSessionRow {
@@ -225,9 +273,11 @@ export class ExerciseSessionRow {
   readonly childPatch = output<TrackerPatch>();
   readonly childRemove = output<string>();
   readonly addSet = output<{ sessionId: string; draft: TrackerDraft }>();
+  readonly addCardio = output<{ sessionId: string; draft: TrackerDraft }>();
 
   protected readonly cardioMeasures = CARDIO_MEASURES;
   protected readonly addSetMeasures = ADD_SET_MEASURES;
+  protected readonly cardioPresets = CARDIO_PRESETS;
   // Expanded by default — the sets are the point; the toggle is just for tucking
   // away a workout you're not editing.
   protected readonly open = signal(true);
@@ -276,6 +326,16 @@ export class ExerciseSessionRow {
 
   protected onAddSet(draft: TrackerDraft): void {
     this.addSet.emit({ sessionId: this.session().id, draft });
+  }
+
+  protected onAddCardio(draft: TrackerDraft): void {
+    this.addCardio.emit({ sessionId: this.session().id, draft });
+  }
+
+  protected addPreset(preset: CardioPreset): void {
+    const values: Record<string, number> = { duration_min: preset.duration_min };
+    if (preset.distance_km !== undefined) values['distance_km'] = preset.distance_km;
+    this.onAddCardio({ label: preset.label, values });
   }
 }
 

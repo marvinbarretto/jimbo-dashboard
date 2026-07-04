@@ -21,7 +21,7 @@ import {
   type TrackerPatch,
 } from '@shared/components/tracker/tracker.types';
 import { ToastService } from '@shared/components/toast/toast.service';
-import { londonDay, londonToday, relativeDayLabel, shiftIsoDay } from '@shared/utils/datetime.utils';
+import { logicalDay, logicalToday, relativeDayLabel, shiftIsoDay } from '@shared/utils/datetime.utils';
 import {
   type DayKey,
   type MonthKey,
@@ -36,7 +36,6 @@ import {
   shiftWeek,
   thisMonthKey,
   thisWeekKey,
-  todayKey,
   weekStartFromKey,
 } from '@shared/utils/date-keys';
 import { sessionStats } from '../../utils/exercise-format';
@@ -88,7 +87,7 @@ export class ExercisePage {
   // constructor-time read is safe (never goes stale within one instance).
   protected readonly granularity = this.route.snapshot.data['granularity'] as TrackerPeriod;
 
-  protected readonly todayIso = londonToday();
+  protected readonly todayIso = logicalToday();
 
   // The raw route key, in the format that route param uses (DayKey / WeekKey
   // / MonthKey) — what previous/next/today navigate with.
@@ -219,7 +218,7 @@ export class ExercisePage {
   protected readonly days = computed<{ date: string; label: string; sessions: SessionDetailed[] }[]>(() => {
     const groups = new Map<string, SessionDetailed[]>();
     for (const s of this.sessions()) {
-      const day = londonDay(s.started_at);
+      const day = logicalDay(s.started_at);
       (groups.get(day) ?? groups.set(day, []).get(day)!).push(s);
     }
     for (const d of this.windowDays()) if (!groups.has(d)) groups.set(d, []);
@@ -345,6 +344,33 @@ export class ExercisePage {
       .subscribe({ next: () => this.reload(), error: () => this.toast.error('Could not add set') });
   }
 
+  protected onAddCardio(e: { sessionId: string; draft: TrackerDraft }): void {
+    // Same get-or-create flow as sets — a free-text activity ("parkrun",
+    // "5-a-side") becomes a cardio-typed catalogue exercise on first use.
+    if (e.draft.ref) {
+      this.addCardio(e.sessionId, e.draft.ref, e.draft);
+      return;
+    }
+    const name = e.draft.label.trim();
+    if (!name) return;
+    this.service.createExercise(name).subscribe({
+      next: (ex) => this.addCardio(e.sessionId, ex.id, e.draft),
+      error: () => this.toast.error('Could not create exercise'),
+    });
+  }
+
+  private addCardio(sessionId: string, exerciseId: string, draft: TrackerDraft): void {
+    const durationMin = draft.values['duration_min'];
+    this.service
+      .createCardio(sessionId, {
+        exercise_id: exerciseId,
+        duration_s: durationMin === undefined ? undefined : durationMin * 60,
+        distance_km: draft.values['distance_km'],
+        avg_heart_rate: draft.values['hr'],
+      })
+      .subscribe({ next: () => this.reload(), error: () => this.toast.error('Could not add cardio') });
+  }
+
   private reload(): void {
     this.sessionsRes.reload();
     this.dailyRes.reload();
@@ -367,14 +393,17 @@ function toNoonIso(date: string): string | null {
 // the two per granularity.
 
 function sanitiseKey(granularity: TrackerPeriod, params: { get(name: string): string | null }): string {
-  if (granularity === 'day') { const v = params.get('date'); return isDayKey(v) ? v : todayKey(); }
+  // 'day' falls back to the logical day (04:00 Europe/London cutover), not
+  // the plain calendar day — must agree with `todayIso` below, or "Today"
+  // and the default route land on different days in the 00:00-04:00 window.
+  if (granularity === 'day') { const v = params.get('date'); return isDayKey(v) ? v : logicalToday(); }
   if (granularity === 'week') { const v = params.get('week'); return isWeekKey(v) ? v : thisWeekKey(); }
   const v = params.get('month');
   return isMonthKey(v) ? v : thisMonthKey();
 }
 
 function defaultKey(granularity: TrackerPeriod): string {
-  if (granularity === 'day') return todayKey();
+  if (granularity === 'day') return logicalToday();
   if (granularity === 'week') return thisWeekKey();
   return thisMonthKey();
 }

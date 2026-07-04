@@ -33,6 +33,26 @@ export function londonDay(iso: string): string {
   return new Date(iso).toLocaleDateString('en-CA', { timeZone: LONDON });
 }
 
+// ── Logical-day helpers ───────────────────────────────────────────
+// Nutrition/exercise entries are bucketed server-side by a "logical day"
+// that starts at 04:00 Europe/London, not midnight — a 1:30am entry counts
+// as "last night", not "today". Mirrors LOGICAL_DAY_CUTOVER_HOURS in
+// jimbo-api's coach-tz.ts. Only relevant for deciding what "Today" means for
+// these two features — journal/other pages still use plain londonToday().
+
+const LOGICAL_DAY_CUTOVER_HOURS = 4;
+
+/** Today's logical day (YYYY-MM-DD) — starts at 04:00 Europe/London, not midnight. */
+export function logicalToday(now: Date = new Date()): string {
+  return londonToday(new Date(now.getTime() - LOGICAL_DAY_CUTOVER_HOURS * 3600_000));
+}
+
+/** The logical day (YYYY-MM-DD) a timestamp falls on. */
+export function logicalDay(iso: string): string {
+  const shifted = new Date(new Date(iso).getTime() - LOGICAL_DAY_CUTOVER_HOURS * 3600_000);
+  return shifted.toLocaleDateString('en-CA', { timeZone: LONDON });
+}
+
 /**
  * Shift a YYYY-MM-DD day by whole days. Parsed as UTC midnight and shifted in
  * UTC so the date arithmetic itself never drifts across DST.

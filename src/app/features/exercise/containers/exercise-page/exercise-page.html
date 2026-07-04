@@ -30,7 +30,7 @@
     @if (showPatterns()) {
       <app-ui-section title="Volume per day" [collapsible]="false">
         @if (hasTrend()) {
-          <app-ui-bar-chart [labels]="trendLabels()" [values]="trendValues()" label="volume" suffix=" kg" />
+          <app-ui-bar-chart [labels]="trendLabels()" [values]="trendValues()" label="volume" suffix=" kg" [showTrend]="true" />
         } @else {
           <app-ui-empty-state message="No sessions in this window." />
         }
@@ -69,6 +69,7 @@
               (childPatch)="onChildPatch($event)"
               (childRemove)="onChildRemove($event)"
               (addSet)="onAddSet($event)"
+              (addCardio)="onAddCardio($event)"
             />
           } @empty {
             <p class="exercise-ledger__empty">No workout logged this day.</p>
