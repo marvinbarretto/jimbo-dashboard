@@ -9,9 +9,22 @@
         <app-ui-stat-card label="Workouts" [value]="totals().sessions.toString()" />
         <app-ui-stat-card label="Sets" [value]="totals().sets.toString()" />
         <app-ui-stat-card label="Volume" [value]="totals().volumeKg.toString()" detail="kg" />
+        <app-ui-stat-card label="Cardio" [value]="cardioLabel()" />
         <app-ui-stat-card label="Steps" [value]="activityTotals().steps.toLocaleString()" />
         <app-ui-stat-card label="Distance" [value]="activityTotals().distanceKm.toString()" detail="km" />
       </div>
+
+      @if (activityMix().length > 0) {
+        <ul class="exercise-summary__mix">
+          @for (row of activityMix(); track row.label) {
+            <li class="exercise-summary__mix-row">
+              <span class="exercise-summary__mix-label">{{ row.label }}</span>
+              <span class="exercise-summary__mix-days">{{ row.days }} {{ row.days === 1 ? 'day' : 'days' }}</span>
+              <span class="exercise-summary__mix-detail">{{ row.detail }}</span>
+            </li>
+          }
+        </ul>
+      }
 
       @if (hasData()) {
         <app-ui-bar-chart
