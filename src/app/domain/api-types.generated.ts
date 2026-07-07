@@ -3848,7 +3848,7 @@ export interface paths {
             parameters: {
                 query?: {
                     /** @description Filter to tasks for a specific executor */
-                    executor?: "jimbo" | "marvin" | "ralph" | "boris";
+                    executor?: "jimbo" | "marvin" | "kipper" | "boris";
                 };
                 header?: never;
                 path?: never;
@@ -11584,7 +11584,7 @@ export interface components {
             } | null;
             suggested_skills?: string | null;
             /** @enum {string|null} */
-            executor?: "jimbo" | "marvin" | "ralph" | "boris" | null;
+            executor?: "jimbo" | "marvin" | "kipper" | "boris" | null;
             is_epic?: number;
             blocked_reason?: string | null;
             /** @description Internal grooming lock — only set null to clear an orphan lock when no active dispatch exists */
@@ -12228,7 +12228,7 @@ export interface components {
              * @description Network identity that will execute the task. Nullable only on legacy rows pre-migration.
              * @enum {string|null}
              */
-            executor: "jimbo" | "marvin" | "ralph" | "boris" | null;
+            executor: "jimbo" | "marvin" | "kipper" | "boris" | null;
             /** @description Path under hub/skills/ (e.g. "code/pr-from-issue"). Nullable during transition period. */
             skill: string | null;
             /** @description JSON-encoded context blob passed to the skill at runtime. */
@@ -12327,7 +12327,7 @@ export interface components {
              * @description Network identity that will execute the task
              * @enum {string}
              */
-            executor: "jimbo" | "marvin" | "ralph" | "boris";
+            executor: "jimbo" | "marvin" | "kipper" | "boris";
             /** @description Skill path under hub/skills/ (e.g. "vault-grooming/analyse") */
             skill: string;
             /** @description Optional JSON blob passed to the skill at runtime */
@@ -13626,7 +13626,7 @@ export interface components {
             repo_url?: string | null;
         };
         Actor: {
-            /** @description Slug identifier, e.g. "marvin", "ralph" */
+            /** @description Slug identifier, e.g. "marvin", "kipper" */
             id: string;
             display_name: string;
             /**

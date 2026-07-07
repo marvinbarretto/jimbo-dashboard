@@ -24,7 +24,7 @@ export type ProjectKind = 'major' | 'minor' | 'admin';
 export type ProjectAutonomyLevel = 'none' | 'propose' | 'ship';
 
 // Structured brief — one block of context every project should carry, surfaced
-// on the detail page and injected into Boris/Ralph context. All optional so
+// on the detail page and injected into Boris/Kipper context. All optional so
 // projects can be richer or poorer without ceremony.
 export interface ProjectBrief {
   intent:           string | null;  // one-line north star

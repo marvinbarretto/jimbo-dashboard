@@ -19,10 +19,10 @@ describe('formatEvent — standard line shape', () => {
   });
 
   it('formats a hand-off (`assigned` with a prior owner) as `reassigned`', () => {
-    const e: VaultActivityEvent = { ...base, type: 'assigned', actor_id: wellKnownActorId('marvin'), from_actor_id: wellKnownActorId('boris'), to_actor_id: wellKnownActorId('ralph'), reason: null };
+    const e: VaultActivityEvent = { ...base, type: 'assigned', actor_id: wellKnownActorId('marvin'), from_actor_id: wellKnownActorId('boris'), to_actor_id: wellKnownActorId('kipper'), reason: null };
     const r = formatEvent(e);
     expect(r.verb).toBe('reassigned');
-    expect(r.target).toBe('ralph');
+    expect(r.target).toBe('kipper');
   });
 
   it('formats an initial assignment (no prior owner) as `assigned`, not `reassigned`', () => {

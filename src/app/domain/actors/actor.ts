@@ -2,10 +2,10 @@ import type { ActorId } from '../ids';
 import type { SkillCapability } from '../capability';
 
 // An actor is anyone or anything that can take an action on a vault item.
-// Today that's marvin (human), ralph (local llm), boris (hosted llm), jimbo (orchestrator).
+// Today that's marvin (human), kipper (local llm), boris (hosted llm), jimbo (orchestrator).
 // Tomorrow it might be a second human, a different local model, a scheduled cron.
 // The shape is deliberately minimal — identity + routing hint, nothing operational.
-// Live status (is ralph reachable right now?) belongs elsewhere, not on the identity row.
+// Live status (is kipper reachable right now?) belongs elsewhere, not on the identity row.
 //
 // Convention for system-originated events: `jimbo` is the actor of record.
 // When an item is created by gmail intake, a scheduled cron, or any automated path
@@ -21,7 +21,7 @@ export type ActorKind = 'human' | 'agent' | 'system';
 export type ActorRuntime = 'ollama' | 'anthropic' | 'openrouter' | 'hermes' | null;
 
 export interface Actor {
-  id: ActorId;                  // slug: 'marvin', 'ralph', 'boris', 'jimbo'
+  id: ActorId;                  // slug: 'marvin', 'kipper', 'boris', 'jimbo'
   display_name: string;
   kind: ActorKind;
   runtime: ActorRuntime;

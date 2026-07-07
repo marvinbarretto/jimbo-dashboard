@@ -495,7 +495,7 @@ export class ProjectLanding {
     }
   }
 
-  // Autonomy level governs how much Boris/Ralph may do without a human in the
+  // Autonomy level governs how much Boris/Kipper may do without a human in the
   // loop on tasks under this project. Null = inherit global default.
   readonly autonomyOptions: readonly { value: ProjectAutonomyLevel | ''; label: string; hint: string }[] = [
     { value: '',        label: 'Default (inherit)', hint: 'No project-specific policy — use the global dispatch default.' },

@@ -75,7 +75,7 @@ interface LabProjectRow {
 export class ListWorkflowSection {
   protected readonly sampleProjects: readonly LabProjectRow[] = [
     { id: 'hermes',     displayName: 'Hermes',     status: 'active',   owner: '@marvin', createdAt: '2026-04-12T09:00:00.000Z' },
-    { id: 'dashboard',  displayName: 'Dashboard',  status: 'active',   owner: '@ralph',  createdAt: '2026-04-18T14:32:00.000Z' },
+    { id: 'dashboard',  displayName: 'Dashboard',  status: 'active',   owner: '@kipper',  createdAt: '2026-04-18T14:32:00.000Z' },
     { id: 'localshout', displayName: 'Localshout', status: 'archived', owner: '@boris',  createdAt: '2026-03-04T11:15:00.000Z' },
   ];
 }

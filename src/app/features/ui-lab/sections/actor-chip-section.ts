@@ -24,7 +24,7 @@ import { actorId } from '@domain/ids';
           <p class="ui-lab__subhead">Pill</p>
           <app-ui-cluster gap="md">
             <app-actor-chip [actor]="marvin" />
-            <app-actor-chip [actor]="ralph" />
+            <app-actor-chip [actor]="kipper" />
             <app-actor-chip [actor]="boris" />
             <app-actor-chip [actor]="jimbo" />
           </app-ui-cluster>
@@ -35,7 +35,7 @@ import { actorId } from '@domain/ids';
 })
 export class ActorChipSection {
   readonly marvin = actorId('marvin');
-  readonly ralph  = actorId('ralph');
+  readonly kipper = actorId('kipper');
   readonly boris  = actorId('boris');
   readonly jimbo  = actorId('jimbo');
 }

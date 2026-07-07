@@ -23,7 +23,7 @@ import { actorId } from '@domain/ids';
           <p class="ui-lab__subhead">Default · outlined ring</p>
           <app-ui-cluster gap="md">
             <app-actor-avatar [actor]="marvin" />
-            <app-actor-avatar [actor]="ralph" />
+            <app-actor-avatar [actor]="kipper" />
             <app-actor-avatar [actor]="boris" />
             <app-actor-avatar [actor]="jimbo" />
           </app-ui-cluster>
@@ -33,7 +33,7 @@ import { actorId } from '@domain/ids';
           <p class="ui-lab__subhead">Filled — high-emphasis only</p>
           <app-ui-cluster gap="md">
             <app-actor-avatar [actor]="marvin" variant="filled" />
-            <app-actor-avatar [actor]="ralph"  variant="filled" />
+            <app-actor-avatar [actor]="kipper"  variant="filled" />
             <app-actor-avatar [actor]="boris"  variant="filled" />
             <app-actor-avatar [actor]="jimbo"  variant="filled" />
           </app-ui-cluster>
@@ -53,7 +53,7 @@ import { actorId } from '@domain/ids';
 })
 export class ActorAvatarSection {
   readonly marvin = actorId('marvin');
-  readonly ralph  = actorId('ralph');
+  readonly kipper = actorId('kipper');
   readonly boris  = actorId('boris');
   readonly jimbo  = actorId('jimbo');
 }

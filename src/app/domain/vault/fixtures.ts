@@ -305,7 +305,7 @@ export const VAULT_ITEMS = [
       'Currently vault-classify runs unconditionally. Should only fire when intake-quality ' +
       'returned actionability=clear. Touches both hermes pipeline-pump and the localshout ' +
       'event-qualifier flow which depends on the same chain.',
-    type: 'task', category: null, assigned_to: wellKnownActorId('ralph'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('kipper'),
     tags: ['pipeline', 'cross-project'],
     acceptance_criteria: [
       { text: 'pipeline-pump skips classify when actionability != clear', done: true },
@@ -373,7 +373,7 @@ export const VAULT_ITEMS = [
     body:
       'Some EH8 postcodes fail in current resolver. Need a fallback path before the ' +
       'submission validator rejects.',
-    type: 'task', category: null, assigned_to: wellKnownActorId('ralph'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('kipper'),
     tags: ['backend', 'localshout'],
     acceptance_criteria: [],
     grooming_status: 'classified',
@@ -521,7 +521,7 @@ export const VAULT_ITEMS = [
     id: ITEM_W, seq: 2423,
     title: 'Tidy: rename internal prop_id to promptId for consistency',
     body: 'Existing var names are inconsistent across hermes / dashboard. Cosmetic.',
-    type: 'task', category: null, assigned_to: wellKnownActorId('ralph'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('kipper'),
     tags: ['cleanup'],
     acceptance_criteria: [
       { text: 'No occurrences of prop_id remain in src/', done: false },
@@ -679,7 +679,7 @@ export const VAULT_ITEMS = [
     body:
       'Filter chips on the vault list are too cramped on narrow screens. Reflow ' +
       'into a dropdown below ~640px viewport.',
-    type: 'task', category: null, assigned_to: wellKnownActorId('ralph'),
+    type: 'task', category: null, assigned_to: wellKnownActorId('kipper'),
     tags: ['frontend', 'ux'],
     acceptance_criteria: [],
     grooming_status: 'classified',
@@ -734,7 +734,7 @@ export const VAULT_ITEMS = [
     created_at: '2026-01-25T10:00:00Z',
   },
 
-  // AF: needs_rework — operator rejected Ralph's decomposition; sent back to Jimbo.
+  // AF: needs_rework — operator rejected Kipper's decomposition; sent back to Jimbo.
   {
     id: ITEM_AF, seq: 2432,
     title: 'Fix webhook retry logic in reaper',

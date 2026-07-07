@@ -26,7 +26,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
         </div>
 
         <div style="--proj-tint: #a878d6; max-width: 280px;">
-          <app-card-parent-link [parentSeq]="2280" parentTitle="Phase C · turn boris/ralph dispatch on" />
+          <app-card-parent-link [parentSeq]="2280" parentTitle="Phase C · turn boris/kipper dispatch on" />
         </div>
       </app-ui-stack>
     </app-ui-section>

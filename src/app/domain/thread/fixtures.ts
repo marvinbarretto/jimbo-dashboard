@@ -5,7 +5,7 @@ import { VAULT_ITEM_IDS } from '../vault/fixtures';
 // Messages exercise every kind:
 //   - A: open question from boris (intake-quality reject) — blocks readiness
 //   - B: comment from marvin (context note)
-//   - C: question from ralph + answer from marvin — answered, does NOT block
+//   - C: question from kipper + answer from marvin — answered, does NOT block
 //   - L: 3 open questions from boris on a vague item (multi-question card test)
 //   - M: 1 unanswered question, ~9 days old (stale)
 //   - N: 2 questions, 1 answered + 1 still open (partial-answer state)
@@ -69,7 +69,7 @@ export const THREAD_MESSAGES = [
   {
     id: MSG_C_Q1,
     vault_item_id: VAULT_ITEM_IDS.C,
-    author_actor_id: wellKnownActorId('ralph'),
+    author_actor_id: wellKnownActorId('kipper'),
     kind: 'question',
     body: 'Should this also gate the manual override path, or only the automatic chain?',
     in_reply_to: null,
@@ -144,14 +144,14 @@ export const THREAD_MESSAGES = [
 
   // S: 2 open questions on a classified item — questions block readiness regardless of column
   {
-    id: MSG_S_Q1, vault_item_id: VAULT_ITEM_IDS.S, author_actor_id: wellKnownActorId('ralph'),
+    id: MSG_S_Q1, vault_item_id: VAULT_ITEM_IDS.S, author_actor_id: wellKnownActorId('kipper'),
     kind: 'question',
     body: 'Are EH8 the only suburb postcodes failing, or is this systematic for outer suburbs?',
     in_reply_to: null, answered_by: null,
     created_at: '2026-04-23T13:30:00Z',
   },
   {
-    id: MSG_S_Q2, vault_item_id: VAULT_ITEM_IDS.S, author_actor_id: wellKnownActorId('ralph'),
+    id: MSG_S_Q2, vault_item_id: VAULT_ITEM_IDS.S, author_actor_id: wellKnownActorId('kipper'),
     kind: 'question',
     body: 'Should the fallback try a partial-postcode lookup, or fall back to a manual override?',
     in_reply_to: null, answered_by: null,

@@ -17,7 +17,7 @@ type Brand<T, B extends string> = T & { readonly __brand: B };
 // the monorepo lands and a shared package can own the source of truth (see
 // docs/architecture/phase-b-followups.md §9b). Adding a new actor takes a
 // matching update in BOTH repos.
-export const KNOWN_ACTORS = ['jimbo', 'marvin', 'ralph', 'boris'] as const;
+export const KNOWN_ACTORS = ['jimbo', 'marvin', 'kipper', 'boris'] as const;
 export type WellKnownActorId = (typeof KNOWN_ACTORS)[number];
 
 export type ActorId        = Brand<string, 'ActorId'>;

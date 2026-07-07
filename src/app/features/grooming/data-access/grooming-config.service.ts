@@ -4,7 +4,7 @@ import { Observable, map } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { environment } from '../../../../environments/environment';
 
-export type GroomingAssessmentExecutor = 'jimbo' | 'marvin' | 'ralph' | 'boris';
+export type GroomingAssessmentExecutor = 'jimbo' | 'marvin' | 'kipper' | 'boris';
 
 export interface GroomingConfigValue {
   github_assessment_executor: GroomingAssessmentExecutor;

@@ -9,7 +9,7 @@ import type { GroomingStatus } from './vault-item';
 //   ungroomed         → boris   (runs intake-quality)
 //   intake_rejected   → marvin  (must answer the questions intake raised)
 //   intake_complete   → boris   (runs vault-classify)
-//   classified        → ralph   (runs vault-decompose)
+//   classified        → kipper   (runs vault-decompose)
 //   decomposed        → marvin  (approves the decomposition)
 //   needs_rework      → marvin  (decides where the rework goes)
 //   ready             → null    (keep current owner; dispatcher picks executor)
@@ -20,7 +20,7 @@ export const OWNER_BY_GROOMING_STATE: Record<GroomingStatus, ActorId | null> = {
   ungroomed:        wellKnownActorId('boris'),
   intake_rejected:  wellKnownActorId('marvin'),
   intake_complete:  wellKnownActorId('boris'),
-  classified:       wellKnownActorId('ralph'),
+  classified:       wellKnownActorId('kipper'),
   decomposed:       wellKnownActorId('marvin'),
   needs_rework:     wellKnownActorId('marvin'),
   ready:            null,

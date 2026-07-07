@@ -6,7 +6,7 @@ export type ActorAvatarVariant = 'outlined' | 'filled';
 
 const MONOGRAM: Record<string, string> = {
   marvin: 'M',
-  ralph:  'R',
+  kipper: 'K',
   boris:  'B',
   jimbo:  'J',
 };

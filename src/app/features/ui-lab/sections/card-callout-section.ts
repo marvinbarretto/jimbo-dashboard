@@ -17,7 +17,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
         </p>
 
         <div style="max-width: 280px;">
-          <app-card-callout variant="question" label="open question · @ralph · 2h ago">
+          <app-card-callout variant="question" label="open question · @kipper · 2h ago">
             should retry preserve the original executor or pick whoever's free?
           </app-card-callout>
         </div>

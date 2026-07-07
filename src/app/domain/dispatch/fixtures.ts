@@ -41,7 +41,7 @@ export const DISPATCH_ENTRIES = [
     task_id: VAULT_ITEM_IDS.C,
     skill: skillId('localshout/event-qualifier'),
     status: 'failed',
-    executor: wellKnownActorId('ralph'),
+    executor: wellKnownActorId('kipper'),
     started_at: '2026-04-23T09:10:00Z',
     completed_at: '2026-04-23T09:11:00Z',
     retry_count: 2,

@@ -24,7 +24,7 @@ const PROJ_HERMES:     ProjectRef = { id: 'hermes',      display_name: 'Hermes',
 const DEMO_QUESTION: ThreadMessage = {
   id: threadMessageId('demo-q1'),
   vault_item_id: vaultItemId('00000000-0000-0000-0000-000000000kk1'),
-  author_actor_id: actorId('ralph'),
+  author_actor_id: actorId('kipper'),
   kind: 'question',
   body: 'Should this update the shared pipeline or only the local preview state?',
   in_reply_to: null,
@@ -91,7 +91,7 @@ const DEMO_CARDS: readonly DemoCardSlot[] = [
 interface ControlState {
   readonly priority:      Priority | null;
   // null = unassigned (exercises the vault-card--unassigned path)
-  readonly assignee:      'marvin' | 'boris' | 'ralph' | null;
+  readonly assignee:      'marvin' | 'boris' | 'kipper' | null;
   readonly ageHours:      number;
   readonly daysInCol:     number;
   readonly showProject:   boolean;
@@ -204,7 +204,7 @@ interface ControlState {
               <select id="kk-assignee" class="kk-ctrl__select" (change)="setCtrlAssignee($event)">
                 <option value="marvin">marvin (mine)</option>
                 <option value="boris">boris (theirs)</option>
-                <option value="ralph">ralph (theirs)</option>
+                <option value="kipper">kipper (theirs)</option>
                 <option value="">— unassigned</option>
               </select>
             </div>
@@ -396,7 +396,7 @@ export class VaultCardKanbanSection {
   readonly epicOptions: readonly VaultItemType[] = [
     baseItem({ seq: 2350, title: 'Unify kanban card components',              is_epic: true, grooming_status: 'ready' }),
     baseItem({ seq: 2300, title: 'Phase B Postgres cutover',                  is_epic: true, grooming_status: 'ready' }),
-    baseItem({ seq: 2280, title: 'Phase C · turn boris/ralph dispatch on',    is_epic: true, grooming_status: 'ready' }),
+    baseItem({ seq: 2280, title: 'Phase C · turn boris/kipper dispatch on',    is_epic: true, grooming_status: 'ready' }),
   ];
 
   // ── Controls state ────────────────────────────────────────────────────────

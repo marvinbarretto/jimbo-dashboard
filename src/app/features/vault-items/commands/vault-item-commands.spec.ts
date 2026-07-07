@@ -252,16 +252,16 @@ describe('VaultItemCommands', () => {
       expect(lastErrorToast()).toBeUndefined();
     });
 
-    it('auto-reassigns to the canonical owner on transition (classified → ralph)', () => {
+    it('auto-reassigns to the canonical owner on transition (classified → kipper)', () => {
       // ITEM_E starts ungroomed. Walk it forward to `classified` and confirm
-      // the owner ends up as ralph (vault-decompose's actor).
+      // the owner ends up as kipper (vault-decompose's actor).
       const id = VAULT_ITEM_IDS.E;
       commands.setStatus(id, 'intake_complete');
       commands.setStatus(id, 'classified');
 
       const after = vaultItems.getById(id)!;
       expect(after.grooming_status).toBe('classified');
-      expect(after.assigned_to).toBe(wellKnownActorId('ralph'));
+      expect(after.assigned_to).toBe(wellKnownActorId('kipper'));
 
       // Audit trail: every transition emits both a status event and an assigned
       // event (when owner changes), so a reader of the activity log sees the

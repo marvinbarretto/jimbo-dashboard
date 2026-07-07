@@ -8,7 +8,7 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { GroomingConfigService, type GroomingConfigValue, type GroomingAssessmentExecutor } from '@features/grooming/data-access/grooming-config.service';
 
-const EXECUTOR_OPTIONS: readonly GroomingAssessmentExecutor[] = ['boris', 'ralph', 'jimbo', 'marvin'];
+const EXECUTOR_OPTIONS: readonly GroomingAssessmentExecutor[] = ['boris', 'kipper', 'jimbo', 'marvin'];
 
 @Component({
   selector: 'app-grooming-settings-page',

@@ -302,7 +302,7 @@ export class VaultDetailPrimitivesSection {
   protected readonly labOwnerOptions: readonly UiInlinePickerOption[] = [
     { id: 'marvin', label: '@marvin', selected: false },
     { id: 'boris', label: '@boris', selected: true },
-    { id: 'ralph', label: '@ralph', selected: false },
+    { id: 'kipper', label: '@kipper', selected: false },
   ];
   protected readonly labReassignOpen = signal(false);
   protected readonly labReassignedTo = signal<string | null>(null);

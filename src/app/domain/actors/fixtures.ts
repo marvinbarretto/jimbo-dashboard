@@ -18,8 +18,8 @@ export const ACTORS = [
     updated_at: '2026-04-24T00:00:00Z',
   },
   {
-    id: wellKnownActorId('ralph'),
-    display_name: 'Ralph',
+    id: wellKnownActorId('kipper'),
+    display_name: 'Kipper',
     kind: 'agent',
     runtime: 'ollama',
     description: 'Local 7B-class model on 24GB RAM. Junior tasks: classification, reassigns, acceptance-criteria drafts, subticket spawning.',
@@ -57,8 +57,8 @@ export const ACTORS = [
 // PREFERRED, CAPABLE, or EXPERIMENTAL among them. Optional — dispatch works
 // without it; this is a routing weight, not a hard gate.
 export const ACTOR_SKILLS = [
-  { actor_id: wellKnownActorId('ralph'), skill_id: skillId('vault-grooming/analyse'),   proficiency: 'capable',      created_at: '2026-04-24T00:00:00Z' },
-  { actor_id: wellKnownActorId('ralph'), skill_id: skillId('vault-grooming/decompose'), proficiency: 'capable',      created_at: '2026-04-24T00:00:00Z' },
+  { actor_id: wellKnownActorId('kipper'), skill_id: skillId('vault-grooming/analyse'),   proficiency: 'capable',      created_at: '2026-04-24T00:00:00Z' },
+  { actor_id: wellKnownActorId('kipper'), skill_id: skillId('vault-grooming/decompose'), proficiency: 'capable',      created_at: '2026-04-24T00:00:00Z' },
 
   { actor_id: wellKnownActorId('boris'), skill_id: skillId('vault-grooming/analyse'),   proficiency: 'preferred',    created_at: '2026-04-24T00:00:00Z' },
   { actor_id: wellKnownActorId('boris'), skill_id: skillId('vault-grooming/decompose'), proficiency: 'preferred',    created_at: '2026-04-24T00:00:00Z' },

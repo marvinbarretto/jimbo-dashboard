@@ -55,7 +55,7 @@ export const ACTIVITY_EVENTS = [
     message_kind: 'comment',
   },
 
-  // -- Item C: created, ralph asked, marvin answered, classified (via vault-classify skill) --
+  // -- Item C: created, kipper asked, marvin answered, classified (via vault-classify skill) --
   {
     id: activityId('e3333333-0001-0001-0001-000000000000'),
     vault_item_id: VAULT_ITEM_IDS.C,
@@ -76,7 +76,7 @@ export const ACTIVITY_EVENTS = [
   {
     id: activityId('e3333333-0002-0002-0002-000000000000'),
     vault_item_id: VAULT_ITEM_IDS.C,
-    actor_id: wellKnownActorId('ralph'),
+    actor_id: wellKnownActorId('kipper'),
     at: '2026-04-23T08:10:00Z',
     type: 'thread_message_posted',
     message_id: THREAD_MESSAGE_IDS.C_Q1,
@@ -98,8 +98,8 @@ export const ACTIVITY_EVENTS = [
     at: '2026-04-23T09:05:00Z',
     type: 'assigned',
     from_actor_id: null,
-    to_actor_id: wellKnownActorId('ralph'),
-    reason: 'classified, routed to ralph for free-tier execution',
+    to_actor_id: wellKnownActorId('kipper'),
+    reason: 'classified, routed to kipper for free-tier execution',
   },
 
   // -- Item D: full lifecycle to done --
@@ -193,10 +193,10 @@ export const ACTIVITY_EVENTS = [
     summary: 'routed to @boris for standard-tier classification follow-up.',
     decisions: [
       'executor=boris (standard tier matched)',
-      'skipped @ralph (free-tier, recent timeouts on classify)',
+      'skipped @kipper (free-tier, recent timeouts on classify)',
     ],
     reasoning:
-      'Item is classified as task with standard complexity. Boris matches the standard tier and has 94% historical success on classify follow-ups in the last 30 days. Ralph would be cheaper but has had 3 recent timeouts on similar payloads.',
+      'Item is classified as task with standard complexity. Boris matches the standard tier and has 94% historical success on classify follow-ups in the last 30 days. Kipper would be cheaper but has had 3 recent timeouts on similar payloads.',
     from_status: null,
     to_status: null,
     duration_ms: 312,
@@ -375,10 +375,10 @@ export const ACTIVITY_EVENTS = [
     type: 'grooming_status_changed', from: 'ungroomed', to: 'classified',
     note: 'classify ran' },
   { id: activityId('e8888888-001a-001a-001a-00000000001a'), vault_item_id: VAULT_ITEM_IDS.S,
-    actor_id: wellKnownActorId('ralph'), at: '2026-04-23T13:30:00Z',
+    actor_id: wellKnownActorId('kipper'), at: '2026-04-23T13:30:00Z',
     type: 'thread_message_posted', message_id: THREAD_MESSAGE_IDS.S_Q1, message_kind: 'question' },
   { id: activityId('e8888888-001b-001b-001b-00000000001b'), vault_item_id: VAULT_ITEM_IDS.S,
-    actor_id: wellKnownActorId('ralph'), at: '2026-04-23T13:31:00Z',
+    actor_id: wellKnownActorId('kipper'), at: '2026-04-23T13:31:00Z',
     type: 'thread_message_posted', message_id: THREAD_MESSAGE_IDS.S_Q2, message_kind: 'question' },
 
   // T — decomposed, all AC done

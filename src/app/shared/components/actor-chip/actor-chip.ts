@@ -3,7 +3,7 @@ import type { ActorId } from '@domain/ids';
 
 const NAME: Record<string, string> = {
   marvin: 'Marvin',
-  ralph:  'Ralph',
+  kipper: 'Kipper',
   boris:  'Boris',
   jimbo:  'Jimbo',
 };

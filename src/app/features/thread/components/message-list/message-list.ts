@@ -74,7 +74,7 @@ export class MessageList {
     return this.actors()[message.author_actor_id]?.kind ?? 'human';
   }
 
-  // For an answer, resolve the parent author so we can show "↳ replying to @ralph".
+  // For an answer, resolve the parent author so we can show "↳ replying to @kipper".
   replyToAuthor(answer: ThreadMessage): { id: ActorId; label: string } | null {
     if (!answer.in_reply_to) return null;
     const parent = this.messages().find(m => m.id === answer.in_reply_to);

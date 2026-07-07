@@ -13,7 +13,7 @@
 import { z } from 'zod';
 import { ALL_CAPABILITIES } from '../capability';
 
-// `id` is the slug ('marvin', 'ralph', etc). Branding happens at the service
+// `id` is the slug ('marvin', 'kipper', etc). Branding happens at the service
 // boundary after parse — the schema just guarantees the string is non-empty.
 export const ApiActorSchema = z.object({
   id:           z.string().min(1),

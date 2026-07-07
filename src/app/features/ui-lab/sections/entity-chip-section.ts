@@ -26,7 +26,7 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
           <p class="ui-lab__subhead">Actors — monochrome (no tint)</p>
           <app-ui-cluster gap="sm">
             <app-entity-chip type="actor" id="marvin" label="Marvin" />
-            <app-entity-chip type="actor" id="ralph"  label="Ralph"  />
+            <app-entity-chip type="actor" id="kipper"  label="Kipper"  />
             <app-entity-chip type="actor" id="boris"  label="Boris"  />
             <app-entity-chip type="actor" id="jimbo"  label="Jimbo"  />
           </app-ui-cluster>
@@ -54,7 +54,7 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
         <div>
           <p class="ui-lab__subhead">Inline with text (typical mention context)</p>
           <p class="ui-lab__support-copy">
-            Assigned to <app-entity-chip type="actor" id="ralph" label="Ralph" /> via
+            Assigned to <app-entity-chip type="actor" id="kipper" label="Kipper" /> via
             <app-entity-chip type="project" id="hermes" label="Hermes" /> —
             unblocks <app-entity-chip type="vault-item" id="abc123" label="Add filter controls" />.
           </p>

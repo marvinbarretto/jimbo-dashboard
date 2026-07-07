@@ -369,7 +369,7 @@ export class GroomingBoard {
   // --- filter groups ------------------------------------------------------
   // Single computed packages all three dimensions for the generic KanbanFilterBar.
   // Each dimension's counts reflect items filtered by all OTHER dimensions, so
-  // clicking @ralph doesn't make @ralph's own count drop to zero.
+  // clicking @kipper doesn't make @kipper's own count drop to zero.
 
   readonly filterGroups = computed<FilterGroup[]>(() => {
     const groups: FilterGroup[] = [
