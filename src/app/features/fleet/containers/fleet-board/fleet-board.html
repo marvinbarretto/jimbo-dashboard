@@ -44,6 +44,30 @@
           </div>
         </app-ui-card>
       }
+
+      <!-- The metered half of the fleet — ambient jobs on the VPS. -->
+      <a class="fleet-worker__link" routerLink="/hermes" title="Open the Hermes control room">
+        <app-ui-card tone="soft" [compact]="true">
+          <div class="fleet-worker">
+            <span class="fleet-worker__dot"
+              [class]="'fleet-worker__dot--' + (hermes.failingCount() > 0 ? 'stale' : 'live')"></span>
+            <div class="fleet-worker__body">
+              <span class="fleet-worker__name">hermes</span>
+              <span class="fleet-worker__meta">
+                vps · {{ hermes.activeCount() }} active · {{ hermes.pausedCount() }} paused
+                @if (hermes.failingCount() > 0) {
+                  · {{ hermes.failingCount() }} failing
+                }
+              </span>
+            </div>
+            @if (hermes.failingCount() > 0) {
+              <app-ui-badge tone="danger">failing</app-ui-badge>
+            } @else {
+              <app-ui-badge tone="neutral">ambient lane</app-ui-badge>
+            }
+          </div>
+        </app-ui-card>
+      </a>
     </div>
   </section>
 

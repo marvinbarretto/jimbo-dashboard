@@ -4,6 +4,7 @@
 // token telemetry, and fold cadence.
 
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
@@ -14,6 +15,7 @@ import { UiRefreshControl } from '@shared/components/ui-refresh-control/ui-refre
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { FleetService } from '../../data-access/fleet.service';
+import { HermesService } from '../../../hermes/data-access/hermes.service';
 import type { FleetWorker } from '@domain/dispatch';
 
 // Heartbeat freshness thresholds, per worker temperament. Boris (M2) is an
@@ -62,7 +64,7 @@ const FOLD_STALE_MS = 3 * 24 * 60 * 60_000;
   selector: 'app-fleet-board',
   imports: [
     UiStack, UiCluster, UiPageHeader, UiCard, UiBadge, UiEmptyState,
-    UiRefreshControl, UiStatCard, RelativeTimePipe,
+    UiRefreshControl, UiStatCard, RelativeTimePipe, RouterLink,
   ],
   templateUrl: './fleet-board.html',
   styleUrl: './fleet-board.scss',
@@ -71,6 +73,10 @@ const FOLD_STALE_MS = 3 * 24 * 60 * 60_000;
 })
 export class FleetBoard {
   private readonly service = inject(FleetService);
+  // The other half of the fleet: Hermes on the VPS (ambient lane, metered
+  // models). Summarised here so one page carries the whole division of
+  // labour; the /hermes page has the full control room.
+  readonly hermes = inject(HermesService);
 
   readonly loading = this.service.loading;
   readonly lastError = this.service.lastError;
