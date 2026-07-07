@@ -29,9 +29,23 @@ const DEFAULT_FRESH = { live: 5 * 60_000, quiet: 60 * 60_000 };
 
 export type HeartbeatTone = 'live' | 'quiet' | 'stale' | 'unknown';
 
+// Grace on top of a declared cooldown/execution window before we call it late.
+const COOLDOWN_GRACE_MS = 3 * 60_000;
+// An 'executing' heartbeat is sent once at claim; the session can then be
+// legitimately silent for up to the longest skill timeout (60min) + margin.
+const EXECUTING_WINDOW_MS = 65 * 60_000;
+
 export function heartbeatTone(worker: FleetWorker, nowMs: number): HeartbeatTone {
   if (!worker.checked_at) return 'unknown';
+  // Deliberate quiet: cooling down until next_poll_at (quota throttle).
+  if (worker.status === 'cooldown' && worker.next_poll_at) {
+    return nowMs < Date.parse(worker.next_poll_at) + COOLDOWN_GRACE_MS ? 'live' : 'stale';
+  }
   const age = nowMs - Date.parse(worker.checked_at);
+  // Mid-task: one heartbeat at claim, then silence while the session runs.
+  if (worker.status === 'executing') {
+    return age < EXECUTING_WINDOW_MS ? 'live' : 'stale';
+  }
   const t = FRESH_MS[worker.id] ?? DEFAULT_FRESH;
   if (age < t.live) return 'live';
   if (age < t.quiet) return 'quiet';

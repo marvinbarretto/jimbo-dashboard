@@ -27,12 +27,16 @@
               <span class="fleet-worker__name">{{ worker.id }}</span>
               <span class="fleet-worker__meta">
                 {{ worker.machine ?? '?' }} · {{ worker.status ?? 'no heartbeat' }}
-                @if (worker.checked_at; as ts) {
+                @if (worker.status === 'cooldown' && worker.next_poll_at; as next) {
+                  · next claim <span [title]="worker.next_poll_at ?? ''">{{ worker.next_poll_at | relativeTime }}</span>
+                } @else if (worker.checked_at; as ts) {
                   · <span [title]="ts">{{ ts | relativeTime }}</span>
                 }
               </span>
             </div>
-            @if (workerTone(worker) === 'quiet' && worker.id === 'kipper') {
+            @if (worker.status === 'cooldown' && workerTone(worker) === 'live') {
+              <app-ui-badge tone="neutral">throttled</app-ui-badge>
+            } @else if (workerTone(worker) === 'quiet' && worker.id === 'kipper') {
               <app-ui-badge tone="neutral">napping</app-ui-badge>
             } @else if (workerTone(worker) === 'stale' || workerTone(worker) === 'unknown') {
               <app-ui-badge tone="danger">silent</app-ui-badge>

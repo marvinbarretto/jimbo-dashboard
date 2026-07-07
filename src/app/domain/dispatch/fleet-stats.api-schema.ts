@@ -12,10 +12,14 @@ export const ApiFleetQueueDepthSchema = z.object({
 });
 
 export const ApiFleetWorkerSchema = z.object({
-  id:         z.string(),
-  machine:    z.string().nullable(),
-  status:     z.string().nullable(),
-  checked_at: z.string().nullable(),
+  id:           z.string(),
+  machine:      z.string().nullable(),
+  status:       z.string().nullable(),
+  checked_at:   z.string().nullable(),
+  // 'cooldown' heartbeats set this: the worker is deliberately quiet until
+  // then (quota throttle), not dead. Optional so the page tolerates an API
+  // that predates the field.
+  next_poll_at: z.string().nullable().optional().default(null),
 });
 
 export const ApiFleetCompletionSchema = z.object({
