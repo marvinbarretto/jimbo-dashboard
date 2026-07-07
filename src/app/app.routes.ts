@@ -106,11 +106,7 @@ export const routes: Routes = [
     path: 'picture',
     loadChildren: () => import('./features/picture/picture.routes').then(m => m.pictureRoutes),
   },
-  {
-    path: 'ralph',
-    title: 'Ralph',
-    loadComponent: () => import('./features/ralph/ralph-page').then(m => m.RalphPage),
-  },
+
   {
     path: 'coverage',
     title: 'Coverage',
