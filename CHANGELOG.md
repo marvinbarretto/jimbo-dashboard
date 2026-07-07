@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.104](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.103...v0.0.104) (2026-07-07)
+
+
+### Features
+
+* **actors:** ralph -> kipper rename, dashboard side (slice 5) ([781761a](https://github.com/marvinbarretto/jimbo-dashboard/commit/781761a03eadfef363bc8dc7a25a18bd96512040))
+* **fleet:** hermes lane card — the whole fleet on one page ([b90a220](https://github.com/marvinbarretto/jimbo-dashboard/commit/b90a2207f77f61f2afdf978997fe7c809c793dab))
+* **fleet:** observability board over GET /api/dispatch/stats ([e2394dd](https://github.com/marvinbarretto/jimbo-dashboard/commit/e2394dd02413d9d605f8b8154df51da1ddaa058a))
+* **hermes:** fold badge — folded jobs visibly claim their dispatch twin ([4b1c670](https://github.com/marvinbarretto/jimbo-dashboard/commit/4b1c670886881abf3da77b07ecdddf3e1b9ef783))
+* **journal:** per-activity breakdown + cardio stat on exercise summary ([19f5600](https://github.com/marvinbarretto/jimbo-dashboard/commit/19f56006cd0b5645eee62a629feda8862b8277f5))
+* **shared:** job-chip — one visual grammar for jobs everywhere ([10288ae](https://github.com/marvinbarretto/jimbo-dashboard/commit/10288aefc3f1ee1f3f481f05809ea9f4e6b5a7b9))
+
+
+### Bug Fixes
+
+* **fleet:** render throttle cooldown and mid-task silence as healthy ([ec82c27](https://github.com/marvinbarretto/jimbo-dashboard/commit/ec82c2761a34251c5ebc58b23171bd5eca9b5e00))
+* **ui-stat-card:** stretch the projected card box to fill its host ([7b2287d](https://github.com/marvinbarretto/jimbo-dashboard/commit/7b2287d8f945259deec5a6b5d53a9779b61e0ff7))
+
 ### [0.0.103](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.102...v0.0.103) (2026-07-04)
 
 
