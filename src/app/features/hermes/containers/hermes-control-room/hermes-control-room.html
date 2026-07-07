@@ -33,9 +33,12 @@
             @if (job.state === 'paused') {
               <span class="cr__job-badge cr__job-badge--warning">paused</span>
             }
-            @if (job.script) {
+            @if (job.script?.startsWith('fold_')) {
+              <span class="cr__job-badge cr__job-badge--fold"
+                    [title]="'Folded onto the dispatch queue: ' + job.script + ' enqueues a flow=fold dispatch row and prints [SKIP] — no Hermes model call. Boris executes the skill on the Claude subscription; see the Folds table on /fleet for the dispatch side of this same run.'">⇄ fold</span>
+            } @else if (job.script) {
               <span class="cr__job-badge cr__job-badge--script"
-                    [title]="'Pre-run script: ' + job.script + '. Gate scripts (e.g. dispatch_gate_boris.py, orchestrate-cap.py) skip the run with no model call when there is no work; others just inject context.'">⏵ script</span>
+                    [title]="'Pre-run script: ' + job.script + '. Gate scripts (e.g. orchestrate-cap.py) skip the run with no model call when there is no work; others just inject context.'">⏵ script</span>
             }
             <span class="cr__job-time">{{ relativeTime(job.last_run_at) }}</span>
           </span>

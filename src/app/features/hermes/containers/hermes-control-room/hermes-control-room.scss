@@ -122,6 +122,9 @@
   &--danger  { background: color-mix(in srgb, var(--color-danger) 15%, transparent); color: var(--color-danger); }
   &--warning { background: color-mix(in srgb, var(--color-warning) 15%, transparent); color: var(--color-warning); }
   &--script  { background: color-mix(in srgb, var(--color-info) 15%, transparent); color: var(--color-info); text-transform: none; letter-spacing: 0.02em; }
+  // Folded job: the schedule lives here, execution lives on the dispatch
+  // queue (Boris) — same accent as the Fleet nav entry to hint the pairing.
+  &--fold    { background: color-mix(in srgb, #e879f9 15%, transparent); color: #e879f9; text-transform: none; letter-spacing: 0.02em; }
 }
 
 .cr__job-time {
