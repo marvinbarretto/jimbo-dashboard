@@ -1,0 +1,87 @@
+@if (isLoading()) {
+  <app-ui-loading-state label="Loading module doc" message="Fetching the module documentation." />
+} @else if (doc(); as doc) {
+  <app-ui-stack class="module-detail" gap="lg">
+    <app-ui-page-header class="module-detail__header">
+      <app-ui-breadcrumb uiPageHeaderLead [crumbs]="crumbs()" />
+      <div uiPageHeaderTitle class="module-detail__title">
+        <h1>{{ doc.module }}</h1>
+        <span class="repo-tag">{{ doc.repo }}</span>
+      </div>
+      <p uiPageHeaderHint>{{ doc.description }}</p>
+    </app-ui-page-header>
+
+    <!-- The staleness banner is the point of the whole system: a stale doc
+         must LOOK stale before anyone reads a word of possibly-wrong prose. -->
+    <section class="staleness-banner" [class]="'staleness-banner--' + doc.staleness.status"
+             aria-label="Documentation freshness">
+      <div class="staleness-banner__headline">
+        <app-module-staleness-badge [staleness]="doc.staleness" />
+        @switch (doc.staleness.status) {
+          @case ('fresh') {
+            <span>Verified against <code>{{ doc.staleness.reviewed_commit }}</code> — no source changes since.</span>
+          }
+          @case ('stale') {
+            <span>Source has moved on since this doc was verified at
+              <code>{{ doc.staleness.reviewed_commit ?? 'unknown' }}</code>. Treat details below with suspicion.</span>
+          }
+          @default {
+            <span>Freshness could not be computed — this doc is unverified, not necessarily wrong.</span>
+          }
+        }
+      </div>
+
+      @if (doc.staleness.status === 'stale') {
+        <div class="staleness-banner__evidence">
+          @if (doc.staleness.commits.length) {
+            <h2>Commits since review</h2>
+            <ul class="staleness-banner__commits">
+              @for (commit of doc.staleness.commits; track commit) {
+                <li><code>{{ commit }}</code></li>
+              }
+            </ul>
+          }
+          @if (doc.staleness.changed_files.length) {
+            <h2>Changed files</h2>
+            <ul class="staleness-banner__files">
+              @for (file of doc.staleness.changed_files; track file) {
+                <li><code>{{ file }}</code></li>
+              }
+            </ul>
+          }
+        </div>
+      }
+    </section>
+
+    <app-ui-section title="Metadata" [collapsible]="false">
+      <app-ui-card tone="soft" [compact]="true">
+        <app-ui-meta-list>
+          <dt>Generated at</dt>
+          <dd>{{ doc.generated_at ?? '—' }}</dd>
+
+          <dt>Reviewed commit</dt>
+          <dd><code>{{ doc.staleness.reviewed_commit ?? '—' }}</code></dd>
+
+          <dt>Source paths</dt>
+          <dd>
+            <ul class="module-detail__paths">
+              @for (path of doc.source_paths; track path) {
+                <li><code>{{ path }}</code></li>
+              }
+            </ul>
+          </dd>
+        </app-ui-meta-list>
+      </app-ui-card>
+    </app-ui-section>
+
+    <app-ui-section title="Documentation" [collapsible]="false">
+      <app-ui-card tone="soft" [compact]="true">
+        <div class="markdown-body" [innerHTML]="doc.body | markdown"></div>
+      </app-ui-card>
+    </app-ui-section>
+  </app-ui-stack>
+} @else if (hasError()) {
+  <app-ui-empty-state title="Module doc not found" message="This module has no documentation, or it failed to load.">
+    <a routerLink="/modules">← Back to module docs</a>
+  </app-ui-empty-state>
+}

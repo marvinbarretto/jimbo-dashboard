@@ -1,0 +1,79 @@
+.modules-list {
+  padding-block: 2rem;
+  max-width: 760px;
+
+  &__header h1 {
+    margin: 0;
+  }
+
+  &__meta {
+    margin-left: 0.75rem;
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+  }
+
+  &__items {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.module-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: inherit;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--color-border-strong);
+    background: color-mix(in srgb, var(--color-border) 20%, transparent);
+  }
+
+  // Stale rows carry their own tint so staleness reads at a glance, even
+  // before the badge — a stale doc must look stale.
+  &--stale {
+    border-color: color-mix(in srgb, var(--color-warning) 45%, var(--color-border));
+    background: color-mix(in srgb, var(--color-warning) 6%, transparent);
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+    }
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  &__name {
+    font-weight: 600;
+  }
+
+  &__description {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .modules-list {
+    padding-block: 1rem;
+  }
+
+  .module-row {
+    flex-wrap: wrap;
+  }
+}

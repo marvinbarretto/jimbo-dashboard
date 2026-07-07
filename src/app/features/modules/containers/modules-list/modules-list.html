@@ -1,0 +1,41 @@
+<app-ui-stack class="modules-list" gap="lg">
+  <app-ui-page-header class="modules-list__header">
+    <h1 uiPageHeaderTitle>Module docs</h1>
+    <p uiPageHeaderHint>
+      Freshness is computed from git, not hoped for.
+      @if (repo(); as repo) {
+        <span class="modules-list__meta">repo <code>{{ repo }}</code></span>
+      }
+      @if (head(); as head) {
+        <span class="modules-list__meta">head <code>{{ head }}</code></span>
+      }
+    </p>
+  </app-ui-page-header>
+
+  @if (isLoading()) {
+    <app-ui-loading-state label="Loading module docs" message="Fetching the module doc index." />
+  } @else if (error()) {
+    <app-ui-empty-state
+      title="Failed to load module docs"
+      [message]="'The module doc index could not be loaded. ' + error()" />
+  } @else if (!modules().length) {
+    <app-ui-empty-state
+      title="No module docs found"
+      message="jimbo-api has no docs/modules entries to serve." />
+  } @else {
+    <ul class="modules-list__items">
+      @for (mod of modules(); track mod.module) {
+        <li>
+          <a class="module-row" [class.module-row--stale]="mod.staleness.status === 'stale'"
+             [routerLink]="['/modules', mod.module]">
+            <div class="module-row__text">
+              <span class="module-row__name">{{ mod.module }}</span>
+              <span class="module-row__description">{{ mod.description }}</span>
+            </div>
+            <app-module-staleness-badge [staleness]="mod.staleness" />
+          </a>
+        </li>
+      }
+    </ul>
+  }
+</app-ui-stack>

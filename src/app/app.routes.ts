@@ -188,6 +188,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/calendar-settings/calendar-settings-page').then(m => m.CalendarSettingsPage),
   },
   {
+    path: 'modules',
+    loadChildren: () => import('./features/modules/modules.routes').then(m => m.modulesRoutes),
+  },
+  {
     path: 'jimbo-workspace',
     loadChildren: () => import('./features/jimbo-workspace/jimbo-workspace.routes').then(m => m.jimboWorkspaceRoutes),
   },
