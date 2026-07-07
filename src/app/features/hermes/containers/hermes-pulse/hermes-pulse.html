@@ -28,7 +28,7 @@
       @if (isRunning()) {
         <ul class="pulse__now-jobs">
           @for (job of runningJobs(); track job.id) {
-            <li class="pulse__now-job">{{ job.name }}</li>
+            <li class="pulse__now-job"><app-job-chip [name]="job.name" state="running" [kind]="chipKind(job)" /></li>
           }
         </ul>
       }
@@ -52,7 +52,7 @@
           <p class="pulse__alerts-label">Needs attention</p>
           @for (job of failingJobs(); track job.id) {
             <div class="pulse__alert-item">
-              <span class="pulse__alert-name">{{ job.name }}</span>
+              <app-job-chip [name]="job.name" state="failing" [kind]="chipKind(job)" />
               <span class="pulse__alert-error">{{ job.last_error ?? job.last_delivery_error ?? 'last run failed' }}</span>
             </div>
           }
@@ -68,7 +68,7 @@
         <ul class="pulse__feed-list">
           @for (job of recentRuns(); track job.id) {
             <li class="pulse__feed-item" [class.pulse__feed-item--error]="job.last_status !== 'ok'">
-              <span class="pulse__feed-name">{{ job.name }}</span>
+              <app-job-chip [name]="job.name" [state]="chipState(job)" [kind]="chipKind(job)" />
               <span class="pulse__feed-schedule">{{ job.schedule_display }}</span>
               <span class="pulse__feed-status" [class]="'pulse__feed-status--' + (job.last_status ?? 'unknown')">
                 {{ job.last_status ?? '—' }}

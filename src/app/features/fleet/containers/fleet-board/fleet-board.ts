@@ -13,6 +13,7 @@ import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiRefreshControl } from '@shared/components/ui-refresh-control/ui-refresh-control';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
+import { JobChip } from '@shared/components/job-chip/job-chip';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { FleetService } from '../../data-access/fleet.service';
 import { HermesService } from '../../../hermes/data-access/hermes.service';
@@ -64,7 +65,7 @@ const FOLD_STALE_MS = 3 * 24 * 60 * 60_000;
   selector: 'app-fleet-board',
   imports: [
     UiStack, UiCluster, UiPageHeader, UiCard, UiBadge, UiEmptyState,
-    UiRefreshControl, UiStatCard, RelativeTimePipe, RouterLink,
+    UiRefreshControl, UiStatCard, RelativeTimePipe, RouterLink, JobChip,
   ],
   templateUrl: './fleet-board.html',
   styleUrl: './fleet-board.scss',

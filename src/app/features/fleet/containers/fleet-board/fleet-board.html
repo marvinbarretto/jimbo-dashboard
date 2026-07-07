@@ -138,8 +138,11 @@
           <tbody>
             @for (fold of folds(); track fold.skill) {
               <tr>
-                <td class="fleet__mono">
-                  {{ fold.skill ?? '—' }}
+                <td>
+                  <app-job-chip
+                    [name]="fold.skill ?? '—'"
+                    kind="fold"
+                    [state]="fold.last_status === 'failed' ? 'failing' : 'active'" />
                   @if (foldIsStale(fold.last_enqueued_at)) {
                     <app-ui-badge tone="danger">stale</app-ui-badge>
                   }

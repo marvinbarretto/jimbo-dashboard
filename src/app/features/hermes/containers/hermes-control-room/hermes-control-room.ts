@@ -6,6 +6,7 @@ import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiTypeahead, type TypeaheadOption } from '@shared/components/ui-typeahead/ui-typeahead';
+import { JobChip, jobChipKind, jobChipState, type JobChipKind, type JobChipState } from '@shared/components/job-chip/job-chip';
 import { HermesService } from '../../data-access/hermes.service';
 import type { HermesJob, HermesRun } from '../../hermes.types';
 import { absoluteTime, deliverLabel, formatBytes, formatDuration, relativeTime, stateBadgeTone } from '../../hermes.utils';
@@ -41,7 +42,7 @@ interface RunDetail {
 
 @Component({
   selector: 'app-hermes-control-room',
-  imports: [FormsModule, UiBadge, UiProse, UiSection, UiTypeahead],
+  imports: [FormsModule, UiBadge, UiProse, UiSection, UiTypeahead, JobChip],
   templateUrl: './hermes-control-room.html',
   styleUrl: './hermes-control-room.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -356,6 +357,9 @@ export class HermesControlRoom {
   }
 
   protected readonly relativeTime = relativeTime;
+
+  protected chipState(job: HermesJob): JobChipState { return jobChipState(job); }
+  protected chipKind(job: HermesJob): JobChipKind { return jobChipKind(job.script); }
   protected readonly absoluteTime = absoluteTime;
   protected readonly stateBadgeTone = stateBadgeTone;
   protected readonly deliverLabel = deliverLabel;
