@@ -17,7 +17,7 @@ source_paths:
   - src/styles/**
   - src/environments/**
 generated_at: 2026-07-07
-reviewed_commit: "1688511"
+reviewed_commit: "75df27c"
 sections:
   purpose: asserted
   responsibilities: asserted
@@ -63,7 +63,8 @@ header height, and section accent — one knob each, applied app-wide.
   `config`, `projects/:id`, `briefings`/`briefing/:id`, `mail-next` /
   `mail-activity(/:gmailId)` (Discord/search deep-link target), `hermes`,
   `stream`, `pomo`/`pomo-reports`, `nutrition`, `exercise`, `journal`,
-  `shopping`, `tasks`, `jimbo-workspace`, `calendar-settings`, `coverage`,
+  `shopping`, `tasks`, `jimbo-workspace`, `modules` (module-docs viewer),
+  `calendar-settings`, `coverage`,
   `activity/:id`, `context/:id`, plus dev surfaces (`ui-lab` with ~40 child
   sections, `test-forms`, `test/epic-cards`). Legacy redirects: `actors` →
   `config/actors`, `projects` → `config/projects`.
