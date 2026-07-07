@@ -1,0 +1,170 @@
+<app-ui-stack gap="lg" class="fleet">
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Fleet</h1>
+    <div uiPageHeaderActions>
+      <app-ui-refresh-control
+        [loading]="loading()"
+        [lastFetch]="lastFetch()"
+        (refresh)="refresh()" />
+    </div>
+  </app-ui-page-header>
+
+  @if (lastError(); as err) {
+    <app-ui-card tone="soft">
+      <p class="fleet__error">⚠ {{ err }}</p>
+    </app-ui-card>
+  }
+
+  <!-- Workers -->
+  <section>
+    <h2 class="fleet__section-title">Workers</h2>
+    <div class="fleet__worker-grid">
+      @for (worker of workers(); track worker.id) {
+        <app-ui-card tone="soft" [compact]="true">
+          <div class="fleet-worker">
+            <span class="fleet-worker__dot" [class]="'fleet-worker__dot--' + workerTone(worker)"></span>
+            <div class="fleet-worker__body">
+              <span class="fleet-worker__name">{{ worker.id }}</span>
+              <span class="fleet-worker__meta">
+                {{ worker.machine ?? '?' }} · {{ worker.status ?? 'no heartbeat' }}
+                @if (worker.checked_at; as ts) {
+                  · <span [title]="ts">{{ ts | relativeTime }}</span>
+                }
+              </span>
+            </div>
+            @if (workerTone(worker) === 'quiet' && worker.id === 'kipper') {
+              <app-ui-badge tone="neutral">napping</app-ui-badge>
+            } @else if (workerTone(worker) === 'stale' || workerTone(worker) === 'unknown') {
+              <app-ui-badge tone="danger">silent</app-ui-badge>
+            }
+          </div>
+        </app-ui-card>
+      }
+    </div>
+  </section>
+
+  <!-- Queue depth per lane -->
+  <section>
+    <h2 class="fleet__section-title">Queue</h2>
+    @if (lanes().length === 0) {
+      <app-ui-empty-state message="Queue drained — nothing proposed, approved, or running." />
+    } @else {
+      <div class="fleet__stat-grid">
+        @for (lane of lanes(); track lane.executor) {
+          <app-ui-stat-card
+            [label]="lane.executor"
+            value="{{ lane.approved + lane.running + lane.proposed }}"
+            [detail]="lane.running + ' running · ' + lane.approved + ' approved · ' + lane.proposed + ' proposed'" />
+        }
+      </div>
+    }
+  </section>
+
+  <!-- Worker burn, trailing 5h -->
+  <section>
+    <h2 class="fleet__section-title">
+      Burn <span class="fleet__section-hint">trailing 5h, worker turns only — interactive use is invisible here</span>
+    </h2>
+    <div class="fleet__stat-grid">
+      <app-ui-stat-card label="turns" value="{{ burnTotals().turns }}" />
+      <app-ui-stat-card label="output tokens" [value]="formatTokens(burnTotals().output_tokens)" />
+      <app-ui-stat-card label="est. cost equiv." [value]="formatCost(burnTotals().estimated_cost)"
+        detail="runs on subscription — $ shown as pressure proxy" />
+    </div>
+    @if (burnRows().length > 0) {
+      <div class="fleet__table-wrap">
+        <table class="fleet__table">
+          <thead>
+            <tr><th>actor</th><th>model</th><th>turns</th><th>in</th><th>out</th><th>cost eq.</th></tr>
+          </thead>
+          <tbody>
+            @for (row of burnRows(); track row.actor + row.model) {
+              <tr>
+                <td>{{ row.actor ?? '—' }}</td>
+                <td class="fleet__mono">{{ row.model }}</td>
+                <td>{{ row.turns }}</td>
+                <td>{{ formatTokens(row.input_tokens) }}</td>
+                <td>{{ formatTokens(row.output_tokens) }}</td>
+                <td>{{ formatCost(row.estimated_cost) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <!-- Fold cadence -->
+  <section>
+    <h2 class="fleet__section-title">
+      Folds <span class="fleet__section-hint">Hermes jobs re-pointed onto the queue — stale means the fail-closed transport broke silently</span>
+    </h2>
+    @if (folds().length === 0) {
+      <app-ui-empty-state message="No fold-flow dispatches yet." />
+    } @else {
+      <div class="fleet__table-wrap">
+        <table class="fleet__table">
+          <thead>
+            <tr><th>skill</th><th>last enqueued</th><th>last completed</th><th>last status</th><th>runs 7d</th></tr>
+          </thead>
+          <tbody>
+            @for (fold of folds(); track fold.skill) {
+              <tr>
+                <td class="fleet__mono">
+                  {{ fold.skill ?? '—' }}
+                  @if (foldIsStale(fold.last_enqueued_at)) {
+                    <app-ui-badge tone="danger">stale</app-ui-badge>
+                  }
+                </td>
+                <td [title]="fold.last_enqueued_at ?? ''">{{ fold.last_enqueued_at | relativeTime }}</td>
+                <td [title]="fold.last_completed_at ?? ''">{{ fold.last_completed_at | relativeTime }}</td>
+                <td>{{ fold.last_status ?? '—' }}</td>
+                <td>{{ fold.runs_7d }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <!-- Recent completions -->
+  <section>
+    <h2 class="fleet__section-title">Recent completions</h2>
+    @if (recent().length === 0) {
+      <app-ui-empty-state message="No completed or failed dispatches yet." />
+    } @else {
+      <div class="fleet__table-wrap">
+        <table class="fleet__table">
+          <thead>
+            <tr>
+              <th>#</th><th>skill</th><th>flow</th><th>executor</th><th>status</th>
+              <th>model</th><th>turns</th><th>out</th><th>cache</th><th>cost eq.</th><th>finished</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of recent(); track row.id) {
+              <tr [class.fleet__row--failed]="row.status === 'failed'">
+                <td>{{ row.id }}</td>
+                <td class="fleet__mono" [title]="row.task_id">{{ row.skill ?? '—' }}</td>
+                <td>{{ row.flow }}</td>
+                <td>{{ row.executor ?? '—' }}</td>
+                <td>
+                  <span class="fleet__status" [class]="'fleet__status--' + row.status" [title]="row.error_message ?? ''">
+                    {{ row.status }}
+                  </span>
+                </td>
+                <td class="fleet__mono">{{ row.completed_model ?? '—' }}</td>
+                <td>{{ row.turns }}</td>
+                <td>{{ formatTokens(row.output_tokens) }}</td>
+                <td>{{ formatTokens(row.cache_read_tokens) }}</td>
+                <td>{{ formatCost(row.estimated_cost) }}</td>
+                <td [title]="row.completed_at ?? ''">{{ row.completed_at | relativeTime }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</app-ui-stack>

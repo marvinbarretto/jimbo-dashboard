@@ -1,0 +1,129 @@
+.fleet__error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.8rem;
+}
+
+.fleet__section-title {
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+
+.fleet__section-hint {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.7rem;
+  color: var(--color-text-soft);
+  margin-left: 0.4rem;
+}
+
+.fleet__worker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+// Fixed-basis flex rather than an auto-fit grid: these rows hold 1–4 cards,
+// and auto-fit would balloon a lone card to the full row width.
+.fleet__stat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+
+  app-ui-stat-card {
+    flex: 0 1 13rem;
+    min-width: 9rem;
+  }
+}
+
+.fleet-worker {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+}
+
+.fleet-worker__dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &--live { background: var(--color-success); }
+  &--quiet { background: var(--color-warning); }
+  &--stale, &--unknown { background: var(--color-danger); }
+}
+
+.fleet-worker__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.fleet-worker__name {
+  font-weight: 650;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.fleet-worker__meta {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.fleet__table-wrap {
+  overflow-x: auto;
+  margin-top: 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 8px);
+}
+
+.fleet__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+
+  th, td {
+    text-align: left;
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+  }
+
+  th {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-soft);
+    background: var(--color-surface-soft);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+}
+
+.fleet__mono {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+.fleet__row--failed td {
+  background: color-mix(in srgb, var(--color-danger) 6%, transparent);
+}
+
+.fleet__status {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+
+  &--completed { color: var(--color-success); }
+  &--failed { color: var(--color-danger); }
+}

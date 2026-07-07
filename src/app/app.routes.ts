@@ -94,6 +94,11 @@ export const routes: Routes = [
     loadChildren: () => import('./features/dispatch-review/dispatch-review.routes').then(m => m.dispatchReviewRoutes),
   },
   {
+    path: 'fleet',
+    title: 'Fleet',
+    loadComponent: () => import('./features/fleet/containers/fleet-board/fleet-board').then(m => m.FleetBoard),
+  },
+  {
     path: 'questions',
     loadChildren: () => import('./features/questions/questions.routes').then(m => m.questionsRoutes),
   },

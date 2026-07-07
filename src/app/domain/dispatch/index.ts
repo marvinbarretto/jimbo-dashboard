@@ -15,6 +15,16 @@ export {
   DISPATCH_STATUS_SYSTEM_MANAGED,
 } from './dispatch-queue-entry';
 
+export type {
+  ApiFleetStats,
+  FleetQueueDepth,
+  FleetWorker,
+  FleetCompletion,
+  FleetBurnRow,
+  FleetFold,
+} from './fleet-stats.api-schema';
+export { ApiFleetStatsSchema } from './fleet-stats.api-schema';
+
 export type { CommissionItem, CommissionStage } from './commission-view';
 export {
   groupCommissions,
