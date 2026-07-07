@@ -30,6 +30,15 @@ import { UiCard } from '../ui-card/ui-card';
       min-width: 0;
     }
 
+    /* The projected section.ui-card is a flex ITEM here, and flex items size
+       to content on the main axis — so the visible bordered box shrank to its
+       text (61px tiles in wide tracks) while host + app-ui-card stretched.
+       Make it grow to fill the chain, completing the intent above. */
+    app-ui-card ::ng-deep .ui-card {
+      flex: 1;
+      min-width: 0;
+    }
+
     .ui-stat-card__body {
       display: flex;
       flex-direction: column;
