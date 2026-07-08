@@ -2,6 +2,9 @@
 // Must be global — Angular's emulated view encapsulation does not scope
 // attribute selectors onto innerHTML-injected nodes.
 .markdown-body {
+  // Prose read off innerHTML, not code — match app-ui-prose's sans-serif
+  // treatment so it doesn't inherit the app's monospace root font.
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   line-height: 1.55;
   word-break: break-word;
