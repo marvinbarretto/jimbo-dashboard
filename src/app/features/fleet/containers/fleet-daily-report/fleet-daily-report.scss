@@ -1,0 +1,94 @@
+.fleet-daily-report__error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.8rem;
+}
+
+.fleet-daily-report__actor {
+  padding: 0.9rem 1rem;
+}
+
+.fleet-daily-report__actor-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.7rem;
+}
+
+.fleet-daily-report__quiet {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.fleet-daily-report__stat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+
+  app-ui-stat-card {
+    flex: 0 1 13rem;
+    min-width: 9rem;
+  }
+}
+
+.fleet-daily-report__flows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.fleet-daily-report__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 8px);
+}
+
+.fleet-daily-report__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+
+  th, td {
+    text-align: left;
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+  }
+
+  th {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-soft);
+    background: var(--color-surface-soft);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+}
+
+.fleet-daily-report__mono {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  white-space: normal;
+}
+
+.fleet-daily-report__failures {
+  margin-top: 0.75rem;
+}
+
+.fleet-daily-report__section-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+
+.fleet-daily-report__failure {
+  margin: 0 0 0.3rem;
+  font-size: 0.78rem;
+  color: var(--color-text-soft);
+}

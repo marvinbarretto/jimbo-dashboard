@@ -2,6 +2,7 @@
   <app-ui-page-header>
     <h1 uiPageHeaderTitle>Fleet</h1>
     <div uiPageHeaderActions>
+      <a routerLink="/fleet/daily-report" class="fleet__daily-link">Daily report →</a>
       <app-ui-refresh-control
         [loading]="loading()"
         [lastFetch]="lastFetch()"
@@ -142,7 +143,8 @@
                   <app-job-chip
                     [name]="fold.skill ?? '—'"
                     kind="fold"
-                    [state]="fold.last_status === 'failed' ? 'failing' : 'active'" />
+                    [state]="fold.last_status === 'failed' ? 'failing' : 'active'"
+                    size="sm" />
                   @if (foldIsStale(fold.last_enqueued_at)) {
                     <app-ui-badge tone="danger">stale</app-ui-badge>
                   }

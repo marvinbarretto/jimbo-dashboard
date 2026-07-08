@@ -25,6 +25,15 @@ export type {
 } from './fleet-stats.api-schema';
 export { ApiFleetStatsSchema } from './fleet-stats.api-schema';
 
+export type {
+  ApiDailyFleetReport,
+  FleetReportModelUsage,
+  FleetReportSkillBreakdown,
+  FleetReportFailure,
+  FleetReportActor,
+} from './daily-fleet-report.api-schema';
+export { ApiDailyFleetReportSchema } from './daily-fleet-report.api-schema';
+
 export type { CommissionItem, CommissionStage } from './commission-view';
 export {
   groupCommissions,

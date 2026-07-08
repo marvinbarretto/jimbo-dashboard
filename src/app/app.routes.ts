@@ -99,6 +99,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/fleet/containers/fleet-board/fleet-board').then(m => m.FleetBoard),
   },
   {
+    path: 'fleet/daily-report',
+    title: 'Fleet — Daily Report',
+    loadComponent: () =>
+      import('./features/fleet/containers/fleet-daily-report/fleet-daily-report').then(m => m.FleetDailyReport),
+  },
+  {
     path: 'questions',
     loadChildren: () => import('./features/questions/questions.routes').then(m => m.questionsRoutes),
   },
@@ -147,6 +153,7 @@ export const routes: Routes = [
       { path: 'ui-segmented',            loadComponent: () => import('./features/ui-lab/sections/ui-segmented-section').then(m => m.UiSegmentedSection) },
       { path: 'ui-filter-pills',         loadComponent: () => import('./features/ui-lab/sections/ui-filter-pills-section').then(m => m.UiFilterPillsSection) },
       { path: 'ui-select-chip',          loadComponent: () => import('./features/ui-lab/sections/ui-select-chip-section').then(m => m.UiSelectChipSection) },
+      { path: 'chip-sizing-options',     loadComponent: () => import('./features/ui-lab/sections/chip-sizing-options-section').then(m => m.ChipSizingOptionsSection) },
       { path: 'ui-stepper',              loadComponent: () => import('./features/ui-lab/sections/ui-stepper-section').then(m => m.UiStepperSection) },
       { path: 'list-workflow',           loadComponent: () => import('./features/ui-lab/sections/list-workflow-section').then(m => m.ListWorkflowSection) },
       { path: 'detail-workflow',         loadComponent: () => import('./features/ui-lab/sections/detail-workflow-section').then(m => m.DetailWorkflowSection) },
@@ -170,6 +177,7 @@ export const routes: Routes = [
       { path: 'project-avatar',          loadComponent: () => import('./features/ui-lab/sections/project-avatar-section').then(m => m.ProjectAvatarSection) },
       { path: 'actor-chip',              loadComponent: () => import('./features/ui-lab/sections/actor-chip-section').then(m => m.ActorChipSection) },
       { path: 'vault-chip',              loadComponent: () => import('./features/ui-lab/sections/vault-chip-section').then(m => m.VaultChipSection) },
+      { path: 'job-chip',                loadComponent: () => import('./features/ui-lab/sections/job-chip-section').then(m => m.JobChipSection) },
       { path: 'epic-rollup',             loadComponent: () => import('./features/ui-lab/sections/epic-rollup-section').then(m => m.EpicRollupSection) },
       { path: 'card-parent-link',        loadComponent: () => import('./features/ui-lab/sections/card-parent-link-section').then(m => m.CardParentLinkSection) },
       { path: 'card-callout',            loadComponent: () => import('./features/ui-lab/sections/card-callout-section').then(m => m.CardCalloutSection) },

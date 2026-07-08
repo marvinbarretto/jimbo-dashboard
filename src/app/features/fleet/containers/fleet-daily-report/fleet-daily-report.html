@@ -1,0 +1,91 @@
+<app-ui-stack gap="lg" class="fleet-daily-report">
+  <app-ui-period-pager
+    granularity="day"
+    title="Fleet — Daily Report"
+    eyebrow="Boris / Kipper activity"
+    [subtitle]="selectedDate()"
+    [value]="selectedDate()"
+    [isAtToday]="isAtToday()"
+    [canGoNext]="canGoNext()"
+    (previous)="previous()"
+    (next)="next()"
+    (today)="today()"
+    (dateChange)="goTo($event)" />
+
+  @if (lastError(); as err) {
+    <app-ui-card tone="soft">
+      <p class="fleet-daily-report__error">⚠ {{ err }}</p>
+    </app-ui-card>
+  }
+
+  @if (!loading() && actors().length === 0) {
+    <app-ui-empty-state title="No data" message="No dispatch activity recorded for this day." />
+  }
+
+  @for (actor of actors(); track actor.executor) {
+    <app-ui-card tone="soft">
+      <div class="fleet-daily-report__actor">
+        <div class="fleet-daily-report__actor-head">
+          <app-actor-chip [actor]="actorLabel(actor)" />
+          @if (actor.total_jobs === 0) {
+            <span class="fleet-daily-report__quiet">0 jobs</span>
+          }
+        </div>
+
+        @if (actor.total_jobs > 0) {
+          <div class="fleet-daily-report__stat-grid">
+            <app-ui-stat-card label="jobs" [value]="actor.total_jobs + ''" [detail]="actor.failed + ' failed'" />
+            <app-ui-stat-card label="cost" [value]="formatCost(actor.estimated_cost)" />
+            <app-ui-stat-card label="tokens" [value]="formatTokens(actor.input_tokens + actor.output_tokens)" />
+          </div>
+
+          <div class="fleet-daily-report__flows">
+            @for (f of flowCounts(actor); track f.flow) {
+              <app-ui-badge tone="neutral">{{ f.flow }}: {{ f.count }}</app-ui-badge>
+            }
+            @for (m of actor.models_used; track m.model) {
+              <app-ui-badge tone="accent">{{ m.model ?? 'no model' }}: {{ m.count }}</app-ui-badge>
+            }
+          </div>
+
+          <div class="fleet-daily-report__table-wrap">
+            <table class="fleet-daily-report__table">
+              <thead>
+                <tr><th>skill</th><th>flow</th><th>count</th><th>first</th><th>last</th><th></th></tr>
+              </thead>
+              <tbody>
+                @for (s of actor.by_skill; track s.skill + s.flow) {
+                  <tr>
+                    <td class="fleet-daily-report__mono">{{ s.skill ?? '—' }}</td>
+                    <td>{{ s.flow }}</td>
+                    <td>{{ s.count }}</td>
+                    <td [title]="s.first_at ?? ''">{{ formatTime(s.first_at) }}</td>
+                    <td [title]="s.last_at ?? ''">{{ formatTime(s.last_at) }}</td>
+                    <td>
+                      @if (s.sustained_loop) {
+                        <app-ui-badge tone="warning">sustained loop</app-ui-badge>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (actor.failures.length > 0) {
+            <div class="fleet-daily-report__failures">
+              <h3 class="fleet-daily-report__section-title">Failures</h3>
+              @for (f of actor.failures; track f.id) {
+                <p class="fleet-daily-report__failure">
+                  <span class="fleet-daily-report__mono">{{ f.skill ?? '—' }}</span>
+                  — {{ f.error_message ?? 'no error message' }}
+                  <span [title]="f.completed_at ?? ''">({{ formatTime(f.completed_at) }})</span>
+                </p>
+              }
+            </div>
+          }
+        }
+      </div>
+    </app-ui-card>
+  }
+</app-ui-stack>
