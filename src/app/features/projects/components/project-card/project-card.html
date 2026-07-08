@@ -19,7 +19,7 @@
 
 <div class="project-card__footer">
   @if (project().owner_actor_id; as owner) {
-    <app-actor-chip [actor]="owner" />
+    <app-actor-chip [actor]="owner" size="sm" />
   } @else {
     <span class="project-card__owner project-card__owner--unowned">— unowned —</span>
   }

@@ -28,9 +28,10 @@ import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
         </div>
 
         <div>
-          <p class="ui-lab__subhead">Sizes · sm (default) / lg — lg for picker / list contexts where the item is the primary content</p>
+          <p class="ui-lab__subhead">Sizes · sm (dense: tables, lists) / md (default) / lg (picker/list contexts where the item is the primary content, e.g. pomo retro)</p>
           <app-ui-cluster gap="md" align="center">
-            <span style="--proj-tint: #6b95d6;"><app-vault-chip kind="task" [seq]="2417" title="wire up dispatch retry button" /></span>
+            <span style="--proj-tint: #6b95d6;"><app-vault-chip size="sm" kind="task" [seq]="2417" title="wire up dispatch retry button" /></span>
+            <span style="--proj-tint: #6b95d6;"><app-vault-chip size="md" kind="task" [seq]="2417" title="wire up dispatch retry button" /></span>
             <span style="--proj-tint: #6b95d6;"><app-vault-chip size="lg" kind="task" [seq]="2417" title="wire up dispatch retry button" /></span>
           </app-ui-cluster>
         </div>

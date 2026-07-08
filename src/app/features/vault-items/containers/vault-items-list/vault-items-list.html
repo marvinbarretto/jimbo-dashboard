@@ -187,14 +187,14 @@
             </td>
             <td>
               @if (item.assigned_to) {
-                <app-entity-chip type="actor" [id]="item.assigned_to" [label]="ownerLabel(item)" />
+                <app-entity-chip type="actor" size="sm" [id]="item.assigned_to" [label]="ownerLabel(item)" />
               } @else {
                 <span class="muted">—</span>
               }
             </td>
             <td>
               @if (item.primary_project_id && item.primary_project_name) {
-                <app-entity-chip type="project" [id]="item.primary_project_id" [label]="item.primary_project_name" [color]="projectColor(item.primary_project_id)" />
+                <app-entity-chip type="project" size="sm" [id]="item.primary_project_id" [label]="item.primary_project_name" [color]="projectColor(item.primary_project_id)" />
               } @else {
                 <span class="muted">—</span>
               }

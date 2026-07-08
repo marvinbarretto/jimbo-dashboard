@@ -17,8 +17,18 @@ import { actorId } from '@domain/ids';
           Monochrome name in a pill border. The full-identity treatment for actors —
           use this anywhere an actor needs to be named on a surface (card owners,
           dispatch headers, mention strips). For the dense / icon-only treatment,
-          reach for <code>app-actor-avatar</code>.
+          reach for <code>app-actor-avatar</code>. Takes a <code>size</code> input —
+          <code>sm</code> / <code>md</code> (default) / <code>lg</code>.
         </p>
+
+        <div>
+          <p class="ui-lab__subhead">Sizes</p>
+          <app-ui-cluster gap="md" align="center">
+            <app-actor-chip [actor]="marvin" size="sm" />
+            <app-actor-chip [actor]="marvin" size="md" />
+            <app-actor-chip [actor]="marvin" size="lg" />
+          </app-ui-cluster>
+        </div>
 
         <div>
           <p class="ui-lab__subhead">Pill</p>

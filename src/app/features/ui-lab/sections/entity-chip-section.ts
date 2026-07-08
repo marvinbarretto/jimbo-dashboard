@@ -20,7 +20,21 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
           <code>app-actor-chip</code> or <code>app-actor-avatar</code> — this chip is fine for
           inline mention contexts but isn't where actor identity gets its emphasis.
           Vault items accept an optional <code>seq</code> to show the operator-facing number.
+          Takes a <code>size</code> input — <code>sm</code> (dense: tables, filter bars,
+          summary rows), <code>md</code> (default), <code>lg</code> (chunky: the chip is the
+          main content). Focus ring only applies when <code>clickable</code> — a plain chip
+          isn't a keyboard target.
         </p>
+
+        <div>
+          <p class="ui-lab__subhead">Sizes</p>
+          <app-ui-cluster gap="md" align="center">
+            <app-entity-chip type="project" id="hermes" label="Hermes" size="sm" />
+            <app-entity-chip type="project" id="hermes" label="Hermes" size="md" />
+            <app-entity-chip type="project" id="hermes" label="Hermes" size="lg" />
+            <app-entity-chip type="project" id="hermes" label="Hermes" size="lg" [clickable]="true" />
+          </app-ui-cluster>
+        </div>
 
         <div>
           <p class="ui-lab__subhead">Actors — monochrome (no tint)</p>

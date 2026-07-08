@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 // freshly-captured tag that should pop (mention capture strip). Add a tone only
 // when a consumer needs it — don't speculatively grow the palette.
 export type TagChipTone = 'muted' | 'accent';
+export type TagChipSize = 'sm' | 'md' | 'lg';
 
 /**
  * Primitive pill for a single free-text tag. Tags have no entity backing, so
@@ -19,7 +20,7 @@ export type TagChipTone = 'muted' | 'accent';
   selector: 'app-tag-chip',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <span class="tag-chip" [class]="'tag-chip--' + tone()">
+    <span [class]="'tag-chip tag-chip--' + tone() + ' tag-chip--' + size()">
       @if (prefix()) {
         <span class="tag-chip__prefix" aria-hidden="true">{{ prefix() }}</span>
       }
@@ -35,20 +36,24 @@ export type TagChipTone = 'muted' | 'accent';
     </span>
   `,
   styles: [`
+    @use 'chip-size' as cs;
+
     :host { display: inline-flex; min-width: 0; }
 
     .tag-chip {
       display: inline-flex;
       align-items: center;
-      gap: 0.25rem;
-      font-size: 0.7rem;
-      padding: 0.15rem 0.55rem;
       border: 1px solid var(--color-border);
       border-radius: 999px;
       color: var(--color-text-muted);
       line-height: 1.4;
       min-width: 0;
+
+      @include cs.md;
     }
+
+    .tag-chip--sm { @include cs.sm; }
+    .tag-chip--lg { @include cs.lg; }
 
     .tag-chip--accent {
       border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
@@ -90,6 +95,7 @@ export class TagChip {
   /** Sigil before the label (e.g. `#`). Omitted for plain tags. */
   readonly prefix = input<string | null>(null);
   readonly tone = input<TagChipTone>('muted');
+  readonly size = input<TagChipSize>('md');
   readonly removable = input<boolean>(false);
 
   readonly removed = output<void>();

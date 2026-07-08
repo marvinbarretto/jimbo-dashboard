@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { EntityChip } from '@shared/components/entity-chip/entity-chip';
+import { EntityChip, type EntityChipSize } from '@shared/components/entity-chip/entity-chip';
 import { TagChip } from '@shared/components/tag-chip/tag-chip';
 import type { Project } from '@domain/projects/project';
 import type { Actor } from '@domain/actors/actor';
@@ -36,6 +36,7 @@ export interface MentionRelatedRef {
             [label]="t"
             prefix="#"
             tone="accent"
+            [size]="size()"
             [removable]="true"
             (removed)="tagRemoved.emit(i)"
           />
@@ -44,6 +45,7 @@ export interface MentionRelatedRef {
         @for (p of projects(); track p.id; let i = $index) {
           <app-entity-chip
             type="project"
+            [size]="size()"
             [id]="p.id"
             [label]="p.display_name"
             [color]="p.color_token"
@@ -55,6 +57,7 @@ export interface MentionRelatedRef {
         @if (assignee(); as a) {
           <app-entity-chip
             type="actor"
+            [size]="size()"
             [id]="a.id"
             [label]="a.display_name"
             [removable]="true"
@@ -65,6 +68,7 @@ export interface MentionRelatedRef {
         @for (r of related(); track r.id; let i = $index) {
           <app-entity-chip
             type="vault-item"
+            [size]="size()"
             [id]="r.id"
             [label]="r.title"
             [seq]="r.seq"
@@ -94,6 +98,9 @@ export class UiMentionChipStrip {
   readonly projects = input<readonly Project[]>([]);
   readonly assignee = input<Actor | null>(null);
   readonly related  = input<readonly MentionRelatedRef[]>([]);
+  // Defaults 'sm' — this strip sits in dense composer/capture rows today.
+  // Forwarded rather than hardcoded so a roomier host can opt into 'md'/'lg'.
+  readonly size     = input<EntityChipSize>('sm');
 
   readonly tagRemoved      = output<number>();
   readonly projectRemoved  = output<number>();

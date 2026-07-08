@@ -12,6 +12,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 
 export type JobChipKind = 'agent' | 'script' | 'fold';
 export type JobChipState = 'active' | 'running' | 'paused' | 'failing' | 'unknown';
+export type JobChipSize = 'sm' | 'md' | 'lg';
 
 /** Derive the chip kind from a job's pre-run script name. */
 export function jobChipKind(script: string | null | undefined): JobChipKind {
@@ -69,13 +70,12 @@ const STATE_TITLE: Record<JobChipState, string> = {
     </span>
   `,
   styles: [`
+    @use 'chip-size' as cs;
+
     .job-chip {
       display: inline-flex;
       align-items: center;
-      gap: 0.32em;
-      font-size: 0.72rem;
       font-family: var(--font-mono);
-      padding: 0.15rem 0.55rem;
       border: 1px solid var(--color-border);
       border-radius: 999px;
       background: color-mix(in srgb, var(--color-border) 40%, transparent);
@@ -83,7 +83,12 @@ const STATE_TITLE: Record<JobChipState, string> = {
       line-height: 1.4;
       white-space: nowrap;
       vertical-align: baseline;
+
+      @include cs.md;
     }
+
+    .job-chip--sm { @include cs.sm; }
+    .job-chip--lg { @include cs.lg; }
 
     .job-chip__dot {
       width: 0.45em;
@@ -120,8 +125,9 @@ export class JobChip {
   readonly state = input<JobChipState>('unknown');
   readonly kind = input<JobChipKind>('agent');
   readonly detail = input<string | null>(null);
+  readonly size = input<JobChipSize>('md');
 
-  readonly cls = computed(() => `job-chip job-chip--${this.state()} job-chip--${this.kind()}`);
+  readonly cls = computed(() => `job-chip job-chip--${this.state()} job-chip--${this.kind()} job-chip--${this.size()}`);
   readonly glyph = computed(() => KIND_GLYPH[this.kind()]);
   readonly title = computed(() => `${KIND_TITLE[this.kind()]} — ${STATE_TITLE[this.state()]}`);
 }

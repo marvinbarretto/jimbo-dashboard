@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 export type VaultChipKind = 'task' | 'subtask' | 'epic';
 export type VaultChipCreator = 'agent' | 'human';
-export type VaultChipSize = 'sm' | 'lg';
+export type VaultChipSize = 'sm' | 'md' | 'lg';
 
 @Component({
   selector: 'app-vault-chip',
@@ -26,6 +26,8 @@ export type VaultChipSize = 'sm' | 'lg';
     </a>
   `,
   styles: [`
+    @use 'chip-size' as cs;
+
     /* Participate in flex layouts so a host row can stretch the chip and let long
        titles ellipsise at the available width rather than the chip's content width. */
     :host { display: inline-flex; max-width: 100%; min-width: 0; }
@@ -33,12 +35,8 @@ export type VaultChipSize = 'sm' | 'lg';
     .vault-chip {
       display: inline-flex;
       align-items: center;
-      gap: 0.25rem;
       max-width: 100%;
       font-family: var(--font-mono);
-      font-size: 0.7rem;
-      line-height: 1.4;
-      padding: 0.05rem 0.5rem 0.05rem 0.25rem;
       border-radius: var(--radius);
       border: 1px solid var(--color-border);
       border-left: 3px solid var(--proj-tint, var(--color-border));
@@ -47,21 +45,46 @@ export type VaultChipSize = 'sm' | 'lg';
       text-decoration: none;
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
+
+      // Only font-size/gap come from the shared scale — border stays 1px with
+      // the project-tint stripe carrying the size cue on its own left-width,
+      // so a chunkier tier doesn't puff up the plain right/top/bottom edges.
+      @include cs.md;
+      border-width: 1px;
+      border-left-width: 4px;
+      padding: 0.4rem 0.75rem 0.4rem 0.5rem;
+      line-height: 1.5;
     }
 
-    /* Larger, more tappable variant — for picker / list contexts where the item
-       is the primary content (e.g. the pomo retro), not an inline reference. */
-    .vault-chip--lg {
-      font-size: 0.88rem;
-      line-height: 1.5;
-      gap: 0.4rem;
-      padding: 0.4rem 0.75rem 0.4rem 0.5rem;
-      border-left-width: 4px;
+    .vault-chip--sm {
+      @include cs.sm;
+      border-width: 1px;
+      border-left-width: 3px;
+      padding: 0.05rem 0.5rem 0.05rem 0.25rem;
+      line-height: 1.4;
     }
+
+    /* Chunkiest tier — for picker / list contexts where the item is the
+       primary content (e.g. the pomo retro), not an inline reference. */
+    .vault-chip--lg {
+      @include cs.lg;
+      border-width: 1px;
+      border-left-width: 5px;
+      padding: 0.55rem 1rem 0.55rem 0.7rem;
+      line-height: 1.5;
+    }
+    .vault-chip--md .vault-chip__prefix,
     .vault-chip--lg .vault-chip__prefix { font-size: 0.85rem; }
+
     .vault-chip:hover {
       border-color: var(--color-border-strong);
       border-left-color: var(--proj-tint, var(--color-border-strong));
+    }
+    .vault-chip:focus-visible {
+      @include cs.focus-ring-md;
+    }
+    .vault-chip--lg:focus-visible {
+      @include cs.focus-ring-lg;
     }
     .vault-chip__prefix {
       color: var(--color-text-muted);
@@ -116,7 +139,7 @@ export class VaultChip {
   readonly creator     = input<VaultChipCreator>('agent');
   readonly epicSeq     = input<number | null>(null);
   readonly href        = input<string | null>(null);
-  readonly size        = input<VaultChipSize>('sm');
+  readonly size        = input<VaultChipSize>('md');
   // When true (default), plain clicks push ?detail=<seq> so a host page that
   // mounted withVaultDetailModal() opens the modal. Middle/cmd-click still
   // honours the rendered href and opens the full /vault-items route.

@@ -1,0 +1,44 @@
+// Shared sizing tiers for the identity-chip family (entity/tag/actor/vault/job
+// chip). Only scale tokens live here — font-size, padding, border-width, gap,
+// focus-ring. Border-radius and colour stay with each component: vault-chip is
+// deliberately a rounded rect, the rest are pills, and tone is per-component.
+//
+//   sm — baseline/compact. Use inside cards, tables, filter bars, dense rows.
+//   md — default. Most inline/standalone chip usage.
+//   lg — chunky. Reserved for main-UI moments where the chip IS the content.
+
+@mixin sm {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.55rem;
+  gap: 0.25rem;
+  border-width: 1px;
+}
+
+@mixin md {
+  font-size: 0.8125rem;
+  padding: 0.4rem 0.85rem;
+  gap: 0.35rem;
+  border-width: 1.5px;
+  font-weight: 500;
+}
+
+@mixin lg {
+  font-size: 0.9rem;
+  padding: 0.55rem 1.1rem;
+  gap: 0.4rem;
+  border-width: 2px;
+  font-weight: 500;
+}
+
+// Only apply to chips that are actually focusable (a real <a>, or a <span
+// role="button" tabindex="0">) — a focus ring on a plain, non-interactive
+// <span> is dead CSS.
+@mixin focus-ring-md {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@mixin focus-ring-lg {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}

@@ -50,7 +50,9 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'project-avatar',          name: 'Project Avatar',        group: 'identity',        selector: 'app-project-avatar',    description: 'Project initials in a colour-filled rounded square. Actor=circle, project=rounded-square — shape disambiguates identity.' },
   { id: 'actor-chip',              name: 'Actor Chip',            group: 'identity',        selector: 'app-actor-chip',        description: 'Actor name in a monochrome pill. Pair with actor-avatar for the dense / icon-only treatment.' },
   { id: 'vault-chip',              name: 'Vault Chip',            group: 'identity',        selector: 'app-vault-chip',        description: 'Task / subtask / epic — same shell, different prefix. Epic encodes creator class via border.' },
+  { id: 'job-chip',                name: 'Job Chip',              group: 'identity',        selector: 'app-job-chip',          description: 'Hermes job identity — kind glyph, status dot, muted-when-paused label. The jobs sibling of actor-chip/entity-chip.' },
   { id: 'ui-select-chip',          name: 'Select Chip',           group: 'identity',        selector: 'app-ui-select-chip',    description: 'Prominent selectable picker pill with optional colour + leading swatch. Fills the gap between app-chip (colour, no select) and filter-pills (select, no colour).' },
+  { id: 'chip-sizing-options',     name: 'Chip Sizing — Options', group: 'identity',                                            description: 'Decision aid: baseline vs. two chunkier sizing tiers for the identity-chip family, with hover/focus/selected/paused states to compare before rollout.' },
 
   // Cards — kanban surface and the slot primitives that compose into it
   { id: 'vault-card',              name: 'Vault Card',            group: 'cards',           selector: 'app-vault-card',        description: 'Unified kanban card driven by CardContext (grooming / dispatch / manual).' },

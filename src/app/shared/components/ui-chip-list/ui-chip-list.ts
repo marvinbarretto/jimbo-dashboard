@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
-import { EntityChip, type EntityType } from '@shared/components/entity-chip/entity-chip';
+import { EntityChip, type EntityType, type EntityChipSize } from '@shared/components/entity-chip/entity-chip';
 
 export type UiChipListTone = 'default' | 'blocker';
 
@@ -30,7 +30,7 @@ export interface UiChipListPickerOption {
         @if (item.entityType) {
           <span class="ui-chip-list__chip ui-chip-list__chip--entity">
             <button type="button" class="ui-chip-list__entity-btn" (click)="itemClicked.emit(item.id)">
-              <app-entity-chip [type]="item.entityType" [id]="item.id" [label]="item.label" [seq]="item.seq ?? null" [color]="item.color ?? null" />
+              <app-entity-chip [type]="item.entityType" [size]="size()" [id]="item.id" [label]="item.label" [seq]="item.seq ?? null" [color]="item.color ?? null" />
             </button>
             @if (allowRemove()) {
               <button type="button" class="ui-chip-list__remove"
@@ -75,7 +75,7 @@ export interface UiChipListPickerOption {
         @for (opt of pickerOptions(); track opt.id) {
           <button type="button" class="ui-chip-list__picker-opt" (click)="onAdd(opt.id)">
             @if (opt.entityType) {
-              <app-entity-chip [type]="opt.entityType" [id]="opt.id" [label]="opt.label" [color]="opt.color ?? null" />
+              <app-entity-chip [type]="opt.entityType" [size]="size()" [id]="opt.id" [label]="opt.label" [color]="opt.color ?? null" />
             } @else {
               {{ opt.label }}
             }
@@ -216,6 +216,9 @@ export class UiChipList {
   readonly emptyLabel = input<string>('none');
   readonly allowRemove = input(true);
   readonly alwaysShowAdd = input(false);
+  // Defaults 'sm' — forwarded to entity-backed items so a roomier host can opt
+  // into 'md'/'lg' without another component change.
+  readonly size = input<EntityChipSize>('sm');
 
   readonly itemClicked = output<string>();
   readonly removed = output<string>();

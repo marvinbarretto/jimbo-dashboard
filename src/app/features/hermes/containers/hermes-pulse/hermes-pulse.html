@@ -68,7 +68,7 @@
         <ul class="pulse__feed-list">
           @for (job of recentRuns(); track job.id) {
             <li class="pulse__feed-item" [class.pulse__feed-item--error]="job.last_status !== 'ok'">
-              <app-job-chip [name]="job.name" [state]="chipState(job)" [kind]="chipKind(job)" />
+              <app-job-chip [name]="job.name" [state]="chipState(job)" [kind]="chipKind(job)" size="sm" />
               <span class="pulse__feed-schedule">{{ job.schedule_display }}</span>
               <span class="pulse__feed-status" [class]="'pulse__feed-status--' + (job.last_status ?? 'unknown')">
                 {{ job.last_status ?? '—' }}

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 
 export type EntityType = 'actor' | 'project' | 'vault-item';
 export type EntityChipVariant = 'soft' | 'solid';
+export type EntityChipSize = 'sm' | 'md' | 'lg';
 
 const PREFIX: Record<EntityType, string> = {
   'actor':      '@',
@@ -41,13 +42,12 @@ const PREFIX: Record<EntityType, string> = {
     </span>
   `,
   styles: [`
+    @use 'chip-size' as cs;
+
     .entity-chip {
       display: inline-flex;
       align-items: center;
-      gap: 0.05em;
-      font-size: 0.72rem;
       font-family: var(--font-mono);
-      padding: 0.15rem 0.55rem 0.15rem 0.35rem;
       border: 1px solid var(--color-border);
       border-radius: 999px;
       background: color-mix(in srgb, var(--color-border) 40%, transparent);
@@ -55,6 +55,22 @@ const PREFIX: Record<EntityType, string> = {
       line-height: 1.4;
       white-space: nowrap;
       vertical-align: baseline;
+
+      @include cs.md;
+      // Prefix glyph wants tighter lead-in space than the shared right-hand
+      // padding — kept as a per-component override, not part of the shared scale.
+      padding-left: 0.55em;
+    }
+
+    .entity-chip--sm {
+      @include cs.sm;
+      padding-left: 0.35em;
+      gap: 0.05em;
+    }
+
+    .entity-chip--lg {
+      @include cs.lg;
+      padding-left: 0.7em;
     }
 
     .entity-chip__prefix {
@@ -165,9 +181,12 @@ const PREFIX: Record<EntityType, string> = {
       }
 
       &:focus-visible {
-        outline: 2px solid var(--color-accent);
-        outline-offset: 2px;
+        @include cs.focus-ring-md;
       }
+    }
+
+    .entity-chip--lg.entity-chip--clickable:focus-visible {
+      @include cs.focus-ring-lg;
     }
   `],
 })
@@ -181,6 +200,7 @@ export class EntityChip {
   readonly disabled = input(false);
   readonly color    = input<string | null>(null);
   readonly variant  = input<EntityChipVariant>('soft');
+  readonly size     = input<EntityChipSize>('md');
   /** When true, renders a trailing × that emits `removed`. Host owns state. */
   readonly removable  = input(false);
   readonly removed    = output<void>();
@@ -190,7 +210,7 @@ export class EntityChip {
   readonly prefix    = computed(() => PREFIX[this.type()]);
   readonly chipStyle = computed(() => this.color() ? { '--chip-color': this.color() } : null);
   readonly cls       = computed(() => {
-    const parts = [`entity-chip entity-chip--${this.type()} entity-chip--${this.id()} entity-chip--${this.variant()}`];
+    const parts = [`entity-chip entity-chip--${this.type()} entity-chip--${this.id()} entity-chip--${this.variant()} entity-chip--${this.size()}`];
     if (this.active())    parts.push('entity-chip--active');
     if (this.disabled())  parts.push('entity-chip--disabled');
     if (this.clickable()) parts.push('entity-chip--clickable');

@@ -42,7 +42,7 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
           #ownerDrop
           ariaHaspopup="listbox"
           ariaLabel="Reassign owner">
-          <app-entity-chip trigger type="actor" [id]="ownerChip().id" [label]="ownerChip().label" />
+          <app-entity-chip trigger type="actor" size="sm" [id]="ownerChip().id" [label]="ownerChip().label" />
           <div panel role="listbox" class="vault-item-status-chips__panel">
             @for (a of activeActors(); track a.id) {
               <button
@@ -86,7 +86,7 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
 
         @if (firstProject(); as p) {
           <a class="chip-link" [routerLink]="['/projects', p.id]">
-            <app-entity-chip type="project" [id]="p.id" [label]="p.display_name" />
+            <app-entity-chip type="project" size="sm" [id]="p.id" [label]="p.display_name" />
           </a>
           @if (extraProjectCount() > 0) {
             <span class="vault-item-status-chips__extra-projects" [title]="extraProjectsTitle()">

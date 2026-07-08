@@ -19,7 +19,18 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
           type). This is the shared home for the tag-pill markup that
           <code>vault-item-tag-list</code> and <code>ui-mention-chip-strip</code>
           used to hand-roll. Per-chip: the caller loops and owns list semantics.
+          Takes a <code>size</code> input — <code>sm</code> / <code>md</code> (default) /
+          <code>lg</code> — same scale as the rest of the identity-chip family.
         </p>
+
+        <div>
+          <p class="ui-lab__subhead">Sizes</p>
+          <app-ui-cluster gap="md" align="center">
+            <app-tag-chip label="positioning" size="sm" />
+            <app-tag-chip label="positioning" size="md" />
+            <app-tag-chip label="positioning" size="lg" />
+          </app-ui-cluster>
+        </div>
 
         <div>
           <p class="ui-lab__subhead">Muted — persisted tags (detail side-panel)</p>

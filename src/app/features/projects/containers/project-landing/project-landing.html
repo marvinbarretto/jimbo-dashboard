@@ -186,7 +186,7 @@
                       </a>
                       @if (issue.linked; as linked) {
                         @if (linked.seq !== null) {
-                          <app-vault-chip kind="task" [seq]="linked.seq" />
+                          <app-vault-chip kind="task" size="sm" [seq]="linked.seq" />
                         }
                         <app-ui-badge tone="neutral" [subtle]="true">{{ linked.status }}</app-ui-badge>
                       } @else {
@@ -272,6 +272,7 @@
             <span class="chip-cell">
               <app-vault-chip
                 [kind]="context.row.original.parent_id ? 'subtask' : 'task'"
+                size="sm"
                 [seq]="context.row.original.seq"
                 [title]="context.row.original.title"
               />
@@ -387,7 +388,7 @@
               <dt>Owner</dt>
               <dd>
                 @if (p.owner_actor_id) {
-                  <app-actor-chip [actor]="p.owner_actor_id" />
+                  <app-actor-chip [actor]="p.owner_actor_id" size="sm" />
                 } @else {
                   <span class="hint">unowned</span>
                 }

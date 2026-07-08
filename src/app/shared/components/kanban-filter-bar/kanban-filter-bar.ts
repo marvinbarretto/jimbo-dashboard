@@ -51,6 +51,7 @@ export interface SortOption {
           (click)="toggled.emit(opt.value)">
           <app-entity-chip
             [type]="opt.entityType"
+            size="sm"
             [id]="opt.value.toString()"
             [label]="opt.label"
             [count]="opt.count"
