@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.105](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.104...v0.0.105) (2026-07-08)
+
+
+### Features
+
+* add module docs freshness contract and staleness script ([e49d478](https://github.com/marvinbarretto/jimbo-dashboard/commit/e49d478a819133a54599a1aadff2beb34fdcc3f3))
+* module docs viewer with staleness badges ([75df27c](https://github.com/marvinbarretto/jimbo-dashboard/commit/75df27ce672402ee8f1a6ce9db28b659e48fb07e))
+
+
+### Bug Fixes
+
+* render markdown-body prose in sans-serif, not monospace ([4128a1b](https://github.com/marvinbarretto/jimbo-dashboard/commit/4128a1b1e0ce0a98c6b73ecb34e8d4dc0f23edf1))
+
 ### [0.0.104](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.103...v0.0.104) (2026-07-07)
 
 
