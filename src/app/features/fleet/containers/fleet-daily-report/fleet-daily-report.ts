@@ -13,6 +13,7 @@ import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiPeriodPager } from '@shared/components/ui-period-pager/ui-period-pager';
 import { ActorChip } from '@shared/components/actor-chip/actor-chip';
 import { actorId } from '@domain/ids';
+import { logicalToday } from '@shared/utils/datetime.utils';
 import { DailyFleetReportService } from '../../data-access/daily-fleet-report.service';
 import type { FleetReportActor } from '@domain/dispatch';
 
@@ -21,10 +22,6 @@ function shiftDate(ymd: string, days: number): string {
   const date = new Date(Date.UTC(y, m - 1, d));
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
-}
-
-function todayYmd(): string {
-  return new Date().toISOString().slice(0, 10);
 }
 
 @Component({
@@ -42,9 +39,12 @@ export class FleetDailyReport {
   readonly lastError = this.service.lastError;
   readonly actors = this.service.actors;
 
-  // The newest report that can exist is yesterday's logical day (today isn't
-  // over yet) — computed once per page load, not a live clock.
-  private readonly latestDate = shiftDate(todayYmd(), -1);
+  // The newest navigable report is today's logical day (04:00 Europe/London
+  // cutover) — computed once per page load, not a live clock. The report for
+  // today is a live, on-demand query over dispatch_queue, so it's genuinely
+  // partial (the day isn't over) rather than unavailable; `isAtToday` below
+  // doubles as the "still in progress" flag the template uses to caveat it.
+  private readonly latestDate = logicalToday();
 
   private readonly _selectedDate = signal(this.latestDate);
   readonly selectedDate = this._selectedDate.asReadonly();

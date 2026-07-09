@@ -18,6 +18,10 @@
     </app-ui-card>
   }
 
+  @if (isAtToday()) {
+    <app-ui-badge tone="neutral">day in progress — totals will keep growing</app-ui-badge>
+  }
+
   @if (!loading() && actors().length === 0) {
     <app-ui-empty-state title="No data" message="No dispatch activity recorded for this day." />
   }
