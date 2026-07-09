@@ -43,6 +43,7 @@ export const navGroups: readonly NavGroup[] = [
       'config', 'grooming', 'execution', 'review', 'vault-items', 'questions', 'activity',
       'skills', 'models', 'model-stacks', 'context', 'coach', 'interrogate',
       'hermes', 'ops', 'triage', 'stream', 'coverage', 'grooming-admin', 'pomo-reports',
+      'entities',
     ],
     items: [
       { href: '/today', label: 'Today' },
@@ -58,6 +59,7 @@ export const navGroups: readonly NavGroup[] = [
       { href: '/review', label: 'Review' },
       { href: '/vault-items', label: 'Vault' },
       { href: '/questions', label: 'Questions' },
+      { href: '/entities', label: 'Entities' },
       { href: '/activity', label: 'Activity' },
       { href: '/config/skills', label: 'Skills' },
       { href: '/config/models', label: 'Models' },
