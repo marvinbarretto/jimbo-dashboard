@@ -37,6 +37,9 @@ export type DispatchId     = Brand<string, 'DispatchId'>;
 export type FocusSessionId = Brand<string, 'FocusSessionId'>;
 export type InterrogateEntityId = Brand<string, 'InterrogateEntityId'>;
 export type ClarificationId = Brand<string, 'ClarificationId'>;
+// Distinct from InterrogateEntityId above — this is the who/what-is-X
+// registry (services/entities.ts), not the interrogate self-model.
+export type EntityRegistryId = Brand<string, 'EntityRegistryId'>;
 
 // Constructor helpers. Use at API boundaries where the raw string arrives.
 // Inside the app, prefer passing the branded type around.
@@ -64,3 +67,4 @@ export const dispatchId      = (v: string): DispatchId      => v as DispatchId;
 export const focusSessionId  = (v: string): FocusSessionId  => v as FocusSessionId;
 export const interrogateEntityId = (v: string): InterrogateEntityId => v as InterrogateEntityId;
 export const clarificationId = (v: string): ClarificationId => v as ClarificationId;
+export const entityRegistryId = (v: string): EntityRegistryId => v as EntityRegistryId;

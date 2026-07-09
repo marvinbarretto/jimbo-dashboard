@@ -1,0 +1,59 @@
+<div class="entity-registry-page">
+  <header class="entity-registry-page__header">
+    <h1 class="entity-registry-page__title">Entity registry</h1>
+    <span class="entity-registry-page__count">
+      {{ loading() ? '…' : resolvedCount() + ' known · ' + unresolvedCount() + ' unresolved' }}
+    </span>
+  </header>
+
+  <p class="entity-registry-page__intro">
+    Who/what-is-X knowledge, learned from clarification answers — so
+    assumption-scan stops asking about a name once it's known. Grows
+    organically as questions get answered; nothing here was backfilled.
+  </p>
+
+  <div class="entity-registry-page__controls">
+    <input
+      type="search"
+      class="entity-registry-page__search"
+      placeholder="search name or alias…"
+      [ngModel]="search()"
+      (ngModelChange)="search.set($event)"
+    />
+    <div class="entity-registry-page__kinds">
+      @for (k of kinds; track k) {
+        <button type="button"
+          class="kind-btn"
+          [class.kind-btn--active]="kindFilter() === k"
+          (click)="setKindFilter(k)">{{ k }}</button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="entity-registry-page__loading">Loading…</p>
+  } @else if (filtered().length === 0) {
+    <div class="entity-registry-page__empty">
+      <p>Nothing here yet — entities accumulate as clarifications get answered.</p>
+    </div>
+  } @else {
+    <ul class="entity-registry-page__list">
+      @for (e of filtered(); track e.id) {
+        <li class="ecard" [class.ecard--unresolved]="e.description === null">
+          <div class="ecard__main">
+            <span class="ecard__kind">{{ e.kind }}</span>
+            <span class="ecard__name">{{ e.name }}</span>
+            @if (e.aliases.length > 0) {
+              <span class="ecard__aliases">aka {{ e.aliases.join(', ') }}</span>
+            }
+          </div>
+          @if (e.description) {
+            <p class="ecard__description">{{ e.description }}</p>
+          } @else {
+            <p class="ecard__unresolved-label">unresolved — not yet explained</p>
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

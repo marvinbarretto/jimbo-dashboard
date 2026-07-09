@@ -76,6 +76,10 @@ export const routes: Routes = [
   },
   { path: 'actors', redirectTo: 'config/actors', pathMatch: 'full' },
   {
+    path: 'entities',
+    loadChildren: () => import('./features/entity-registry/entity-registry.routes').then(m => m.entityRegistryRoutes),
+  },
+  {
     path: 'projects/:id',
     title: 'Project',
     loadComponent: () => import('./features/projects/containers/project-landing/project-landing').then(m => m.ProjectLanding),
