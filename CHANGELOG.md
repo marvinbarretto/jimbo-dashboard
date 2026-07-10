@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.106](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.105...v0.0.106) (2026-07-10)
+
+
+### Features
+
+* **entity-registry:** standalone viewer page at /entities ([a356783](https://github.com/marvinbarretto/jimbo-dashboard/commit/a356783e5dd0fe72c8c340c75f075aa15d90f838))
+* **fleet:** add daily fleet activity report page ([8241d5e](https://github.com/marvinbarretto/jimbo-dashboard/commit/8241d5e9213df66048007acb6d381a7e1b61f7c1))
+* **fleet:** let the daily report show today, not just finished days ([20bf3cf](https://github.com/marvinbarretto/jimbo-dashboard/commit/20bf3cf35bc8d1f929afa565fbebd7011aa24a91))
+* **nav:** add Entities to the Archive nav group ([d55f772](https://github.com/marvinbarretto/jimbo-dashboard/commit/d55f77234ffe0ba38d2f899b0193e38f67f06806))
+* unify identity-chip sizing on a shared sm/md/lg scale ([3c1ed66](https://github.com/marvinbarretto/jimbo-dashboard/commit/3c1ed66caee1599974e3e32e1c3e114419266e56))
+
+
+### Bug Fixes
+
+* **pomo:** reflect new epic children in progress meter without reload ([eb7d046](https://github.com/marvinbarretto/jimbo-dashboard/commit/eb7d0466877f2ade9faefcc3736b0e9560f8bfea))
+
 ### [0.0.105](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.104...v0.0.105) (2026-07-08)
 
 
