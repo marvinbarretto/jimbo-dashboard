@@ -178,6 +178,22 @@ export class VaultItemsService {
           this.projectsJunction.markLinked(real.id, toProjectId(input.primary_project_id));
         }
 
+        // children_count/children_inbox_count are board-query-derived embeds —
+        // the parent row won't see this new child until the next bulk reload.
+        // Bump them locally so an epic's progress meter reflects the story
+        // that was just created under it, instead of looking unchanged (which
+        // reads as "the task wasn't assigned to the epic").
+        if (input.parent_id) {
+          const parentId = vaultItemId(input.parent_id);
+          this._items.update(items => items.map(i => i.id === parentId
+            ? {
+                ...i,
+                children_count: (i.children_count ?? 0) + 1,
+                children_inbox_count: (i.children_inbox_count ?? 0) + 1,
+              }
+            : i));
+        }
+
         // CreateNoteBody doesn't accept grooming_status or assigned_to overrides
         // for board-driven flows — the server defaults to ungroomed/jimbo. PATCH
         // any drift in a follow-up so the UI sees what we asked for.
