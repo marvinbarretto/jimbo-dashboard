@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.107](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.106...v0.0.107) (2026-07-10)
+
+
+### Features
+
+* **notifications:** add check-in schedule settings page ([8639570](https://github.com/marvinbarretto/jimbo-dashboard/commit/8639570a8a832b8fcc8f76b1c0def1318b9e4d54))
+
 ### [0.0.106](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.105...v0.0.106) (2026-07-10)
 
 
