@@ -1,0 +1,73 @@
+<app-ui-stack gap="lg">
+  <app-ui-page-header>
+    <app-ui-back-link uiPageHeaderLead [to]="['/config/settings']">← Settings</app-ui-back-link>
+    <h1 uiPageHeaderTitle>Notifications</h1>
+  </app-ui-page-header>
+
+  @if (loading()) {
+    <app-ui-loading-state message="Loading…" />
+  } @else {
+    <app-ui-section title="Check-ins" [collapsible]="false">
+      <p class="notification-settings-hint">
+        When Jimbo can ping you — assignment notices and the hourly activity check-in both
+        respect this window. Outside it, nothing is sent.
+      </p>
+
+      <label class="notification-settings-toggle">
+        <app-ui-toggle [checked]="enabled()" label="Check-ins enabled" (changed)="onEnabledChange($event)" />
+        <span>Check-ins enabled</span>
+      </label>
+
+      <div class="notification-settings-window">
+        <label class="notification-settings-field">
+          <span class="notification-settings-field__label">Interruptible from</span>
+          <input
+            class="notification-settings-field__input"
+            type="time"
+            [value]="start()"
+            (change)="onStartChange($event)"
+          />
+        </label>
+        <label class="notification-settings-field">
+          <span class="notification-settings-field__label">Until</span>
+          <input
+            class="notification-settings-field__input"
+            type="time"
+            [value]="end()"
+            (change)="onEndChange($event)"
+          />
+        </label>
+        <span class="notification-settings-timezone">{{ timezone() }}</span>
+      </div>
+
+      <p class="notification-settings-status">
+        Right now:
+        @if (currentlyInterruptible()) {
+          <span class="notification-settings-status__on">interruptible</span>
+        } @else {
+          <span class="notification-settings-status__off">quiet</span>
+        }
+      </p>
+
+      <app-ui-button variant="primary" [disabled]="!dirty() || saving()" (pressed)="save()">
+        {{ saving() ? 'Saving…' : 'Save' }}
+      </app-ui-button>
+    </app-ui-section>
+
+    <app-ui-section title="Busy right now?" [collapsible]="false">
+      @if (isMuted()) {
+        <p class="notification-settings-hint">Muted until {{ mutedUntil() | date: 'short' }}.</p>
+        <app-ui-button variant="secondary" [disabled]="saving()" (pressed)="unmute()">Unmute</app-ui-button>
+      } @else {
+        <p class="notification-settings-hint">
+          Suppress every ping — assignment notices and check-ins — for a stretch, regardless of the window above.
+        </p>
+        <app-ui-cluster gap="sm">
+          <app-ui-button variant="secondary" [disabled]="saving()" (pressed)="muteFor(2)">Mute 2h</app-ui-button>
+          <app-ui-button variant="secondary" [disabled]="saving()" (pressed)="muteFor(4)">Mute 4h</app-ui-button>
+          <app-ui-button variant="secondary" [disabled]="saving()" (pressed)="muteFor(12)">Rest of today</app-ui-button>
+        </app-ui-cluster>
+      }
+    </app-ui-section>
+  }
+</app-ui-stack>

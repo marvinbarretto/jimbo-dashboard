@@ -200,6 +200,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/calendar-settings/calendar-settings-page').then(m => m.CalendarSettingsPage),
   },
   {
+    path: 'notification-settings',
+    title: 'Notification settings',
+    loadComponent: () => import('./features/notification-settings/containers/notification-settings-page/notification-settings-page').then(m => m.NotificationSettingsPage),
+  },
+  {
     path: 'modules',
     loadChildren: () => import('./features/modules/modules.routes').then(m => m.modulesRoutes),
   },

@@ -36,6 +36,11 @@ const SETTINGS_ENTRIES: readonly SettingsEntry[] = [
     description: 'Which Google Tasks lists feed into triage.',
     link: '/tasks/settings',
   },
+  {
+    title: 'Notifications',
+    description: 'Check-in hours and assignment pings — when Jimbo is allowed to interrupt you.',
+    link: '/notification-settings',
+  },
 ];
 
 @Component({
