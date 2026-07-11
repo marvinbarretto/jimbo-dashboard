@@ -123,6 +123,7 @@
         [allProjects]="store.projects()"
         [isGitHubItem]="store.isGitHubItem()"
         [activeActors]="store.activeActors()"
+        [showPipelineStatus]="item.type === 'task'"
         (statusChange)="store.setStatus($event)"
         (reassign)="store.reassign($event)"
         (epicToggle)="store.setEpic($event)"
@@ -191,57 +192,23 @@
       <app-ui-section
         title="Body"
         [collapsible]="false"
-        meta="intake · delivery · links">
-        <div class="vault-item-detail__body-layout">
-          <!-- Primary column: the work itself — what it is + how it ships. -->
-          <div class="vault-item-detail__body-main">
-            <app-vault-item-intake-block
-              [body]="item.body"
-              [createdAt]="item.created_at"
-              [editable]="store.isManual()"
-              (bodyChange)="store.updateBody($event)"
-            />
-
-            @if (!item.is_epic) {
-              <app-vault-item-delivery-block
-                [readiness]="store.readiness()"
-                [criteria]="item.acceptance_criteria"
-                [editable]="true"
-                [groomingOverridable]="store.groomingOverridable()"
-                [groomingOverride]="item.grooming_override"
-                (criteriaChange)="store.updateCriteria($event)"
-                (groomingOverrideChange)="store.setGroomingOverride($event)"
-              />
-            }
-          </div>
-
-          <!-- Side column: relationships + metadata. -->
-          <aside class="vault-item-detail__body-side">
-          <app-vault-item-links-block
-            [subtasks]="store.children()"
-            [parentIsEpic]="item.is_epic"
-            [projects]="store.projects()"
-            [activeProjects]="store.activeProjects()"
-            [openBlockers]="store.openBlockers()"
-            [tags]="item.tags"
-            [addBlockerSeqInput]="store.addBlockerSeqInput()"
-            [availableEpics]="store.availableEpics()"
-            [parent]="store.parentRef()"
-            [editable]="true"
-            (subtaskClicked)="swapToSeq($event)"
-            (projectClicked)="onProjectClicked($event)"
-            (projectAdded)="store.addProject($event)"
-            (projectRemoved)="store.removeProject($event)"
-            (blockerClicked)="swapToSeq($event)"
-            (blockerRemoved)="store.removeBlocker($event)"
-            (blockerAddBySeq)="store.addBlockerBySeq()"
-            (blockerSeqInputChange)="store.addBlockerSeqInput.set($event)"
-            (tagsChange)="store.updateTags($event)"
-            (parentClicked)="swapToSeq($event)"
-            (parentChange)="store.updateParent($event)"
-          />
-          </aside>
-        </div>
+        [meta]="item.type === 'task' ? 'intake · delivery · links' : 'intake · links'">
+        @switch (item.type) {
+          @case ('task') {
+            <app-vault-item-body-task
+              (subtaskClicked)="swapToSeq($event)"
+              (projectClicked)="onProjectClicked($event)"
+              (blockerClicked)="swapToSeq($event)"
+              (parentClicked)="swapToSeq($event)" />
+          }
+          @default {
+            <app-vault-item-body-capture
+              (subtaskClicked)="swapToSeq($event)"
+              (projectClicked)="onProjectClicked($event)"
+              (blockerClicked)="swapToSeq($event)"
+              (parentClicked)="swapToSeq($event)" />
+          }
+        }
       </app-ui-section>
       </div>
 

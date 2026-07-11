@@ -178,7 +178,9 @@ export class VaultItemDialogStore {
     // Epics are containers, not dispatchable work — they carry no readiness
     // pipeline (no AC, no grooming, no priority gate), so suppress the
     // "Waiting on …" banner that those task-only checks would produce.
-    if (i.is_epic) return undefined;
+    // Same reasoning extends to non-task types: a note/bookmark never enters
+    // the grooming→dispatch pipeline, so "Waiting on intake review" is noise.
+    if (i.is_epic || i.type !== 'task') return undefined;
     return computeNextAction(i, r);
   });
 

@@ -100,31 +100,35 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
         }
       </app-ui-cluster>
 
-      <!-- Secondary tier: classification metadata -->
-      <app-ui-cluster gap="sm" align="center" class="vault-item-status-chips__secondary">
-        <!-- Grooming + actionability are intake-pipeline state for tasks. An epic
-             isn't groomed or classified, so these read as noise on it. -->
-        @if (!item().is_epic) {
-          <app-ui-badge [tone]="groomingTone()">{{ groomingLabel() }}</app-ui-badge>
+      <!-- Secondary tier: classification metadata. Grooming/actionability/epic
+           are all grooming→dispatch pipeline concepts that only apply to
+           dispatchable tasks — a note/bookmark never enters that pipeline. -->
+      @if (showPipelineStatus()) {
+        <app-ui-cluster gap="sm" align="center" class="vault-item-status-chips__secondary">
+          <!-- Grooming + actionability are intake-pipeline state for tasks. An epic
+               isn't groomed or classified, so these read as noise on it. -->
+          @if (!item().is_epic) {
+            <app-ui-badge [tone]="groomingTone()">{{ groomingLabel() }}</app-ui-badge>
 
-          @if (item().actionability !== null) {
-            <app-ui-badge [tone]="actionabilityTone()">{{ item().actionability }}</app-ui-badge>
+            @if (item().actionability !== null) {
+              <app-ui-badge [tone]="actionabilityTone()">{{ item().actionability }}</app-ui-badge>
+            }
           }
-        }
 
-        @if (isGitHubItem()) {
-          <app-ui-badge tone="info" [subtle]="true">github</app-ui-badge>
-        }
+          @if (isGitHubItem()) {
+            <app-ui-badge tone="info" [subtle]="true">github</app-ui-badge>
+          }
 
-        <button
-          type="button"
-          class="vault-item-status-chips__epic-toggle"
-          [class.vault-item-status-chips__epic-toggle--active]="item().is_epic"
-          (click)="epicToggle.emit(!item().is_epic)"
-          [title]="item().is_epic ? 'Remove epic flag' : 'Mark as epic'">
-          {{ item().is_epic ? 'EPIC ×' : '+ epic' }}
-        </button>
-      </app-ui-cluster>
+          <button
+            type="button"
+            class="vault-item-status-chips__epic-toggle"
+            [class.vault-item-status-chips__epic-toggle--active]="item().is_epic"
+            (click)="epicToggle.emit(!item().is_epic)"
+            [title]="item().is_epic ? 'Remove epic flag' : 'Mark as epic'">
+            {{ item().is_epic ? 'EPIC ×' : '+ epic' }}
+          </button>
+        </app-ui-cluster>
+      }
 
     </div>
   `,
@@ -234,6 +238,10 @@ export class VaultItemStatusChips {
   readonly allProjects = input<readonly Project[]>([]);
   readonly isGitHubItem = input(false);
   readonly activeActors = input.required<readonly Actor[]>();
+  /** Grooming/actionability/epic tier only makes sense for dispatchable
+   *  (`type: 'task'`) items — see vault-item-detail-body.html. Defaults true
+   *  so v2 (which doesn't pass this yet) keeps its current behavior. */
+  readonly showPipelineStatus = input<boolean>(true);
 
   readonly statusChange = output<'active' | 'done'>();
   readonly reassign = output<string>();

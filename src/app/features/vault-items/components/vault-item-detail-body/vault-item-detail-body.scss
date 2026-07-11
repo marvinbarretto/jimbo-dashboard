@@ -98,28 +98,9 @@
   }
 }
 
-// Detail panel now uses the full tab width: a wide primary column (the work —
-// intake + delivery) beside a narrower side column (relationships + metadata).
-// Stacks to a single column on narrow viewports.
-.vault-item-detail__body-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
-  gap: 1.5rem;
-  align-items: start;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
-}
-
-.vault-item-detail__body-main,
-.vault-item-detail__body-side {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  min-width: 0;
-}
+// Body-panel layout (main/side two-column grid) now lives inside
+// VaultItemBodyTask / VaultItemBodyCapture — this shell only picks which one
+// to mount via @switch (item.type).
 
 // GH items age from off-white → pale yellow. Same --stale-norm / --ancient-norm
 // contract as the grooming card staleness mixin, but cooler hue (oklch 85-95°
