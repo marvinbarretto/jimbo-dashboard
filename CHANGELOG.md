@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.108](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.107...v0.0.108) (2026-07-11)
+
+
+### Features
+
+* **vault-items:** split detail Body by type — task vs note/bookmark ([00b6622](https://github.com/marvinbarretto/jimbo-dashboard/commit/00b662296204b1eaf08ce867e20d94249738d92a)), closes [#3257](https://github.com/marvinbarretto/jimbo-dashboard/issues/3257)
+
 ### [0.0.107](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.106...v0.0.107) (2026-07-10)
 
 
