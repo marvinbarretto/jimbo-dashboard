@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.115](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.114...v0.0.115) (2026-07-20)
+
+
+### Bug Fixes
+
+* **exercise:** fetch full catalogue (limit=300) now the API cap allows it ([7f583e8](https://github.com/marvinbarretto/jimbo-dashboard/commit/7f583e8b5ebb46a66c3ffe7238f29a13fb3eb142))
+* **tracker:** oversize inline number fields for easier data entry ([eed625c](https://github.com/marvinbarretto/jimbo-dashboard/commit/eed625cd0f037487a66eea93d3398c6409f78415))
+
 ### [0.0.114](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.113...v0.0.114) (2026-07-20)
 
 
