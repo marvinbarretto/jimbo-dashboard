@@ -14,7 +14,7 @@
         <app-ui-stat-card label="Worst p95" [value]="worstP95Ms() + 'ms'" detail="slowest tool" />
       </div>
 
-      <app-ui-subsection label="Calls by hour (UTC)">
+      <app-ui-subsection label="Calls by hour">
         <app-ui-bar-chart
           [labels]="hourLabels()"
           [values]="hourValues()"
@@ -42,7 +42,7 @@
               <li class="mcp__error">
                 <span class="mcp__error-meta">
                   <app-ui-badge tone="danger">{{ e.tool }}</app-ui-badge>
-                  <span class="mcp__error-time">{{ formatTimeUtc(e.ts) }}</span>
+                  <span class="mcp__error-time">{{ formatTime(e.ts) }}</span>
                 </span>
                 <span class="mcp__error-message">{{ e.message }}</span>
               </li>
@@ -55,7 +55,7 @@
         <ul class="mcp__calls" role="list">
           @for (c of recentCalls(); track c.ts) {
             <li class="mcp__call" [class.mcp__call--err]="!c.success">
-              <span class="mcp__call-time">{{ c.timeUtc }}</span>
+              <span class="mcp__call-time">{{ c.time }}</span>
               <span class="mcp__call-tool">{{ c.tool }}</span>
               <span class="mcp__call-duration">{{ c.duration_ms }}ms</span>
               <span class="mcp__call-args">{{ c.argsSummary }}</span>

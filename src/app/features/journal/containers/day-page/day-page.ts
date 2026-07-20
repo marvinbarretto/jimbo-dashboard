@@ -113,11 +113,15 @@ export class JournalDayPage {
   protected readonly codeLoading = computed(() => this.codeData() === null);
 
   // Evidence-based desk time: union of focus sessions and honest code-session
-  // spans — overlap (a pomo inside a code session) counts once.
-  protected readonly deskMinutes = computed(() => unionMinutes([
-    ...focusSpans(this.bundle()?.sessions ?? []),
-    ...codeEvidenceSpans(this.codeSessions(), heartbeatBursts(this.codeHeartbeats())),
-  ]));
+  // spans — overlap (a pomo inside a code session) counts once. Executor
+  // sessions (actor = boris/kipper) are the fleet's time, not Marvin's desk.
+  protected readonly deskMinutes = computed(() => {
+    const ownSessions = this.codeSessions().filter(s => !s.actor);
+    return unionMinutes([
+      ...focusSpans(this.bundle()?.sessions ?? []),
+      ...codeEvidenceSpans(ownSessions, heartbeatBursts(this.codeHeartbeats())),
+    ]);
+  });
 
   protected readonly bundle = this.journal.day;
   protected readonly loading = computed(() => this.journal.loading() === 'day' && !this.bundle());

@@ -2,12 +2,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
   input,
   linkedSignal,
-  signal,
 } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, from, of, startWith, switchMap } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
@@ -17,7 +17,7 @@ import type {
   BriefingAnalysis,
   BriefingRating as Rating,
 } from '../../../briefings/data-access/briefing.types';
-import { type DayKey, dateFromDayKey, shiftDay } from '@shared/utils/date-keys';
+import { type DayKey, dayWindowIso } from '@shared/utils/date-keys';
 
 // The morning/afternoon briefings that belong to the journal day, with the same
 // rating control as the archive. Self-contained (mirrors journal-agents-section):
@@ -34,8 +34,28 @@ export class JournalBriefingsSection {
 
   readonly date = input.required<DayKey>();
 
-  protected readonly briefings = signal<BriefingAnalysis[]>([]);
-  protected readonly loading = signal(false);
+  // switchMap so rapid day paging can't race: a slow earlier-day response is
+  // unsubscribed rather than overwriting the current day (the old bare-async
+  // effect was last-write-wins). Local-midnight boundaries so the afternoon
+  // briefing buckets to this calendar day, not the next. startWith(null)
+  // restores the loading state while a new day loads.
+  private readonly fetched = toSignal(
+    toObservable(this.date).pipe(
+      switchMap(key => {
+        const { since, until } = dayWindowIso(key);
+        return from(this.service.fetchForDate(since, until)).pipe(
+          catchError(() => of([] as BriefingAnalysis[])),
+          startWith(null),
+        );
+      }),
+    ),
+    { initialValue: null },
+  );
+
+  protected readonly loading = computed(() => this.fetched() === null);
+
+  // linkedSignal so onRate can patch a row in place; re-syncs on each fetch.
+  protected readonly briefings = linkedSignal<BriefingAnalysis[]>(() => this.fetched() ?? []);
 
   // Order morning → afternoon for the day view (API returns newest-first).
   protected readonly ordered = computed(() =>
@@ -51,28 +71,6 @@ export class JournalBriefingsSection {
     const n = this.ordered().length;
     return n ? `${n} briefing${n === 1 ? '' : 's'}` : 'none yet';
   });
-
-  constructor() {
-    // Re-fetch whenever the day changes. Local-midnight boundaries so the
-    // afternoon briefing buckets to this calendar day, not the next.
-    effect(() => {
-      const key = this.date();
-      void this.loadFor(key);
-    });
-  }
-
-  private async loadFor(key: DayKey): Promise<void> {
-    this.loading.set(true);
-    try {
-      const since = dateFromDayKey(key).toISOString();
-      const until = dateFromDayKey(shiftDay(key, 1)).toISOString();
-      this.briefings.set(await this.service.fetchForDate(since, until));
-    } catch {
-      this.briefings.set([]);
-    } finally {
-      this.loading.set(false);
-    }
-  }
 
   protected sessionLabel(session: string): string {
     if (session === 'morning') return 'Morning';

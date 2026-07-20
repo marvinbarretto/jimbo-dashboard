@@ -116,6 +116,16 @@ export function daysInMonth(key: MonthKey): DayKey[] {
   return Array.from({ length: end.getDate() }, (_, i) => `${y}-${pad(m)}-${pad(i + 1)}`);
 }
 
+// [since, until) ISO instants covering the local calendar day. Every journal
+// section windows on this so a late-evening BST event can't fall on the wrong
+// page (UTC windows shifted the day by an hour for half the year).
+export function dayWindowIso(key: DayKey): { since: string; until: string } {
+  return {
+    since: dateFromDayKey(key).toISOString(),
+    until: dateFromDayKey(shiftDay(key, 1)).toISOString(),
+  };
+}
+
 export function dayKeyOf(iso: string | null | undefined): DayKey | null {
   if (!iso) return null;
   const d = new Date(iso);

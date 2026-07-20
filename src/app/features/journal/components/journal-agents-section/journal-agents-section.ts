@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
@@ -8,7 +8,8 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
-import { catchError, of, switchMap, timer } from 'rxjs';
+import { catchError, of, startWith, switchMap, timer } from 'rxjs';
+import { dayWindowIso } from '@shared/utils/date-keys';
 import {
   AgentRunsService,
   type AgentRunOutcome,
@@ -77,7 +78,8 @@ interface JobCost {
 export class JournalAgentsSection {
   private readonly service = inject(AgentRunsService);
 
-  // YYYY-MM-DD. Treated as a UTC day window — Hermes timestamps are stored UTC.
+  // YYYY-MM-DD, windowed as a LOCAL calendar day (dayWindowIso) — matching the
+  // rest of the journal page. Hermes stores UTC instants; the boundary is ours.
   readonly date = input.required<string>();
 
   // Per-job usefulness verdicts (keep/watch/cut). Loaded once; updated
@@ -99,13 +101,18 @@ export class JournalAgentsSection {
     this.service.setRating(jobName, rating).subscribe({ error: () => {} });
   }
 
-  // Refresh every 60s. Cheap query, view-only.
+  // Rekeyed on the date input so navigating days refetches immediately and
+  // cancels the in-flight request (the old shape read date() inside a
+  // once-created timer — up to 60s of the previous day after navigation).
+  // startWith(null) drops back to the loading state while the new day loads.
   private readonly result = toSignal(
-    timer(0, 60_000).pipe(
-      switchMap(() => this.service.rollup({
-        since: `${this.date()}T00:00:00Z`,
-        until: `${this.date()}T23:59:59.999Z`,
-      }).pipe(catchError(() => of({ items: [] as AgentRunRollupRow[] })))),
+    toObservable(this.date).pipe(
+      switchMap((date) => timer(0, 60_000).pipe(
+        switchMap(() => this.service.rollup(dayWindowIso(date)).pipe(
+          catchError(() => of({ items: [] as AgentRunRollupRow[] })),
+        )),
+        startWith(null),
+      )),
     ),
     { initialValue: null },
   );

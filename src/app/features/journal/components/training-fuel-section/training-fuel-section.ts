@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
-import { catchError, combineLatest, of, switchMap, timer } from 'rxjs';
+import { catchError, combineLatest, of, startWith, switchMap, timer } from 'rxjs';
 import {
   ExerciseService,
   type ExerciseCatalogItem,
@@ -57,21 +57,30 @@ export class TrainingFuelSection {
   readonly from = input.required<string>(); // YYYY-MM-DD inclusive
   readonly to = input.required<string>();    // YYYY-MM-DD inclusive
 
+  // The exercise catalogue is effectively static — fetch once, not per poll.
+  private readonly catalog = toSignal(
+    this.exercise.listExercises().pipe(catchError(() => of([] as ExerciseCatalogItem[]))),
+    { initialValue: [] as ExerciseCatalogItem[] },
+  );
+
+  // Rekeyed on the range inputs so week/month navigation refetches immediately
+  // and cancels the in-flight request; startWith(null) restores the loading
+  // state while the new range loads.
   private readonly result = toSignal(
-    timer(0, 60_000).pipe(
-      switchMap(() =>
-        combineLatest({
-          sessions: this.exercise.listDetailed({ from: this.from(), to: this.to(), limit: 200 }).pipe(
-            catchError(() => of({ items: [] as SessionDetailed[] })),
-          ),
-          catalog: this.exercise.listExercises().pipe(
-            catchError(() => of([] as ExerciseCatalogItem[])),
-          ),
-          nutritionDaily: this.nutrition.daily({ from: this.from(), to: this.to() }).pipe(
-            catchError(() => of({ days: [] as FoodDailyRow[] })),
-          ),
-        }),
-      ),
+    combineLatest([toObservable(this.from), toObservable(this.to)]).pipe(
+      switchMap(([from, to]) => timer(0, 60_000).pipe(
+        switchMap(() =>
+          combineLatest({
+            sessions: this.exercise.listDetailed({ from, to, limit: 200 }).pipe(
+              catchError(() => of({ items: [] as SessionDetailed[] })),
+            ),
+            nutritionDaily: this.nutrition.daily({ from, to }).pipe(
+              catchError(() => of({ days: [] as FoodDailyRow[] })),
+            ),
+          }),
+        ),
+        startWith(null),
+      )),
     ),
     { initialValue: null },
   );
@@ -79,7 +88,7 @@ export class TrainingFuelSection {
   readonly loading = computed(() => this.result() === null);
 
   private readonly exerciseIndex = computed<ReadonlyMap<string, ExerciseMeta>>(
-    () => new Map((this.result()?.catalog ?? []).map((e) => [e.id, e])),
+    () => new Map(this.catalog().map((e) => [e.id, e])),
   );
 
   private readonly dayType = computed(() =>

@@ -156,60 +156,70 @@ export class JournalDataService {
   readonly loading = signal<'idle' | 'day' | 'week' | 'month'>('idle');
   readonly error = signal<string | null>(null);
 
-  async loadDay(key: DayKey): Promise<void> {
-    this.loading.set('day');
+  // Monotonic per-granularity sequence: rapid paging fires overlapping loads,
+  // and without a guard whichever request resolved LAST won — not necessarily
+  // the period being viewed. Only the newest load may write its bundle.
+  private readonly seq = { day: 0, week: 0, month: 0 };
+
+  private async guardedLoad<T>(
+    kind: 'day' | 'week' | 'month',
+    fetch: () => Promise<T>,
+    commit: (result: T) => void,
+  ): Promise<void> {
+    const seq = ++this.seq[kind];
+    const isCurrent = () => seq === this.seq[kind];
+    this.loading.set(kind);
     this.error.set(null);
     try {
-      const daysBack = daysBackFromAnchor(dateFromDayKey(key), 1);
+      const result = await fetch();
+      if (isCurrent()) commit(result);
+    } catch (e) {
+      if (isCurrent()) this.error.set(messageOf(e));
+    } finally {
+      if (isCurrent()) this.loading.set('idle');
+    }
+  }
+
+  async loadDay(key: DayKey): Promise<void> {
+    return this.guardedLoad('day', async () => {
+      const window = localWindow(dateFromDayKey(key), dateFromDayKey(shiftDay(key, 1)));
       const [sessions, events, telemetry] = await Promise.all([
-        this.fetchSessions({ daysBack }),
-        this.fetchEvents({ days: daysBack }),
+        this.fetchSessions(window),
+        this.fetchEvents(window),
         this.fetchTelemetryForDate(key),
       ]);
-      this.day.set(buildDayBundle(key, sessions, events, telemetry));
-    } catch (e) {
-      this.error.set(messageOf(e));
-    } finally {
-      this.loading.set('idle');
-    }
+      return buildDayBundle(key, sessions, events, telemetry);
+    }, bundle => this.day.set(bundle));
   }
 
   async loadWeek(key: WeekKey): Promise<void> {
-    this.loading.set('week');
-    this.error.set(null);
-    try {
+    return this.guardedLoad('week', async () => {
       const monday = weekStartFromKey(key);
-      const daysBack = daysBackFromAnchor(monday, 7);
-      const sessions = await this.fetchSessions({ daysBack });
-      this.week.set(buildWeekBundle(key, sessions));
-    } catch (e) {
-      this.error.set(messageOf(e));
-    } finally {
-      this.loading.set('idle');
-    }
+      const nextMonday = new Date(monday);
+      nextMonday.setDate(monday.getDate() + 7);
+      const sessions = await this.fetchSessions(localWindow(monday, nextMonday));
+      return buildWeekBundle(key, sessions);
+    }, bundle => this.week.set(bundle));
   }
 
   async loadMonth(key: MonthKey): Promise<void> {
-    this.loading.set('month');
-    this.error.set(null);
-    try {
+    return this.guardedLoad('month', async () => {
       const { start, end } = monthRange(key);
-      const daysSpan = end.getDate();
-      const daysBack = daysBackFromAnchor(start, daysSpan);
-      const sessions = await this.fetchSessions({ daysBack });
-      this.month.set(buildMonthBundle(key, sessions));
-    } catch (e) {
-      this.error.set(messageOf(e));
-    } finally {
-      this.loading.set('idle');
-    }
+      const dayAfterEnd = new Date(end);
+      dayAfterEnd.setDate(end.getDate() + 1);
+      const sessions = await this.fetchSessions(localWindow(start, dayAfterEnd));
+      return buildMonthBundle(key, sessions);
+    }, bundle => this.month.set(bundle));
   }
 
-  private async fetchSessions(opts: { daysBack: number }): Promise<FocusSessionLite[]> {
+  // Exact [since, until) windows so a past period fetches only its own rows.
+  // The old days-back-from-now pattern fetched "that period until now" and the
+  // API's newest-first LIMIT 50 could silently drop the period entirely.
+  private async fetchSessions(window: FetchWindow): Promise<FocusSessionLite[]> {
     try {
       const res = await firstValueFrom(
         this.http.get<{ items: ApiFocusSession[] }>(
-          `${this.base}/api/focus-sessions?days=${Math.max(1, opts.daysBack)}`,
+          `${this.base}/api/focus-sessions?since=${encodeURIComponent(window.since)}&until=${encodeURIComponent(window.until)}&limit=500`,
         ),
       );
       return (res.items ?? []).map(toSessionLite);
@@ -218,11 +228,11 @@ export class JournalDataService {
     }
   }
 
-  private async fetchEvents(opts: { days: number }): Promise<CalendarEventLite[]> {
+  private async fetchEvents(window: FetchWindow): Promise<CalendarEventLite[]> {
     try {
       const res = await firstValueFrom(
         this.http.get<{ items?: ApiCalendarEvent[]; events?: ApiCalendarEvent[] }>(
-          `${this.base}/api/google-calendar/events?days=${opts.days}`,
+          `${this.base}/api/google-calendar/events?since=${encodeURIComponent(window.since)}&until=${encodeURIComponent(window.until)}`,
         ),
       );
       const raw = res.items ?? res.events ?? [];
@@ -466,15 +476,13 @@ function sessionEffectiveSeconds(s: FocusSessionLite): number {
   return s.actual_seconds ?? s.planned_seconds;
 }
 
-// `days` param on the API is "days back from now". Translate the bundle's
-// anchor (start of week / start of month) into how far back we need to look.
-function daysBackFromAnchor(anchor: Date, span: number): number {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const a = new Date(anchor);
-  a.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((today.getTime() - a.getTime()) / 86_400_000);
-  return Math.max(span, diffDays + span);
+interface FetchWindow {
+  readonly since: string;
+  readonly until: string;
+}
+
+function localWindow(start: Date, endExclusive: Date): FetchWindow {
+  return { since: start.toISOString(), until: endExclusive.toISOString() };
 }
 
 function messageOf(e: unknown): string {

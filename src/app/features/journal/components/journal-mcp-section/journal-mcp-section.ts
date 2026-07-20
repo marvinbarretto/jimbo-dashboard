@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
@@ -9,7 +9,8 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
-import { catchError, combineLatest, of, switchMap, timer } from 'rxjs';
+import { catchError, combineLatest, of, startWith, switchMap, timer } from 'rxjs';
+import { dayWindowIso } from '@shared/utils/date-keys';
 import {
   McpCallsService,
   type McpCallRollupRow,
@@ -24,7 +25,7 @@ interface ErrorRow {
 
 interface CallRow {
   ts: string;
-  timeUtc: string;
+  time: string;
   tool: string;
   duration_ms: number;
   success: boolean;
@@ -62,30 +63,32 @@ const MAX_CALL_ROWS = 100;
 export class JournalMcpSection {
   private readonly service = inject(McpCallsService);
 
-  // YYYY-MM-DD UTC day window — MCP call ts uses NOW() (TIMESTAMPTZ),
-  // matches the Hermes/agents-section convention. Hour buckets below are
-  // also UTC so they line up with the same window.
+  // YYYY-MM-DD, windowed as a LOCAL calendar day (dayWindowIso) — matching the
+  // rest of the journal page. Hour buckets below are local for the same reason.
   readonly date = input.required<string>();
 
   // Fetch rollup + tail for the same window. Rollup gives stats; tail gives
-  // per-call detail needed for the hour chart and error spotlight. Refresh
-  // every 60s, same cadence as the agents section.
+  // per-call detail needed for the hour chart and error spotlight. Rekeyed on
+  // the date input (immediate refetch + cancel on navigation), refreshed every
+  // 60s; startWith(null) restores the loading state while a new day loads.
   private readonly result = toSignal(
-    timer(0, 60_000).pipe(
-      switchMap(() => {
-        const since = `${this.date()}T00:00:00Z`;
-        const until = `${this.date()}T23:59:59.999Z`;
-        return combineLatest({
-          rollup: this.service.rollup({ since, until }).pipe(
-            catchError(() => of({ items: [] as McpCallRollupRow[] })),
-          ),
-          // 1000 is the new server-side max — covers a very busy day. Falls
-          // back to empty on error so the rollup view still renders.
-          tail: this.service.tail({ limit: 1000, since, until }).pipe(
-            catchError(() => of({ items: [] as McpCallTailRow[] })),
-          ),
-        });
-      }),
+    toObservable(this.date).pipe(
+      switchMap((date) => timer(0, 60_000).pipe(
+        switchMap(() => {
+          const { since, until } = dayWindowIso(date);
+          return combineLatest({
+            rollup: this.service.rollup({ since, until }).pipe(
+              catchError(() => of({ items: [] as McpCallRollupRow[] })),
+            ),
+            // 1000 is the server-side max — covers a very busy day. Falls
+            // back to empty on error so the rollup view still renders.
+            tail: this.service.tail({ limit: 1000, since, until }).pipe(
+              catchError(() => of({ items: [] as McpCallTailRow[] })),
+            ),
+          });
+        }),
+        startWith(null),
+      )),
     ),
     { initialValue: null },
   );
@@ -127,14 +130,14 @@ export class JournalMcpSection {
   // Rows sorted by call volume so the busiest tools are visually anchored.
   readonly rows = computed(() => [...this.items()]);
 
-  // 24 UTC-hour buckets matching the existing focus-by-hour pattern in
+  // 24 local-hour buckets matching the existing focus-by-hour pattern in
   // day-page.html. Lets cron rhythms (06:15 morning briefing, 04:00 nightly
   // pulse, etc.) jump out at a glance.
   readonly hourLabels = computed(() => HOUR_LABELS);
   readonly hourValues = computed(() => {
     const buckets = new Array<number>(24).fill(0);
     for (const r of this.tail()) {
-      const hour = new Date(r.ts).getUTCHours();
+      const hour = new Date(r.ts).getHours();
       buckets[hour]! += 1;
     }
     return buckets;
@@ -163,11 +166,10 @@ export class JournalMcpSection {
     return row.error_count > 0 ? `${row.error_count} err` : 'ok';
   }
 
-  // Short UTC HH:MM for the error spotlight. Matches the rest of the page's
-  // implied UTC framing (the section date itself is a UTC day key).
-  formatTimeUtc(ts: string): string {
+  // Short local HH:MM for the error spotlight — same clock as the page.
+  formatTime(ts: string): string {
     const d = new Date(ts);
-    return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}Z`;
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
   }
 
   // Per-call rows for the "Recent calls" table. Newest-first (tail already
@@ -180,7 +182,7 @@ export class JournalMcpSection {
       .slice(0, MAX_CALL_ROWS)
       .map((r) => ({
         ts: r.ts,
-        timeUtc: formatTimeFullUtc(r.ts),
+        time: formatTimeFull(r.ts),
         tool: r.tool,
         duration_ms: r.duration_ms,
         success: r.success,
@@ -192,11 +194,11 @@ export class JournalMcpSection {
   readonly hiddenCallCount = computed(() => Math.max(0, this.tail().length - MAX_CALL_ROWS));
 }
 
-function formatTimeFullUtc(ts: string): string {
+function formatTimeFull(ts: string): string {
   const d = new Date(ts);
-  const hh = d.getUTCHours().toString().padStart(2, '0');
-  const mm = d.getUTCMinutes().toString().padStart(2, '0');
-  const ss = d.getUTCSeconds().toString().padStart(2, '0');
+  const hh = d.getHours().toString().padStart(2, '0');
+  const mm = d.getMinutes().toString().padStart(2, '0');
+  const ss = d.getSeconds().toString().padStart(2, '0');
   return `${hh}:${mm}:${ss}`;
 }
 
