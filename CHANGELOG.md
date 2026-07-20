@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.110](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.109...v0.0.110) (2026-07-20)
+
+
+### Features
+
+* **journal:** honest running sessions — last-seen ends + heartbeat bursts ([e43c9a5](https://github.com/marvinbarretto/jimbo-dashboard/commit/e43c9a5ec8bfc938a3dbd0a17dc93b71ef83adf8))
+
+
+### Bug Fixes
+
+* **journal:** stop 4x over-counting windowed phone telemetry ([a7c05a2](https://github.com/marvinbarretto/jimbo-dashboard/commit/a7c05a2a37bdf0b55395318add6b5b9c82687173))
+
 ### [0.0.109](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.108...v0.0.109) (2026-07-20)
 
 
