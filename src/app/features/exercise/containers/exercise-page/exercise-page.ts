@@ -50,6 +50,7 @@ import {
   type CardioPatch,
 } from '../../data-access/exercise.service';
 import { bodyPartBreakdown, lastTrainedByRegion, type ExerciseMeta } from '../../utils/muscle-region';
+import { buildExerciseHistory } from '../../utils/exercise-history';
 
 const TOTALS_MEASURES: readonly TrackerMeasure[] = [
   { key: 'volume_kg', label: 'Volume', unit: 'kg', primary: true },
@@ -124,6 +125,11 @@ export class ExercisePage {
     () => `/api/gym/sessions/daily?from=${this.window().start}&to=${this.window().end}`,
   );
   private readonly catalogRes = httpResource<ExerciseCatalogItem[]>(() => `/api/gym/exercises?limit=100`);
+  // Trailing history for "last time" hints/prefill — independent of the viewed
+  // window so a fresh day view still knows what you lifted last session.
+  private readonly historyRes = httpResource<{ items: SessionDetailed[] }>(
+    () => `/api/gym/sessions/detailed?days=180&limit=200`,
+  );
 
   // Spinner only on the FIRST load. During reload-after-write hasValue() stays
   // true, so the ledger is never torn down — edits keep their place and expanded
@@ -131,6 +137,7 @@ export class ExercisePage {
   protected readonly loading = computed(() => this.sessionsRes.isLoading() && !this.sessionsRes.hasValue());
 
   private readonly sessions = computed<SessionDetailed[]>(() => this.sessionsRes.value()?.items ?? []);
+  protected readonly history = computed(() => buildExerciseHistory(this.historyRes.value()?.items ?? []));
   private readonly dailyRows = computed<GymDailyRow[]>(() => this.dailyRes.value()?.days ?? []);
 
   // Picker options ranked "yours first": exercises you've logged in the loaded
@@ -299,6 +306,7 @@ export class ExercisePage {
       if ('sets' in v) patch.sets = v['sets'] ?? undefined;
       if ('reps' in v) patch.reps = v['reps'];
       if ('weight_kg' in v) patch.weight_kg = v['weight_kg'];
+      if ('rpe' in v) patch.rpe = v['rpe'];
       this.service.patchSet(id, patch).subscribe({ next: () => this.reload(), error: () => this.toast.error('Could not save set') });
     } else {
       const patch: CardioPatch = {};
@@ -333,6 +341,10 @@ export class ExercisePage {
   private addSet(sessionId: string, exerciseId: string, draft: TrackerDraft): void {
     const session = this.sessions().find((s) => s.id === sessionId);
     const setNumber = (session?.sets.length ?? 0) + 1;
+    // API validates rpe as 1-10; treat anything outside as "not rated" rather
+    // than failing the whole set.
+    const rawRpe = draft.values['rpe'];
+    const rpe = rawRpe !== undefined && rawRpe >= 1 && rawRpe <= 10 ? Math.round(rawRpe) : undefined;
     this.service
       .createSet(sessionId, {
         exercise_id: exerciseId,
@@ -340,6 +352,7 @@ export class ExercisePage {
         sets: draft.values['sets'],
         reps: draft.values['reps'],
         weight_kg: draft.values['weight_kg'],
+        rpe,
       })
       .subscribe({ next: () => this.reload(), error: () => this.toast.error('Could not add set') });
   }
@@ -374,6 +387,9 @@ export class ExercisePage {
   private reload(): void {
     this.sessionsRes.reload();
     this.dailyRes.reload();
+    // Keep "last time" hints honest after edits (today's session is itself
+    // tomorrow's last-time source).
+    this.historyRes.reload();
   }
 }
 

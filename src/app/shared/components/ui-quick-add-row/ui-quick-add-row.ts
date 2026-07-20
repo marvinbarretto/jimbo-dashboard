@@ -29,6 +29,7 @@ const norm = (s: string): string => s.trim().toLowerCase();
   imports: [UiButton, UiTypeahead],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <div class="quick-add-block">
     <div class="quick-add">
       <app-ui-typeahead
         class="quick-add__label"
@@ -71,6 +72,11 @@ const norm = (s: string): string => s.trim().toLowerCase();
         {{ addLabel() }}
       </app-ui-button>
     </div>
+
+    @if (activeHint(); as hint) {
+      <p class="quick-add__hint">{{ hint }}</p>
+    }
+    </div>
   `,
   styles: [`
     .quick-add {
@@ -108,6 +114,12 @@ const norm = (s: string): string => s.trim().toLowerCase();
     }
 
     .quick-add__unit { font-size: 0.7rem; opacity: 0.7; color: var(--color-text-muted); }
+
+    .quick-add__hint {
+      margin: 0.1rem 0 0;
+      font-size: 0.74rem;
+      color: var(--color-text-muted);
+    }
   `],
 })
 export class UiQuickAddRow {
@@ -128,12 +140,26 @@ export class UiQuickAddRow {
   readonly defaultDate = input<string | undefined>(undefined);
   /** Default kind stamped on the draft (e.g. 'food' | 'supplement'). */
   readonly kind = input<string | undefined>(undefined);
+  /**
+   * Per-option default measure values (option id → values), applied on pick.
+   * Anything the user already typed wins; picking a different option replaces
+   * only the values a previous pick auto-filled.
+   */
+  readonly prefill = input<Readonly<Record<string, Readonly<Record<string, number>>>>>({});
+  /**
+   * Per-option context line (option id → text) shown under the row while the
+   * label resolves to that option — e.g. "Last time: 2×10×25 kg @ RPE 6".
+   */
+  readonly hints = input<Readonly<Record<string, string>>>({});
 
   readonly add = output<TrackerDraft>();
 
   /** The typeahead's visible text — the label source of truth (two-way bound). */
   protected readonly query = signal('');
   protected readonly values = signal<Record<string, number>>({});
+  // Keys whose current value came from prefill, not the user — the set a later
+  // pick is allowed to overwrite.
+  private readonly autoFilled = signal<ReadonlySet<string>>(new Set());
 
   // Id-bearing catalog → resolve picks to a ref; free-text suggestions get no ref.
   private readonly refMode = computed(() => this.options().length > 0);
@@ -154,9 +180,39 @@ export class UiQuickAddRow {
     return true;
   });
 
+  // The option the current query text resolves to (how commit() will read it).
+  private readonly matchedId = computed<string | undefined>(() => {
+    const q = norm(this.query());
+    return q ? this.options().find((o) => norm(o.label) === q)?.id : undefined;
+  });
+
+  protected readonly activeHint = computed<string | undefined>(() => {
+    const id = this.matchedId();
+    return id ? this.hints()[id] : undefined;
+  });
+
   protected onPick(option: QuickAddOption): void {
     this.query.set(option.label);
+    this.applyPrefill(option.id);
     if (this.instantCommit()) this.commit();
+  }
+
+  private applyPrefill(optionId: string): void {
+    const defaults = this.prefill()[optionId] ?? {};
+    // Drop stale auto-fills from a previous pick, then lay in the new ones —
+    // never touching a value the user typed themselves.
+    const next = { ...this.values() };
+    for (const key of this.autoFilled()) delete next[key];
+    const nowAuto = new Set<string>();
+    for (const m of this.measures()) {
+      const d = defaults[m.key];
+      if (d !== undefined && next[m.key] === undefined) {
+        next[m.key] = d;
+        nowAuto.add(m.key);
+      }
+    }
+    this.values.set(next);
+    this.autoFilled.set(nowAuto);
   }
 
   protected onCreate(text: string): void {
@@ -175,6 +231,13 @@ export class UiQuickAddRow {
       const next = { ...v };
       if (raw === '' || !Number.isFinite(n)) delete next[key];
       else next[key] = n;
+      return next;
+    });
+    // Touched by hand — no longer a prefill's to overwrite.
+    this.autoFilled.update((s) => {
+      if (!s.has(key)) return s;
+      const next = new Set(s);
+      next.delete(key);
       return next;
     });
   }
@@ -206,5 +269,6 @@ export class UiQuickAddRow {
   private reset(): void {
     this.query.set('');
     this.values.set({});
+    this.autoFilled.set(new Set());
   }
 }

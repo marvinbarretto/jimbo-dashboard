@@ -14,6 +14,7 @@ import {
 } from '@shared/components/tracker/tracker.types';
 import { formatLondonTime } from '@shared/utils/datetime.utils';
 import type { CardioDetailed, SessionDetailed, SessionPatch, SetDetailed } from '../../data-access/exercise.service';
+import { lastPerfBefore, lastTimeHint, type ExercisePerf } from '../../utils/exercise-history';
 
 const CARDIO_MEASURES: readonly TrackerMeasure[] = [
   { key: 'duration_min', label: 'duration', unit: 'min', primary: true },
@@ -24,9 +25,10 @@ const ADD_SET_MEASURES: readonly TrackerMeasure[] = [
   { key: 'sets', label: 'sets' },
   { key: 'reps', label: 'reps' },
   { key: 'weight_kg', label: 'kg', unit: 'kg', kind: 'number' },
+  { key: 'rpe', label: 'RPE' },
 ];
 
-type SetField = 'sets' | 'reps' | 'weight_kg';
+type SetField = 'sets' | 'reps' | 'weight_kg' | 'rpe';
 
 interface CardioPreset {
   readonly label: string;
@@ -94,6 +96,23 @@ const CARDIO_PRESETS: readonly CardioPreset[] = [
 
       @if (open()) {
         <div class="session__body">
+          @if (editable() || session().pre_energy !== null) {
+            <div class="session__energy">
+              <span class="session__energy-label" title="How fresh you felt going in: 1 = running on fumes, 5 = fully charged. Context for reading RPE — a hard set on a drained day isn't a strength loss.">pre-energy</span>
+              @for (n of energyLevels; track n) {
+                <button
+                  type="button"
+                  class="session__energy-dot"
+                  [class.session__energy-dot--on]="(session().pre_energy ?? 0) >= n"
+                  [disabled]="!editable()"
+                  [attr.aria-label]="'Pre-workout energy ' + n + ' of 5'"
+                  [attr.aria-pressed]="session().pre_energy === n"
+                  (click)="setEnergy(n)"
+                >{{ n }}</button>
+              }
+            </div>
+          }
+
           @if (session().sets.length) {
             <ul class="session__list">
               @for (s of session().sets; track s.id) {
@@ -113,7 +132,12 @@ const CARDIO_PRESETS: readonly CardioPreset[] = [
                     } @else { {{ s.weight_kg ?? 0 }} }
                     <span class="setrow__unit">kg</span>
                   </span>
-                  @if (s.rpe !== null) {
+                  @if (editable()) {
+                    <span class="setrow__rpe" title="RPE — Rate of Perceived Exertion (1–10): how hard it felt. 7 = 3 reps left in the tank, 8 = 2 left, 10 = nothing left. Aim for 7–8.">
+                      RPE
+                      <app-ui-inline-edit kind="number" [min]="1" [max]="10" [value]="s.rpe === null ? '' : s.rpe.toString()" placeholder="–" ariaLabel="RPE (1-10)" (saved)="saveSet(s, 'rpe', $event)" />
+                    </span>
+                  } @else if (s.rpe !== null) {
                     <span class="setrow__rpe" title="RPE — Rate of Perceived Exertion (1–10): how hard the set felt (10 = no reps left)">RPE {{ s.rpe }}</span>
                   }
                   @if (editable()) {
@@ -143,6 +167,7 @@ const CARDIO_PRESETS: readonly CardioPreset[] = [
             <app-ui-quick-add-row class="session__add"
               [options]="exerciseOptions()" [measures]="addSetMeasures"
               [allowCreate]="true"
+              [prefill]="setPrefills()" [hints]="setHints()"
               placeholder="search or add an exercise…" addLabel="Add"
               (add)="onAddSet($event)" />
             <div class="session__presets">
@@ -229,10 +254,53 @@ const CARDIO_PRESETS: readonly CardioPreset[] = [
     .setrow__unit { font-size: 0.72rem; color: var(--color-text-muted); }
     .setrow__rpe {
       flex: 0 0 auto;
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.2rem;
       font-size: 0.68rem;
       letter-spacing: 0.02em;
       color: var(--color-text-muted);
       cursor: help;
+    }
+    .setrow__rpe app-ui-inline-edit { flex: 0 0 auto; width: 1.6rem; font-size: 0.82rem; }
+
+    .session__energy {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding-top: 0.15rem;
+    }
+    .session__energy-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.02em;
+      color: var(--color-text-muted);
+      cursor: help;
+      margin-right: 0.2rem;
+    }
+    .session__energy-dot {
+      font: inherit;
+      font-size: 0.68rem;
+      font-variant-numeric: tabular-nums;
+      width: 1.35rem;
+      height: 1.35rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-muted);
+      background: transparent;
+      border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+      border-radius: 50%;
+      cursor: pointer;
+      padding: 0;
+
+      &:hover:not(:disabled) { border-color: var(--color-accent); }
+      &:disabled { cursor: default; }
+
+      &--on {
+        color: var(--color-accent-contrast, var(--color-text));
+        background: color-mix(in srgb, var(--color-accent) 55%, transparent);
+        border-color: var(--color-accent);
+      }
     }
 
     .session__add {
@@ -267,6 +335,8 @@ export class ExerciseSessionRow {
   readonly session = input.required<SessionDetailed>();
   readonly editable = input<boolean>(true);
   readonly exerciseOptions = input<readonly QuickAddOption[]>([]);
+  /** Exercise history index (see buildExerciseHistory) powering "last time" hints + prefill. */
+  readonly history = input<ReadonlyMap<string, readonly ExercisePerf[]>>(new Map());
 
   readonly sessionPatch = output<{ id: string; changes: SessionPatch }>();
   readonly sessionRemove = output<string>();
@@ -278,6 +348,7 @@ export class ExerciseSessionRow {
   protected readonly cardioMeasures = CARDIO_MEASURES;
   protected readonly addSetMeasures = ADD_SET_MEASURES;
   protected readonly cardioPresets = CARDIO_PRESETS;
+  protected readonly energyLevels = [1, 2, 3, 4, 5] as const;
   // Expanded by default — the sets are the point; the toggle is just for tucking
   // away a workout you're not editing.
   protected readonly open = signal(true);
@@ -290,6 +361,30 @@ export class ExerciseSessionRow {
   protected readonly displayTime = (v: string): string => (v.length >= 16 ? v.slice(11, 16) : v);
 
   protected readonly cardioEntries = computed<TrackerEntry[]>(() => this.session().cardio.map(cardioToEntry));
+
+  // "Last time" per exercise, relative to THIS session's start — browsing a
+  // past day cites only sessions before it, never later ones.
+  private readonly lastPerfs = computed<ReadonlyMap<string, ExercisePerf>>(() => {
+    const s = this.session();
+    const out = new Map<string, ExercisePerf>();
+    for (const exerciseId of this.history().keys()) {
+      const perf = lastPerfBefore(this.history(), exerciseId, s);
+      if (perf) out.set(exerciseId, perf);
+    }
+    return out;
+  });
+
+  protected readonly setPrefills = computed<Record<string, Readonly<Record<string, number>>>>(() => {
+    const out: Record<string, Readonly<Record<string, number>>> = {};
+    for (const [id, perf] of this.lastPerfs()) out[id] = perf.prefill;
+    return out;
+  });
+
+  protected readonly setHints = computed<Record<string, string>>(() => {
+    const out: Record<string, string> = {};
+    for (const [id, perf] of this.lastPerfs()) out[id] = lastTimeHint(perf);
+    return out;
+  });
 
   protected readonly summary = computed(() => {
     const s = this.session();
@@ -317,11 +412,27 @@ export class ExerciseSessionRow {
   }
 
   protected saveSet(s: SetDetailed, field: SetField, value: string): void {
+    // RPE is the one clearable field — an emptied input means "not rated".
+    if (field === 'rpe' && value.trim() === '') {
+      if (s.rpe !== null) this.childPatch.emit({ id: `set:${s.id}`, changes: { values: { rpe: null } } });
+      return;
+    }
     const n = field === 'weight_kg' ? Number(value) : Math.round(Number(value));
     if (!Number.isFinite(n) || n < 0 || (field === 'sets' && n < 1)) return;
-    const current = field === 'sets' ? (s.sets ?? 1) : field === 'reps' ? (s.reps ?? 0) : (s.weight_kg ?? 0);
+    if (field === 'rpe' && (n < 1 || n > 10)) return;
+    const current =
+      field === 'sets' ? (s.sets ?? 1)
+      : field === 'reps' ? (s.reps ?? 0)
+      : field === 'weight_kg' ? (s.weight_kg ?? 0)
+      : s.rpe;
     if (n === current) return;
     this.childPatch.emit({ id: `set:${s.id}`, changes: { values: { [field]: n } } });
+  }
+
+  protected setEnergy(level: number): void {
+    // Tapping the current level clears it back to unrated.
+    const next = this.session().pre_energy === level ? null : level;
+    this.sessionPatch.emit({ id: this.session().id, changes: { pre_energy: next } });
   }
 
   protected onAddSet(draft: TrackerDraft): void {
