@@ -90,7 +90,12 @@ export class JournalCodeSessionsSection {
 
   readonly rows = computed<SessionRow[]>(() => this.sessions().map(s => ({
     id: s.id,
-    timeLabel: `${absoluteTime(s.started_at)} – ${s.ended_at ? absoluteTime(s.ended_at) : 'now'}`,
+    // Running sessions end at their last heartbeat with a trailing ellipsis —
+    // "still open, last active then" — rather than pretending to reach "now".
+    timeLabel: `${absoluteTime(s.started_at)} – ${
+      s.ended_at ? absoluteTime(s.ended_at)
+      : s.last_seen_at ? `${absoluteTime(s.last_seen_at)}…`
+      : 'now'}`,
     durationLabel: formatMinutes(effectiveMinutes(s)),
     repoShort: s.repo ? (s.repo.split('/').at(-1) ?? s.repo) : null,
     branch: s.branch,
@@ -132,10 +137,12 @@ export class JournalCodeSessionsSection {
 }
 
 // duration_minutes is null while a session is running (and on unreaped
-// strays); fall back to wall-clock elapsed so today's active session still
-// counts toward the day's total.
+// strays); fall back to the span up to the last heartbeat — the latest
+// EVIDENCE of activity — so an idle-but-open terminal doesn't keep
+// inflating the day's desk time. Wall-clock "now" is the last resort only.
 function effectiveMinutes(s: CodeSession): number {
   if (s.duration_minutes != null) return s.duration_minutes;
-  const end = s.ended_at ? new Date(s.ended_at).getTime() : Date.now();
-  return Math.max(0, Math.round((end - new Date(s.started_at).getTime()) / 60_000));
+  const end = s.ended_at ?? s.last_seen_at;
+  const endMs = end ? new Date(end).getTime() : Date.now();
+  return Math.max(0, Math.round((endMs - new Date(s.started_at).getTime()) / 60_000));
 }

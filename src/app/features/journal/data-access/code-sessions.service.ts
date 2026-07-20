@@ -55,6 +55,13 @@ export interface CodeSession {
   readonly artifacts: CodeSessionArtifacts;
   readonly friction: CodeSessionFriction | null;
   readonly outcome: CodeSessionOutcome | null;
+  /** Last Stop-hook heartbeat — the honest end of a still-running session. */
+  readonly last_seen_at: string | null;
+}
+
+export interface CodeSessionHeartbeat {
+  readonly session_id: string;
+  readonly ts: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -69,5 +76,12 @@ export class CodeSessionsService {
       limit: String(params.limit ?? 100),
     });
     return this.http.get<{ items: CodeSession[] }>(`${this.base}/api/code-sessions?${q}`);
+  }
+
+  // One tick per agent turn (Stop hook). Recorded server-side from Jul 2026 —
+  // sessions before that render without intra-session bursts.
+  heartbeats(params: { since: string; until: string }): Observable<{ items: CodeSessionHeartbeat[] }> {
+    const q = new URLSearchParams({ since: params.since, until: params.until });
+    return this.http.get<{ items: CodeSessionHeartbeat[] }>(`${this.base}/api/code-sessions/heartbeats?${q}`);
   }
 }

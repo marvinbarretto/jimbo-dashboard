@@ -3,6 +3,7 @@ import type { TelemetryEventLite } from '../data-access/journal-data.service';
 import {
   assignColumns,
   commitPins,
+  heartbeatBursts,
   timelineWindow,
   youtubeEpisodes,
   type RetroInterval,
@@ -151,6 +152,38 @@ describe('assignColumns', () => {
     expect(out.find(o => o.id === 'code')!.cols).toBe(2);
     expect(out.find(o => o.id === 'pomo')!.cols).toBe(2);
     expect(out.find(o => o.id === 'later')!.cols).toBe(1);
+  });
+});
+
+describe('heartbeatBursts', () => {
+  function hb(session: string, offsetMin: number) {
+    return { session_id: session, ts: new Date(T0 + offsetMin * MIN).toISOString() };
+  }
+
+  it('clusters ticks within the gap into one burst', () => {
+    const bursts = heartbeatBursts([hb('a', 0), hb('a', 5), hb('a', 18)]);
+    const a = bursts.get('a')!;
+    expect(a).toHaveLength(1);
+    expect(a[0].startMs).toBe(T0);
+    expect(a[0].endMs).toBe(T0 + 18 * MIN);
+    expect(a[0].ticks).toBe(3);
+  });
+
+  it('splits bursts across gaps beyond 20 minutes', () => {
+    const bursts = heartbeatBursts([hb('a', 0), hb('a', 5), hb('a', 120), hb('a', 125)]);
+    expect(bursts.get('a')).toHaveLength(2);
+  });
+
+  it('gives a lone tick a minimum visible span', () => {
+    const [seg] = heartbeatBursts([hb('a', 0)]).get('a')!;
+    expect(seg.endMs - seg.startMs).toBe(5 * MIN);
+    expect(seg.ticks).toBe(1);
+  });
+
+  it('keeps sessions separate and handles unsorted input', () => {
+    const bursts = heartbeatBursts([hb('b', 50), hb('a', 5), hb('a', 0)]);
+    expect(bursts.get('a')![0].ticks).toBe(2);
+    expect(bursts.get('b')![0].ticks).toBe(1);
   });
 });
 

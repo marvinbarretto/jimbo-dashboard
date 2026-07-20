@@ -7,9 +7,11 @@ import { absoluteTime } from '@shared/utils/datetime.utils';
 import { type DayKey, dateFromDayKey, shiftDay, todayKey } from '@shared/utils/date-keys';
 import { catchError, map, of, switchMap, timer } from 'rxjs';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
+import { forkJoin } from 'rxjs';
 import {
   CodeSessionsService,
   type CodeSession,
+  type CodeSessionHeartbeat,
 } from '../../data-access/code-sessions.service';
 import type {
   CalendarEventLite,
@@ -23,6 +25,7 @@ import {
   commitPins,
   exerciseIntervals,
   focusIntervals,
+  heartbeatBursts,
   timelineWindow,
   youtubeEpisodes,
   type RetroInterval,
@@ -48,15 +51,23 @@ const SOURCE_LABEL: Record<RetroSource, string> = {
   exercise: 'Exercise',
 };
 
+interface BurstVM {
+  readonly topPct: number;
+  readonly heightPct: number;
+}
+
 interface BlockVM {
   readonly id: string;
   readonly source: RetroSource;
+  readonly open: boolean;
   readonly topPx: number;
   readonly heightPx: number;
   readonly leftPct: number;
   readonly widthPct: number;
   readonly label: string;
   readonly tooltip: string;
+  /** Heartbeat activity bursts, as offsets within this block. */
+  readonly bursts: readonly BurstVM[];
 }
 
 interface PinVM {
@@ -94,26 +105,35 @@ export class JournalTimelineSection {
     { initialValue: Date.now() },
   );
 
-  // Code sessions come from their own endpoint rather than the day bundle;
-  // fetched here with the same local-midnight window as the sessions section.
+  // Code sessions + their heartbeat trail come from their own endpoints
+  // rather than the day bundle; fetched here with the same local-midnight
+  // window as the sessions section.
   private readonly codeResult = toSignal(
     toObservable(this.date).pipe(
       switchMap((date) => timer(0, 60_000).pipe(
-        switchMap(() => this.codeSessions.list({
-          since: dateFromDayKey(date).toISOString(),
-          until: dateFromDayKey(shiftDay(date, 1)).toISOString(),
-        }).pipe(catchError(() => of({ items: [] as CodeSession[] })))),
+        switchMap(() => {
+          const range = {
+            since: dateFromDayKey(date).toISOString(),
+            until: dateFromDayKey(shiftDay(date, 1)).toISOString(),
+          };
+          return forkJoin({
+            sessions: this.codeSessions.list(range).pipe(catchError(() => of({ items: [] as CodeSession[] }))),
+            heartbeats: this.codeSessions.heartbeats(range).pipe(catchError(() => of({ items: [] as CodeSessionHeartbeat[] }))),
+          });
+        }),
       )),
     ),
     { initialValue: null },
   );
+
+  private readonly bursts = computed(() => heartbeatBursts(this.codeResult()?.heartbeats.items ?? []));
 
   private readonly hidden = signal<ReadonlySet<RetroSource>>(new Set());
 
   private readonly allIntervals = computed<RetroInterval[]>(() => [
     ...calendarIntervals(this.events()),
     ...focusIntervals(this.sessions(), id => this.projectName(id)),
-    ...codeIntervals(this.codeResult()?.items ?? [], this.nowMs()),
+    ...codeIntervals(this.codeResult()?.sessions.items ?? []),
     ...youtubeEpisodes(this.telemetry()),
     ...exerciseIntervals(this.telemetry()),
   ]);
@@ -174,18 +194,30 @@ export class JournalTimelineSection {
       list.push({ ...iv, startMs, endMs });
       byLane.set(iv.lane, list);
     }
+    const bursts = this.bursts();
     return LANES.map(lane => ({
       ...lane,
-      blocks: assignColumns(byLane.get(lane.key) ?? []).map<BlockVM>(iv => ({
-        id: iv.id,
-        source: iv.source,
-        topPx: ((iv.startMs - w.startMs) / HOUR_MS) * PX_PER_HOUR,
-        heightPx: Math.max(((iv.endMs - iv.startMs) / HOUR_MS) * PX_PER_HOUR, 14),
-        leftPct: (iv.col / iv.cols) * 100,
-        widthPct: (1 / iv.cols) * 100,
-        label: iv.label,
-        tooltip: `${absoluteTime(new Date(iv.startMs).toISOString())}–${absoluteTime(new Date(iv.endMs).toISOString())} · ${iv.label}${iv.detail ? ` · ${iv.detail}` : ''}`,
-      })),
+      blocks: assignColumns(byLane.get(lane.key) ?? []).map<BlockVM>(iv => {
+        const span = iv.endMs - iv.startMs;
+        const burstVMs = (iv.sessionKey ? (bursts.get(iv.sessionKey) ?? []) : [])
+          .filter(b => b.endMs > iv.startMs && b.startMs < iv.endMs)
+          .map<BurstVM>(b => ({
+            topPct: (Math.max(b.startMs - iv.startMs, 0) / span) * 100,
+            heightPct: ((Math.min(b.endMs, iv.endMs) - Math.max(b.startMs, iv.startMs)) / span) * 100,
+          }));
+        return {
+          id: iv.id,
+          source: iv.source,
+          open: iv.open ?? false,
+          topPx: ((iv.startMs - w.startMs) / HOUR_MS) * PX_PER_HOUR,
+          heightPx: Math.max(((iv.endMs - iv.startMs) / HOUR_MS) * PX_PER_HOUR, 14),
+          leftPct: (iv.col / iv.cols) * 100,
+          widthPct: (1 / iv.cols) * 100,
+          label: iv.label,
+          tooltip: `${absoluteTime(new Date(iv.startMs).toISOString())}–${absoluteTime(new Date(iv.endMs).toISOString())}${iv.open ? ' (still open)' : ''} · ${iv.label}${iv.detail ? ` · ${iv.detail}` : ''}`,
+          bursts: burstVMs,
+        };
+      }),
     }));
   });
 

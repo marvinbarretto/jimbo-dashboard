@@ -26,6 +26,10 @@ export interface RetroInterval {
   readonly endMs: number;
   readonly label: string;
   readonly detail: string | null;
+  /** Still running — endMs is last-seen evidence, not a real end. */
+  readonly open?: boolean;
+  /** Correlates a code interval with its heartbeat trail. */
+  readonly sessionKey?: string;
 }
 
 export interface RetroPinCluster {
@@ -82,14 +86,19 @@ export function focusIntervals(
   });
 }
 
-export function codeIntervals(sessions: readonly CodeSession[], nowMs: number): RetroInterval[] {
+export function codeIntervals(sessions: readonly CodeSession[]): RetroInterval[] {
   return sessions.map(s => {
     const startMs = Date.parse(s.started_at);
+    // A running session ends at its last heartbeat — the latest EVIDENCE of
+    // activity — not at "now". A terminal left open overnight otherwise
+    // renders as a solid block of work until you close it.
     const endMs = s.ended_at
       ? Date.parse(s.ended_at)
-      : s.duration_minutes != null
-        ? startMs + s.duration_minutes * MIN_MS
-        : Math.max(nowMs, startMs + 5 * MIN_MS);
+      : s.last_seen_at
+        ? Math.max(Date.parse(s.last_seen_at), startMs + 5 * MIN_MS)
+        : s.duration_minutes != null
+          ? startMs + s.duration_minutes * MIN_MS
+          : startMs + 5 * MIN_MS;
     return {
       id: `code-${s.id}`,
       lane: 'desk' as const,
@@ -98,8 +107,62 @@ export function codeIntervals(sessions: readonly CodeSession[], nowMs: number): 
       endMs,
       label: s.headline ?? (s.repo?.split('/').at(-1) ?? 'Code session'),
       detail: s.repo,
+      open: s.status === 'running',
+      sessionKey: s.session_id,
     };
   });
+}
+
+export interface BurstSegment {
+  readonly startMs: number;
+  readonly endMs: number;
+  readonly ticks: number;
+}
+
+// Heartbeats arrive one per agent turn. Cluster each session's ticks into
+// activity bursts (gap beyond the threshold = you walked away); a session's
+// long envelope then shows WHERE in the day the work actually happened.
+const BURST_GAP_MS = 20 * MIN_MS;
+const BURST_MIN_SPAN_MS = 5 * MIN_MS;
+
+export function heartbeatBursts(
+  heartbeats: readonly { session_id: string; ts: string }[],
+): ReadonlyMap<string, readonly BurstSegment[]> {
+  const bySession = new Map<string, number[]>();
+  for (const hb of heartbeats) {
+    const ms = Date.parse(hb.ts);
+    if (!Number.isFinite(ms)) continue;
+    const list = bySession.get(hb.session_id) ?? [];
+    list.push(ms);
+    bySession.set(hb.session_id, list);
+  }
+
+  const out = new Map<string, BurstSegment[]>();
+  for (const [sessionId, times] of bySession) {
+    times.sort((a, b) => a - b);
+    const segments: BurstSegment[] = [];
+    let start = times[0];
+    let last = times[0];
+    let ticks = 1;
+    const push = () => segments.push({
+      startMs: start,
+      // A single tick has no span — give it a minimum so it stays visible.
+      endMs: Math.max(last, start + BURST_MIN_SPAN_MS),
+      ticks,
+    });
+    for (const t of times.slice(1)) {
+      if (t - last > BURST_GAP_MS) {
+        push();
+        start = t;
+        ticks = 0;
+      }
+      last = t;
+      ticks += 1;
+    }
+    push();
+    out.set(sessionId, segments);
+  }
+  return out;
 }
 
 export function exerciseIntervals(events: readonly TelemetryEventLite[]): RetroInterval[] {

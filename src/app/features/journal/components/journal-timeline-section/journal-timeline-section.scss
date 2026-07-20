@@ -98,6 +98,7 @@ $src-colors: (
   -webkit-line-clamp: 2;
   overflow: hidden;
   color: var(--color-text);
+  position: relative; // above the burst bands
 }
 
 @each $src, $color in $src-colors {
@@ -114,6 +115,22 @@ $src-colors: (
   background: transparent;
   border-style: dashed;
   border-left-style: solid;
+}
+
+// Still-running session: the bottom edge is "last seen", not a real end.
+.rt__block--open {
+  border-bottom-style: dashed;
+  border-bottom-width: 2px;
+}
+
+// Heartbeat activity bursts inside a session envelope — where the work
+// actually happened within a long-open terminal. Label stays on top.
+.rt__burst {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, rgba(168, 85, 247, 0.9) 22%, transparent);
+  pointer-events: none;
 }
 
 .rt__pin {

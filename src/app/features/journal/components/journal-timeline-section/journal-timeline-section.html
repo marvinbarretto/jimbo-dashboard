@@ -48,12 +48,15 @@
             }
             @for (b of lane.blocks; track b.id) {
               <div
-                [class]="'rt__block rt__block--' + b.source"
+                [class]="'rt__block rt__block--' + b.source + (b.open ? ' rt__block--open' : '')"
                 [style.top.px]="b.topPx"
                 [style.height.px]="b.heightPx"
                 [style.left.%]="b.leftPct"
                 [style.width.%]="b.widthPct"
                 [title]="b.tooltip">
+                @for (burst of b.bursts; track burst.topPct) {
+                  <span class="rt__burst" [style.top.%]="burst.topPct" [style.height.%]="burst.heightPct"></span>
+                }
                 <span class="rt__block-label">{{ b.label }}</span>
               </div>
             }
