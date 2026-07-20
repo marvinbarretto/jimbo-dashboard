@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.111](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.110...v0.0.111) (2026-07-20)
+
+
+### Features
+
+* **journal:** measure work from all evidence, not just pomodoros ([7f2b576](https://github.com/marvinbarretto/jimbo-dashboard/commit/7f2b576256455bc43b057509c41c2fc5c41eed23))
+
 ### [0.0.110](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.109...v0.0.110) (2026-07-20)
 
 
