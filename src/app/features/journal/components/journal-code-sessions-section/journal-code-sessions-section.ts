@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
@@ -7,14 +6,11 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { absoluteTime, formatMinutes, pluralise } from '@shared/utils/datetime.utils';
-import { type DayKey, dateFromDayKey, shiftDay } from '@shared/utils/date-keys';
-import { catchError, of, switchMap, timer } from 'rxjs';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
-import {
-  CodeSessionsService,
-  type CodeSession,
-  type CodeSessionOutcome,
-  type FrictionLevel,
+import type {
+  CodeSession,
+  CodeSessionOutcome,
+  FrictionLevel,
 } from '../../data-access/code-sessions.service';
 
 type Tone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'info';
@@ -59,36 +55,19 @@ interface SessionRow {
   styleUrl: './journal-code-sessions-section.scss',
 })
 export class JournalCodeSessionsSection {
-  private readonly service = inject(CodeSessionsService);
   private readonly projects = inject(ProjectsService);
 
-  readonly date = input.required<DayKey>();
+  // Fetched once by the day page (shared with the timeline + Work rollup).
+  readonly sessions = input.required<readonly CodeSession[]>();
+  readonly loading = input<boolean>(false);
 
-  // Local-midnight day window, matching the journal's bucketing convention
-  // (started_at is UTC; the day a session "belongs to" is the local calendar
-  // day it started in). Refetch immediately on day navigation, then every
-  // 60s so a running session's elapsed time stays roughly current.
-  private readonly result = toSignal(
-    toObservable(this.date).pipe(
-      switchMap((date) => timer(0, 60_000).pipe(
-        switchMap(() => this.service.list({
-          since: dateFromDayKey(date).toISOString(),
-          until: dateFromDayKey(shiftDay(date, 1)).toISOString(),
-        }).pipe(catchError(() => of({ items: [] as CodeSession[] })))),
-      )),
-    ),
-    { initialValue: null },
+  private readonly ordered = computed<CodeSession[]>(() =>
+    [...this.sessions()].sort((a, b) => a.started_at.localeCompare(b.started_at)),
   );
 
-  readonly loading = computed(() => this.result() === null);
+  readonly open = linkedSignal(() => this.loading() || this.ordered().length > 0);
 
-  private readonly sessions = computed<CodeSession[]>(() =>
-    [...(this.result()?.items ?? [])].sort((a, b) => a.started_at.localeCompare(b.started_at)),
-  );
-
-  readonly open = linkedSignal(() => this.loading() || this.sessions().length > 0);
-
-  readonly rows = computed<SessionRow[]>(() => this.sessions().map(s => ({
+  readonly rows = computed<SessionRow[]>(() => this.ordered().map(s => ({
     id: s.id,
     // Running sessions end at their last heartbeat with a trailing ellipsis —
     // "still open, last active then" — rather than pretending to reach "now".
@@ -111,8 +90,13 @@ export class JournalCodeSessionsSection {
     frictionLevel: s.friction && s.friction.level !== 'low' ? s.friction.level : null,
   })));
 
+  // Long-open running sessions (terminal left open for hours) have no honest
+  // duration — their envelope is idle time, so they're excluded from the
+  // total rather than counted at 10+ hours. Surfaced via openEnvelopeCount.
   readonly totalMinutes = computed(() =>
-    this.sessions().reduce((sum, s) => sum + effectiveMinutes(s), 0));
+    this.sessions().reduce((sum, s) => sum + (isOpenEnvelope(s) ? 0 : effectiveMinutes(s)), 0));
+
+  readonly openEnvelopeCount = computed(() => this.sessions().filter(isOpenEnvelope).length);
 
   readonly totalCommits = computed(() =>
     this.sessions().reduce((sum, s) => sum + s.artifacts.commits.length, 0));
@@ -134,6 +118,13 @@ export class JournalCodeSessionsSection {
 
   outcomeTone(o: CodeSessionOutcome): Tone { return OUTCOME_TONE[o]; }
   frictionTone(level: FrictionLevel): Tone { return level === 'high' ? 'danger' : 'warning'; }
+}
+
+// Running longer than this = a terminal left open, not one work stretch.
+const OPEN_ENVELOPE_MINUTES = 3 * 60;
+
+function isOpenEnvelope(s: CodeSession): boolean {
+  return s.status === 'running' && effectiveMinutes(s) > OPEN_ENVELOPE_MINUTES;
 }
 
 // duration_minutes is null while a session is running (and on unreaped

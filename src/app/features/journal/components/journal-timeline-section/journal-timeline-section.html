@@ -48,7 +48,7 @@
             }
             @for (b of lane.blocks; track b.id) {
               <div
-                [class]="'rt__block rt__block--' + b.source + (b.open ? ' rt__block--open' : '')"
+                [class]="'rt__block rt__block--' + b.source + (b.open ? ' rt__block--open' : '') + (b.hollow ? ' rt__block--hollow' : '')"
                 [style.top.px]="b.topPx"
                 [style.height.px]="b.heightPx"
                 [style.left.%]="b.leftPct"

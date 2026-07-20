@@ -1,17 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { Chip } from '@shared/components/chip/chip';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { absoluteTime } from '@shared/utils/datetime.utils';
-import { type DayKey, dateFromDayKey, shiftDay, todayKey } from '@shared/utils/date-keys';
-import { catchError, map, of, switchMap, timer } from 'rxjs';
+import { type DayKey, dateFromDayKey, todayKey } from '@shared/utils/date-keys';
+import { map, timer } from 'rxjs';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
-import { forkJoin } from 'rxjs';
-import {
-  CodeSessionsService,
-  type CodeSession,
-  type CodeSessionHeartbeat,
+import type {
+  CodeSession,
+  CodeSessionHeartbeat,
 } from '../../data-access/code-sessions.service';
 import type {
   CalendarEventLite,
@@ -35,6 +33,12 @@ import {
 
 const PX_PER_HOUR = 48;
 const HOUR_MS = 3_600_000;
+
+// A code-session envelope longer than this is almost certainly a terminal
+// left open (nobody codes 3h unbroken without a turn gap) — render it hollow
+// so the fill only claims time with actual evidence. Sessions WITH a
+// heartbeat trail always render hollow + bursts, whatever their length.
+const HOLLOW_AFTER_MS = 3 * HOUR_MS;
 
 const LANES: readonly { key: RetroLane; label: string }[] = [
   { key: 'plan', label: 'Plan' },
@@ -60,6 +64,8 @@ interface BlockVM {
   readonly id: string;
   readonly source: RetroSource;
   readonly open: boolean;
+  /** Envelope only — don't let the fill claim the whole span as work. */
+  readonly hollow: boolean;
   readonly topPx: number;
   readonly heightPx: number;
   readonly leftPct: number;
@@ -90,50 +96,31 @@ interface HourTick {
   styleUrl: './journal-timeline-section.scss',
 })
 export class JournalTimelineSection {
-  private readonly codeSessions = inject(CodeSessionsService);
   private readonly projects = inject(ProjectsService);
 
   readonly date = input.required<DayKey>();
   readonly sessions = input.required<readonly FocusSessionLite[]>();
   readonly events = input.required<readonly CalendarEventLite[]>();
   readonly telemetry = input.required<readonly TelemetryEventLite[]>();
+  // Fetched once by the day page and shared with the sessions section.
+  readonly codeSessions = input.required<readonly CodeSession[]>();
+  readonly heartbeats = input.required<readonly CodeSessionHeartbeat[]>();
 
-  // One clock for the whole section: drives the now-line and the open end of
-  // a still-running code session. 60s resolution is plenty at 48px/hour.
+  // One clock for the whole section: drives the now-line. 60s resolution is
+  // plenty at 48px/hour.
   private readonly nowMs = toSignal(
     timer(0, 60_000).pipe(map(() => Date.now())),
     { initialValue: Date.now() },
   );
 
-  // Code sessions + their heartbeat trail come from their own endpoints
-  // rather than the day bundle; fetched here with the same local-midnight
-  // window as the sessions section.
-  private readonly codeResult = toSignal(
-    toObservable(this.date).pipe(
-      switchMap((date) => timer(0, 60_000).pipe(
-        switchMap(() => {
-          const range = {
-            since: dateFromDayKey(date).toISOString(),
-            until: dateFromDayKey(shiftDay(date, 1)).toISOString(),
-          };
-          return forkJoin({
-            sessions: this.codeSessions.list(range).pipe(catchError(() => of({ items: [] as CodeSession[] }))),
-            heartbeats: this.codeSessions.heartbeats(range).pipe(catchError(() => of({ items: [] as CodeSessionHeartbeat[] }))),
-          });
-        }),
-      )),
-    ),
-    { initialValue: null },
-  );
-
-  private readonly bursts = computed(() => heartbeatBursts(this.codeResult()?.heartbeats.items ?? []));
+  private readonly bursts = computed(() => heartbeatBursts(this.heartbeats()));
 
   private readonly hidden = signal<ReadonlySet<RetroSource>>(new Set());
 
   private readonly allIntervals = computed<RetroInterval[]>(() => [
     ...calendarIntervals(this.events()),
     ...focusIntervals(this.sessions(), id => this.projectName(id)),
-    ...codeIntervals(this.codeResult()?.sessions.items ?? []),
+    ...codeIntervals(this.codeSessions()),
     ...youtubeEpisodes(this.telemetry()),
     ...exerciseIntervals(this.telemetry()),
   ]);
@@ -205,16 +192,21 @@ export class JournalTimelineSection {
             topPct: (Math.max(b.startMs - iv.startMs, 0) / span) * 100,
             heightPct: ((Math.min(b.endMs, iv.endMs) - Math.max(b.startMs, iv.startMs)) / span) * 100,
           }));
+        const hollow = iv.source === 'code' && (burstVMs.length > 0 || span > HOLLOW_AFTER_MS);
+        const hollowNote = hollow && burstVMs.length === 0
+          ? ' · terminal open — no turn trail for this span'
+          : '';
         return {
           id: iv.id,
           source: iv.source,
           open: iv.open ?? false,
+          hollow,
           topPx: ((iv.startMs - w.startMs) / HOUR_MS) * PX_PER_HOUR,
           heightPx: Math.max(((iv.endMs - iv.startMs) / HOUR_MS) * PX_PER_HOUR, 14),
           leftPct: (iv.col / iv.cols) * 100,
           widthPct: (1 / iv.cols) * 100,
           label: iv.label,
-          tooltip: `${absoluteTime(new Date(iv.startMs).toISOString())}–${absoluteTime(new Date(iv.endMs).toISOString())}${iv.open ? ' (still open)' : ''} · ${iv.label}${iv.detail ? ` · ${iv.detail}` : ''}`,
+          tooltip: `${absoluteTime(new Date(iv.startMs).toISOString())}–${absoluteTime(new Date(iv.endMs).toISOString())}${iv.open ? ' (still open)' : ''} · ${iv.label}${iv.detail ? ` · ${iv.detail}` : ''}${hollowNote}`,
           bursts: burstVMs,
         };
       }),

@@ -123,6 +123,14 @@ $src-colors: (
   border-bottom-width: 2px;
 }
 
+// Hollow envelope: the terminal was open this whole span but only the burst
+// bands are evidence of work — a solid fill over 10 open-but-idle hours told
+// a story the data doesn't support. Applies to long sessions and to any
+// session with a heartbeat trail.
+.rt__block--hollow {
+  background: color-mix(in srgb, rgba(168, 85, 247, 0.9) 4%, transparent);
+}
+
 // Heartbeat activity bursts inside a session envelope — where the work
 // actually happened within a long-open terminal. Label stays on top.
 .rt__burst {

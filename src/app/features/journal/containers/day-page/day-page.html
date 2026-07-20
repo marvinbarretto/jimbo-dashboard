@@ -37,6 +37,8 @@
       [sessions]="b.sessions"
       [events]="b.events"
       [telemetry]="b.telemetry"
+      [codeSessions]="codeSessions()"
+      [heartbeats]="codeHeartbeats()"
     />
 
     <!-- ── WORK ─────────────────────────────────────────────── -->
@@ -44,8 +46,13 @@
       [expanded]="workOpen()" (toggled)="workOpen.set(!workOpen())">
       <app-ui-stack gap="lg">
         <div class="journal-day__stats">
+          <!-- Desk time = union of focus sessions + honest code-session spans;
+               overlapping evidence counts once. The broadest "did work happen"
+               number — pomos are one input, not the measure. -->
+          <app-ui-stat-card label="Desk time" [value]="deskMinutes().toString()" detail="minutes, all evidence" />
           <app-ui-stat-card label="Pomodoros" [value]="b.totals.pomos_completed.toString()" [detail]="b.totals.pomos_abandoned ? b.totals.pomos_abandoned + ' abandoned' : null" />
           <app-ui-stat-card label="Focus" [value]="b.totals.focus_minutes.toString()" detail="minutes" />
+          <app-ui-stat-card label="Commits" [value]="(commitsSummary()?.totalCommits ?? 0).toString()" />
           <app-ui-stat-card label="Calendar" [value]="b.totals.events_count.toString()" detail="events" />
         </div>
 
@@ -186,7 +193,7 @@
     <!-- Claude Code hook captures: start/end, repo, narrated headline +
          bullets. The richest "what actually got done at the desk" signal —
          self-fetching, same pattern as Agents/MCP. -->
-    <app-journal-code-sessions-section id="jsec-code-sessions" [date]="key()" />
+    <app-journal-code-sessions-section id="jsec-code-sessions" [sessions]="codeSessions()" [loading]="codeLoading()" />
 
     <!-- ── CODE ────────────────────────────────────────────── -->
     <app-ui-section id="jsec-code" title="Code" [meta]="codeMeta()"

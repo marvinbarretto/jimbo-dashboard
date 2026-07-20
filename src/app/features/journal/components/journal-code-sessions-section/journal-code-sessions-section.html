@@ -10,7 +10,8 @@
       <div class="code-sessions__stats">
         <app-ui-stat-card label="Sessions" [value]="rows().length.toString()"
           [detail]="executorCount() ? interactiveCount() + ' me · ' + executorCount() + ' agents' : null" />
-        <app-ui-stat-card label="Desk time" [value]="totalMinutes().toString()" detail="minutes" />
+        <app-ui-stat-card label="Desk time" [value]="totalMinutes().toString()"
+          [detail]="openEnvelopeCount() ? 'minutes · ' + openEnvelopeCount() + ' open-ended not counted' : 'minutes'" />
         <app-ui-stat-card label="Commits" [value]="totalCommits().toString()" />
         <app-ui-stat-card label="Repos" [value]="reposTouched().toString()" />
       </div>

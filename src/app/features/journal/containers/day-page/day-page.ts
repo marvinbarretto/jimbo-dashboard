@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, linkedSignal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { formatPageTitle } from '@app/app-title-strategy';
-import { map } from 'rxjs';
+import { catchError, forkJoin, map, of, switchMap, timer } from 'rxjs';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
@@ -14,6 +14,13 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { absoluteTime, formatMinutes, pluralise } from '@shared/utils/datetime.utils';
 import { dedupeWindowedSum } from '../../utils/windowed-telemetry';
+import { heartbeatBursts } from '../../utils/retro-timeline';
+import { codeEvidenceSpans, focusSpans, unionMinutes } from '../../utils/work-measure';
+import {
+  CodeSessionsService,
+  type CodeSession,
+  type CodeSessionHeartbeat,
+} from '../../data-access/code-sessions.service';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { JournalDataService } from '../../data-access/journal-data.service';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
@@ -31,6 +38,7 @@ import { NutritionDaySection } from '../../../nutrition/components/nutrition-day
 import { ExerciseDaySection } from '../../../exercise/components/exercise-day-section/exercise-day-section';
 import {
   type DayKey,
+  dateFromDayKey,
   formatDayLong,
   isDayKey,
   shiftDay,
@@ -72,11 +80,44 @@ export class JournalDayPage {
   private readonly titleService = inject(Title);
   private readonly journal = inject(JournalDataService);
   private readonly projects = inject(ProjectsService);
+  private readonly codeSessionsApi = inject(CodeSessionsService);
 
   protected readonly key = toSignal(
     this.route.paramMap.pipe(map(p => sanitiseKey(p.get('date')))),
     { initialValue: todayKey() },
   );
+
+  // Single code-sessions + heartbeat fetch for the whole page — the Work
+  // rollup, the timeline and the sessions section all consume it. Local-
+  // midnight window, refreshed every 60s (matches the other live sections).
+  private readonly codeData = toSignal(
+    toObservable(this.key).pipe(
+      switchMap((date) => timer(0, 60_000).pipe(
+        switchMap(() => {
+          const range = {
+            since: dateFromDayKey(date).toISOString(),
+            until: dateFromDayKey(shiftDay(date, 1)).toISOString(),
+          };
+          return forkJoin({
+            sessions: this.codeSessionsApi.list(range).pipe(catchError(() => of({ items: [] as CodeSession[] }))),
+            heartbeats: this.codeSessionsApi.heartbeats(range).pipe(catchError(() => of({ items: [] as CodeSessionHeartbeat[] }))),
+          });
+        }),
+      )),
+    ),
+    { initialValue: null },
+  );
+
+  protected readonly codeSessions = computed(() => this.codeData()?.sessions.items ?? []);
+  protected readonly codeHeartbeats = computed(() => this.codeData()?.heartbeats.items ?? []);
+  protected readonly codeLoading = computed(() => this.codeData() === null);
+
+  // Evidence-based desk time: union of focus sessions and honest code-session
+  // spans — overlap (a pomo inside a code session) counts once.
+  protected readonly deskMinutes = computed(() => unionMinutes([
+    ...focusSpans(this.bundle()?.sessions ?? []),
+    ...codeEvidenceSpans(this.codeSessions(), heartbeatBursts(this.codeHeartbeats())),
+  ]));
 
   protected readonly bundle = this.journal.day;
   protected readonly loading = computed(() => this.journal.loading() === 'day' && !this.bundle());
@@ -84,12 +125,17 @@ export class JournalDayPage {
   protected readonly subtitle = computed(() => relativeDayLabel(this.key()));
   protected readonly isToday = computed(() => this.key() === todayKey());
 
+  // Work is measured from ALL the evidence — pomos alone under-report a
+  // multitasking day. Desk time leads (the union), pomos become one input.
   protected readonly workMeta = computed(() => {
     const t = this.bundle()?.totals;
     if (!t) return '';
     const parts: string[] = [];
+    const desk = this.deskMinutes();
+    if (desk) parts.push(formatMinutes(desk) + ' desk');
     if (t.pomos_completed) parts.push(pluralise(t.pomos_completed, 'pomo'));
-    if (t.focus_minutes) parts.push(formatMinutes(t.focus_minutes) + ' focus');
+    const commits = this.commitsSummary()?.totalCommits ?? 0;
+    if (commits) parts.push(pluralise(commits, 'commit'));
     return parts.join(' · ') || 'Nothing logged yet';
   });
 
@@ -105,7 +151,10 @@ export class JournalDayPage {
     const b = this.bundle();
     if (!b) return false;
     const t = b.totals;
-    return Boolean(t.pomos_completed || t.focus_minutes || b.sessions.length || b.events.length);
+    return Boolean(
+      t.pomos_completed || t.focus_minutes || b.sessions.length || b.events.length ||
+      this.deskMinutes() || this.commitsSummary()?.totalCommits,
+    );
   });
   protected readonly hasHealth = computed(() => this.healthSummary() != null);
   protected readonly hasCode = computed(() => this.commitsSummary() != null);
