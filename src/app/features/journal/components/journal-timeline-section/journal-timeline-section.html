@@ -1,0 +1,69 @@
+<app-ui-section title="Timeline" [meta]="sectionMeta()" [expanded]="open()" (toggled)="open.set(!open())">
+  @if (!hasAnything()) {
+    <app-ui-empty-state
+      title="Nothing on the timeline"
+      message="No captured signals for this day — an offline day, or before collection started." />
+  } @else {
+    <div class="rt">
+      <div class="rt__toggles">
+        @for (chip of sourceChips(); track chip.source) {
+          <app-chip [active]="chip.active" [count]="chip.count" (toggle)="toggleSource(chip.source)">
+            {{ chip.label }}
+          </app-chip>
+        }
+        @if (commitCount()) {
+          <span class="rt__pin-legend">● {{ commitCount() }} commits</span>
+        }
+      </div>
+
+      <div class="rt__head">
+        <span class="rt__head-gutter"></span>
+        <span class="rt__head-pins" title="Commits">●</span>
+        @for (lane of lanes(); track lane.key) {
+          <span class="rt__head-lane">{{ lane.label }}</span>
+        }
+      </div>
+
+      <div class="rt__grid" [style.height.px]="gridHeightPx()">
+        <div class="rt__gutter">
+          @for (tick of hourTicks(); track tick.topPx) {
+            <span class="rt__hour" [style.top.px]="tick.topPx">{{ tick.label }}</span>
+          }
+        </div>
+
+        <div class="rt__pins">
+          @for (pin of pinVMs(); track pin.id) {
+            <span class="rt__pin" [style.top.px]="pin.topPx" [title]="pin.tooltip">
+              @if (pin.count > 1) {
+                <span class="rt__pin-count">{{ pin.count }}</span>
+              }
+            </span>
+          }
+        </div>
+
+        @for (lane of lanes(); track lane.key) {
+          <div class="rt__lane">
+            @for (tick of hourTicks(); track tick.topPx) {
+              <span class="rt__gridline" [style.top.px]="tick.topPx"></span>
+            }
+            @for (b of lane.blocks; track b.id) {
+              <div
+                [class]="'rt__block rt__block--' + b.source"
+                [style.top.px]="b.topPx"
+                [style.height.px]="b.heightPx"
+                [style.left.%]="b.leftPct"
+                [style.width.%]="b.widthPct"
+                [title]="b.tooltip">
+                <span class="rt__block-label">{{ b.label }}</span>
+              </div>
+            }
+          </div>
+        }
+
+        @if (nowLineTopPx() !== null) {
+          <div class="rt__now" [style.top.px]="nowLineTopPx()"></div>
+        }
+      </div>
+    </div>
+  }
+</app-ui-section>

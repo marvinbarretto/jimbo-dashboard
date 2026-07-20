@@ -21,6 +21,7 @@ import { UiPeriodPager } from '@shared/components/ui-period-pager/ui-period-page
 import { JournalDaySummary } from '../../components/journal-day-summary/journal-day-summary';
 import { JournalAgentsSection } from '../../components/journal-agents-section/journal-agents-section';
 import { JournalCodeSessionsSection } from '../../components/journal-code-sessions-section/journal-code-sessions-section';
+import { JournalTimelineSection } from '../../components/journal-timeline-section/journal-timeline-section';
 import { JournalMcpSection } from '../../components/journal-mcp-section/journal-mcp-section';
 import { JournalBriefingsSection } from '../../components/journal-briefings-section/journal-briefings-section';
 import { JournalConsumptionSection } from '../../components/journal-consumption-section/journal-consumption-section';
@@ -52,6 +53,7 @@ import {
     JournalDaySummary,
     JournalAgentsSection,
     JournalCodeSessionsSection,
+    JournalTimelineSection,
     JournalMcpSection,
     JournalBriefingsSection,
     JournalConsumptionSection,
@@ -119,6 +121,7 @@ export class JournalDayPage {
   // template. Order mirrors the on-page section order.
   protected readonly navSections: readonly JournalNavSection[] = [
     { id: 'jsec-briefings', label: 'Briefings' },
+    { id: 'jsec-timeline', label: 'Timeline' },
     { id: 'jsec-work', label: 'Work' },
     { id: 'jsec-health', label: 'Health' },
     { id: 'jsec-code-sessions', label: 'Sessions' },

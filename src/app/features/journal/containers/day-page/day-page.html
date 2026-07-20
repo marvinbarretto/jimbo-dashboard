@@ -28,6 +28,17 @@
     <app-ui-loading-state message="Pulling the day's data…" />
   } @else if (bundle(); as b) {
 
+    <!-- ── TIMELINE ─────────────────────────────────────────── -->
+    <!-- The day reconstructed from evidence: calendar intent as ghosts,
+         desk/watching/body intervals, commit pins. -->
+    <app-journal-timeline-section
+      id="jsec-timeline"
+      [date]="key()"
+      [sessions]="b.sessions"
+      [events]="b.events"
+      [telemetry]="b.telemetry"
+    />
+
     <!-- ── WORK ─────────────────────────────────────────────── -->
     <app-ui-section id="jsec-work" title="Work" [meta]="workMeta()"
       [expanded]="workOpen()" (toggled)="workOpen.set(!workOpen())">
