@@ -531,6 +531,13 @@ export class VaultItemDialogStore {
     this.vaultItemsService.update(i.id, { grooming_override: next });
   }
 
+  /** Effort in 25-minute pomodoro blocks. null clears the estimate — the
+   *  planner falls back to 1 block rather than treating null as zero effort. */
+  updateEstimatedBlocks(next: number | null): void {
+    const i = this.item(); if (!i) return;
+    this.vaultItemsService.update(i.id, { estimated_blocks: next });
+  }
+
   updateTags(next: readonly string[]): void {
     const i = this.item(); if (!i) return;
     this.vaultItemsService.update(i.id, { tags: [...next] });

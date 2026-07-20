@@ -503,7 +503,7 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
       priority: effectivePriority(item) ?? 3,
       owner: item.assigned_to,
       epicLabel: parent ? `↳ #${parent.seq} ${parent.title}` : null,
-      size: 1,
+      size: item.estimated_blocks ?? 1,
       locked: false, // overridden by the `queue` computed from lockedQueueIds
     };
   }

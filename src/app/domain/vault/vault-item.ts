@@ -225,6 +225,11 @@ export interface VaultItem {
   // stage instead and never set this. Optional: legacy/manual construction omits it.
   started_at?:         string | null;
 
+  // Effort in 25-minute pomodoro blocks. Null = not yet estimated — consumers
+  // (currently the planner) fall back to 1 block rather than treating null
+  // as "zero effort". Optional: legacy/manual construction omits it.
+  estimated_blocks?:   number | null;
+
   // Where this item came from. See `Source` comment above. Nullable for legacy / unknown.
   source:              Source | null;
 

@@ -73,6 +73,9 @@ export const ApiVaultItemSchema = z.object({
   // Human-owner readiness override. Optional+default for the same pre-deploy
   // reason as started_at above.
   grooming_override:    z.boolean().optional().default(false),
+  // Effort in pomodoro blocks. Optional+default for the same pre-deploy
+  // reason as started_at above.
+  estimated_blocks:     z.number().nullable().optional().default(null),
   source_kind:          z.string().nullable(),
   source_ref:           z.string().nullable(),
   source_url:           z.string().nullable(),

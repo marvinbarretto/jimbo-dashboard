@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
 import { VaultItemDialogStore } from '../../../dialog/vault-item-dialog-store';
 import { VaultItemDeliveryBlock } from '../vault-item-delivery-block/vault-item-delivery-block';
 import { VaultItemIntakeBlock } from '../vault-item-intake-block/vault-item-intake-block';
@@ -30,6 +30,15 @@ import { VaultItemLinksBlock } from '../vault-item-links-block/vault-item-links-
           />
 
           @if (!item.is_epic) {
+            <div class="vault-item-body-task__estimate">
+              <span class="vault-item-body-task__estimate-label">Estimate</span>
+              <div class="vault-item-body-task__estimate-stepper">
+                <button type="button" (click)="decEstimate()" [disabled]="estimateBlocks() <= 1" aria-label="decrease estimate">−</button>
+                <span>{{ estimateBlocks() }}×25m</span>
+                <button type="button" (click)="incEstimate()" aria-label="increase estimate">+</button>
+              </div>
+            </div>
+
             <app-vault-item-delivery-block
               [readiness]="store.readiness()"
               [criteria]="item.acceptance_criteria"
@@ -96,6 +105,49 @@ import { VaultItemLinksBlock } from '../vault-item-links-block/vault-item-links-
       gap: 1.25rem;
       min-width: 0;
     }
+
+    // Effort estimate, in the planner's 25-minute pomodoro-block unit — set
+    // here (detail modal) rather than on BlockCard/VaultCard's face, per the
+    // "minimal card, rich detail on click" rule the planner cards follow.
+    .vault-item-body-task__estimate {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin: -0.3rem 0 0;
+    }
+    .vault-item-body-task__estimate-label {
+      font-size: 0.7rem;
+      color: var(--color-text-muted);
+    }
+    .vault-item-body-task__estimate-stepper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+    }
+    .vault-item-body-task__estimate-stepper button {
+      width: 20px;
+      height: 20px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      background: var(--color-surface);
+      color: var(--color-text-soft);
+      cursor: pointer;
+    }
+    .vault-item-body-task__estimate-stepper button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    .vault-item-body-task__estimate-stepper button:not(:disabled):hover {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
   `],
 })
 export class VaultItemBodyTask {
@@ -107,4 +159,14 @@ export class VaultItemBodyTask {
   readonly projectClicked = output<string>();
   readonly blockerClicked = output<number>();
   readonly parentClicked = output<number>();
+
+  protected readonly estimateBlocks = computed(() => this.store.item()?.estimated_blocks ?? 1);
+
+  protected incEstimate(): void {
+    this.store.updateEstimatedBlocks(this.estimateBlocks() + 1);
+  }
+
+  protected decEstimate(): void {
+    this.store.updateEstimatedBlocks(Math.max(1, this.estimateBlocks() - 1));
+  }
 }
