@@ -1,0 +1,66 @@
+<app-ui-section title="Code sessions" [meta]="sectionMeta()" [expanded]="open()" (toggled)="open.set(!open())">
+  @if (loading()) {
+    <app-ui-loading-state message="Reading code sessions…" />
+  } @else if (rows().length === 0) {
+    <app-ui-empty-state
+      title="No code sessions"
+      message="No Claude Code sessions started this day. Hook capture only — offline work won't appear here." />
+  } @else {
+    <app-ui-stack gap="lg">
+      <div class="code-sessions__stats">
+        <app-ui-stat-card label="Sessions" [value]="rows().length.toString()"
+          [detail]="executorCount() ? interactiveCount() + ' me · ' + executorCount() + ' agents' : null" />
+        <app-ui-stat-card label="Desk time" [value]="totalMinutes().toString()" detail="minutes" />
+        <app-ui-stat-card label="Commits" [value]="totalCommits().toString()" />
+        <app-ui-stat-card label="Repos" [value]="reposTouched().toString()" />
+      </div>
+
+      <ul class="code-sessions__list">
+        @for (s of rows(); track s.id) {
+          <li class="code-sessions__row">
+            <div class="code-sessions__when">
+              <span class="code-sessions__time">{{ s.timeLabel }}</span>
+              <span class="code-sessions__duration">{{ s.durationLabel }}</span>
+            </div>
+            <div class="code-sessions__body">
+              <div class="code-sessions__head">
+                <span class="code-sessions__headline">{{ s.headline }}</span>
+                @if (s.running) {
+                  <app-ui-badge tone="info">running</app-ui-badge>
+                } @else if (s.outcome) {
+                  <app-ui-badge [tone]="outcomeTone(s.outcome)">{{ s.outcome }}</app-ui-badge>
+                }
+                @if (s.frictionLevel; as f) {
+                  <app-ui-badge [tone]="frictionTone(f)">{{ f }} friction</app-ui-badge>
+                }
+                @if (s.actor; as actor) {
+                  <app-ui-badge tone="accent">{{ actor }}</app-ui-badge>
+                }
+              </div>
+              <div class="code-sessions__meta">
+                @if (s.projectName; as p) { <span>{{ p }}</span> }
+                @if (s.repoShort; as r) {
+                  <span class="code-sessions__mono">{{ r }}@if (s.branch) {:{{ s.branch }}}</span>
+                }
+                @if (s.commitCount) { <span>{{ s.commitCount }} commit{{ s.commitCount === 1 ? '' : 's' }}</span> }
+                @if (s.filesTouched) { <span>{{ s.filesTouched }} files</span> }
+              </div>
+              @if (s.bullets.length) {
+                <ul class="code-sessions__bullets">
+                  @for (b of s.bullets; track $index) {
+                    <li>{{ b }}</li>
+                  }
+                </ul>
+              }
+              @if (s.nextSteps.length) {
+                <p class="code-sessions__next">
+                  Left open: {{ s.nextSteps.join(' · ') }}
+                </p>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    </app-ui-stack>
+  }
+</app-ui-section>

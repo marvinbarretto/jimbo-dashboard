@@ -214,6 +214,12 @@
       }
     </app-ui-section>
 
+    <!-- ── CODE SESSIONS ───────────────────────────────────── -->
+    <!-- Claude Code hook captures: start/end, repo, narrated headline +
+         bullets. The richest "what actually got done at the desk" signal —
+         self-fetching, same pattern as Agents/MCP. -->
+    <app-journal-code-sessions-section id="jsec-code-sessions" [date]="key()" />
+
     <!-- ── CODE ────────────────────────────────────────────── -->
     <app-ui-section id="jsec-code" title="Code" [meta]="codeMeta()"
       [expanded]="codeOpen()" (toggled)="codeOpen.set(!codeOpen())">

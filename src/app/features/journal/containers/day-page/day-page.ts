@@ -20,6 +20,7 @@ import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { UiPeriodPager } from '@shared/components/ui-period-pager/ui-period-pager';
 import { JournalDaySummary } from '../../components/journal-day-summary/journal-day-summary';
 import { JournalAgentsSection } from '../../components/journal-agents-section/journal-agents-section';
+import { JournalCodeSessionsSection } from '../../components/journal-code-sessions-section/journal-code-sessions-section';
 import { JournalMcpSection } from '../../components/journal-mcp-section/journal-mcp-section';
 import { JournalBriefingsSection } from '../../components/journal-briefings-section/journal-briefings-section';
 import { JournalConsumptionSection } from '../../components/journal-consumption-section/journal-consumption-section';
@@ -50,6 +51,7 @@ import {
     UiPeriodPager,
     JournalDaySummary,
     JournalAgentsSection,
+    JournalCodeSessionsSection,
     JournalMcpSection,
     JournalBriefingsSection,
     JournalConsumptionSection,
@@ -123,6 +125,7 @@ export class JournalDayPage {
     { id: 'jsec-briefings', label: 'Briefings' },
     { id: 'jsec-work', label: 'Work' },
     { id: 'jsec-health', label: 'Health' },
+    { id: 'jsec-code-sessions', label: 'Sessions' },
     { id: 'jsec-code', label: 'Code' },
     { id: 'jsec-agents', label: 'Agents' },
     { id: 'jsec-mcp', label: 'MCP' },
