@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.109](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.108...v0.0.109) (2026-07-20)
+
+
+### Features
+
+* **journal:** add retro timeline section to the day page ([b945dad](https://github.com/marvinbarretto/jimbo-dashboard/commit/b945dada8f04c0693d1d4c0d694333f35ae9b4a2))
+* **journal:** surface code sessions on the day page ([63f3335](https://github.com/marvinbarretto/jimbo-dashboard/commit/63f333558682357091e407d9757ffd1cb8f58805))
+* **planner:** add week planner spike with FullCalendar, vault-item queue, lock/randomize ([9dfa8f6](https://github.com/marvinbarretto/jimbo-dashboard/commit/9dfa8f6ba48dff94d5b2f97a211292b4f328456f))
+* **planner:** extract shared item-header, wire into block-card and vault-card ([4a09088](https://github.com/marvinbarretto/jimbo-dashboard/commit/4a09088bac8ee6d2d3adb78c84015c9cee39aa9d))
+* **planner:** sync placements to real Jimbo Suggestions calendar ([dc9e6e6](https://github.com/marvinbarretto/jimbo-dashboard/commit/dc9e6e6ab24ce0ce7b9687ecdfb1fdfd7692fdb3))
+* **vault-items:** add estimated_blocks effort estimate ([fdb784f](https://github.com/marvinbarretto/jimbo-dashboard/commit/fdb784f4b9ae5f035b4af1cf20bafb9cbae180e2))
+
+
+### Code Refactoring
+
+* **journal:** drop dead activities and sleep/heart-rate paths ([e26e181](https://github.com/marvinbarretto/jimbo-dashboard/commit/e26e1811fb7b08a1f9c796424579dc7ba4586b22))
+
 ### [0.0.108](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.107...v0.0.108) (2026-07-11)
 
 
