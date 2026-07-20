@@ -30,6 +30,7 @@ export type BlockCardVariant = 'queue' | 'calendar';
     <app-item-header
       [projectName]="projectName()"
       [projectColor]="projectColor()"
+      [seq]="seq()"
       [priority]="priority()"
       [owner]="owner()"
       [secondary]="secondary()"

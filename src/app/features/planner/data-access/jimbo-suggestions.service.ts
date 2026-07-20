@@ -13,6 +13,10 @@ export interface SuggestionEvent {
   readonly start: string; // ISO datetime, or YYYY-MM-DD when allDay
   readonly end: string | null;
   readonly allDay: boolean;
+  // extendedProperties.private — caller-owned metadata, invisible in the
+  // normal Calendar UI. Absent on genuine Jimbo-authored suggestions; present
+  // on events the planner itself previously synced (see PlannerSyncService).
+  readonly privateProps: Record<string, string> | null;
 }
 
 interface RawCalEvent {
@@ -20,6 +24,7 @@ interface RawCalEvent {
   readonly summary?: string;
   readonly start: { readonly dateTime?: string; readonly date?: string };
   readonly end: { readonly dateTime?: string; readonly date?: string };
+  readonly extendedProperties?: { readonly private?: Record<string, string> };
 }
 
 // The calendar ID itself isn't a secret (Marvin's own reader-access
@@ -62,8 +67,9 @@ export class JimboSuggestionsService {
 
 function toSuggestionEvent(e: RawCalEvent): SuggestionEvent {
   const title = e.summary ?? '(untitled)';
+  const privateProps = e.extendedProperties?.private ?? null;
   if (e.start.date) {
-    return { id: e.id, title, start: e.start.date, end: e.end.date ?? null, allDay: true };
+    return { id: e.id, title, start: e.start.date, end: e.end.date ?? null, allDay: true, privateProps };
   }
-  return { id: e.id, title, start: e.start.dateTime!, end: e.end.dateTime ?? null, allDay: false };
+  return { id: e.id, title, start: e.start.dateTime!, end: e.end.dateTime ?? null, allDay: false, privateProps };
 }

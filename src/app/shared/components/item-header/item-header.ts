@@ -29,6 +29,9 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'none';
   template: `
     <span class="item-header__left">
       <app-project-avatar [name]="projectName()" color="var(--color-bg)" variant="outlined" size="sm" />
+      @if (seq() !== null) {
+        <span class="item-header__seq">#{{ seq() }}</span>
+      }
       @switch (secondary()) {
         @case ('time') {
           @if (timeText()) {
@@ -83,6 +86,13 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'none';
       min-width: 0;
     }
     .item-header__left { flex: 1; }
+    .item-header__seq {
+      font-size: 0.6rem;
+      font-weight: 500;
+      opacity: 0.75;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
     .item-header__time {
       font-size: 0.6rem;
       font-weight: 500;
@@ -117,6 +127,7 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'none';
 export class ItemHeader {
   readonly projectName = input.required<string>();
   readonly projectColor = input<string | null>(null);
+  readonly seq = input<number | null>(null);
   readonly priority = input<Priority | null>(null);
   readonly owner = input<ActorId | null>(null);
   readonly secondary = input<ItemHeaderSecondary>('none');

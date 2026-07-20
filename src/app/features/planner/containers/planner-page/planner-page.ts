@@ -24,6 +24,7 @@ import { BlockCard } from '@shared/components/block-card/block-card';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { withVaultDetailModal } from '@shared/kanban/detail-modal';
 import { JimboSuggestionsService, type SuggestionEvent } from '../../data-access/jimbo-suggestions.service';
+import { PlannerSyncService } from '../../data-access/planner-sync.service';
 
 // Queue candidates: my top-N active tasks by priority (P0 first, unscored
 // items sink to the bottom rather than jump the queue), plus anything
@@ -56,6 +57,17 @@ interface BlockVM {
 // re-rendering itself.
 interface PlacedBlock extends BlockVM {
   readonly start: string; // ISO
+  // The real Google Calendar event this placement is synced to — null until
+  // the initial async create() resolves. Lets a later move/resize/lock PATCH
+  // the same event instead of creating a duplicate.
+  readonly googleEventId: string | null;
+}
+
+// randomizeFill's input shape — a BlockVM plus whichever real calendar event
+// (if any) it's already synced to, so a re-placed block updates in place
+// rather than creating a duplicate.
+interface RandomizeCandidate extends BlockVM {
+  readonly googleEventId: string | null;
 }
 
 interface Interval {
@@ -91,6 +103,14 @@ function totalSlotsInWindow(): number {
   return ((endH * 60 + endM) - (startH * 60 + startM)) / BLOCK_MINUTES;
 }
 
+const MINUTES_PER_WEEK = 7 * 24 * 60;
+
+interface ProjectAllocation {
+  readonly projectName: string;
+  readonly projectColor: string;
+  readonly minutes: number;
+}
+
 @Component({
   selector: 'app-planner-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -100,6 +120,7 @@ function totalSlotsInWindow(): number {
 })
 export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
   private readonly suggestions = inject(JimboSuggestionsService);
+  private readonly sync = inject(PlannerSyncService);
   private readonly vaultItems = inject(VAULT_ITEMS_READ);
   private readonly projects = inject(ProjectsService);
   private readonly queueEl = viewChild<ElementRef<HTMLElement>>('queueList');
@@ -149,8 +170,46 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
     this.placements().filter(b => b.locked).length + this.queue().filter(b => b.locked).length,
   );
 
+  // ── Week metrics ──────────────────────────────────────────────────────────
+  // "Busy" counts real committed time — placed blocks plus genuine Jimbo
+  // suggestions (not our own synced placements, already counted via
+  // `placements`). "Free" is remaining capacity inside the work window
+  // (07:00-22:00); "downtime" is the much bigger number of the week that
+  // isn't work hours at all — sleep, evenings, weekends. Two different
+  // questions ("is my work day full?" vs "how much of my week is mine?"),
+  // not the same number reframed.
+  private readonly windowMinutes = totalSlotsInWindow() * BLOCK_MINUTES * 7;
+
+  readonly busyMinutes = computed(() => {
+    const suggestionMinutes = this.suggestions.events()
+      .filter(ev => !this.sync.isOurs(ev))
+      .reduce((sum, ev) => sum + minutesOf(toInterval(ev)), 0);
+    const placedMinutes = this.placements().reduce((sum, b) => sum + b.size * BLOCK_MINUTES, 0);
+    return suggestionMinutes + placedMinutes;
+  });
+
+  readonly freeMinutes = computed(() => Math.max(0, this.windowMinutes - this.busyMinutes()));
+  readonly downtimeMinutes = computed(() => Math.max(0, MINUTES_PER_WEEK - this.busyMinutes()));
+
+  // Only placed blocks count — a queued item hasn't actually claimed any
+  // calendar time yet, so it shouldn't read as "allocated".
+  readonly projectAllocations = computed<ProjectAllocation[]>(() => {
+    const byProject = new Map<string, ProjectAllocation>();
+    for (const b of this.placements()) {
+      const existing = byProject.get(b.projectName);
+      const minutes = b.size * BLOCK_MINUTES;
+      byProject.set(b.projectName, existing
+        ? { ...existing, minutes: existing.minutes + minutes }
+        : { projectName: b.projectName, projectColor: b.projectColor, minutes });
+    }
+    return [...byProject.values()].sort((a, b) => b.minutes - a.minutes);
+  });
+
+  // Events the planner itself previously synced render via `placements`
+  // (a real app-block-card) instead of the plain read-only suggestion-card —
+  // excluded here so they don't render twice.
   private readonly events = computed<EventInput[]>(() => [
-    ...this.suggestions.events().map(toSuggestionEventInput),
+    ...this.suggestions.events().filter(ev => !this.sync.isOurs(ev)).map(toSuggestionEventInput),
     ...this.placements().map(toBlockEventInput),
   ]);
 
@@ -190,7 +249,14 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
       if (!blockId) return;
       const block = this.queue().find(b => b.id === blockId);
       if (!block || !info.event.start) return;
-      this.placements.update(p => [...p, { ...block, start: info.event.start!.toISOString(), locked: false }]);
+      const newBlock: PlacedBlock = {
+        ...block,
+        start: info.event.start.toISOString(),
+        locked: false,
+        googleEventId: null,
+      };
+      this.placements.update(p => [...p, newBlock]);
+      void this.syncCreate(newBlock);
     },
 
     // Drag an already-placed block's edge — duration change, in whole
@@ -201,7 +267,7 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
       if (!blockId || !info.event.start || !info.event.end) return;
       const ms = info.event.end.getTime() - info.event.start.getTime();
       const size = Math.max(1, Math.round(ms / (BLOCK_MINUTES * 60_000)));
-      this.placements.update(p => p.map(b => (b.id === blockId ? { ...b, size } : b)));
+      this.updatePlacement(blockId, b => ({ ...b, size }));
     },
 
     // Drag an already-placed block to a different day/time.
@@ -209,7 +275,23 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
       const blockId = info.event.extendedProps['blockId'] as string | undefined;
       if (!blockId || !info.event.start) return;
       const start = info.event.start.toISOString();
-      this.placements.update(p => p.map(b => (b.id === blockId ? { ...b, start } : b)));
+      this.updatePlacement(blockId, b => ({ ...b, start }));
+    },
+
+    // Drag an already-placed block back onto the queue list — unplace it.
+    // Checked here rather than eventDrop: eventDrop only fires for a drop
+    // that resolves to a valid calendar position, so dropping outside the
+    // grid entirely (over the queue) reverts and skips it. eventDragStop
+    // fires either way, so it's the only hook that can catch this.
+    eventDragStop: (info) => {
+      const blockId = info.event.extendedProps['blockId'] as string | undefined;
+      if (!blockId) return;
+      const queueRect = this.queueEl()?.nativeElement.getBoundingClientRect();
+      if (!queueRect) return;
+      const { clientX, clientY } = info.jsEvent as MouseEvent;
+      const overQueue = clientX >= queueRect.left && clientX <= queueRect.right
+        && clientY >= queueRect.top && clientY <= queueRect.bottom;
+      if (overQueue) this.unplace(blockId);
     },
 
     // No eventClick handler — locking is now BlockCard's own lock-icon click
@@ -218,8 +300,22 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
     // over the same click.
   }));
 
-  ngOnInit(): void {
-    void this.suggestions.load();
+  async ngOnInit(): Promise<void> {
+    await this.suggestions.load();
+    this.reconcileFromSuggestions();
+  }
+
+  // Runs once after the initial load: events the planner previously synced
+  // (carrying our extendedProperties marker) get promoted from the read-only
+  // suggestions feed into real placements, so a page reload doesn't forget
+  // what's already scheduled.
+  private reconcileFromSuggestions(): void {
+    const reconciled = this.sync.reconcileAll(this.suggestions.events());
+    if (!reconciled.length) return;
+    const known = new Set(this.placements().map(b => b.googleEventId));
+    const fresh = reconciled.filter(b => !known.has(b.googleEventId));
+    if (!fresh.length) return;
+    this.placements.update(p => [...p, ...fresh]);
   }
 
   ngAfterViewInit(): void {
@@ -270,8 +366,46 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
     this.density.set(d);
   }
 
+  protected fmtDuration(minutes: number): string {
+    const h = Math.floor(minutes / 60);
+    const m = Math.round(minutes % 60);
+    if (h === 0) return `${m}m`;
+    if (m === 0) return `${h}h`;
+    return `${h}h ${m}m`;
+  }
+
   toggleLock(blockId: string): void {
-    this.placements.update(p => p.map(b => (b.id === blockId ? { ...b, locked: !b.locked } : b)));
+    this.updatePlacement(blockId, b => ({ ...b, locked: !b.locked }));
+  }
+
+  // Drag-out-to-queue and any other "take this off the calendar" action
+  // funnel through here — drops the placement (it reappears in `queue`,
+  // a pure computed, on its own) and deletes the real event if it had one.
+  unplace(blockId: string): void {
+    const block = this.placements().find(b => b.id === blockId);
+    this.placements.update(p => p.filter(b => b.id !== blockId));
+    if (block?.googleEventId) void this.sync.remove(block.googleEventId);
+  }
+
+  // Applies a local edit to a placement and, if it's already synced to a
+  // real calendar event, PATCHes that event to match — the two paths that
+  // change a placement in place (drag, resize, lock) all go through this.
+  private updatePlacement(blockId: string, fn: (b: PlacedBlock) => PlacedBlock): void {
+    let updated: PlacedBlock | undefined;
+    this.placements.update(p => p.map(b => {
+      if (b.id !== blockId) return b;
+      updated = fn(b);
+      return updated;
+    }));
+    if (updated?.googleEventId) void this.sync.update(updated.googleEventId, updated);
+  }
+
+  // Fire-and-update: create the real event, then attach its id once the
+  // call resolves so the next edit PATCHes instead of creating a duplicate.
+  private async syncCreate(block: PlacedBlock): Promise<void> {
+    const googleEventId = await this.sync.create(block);
+    if (!googleEventId) return;
+    this.placements.update(p => p.map(b => (b.id === block.id ? { ...b, googleEventId } : b)));
   }
 
   toggleQueueLock(id: string): void {
@@ -287,12 +421,17 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
   // placement — is pooled and re-scattered into open slots.
   randomize(): void {
     const lockedPlacements = this.placements().filter(b => b.locked);
-    const unlockedAsBlocks: BlockVM[] = this.placements()
-      .filter(b => !b.locked)
-      .map(({ id, seq, title, projectName, projectColor, priority, owner, epicLabel, size }) => ({
-        id, seq, title, projectName, projectColor, priority, owner, epicLabel, size, locked: false,
+    const unlockedPlacements = this.placements().filter(b => !b.locked);
+    // googleEventId rides along so a block that lands again still updates
+    // its existing event instead of creating a duplicate.
+    const unlockedAsBlocks: RandomizeCandidate[] = unlockedPlacements
+      .map(({ id, seq, title, projectName, projectColor, priority, owner, epicLabel, size, googleEventId }) => ({
+        id, seq, title, projectName, projectColor, priority, owner, epicLabel, size, locked: false, googleEventId,
       }));
-    const candidates = [...this.queue().filter(b => !b.locked), ...unlockedAsBlocks];
+    const queueAsBlocks: RandomizeCandidate[] = this.queue()
+      .filter(b => !b.locked)
+      .map(b => ({ ...b, googleEventId: null }));
+    const candidates = [...queueAsBlocks, ...unlockedAsBlocks];
 
     const fixed: Interval[] = [
       ...this.suggestions.events().map(toInterval),
@@ -303,6 +442,54 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
     // `unplaced` needs no handling — anything not placed simply isn't in
     // `placements`, so it reappears in `queue` (a pure computed) on its own.
     this.placements.set([...lockedPlacements, ...placed]);
+
+    // Anything that was synced but didn't make it back into `placed` this
+    // round is now an orphaned real event — nothing local points at it.
+    const placedIds = new Set(placed.map(b => b.id));
+    const orphaned = unlockedPlacements.filter(b => b.googleEventId && !placedIds.has(b.id));
+    for (const b of orphaned) void this.sync.remove(b.googleEventId!);
+
+    for (const block of placed) {
+      if (block.googleEventId) void this.sync.update(block.googleEventId, block);
+      else void this.syncCreate(block);
+    }
+  }
+
+  // Recalibrate ≠ randomize. Randomize reshuffles everything unlocked from
+  // scratch, whether it still needs it or not — good for "fill the board".
+  // Recalibrate corrects drift since the plan was made: a placement whose
+  // vault item was completed/archived elsewhere is cleared (and its synced
+  // event deleted); a placement whose slot has already passed and is still
+  // undone gets moved forward to the next open slot. Everything else —
+  // future placements, whether locked or not — is left exactly where it is.
+  recalibrate(): void {
+    const now = Date.now();
+    const activeIds = new Set<string>(this.vaultItems.activeItems().map(i => i.id));
+
+    const stale = this.placements().filter(b => !activeIds.has(b.id));
+    const missed = this.placements().filter(
+      b => activeIds.has(b.id) && !b.locked && new Date(b.start).getTime() < now,
+    );
+    const missedIds = new Set(missed.map(b => b.id));
+    const current = this.placements().filter(b => activeIds.has(b.id) && !missedIds.has(b.id));
+
+    for (const b of stale) if (b.googleEventId) void this.sync.remove(b.googleEventId);
+
+    const fixed: Interval[] = [
+      ...this.suggestions.events().filter(ev => !this.sync.isOurs(ev)).map(toInterval),
+      ...current.map(placedToInterval),
+    ];
+    const { placed: rescheduled } = randomizeFill(missed, fixed, this.weekDates);
+    // Unplaced missed items need no handling — they're simply not in
+    // `placements`, so they reappear in `queue` (a pure computed) on their
+    // own, same as anything randomize couldn't fit.
+
+    this.placements.set([...current, ...rescheduled]);
+
+    for (const block of rescheduled) {
+      if (block.googleEventId) void this.sync.update(block.googleEventId, block);
+      else void this.syncCreate(block);
+    }
   }
 
   private toBlockVM(item: VaultItem): BlockVM {
@@ -379,13 +566,13 @@ function overlaps(a: Interval, b: Interval): boolean {
 }
 
 function randomizeFill(
-  candidates: readonly BlockVM[],
+  candidates: readonly RandomizeCandidate[],
   fixed: readonly Interval[],
   weekDates: readonly string[],
-): { placed: PlacedBlock[]; unplaced: BlockVM[] } {
+): { placed: PlacedBlock[]; unplaced: RandomizeCandidate[] } {
   const busy = [...fixed];
   const placed: PlacedBlock[] = [];
-  const unplaced: BlockVM[] = [];
+  const unplaced: RandomizeCandidate[] = [];
 
   for (const block of shuffle(candidates)) {
     const durationMs = block.size * BLOCK_MINUTES * 60_000;
@@ -424,6 +611,10 @@ function toInterval(ev: SuggestionEvent): Interval {
   const start = new Date(ev.start).getTime();
   const end = ev.end ? new Date(ev.end).getTime() : start + 30 * 60_000;
   return { start, end };
+}
+
+function minutesOf(iv: Interval): number {
+  return (iv.end - iv.start) / 60_000;
 }
 
 function placedToInterval(b: PlacedBlock): Interval {

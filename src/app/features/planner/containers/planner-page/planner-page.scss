@@ -63,6 +63,106 @@
   font-size: 0.85rem;
 }
 
+/* ── Metrics strip ───────────────────────────────────────────────────────── */
+
+.metrics {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  flex-wrap: wrap;
+}
+
+.metrics__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex-shrink: 0;
+}
+
+.metrics__value {
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.metrics__label {
+  font-size: 0.62rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.metrics__projects {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.metrics__empty {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.metrics__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-soft);
+  color: var(--color-text-soft);
+  white-space: nowrap;
+}
+
+.metrics__chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--chip-color, var(--color-accent));
+  flex-shrink: 0;
+}
+
+/* Stub — no data behind these yet, deliberately styled as "not real" (no
+   dot, dashed, muted) so they read as a preview of a future section rather
+   than a broken metric. */
+.metrics__balance {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  padding-left: 1rem;
+  border-left: 1px dashed var(--color-border);
+}
+
+.metrics__balance-label {
+  font-size: 0.62rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.metrics__soon {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: var(--color-warning);
+  margin-left: 0.3rem;
+}
+
+.metrics__chip--stub {
+  border-style: dashed;
+  color: var(--color-text-muted);
+  background: transparent;
+}
+
 .density-toggle {
   display: flex;
   border: 1px solid var(--color-border);
@@ -110,6 +210,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+}
+
+.queue__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .queue__sub {

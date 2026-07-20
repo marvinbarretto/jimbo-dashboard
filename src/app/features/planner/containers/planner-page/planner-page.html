@@ -3,7 +3,7 @@
   <header class="planner__head">
     <div>
       <h1 class="planner__title">Week planner <span class="planner__badge">spike</span></h1>
-      <p class="planner__sub">Drag a block on, drag its edge to resize, click 🔒 to lock, click the title to open it. Nothing here is saved yet.</p>
+      <p class="planner__sub">Drag a block on or back off, drag its edge to resize, click 🔒 to lock, click the title to open it. Synced to the real Jimbo Suggestions calendar.</p>
     </div>
     <div class="planner__controls">
       <div class="density-toggle">
@@ -16,6 +16,36 @@
     </div>
   </header>
 
+  <section class="metrics">
+    <div class="metrics__stat">
+      <span class="metrics__value">{{ fmtDuration(busyMinutes()) }}</span>
+      <span class="metrics__label">busy this week</span>
+    </div>
+    <div class="metrics__stat">
+      <span class="metrics__value">{{ fmtDuration(freeMinutes()) }}</span>
+      <span class="metrics__label">free in work window</span>
+    </div>
+    <div class="metrics__stat">
+      <span class="metrics__value">{{ fmtDuration(downtimeMinutes()) }}</span>
+      <span class="metrics__label">downtime this week</span>
+    </div>
+    <div class="metrics__projects">
+      @for (p of projectAllocations(); track p.projectName) {
+        <span class="metrics__chip" [style.--chip-color]="p.projectColor">
+          <span class="metrics__chip-dot"></span>{{ p.projectName }} · {{ fmtDuration(p.minutes) }}
+        </span>
+      } @empty {
+        <span class="metrics__empty">No project time allocated yet</span>
+      }
+    </div>
+    <div class="metrics__balance">
+      <span class="metrics__balance-label">Life balance <span class="metrics__soon">soon</span></span>
+      <span class="metrics__chip metrics__chip--stub">friends</span>
+      <span class="metrics__chip metrics__chip--stub">exercise</span>
+      <span class="metrics__chip metrics__chip--stub">music</span>
+    </div>
+  </section>
+
   @if (hasError()) {
     <p class="planner__error">Could not load the Jimbo Suggestions calendar.</p>
   }
@@ -25,7 +55,10 @@
     <section class="queue">
       <div class="queue__head">
         <span>Block queue</span>
-        <app-ui-button size="sm" variant="primary" (pressed)="randomize()">Randomize</app-ui-button>
+        <span class="queue__actions">
+          <app-ui-button size="sm" variant="secondary" (pressed)="recalibrate()" title="Clear completed items, move missed slots forward — leaves everything else in place">Recalibrate</app-ui-button>
+          <app-ui-button size="sm" variant="primary" (pressed)="randomize()">Randomize</app-ui-button>
+        </span>
       </div>
       <div class="queue__sub">Your top 10 by priority, or tagged "this-week"</div>
       @if (lockedCount() > 0) {
