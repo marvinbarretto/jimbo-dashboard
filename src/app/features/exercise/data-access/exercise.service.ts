@@ -183,8 +183,10 @@ export class ExerciseService {
   }
 
   // Exercise catalogue for the set/cardio picker (fuzzy name search optional).
+  // limit must cover the whole catalogue — consumers treat the result as
+  // complete (region lookups, name dedupe); server caps at 500.
   listExercises(q?: string): Observable<ExerciseCatalogItem[]> {
-    const qs = q ? `?q=${encodeURIComponent(q)}&limit=100` : '?limit=100';
+    const qs = q ? `?q=${encodeURIComponent(q)}&limit=300` : '?limit=300';
     return this.http.get<ExerciseCatalogItem[]>(`${this.base}/api/gym/exercises${qs}`);
   }
 

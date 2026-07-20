@@ -124,7 +124,10 @@ export class ExercisePage {
   private readonly dailyRes = httpResource<{ days: GymDailyRow[] }>(
     () => `/api/gym/sessions/daily?from=${this.window().start}&to=${this.window().end}`,
   );
-  private readonly catalogRes = httpResource<ExerciseCatalogItem[]>(() => `/api/gym/exercises?limit=100`);
+  // Whole catalogue in one fetch — the picker, region lookups, and name-based
+  // get-or-create all assume nothing is truncated (~100 rows and growing;
+  // server caps at 500).
+  private readonly catalogRes = httpResource<ExerciseCatalogItem[]>(() => `/api/gym/exercises?limit=300`);
   // Trailing history for "last time" hints/prefill — independent of the viewed
   // window so a fresh day view still knows what you lifted last session.
   private readonly historyRes = httpResource<{ items: SessionDetailed[] }>(
