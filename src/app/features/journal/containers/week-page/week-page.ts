@@ -79,12 +79,6 @@ export class JournalWeekPage {
   protected readonly projectValues = computed(() =>
     (this.bundle()?.by_project ?? []).map(p => p.minutes),
   );
-  protected readonly taskTypeRows = computed(() => {
-    const map = this.bundle()?.by_task_type;
-    if (!map) return [];
-    return [...map.entries()].sort((a, b) => b[1] - a[1]);
-  });
-
   protected readonly dayLinks = computed(() => {
     const b = this.bundle();
     if (!b) return [];
@@ -93,7 +87,6 @@ export class JournalWeekPage {
       label: DAY_LABELS[i] ?? day,
       minutes: b.minutes_per_day[i] ?? 0,
       pomos: b.pomos_per_day[i] ?? 0,
-      activities: b.activities_per_day[i] ?? 0,
     }));
   });
 

@@ -87,7 +87,6 @@ export class JournalDayPage {
     const parts: string[] = [];
     if (t.pomos_completed) parts.push(pluralise(t.pomos_completed, 'pomo'));
     if (t.focus_minutes) parts.push(formatMinutes(t.focus_minutes) + ' focus');
-    if (t.activity_count) parts.push(pluralise(t.activity_count, 'activity', 'activities'));
     return parts.join(' · ') || 'Nothing logged yet';
   });
 
@@ -103,10 +102,7 @@ export class JournalDayPage {
     const b = this.bundle();
     if (!b) return false;
     const t = b.totals;
-    return Boolean(
-      t.pomos_completed || t.focus_minutes || t.activity_count ||
-      b.sessions.length || b.activities.length || b.events.length,
-    );
+    return Boolean(t.pomos_completed || t.focus_minutes || b.sessions.length || b.events.length);
   });
   protected readonly hasHealth = computed(() => this.healthSummary() != null);
   protected readonly hasCode = computed(() => this.commitsSummary() != null);
@@ -143,12 +139,6 @@ export class JournalDayPage {
   protected readonly projectValues = computed(() =>
     (this.bundle()?.by_project ?? []).map(p => p.minutes),
   );
-  protected readonly taskTypeRows = computed(() => {
-    const map = this.bundle()?.by_task_type;
-    if (!map) return [];
-    return [...map.entries()].sort((a, b) => b[1] - a[1]);
-  });
-
   protected readonly telemetryEvents = computed(() => this.bundle()?.telemetry ?? []);
 
   protected readonly phoneSummary = computed(() => {
@@ -285,17 +275,6 @@ export class JournalDayPage {
     const energyKcal = Math.round(sum('calories_total'));
     const floors = Math.round(sum('floors'));
 
-    // Heart rate — aggregate across all hourly summary events
-    const hrEvents = events.filter(e => e.type === 'heart_rate_summary');
-    const hrAvgs = hrEvents.map(e => e.payload?.['avg'] as number | undefined).filter((v): v is number => v != null);
-    const hrMaxes = hrEvents.map(e => e.payload?.['max'] as number | undefined).filter((v): v is number => v != null);
-    const hrMins = hrEvents.map(e => e.payload?.['min'] as number | undefined).filter((v): v is number => v != null);
-    const hr = hrAvgs.length ? {
-      avg: Math.round(hrAvgs.reduce((a, b) => a + b, 0) / hrAvgs.length),
-      max: Math.max(...hrMaxes),
-      min: Math.min(...hrMins),
-    } : null;
-
     // Exercise sessions — one event per session
     const exercises = events
       .filter(e => e.type === 'exercise_session')
@@ -306,16 +285,7 @@ export class JournalDayPage {
       }))
       .sort((a, b) => a.ts.localeCompare(b.ts));
 
-    // Sleep — sessions whose ts falls in the fetch window (overnight sleep may span midnight)
-    const sleepEvents = events.filter(e => e.type === 'sleep_session');
-    const sleepMin = Math.round(sleepEvents.reduce((s, e) => s + (e.value ?? 0), 0));
-    const sleepStages = sleepEvents.flatMap(e =>
-      (e.payload?.['stages'] as Array<{ stage_type: string; duration_min: number }> | undefined) ?? []
-    );
-    const deepMin = Math.round(sleepStages.filter(s => s.stage_type === 'deep').reduce((a, s) => a + s.duration_min, 0));
-    const remMin = Math.round(sleepStages.filter(s => s.stage_type === 'rem').reduce((a, s) => a + s.duration_min, 0));
-
-    return { steps, distanceKm, energyKcal, floors, hr, exercises, sleepMin, deepMin, remMin };
+    return { steps, distanceKm, energyKcal, floors, exercises };
   });
 
   protected readonly Math = Math;

@@ -4,34 +4,6 @@
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
-.journal-week__split {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: 1fr 1fr;
-
-  @media (max-width: 760px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.journal-week__list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.journal-week__row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.85rem;
-}
-
-.journal-week__row-label { color: var(--color-text-muted); }
-.journal-week__row-value { font-weight: 600; color: var(--color-text); }
-
 .journal-week__days {
   margin: 0;
   padding: 0;

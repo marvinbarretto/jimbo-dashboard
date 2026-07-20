@@ -47,8 +47,7 @@
 }
 
 .journal-day__sessions,
-.journal-day__events,
-.journal-day__activities {
+.journal-day__events {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -115,10 +114,9 @@
   color: var(--color-text-muted);
 }
 
-.journal-day__event,
-.journal-day__activity {
+.journal-day__event {
   display: grid;
-  grid-template-columns: 4.5rem 5.5rem 1fr auto;
+  grid-template-columns: 4.5rem 1fr auto;
   gap: 0.6rem;
   align-items: baseline;
   padding: 0.4rem 0;
@@ -131,28 +129,17 @@
   }
 }
 
-.journal-day__event {
-  grid-template-columns: 4.5rem 1fr auto;
-}
-
-.journal-day__event-time,
-.journal-day__activity-time {
+.journal-day__event-time {
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
   font-size: 0.78rem;
 }
 
-.journal-day__event-cal,
-.journal-day__activity-type {
+.journal-day__event-cal {
   color: var(--color-text-muted);
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-
-.journal-day__activity-outcome {
-  color: var(--color-text-soft);
-  font-size: 0.78rem;
 }
 
 .journal-day__phone-group {

@@ -1,11 +1,16 @@
 // Day/week/month bundles for the journal feature.
 //
 // Each bundle is loaded by hitting the same Jimbo endpoints `today-page` uses
-// (focus-sessions, activity, calendar) and bucketing on the client. Bucketing
+// (focus-sessions, calendar, telemetry) and bucketing on the client. Bucketing
 // is local-time so the day a session "belongs to" matches the user's calendar.
 // As Jimbo grows new endpoints (mood, exercise, music, …) they slot in here
 // without changing the page contracts — pages already render whatever the
 // bundle signal exposes.
+//
+// Deliberately NOT fetched (verified dead against prod, Jul 2026): the
+// activities table (legacy Jimbo agent log, nothing written since the
+// April orchestration sunset) and health_connect sleep_session /
+// heart_rate_summary (no device records sleep — zero rows ever).
 
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
@@ -34,15 +39,6 @@ export interface FocusSessionLite {
   readonly status: 'running' | 'completed' | 'abandoned';
   readonly notes: string | null;
   readonly tags: readonly string[];
-}
-
-export interface ActivityLite {
-  readonly id: string;
-  readonly timestamp: string;
-  readonly task_type: string;
-  readonly description: string;
-  readonly outcome: string | null;
-  readonly satisfaction: number | null;
 }
 
 export interface CalendarEventLite {
@@ -74,19 +70,16 @@ export interface TelemetryEventLite {
 export interface DayBundle {
   readonly date: DayKey;
   readonly sessions: readonly FocusSessionLite[];
-  readonly activities: readonly ActivityLite[];
   readonly events: readonly CalendarEventLite[];
   readonly telemetry: readonly TelemetryEventLite[];
   readonly totals: {
     readonly pomos_completed: number;
     readonly pomos_abandoned: number;
     readonly focus_minutes: number;
-    readonly activity_count: number;
     readonly events_count: number;
   };
   readonly hourly_minutes: readonly number[]; // length 24
   readonly by_project: readonly ProjectMinutes[];
-  readonly by_task_type: ReadonlyMap<string, number>;
 }
 
 export interface WeekBundle {
@@ -95,13 +88,10 @@ export interface WeekBundle {
   readonly totals: {
     readonly pomos_completed: number;
     readonly focus_minutes: number;
-    readonly activity_count: number;
   };
   readonly minutes_per_day: readonly number[];
   readonly pomos_per_day: readonly number[];
-  readonly activities_per_day: readonly number[];
   readonly by_project: readonly ProjectMinutes[];
-  readonly by_task_type: ReadonlyMap<string, number>;
 }
 
 export interface MonthBundle {
@@ -110,7 +100,6 @@ export interface MonthBundle {
   readonly totals: {
     readonly pomos_completed: number;
     readonly focus_minutes: number;
-    readonly activity_count: number;
     readonly active_days: number;
   };
   readonly minutes_per_day: readonly number[];
@@ -128,15 +117,6 @@ interface ApiFocusSession {
   status: string;
   notes: string | null;
   tags: string[] | null;
-}
-
-interface ApiActivity {
-  id: string;
-  timestamp: string;
-  task_type: string;
-  description: string;
-  outcome: string | null;
-  satisfaction: number | null;
 }
 
 interface ApiCalendarEvent {
@@ -178,13 +158,12 @@ export class JournalDataService {
     this.error.set(null);
     try {
       const daysBack = daysBackFromAnchor(dateFromDayKey(key), 1);
-      const [sessions, activities, events, telemetry] = await Promise.all([
+      const [sessions, events, telemetry] = await Promise.all([
         this.fetchSessions({ daysBack }),
-        this.fetchActivitiesForDate(key),
         this.fetchEvents({ days: daysBack }),
         this.fetchTelemetryForDate(key),
       ]);
-      this.day.set(buildDayBundle(key, sessions, activities, events, telemetry));
+      this.day.set(buildDayBundle(key, sessions, events, telemetry));
     } catch (e) {
       this.error.set(messageOf(e));
     } finally {
@@ -198,11 +177,8 @@ export class JournalDataService {
     try {
       const monday = weekStartFromKey(key);
       const daysBack = daysBackFromAnchor(monday, 7);
-      const [sessions, activities] = await Promise.all([
-        this.fetchSessions({ daysBack }),
-        this.fetchActivities({ days: daysBack }),
-      ]);
-      this.week.set(buildWeekBundle(key, sessions, activities));
+      const sessions = await this.fetchSessions({ daysBack });
+      this.week.set(buildWeekBundle(key, sessions));
     } catch (e) {
       this.error.set(messageOf(e));
     } finally {
@@ -217,11 +193,8 @@ export class JournalDataService {
       const { start, end } = monthRange(key);
       const daysSpan = end.getDate();
       const daysBack = daysBackFromAnchor(start, daysSpan);
-      const [sessions, activities] = await Promise.all([
-        this.fetchSessions({ daysBack }),
-        this.fetchActivities({ days: daysBack }),
-      ]);
-      this.month.set(buildMonthBundle(key, sessions, activities));
+      const sessions = await this.fetchSessions({ daysBack });
+      this.month.set(buildMonthBundle(key, sessions));
     } catch (e) {
       this.error.set(messageOf(e));
     } finally {
@@ -237,30 +210,6 @@ export class JournalDataService {
         ),
       );
       return (res.items ?? []).map(toSessionLite);
-    } catch {
-      return [];
-    }
-  }
-
-  private async fetchActivitiesForDate(date: DayKey): Promise<ActivityLite[]> {
-    try {
-      const res = await firstValueFrom(
-        this.http.get<{ entries: ApiActivity[] }>(`${this.base}/api/activity?date=${date}`),
-      );
-      return (res.entries ?? []).map(toActivityLite);
-    } catch {
-      return [];
-    }
-  }
-
-  private async fetchActivities(opts: { days: number }): Promise<ActivityLite[]> {
-    try {
-      const res = await firstValueFrom(
-        this.http.get<{ entries: ApiActivity[] }>(
-          `${this.base}/api/activity?days=${Math.max(1, opts.days)}`,
-        ),
-      );
-      return (res.entries ?? []).map(toActivityLite);
     } catch {
       return [];
     }
@@ -294,11 +243,7 @@ export class JournalDataService {
       // falling outside the main window. Fetch it separately from the prior day.
       const prevSince = dateFromDayKey(shiftDay(date, -1)).toISOString();
 
-      // Sleep sessions start the night before (e.g. 23:00 local), so their ts
-      // falls before local midnight. Fetch health_connect from the prior evening.
-      const eveningSince = dateFromDayKey(shiftDay(date, -1)).toISOString();
-
-      const [dayRes, usageRes, sleepRes, githubRes, youtubeRes] = await Promise.all([
+      const [dayRes, usageRes, githubRes, youtubeRes] = await Promise.all([
         firstValueFrom(
           this.http.get<{ events: ApiTelemetryEvent[] }>(
             `${this.base}/api/telemetry/events?since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}&limit=500`,
@@ -307,11 +252,6 @@ export class JournalDataService {
         firstValueFrom(
           this.http.get<{ events: ApiTelemetryEvent[] }>(
             `${this.base}/api/telemetry/events?collector=usage&type=app_usage_daily&since=${encodeURIComponent(prevSince)}&until=${encodeURIComponent(since)}&limit=5`,
-          ),
-        ),
-        firstValueFrom(
-          this.http.get<{ events: ApiTelemetryEvent[] }>(
-            `${this.base}/api/telemetry/events?collector=health_connect&type=sleep_session&since=${encodeURIComponent(eveningSince)}&until=${encodeURIComponent(since)}&limit=10`,
           ),
         ),
         // Pulled separately because high-volume collectors (notifications,
@@ -335,7 +275,6 @@ export class JournalDataService {
       const dayEvents = (dayRes.events ?? []).map(toTelemetryEventLite);
       const extraEvents = [
         ...(usageRes.events ?? []).map(toTelemetryEventLite),
-        ...(sleepRes.events ?? []).map(toTelemetryEventLite),
         ...(githubRes.events ?? []).map(toTelemetryEventLite),
         ...(youtubeRes.events ?? []).map(toTelemetryEventLite),
       ];
@@ -359,17 +298,6 @@ function toSessionLite(s: ApiFocusSession): FocusSessionLite {
     status,
     notes: s.notes,
     tags: s.tags ?? [],
-  };
-}
-
-function toActivityLite(a: ApiActivity): ActivityLite {
-  return {
-    id: a.id,
-    timestamp: a.timestamp,
-    task_type: a.task_type,
-    description: a.description,
-    outcome: a.outcome,
-    satisfaction: a.satisfaction,
   };
 }
 
@@ -403,7 +331,6 @@ function toEventLite(e: ApiCalendarEvent): CalendarEventLite {
 function buildDayBundle(
   key: DayKey,
   sessions: readonly FocusSessionLite[],
-  activities: readonly ActivityLite[],
   events: readonly CalendarEventLite[],
   telemetry: readonly TelemetryEventLite[],
 ): DayBundle {
@@ -424,40 +351,30 @@ function buildDayBundle(
     hourly[startHour] = (hourly[startHour] ?? 0) + seconds / 60;
   }
 
-  const byTask = new Map<string, number>();
-  for (const a of activities) {
-    byTask.set(a.task_type, (byTask.get(a.task_type) ?? 0) + 1);
-  }
-
   return {
     date: key,
     sessions: daySessions,
-    activities,
     events: dayEvents,
     telemetry,
     totals: {
       pomos_completed: pomosCompleted,
       pomos_abandoned: pomosAbandoned,
       focus_minutes: Math.round(focusSeconds / 60),
-      activity_count: activities.length,
       events_count: dayEvents.length,
     },
     hourly_minutes: hourly.map(m => Math.round(m)),
     by_project: aggregateByProject(daySessions),
-    by_task_type: byTask,
   };
 }
 
 function buildWeekBundle(
   key: WeekKey,
   sessions: readonly FocusSessionLite[],
-  activities: readonly ActivityLite[],
 ): WeekBundle {
   const days = daysInWeek(key);
   const dayIndex = new Map(days.map((d, i) => [d, i] as const));
   const minutesPerDay = new Array<number>(7).fill(0);
   const pomosPerDay = new Array<number>(7).fill(0);
-  const activitiesPerDay = new Array<number>(7).fill(0);
   const inWeekSessions: FocusSessionLite[] = [];
 
   for (const s of sessions) {
@@ -470,38 +387,22 @@ function buildWeekBundle(
     if (s.status === 'completed') pomosPerDay[idx] += 1;
   }
 
-  let activityCount = 0;
-  const byTask = new Map<string, number>();
-  for (const a of activities) {
-    const day = dayKeyOf(a.timestamp);
-    if (!day) continue;
-    const idx = dayIndex.get(day);
-    if (idx === undefined) continue;
-    activitiesPerDay[idx] += 1;
-    activityCount += 1;
-    byTask.set(a.task_type, (byTask.get(a.task_type) ?? 0) + 1);
-  }
-
   return {
     week: key,
     days,
     totals: {
       pomos_completed: pomosPerDay.reduce((a, b) => a + b, 0),
       focus_minutes: Math.round(minutesPerDay.reduce((a, b) => a + b, 0)),
-      activity_count: activityCount,
     },
     minutes_per_day: minutesPerDay.map(m => Math.round(m)),
     pomos_per_day: pomosPerDay,
-    activities_per_day: activitiesPerDay,
     by_project: aggregateByProject(inWeekSessions),
-    by_task_type: byTask,
   };
 }
 
 function buildMonthBundle(
   key: MonthKey,
   sessions: readonly FocusSessionLite[],
-  activities: readonly ActivityLite[],
 ): MonthBundle {
   const days = daysInMonth(key);
   const dayIndex = new Map(days.map((d, i) => [d, i] as const));
@@ -521,22 +422,12 @@ function buildMonthBundle(
     if ((s.actual_seconds ?? 0) > 0 || s.status === 'completed') activeDays.add(day);
   }
 
-  let activityCount = 0;
-  for (const a of activities) {
-    const day = dayKeyOf(a.timestamp);
-    if (!day) continue;
-    if (!dayIndex.has(day)) continue;
-    activityCount += 1;
-    activeDays.add(day);
-  }
-
   return {
     month: key,
     days,
     totals: {
       pomos_completed: pomosPerDay.reduce((a, b) => a + b, 0),
       focus_minutes: Math.round(minutesPerDay.reduce((a, b) => a + b, 0)),
-      activity_count: activityCount,
       active_days: activeDays.size,
     },
     minutes_per_day: minutesPerDay.map(m => Math.round(m)),
