@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.114](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.113...v0.0.114) (2026-07-20)
+
+
+### Features
+
+* **journal:** day page loads from the /api/journal/day bundle ([dc469d9](https://github.com/marvinbarretto/jimbo-dashboard/commit/dc469d9fbf96efdce35adfbb685bf38b1a48b90a))
+
 ### [0.0.113](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.112...v0.0.113) (2026-07-20)
 
 
