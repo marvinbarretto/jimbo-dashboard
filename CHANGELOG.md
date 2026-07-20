@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.113](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.112...v0.0.113) (2026-07-20)
+
+
+### Bug Fixes
+
+* **exercise:** get-or-create by name for ref-less set/cardio drafts ([4ca3bd8](https://github.com/marvinbarretto/jimbo-dashboard/commit/4ca3bd86c925efc02f144d19ae5fd00eee972ac4))
+* **journal:** correct data windows, races, and desk-time attribution ([43ba830](https://github.com/marvinbarretto/jimbo-dashboard/commit/43ba830a3d9fec6398e04f3eb658a8faacfc43c9))
+
 ### [0.0.112](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.111...v0.0.112) (2026-07-20)
 
 
