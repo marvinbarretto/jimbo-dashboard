@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.112](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.111...v0.0.112) (2026-07-20)
+
+
+### Features
+
+* **exercise:** capture effort (RPE + pre-energy) and show last-time progression hints ([c550447](https://github.com/marvinbarretto/jimbo-dashboard/commit/c550447f6cdb3a3f1d6ca631d4606154c73acda8))
+
 ### [0.0.111](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.110...v0.0.111) (2026-07-20)
 
 
