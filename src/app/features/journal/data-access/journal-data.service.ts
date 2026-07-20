@@ -61,6 +61,8 @@ export interface TelemetryEventLite {
   readonly collector: string;
   readonly type: string;
   readonly ts: string;
+  /** Interval end for windowed collectors (screen_session, HC aggregates). */
+  readonly ts_end?: string | null;
   readonly value: number | null;
   readonly unit: string | null;
   readonly source: string | null;
@@ -134,6 +136,7 @@ interface ApiTelemetryEvent {
   collector: string;
   type: string;
   ts: string;
+  ts_end: string | null;
   value: number | null;
   unit: string | null;
   source: string | null;
@@ -307,6 +310,7 @@ function toTelemetryEventLite(e: ApiTelemetryEvent): TelemetryEventLite {
     collector: e.collector,
     type: e.type,
     ts: e.ts,
+    ts_end: e.ts_end ?? null,
     value: e.value,
     unit: e.unit,
     source: e.source ?? null,

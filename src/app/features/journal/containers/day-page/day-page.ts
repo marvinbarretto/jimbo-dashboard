@@ -13,6 +13,7 @@ import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { absoluteTime, formatMinutes, pluralise } from '@shared/utils/datetime.utils';
+import { dedupeWindowedSum } from '../../utils/windowed-telemetry';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { JournalDataService } from '../../data-access/journal-data.service';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
@@ -147,10 +148,14 @@ export class JournalDayPage {
   protected readonly phoneSummary = computed(() => {
     const events = this.telemetryEvents();
 
-    // Screen & usage — UsageCollector emits hourly screen_session events
+    // Screen & usage — UsageCollector emits every ~30min, each event covering
+    // a rolling 2-hour window. Raw sums over-count ~4×; dedupe to a
+    // non-overlapping cover instead.
     const screenSessions = events.filter(e => e.collector === 'usage' && e.type === 'screen_session');
-    const screenOnMinutes = Math.round(screenSessions.reduce((s, e) => s + (e.value ?? 0), 0) / 60);
-    const unlocks = screenSessions.reduce((s, e) => s + ((e.payload?.['unlock_count'] as number) ?? 0), 0);
+    const screenOnMinutes = Math.round(dedupeWindowedSum(screenSessions, e => e.value ?? 0) / 60);
+    const unlocks = Math.round(
+      dedupeWindowedSum(screenSessions, e => (e.payload?.['unlock_count'] as number) ?? 0),
+    );
     const firstUnlockAt = screenSessions
       .flatMap(e => { const t = e.payload?.['first_unlock_ts'] as string | undefined; return t ? [t] : []; })
       .sort()[0] ?? null;
@@ -269,7 +274,11 @@ export class JournalDayPage {
     const events = this.telemetryEvents().filter(e => e.collector === 'health_connect');
     if (!events.length) return null;
 
-    const sum = (type: string) => events.filter(e => e.type === type).reduce((s, e) => s + (e.value ?? 0), 0);
+    // HC aggregates share the phone's rolling-2h-window emission pattern
+    // (source: health_connect_aggregate) — same dedupe as screen_session,
+    // or a 7k-step day reads as 26k.
+    const sum = (type: string) =>
+      dedupeWindowedSum(events.filter(e => e.type === type), e => e.value ?? 0);
 
     const steps = Math.round(sum('steps'));
     const distanceKm = sum('distance') / 1000;
