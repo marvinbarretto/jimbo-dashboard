@@ -31,6 +31,7 @@ export const primaryNavItems: readonly NavLink[] = [
   { href: '/hermes',                label: 'Hermes',         accent: '#fb923c' },
   { href: '/stream',                label: 'Stream',         accent: '#5eead4' },
   { href: '/ui-lab',                label: 'UI Lab',         accent: '#a78bfa' },
+  { href: '/planner',               label: 'Planner',        accent: '#f97316' },
 ];
 
 export const navGroups: readonly NavGroup[] = [

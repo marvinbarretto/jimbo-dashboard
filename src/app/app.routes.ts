@@ -189,6 +189,7 @@ export const routes: Routes = [
       { path: 'commission-card',         loadComponent: () => import('./features/ui-lab/sections/commission-card-section').then(m => m.CommissionCardSection) },
       { path: 'dispatch-history-list',   loadComponent: () => import('./features/ui-lab/sections/dispatch-history-list-section').then(m => m.DispatchHistoryListSection) },
       { path: 'vault-card',              loadComponent: () => import('./features/ui-lab/sections/vault-card-section').then(m => m.VaultCardSection) },
+      { path: 'block-card',              loadComponent: () => import('./features/ui-lab/sections/block-card-section').then(m => m.BlockCardSection) },
       { path: 'vault-card-kanban',      loadComponent: () => import('./features/ui-lab/sections/vault-card-kanban-section').then(m => m.VaultCardKanbanSection) },
       { path: 'nutrition-row',           loadComponent: () => import('./features/ui-lab/sections/nutrition-row-section').then(m => m.NutritionRowSection) },
       { path: 'tracker',                 loadComponent: () => import('./features/ui-lab/sections/tracker-section').then(m => m.TrackerSection) },
@@ -198,6 +199,11 @@ export const routes: Routes = [
     path: 'calendar-settings',
     title: 'Calendar settings',
     loadComponent: () => import('./features/calendar-settings/calendar-settings-page').then(m => m.CalendarSettingsPage),
+  },
+  {
+    path: 'planner',
+    title: 'Planner',
+    loadComponent: () => import('./features/planner/containers/planner-page/planner-page').then(m => m.PlannerPage),
   },
   {
     path: 'notification-settings',

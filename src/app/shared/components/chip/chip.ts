@@ -11,6 +11,8 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
     <button
       type="button"
       [class]="cls()"
+      [style.border-color]="color()"
+      [style.color]="color()"
       [disabled]="disabled()"
       (click)="onClick()"
     >
@@ -65,6 +67,10 @@ export class Chip {
   readonly disabled = input<boolean>(false);
   readonly count    = input<number | null | undefined>(undefined);
   readonly tone     = input<string | null>(null);
+  // Arbitrary colour (e.g. a project's color_token) for callers whose tint
+  // isn't one of a small fixed set — `tone` stays the class-based mechanism
+  // for known palettes, `color` is the escape hatch for per-record colours.
+  readonly color    = input<string | null>(null);
 
   readonly toggle = output<void>();
 

@@ -1,0 +1,80 @@
+<section class="planner">
+
+  <header class="planner__head">
+    <div>
+      <h1 class="planner__title">Week planner <span class="planner__badge">spike</span></h1>
+      <p class="planner__sub">Drag a block on, drag its edge to resize, click 🔒 to lock, click the title to open it. Nothing here is saved yet.</p>
+    </div>
+    <div class="planner__controls">
+      <div class="density-toggle">
+        <button type="button" [class.active]="density() === 'comfortable'" (click)="setDensity('comfortable')">Comfortable</button>
+        <button type="button" [class.active]="density() === 'compact'" (click)="setDensity('compact')">Compact</button>
+      </div>
+      <div class="planner__stats">
+        {{ queue().length }} queued · {{ queuedMinutes() }}m left
+      </div>
+    </div>
+  </header>
+
+  @if (hasError()) {
+    <p class="planner__error">Could not load the Jimbo Suggestions calendar.</p>
+  }
+
+  <div class="planner__board">
+
+    <section class="queue">
+      <div class="queue__head">
+        <span>Block queue</span>
+        <app-ui-button size="sm" variant="primary" (pressed)="randomize()">Randomize</app-ui-button>
+      </div>
+      <div class="queue__sub">Your top 10 by priority, or tagged "this-week"</div>
+      @if (lockedCount() > 0) {
+        <div class="queue__locked-note">{{ lockedCount() }} locked — kept in place</div>
+      }
+      <div class="queue__list" #queueList>
+        @for (b of queue(); track b.id) {
+          <app-block-card
+            variant="queue"
+            [attr.data-block-id]="b.id"
+            [seq]="b.seq"
+            [title]="b.title"
+            [projectName]="b.projectName"
+            [projectColor]="b.projectColor"
+            [priority]="b.priority"
+            [size]="b.size" />
+        } @empty {
+          <div class="empty">Queue clear.</div>
+        }
+      </div>
+    </section>
+
+    <section class="calendar">
+      @if (isLoading()) {
+        <div class="calendar__loading">loading Jimbo Suggestions…</div>
+      }
+      <full-calendar [options]="calendarOptions()">
+        <ng-template #eventContent let-arg>
+          @if (arg.event.extendedProps.blockId) {
+            <app-block-card
+              variant="calendar"
+              [seq]="arg.event.extendedProps.seq"
+              [title]="arg.event.title"
+              [projectName]="arg.event.extendedProps.projectName"
+              [projectColor]="arg.event.extendedProps.projectColor"
+              [priority]="arg.event.extendedProps.priority"
+              [size]="arg.event.extendedProps.size"
+              [locked]="arg.event.extendedProps.locked"
+              [timeText]="arg.timeText"
+              (lockToggle)="toggleLock(arg.event.extendedProps.blockId)" />
+          } @else {
+            <div class="suggestion-content">
+              <div class="suggestion-content__time">{{ arg.timeText }}</div>
+              <div class="suggestion-content__title">{{ arg.event.title }}</div>
+            </div>
+          }
+        </ng-template>
+      </full-calendar>
+    </section>
+
+  </div>
+</section>
