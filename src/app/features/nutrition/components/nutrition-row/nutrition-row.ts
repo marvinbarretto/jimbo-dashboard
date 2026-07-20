@@ -54,6 +54,7 @@ type MacroField = 'est_kcal' | 'est_protein_g' | 'est_carbs_g' | 'est_fat_g';
               @if (editable()) {
                 <app-ui-inline-edit
                   kind="number"
+                  size="lg"
                   [min]="0"
                   [step]="1"
                   [value]="(entry()[m.field] ?? 0).toString()"
@@ -86,8 +87,8 @@ type MacroField = 'est_kcal' | 'est_protein_g' | 'est_carbs_g' | 'est_fat_g';
     .nutrition-row {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      font-size: 0.82rem;
+      gap: 0.7rem;
+      font-size: 0.86rem;
     }
 
     .nutrition-row__time {
@@ -107,7 +108,7 @@ type MacroField = 'est_kcal' | 'est_protein_g' | 'est_carbs_g' | 'est_fat_g';
       flex: 0 0 auto;
       display: flex;
       align-items: center;
-      gap: 0.55rem;
+      gap: 0.65rem;
       color: var(--color-text-muted);
       font-variant-numeric: tabular-nums;
     }
@@ -115,7 +116,7 @@ type MacroField = 'est_kcal' | 'est_protein_g' | 'est_carbs_g' | 'est_fat_g';
     .nutrition-row__macro {
       display: inline-flex;
       align-items: baseline;
-      gap: 0.15rem;
+      gap: 0.2rem;
     }
 
     /* Calories lead, macros read as a quieter trailing group. */
@@ -132,7 +133,7 @@ type MacroField = 'est_kcal' | 'est_protein_g' | 'est_carbs_g' | 'est_fat_g';
     /* Give inline number fields a sensible width inside the dense row. */
     .nutrition-row__macro app-ui-inline-edit {
       flex: 0 0 auto;
-      width: 3.2rem;
+      width: 4rem;
     }
 
     .nutrition-row__pending {

@@ -82,9 +82,9 @@ const norm = (s: string): string => s.trim().toLowerCase();
     .quick-add {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 0.82rem;
-      padding: 0.15rem 0;
+      gap: 0.55rem;
+      font-size: 0.86rem;
+      padding: 0.2rem 0;
     }
 
     .quick-add__label {
@@ -100,14 +100,14 @@ const norm = (s: string): string => s.trim().toLowerCase();
     }
 
     .quick-add__num {
-      width: 3.6rem;
+      width: 4.4rem;
       font: inherit;
       font-variant-numeric: tabular-nums;
       color: var(--color-text);
       background: var(--color-surface-soft, transparent);
       border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
       border-radius: var(--radius);
-      padding: 0.28rem 0.35rem;
+      padding: 0.4rem 0.5rem;
 
       &::placeholder { color: var(--color-text-muted); opacity: 0.6; }
       &:focus { outline: none; border-color: var(--color-accent); }

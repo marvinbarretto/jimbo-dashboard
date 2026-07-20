@@ -120,22 +120,22 @@ const CARDIO_PRESETS: readonly CardioPreset[] = [
                   <span class="setrow__name">{{ s.exercise_name ?? s.exercise_id }}</span>
                   <span class="setrow__note" aria-label="sets by reps by weight">
                     @if (editable()) {
-                      <app-ui-inline-edit kind="number" [min]="1" [value]="(s.sets ?? 1).toString()" ariaLabel="sets" (saved)="saveSet(s, 'sets', $event)" />
+                      <app-ui-inline-edit kind="number" size="lg" [min]="1" [value]="(s.sets ?? 1).toString()" ariaLabel="sets" (saved)="saveSet(s, 'sets', $event)" />
                     } @else { {{ s.sets ?? 1 }} }
                     <span class="setrow__x">×</span>
                     @if (editable()) {
-                      <app-ui-inline-edit kind="number" [min]="0" [value]="(s.reps ?? 0).toString()" ariaLabel="reps" (saved)="saveSet(s, 'reps', $event)" />
+                      <app-ui-inline-edit kind="number" size="lg" [min]="0" [value]="(s.reps ?? 0).toString()" ariaLabel="reps" (saved)="saveSet(s, 'reps', $event)" />
                     } @else { {{ s.reps ?? 0 }} }
                     <span class="setrow__x">×</span>
                     @if (editable()) {
-                      <app-ui-inline-edit kind="number" [min]="0" [step]="0.5" [value]="(s.weight_kg ?? 0).toString()" ariaLabel="weight in kg" (saved)="saveSet(s, 'weight_kg', $event)" />
+                      <app-ui-inline-edit kind="number" size="lg" [min]="0" [step]="0.5" [value]="(s.weight_kg ?? 0).toString()" ariaLabel="weight in kg" (saved)="saveSet(s, 'weight_kg', $event)" />
                     } @else { {{ s.weight_kg ?? 0 }} }
                     <span class="setrow__unit">kg</span>
                   </span>
                   @if (editable()) {
                     <span class="setrow__rpe" title="RPE — Rate of Perceived Exertion (1–10): how hard it felt. 7 = 3 reps left in the tank, 8 = 2 left, 10 = nothing left. Aim for 7–8.">
                       RPE
-                      <app-ui-inline-edit kind="number" [min]="1" [max]="10" [value]="s.rpe === null ? '' : s.rpe.toString()" placeholder="–" ariaLabel="RPE (1-10)" (saved)="saveSet(s, 'rpe', $event)" />
+                      <app-ui-inline-edit kind="number" size="lg" [min]="1" [max]="10" [value]="s.rpe === null ? '' : s.rpe.toString()" placeholder="–" ariaLabel="RPE (1-10)" (saved)="saveSet(s, 'rpe', $event)" />
                     </span>
                   } @else if (s.rpe !== null) {
                     <span class="setrow__rpe" title="RPE — Rate of Perceived Exertion (1–10): how hard the set felt (10 = no reps left)">RPE {{ s.rpe }}</span>
@@ -237,32 +237,32 @@ const CARDIO_PRESETS: readonly CardioPreset[] = [
     .setrow {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      font-size: 0.82rem;
+      gap: 0.7rem;
+      font-size: 0.86rem;
     }
     .setrow__name { flex: 1 1 auto; min-width: 0; }
     .setrow__note {
       flex: 0 0 auto;
       display: inline-flex;
       align-items: baseline;
-      gap: 0.2rem;
+      gap: 0.25rem;
       color: var(--color-text);
       font-variant-numeric: tabular-nums;
     }
-    .setrow__note app-ui-inline-edit { flex: 0 0 auto; width: 2.4rem; }
+    .setrow__note app-ui-inline-edit { flex: 0 0 auto; width: 3.4rem; }
     .setrow__x { color: var(--color-text-muted); opacity: 0.7; }
     .setrow__unit { font-size: 0.72rem; color: var(--color-text-muted); }
     .setrow__rpe {
       flex: 0 0 auto;
       display: inline-flex;
       align-items: baseline;
-      gap: 0.2rem;
-      font-size: 0.68rem;
+      gap: 0.25rem;
+      font-size: 0.7rem;
       letter-spacing: 0.02em;
       color: var(--color-text-muted);
       cursor: help;
     }
-    .setrow__rpe app-ui-inline-edit { flex: 0 0 auto; width: 1.6rem; font-size: 0.82rem; }
+    .setrow__rpe app-ui-inline-edit { flex: 0 0 auto; width: 2.6rem; }
 
     .session__energy {
       display: flex;

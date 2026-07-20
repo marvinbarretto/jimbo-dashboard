@@ -166,9 +166,11 @@ export interface UiInlineEditOption {
       }
 
       &--lg {
-        font-size: 1.02rem;
+        font-size: 1.05rem;
         font-weight: 650;
         letter-spacing: -0.01em;
+        padding: 0.3rem 0.5rem;
+        margin: -0.3rem -0.5rem;
       }
     }
 
@@ -180,9 +182,11 @@ export interface UiInlineEditOption {
       &:focus { outline: none; }
 
       &--lg {
-        font-size: 1.02rem;
+        font-size: 1.05rem;
         font-weight: 650;
         letter-spacing: -0.01em;
+        padding: 0.3rem 0.5rem;
+        margin: -0.3rem -0.5rem;
       }
 
       &--textarea {

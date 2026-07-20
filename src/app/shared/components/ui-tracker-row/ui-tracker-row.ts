@@ -73,6 +73,7 @@ import {
               @if (editable() && rowEditable() && (m.editable ?? true)) {
                 <app-ui-inline-edit
                   kind="number"
+                  size="lg"
                   [min]="0"
                   [step]="m.kind === 'number' ? 0.1 : 1"
                   [value]="valueText(m)"
@@ -107,8 +108,8 @@ import {
     .tracker-row {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      font-size: 0.82rem;
+      gap: 0.7rem;
+      font-size: 0.86rem;
     }
 
     .tracker-row__time {
@@ -164,7 +165,7 @@ import {
 
     .tracker-row__measure app-ui-inline-edit {
       flex: 0 0 auto;
-      width: 3.2rem;
+      width: 4rem;
     }
 
     .tracker-row__pending {
