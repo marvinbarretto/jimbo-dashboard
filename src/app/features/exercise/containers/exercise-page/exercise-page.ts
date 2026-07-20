@@ -323,14 +323,23 @@ export class ExercisePage {
     req.subscribe({ next: () => this.reload(), error: () => this.toast.error('Could not delete') });
   }
 
+  // Ref-less drafts (presets, free text) must still reuse an existing catalogue
+  // row when the name matches — blind creates were minting duplicate exercises
+  // on every cardio-preset tap.
+  private resolveExerciseId(name: string): string | undefined {
+    const n = name.trim().toLowerCase();
+    return this.exerciseOptions().find((o) => o.label.trim().toLowerCase() === n)?.id;
+  }
+
   protected onAddSet(e: { sessionId: string; draft: TrackerDraft }): void {
-    // A draft with a ref picked an existing exercise; a ref-less draft is a new
-    // free-text exercise — create it first, then add the set against its id.
-    if (e.draft.ref) {
-      this.addSet(e.sessionId, e.draft.ref, e.draft);
+    // A draft with a ref picked an existing exercise; a ref-less draft gets
+    // get-or-create semantics — match by name first, create only when new.
+    const name = e.draft.label.trim();
+    const existing = e.draft.ref ?? this.resolveExerciseId(name);
+    if (existing) {
+      this.addSet(e.sessionId, existing, e.draft);
       return;
     }
-    const name = e.draft.label.trim();
     if (!name) return;
     this.service.createExercise(name).subscribe({
       next: (ex) => this.addSet(e.sessionId, ex.id, e.draft),
@@ -358,13 +367,15 @@ export class ExercisePage {
   }
 
   protected onAddCardio(e: { sessionId: string; draft: TrackerDraft }): void {
-    // Same get-or-create flow as sets — a free-text activity ("parkrun",
-    // "5-a-side") becomes a cardio-typed catalogue exercise on first use.
-    if (e.draft.ref) {
-      this.addCardio(e.sessionId, e.draft.ref, e.draft);
+    // Same get-or-create flow as sets. This is the path cardio presets take
+    // (they emit no ref), so the name match here is what stops each
+    // "5-a-side football" tap creating a fresh catalogue row.
+    const name = e.draft.label.trim();
+    const existing = e.draft.ref ?? this.resolveExerciseId(name);
+    if (existing) {
+      this.addCardio(e.sessionId, existing, e.draft);
       return;
     }
-    const name = e.draft.label.trim();
     if (!name) return;
     this.service.createExercise(name).subscribe({
       next: (ex) => this.addCardio(e.sessionId, ex.id, e.draft),
