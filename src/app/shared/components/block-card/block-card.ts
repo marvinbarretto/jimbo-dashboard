@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import type { Priority } from '@domain/vault/vault-item';
+import type { ActorId } from '@domain/ids';
 import { KanbanCardLinkDirective } from '@shared/kanban/card-link.directive';
-import { Chip } from '@shared/components/chip/chip';
-import { PriorityBadge } from '@shared/components/priority-badge/priority-badge';
+import { ItemHeader, type ItemHeaderSecondary } from '@shared/components/item-header/item-header';
 
 export type BlockCardVariant = 'queue' | 'calendar';
 
@@ -11,71 +11,67 @@ export type BlockCardVariant = 'queue' | 'calendar';
 // event (has a time, may be locked) — same visual identity either way, so
 // an item reads as the same object whichever list it's currently in.
 //
-// Interaction is split: drag/resize (queue → calendar, resize-on-calendar)
-// stay owned by the consumer, exactly like every other kanban card in this
-// app. Opening the vault item, though, is baked in here via the same
-// KanbanCardLinkDirective + ?detail=<seq> mechanism VaultCard's title uses —
-// consistent behaviour wherever a vault item's title appears, not a second
-// bespoke click handler. Lock only toggles from its own icon (stopPropagation),
-// so it doesn't fight the title's click-to-open.
+// The identity strip (project/priority/owner/time-or-epic/lock) is the
+// shared app-item-header, also used by app-vault-card — see that component
+// for why. Interaction beyond lock (drag, resize) stays owned by the
+// consumer, exactly like every other kanban card in this app. Opening the
+// vault item is baked in here via the same KanbanCardLinkDirective +
+// ?detail=<seq> mechanism VaultCard's title uses.
 @Component({
   selector: 'app-block-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Chip, PriorityBadge, KanbanCardLinkDirective],
+  imports: [ItemHeader, KanbanCardLinkDirective],
   host: {
     class: 'block-card',
-    '[class.block-card--p0]': 'priority() === 0',
     '[class.block-card--calendar]': "variant() === 'calendar'",
     '[class.block-card--locked]': 'locked()',
   },
   template: `
-    @if (variant() === 'calendar' && timeText()) {
-      <div class="block-card__time">{{ timeText() }}</div>
-    }
-    <div class="block-card__title">
-      @if (variant() === 'calendar') {
-        <span class="block-card__lock" (click)="onLockClick($event)">{{ locked() ? '🔒' : '🔓' }}</span>
-      }<a class="block-card__link" [appKanbanCardLink]="seq()">{{ title() }}</a>
-    </div>
-    <div class="block-card__meta">
-      <app-chip [color]="projectColor()" [count]="size()">{{ projectName() }}</app-chip>
-      <app-priority-badge [priority]="priority()" />
+    <app-item-header
+      [projectName]="projectName()"
+      [projectColor]="projectColor()"
+      [priority]="priority()"
+      [owner]="owner()"
+      [secondary]="secondary()"
+      [timeText]="timeText()"
+      [epicLabel]="epicLabel()"
+      [showLock]="true"
+      [locked]="locked()"
+      (lockToggle)="lockToggle.emit()" />
+    <div class="block-card__body">
+      <a class="block-card__link" [appKanbanCardLink]="seq()">{{ title() }}</a>
+      <span class="block-card__size" [attr.title]="size() + ' × 25-minute blocks'">{{ size() }}×25m</span>
     </div>
   `,
   styles: [`
     :host.block-card {
       display: block;
       border: 1px solid var(--color-border);
-      border-radius: var(--radius);
+      /* Deliberately softer than the app's sharp 2px --radius — scoped to
+         this card family (block-card/vault-card), not a global token change. */
+      border-radius: 10px;
       background: var(--color-surface-raised);
-      padding: 0.5rem 0.6rem;
-      font-size: 0.75rem;
-      line-height: 1.35;
       overflow: hidden;
       cursor: grab;
-    }
-    :host.block-card--p0 {
-      border-color: var(--color-warning);
-      background: color-mix(in srgb, var(--color-warning) 10%, var(--color-surface-raised));
     }
     :host.block-card--calendar {
       cursor: pointer;
       height: 100%;
     }
-    :host.block-card--calendar.block-card--locked {
-      opacity: 0.7;
+    /* Locked applies the same look whichever context the card is in — a
+       locked queue item is exempt from randomize the same way a locked
+       calendar block is exempt from being moved by it. */
+    :host.block-card--locked {
+      opacity: 0.75;
       cursor: default;
     }
-    .block-card__time {
-      font-size: 0.62rem;
-      color: var(--color-text-muted);
-    }
-    .block-card__title {
-      font-size: 0.72rem;
-    }
-    .block-card__lock {
-      margin-right: 0.25rem;
-      cursor: pointer;
+    .block-card__body {
+      padding: 0.5rem 0.6rem;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.4rem;
     }
     .block-card__link {
       color: inherit;
@@ -84,12 +80,11 @@ export type BlockCardVariant = 'queue' | 'calendar';
     .block-card__link:hover {
       text-decoration: underline;
     }
-    .block-card__meta {
-      margin-top: 0.35rem;
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-      flex-wrap: wrap;
+    .block-card__size {
+      font-size: 0.6rem;
+      color: var(--color-text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
     }
   `],
 })
@@ -100,14 +95,15 @@ export class BlockCard {
   readonly projectName = input.required<string>();
   readonly projectColor = input.required<string>();
   readonly priority = input.required<Priority>();
+  readonly owner = input<ActorId | null>(null);
+  readonly epicLabel = input<string | null>(null);
   readonly size = input.required<number>();
   readonly locked = input(false);
   readonly timeText = input<string | null>(null);
 
   readonly lockToggle = output<void>();
 
-  onLockClick(event: MouseEvent): void {
-    event.stopPropagation();
-    this.lockToggle.emit();
-  }
+  readonly secondary = computed<ItemHeaderSecondary>(() =>
+    this.variant() === 'calendar' ? 'time' : this.epicLabel() ? 'epic' : 'none',
+  );
 }

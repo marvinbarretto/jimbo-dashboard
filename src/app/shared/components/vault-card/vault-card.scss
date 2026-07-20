@@ -3,7 +3,10 @@
 .vault-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  // Deliberately softer than the app's sharp 2px --radius — scoped to this
+  // card family (vault-card/block-card), not a global token change.
+  border-radius: 10px;
+  overflow: hidden; // app-item-header bleeds edge-to-edge, no radius of its own
   font-family: var(--font-mono);
   position: relative;
 
@@ -45,55 +48,9 @@
   border-top: 2px solid color-mix(in srgb, var(--color-info) 60%, var(--color-border));
 }
 
-// Project header strip — full-bleed bar painted in the project colour, with
-// the project name on the left and (when subtask) the parent epic on the
-// right. Cards with no project and no parent skip the bar entirely.
-.vault-card__project-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.6rem;
-  font-size: 0.65rem;
-  letter-spacing: 0.02em;
-  background: var(--proj-tint, var(--color-border));
-  color: var(--color-bg);
-  font-weight: 500;
-  min-width: 0;
-  border-radius: var(--radius) var(--radius) 0 0;
-
-  // When no project token, fall back to a neutral band (subtask of an epic
-  // that has no project on the parent).
-  &--no-project {
-    background: var(--color-surface-soft, var(--color-border));
-    color: var(--color-text-muted);
-  }
-}
-.vault-card__project-bar-name {
-  color: inherit;
-  text-decoration: none;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 1;
-  min-width: 0;
-
-  &:hover { text-decoration: underline; }
-}
-.vault-card__project-bar-epic {
-  color: inherit;
-  opacity: 0.85;
-  text-decoration: none;
-  margin-left: auto;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 1;
-  min-width: 0;
-  font-weight: 500;
-
-  &:hover { text-decoration: underline; opacity: 1; }
-}
+// Project/priority/owner/epic strip — now app-item-header (see that
+// component). Was a plain-text-only full-bleed bar; superseded, not
+// duplicated — .vault-card__project-bar itself no longer renders.
 
 .vault-card__body {
   padding: 0.5rem 0.625rem 0.4rem;

@@ -190,6 +190,7 @@ export const routes: Routes = [
       { path: 'dispatch-history-list',   loadComponent: () => import('./features/ui-lab/sections/dispatch-history-list-section').then(m => m.DispatchHistoryListSection) },
       { path: 'vault-card',              loadComponent: () => import('./features/ui-lab/sections/vault-card-section').then(m => m.VaultCardSection) },
       { path: 'block-card',              loadComponent: () => import('./features/ui-lab/sections/block-card-section').then(m => m.BlockCardSection) },
+      { path: 'item-header',             loadComponent: () => import('./features/ui-lab/sections/item-header-section').then(m => m.ItemHeaderSection) },
       { path: 'vault-card-kanban',      loadComponent: () => import('./features/ui-lab/sections/vault-card-kanban-section').then(m => m.VaultCardKanbanSection) },
       { path: 'nutrition-row',           loadComponent: () => import('./features/ui-lab/sections/nutrition-row-section').then(m => m.NutritionRowSection) },
       { path: 'tracker',                 loadComponent: () => import('./features/ui-lab/sections/tracker-section').then(m => m.TrackerSection) },

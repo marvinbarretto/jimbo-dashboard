@@ -1,19 +1,12 @@
 <article class="vault-card" [class.vault-card--epic]="isEpic()">
 
-  @if (context().project || context().parentEpic) {
-    <div class="vault-card__project-bar" [class.vault-card__project-bar--no-project]="!context().project">
-      @if (context().project; as proj) {
-        <a class="vault-card__project-bar-name"
-           [routerLink]="['/projects', proj.id]"
-           [attr.title]="proj.display_name">/{{ proj.display_name }}</a>
-      }
-      @if (context().parentEpic; as parent) {
-        <a class="vault-card__project-bar-epic"
-           [routerLink]="['/vault-items', parent.seq]"
-           [attr.title]="'Epic #' + parent.seq + ' · ' + parent.title">↳ #{{ parent.seq }} {{ parent.title }}</a>
-      }
-    </div>
-  }
+  <app-item-header
+    [projectName]="context().project?.display_name ?? 'No project'"
+    [projectColor]="context().project?.color_token ?? null"
+    [priority]="priority()"
+    [owner]="context().owner"
+    secondary="epic"
+    [epicLabel]="epicHeaderLabel()" />
 
   @if (!context().project && projectTrigger(); as t) {
     <input

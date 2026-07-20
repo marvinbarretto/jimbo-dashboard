@@ -141,22 +141,33 @@
   border-radius: var(--radius);
 }
 
-// app-block-card (shared/components/block-card) owns its own look now —
-// same component in the queue and (via the real <ng-template #eventContent>
-// below) on the calendar, so no card CSS needs to live here at all. The
-// suggestion (read-only) cards are plain markup, not app-block-card, since
-// they're a different, simpler kind of thing — not draggable, no lock state.
-.suggestion-content {
-  padding: 0.05rem 0.1rem;
-  line-height: 1.3;
+// app-block-card (shared/components/block-card) owns its own look — same
+// component in the queue and (via the real <ng-template #eventContent>
+// below) on the calendar. Suggestion (read-only) cards are plain markup, not
+// app-block-card — not draggable, no lock state, no vault item behind them
+// to link to — but deliberately share the same card shape (10px radius,
+// header-strip + body) so they read as the same *family* of thing. Dashed
+// border + neutral (not project-coloured) header is what marks them as the
+// different, non-interactive kind.
+.suggestion-card {
+  border: 1px dashed var(--color-border);
+  border-radius: 10px;
   overflow: hidden;
+  height: 100%;
+  background: var(--color-surface);
 }
-.suggestion-content__time {
-  font-size: 0.62rem;
-  opacity: 0.85;
+.suggestion-card__header {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: var(--color-surface-soft);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
 }
-.suggestion-content__title {
-  font-size: 0.7rem;
+.suggestion-card__body {
+  padding: 0.5rem 0.6rem;
+  font-size: 0.72rem;
+  color: var(--color-text-soft);
 }
 
 /* ── Calendar ────────────────────────────────────────────────────────────── */
@@ -207,10 +218,12 @@
     color: var(--color-text-muted);
   }
 
-  /* Jimbo Suggestions — read-only, dashed to distinguish from your own blocks. */
+  /* .suggestion-card supplies its own dashed border/radius/background —
+     strip FullCalendar's default event chrome so it doesn't double up
+     (same reasoning as .fc-event.fc-block below). */
   .fc-event.fc-suggestion {
     background: transparent;
-    border: 1px dashed var(--color-border);
+    border: none;
     color: var(--color-text-soft);
     cursor: default;
   }

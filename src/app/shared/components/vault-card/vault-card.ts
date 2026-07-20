@@ -17,6 +17,7 @@ import { EpicBadge } from '@shared/components/epic-badge/epic-badge';
 import { DispatchStatusBadge } from '@shared/components/dispatch-status-badge/dispatch-status-badge';
 import { CardCallout, type CalloutVariant } from '@shared/components/card-callout/card-callout';
 import { EpicRollup } from '@shared/components/epic-rollup/epic-rollup';
+import { ItemHeader } from '@shared/components/item-header/item-header';
 import { effectivePriority, ageInDays, isStuck, staleNorm, ancientNorm } from '@domain/vault';
 import type { ActorId, VaultItemId } from '@domain/ids';
 import type { IconName } from '@shared/components/app-icon/icon-registry';
@@ -136,6 +137,7 @@ function actionsFor(ctx: CardContext): CardAction[] {
     DispatchStatusBadge,
     CardCallout,
     EpicRollup,
+    ItemHeader,
   ],
   templateUrl: './vault-card.html',
   styleUrl: './vault-card.scss',
@@ -214,6 +216,14 @@ export class VaultCard {
   protected readonly projectTint = computed(() => {
     const ctx = this.context();
     return ctx.project?.color_token ?? null;
+  });
+
+  // Feeds app-item-header's "epic" secondary slot — same "↳ #<seq> <title>"
+  // shape the old plain-text project-bar link used, just formatted for a
+  // non-interactive display span instead of a routerLink.
+  protected readonly epicHeaderLabel = computed<string | null>(() => {
+    const parent = this.context().parentEpic;
+    return parent ? `↳ #${parent.seq} ${parent.title}` : null;
   });
 
   // ── Ownership ──────────────────────────────────────────────────────────────

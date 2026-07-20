@@ -5,8 +5,11 @@ export type ProjectAvatarVariant = 'filled' | 'outlined';
 
 // Tokenize on whitespace / dash / underscore AND CamelCase boundaries so
 // "LocalShout" → "LS", "Reinvent Me" → "RM", "Hermes" → "H". Single-letter
-// fallback when the name is one token (consistent with ActorAvatar).
-function projectInitials(name: string): string {
+// fallback when the name is one token (consistent with ActorAvatar). Guards
+// against a transiently-undefined name — e.g. a consumer rendering this
+// mid-drag before its own data has fully resolved — rather than throwing.
+function projectInitials(name: string | undefined): string {
+  if (!name) return '?';
   const tokens = name
     .split(/[\s\-_]+/)
     .flatMap(t => t.split(/(?=[A-Z])/))

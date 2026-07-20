@@ -41,7 +41,11 @@
             [projectName]="b.projectName"
             [projectColor]="b.projectColor"
             [priority]="b.priority"
-            [size]="b.size" />
+            [owner]="b.owner"
+            [epicLabel]="b.epicLabel"
+            [size]="b.size"
+            [locked]="b.locked"
+            (lockToggle)="toggleQueueLock(b.id)" />
         } @empty {
           <div class="empty">Queue clear.</div>
         }
@@ -62,14 +66,16 @@
               [projectName]="arg.event.extendedProps.projectName"
               [projectColor]="arg.event.extendedProps.projectColor"
               [priority]="arg.event.extendedProps.priority"
+              [owner]="arg.event.extendedProps.owner"
+              [epicLabel]="arg.event.extendedProps.epicLabel"
               [size]="arg.event.extendedProps.size"
               [locked]="arg.event.extendedProps.locked"
               [timeText]="arg.timeText"
               (lockToggle)="toggleLock(arg.event.extendedProps.blockId)" />
           } @else {
-            <div class="suggestion-content">
-              <div class="suggestion-content__time">{{ arg.timeText }}</div>
-              <div class="suggestion-content__title">{{ arg.event.title }}</div>
+            <div class="suggestion-card">
+              <div class="suggestion-card__header">{{ arg.timeText }}</div>
+              <div class="suggestion-card__body">{{ arg.event.title }}</div>
             </div>
           }
         </ng-template>

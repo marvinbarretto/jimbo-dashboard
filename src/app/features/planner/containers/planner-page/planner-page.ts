@@ -15,6 +15,7 @@ import type { CalendarOptions, EventInput } from '@fullcalendar/core';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin, { Draggable } from '@fullcalendar/interaction';
 import type { VaultItem, Priority } from '@domain/vault/vault-item';
+import type { ActorId } from '@domain/ids';
 import { effectivePriority } from '@domain/vault/readiness';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { VAULT_ITEMS_READ } from '@features/vault-items/data-access/vault-items.read';
@@ -40,17 +41,21 @@ interface BlockVM {
   readonly projectName: string;
   readonly projectColor: string;
   readonly priority: Priority;
+  readonly owner: ActorId | null;
+  readonly epicLabel: string | null; // parent epic, "↳ #<seq> <title>" — null if standalone
   readonly size: number; // in 25-minute pomodoro blocks
+  // Locked applies in the queue too, not just once placed — excluded from
+  // randomize-fill and (via the Draggable eventData guard below) can't be
+  // dragged onto the calendar until unlocked again.
+  readonly locked: boolean;
 }
 
 // A block once dropped onto the calendar. `start`/`size`/`locked` are the
 // source of truth for placement, duration and lock state — the calendar is a
 // rendering of this, not the other way round, so state survives FullCalendar
-// re-rendering itself. Locked blocks are excluded from randomize-fill and
-// made non-draggable/non-resizable on the calendar itself.
+// re-rendering itself.
 interface PlacedBlock extends BlockVM {
   readonly start: string; // ISO
-  readonly locked: boolean;
 }
 
 interface Interval {
@@ -74,7 +79,11 @@ const FILL_WINDOW_END = '22:00';
 // .fc-timegrid-slot, which only repaints the empty grid, not events already
 // positioned from FullCalendar's own internal ratio) is the mechanism that
 // actually keeps placed events in sync with the grid.
-const SLOT_PX: Record<Density, number> = { comfortable: 34, compact: 18 };
+// Bumped up from the pre-ItemHeader values (34/18) — a block-card is now a
+// two-row card (item-header strip + title/size body), not a single meta
+// row, so a 25-min block needs real room or it renders squished/overlapping
+// regardless of how correctly it was actually placed.
+const SLOT_PX: Record<Density, number> = { comfortable: 56, compact: 38 };
 
 function totalSlotsInWindow(): number {
   const [startH, startM] = FILL_WINDOW_START.split(':').map(Number);
@@ -104,6 +113,10 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
 
   readonly placements = signal<PlacedBlock[]>([]);
   readonly density = signal<Density>('comfortable');
+  // Locked-in-queue ids — separate from `placements` since a queue item
+  // isn't a PlacedBlock at all; this is the only queue-side state we own
+  // locally (everything else in `queue` is derived fresh from vault items).
+  private readonly lockedQueueIds = signal<ReadonlySet<string>>(new Set());
 
   readonly isLoading = this.suggestions.isLoading;
   readonly hasError = this.suggestions.hasError;
@@ -125,13 +138,16 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
 
   readonly queue = computed<BlockVM[]>(() => {
     const placedIds = new Set(this.placements().map(p => p.id));
+    const lockedIds = this.lockedQueueIds();
     return this.candidateItems()
       .filter(i => !placedIds.has(i.id))
-      .map(i => this.toBlockVM(i));
+      .map(i => ({ ...this.toBlockVM(i), locked: lockedIds.has(i.id) }));
   });
 
   readonly queuedMinutes = computed(() => this.queue().reduce((sum, b) => sum + b.size, 0) * BLOCK_MINUTES);
-  readonly lockedCount = computed(() => this.placements().filter(b => b.locked).length);
+  readonly lockedCount = computed(() =>
+    this.placements().filter(b => b.locked).length + this.queue().filter(b => b.locked).length,
+  );
 
   private readonly events = computed<EventInput[]>(() => [
     ...this.suggestions.events().map(toSuggestionEventInput),
@@ -214,11 +230,33 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
       eventData: (el) => {
         const blockId = el.getAttribute('data-block-id');
         const block = this.queue().find(b => b.id === blockId);
-        if (!block) return {};
+        // Locked queue items refuse the drop: no blockId in extendedProps
+        // means eventReceive's own guard bails without placing it — the
+        // card can still be visually dragged (FullCalendar owns that part),
+        // it just doesn't land anywhere, matching "locked = can't move"
+        // for a calendar block too.
+        if (!block || block.locked) return {};
+        // Full extendedProps, not just blockId — FullCalendar renders this
+        // via our own eventContent template immediately on drop, before
+        // eventReceive gets a chance to replace it with the real placement.
+        // Sending a partial payload here previously rendered momentarily
+        // with undefined projectName/priority/etc — harmless with the old
+        // plain-text template, but app-project-avatar's initials computation
+        // throws on an undefined name, so it needs to be complete.
         return {
           title: block.title,
           duration: { minutes: block.size * BLOCK_MINUTES },
-          extendedProps: { blockId: block.id },
+          extendedProps: {
+            blockId: block.id,
+            seq: block.seq,
+            locked: false,
+            projectName: block.projectName,
+            projectColor: block.projectColor,
+            priority: block.priority,
+            owner: block.owner,
+            epicLabel: block.epicLabel,
+            size: block.size,
+          },
         };
       },
     });
@@ -236,17 +274,25 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
     this.placements.update(p => p.map(b => (b.id === blockId ? { ...b, locked: !b.locked } : b)));
   }
 
-  // Locked placements + the real Jimbo Suggestions events are fixed
-  // obstacles. Everything else — the queue, and any unlocked placement — is
-  // pooled and re-scattered into open slots. Locked blocks are never moved.
+  toggleQueueLock(id: string): void {
+    this.lockedQueueIds.update(ids => {
+      const next = new Set(ids);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  // Locked placements/queue items + the real Jimbo Suggestions events are
+  // fixed obstacles. Everything else — the unlocked queue, and any unlocked
+  // placement — is pooled and re-scattered into open slots.
   randomize(): void {
     const lockedPlacements = this.placements().filter(b => b.locked);
     const unlockedAsBlocks: BlockVM[] = this.placements()
       .filter(b => !b.locked)
-      .map(({ id, seq, title, projectName, projectColor, priority, size }) => ({
-        id, seq, title, projectName, projectColor, priority, size,
+      .map(({ id, seq, title, projectName, projectColor, priority, owner, epicLabel, size }) => ({
+        id, seq, title, projectName, projectColor, priority, owner, epicLabel, size, locked: false,
       }));
-    const candidates = [...this.queue(), ...unlockedAsBlocks];
+    const candidates = [...this.queue().filter(b => !b.locked), ...unlockedAsBlocks];
 
     const fixed: Interval[] = [
       ...this.suggestions.events().map(toInterval),
@@ -260,6 +306,7 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private toBlockVM(item: VaultItem): BlockVM {
+    const parent = item.parent_id ? this.vaultItems.getById(item.parent_id) : undefined;
     return {
       id: item.id,
       seq: item.seq,
@@ -267,7 +314,10 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
       projectName: item.primary_project_name ?? 'No project',
       projectColor: this.colorForProject(item.primary_project_id),
       priority: effectivePriority(item) ?? 3,
+      owner: item.assigned_to,
+      epicLabel: parent ? `↳ #${parent.seq} ${parent.title}` : null,
       size: 1,
+      locked: false, // overridden by the `queue` computed from lockedQueueIds
     };
   }
 
@@ -315,6 +365,8 @@ function toBlockEventInput(b: PlacedBlock): EventInput {
       projectName: b.projectName,
       projectColor: b.projectColor,
       priority: b.priority,
+      owner: b.owner,
+      epicLabel: b.epicLabel,
       size: b.size,
     },
   };

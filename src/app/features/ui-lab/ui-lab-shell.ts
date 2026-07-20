@@ -67,6 +67,7 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'commission-card',         name: 'Commission Card',       group: 'cards',           selector: 'app-commission-card',       description: 'Organism — one card per item on the execution board: stage, assignee, PR link, ×N history drill-down.' },
   { id: 'dispatch-history-list',   name: 'Dispatch History List', group: 'cards',           selector: 'app-dispatch-history-list', description: 'Organism — per-item commission history (newest first); surfaces superseded attempts and their PRs.' },
   { id: 'block-card',              name: 'Block Card',            group: 'cards',           selector: 'app-block-card',        description: 'Planner pomodoro-block card. Same component, two variants — queue (draggable, not yet scheduled) and calendar (has a time, may be locked).' },
+  { id: 'item-header',             name: 'Item Header',           group: 'cards',           selector: 'app-item-header',       description: 'Shared identity strip — project avatar + priority + owner + time-or-epic + optional lock. Used by both app-block-card and app-vault-card so the same kind of thing reads the same way everywhere.' },
 
   // Forms & editing — input controls and form chrome
   { id: 'ui-button',               name: 'Button',                group: 'forms-editing',   selector: 'app-ui-button',         description: 'Button primitives — UiButton (action) and UiButtonLink (navigation) sharing one visual contract.' },
