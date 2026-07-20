@@ -1,11 +1,11 @@
 // Day/week/month bundles for the journal feature.
 //
-// Each bundle is loaded by hitting the same Jimbo endpoints `today-page` uses
-// (focus-sessions, calendar, telemetry) and bucketing on the client. Bucketing
-// is local-time so the day a session "belongs to" matches the user's calendar.
-// As Jimbo grows new endpoints (mood, exercise, music, …) they slot in here
-// without changing the page contracts — pages already render whatever the
-// bundle signal exposes.
+// The DAY bundle is one round trip: GET /api/journal/day composes focus
+// sessions, calendar, telemetry, code sessions and heartbeats server-side
+// (each source fails soft to [] there). Week/month still fetch focus sessions
+// directly. Bucketing stays client-side and local-time so the day a session
+// "belongs to" matches the user's calendar — the server is never asked to
+// guess a timezone; we send exact [since, until) instants.
 //
 // Deliberately NOT fetched (verified dead against prod, Jul 2026): the
 // activities table (legacy Jimbo agent log, nothing written since the
@@ -16,6 +16,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import type { CodeSession, CodeSessionHeartbeat } from './code-sessions.service';
 import {
   type DayKey,
   type MonthKey,
@@ -74,6 +75,8 @@ export interface DayBundle {
   readonly sessions: readonly FocusSessionLite[];
   readonly events: readonly CalendarEventLite[];
   readonly telemetry: readonly TelemetryEventLite[];
+  readonly code_sessions: readonly CodeSession[];
+  readonly heartbeats: readonly CodeSessionHeartbeat[];
   readonly totals: {
     readonly pomos_completed: number;
     readonly pomos_abandoned: number;
@@ -129,6 +132,8 @@ interface ApiCalendarEvent {
   end: string | { dateTime?: string; date?: string };
   all_day?: boolean;
   calendar?: string;
+  /** Taxonomy tag from calendar_config — present on config-enriched reads. */
+  calendarTag?: string | null;
 }
 
 interface ApiTelemetryEvent {
@@ -141,6 +146,14 @@ interface ApiTelemetryEvent {
   unit: string | null;
   source: string | null;
   payload: Record<string, unknown> | null;
+}
+
+interface ApiJournalDay {
+  focus_sessions: ApiFocusSession[];
+  calendar_events: ApiCalendarEvent[];
+  telemetry: ApiTelemetryEvent[];
+  code_sessions: CodeSession[];
+  heartbeats: CodeSessionHeartbeat[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -182,13 +195,13 @@ export class JournalDataService {
 
   async loadDay(key: DayKey): Promise<void> {
     return this.guardedLoad('day', async () => {
-      const window = localWindow(dateFromDayKey(key), dateFromDayKey(shiftDay(key, 1)));
-      const [sessions, events, telemetry] = await Promise.all([
-        this.fetchSessions(window),
-        this.fetchEvents(window),
-        this.fetchTelemetryForDate(key),
-      ]);
-      return buildDayBundle(key, sessions, events, telemetry);
+      const { since, until } = localWindow(dateFromDayKey(key), dateFromDayKey(shiftDay(key, 1)));
+      const res = await firstValueFrom(
+        this.http.get<ApiJournalDay>(
+          `${this.base}/api/journal/day?since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}`,
+        ),
+      );
+      return buildDayBundle(key, res);
     }, bundle => this.day.set(bundle));
   }
 
@@ -228,75 +241,6 @@ export class JournalDataService {
     }
   }
 
-  private async fetchEvents(window: FetchWindow): Promise<CalendarEventLite[]> {
-    try {
-      const res = await firstValueFrom(
-        this.http.get<{ items?: ApiCalendarEvent[]; events?: ApiCalendarEvent[] }>(
-          `${this.base}/api/google-calendar/events?since=${encodeURIComponent(window.since)}&until=${encodeURIComponent(window.until)}`,
-        ),
-      );
-      const raw = res.items ?? res.events ?? [];
-      return raw.map(toEventLite);
-    } catch {
-      return [];
-    }
-  }
-
-  private async fetchTelemetryForDate(date: DayKey): Promise<TelemetryEventLite[]> {
-    try {
-      // Use local-time midnight boundaries so screen_session events (whose ts is
-      // a UTC Instant from the device) correctly align with the user's calendar day.
-      const dayStart = dateFromDayKey(date);
-      const dayEnd = dateFromDayKey(shiftDay(date, 1));
-      const since = dayStart.toISOString();
-      const until = dayEnd.toISOString();
-
-      // app_usage_daily has ts = previous local-day midnight (start of the covered
-      // period). For a UTC+N user that timestamp is N hours before local midnight,
-      // falling outside the main window. Fetch it separately from the prior day.
-      const prevSince = dateFromDayKey(shiftDay(date, -1)).toISOString();
-
-      const [dayRes, usageRes, githubRes, youtubeRes] = await Promise.all([
-        firstValueFrom(
-          this.http.get<{ events: ApiTelemetryEvent[] }>(
-            `${this.base}/api/telemetry/events?since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}&limit=500`,
-          ),
-        ),
-        firstValueFrom(
-          this.http.get<{ events: ApiTelemetryEvent[] }>(
-            `${this.base}/api/telemetry/events?collector=usage&type=app_usage_daily&since=${encodeURIComponent(prevSince)}&until=${encodeURIComponent(since)}&limit=5`,
-          ),
-        ),
-        // Pulled separately because high-volume collectors (notifications,
-        // location) drown github pushes out of the 500-event main window
-        // on busy days.
-        firstValueFrom(
-          this.http.get<{ events: ApiTelemetryEvent[] }>(
-            `${this.base}/api/telemetry/events?collector=github&type=push&since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}&limit=100`,
-          ),
-        ),
-        // YouTube watch segments — pulled separately for the same reason as github:
-        // a heavy-viewing day can exceed the 500-event main window. Many short
-        // segments per day, so the limit is generous.
-        firstValueFrom(
-          this.http.get<{ events: ApiTelemetryEvent[] }>(
-            `${this.base}/api/telemetry/events?collector=youtube&type=watch_session&since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}&limit=500`,
-          ),
-        ),
-      ]);
-
-      const dayEvents = (dayRes.events ?? []).map(toTelemetryEventLite);
-      const extraEvents = [
-        ...(usageRes.events ?? []).map(toTelemetryEventLite),
-        ...(githubRes.events ?? []).map(toTelemetryEventLite),
-        ...(youtubeRes.events ?? []).map(toTelemetryEventLite),
-      ];
-      const dayIds = new Set(dayEvents.map(e => e.id));
-      return [...dayEvents, ...extraEvents.filter(e => !dayIds.has(e.id))];
-    } catch {
-      return [];
-    }
-  }
 }
 
 function toSessionLite(s: ApiFocusSession): FocusSessionLite {
@@ -338,16 +282,14 @@ function toEventLite(e: ApiCalendarEvent): CalendarEventLite {
     start,
     end,
     all_day: allDay,
-    calendar: e.calendar,
+    calendar: e.calendar ?? e.calendarTag ?? undefined,
   };
 }
 
-function buildDayBundle(
-  key: DayKey,
-  sessions: readonly FocusSessionLite[],
-  events: readonly CalendarEventLite[],
-  telemetry: readonly TelemetryEventLite[],
-): DayBundle {
+function buildDayBundle(key: DayKey, api: ApiJournalDay): DayBundle {
+  const sessions = (api.focus_sessions ?? []).map(toSessionLite);
+  const events = (api.calendar_events ?? []).map(toEventLite);
+  const telemetry = (api.telemetry ?? []).map(toTelemetryEventLite);
   const daySessions = sessions.filter(s => dayKeyOf(s.started_at) === key);
   const dayEvents = events.filter(e => dayKeyOf(e.start) === key);
 
@@ -370,6 +312,8 @@ function buildDayBundle(
     sessions: daySessions,
     events: dayEvents,
     telemetry,
+    code_sessions: api.code_sessions ?? [],
+    heartbeats: api.heartbeats ?? [],
     totals: {
       pomos_completed: pomosCompleted,
       pomos_abandoned: pomosAbandoned,

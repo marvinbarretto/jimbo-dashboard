@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, linkedSignal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { formatPageTitle } from '@app/app-title-strategy';
-import { catchError, forkJoin, map, of, switchMap, timer } from 'rxjs';
+import { EMPTY, map, switchMap, timer } from 'rxjs';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
@@ -16,11 +16,6 @@ import { absoluteTime, formatMinutes, pluralise } from '@shared/utils/datetime.u
 import { dedupeWindowedSum } from '../../utils/windowed-telemetry';
 import { heartbeatBursts } from '../../utils/retro-timeline';
 import { codeEvidenceSpans, focusSpans, unionMinutes } from '../../utils/work-measure';
-import {
-  CodeSessionsService,
-  type CodeSession,
-  type CodeSessionHeartbeat,
-} from '../../data-access/code-sessions.service';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { JournalDataService } from '../../data-access/journal-data.service';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
@@ -38,7 +33,6 @@ import { NutritionDaySection } from '../../../nutrition/components/nutrition-day
 import { ExerciseDaySection } from '../../../exercise/components/exercise-day-section/exercise-day-section';
 import {
   type DayKey,
-  dateFromDayKey,
   formatDayLong,
   isDayKey,
   shiftDay,
@@ -80,37 +74,17 @@ export class JournalDayPage {
   private readonly titleService = inject(Title);
   private readonly journal = inject(JournalDataService);
   private readonly projects = inject(ProjectsService);
-  private readonly codeSessionsApi = inject(CodeSessionsService);
 
   protected readonly key = toSignal(
     this.route.paramMap.pipe(map(p => sanitiseKey(p.get('date')))),
     { initialValue: todayKey() },
   );
 
-  // Single code-sessions + heartbeat fetch for the whole page — the Work
-  // rollup, the timeline and the sessions section all consume it. Local-
-  // midnight window, refreshed every 60s (matches the other live sections).
-  private readonly codeData = toSignal(
-    toObservable(this.key).pipe(
-      switchMap((date) => timer(0, 60_000).pipe(
-        switchMap(() => {
-          const range = {
-            since: dateFromDayKey(date).toISOString(),
-            until: dateFromDayKey(shiftDay(date, 1)).toISOString(),
-          };
-          return forkJoin({
-            sessions: this.codeSessionsApi.list(range).pipe(catchError(() => of({ items: [] as CodeSession[] }))),
-            heartbeats: this.codeSessionsApi.heartbeats(range).pipe(catchError(() => of({ items: [] as CodeSessionHeartbeat[] }))),
-          });
-        }),
-      )),
-    ),
-    { initialValue: null },
-  );
-
-  protected readonly codeSessions = computed(() => this.codeData()?.sessions.items ?? []);
-  protected readonly codeHeartbeats = computed(() => this.codeData()?.heartbeats.items ?? []);
-  protected readonly codeLoading = computed(() => this.codeData() === null);
+  // Code sessions + heartbeats ride the day bundle — the Work rollup, the
+  // timeline and the sessions section all consume the same fetch.
+  protected readonly codeSessions = computed(() => this.bundle()?.code_sessions ?? []);
+  protected readonly codeHeartbeats = computed(() => this.bundle()?.heartbeats ?? []);
+  protected readonly codeLoading = computed(() => !this.bundle());
 
   // Evidence-based desk time: union of focus sessions and honest code-session
   // spans — overlap (a pomo inside a code session) counts once. Executor
@@ -359,6 +333,13 @@ export class JournalDayPage {
   constructor() {
     effect(() => this.titleService.setTitle(formatPageTitle(formatDayLong(this.key()))));
     effect(() => this.journal.loadDay(this.key()));
+
+    // Keep TODAY live with a 60s refresh; past days are immutable, so
+    // navigating to one loads once (via the effect above) and stops polling.
+    toObservable(this.key).pipe(
+      switchMap(key => key === todayKey() ? timer(60_000, 60_000).pipe(map(() => key)) : EMPTY),
+      takeUntilDestroyed(),
+    ).subscribe(key => this.journal.loadDay(key));
   }
 
   protected previous(): void {
