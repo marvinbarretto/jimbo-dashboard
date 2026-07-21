@@ -25,6 +25,7 @@ import { UiButton } from '@shared/components/ui-button/ui-button';
 import { withVaultDetailModal } from '@shared/kanban/detail-modal';
 import { JimboSuggestionsService, type SuggestionEvent } from '../../data-access/jimbo-suggestions.service';
 import { PlannerSyncService } from '../../data-access/planner-sync.service';
+import { WatchQueuePanel } from '../../components/watch-queue-panel/watch-queue-panel';
 
 // Queue candidates: my top-N active tasks by priority (P0 first, unscored
 // items sink to the bottom rather than jump the queue), plus anything
@@ -114,7 +115,7 @@ interface ProjectAllocation {
 @Component({
   selector: 'app-planner-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FullCalendarModule, BlockCard, UiButton],
+  imports: [FullCalendarModule, BlockCard, UiButton, WatchQueuePanel],
   templateUrl: './planner-page.html',
   styleUrl: './planner-page.scss',
 })

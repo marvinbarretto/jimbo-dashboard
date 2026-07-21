@@ -52,6 +52,8 @@
 
   <div class="planner__board">
 
+    <div class="planner__sidebar">
+
     <section class="queue">
       <div class="queue__head">
         <span>Block queue</span>
@@ -84,6 +86,11 @@
         }
       </div>
     </section>
+
+      <app-watch-queue-panel />
+
+    </div>
+
 
     <section class="calendar">
       @if (isLoading()) {

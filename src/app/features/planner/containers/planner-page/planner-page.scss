@@ -191,6 +191,16 @@
   align-items: start;
 }
 
+/* Left column holds the block queue and the watch queue as one grid child —
+   .planner__board is a 2-column grid, so a third direct child would wrap the
+   calendar onto a second row. */
+.planner__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
 /* ── Queue ───────────────────────────────────────────────────────────────── */
 
 .queue {

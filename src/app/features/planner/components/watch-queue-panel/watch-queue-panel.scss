@@ -1,0 +1,106 @@
+// Mirrors the .queue panel's spacing/typography so the two read as siblings
+// in the planner's left column rather than as a bolted-on widget.
+.watchq {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 6px);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.watchq__head {
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.watchq__count {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.watchq__sub {
+  padding: 0.4rem 0.9rem 0;
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+}
+
+.watchq__raw {
+  opacity: 0.7;
+}
+
+.watchq__note {
+  padding: 0.7rem 0.9rem;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+
+  &--error {
+    color: var(--color-danger, #d66);
+  }
+}
+
+.watchq__list {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0.6rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  // Long queues shouldn't push the block queue off screen.
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+.watchq__item {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--color-surface-raised, transparent);
+}
+
+.watchq__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+// Duration leads: it's the field that decides whether this fits the gap
+// you've actually got.
+.watchq__len {
+  flex: 0 0 auto;
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-text-soft);
+  min-width: 2.6rem;
+
+  // Anything over ~40 min needs a deliberate slot, not a gap.
+  &--long {
+    color: var(--color-warning, #d9a441);
+  }
+}
+
+.watchq__title {
+  font-size: 0.72rem;
+  line-height: 1.3;
+  color: var(--color-text);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.watchq__meta {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+  padding-left: 3.1rem;
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
