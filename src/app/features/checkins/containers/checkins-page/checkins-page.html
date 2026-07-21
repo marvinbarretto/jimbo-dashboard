@@ -1,0 +1,61 @@
+<app-ui-stack class="checkins" gap="lg">
+
+  <header class="checkins__header">
+    <h1 class="checkins__title">Check-ins</h1>
+    <p class="checkins__meta">Mood and energy over time.</p>
+  </header>
+
+  <app-ui-card>
+    <app-ui-stack gap="md">
+      <div class="checkins__pickers">
+        <app-ui-score-picker label="Mood" [value]="mood()" (picked)="mood.set($event)" />
+        <app-ui-score-picker label="Energy" [value]="energy()" (picked)="energy.set($event)" />
+      </div>
+      <app-ui-cluster gap="sm">
+        <app-ui-button
+          variant="primary"
+          [disabled]="mood() == null || energy() == null || saving()"
+          (pressed)="save()">
+          {{ saving() ? 'Saving…' : 'Log check-in' }}
+        </app-ui-button>
+      </app-ui-cluster>
+    </app-ui-stack>
+  </app-ui-card>
+
+  <app-ui-card>
+    <app-ui-stack gap="md">
+      <div class="checkins__trend-header">
+        <span class="checkins__label">Trend</span>
+        <app-ui-cluster gap="xs">
+          @for (p of periods; track p.days) {
+            <app-ui-button
+              variant="ghost"
+              size="sm"
+              [class.checkins__period--active]="periodDays() === p.days"
+              (pressed)="setPeriod(p.days)">
+              {{ p.label }}
+            </app-ui-button>
+          }
+        </app-ui-cluster>
+      </div>
+
+      @if (!loading() && rows().length === 0) {
+        <app-ui-empty-state
+          title="No check-ins yet"
+          message="Log one above, or complete a pomodoro — mood/energy trends will show up here." />
+      } @else {
+        <div class="checkins__charts">
+          <div class="checkins__chart">
+            <span class="checkins__chart-label">Mood</span>
+            <app-ui-bar-chart [labels]="labels()" [values]="moodValues()" label="Mood" [height]="180" />
+          </div>
+          <div class="checkins__chart">
+            <span class="checkins__chart-label">Energy</span>
+            <app-ui-bar-chart [labels]="labels()" [values]="energyValues()" label="Energy" [height]="180" accent="rgba(251, 146, 60, 0.7)" />
+          </div>
+        </div>
+      }
+    </app-ui-stack>
+  </app-ui-card>
+
+</app-ui-stack>

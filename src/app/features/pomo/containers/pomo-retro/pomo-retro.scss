@@ -236,6 +236,14 @@
   color: var(--color-text-soft);
 }
 
+/* ── Mood/energy check-in (separate from the -1/0/1 session-quality mood) ── */
+
+.retro__checkin-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
 /* ── Interrupted ─────────────────────────────────────────────────────────── */
 
 .retro__interrupted {

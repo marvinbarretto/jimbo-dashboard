@@ -16,6 +16,7 @@ export const primaryNavItems: readonly NavLink[] = [
   { href: '/config',                label: 'Config',         accent: '#818cf8' },
   { href: '/journal',               label: 'Journal',        accent: '#fde68a' },
   { href: '/nutrition',             label: 'Nutrition',      accent: '#fda4af' },
+  { href: '/checkins',              label: 'Check-ins',      accent: '#a3e635' },
   { href: '/exercise',              label: 'Exercise',       accent: '#38bdf8' },
   { href: '/pomo-reports',          label: 'Pomo reports',   accent: '#fb923c' },
   { href: '/calendar-settings',     label: 'Calendars',      accent: '#34d399' },

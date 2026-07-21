@@ -13,6 +13,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FocusSessionsService } from '../../data-access/focus-sessions.service';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { VaultItemsService } from '../../../vault-items/data-access/vault-items.service';
+import { CheckinsService } from '../../../checkins/data-access/checkins.service';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiButton } from '@shared/components/ui-button/ui-button';
@@ -21,6 +22,7 @@ import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { UiProgressMeter } from '@shared/components/ui-progress-meter/ui-progress-meter';
+import { UiScorePicker } from '@shared/components/ui-score-picker/ui-score-picker';
 import { VaultChip, type VaultChipKind, type VaultChipCreator } from '@shared/components/vault-chip/vault-chip';
 import { withVaultDetailModal } from '@shared/kanban/detail-modal';
 import type { SessionMood } from '@domain/focus-sessions';
@@ -63,7 +65,7 @@ const MOOD_OPTIONS: { value: SessionMood; icon: string; label: string }[] = [
 @Component({
   selector: 'app-pomo-retro',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, UiStack, UiCard, UiButton, UiCluster, UiStatCard, UiEmptyState, UiDonutChart, UiProgressMeter, VaultChip],
+  imports: [FormsModule, UiStack, UiCard, UiButton, UiCluster, UiStatCard, UiEmptyState, UiDonutChart, UiProgressMeter, UiScorePicker, VaultChip],
   templateUrl: './pomo-retro.html',
   styleUrl: './pomo-retro.scss',
 })
@@ -71,6 +73,7 @@ export class PomoRetro implements OnInit {
   private readonly sessions = inject(FocusSessionsService);
   private readonly projects = inject(ProjectsService);
   private readonly vaultItems = inject(VaultItemsService);
+  private readonly checkins = inject(CheckinsService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly http = inject(HttpClient);
@@ -206,6 +209,12 @@ export class PomoRetro implements OnInit {
   readonly mood = signal<SessionMood | null>(null);
   readonly interrupted = signal(false);
   readonly saving = signal(false);
+
+  // Separate from `mood` above (session quality, -1/0/1) — this is "how are
+  // you feeling right now", a general 1-5 mood/energy check-in fed into the
+  // same unified log Telegram and the dashboard write to.
+  readonly checkinMood = signal<number | null>(null);
+  readonly checkinEnergy = signal<number | null>(null);
 
   async ngOnInit(): Promise<void> {
     await this.sessions.loadRecent(1);
@@ -411,6 +420,21 @@ export class PomoRetro implements OnInit {
       mood: this.mood(),
       interrupted: this.interrupted(),
     });
+
+    const checkinMood = this.checkinMood();
+    const checkinEnergy = this.checkinEnergy();
+    if (checkinMood != null && checkinEnergy != null) {
+      // Best-effort — a failed check-in log shouldn't block the session save
+      // that already succeeded above.
+      firstValueFrom(
+        this.checkins.create({
+          source: 'pomo_complete',
+          mood: checkinMood,
+          energy: checkinEnergy,
+          context: { session_id: s.id },
+        }),
+      ).catch(() => {});
+    }
   }
 
   async startBreak(): Promise<void> {

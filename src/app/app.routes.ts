@@ -228,6 +228,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/nutrition/nutrition.routes').then(m => m.nutritionRoutes),
   },
   {
+    path: 'checkins',
+    loadChildren: () => import('./features/checkins/checkins.routes').then(m => m.checkinsRoutes),
+  },
+  {
     path: 'exercise',
     loadChildren: () => import('./features/exercise/exercise.routes').then(m => m.exerciseRoutes),
   },
