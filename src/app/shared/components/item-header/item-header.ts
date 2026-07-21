@@ -65,6 +65,9 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'none';
           }
         </button>
       }
+      @if (showRemove()) {
+        <button type="button" class="item-header__remove" (click)="onRemoveClick($event)" aria-label="remove">×</button>
+      }
     </span>
   `,
   styles: [`
@@ -107,7 +110,7 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'none';
       white-space: nowrap;
       min-width: 0;
     }
-    .item-header__lock {
+    .item-header__lock, .item-header__remove {
       width: 18px; height: 18px;
       padding: 0; margin: 0; /* global button reset otherwise adds ~9px/15px */
       box-sizing: border-box;
@@ -121,7 +124,8 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'none';
       color: var(--color-bg);
       cursor: pointer;
     }
-    .item-header__lock:hover { background: color-mix(in srgb, black 35%, transparent); }
+    .item-header__lock:hover, .item-header__remove:hover { background: color-mix(in srgb, black 35%, transparent); }
+    .item-header__remove { font-size: 0.85rem; line-height: 1; }
   `],
 })
 export class ItemHeader {
@@ -135,11 +139,18 @@ export class ItemHeader {
   readonly epicLabel = input<string | null>(null);
   readonly showLock = input(false);
   readonly locked = input(false);
+  readonly showRemove = input(false);
 
   readonly lockToggle = output<void>();
+  readonly remove = output<void>();
 
   onLockClick(event: MouseEvent): void {
     event.stopPropagation();
     this.lockToggle.emit();
+  }
+
+  onRemoveClick(event: MouseEvent): void {
+    event.stopPropagation();
+    this.remove.emit();
   }
 }

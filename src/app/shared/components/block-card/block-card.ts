@@ -38,7 +38,9 @@ export type BlockCardVariant = 'queue' | 'calendar';
       [epicLabel]="epicLabel()"
       [showLock]="true"
       [locked]="locked()"
-      (lockToggle)="lockToggle.emit()" />
+      [showRemove]="showRemove()"
+      (lockToggle)="lockToggle.emit()"
+      (remove)="remove.emit()" />
     <div class="block-card__body">
       <a class="block-card__link" [appKanbanCardLink]="seq()">{{ title() }}</a>
       <span class="block-card__size" [attr.title]="size() + ' × 25-minute blocks'">{{ size() }}×25m</span>
@@ -101,8 +103,12 @@ export class BlockCard {
   readonly size = input.required<number>();
   readonly locked = input(false);
   readonly timeText = input<string | null>(null);
+  // Calendar context only: × in the header strip to take the block off the
+  // calendar and back into the queue without the drag-to-queue gesture.
+  readonly showRemove = input(false);
 
   readonly lockToggle = output<void>();
+  readonly remove = output<void>();
 
   readonly secondary = computed<ItemHeaderSecondary>(() =>
     this.variant() === 'calendar' ? 'time' : this.epicLabel() ? 'epic' : 'none',
