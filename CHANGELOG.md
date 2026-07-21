@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.120](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.119...v0.0.120) (2026-07-21)
+
+
+### Features
+
+* **exercise:** show what each exercise works, at entry time ([fc937f8](https://github.com/marvinbarretto/jimbo-dashboard/commit/fc937f80500b7219f9ce5a6cda535c951e191bf0))
+* **journal:** per-slice colours on the work-page donut ([9deaf4c](https://github.com/marvinbarretto/jimbo-dashboard/commit/9deaf4c594bfcbf5712ac9607d6a5f3032c1c408))
+* **planner:** collapsible panels, clear-unlocked, x-to-unplace blocks ([919667f](https://github.com/marvinbarretto/jimbo-dashboard/commit/919667f6b18bfb0ebdcd87f29adfcb3811366ba5))
+* **planner:** watch queue panel in the sidebar ([f059e44](https://github.com/marvinbarretto/jimbo-dashboard/commit/f059e44b65f971a770e20f8f3d4a0b1f35b924f4))
+* **shared:** optional remove action on item-header and block-card ([8915116](https://github.com/marvinbarretto/jimbo-dashboard/commit/8915116e5810478d86de7cb1b3fb68797a46b326))
+
+
+### Bug Fixes
+
+* **planner:** only style real links as clickable in the watch queue ([89abf68](https://github.com/marvinbarretto/jimbo-dashboard/commit/89abf685b98b27c94c929b5ad5d818ab88b16d72))
+
 ### [0.0.119](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.118...v0.0.119) (2026-07-21)
 
 
