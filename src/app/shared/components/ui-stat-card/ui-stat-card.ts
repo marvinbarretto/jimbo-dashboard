@@ -9,7 +9,7 @@ import { UiCard } from '../ui-card/ui-card';
     <app-ui-card tone="soft" [compact]="true">
       <div class="ui-stat-card__body">
         <span class="ui-stat-card__label">{{ label() }}</span>
-        <strong class="ui-stat-card__value">{{ value() }}</strong>
+        <strong class="ui-stat-card__value" [class]="'ui-stat-card__value--' + status()">{{ value() }}</strong>
         @if (detail(); as d) {
           <p class="ui-stat-card__detail">{{ d }}</p>
         }
@@ -67,6 +67,11 @@ import { UiCard } from '../ui-card/ui-card';
       word-break: break-word;
     }
 
+    // Status tones colour the number only — the card stays neutral so a row of
+    // tiles doesn't turn into a wall of red when several are unhealthy.
+    .ui-stat-card__value--warn  { color: var(--color-warning); }
+    .ui-stat-card__value--alert { color: var(--color-danger); }
+
     .ui-stat-card__detail {
       margin: 0;
       font-size: 0.7rem;
@@ -80,4 +85,6 @@ export class UiStatCard {
   readonly label = input.required<string>();
   readonly value = input.required<string>();
   readonly detail = input<string | null>(null);
+  /** Tints the value when a stat is out of range — see the tone styles above. */
+  readonly status = input<'neutral' | 'warn' | 'alert'>('neutral');
 }
