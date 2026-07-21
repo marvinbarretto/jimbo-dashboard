@@ -24,6 +24,10 @@ import { UiPeriodDatePicker } from './ui-period-date-picker';
       </div>
 
       <div class="period-pager__controls">
+        <!-- Page-supplied controls that belong with the period chrome (e.g.
+             the journal's Day/Week/Month switch) — projected so the whole
+             navigation cluster reads as one unit instead of orphan rows. -->
+        <ng-content select="[period-pager-actions]" />
         <app-ui-button variant="ghost" size="sm" ariaLabel="Previous" (pressed)="previous.emit()">‹</app-ui-button>
         @if (!isAtToday()) {
           <app-ui-button variant="ghost" size="sm" (pressed)="today.emit()">Today</app-ui-button>

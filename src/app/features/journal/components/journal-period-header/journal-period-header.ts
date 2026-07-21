@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { UiPeriodPager } from '@shared/components/ui-period-pager/ui-period-pager';
+import { UiSegmented, type UiSegmentedOption } from '@shared/components/ui-segmented/ui-segmented';
 import {
   type DayKey,
   formatDayLong,
@@ -22,14 +23,16 @@ import {
 } from '../../utils/period-links';
 
 /**
- * Period navigation for a journal domain page: prev/next/today pager plus
- * Day | Week | Month peer links that preserve the point-in-time (viewing a
- * March day → Week lands on the week containing it). Owns the router
- * navigation so domain pages only render content.
+ * Period navigation for a journal domain page: one header cluster holding the
+ * title, the Day | Week | Month switch and the prev/today/next pager (the
+ * switch is projected into the pager's controls so nothing floats loose).
+ * Granularity changes preserve the point-in-time — a March day's Week lands
+ * on the week containing it. Owns all navigation; domain pages only render
+ * content.
  */
 @Component({
   selector: 'app-journal-period-header',
-  imports: [RouterLink, UiPeriodPager],
+  imports: [UiPeriodPager, UiSegmented],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-ui-period-pager
@@ -43,45 +46,18 @@ import {
       (next)="shift(1)"
       (today)="goCurrent()"
       (dateChange)="onKeyInput($event)"
-    />
-    @if (granularities().length > 1) {
-      <nav class="jph__grains" aria-label="Granularity">
-        @for (g of granularities(); track g) {
-          <a
-            class="jph__grain"
-            [class.jph__grain--active]="g === granularity()"
-            [routerLink]="['/journal', domain(), g, peers()[g]]"
-          >{{ GRAIN_LABEL[g] }}</a>
-        }
-      </nav>
-    }
-  `,
-  styles: [`
-    :host { display: block; }
-
-    .jph__grains {
-      display: flex;
-      gap: 0.25rem;
-      margin-top: 0.5rem;
-    }
-
-    .jph__grain {
-      font-size: 0.75rem;
-      padding: 0.25rem 0.7rem;
-      border-radius: 999px;
-      color: var(--color-text-muted);
-      text-decoration: none;
-      border: 1px solid var(--color-border);
-
-      &:hover { color: var(--color-text); }
-
-      &--active {
-        color: var(--color-accent);
-        border-color: color-mix(in oklab, var(--color-accent) 45%, transparent);
-        background: color-mix(in oklab, var(--color-accent) 10%, transparent);
+    >
+      @if (granularities().length > 1) {
+        <app-ui-segmented
+          period-pager-actions
+          [options]="grainOptions()"
+          [value]="granularity()"
+          ariaLabel="Granularity"
+          (changed)="onGranularity($event)"
+        />
       }
-    }
-  `],
+    </app-ui-period-pager>
+  `,
 })
 export class JournalPeriodHeader {
   private readonly router = inject(Router);
@@ -92,11 +68,13 @@ export class JournalPeriodHeader {
   /** Granularities this domain supports (Overview is day-only). */
   readonly granularities = input<readonly JournalGranularity[]>(['day', 'week', 'month']);
 
-  protected readonly GRAIN_LABEL: Record<JournalGranularity, string> = {
-    day: 'Day', week: 'Week', month: 'Month',
-  };
+  protected readonly grainOptions = computed<UiSegmentedOption[]>(() =>
+    this.granularities().map(g => ({
+      value: g,
+      label: g === 'day' ? 'Day' : g === 'week' ? 'Week' : 'Month',
+    })));
 
-  protected readonly peers = computed(() => peerKeys(this.granularity(), this.key()));
+  private readonly peers = computed(() => peerKeys(this.granularity(), this.key()));
   protected readonly isCurrent = computed(() => periodContainsToday(this.granularity(), this.key()));
 
   protected readonly title = computed(() => {
@@ -116,6 +94,12 @@ export class JournalPeriodHeader {
       case 'month': return '';
     }
   });
+
+  protected onGranularity(value: string): void {
+    const g = value as JournalGranularity;
+    if (!this.granularities().includes(g) || g === this.granularity()) return;
+    this.router.navigate(['/journal', this.domain(), g, this.peers()[g]]);
+  }
 
   protected shift(delta: number): void {
     const key = this.key();
