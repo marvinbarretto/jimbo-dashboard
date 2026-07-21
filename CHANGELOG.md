@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.118](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.117...v0.0.118) (2026-07-21)
+
+
+### Features
+
+* **checkins:** mood/energy check-in trend page, pomo-retro capture point ([dde232f](https://github.com/marvinbarretto/jimbo-dashboard/commit/dde232f3616707221446dce66567b25937a9e90c))
+* **checkins:** word-anchored score picker, energy narrowed to 3 states ([90355f1](https://github.com/marvinbarretto/jimbo-dashboard/commit/90355f159ff85e8af53aea843b5c3ce3923c168a))
+* **journal:** domain-first IA — Overview/Work/Body/Jimbo/Phone with per-domain periods ([c6664f1](https://github.com/marvinbarretto/jimbo-dashboard/commit/c6664f18858ecebf6b5d68501b8ed110767b8df0))
+
 ### [0.0.117](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.116...v0.0.117) (2026-07-21)
 
 
