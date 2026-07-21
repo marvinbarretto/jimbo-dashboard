@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { WatchQueueService } from '../../data-access/watch-queue.service';
 
 /**
@@ -19,45 +19,50 @@ import { WatchQueueService } from '../../data-access/watch-queue.service';
   template: `
     <section class="watchq">
       <div class="watchq__head">
-        <span>Watch queue</span>
+        <button type="button" class="collapse-toggle" (click)="toggleCollapsed()" [attr.aria-expanded]="!collapsed()">
+          <span class="collapse-toggle__chevron">{{ collapsed() ? '▸' : '▾' }}</span>
+          Watch queue
+        </button>
         <span class="watchq__count">{{ svc.count() }}</span>
       </div>
 
-      @if (svc.isLoading()) {
-        <div class="watchq__note">Loading…</div>
-      } @else if (svc.hasError()) {
-        <div class="watchq__note watchq__note--error">Couldn't load the watch queue.</div>
-      } @else if (svc.count() === 0) {
-        <div class="watchq__note">Nothing queued.</div>
-      } @else {
-        <div class="watchq__sub">
-          {{ fmt(svc.totalWatchMinutes()) }} at 1.5&times;
-          <span class="watchq__raw">({{ fmt(svc.totalMinutes()) }} actual)</span>
-        </div>
+      @if (!collapsed()) {
+        @if (svc.isLoading()) {
+          <div class="watchq__note">Loading…</div>
+        } @else if (svc.hasError()) {
+          <div class="watchq__note watchq__note--error">Couldn't load the watch queue.</div>
+        } @else if (svc.count() === 0) {
+          <div class="watchq__note">Nothing queued.</div>
+        } @else {
+          <div class="watchq__sub">
+            {{ fmt(svc.totalWatchMinutes()) }} at 1.5&times;
+            <span class="watchq__raw">({{ fmt(svc.totalMinutes()) }} actual)</span>
+          </div>
 
-        <ul class="watchq__list">
-          @for (item of items(); track item.id) {
-            <li class="watchq__item">
-              <div class="watchq__row">
-                <span class="watchq__len" [class.watchq__len--long]="(item.watchMinutes ?? 0) >= 40">
-                  {{ item.watchMinutes ?? '?' }}m
-                </span>
-                @if (item.url) {
-                  <a class="watchq__title" [href]="item.url" target="_blank" rel="noopener">{{ item.title }}</a>
-                } @else {
-                  <span class="watchq__title">{{ item.title }}</span>
-                }
-              </div>
-              <div class="watchq__meta">
-                @if (item.seq) { <span class="watchq__seq">#{{ item.seq }}</span> }
-                @if (item.minutes && item.minutes !== item.watchMinutes) {
-                  <span class="watchq__actual">{{ item.minutes }}m actual</span>
-                }
-                @if (item.blocks) { <span class="watchq__blocks">{{ item.blocks }}&times;25m</span> }
-              </div>
-            </li>
-          }
-        </ul>
+          <ul class="watchq__list">
+            @for (item of items(); track item.id) {
+              <li class="watchq__item">
+                <div class="watchq__row">
+                  <span class="watchq__len" [class.watchq__len--long]="(item.watchMinutes ?? 0) >= 40">
+                    {{ item.watchMinutes ?? '?' }}m
+                  </span>
+                  @if (item.url) {
+                    <a class="watchq__title" [href]="item.url" target="_blank" rel="noopener">{{ item.title }}</a>
+                  } @else {
+                    <span class="watchq__title">{{ item.title }}</span>
+                  }
+                </div>
+                <div class="watchq__meta">
+                  @if (item.seq) { <span class="watchq__seq">#{{ item.seq }}</span> }
+                  @if (item.minutes && item.minutes !== item.watchMinutes) {
+                    <span class="watchq__actual">{{ item.minutes }}m actual</span>
+                  }
+                  @if (item.blocks) { <span class="watchq__blocks">{{ item.blocks }}&times;25m</span> }
+                </div>
+              </li>
+            }
+          </ul>
+        }
       }
     </section>
   `,
@@ -65,8 +70,14 @@ import { WatchQueueService } from '../../data-access/watch-queue.service';
 export class WatchQueuePanel implements OnInit {
   protected readonly svc = inject(WatchQueueService);
 
+  protected readonly collapsed = signal(false);
+
   /** Shortest first — matches how you'd actually pick something to watch. */
   protected readonly items = computed(() => this.svc.byShortest());
+
+  protected toggleCollapsed(): void {
+    this.collapsed.update(v => !v);
+  }
 
   ngOnInit(): void {
     void this.svc.load();

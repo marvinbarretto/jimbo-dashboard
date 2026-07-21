@@ -23,6 +23,26 @@
   color: var(--color-text-muted);
 }
 
+// Same collapse-toggle treatment as the block queue's head (planner-page.scss
+// owns the sibling declaration) — component styles are scoped, so the class
+// is re-declared here rather than shared.
+.collapse-toggle {
+  font: inherit;
+  color: inherit;
+  border: none;
+  background: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.collapse-toggle__chevron {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+}
+
 .watchq__sub {
   padding: 0.4rem 0.9rem 0;
   font-size: 0.65rem;

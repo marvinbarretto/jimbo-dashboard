@@ -186,19 +186,29 @@
 
 .planner__board {
   display: grid;
-  grid-template-columns: 18rem 1fr;
+  grid-template-columns: 22rem 1fr;
   gap: 1.25rem;
   align-items: start;
 }
 
 /* Left column holds the block queue and the watch queue as one grid child —
    .planner__board is a 2-column grid, so a third direct child would wrap the
-   calendar onto a second row. */
+   calendar onto a second row.
+
+   Sticky + viewport-capped with its own scroll: the calendar column is far
+   taller than a screen, so without this the queues scroll away and drag-out
+   / Clear are off-screen exactly when you want them. align-items: start on
+   the grid is what lets sticky work here (a stretched grid child can't
+   stick). */
 .planner__sidebar {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   min-width: 0;
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
 }
 
 /* ── Queue ───────────────────────────────────────────────────────────────── */
@@ -220,6 +230,32 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+}
+
+/* Shared by the block-queue head (here) and the watch-queue head (its own
+   stylesheet re-declares the same class) — a plain text button that reads as
+   the panel title with a disclosure chevron in front. */
+.collapse-toggle {
+  font: inherit;
+  color: inherit;
+  border: none;
+  background: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.collapse-toggle__chevron {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+}
+
+.collapse-toggle__count {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  font-weight: 500;
 }
 
 .queue__actions {
@@ -246,6 +282,12 @@
   flex-direction: column;
   gap: 0.5rem;
   min-height: 6rem;
+}
+
+/* display: none rather than removing from the DOM — FullCalendar's Draggable
+   holds a reference to this element (see the comment in the template). */
+.queue__list--collapsed {
+  display: none;
 }
 
 .empty {
@@ -294,6 +336,12 @@
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   padding: 0.75rem;
+  /* The grid is ~2000px tall (slots × SLOT_PX) — cap the box at the viewport
+     and scroll internally so the page itself stays one screen tall and the
+     sidebar never has to chase the calendar. stickyHeaderDates in the
+     calendar options keeps the day names pinned inside this scroller. */
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
 
   --fc-border-color: var(--color-border);
   --fc-page-bg-color: var(--color-surface);

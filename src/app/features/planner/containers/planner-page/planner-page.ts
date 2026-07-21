@@ -135,6 +135,7 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
 
   readonly placements = signal<PlacedBlock[]>([]);
   readonly density = signal<Density>('comfortable');
+  readonly queueCollapsed = signal(false);
   // Locked-in-queue ids — separate from `placements` since a queue item
   // isn't a PlacedBlock at all; this is the only queue-side state we own
   // locally (everything else in `queue` is derived fresh from vault items).
@@ -225,6 +226,10 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
     // therefore reposition events, which are computed from row height) to
     // fill that height.
     expandRows: true,
+    // The calendar now lives in its own internally-scrolling box (see
+    // .calendar in the SCSS) — keep the day-name header pinned while the
+    // tall grid scrolls underneath it.
+    stickyHeaderDates: true,
     firstDay: 1,
     nowIndicator: true,
     slotDuration: `00:${BLOCK_MINUTES}:00`,
@@ -367,6 +372,10 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
     this.density.set(d);
   }
 
+  toggleQueueCollapsed(): void {
+    this.queueCollapsed.update(v => !v);
+  }
+
   protected fmtDuration(minutes: number): string {
     const h = Math.floor(minutes / 60);
     const m = Math.round(minutes % 60);
@@ -386,6 +395,15 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
     const block = this.placements().find(b => b.id === blockId);
     this.placements.update(p => p.filter(b => b.id !== blockId));
     if (block?.googleEventId) void this.sync.remove(block.googleEventId);
+  }
+
+  // Bulk undo for randomize: every unlocked placement comes off the calendar
+  // and back into the queue in one press. Locked blocks stay put — same
+  // contract as randomize itself.
+  clearUnlocked(): void {
+    const unlocked = this.placements().filter(b => !b.locked);
+    this.placements.update(p => p.filter(b => b.locked));
+    for (const b of unlocked) if (b.googleEventId) void this.sync.remove(b.googleEventId);
   }
 
   // Applies a local edit to a placement and, if it's already synced to a

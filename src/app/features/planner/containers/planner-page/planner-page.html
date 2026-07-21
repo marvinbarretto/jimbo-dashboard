@@ -56,17 +56,29 @@
 
     <section class="queue">
       <div class="queue__head">
-        <span>Block queue</span>
+        <button type="button" class="collapse-toggle" (click)="toggleQueueCollapsed()" [attr.aria-expanded]="!queueCollapsed()">
+          <span class="collapse-toggle__chevron">{{ queueCollapsed() ? '▸' : '▾' }}</span>
+          Block queue
+          @if (queueCollapsed()) {
+            <span class="collapse-toggle__count">{{ queue().length }}</span>
+          }
+        </button>
         <span class="queue__actions">
+          <app-ui-button size="sm" variant="secondary" (pressed)="clearUnlocked()" title="Take every unlocked block off the calendar and back into the queue">Clear</app-ui-button>
           <app-ui-button size="sm" variant="secondary" (pressed)="recalibrate()" title="Clear completed items, move missed slots forward — leaves everything else in place">Recalibrate</app-ui-button>
           <app-ui-button size="sm" variant="primary" (pressed)="randomize()">Randomize</app-ui-button>
         </span>
       </div>
-      <div class="queue__sub">Your top 10 by priority, or tagged "this-week"</div>
-      @if (lockedCount() > 0) {
-        <div class="queue__locked-note">{{ lockedCount() }} locked — kept in place</div>
+      @if (!queueCollapsed()) {
+        <div class="queue__sub">Your top 10 by priority, or tagged "this-week"</div>
+        @if (lockedCount() > 0) {
+          <div class="queue__locked-note">{{ lockedCount() }} locked — kept in place</div>
+        }
       }
-      <div class="queue__list" #queueList>
+      <!-- Collapse hides via CSS, not @if — FullCalendar's Draggable is bound
+           to this element once in ngAfterViewInit, so it has to stay in the
+           DOM or drag-from-queue dies after the first collapse. -->
+      <div class="queue__list" [class.queue__list--collapsed]="queueCollapsed()" #queueList>
         @for (b of queue(); track b.id) {
           <app-block-card
             variant="queue"
@@ -111,7 +123,9 @@
               [size]="arg.event.extendedProps.size"
               [locked]="arg.event.extendedProps.locked"
               [timeText]="arg.timeText"
-              (lockToggle)="toggleLock(arg.event.extendedProps.blockId)" />
+              [showRemove]="!arg.event.extendedProps.locked"
+              (lockToggle)="toggleLock(arg.event.extendedProps.blockId)"
+              (remove)="unplace(arg.event.extendedProps.blockId)" />
           } @else {
             <div class="suggestion-card">
               <div class="suggestion-card__header">{{ arg.timeText }}</div>
