@@ -13,13 +13,14 @@ interface Lesson {
   last_cited_at: string | null;
 }
 
-interface Correction {
-  id: string;
-  created_at: string;
+interface UningestedCount {
+  total: number;
 }
 
 const DAY_MS = 86_400_000;
 const CITED_WINDOW_DAYS = 30;
+// Corrections the distiller consumes per run — the API's default page size.
+const DISTILL_BATCH = 50;
 
 /**
  * Health of the grooming pump's learning loop, which is otherwise invisible:
@@ -46,7 +47,7 @@ const CITED_WINDOW_DAYS = 30;
         label="Awaiting distill"
         [value]="uningested()"
         [status]="uningestedStatus()"
-        detail="Corrections not yet turned into lessons"
+        [detail]="uningestedDetail()"
       />
       <app-ui-stat-card
         label="Active lessons"
@@ -80,13 +81,16 @@ export class GroomingHealthStrip {
   private readonly lessonsRes = httpResource<Lesson[]>(
     () => `${environment.dashboardApiUrl}/api/grooming/lessons`,
   );
-  private readonly uningestedRes = httpResource<Correction[]>(
-    () => `${environment.dashboardApiUrl}/api/grooming/corrections/uningested`,
+  // The /count endpoint, not the list: the list pages at 50 (max 200), so its
+  // length is a page size and this tile read a reassuring "50" while the real
+  // backlog was 1476.
+  private readonly uningestedRes = httpResource<UningestedCount>(
+    () => `${environment.dashboardApiUrl}/api/grooming/corrections/uningested/count`,
   );
 
   private readonly counts = computed(() => this.pipelineRes.value()?.counts ?? {});
   private readonly lessons = computed(() => this.lessonsRes.value() ?? []);
-  private readonly uningestedCount = computed(() => this.uningestedRes.value()?.length ?? 0);
+  private readonly uningestedCount = computed(() => this.uningestedRes.value()?.total ?? 0);
 
   private readonly ungroomedCount = computed(() => this.counts()['ungroomed'] ?? 0);
   private readonly totalCount = computed(() =>
@@ -109,6 +113,15 @@ export class GroomingHealthStrip {
     const total = this.totalCount();
     if (!total) return null;
     return `${Math.round((this.ungroomedCount() / total) * 100)}% of ${total} items`;
+  });
+
+  // The backlog number alone doesn't say whether it's draining — the distiller
+  // takes DISTILL_BATCH per daily run, so surface the implied catch-up time.
+  protected readonly uningestedDetail = computed(() => {
+    const n = this.uningestedCount();
+    if (!n) return 'Distiller is caught up';
+    const days = Math.ceil(n / DISTILL_BATCH);
+    return `~${days} daily run${days === 1 ? '' : 's'} to clear at ${DISTILL_BATCH}/run`;
   });
 
   protected readonly lessonsDetail = computed(() => {
