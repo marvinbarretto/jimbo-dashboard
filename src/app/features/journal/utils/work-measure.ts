@@ -18,25 +18,75 @@ export interface SpanMs {
 const HONEST_ENVELOPE_MS = 3 * 3_600_000;
 const MIN_MS = 60_000;
 
-/** Total minutes covered by the union of the given spans. */
-export function unionMinutes(spans: readonly SpanMs[]): number {
+/** Overlapping spans merged into a sorted, disjoint cover. */
+export function mergeSpans(spans: readonly SpanMs[]): SpanMs[] {
   const sorted = [...spans]
     .filter(s => s.endMs > s.startMs)
     .sort((a, b) => a.startMs - b.startMs);
-  let total = 0;
-  let curStart = 0;
-  let curEnd = -Infinity;
+  const merged: Array<{ startMs: number; endMs: number }> = [];
   for (const s of sorted) {
-    if (s.startMs > curEnd) {
-      if (curEnd > curStart) total += curEnd - curStart;
-      curStart = s.startMs;
-      curEnd = s.endMs;
-    } else {
-      curEnd = Math.max(curEnd, s.endMs);
+    const last = merged[merged.length - 1];
+    if (last && s.startMs <= last.endMs) last.endMs = Math.max(last.endMs, s.endMs);
+    else merged.push({ startMs: s.startMs, endMs: s.endMs });
+  }
+  return merged;
+}
+
+/** Total minutes covered by the union of the given spans. */
+export function unionMinutes(spans: readonly SpanMs[]): number {
+  const total = mergeSpans(spans).reduce((t, s) => t + (s.endMs - s.startMs), 0);
+  return Math.round(total / MIN_MS);
+}
+
+const HOUR_MS = 3_600_000;
+
+/**
+ * Union minutes bucketed into the day's 24 local hours — a span crossing an
+ * hour boundary contributes to both buckets pro-rata, so the bars sum to the
+ * desk-time total instead of lumping a whole session on its start hour.
+ */
+export function hourlyUnionMinutes(spans: readonly SpanMs[], dayStartMs: number): number[] {
+  const buckets = new Array<number>(24).fill(0);
+  for (const s of mergeSpans(spans)) {
+    const firstHour = Math.max(0, Math.floor((s.startMs - dayStartMs) / HOUR_MS));
+    const lastHour = Math.min(23, Math.floor((s.endMs - 1 - dayStartMs) / HOUR_MS));
+    for (let h = firstHour; h <= lastHour; h++) {
+      const hourStart = dayStartMs + h * HOUR_MS;
+      const overlap = Math.min(s.endMs, hourStart + HOUR_MS) - Math.max(s.startMs, hourStart);
+      if (overlap > 0) buckets[h] += overlap / MIN_MS;
     }
   }
-  if (curEnd > curStart) total += curEnd - curStart;
-  return Math.round(total / MIN_MS);
+  return buckets.map(m => Math.round(m));
+}
+
+export interface ProjectWorkMinutes {
+  readonly project_id: string | null;
+  readonly minutes: number;
+}
+
+/**
+ * Per-project desk minutes from ALL evidence: each project's focus spans and
+ * honest code spans are unioned together, so a pomo run inside a code session
+ * on the same project counts once. Pass interactive code sessions only —
+ * executor time is the fleet's, not the desk's.
+ */
+export function projectUnionMinutes(
+  focus: readonly FocusSessionLite[],
+  code: readonly CodeSession[],
+  bursts: ReadonlyMap<string, readonly BurstSegment[]>,
+): ProjectWorkMinutes[] {
+  const byProject = new Map<string, SpanMs[]>();
+  const add = (projectId: string | null, spans: readonly SpanMs[]) => {
+    if (!spans.length) return;
+    const key = projectId ?? '';
+    byProject.set(key, [...(byProject.get(key) ?? []), ...spans]);
+  };
+  for (const s of focus) add(s.project_id, focusSpans([s]));
+  for (const s of code) add(s.project_id, codeEvidenceSpans([s], bursts));
+  return [...byProject.entries()]
+    .map(([key, spans]) => ({ project_id: key || null, minutes: unionMinutes(spans) }))
+    .filter(p => p.minutes > 0)
+    .sort((a, b) => b.minutes - a.minutes);
 }
 
 export function focusSpans(sessions: readonly FocusSessionLite[]): SpanMs[] {

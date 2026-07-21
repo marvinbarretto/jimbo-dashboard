@@ -30,7 +30,8 @@ $src-colors: (
 .rt__head,
 .rt__grid {
   display: grid;
-  grid-template-columns: 3.2rem 1.4rem repeat(4, minmax(0, 1fr));
+  // gutter · commit pins · phone pins · 4 lanes
+  grid-template-columns: 3.2rem 1.4rem 1.4rem repeat(4, minmax(0, 1fr));
   column-gap: 0.35rem;
 }
 
@@ -150,6 +151,21 @@ $src-colors: (
   border-radius: 50%;
   background: rgba(168, 85, 247, 0.9);
   cursor: default;
+}
+
+// Phone pins: diamond + the phone accent so they never read as commits.
+.rt__pin--phone {
+  border-radius: 2px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: rgba(99, 179, 237, 0.9);
+
+  .rt__pin-count {
+    transform: translateY(-50%) rotate(-45deg);
+  }
+}
+
+.rt__pin-legend--phone {
+  margin-left: 0.6rem;
 }
 
 .rt__pin-count {

@@ -240,6 +240,55 @@ export function youtubeEpisodes(events: readonly TelemetryEventLite[]): RetroInt
   return episodes;
 }
 
+// Phone signals with honest single timestamps, rendered as pins on their own
+// rail (screen_session stays excluded — overlapping rolling 2h windows are
+// not intervals). Media = a session started (title/app); movement = an
+// activity-recognition enter transition other than 'still'.
+export function phonePins(events: readonly TelemetryEventLite[]): RetroPinCluster[] {
+  const moments = events
+    .flatMap(e => {
+      if (e.collector === 'media' && e.type === 'media.session_started') {
+        const title = e.payload?.['title'] as string | null;
+        const pkg = (e.payload?.['pkg'] as string | undefined)?.split('.').at(-1);
+        return [{ tsMs: Date.parse(e.ts), label: `▶ ${title ?? pkg ?? 'media'}` }];
+      }
+      if (e.collector === 'activity' && (e.payload?.['transition'] as string) === 'enter') {
+        const type = e.payload?.['activity_type'] as string | undefined;
+        if (type && type !== 'still' && type !== 'unknown') {
+          return [{ tsMs: Date.parse(e.ts), label: `⇢ ${type.replace(/_/g, ' ')}` }];
+        }
+      }
+      return [];
+    })
+    .filter(m => Number.isFinite(m.tsMs))
+    .sort((a, b) => a.tsMs - b.tsMs);
+
+  const clusters: RetroPinCluster[] = [];
+  let current: { tsMs: number; lastMs: number; items: string[] } | null = null;
+  const flush = () => {
+    if (!current) return;
+    clusters.push({
+      id: `phone-${current.tsMs}`,
+      tsMs: current.tsMs,
+      count: current.items.length,
+      label: current.items.length === 1 ? current.items[0] : `${current.items.length} phone events`,
+      items: current.items,
+    });
+    current = null;
+  };
+  for (const m of moments) {
+    if (current && m.tsMs - current.lastMs <= PIN_CLUSTER_MS) {
+      current.items.push(m.label);
+      current.lastMs = m.tsMs;
+    } else {
+      flush();
+      current = { tsMs: m.tsMs, lastMs: m.tsMs, items: [m.label] };
+    }
+  }
+  flush();
+  return clusters;
+}
+
 export function commitPins(events: readonly TelemetryEventLite[]): RetroPinCluster[] {
   type CommitRow = { sha: string; subject: string; author_date: string };
   const commits = events

@@ -24,6 +24,7 @@ import {
   exerciseIntervals,
   focusIntervals,
   heartbeatBursts,
+  phonePins,
   timelineWindow,
   youtubeEpisodes,
   type RetroInterval,
@@ -127,6 +128,10 @@ export class JournalTimelineSection {
 
   private readonly pins = computed(() => commitPins(this.telemetry()));
 
+  // Media starts + movement transitions — the phone signals with honest
+  // single timestamps. Rendered on their own pin rail beside the commits.
+  private readonly phonePinsList = computed(() => phonePins(this.telemetry()));
+
   readonly sourceChips = computed(() => {
     const counts = new Map<RetroSource, number>();
     for (const iv of this.allIntervals()) {
@@ -153,7 +158,11 @@ export class JournalTimelineSection {
   // Window fits ALL of the day's data (not just visible) so toggling a layer
   // filters content without the whole grid re-anchoring under the cursor.
   private readonly window = computed(() =>
-    timelineWindow(dateFromDayKey(this.date()).getTime(), this.allIntervals(), this.pins()));
+    timelineWindow(
+      dateFromDayKey(this.date()).getTime(),
+      this.allIntervals(),
+      [...this.pins(), ...this.phonePinsList()],
+    ));
 
   readonly gridHeightPx = computed(() => {
     const w = this.window();
@@ -213,9 +222,14 @@ export class JournalTimelineSection {
     }));
   });
 
-  readonly pinVMs = computed<PinVM[]>(() => {
+  readonly pinVMs = computed<PinVM[]>(() => this.toPinVMs(this.pins()));
+  readonly phonePinVMs = computed<PinVM[]>(() => this.toPinVMs(this.phonePinsList()));
+  readonly phoneEventCount = computed(() =>
+    this.phonePinsList().reduce((s, p) => s + p.count, 0));
+
+  private toPinVMs(clusters: readonly { id: string; tsMs: number; count: number; items: readonly string[] }[]): PinVM[] {
     const w = this.window();
-    return this.pins()
+    return clusters
       .filter(p => p.tsMs >= w.startMs && p.tsMs <= w.endMs)
       .map(p => ({
         id: p.id,
@@ -223,7 +237,7 @@ export class JournalTimelineSection {
         count: p.count,
         tooltip: `${absoluteTime(new Date(p.tsMs).toISOString())} · ${p.items.join('\n')}`,
       }));
-  });
+  }
 
   // Now-line only on today's page, and only when "now" falls inside the window.
   readonly nowLineTopPx = computed<number | null>(() => {
@@ -234,7 +248,8 @@ export class JournalTimelineSection {
     return ((now - w.startMs) / HOUR_MS) * PX_PER_HOUR;
   });
 
-  readonly hasAnything = computed(() => this.allIntervals().length > 0 || this.pins().length > 0);
+  readonly hasAnything = computed(() =>
+    this.allIntervals().length > 0 || this.pins().length > 0 || this.phonePinsList().length > 0);
   readonly open = linkedSignal(() => this.hasAnything());
 
   readonly sectionMeta = computed(() => {

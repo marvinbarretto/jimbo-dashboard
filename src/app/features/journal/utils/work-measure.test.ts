@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { CodeSession } from '../data-access/code-sessions.service';
+import type { FocusSessionLite } from '../data-access/journal-data.service';
 import type { BurstSegment } from './retro-timeline';
-import { codeEvidenceSpans, unionMinutes } from './work-measure';
+import {
+  codeEvidenceSpans,
+  hourlyUnionMinutes,
+  projectUnionMinutes,
+  unionMinutes,
+} from './work-measure';
 
 const T0 = Date.parse('2026-07-20T10:00:00Z');
 const MIN = 60_000;
@@ -53,6 +59,85 @@ describe('unionMinutes', () => {
   it('handles empty and inverted spans', () => {
     expect(unionMinutes([])).toBe(0);
     expect(unionMinutes([span(10, 10)])).toBe(0);
+  });
+});
+
+function focus(over: Partial<FocusSessionLite>): FocusSessionLite {
+  return {
+    id: over.id ?? 'f-x',
+    project_id: null,
+    started_at: new Date(T0).toISOString(),
+    ended_at: null,
+    planned_seconds: 1500,
+    actual_seconds: 1500,
+    status: 'completed',
+    notes: null,
+    tags: [],
+    ...over,
+  };
+}
+
+describe('hourlyUnionMinutes', () => {
+  // T0 is 10:00Z; use it as the "day start" so bucket 0 = the T0 hour.
+  it('splits a span crossing an hour boundary pro-rata', () => {
+    const buckets = hourlyUnionMinutes([span(30, 90)], T0);
+    expect(buckets[0]).toBe(30);
+    expect(buckets[1]).toBe(30);
+    expect(buckets.reduce((a, b) => a + b, 0)).toBe(60);
+  });
+
+  it('counts overlapping spans once, matching the desk-time total', () => {
+    const spans = [span(0, 120), span(30, 55)];
+    const buckets = hourlyUnionMinutes(spans, T0);
+    expect(buckets.reduce((a, b) => a + b, 0)).toBe(unionMinutes(spans));
+  });
+
+  it('clamps spans outside the day', () => {
+    const buckets = hourlyUnionMinutes([span(-60, 30), span(23 * 60 + 30, 25 * 60)], T0);
+    expect(buckets[0]).toBe(30);
+    expect(buckets[23]).toBe(30);
+  });
+});
+
+describe('projectUnionMinutes', () => {
+  const noBursts = new Map<string, readonly BurstSegment[]>();
+
+  it('unions focus and code evidence per project', () => {
+    const f = focus({ project_id: 'p1' }); // 25 min at T0
+    const c = session({
+      project_id: 'p1',
+      ended_at: new Date(T0 + 60 * MIN).toISOString(), // 60 min envelope containing the pomo
+    });
+    const rows = projectUnionMinutes([f], [c], noBursts);
+    expect(rows).toEqual([{ project_id: 'p1', minutes: 60 }]);
+  });
+
+  it('keeps projects separate and sorts by minutes', () => {
+    const f = focus({ project_id: 'p1' }); // 25 min
+    const c = session({
+      project_id: 'p2',
+      started_at: new Date(T0 + 120 * MIN).toISOString(),
+      ended_at: new Date(T0 + 210 * MIN).toISOString(), // 90 min
+    });
+    const rows = projectUnionMinutes([f], [c], noBursts);
+    expect(rows).toEqual([
+      { project_id: 'p2', minutes: 90 },
+      { project_id: 'p1', minutes: 25 },
+    ]);
+  });
+
+  it('buckets unattributed work under null', () => {
+    const rows = projectUnionMinutes([focus({})], [], noBursts);
+    expect(rows).toEqual([{ project_id: null, minutes: 25 }]);
+  });
+
+  it('drops projects whose only evidence is a trail-less long envelope', () => {
+    const c = session({
+      project_id: 'p3',
+      status: 'running',
+      last_seen_at: new Date(T0 + 10 * 60 * MIN).toISOString(),
+    });
+    expect(projectUnionMinutes([], [c], noBursts)).toEqual([]);
   });
 });
 

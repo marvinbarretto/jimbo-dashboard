@@ -14,11 +14,15 @@
         @if (commitCount()) {
           <span class="rt__pin-legend">● {{ commitCount() }} commits</span>
         }
+        @if (phoneEventCount()) {
+          <span class="rt__pin-legend rt__pin-legend--phone">◆ {{ phoneEventCount() }} phone</span>
+        }
       </div>
 
       <div class="rt__head">
         <span class="rt__head-gutter"></span>
         <span class="rt__head-pins" title="Commits">●</span>
+        <span class="rt__head-pins rt__head-pins--phone" title="Phone (media + movement)">◆</span>
         @for (lane of lanes(); track lane.key) {
           <span class="rt__head-lane">{{ lane.label }}</span>
         }
@@ -34,6 +38,16 @@
         <div class="rt__pins">
           @for (pin of pinVMs(); track pin.id) {
             <span class="rt__pin" [style.top.px]="pin.topPx" [title]="pin.tooltip">
+              @if (pin.count > 1) {
+                <span class="rt__pin-count">{{ pin.count }}</span>
+              }
+            </span>
+          }
+        </div>
+
+        <div class="rt__pins rt__pins--phone">
+          @for (pin of phonePinVMs(); track pin.id) {
+            <span class="rt__pin rt__pin--phone" [style.top.px]="pin.topPx" [title]="pin.tooltip">
               @if (pin.count > 1) {
                 <span class="rt__pin-count">{{ pin.count }}</span>
               }

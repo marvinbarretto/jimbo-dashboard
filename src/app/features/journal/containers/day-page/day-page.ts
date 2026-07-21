@@ -15,7 +15,13 @@ import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-s
 import { absoluteTime, formatMinutes, pluralise } from '@shared/utils/datetime.utils';
 import { dedupeWindowedSum } from '../../utils/windowed-telemetry';
 import { heartbeatBursts } from '../../utils/retro-timeline';
-import { codeEvidenceSpans, focusSpans, unionMinutes } from '../../utils/work-measure';
+import {
+  codeEvidenceSpans,
+  focusSpans,
+  hourlyUnionMinutes,
+  projectUnionMinutes,
+  unionMinutes,
+} from '../../utils/work-measure';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { JournalDataService } from '../../data-access/journal-data.service';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
@@ -28,16 +34,27 @@ import { JournalTimelineSection } from '../../components/journal-timeline-sectio
 import { JournalMcpSection } from '../../components/journal-mcp-section/journal-mcp-section';
 import { JournalBriefingsSection } from '../../components/journal-briefings-section/journal-briefings-section';
 import { JournalConsumptionSection } from '../../components/journal-consumption-section/journal-consumption-section';
-import { JournalSectionNav, type JournalNavSection } from '../../components/journal-section-nav/journal-section-nav';
+import { UiInlineTabs, type UiInlineTabOption } from '@shared/components/ui-inline-tabs/ui-inline-tabs';
 import { NutritionDaySection } from '../../../nutrition/components/nutrition-day-section/nutrition-day-section';
 import { ExerciseDaySection } from '../../../exercise/components/exercise-day-section/exercise-day-section';
 import {
   type DayKey,
+  dateFromDayKey,
   formatDayLong,
   isDayKey,
   shiftDay,
   todayKey,
 } from '@shared/utils/date-keys';
+
+// Tab groups for the day's sections. Summary + timeline stay above the tab
+// bar as the always-visible glance layer; everything else lives in a tab so
+// the page doesn't demand a full-day scroll.
+const DAY_TABS = ['work', 'body', 'jimbo', 'phone'] as const;
+type JournalDayTab = (typeof DAY_TABS)[number];
+
+function isDayTab(value: string | null): value is JournalDayTab {
+  return !!value && (DAY_TABS as readonly string[]).includes(value);
+}
 
 @Component({
   selector: 'app-journal-day-page',
@@ -60,7 +77,7 @@ import {
     JournalMcpSection,
     JournalBriefingsSection,
     JournalConsumptionSection,
-    JournalSectionNav,
+    UiInlineTabs,
     NutritionDaySection,
     ExerciseDaySection,
   ],
@@ -86,16 +103,59 @@ export class JournalDayPage {
   protected readonly codeHeartbeats = computed(() => this.bundle()?.heartbeats ?? []);
   protected readonly codeLoading = computed(() => !this.bundle());
 
-  // Evidence-based desk time: union of focus sessions and honest code-session
-  // spans — overlap (a pomo inside a code session) counts once. Executor
-  // sessions (actor = boris/kipper) are the fleet's time, not Marvin's desk.
-  protected readonly deskMinutes = computed(() => {
-    const ownSessions = this.codeSessions().filter(s => !s.actor);
-    return unionMinutes([
-      ...focusSpans(this.bundle()?.sessions ?? []),
-      ...codeEvidenceSpans(ownSessions, heartbeatBursts(this.codeHeartbeats())),
-    ]);
-  });
+  // Active tab, deep-linkable via ?tab= (work is the default and keeps the
+  // URL clean). Day navigation preserves it.
+  protected readonly tab = toSignal(
+    this.route.queryParamMap.pipe(map(p => {
+      const raw = p.get('tab');
+      return isDayTab(raw) ? raw : 'work';
+    })),
+    { initialValue: 'work' as JournalDayTab },
+  );
+
+  protected readonly tabOptions = computed<UiInlineTabOption[]>(() => [
+    { value: 'work', label: 'Work' },
+    { value: 'body', label: 'Body' },
+    { value: 'jimbo', label: 'Jimbo' },
+    { value: 'phone', label: 'Phone' },
+  ]);
+
+  protected setTab(value: string): void {
+    if (!isDayTab(value)) return;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab: value === 'work' ? null : value },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  // Marvin's interactive sessions only — executor time (boris/kipper) is the
+  // fleet's, not the desk's.
+  private readonly ownCodeSessions = computed(() => this.codeSessions().filter(s => !s.actor));
+
+  // Evidence-based desk spans: focus sessions + honest code-session spans.
+  // Every Work visual derives from this one union so the numbers agree.
+  private readonly deskSpans = computed(() => [
+    ...focusSpans(this.bundle()?.sessions ?? []),
+    ...codeEvidenceSpans(this.ownCodeSessions(), heartbeatBursts(this.codeHeartbeats())),
+  ]);
+
+  protected readonly deskMinutes = computed(() => unionMinutes(this.deskSpans()));
+
+  // Desk activity by hour — union spans distributed pro-rata across hour
+  // buckets, so the chart sums to the desk-time stat (the old chart bucketed
+  // whole pomos onto their start hour and ignored code sessions entirely).
+  protected readonly deskHourly = computed(() =>
+    hourlyUnionMinutes(this.deskSpans(), dateFromDayKey(this.key()).getTime()));
+
+  // Project attribution from ALL evidence (focus + code sessions), not just
+  // pomos — code sessions carry project_id resolved from the repo.
+  protected readonly projectWork = computed(() => projectUnionMinutes(
+    this.bundle()?.sessions ?? [],
+    this.ownCodeSessions(),
+    heartbeatBursts(this.codeHeartbeats()),
+  ));
 
   protected readonly bundle = this.journal.day;
   protected readonly loading = computed(() => this.journal.loading() === 'day' && !this.bundle());
@@ -145,30 +205,12 @@ export class JournalDayPage {
   protected readonly codeOpen = linkedSignal(() => this.hasCode());
   protected readonly phoneOpen = linkedSignal(() => this.hasPhone());
 
-  // Chip scroll-spy targets. Ids match the anchor host elements in the
-  // template. Order mirrors the on-page section order.
-  protected readonly navSections: readonly JournalNavSection[] = [
-    { id: 'jsec-briefings', label: 'Briefings' },
-    { id: 'jsec-timeline', label: 'Timeline' },
-    { id: 'jsec-work', label: 'Work' },
-    { id: 'jsec-health', label: 'Health' },
-    { id: 'jsec-code-sessions', label: 'Sessions' },
-    { id: 'jsec-code', label: 'Code' },
-    { id: 'jsec-agents', label: 'Agents' },
-    { id: 'jsec-mcp', label: 'MCP' },
-    { id: 'jsec-nutrition', label: 'Nutrition' },
-    { id: 'jsec-exercise', label: 'Exercise' },
-    { id: 'jsec-phone', label: 'Phone' },
-    { id: 'jsec-consumption', label: 'Consumption' },
-  ];
-
   protected readonly hourlyLabels = computed(() => HOUR_LABELS);
-  protected readonly hourlyValues = computed(() => this.bundle()?.hourly_minutes ?? []);
   protected readonly projectLabels = computed(() =>
-    (this.bundle()?.by_project ?? []).map(p => this.projectName(p.project_id)),
+    this.projectWork().map(p => this.projectName(p.project_id)),
   );
   protected readonly projectValues = computed(() =>
-    (this.bundle()?.by_project ?? []).map(p => p.minutes),
+    this.projectWork().map(p => p.minutes),
   );
   protected readonly telemetryEvents = computed(() => this.bundle()?.telemetry ?? []);
 
@@ -359,7 +401,8 @@ export class JournalDayPage {
   }
 
   private navigateTo(key: DayKey): void {
-    this.router.navigate(['/journal/day', key]);
+    // Preserve the active tab across day paging.
+    this.router.navigate(['/journal/day', key], { queryParamsHandling: 'preserve' });
   }
 
   protected formatTime(iso: string): string {
