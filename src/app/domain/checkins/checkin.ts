@@ -31,3 +31,10 @@ export interface MoodDailyRow {
   avg_energy: number;
   count:      number;
 }
+
+// Word anchors, not bare numbers — matches jimbo-api's mood-log.ts labels
+// exactly (index 0 = score 1). Mood genuinely spans 5 states; energy only
+// ever reads as three (none/some/lots), so the scales are deliberately
+// different widths.
+export const MOOD_LABELS = ['Rough', 'Off', 'OK', 'Good', 'Great'] as const;
+export const ENERGY_LABELS = ['None', 'Some', 'Lots'] as const;

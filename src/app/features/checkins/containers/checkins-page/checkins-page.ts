@@ -9,7 +9,7 @@ import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiScorePicker } from '@shared/components/ui-score-picker/ui-score-picker';
-import type { MoodDailyRow } from '@domain/checkins';
+import { MOOD_LABELS, ENERGY_LABELS, type MoodDailyRow } from '@domain/checkins';
 
 const PERIODS = [
   { label: '7d', days: 7 },
@@ -30,6 +30,8 @@ export class CheckinsPage implements OnInit {
 
   readonly periods = PERIODS;
   readonly periodDays = signal<number>(30);
+  readonly moodLabels = MOOD_LABELS;
+  readonly energyLabels = ENERGY_LABELS;
 
   readonly mood = signal<number | null>(null);
   readonly energy = signal<number | null>(null);

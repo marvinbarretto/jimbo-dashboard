@@ -8,8 +8,8 @@
   <app-ui-card>
     <app-ui-stack gap="md">
       <div class="checkins__pickers">
-        <app-ui-score-picker label="Mood" [value]="mood()" (picked)="mood.set($event)" />
-        <app-ui-score-picker label="Energy" [value]="energy()" (picked)="energy.set($event)" />
+        <app-ui-score-picker label="Mood" [options]="moodLabels" [value]="mood()" (picked)="mood.set($event)" />
+        <app-ui-score-picker label="Energy" [options]="energyLabels" [value]="energy()" (picked)="energy.set($event)" />
       </div>
       <app-ui-cluster gap="sm">
         <app-ui-button

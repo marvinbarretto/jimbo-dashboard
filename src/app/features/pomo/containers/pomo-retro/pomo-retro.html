@@ -102,8 +102,8 @@
       <div class="retro__field-group">
         <span class="retro__label">Mood &amp; energy right now</span>
         <div class="retro__checkin-row">
-          <app-ui-score-picker label="Mood" [value]="checkinMood()" (picked)="checkinMood.set($event)" />
-          <app-ui-score-picker label="Energy" [value]="checkinEnergy()" (picked)="checkinEnergy.set($event)" />
+          <app-ui-score-picker label="Mood" [options]="moodLabels" [value]="checkinMood()" (picked)="checkinMood.set($event)" />
+          <app-ui-score-picker label="Energy" [options]="energyLabels" [value]="checkinEnergy()" (picked)="checkinEnergy.set($event)" />
         </div>
       </div>
 

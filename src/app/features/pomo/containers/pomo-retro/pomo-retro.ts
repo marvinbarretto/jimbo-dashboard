@@ -27,6 +27,7 @@ import { VaultChip, type VaultChipKind, type VaultChipCreator } from '@shared/co
 import { withVaultDetailModal } from '@shared/kanban/detail-modal';
 import type { SessionMood } from '@domain/focus-sessions';
 import type { VaultItem } from '@domain/vault';
+import { MOOD_LABELS, ENERGY_LABELS } from '@domain/checkins';
 import { environment } from '../../../../../environments/environment';
 import { vaultItemId } from '@domain/ids';
 
@@ -215,6 +216,8 @@ export class PomoRetro implements OnInit {
   // same unified log Telegram and the dashboard write to.
   readonly checkinMood = signal<number | null>(null);
   readonly checkinEnergy = signal<number | null>(null);
+  readonly moodLabels = MOOD_LABELS;
+  readonly energyLabels = ENERGY_LABELS;
 
   async ngOnInit(): Promise<void> {
     await this.sessions.loadRecent(1);

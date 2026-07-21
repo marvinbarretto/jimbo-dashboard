@@ -1,6 +1,11 @@
-// Reusable 1-N tap-to-score picker — generalised from the retro screen's
-// hand-rolled mood buttons. One row of number buttons under a label; used for
-// both mood and energy on the check-in page and the pomo retro screen.
+// Reusable tap-to-score picker — generalised from the retro screen's
+// hand-rolled mood buttons. One row of labelled buttons; used for both mood
+// and energy on the check-in page and the pomo retro screen.
+//
+// Word anchors, not bare numbers — a number alone has no fixed meaning across
+// days and pulls toward always tapping the middle. `options` is the ordered
+// list of labels (index 0 = value 1, etc.) — deliberately no numeric
+// fallback, since every real use of this picker has real words to say.
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
 @Component({
@@ -10,14 +15,14 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
     <div class="score-picker">
       <span class="score-picker__label">{{ label() }}</span>
       <div class="score-picker__row">
-        @for (n of options(); track n) {
+        @for (opt of indexed(); track opt.value) {
           <button
             type="button"
             class="score-picker__btn"
-            [class.score-picker__btn--active]="value() === n"
-            [attr.aria-label]="label() + ' ' + n"
-            (click)="pick(n)">
-            {{ n }}
+            [class.score-picker__btn--active]="value() === opt.value"
+            [attr.aria-label]="label() + ' ' + opt.text"
+            (click)="pick(opt.value)">
+            {{ opt.text }}
           </button>
         }
       </div>
@@ -39,15 +44,17 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 
     .score-picker__row {
       display: flex;
+      flex-wrap: wrap;
       gap: 0.4rem;
     }
 
     .score-picker__btn {
-      display: grid;
-      place-items: center;
-      width: 2.25rem;
-      height: 2.25rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem 0.85rem;
       font: inherit;
+      font-size: 0.85rem;
       font-weight: 600;
       border: 1px solid var(--color-border);
       border-radius: var(--radius);
@@ -71,11 +78,11 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 })
 export class UiScorePicker {
   readonly label = input.required<string>();
-  readonly max = input(5);
+  readonly options = input.required<readonly string[]>();
   readonly value = input<number | null>(null);
   readonly picked = output<number>();
 
-  readonly options = computed(() => Array.from({ length: this.max() }, (_, i) => i + 1));
+  readonly indexed = computed(() => this.options().map((text, i) => ({ value: i + 1, text })));
 
   pick(n: number): void {
     this.picked.emit(n);
