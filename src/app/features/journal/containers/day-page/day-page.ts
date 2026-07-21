@@ -122,9 +122,11 @@ export class JournalDayPage {
 
   protected setTab(value: string): void {
     if (!isDayTab(value)) return;
+    // Always write the param explicitly — clearing it via `tab: null` under
+    // 'merge' left the old value in place, so returning to Work never stuck.
     this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { tab: value === 'work' ? null : value },
+      queryParams: { tab: value },
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
