@@ -13,8 +13,9 @@ import {
   type TrackerPatch,
 } from '@shared/components/tracker/tracker.types';
 import { formatLondonTime } from '@shared/utils/datetime.utils';
-import type { CardioDetailed, SessionDetailed, SessionPatch, SetDetailed } from '../../data-access/exercise.service';
+import type { CardioDetailed, ExerciseCatalogItem, SessionDetailed, SessionPatch, SetDetailed } from '../../data-access/exercise.service';
 import { lastPerfBefore, lastTimeHint, type ExercisePerf } from '../../utils/exercise-history';
+import { muscleSummary } from '../../utils/muscle-region';
 
 const CARDIO_MEASURES: readonly TrackerMeasure[] = [
   { key: 'duration_min', label: 'duration', unit: 'min', primary: true },
@@ -117,7 +118,12 @@ const CARDIO_PRESETS: readonly CardioPreset[] = [
             <ul class="session__list">
               @for (s of session().sets; track s.id) {
                 <li class="setrow">
-                  <span class="setrow__name">{{ s.exercise_name ?? s.exercise_id }}</span>
+                  <span class="setrow__name" [attr.title]="descriptionFor(s.exercise_id)">
+                    {{ s.exercise_name ?? s.exercise_id }}
+                    @if (muscleFor(s.exercise_id); as m) {
+                      <span class="setrow__muscle">{{ m }}</span>
+                    }
+                  </span>
                   <span class="setrow__note" aria-label="sets by reps by weight">
                     @if (editable()) {
                       <app-ui-inline-edit kind="number" size="lg" [min]="1" [value]="(s.sets ?? 1).toString()" ariaLabel="sets" (saved)="saveSet(s, 'sets', $event)" />
@@ -241,6 +247,13 @@ const CARDIO_PRESETS: readonly CardioPreset[] = [
       font-size: 0.86rem;
     }
     .setrow__name { flex: 1 1 auto; min-width: 0; }
+    .setrow__muscle {
+      margin-left: 0.4rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.02em;
+      color: var(--color-text-muted);
+      white-space: nowrap;
+    }
     .setrow__note {
       flex: 0 0 auto;
       display: inline-flex;
@@ -337,6 +350,8 @@ export class ExerciseSessionRow {
   readonly exerciseOptions = input<readonly QuickAddOption[]>([]);
   /** Exercise history index (see buildExerciseHistory) powering "last time" hints + prefill. */
   readonly history = input<ReadonlyMap<string, readonly ExercisePerf[]>>(new Map());
+  /** Catalogue by exercise id — muscle labels on set rows, descriptions as picker hints. */
+  readonly catalog = input<ReadonlyMap<string, ExerciseCatalogItem>>(new Map());
 
   readonly sessionPatch = output<{ id: string; changes: SessionPatch }>();
   readonly sessionRemove = output<string>();
@@ -380,11 +395,24 @@ export class ExerciseSessionRow {
     return out;
   });
 
+  // Picker hint per exercise: performance history when there is any, otherwise
+  // the catalogue description — a machine you've never used explains itself.
   protected readonly setHints = computed<Record<string, string>>(() => {
     const out: Record<string, string> = {};
+    for (const [id, item] of this.catalog()) {
+      if (item.description) out[id] = item.description;
+    }
     for (const [id, perf] of this.lastPerfs()) out[id] = lastTimeHint(perf);
     return out;
   });
+
+  protected muscleFor(exerciseId: string): string | null {
+    return muscleSummary(this.catalog().get(exerciseId));
+  }
+
+  protected descriptionFor(exerciseId: string): string | null {
+    return this.catalog().get(exerciseId)?.description ?? null;
+  }
 
   protected readonly summary = computed(() => {
     const s = this.session();

@@ -22,6 +22,22 @@ export const MUSCLE_GROUP_REGION: Record<number, BodyPartRegion> = {
   11: 'arms', // forearms
 };
 
+// Specific muscle names for the same fixed seed — finer-grained than the
+// region buckets above, for per-exercise labels ("biceps", not "arms").
+export const MUSCLE_GROUP_NAMES: Record<number, string> = {
+  1: 'chest',
+  2: 'back',
+  3: 'shoulders',
+  4: 'biceps',
+  5: 'triceps',
+  6: 'quads',
+  7: 'hamstrings',
+  8: 'glutes',
+  9: 'calves',
+  10: 'core',
+  11: 'forearms',
+};
+
 export const REGION_LABELS: Record<BodyPartRegion, string> = {
   chest: 'Chest',
   back: 'Back',
@@ -47,6 +63,24 @@ export function regionForExercise(ex: ExerciseMeta | undefined): BodyPartRegion 
   if (ex.equipment_type === 'cardio') return 'cardio';
   if (ex.primary_muscle_group != null) return MUSCLE_GROUP_REGION[ex.primary_muscle_group] ?? 'other';
   return 'other';
+}
+
+/**
+ * Human muscle summary for one exercise: primary first, then secondaries —
+ * "back · biceps". Cardio-typed exercises read "cardio"; fully unclassified
+ * ones return null (show nothing rather than "other").
+ */
+export function muscleSummary(
+  ex: Pick<ExerciseCatalogItem, 'primary_muscle_group' | 'secondary_muscle_groups' | 'equipment_type'> | undefined,
+): string | null {
+  if (!ex) return null;
+  if (ex.equipment_type === 'cardio') return 'cardio';
+  const ids = [ex.primary_muscle_group, ...(ex.secondary_muscle_groups ?? [])];
+  const names = ids
+    .filter((id): id is number => id !== null)
+    .map((id) => MUSCLE_GROUP_NAMES[id])
+    .filter((n): n is string => n !== undefined);
+  return names.length ? [...new Set(names)].join(' · ') : null;
 }
 
 export interface BodyPartCount {

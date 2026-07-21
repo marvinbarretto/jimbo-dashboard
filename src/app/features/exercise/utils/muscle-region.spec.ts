@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   bodyPartBreakdown,
   lastTrainedByRegion,
+  muscleSummary,
   regionForExercise,
   trainingDayTypeByDate,
   type ExerciseMeta,
@@ -148,5 +149,22 @@ describe('trainingDayTypeByDate', () => {
     const sessions = [session('2026-06-25T10:00:00Z', [set('ex_chest')])];
     const byDate = trainingDayTypeByDate(sessions, exerciseIndex);
     expect(byDate.has('2026-06-26')).toBe(false);
+  });
+});
+
+describe('muscleSummary', () => {
+  it('lists primary then secondaries with names, deduped', () => {
+    expect(muscleSummary({ primary_muscle_group: 2, secondary_muscle_groups: [4, 2], equipment_type: 'machine' }))
+      .toBe('back · biceps');
+  });
+
+  it('reads "cardio" for cardio equipment regardless of muscle groups', () => {
+    expect(muscleSummary({ primary_muscle_group: null, secondary_muscle_groups: [], equipment_type: 'cardio' }))
+      .toBe('cardio');
+  });
+
+  it('returns null for unclassified or missing exercises', () => {
+    expect(muscleSummary({ primary_muscle_group: null, secondary_muscle_groups: [], equipment_type: null })).toBeNull();
+    expect(muscleSummary(undefined)).toBeNull();
   });
 });

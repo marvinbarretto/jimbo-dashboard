@@ -49,7 +49,7 @@ import {
   type SetPatch,
   type CardioPatch,
 } from '../../data-access/exercise.service';
-import { bodyPartBreakdown, lastTrainedByRegion, type ExerciseMeta } from '../../utils/muscle-region';
+import { bodyPartBreakdown, lastTrainedByRegion, muscleSummary } from '../../utils/muscle-region';
 import { buildExerciseHistory } from '../../utils/exercise-history';
 
 const TOTALS_MEASURES: readonly TrackerMeasure[] = [
@@ -170,12 +170,17 @@ export class ExercisePage {
 
     return [...byId.values()]
       .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
-      .map((e) => ({
-        id: e.id,
-        label: e.label,
-        boosted: e.count > 0,
-        hint: e.count > 0 ? `you · ${e.count}×` : undefined,
-      }));
+      .map((e) => {
+        // "what it works" up front, usage after: "back · biceps — you · 3×"
+        const muscles = muscleSummary(this.exerciseIndex().get(e.id));
+        const used = e.count > 0 ? `you · ${e.count}×` : null;
+        return {
+          id: e.id,
+          label: e.label,
+          boosted: e.count > 0,
+          hint: [muscles, used].filter(Boolean).join(' — ') || undefined,
+        };
+      });
   });
 
   // ── Period totals + trend ────────────────────────────────────────
@@ -207,7 +212,9 @@ export class ExercisePage {
   protected readonly hasTrend = computed(() => this.dailyRows().some((d) => d.sessions > 0));
 
   // ── Body parts worked (within the selected window) ────────────────
-  private readonly exerciseIndex = computed<ReadonlyMap<string, ExerciseMeta>>(
+  // Full catalogue rows (not just ExerciseMeta) — session rows also read
+  // description/secondaries for muscle labels and picker hints.
+  protected readonly exerciseIndex = computed<ReadonlyMap<string, ExerciseCatalogItem>>(
     () => new Map((this.catalogRes.value() ?? []).map((e) => [e.id, e])),
   );
   private readonly bodyPartChart = computed(() => bodyPartBreakdown(this.sessions(), this.exerciseIndex()));
