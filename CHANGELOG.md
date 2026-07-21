@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.116](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.115...v0.0.116) (2026-07-21)
+
+
+### Features
+
+* **journal:** tabbed day page, all-evidence work charts, phone pins on timeline ([caf4f2d](https://github.com/marvinbarretto/jimbo-dashboard/commit/caf4f2d6fa31719d0bcefc952603fa20e667bf77))
+
 ### [0.0.115](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.114...v0.0.115) (2026-07-20)
 
 
