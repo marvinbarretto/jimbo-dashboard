@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.117](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.116...v0.0.117) (2026-07-21)
+
+
+### Bug Fixes
+
+* **journal:** day tab selection sticks when returning to Work ([235e999](https://github.com/marvinbarretto/jimbo-dashboard/commit/235e99995736056dd9d90f8b57a24387701a7b9b))
+
 ### [0.0.116](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.115...v0.0.116) (2026-07-21)
 
 
