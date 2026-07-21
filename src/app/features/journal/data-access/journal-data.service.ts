@@ -1,11 +1,12 @@
-// Day/week/month bundles for the journal feature.
+// Journal bundles: one server round trip per view.
 //
-// The DAY bundle is one round trip: GET /api/journal/day composes focus
-// sessions, calendar, telemetry, code sessions and heartbeats server-side
-// (each source fails soft to [] there). Week/month still fetch focus sessions
-// directly. Bucketing stays client-side and local-time so the day a session
-// "belongs to" matches the user's calendar — the server is never asked to
-// guess a timezone; we send exact [since, until) instants.
+// The DAY bundle (GET /api/journal/day) composes focus sessions, calendar,
+// telemetry, code sessions and heartbeats; the WORK bundle
+// (GET /api/journal/work) carries the work evidence for an arbitrary
+// week/month window without the telemetry firehose. Each source fails soft
+// to [] server-side. Bucketing stays client-side and local-time so the day a
+// session "belongs to" matches the user's calendar — the server is never
+// asked to guess a timezone; we send exact [since, until) instants.
 //
 // Deliberately NOT fetched (verified dead against prod, Jul 2026): the
 // activities table (legacy Jimbo agent log, nothing written since the
@@ -22,11 +23,10 @@ import {
   type MonthKey,
   type WeekKey,
   dateFromDayKey,
-  daysInMonth,
-  daysInWeek,
   dayKeyOf,
   monthRange,
   shiftDay,
+  todayKey,
   weekStartFromKey,
 } from '@shared/utils/date-keys';
 
@@ -87,29 +87,14 @@ export interface DayBundle {
   readonly by_project: readonly ProjectMinutes[];
 }
 
-export interface WeekBundle {
-  readonly week: WeekKey;
-  readonly days: readonly DayKey[];
-  readonly totals: {
-    readonly pomos_completed: number;
-    readonly focus_minutes: number;
-  };
-  readonly minutes_per_day: readonly number[];
-  readonly pomos_per_day: readonly number[];
-  readonly by_project: readonly ProjectMinutes[];
-}
-
-export interface MonthBundle {
-  readonly month: MonthKey;
-  readonly days: readonly DayKey[];
-  readonly totals: {
-    readonly pomos_completed: number;
-    readonly focus_minutes: number;
-    readonly active_days: number;
-  };
-  readonly minutes_per_day: readonly number[];
-  readonly pomos_per_day: readonly number[];
-  readonly by_project: readonly ProjectMinutes[];
+/** Work evidence for a week/month window — pages derive their own rollups. */
+export interface WorkBundle {
+  readonly granularity: 'week' | 'month';
+  readonly key: WeekKey | MonthKey;
+  readonly sessions: readonly FocusSessionLite[];
+  readonly code_sessions: readonly CodeSession[];
+  readonly heartbeats: readonly CodeSessionHeartbeat[];
+  readonly github_pushes: readonly TelemetryEventLite[];
 }
 
 interface ApiFocusSession {
@@ -156,26 +141,32 @@ interface ApiJournalDay {
   heartbeats: CodeSessionHeartbeat[];
 }
 
+interface ApiJournalWork {
+  focus_sessions: ApiFocusSession[];
+  code_sessions: CodeSession[];
+  heartbeats: CodeSessionHeartbeat[];
+  github_pushes: ApiTelemetryEvent[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class JournalDataService {
   private readonly http = inject(HttpClient);
   private readonly base = environment.dashboardApiUrl;
 
-  // One in-flight bundle per granularity. Pages drive the key via an effect.
+  // One in-flight bundle per kind. Pages drive the key via an effect.
   readonly day = signal<DayBundle | null>(null);
-  readonly week = signal<WeekBundle | null>(null);
-  readonly month = signal<MonthBundle | null>(null);
+  readonly work = signal<WorkBundle | null>(null);
 
-  readonly loading = signal<'idle' | 'day' | 'week' | 'month'>('idle');
+  readonly loading = signal<'idle' | 'day' | 'work'>('idle');
   readonly error = signal<string | null>(null);
 
-  // Monotonic per-granularity sequence: rapid paging fires overlapping loads,
-  // and without a guard whichever request resolved LAST won — not necessarily
+  // Monotonic per-kind sequence: rapid paging fires overlapping loads, and
+  // without a guard whichever request resolved LAST won — not necessarily
   // the period being viewed. Only the newest load may write its bundle.
-  private readonly seq = { day: 0, week: 0, month: 0 };
+  private readonly seq = { day: 0, work: 0 };
 
   private async guardedLoad<T>(
-    kind: 'day' | 'week' | 'month',
+    kind: 'day' | 'work',
     fetch: () => Promise<T>,
     commit: (result: T) => void,
   ): Promise<void> {
@@ -194,6 +185,9 @@ export class JournalDataService {
   }
 
   async loadDay(key: DayKey): Promise<void> {
+    // Domain pages share the day bundle — switching Overview → Work on the
+    // same past day shouldn't refetch. Today always refetches (it's live).
+    if (this.day()?.date === key && key !== todayKey()) return;
     return this.guardedLoad('day', async () => {
       const { since, until } = localWindow(dateFromDayKey(key), dateFromDayKey(shiftDay(key, 1)));
       const res = await firstValueFrom(
@@ -205,42 +199,55 @@ export class JournalDataService {
     }, bundle => this.day.set(bundle));
   }
 
-  async loadWeek(key: WeekKey): Promise<void> {
-    return this.guardedLoad('week', async () => {
-      const monday = weekStartFromKey(key);
-      const nextMonday = new Date(monday);
-      nextMonday.setDate(monday.getDate() + 7);
-      const sessions = await this.fetchSessions(localWindow(monday, nextMonday));
-      return buildWeekBundle(key, sessions);
-    }, bundle => this.week.set(bundle));
-  }
-
-  async loadMonth(key: MonthKey): Promise<void> {
-    return this.guardedLoad('month', async () => {
-      const { start, end } = monthRange(key);
-      const dayAfterEnd = new Date(end);
-      dayAfterEnd.setDate(end.getDate() + 1);
-      const sessions = await this.fetchSessions(localWindow(start, dayAfterEnd));
-      return buildMonthBundle(key, sessions);
-    }, bundle => this.month.set(bundle));
-  }
-
-  // Exact [since, until) windows so a past period fetches only its own rows.
-  // The old days-back-from-now pattern fetched "that period until now" and the
-  // API's newest-first LIMIT 50 could silently drop the period entirely.
-  private async fetchSessions(window: FetchWindow): Promise<FocusSessionLite[]> {
-    try {
+  async loadWork(granularity: 'week' | 'month', key: WeekKey | MonthKey): Promise<void> {
+    const current = this.work();
+    // Same skip rule as loadDay: a cached past window is immutable; a window
+    // containing today stays live and always refetches.
+    if (
+      current?.granularity === granularity && current.key === key &&
+      !windowForPeriod(granularity, key).containsToday
+    ) return;
+    return this.guardedLoad('work', async () => {
+      const { since, until } = windowForPeriod(granularity, key);
       const res = await firstValueFrom(
-        this.http.get<{ items: ApiFocusSession[] }>(
-          `${this.base}/api/focus-sessions?since=${encodeURIComponent(window.since)}&until=${encodeURIComponent(window.until)}&limit=500`,
+        this.http.get<ApiJournalWork>(
+          `${this.base}/api/journal/work?since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}`,
         ),
       );
-      return (res.items ?? []).map(toSessionLite);
-    } catch {
-      return [];
-    }
+      return {
+        granularity,
+        key,
+        sessions: (res.focus_sessions ?? []).map(toSessionLite),
+        code_sessions: res.code_sessions ?? [],
+        heartbeats: res.heartbeats ?? [],
+        github_pushes: (res.github_pushes ?? []).map(toTelemetryEventLite),
+      } satisfies WorkBundle;
+    }, bundle => this.work.set(bundle));
   }
+}
 
+// Local-midnight [since, until) instants for a week/month key.
+function windowForPeriod(
+  granularity: 'week' | 'month',
+  key: string,
+): FetchWindow & { containsToday: boolean } {
+  let start: Date;
+  let endExclusive: Date;
+  if (granularity === 'week') {
+    start = weekStartFromKey(key);
+    endExclusive = new Date(start);
+    endExclusive.setDate(start.getDate() + 7);
+  } else {
+    const { start: s, end } = monthRange(key);
+    start = s;
+    endExclusive = new Date(end);
+    endExclusive.setDate(end.getDate() + 1);
+  }
+  const now = Date.now();
+  return {
+    ...localWindow(start, endExclusive),
+    containsToday: now >= start.getTime() && now < endExclusive.getTime(),
+  };
 }
 
 function toSessionLite(s: ApiFocusSession): FocusSessionLite {
@@ -322,75 +329,6 @@ function buildDayBundle(key: DayKey, api: ApiJournalDay): DayBundle {
     },
     hourly_minutes: hourly.map(m => Math.round(m)),
     by_project: aggregateByProject(daySessions),
-  };
-}
-
-function buildWeekBundle(
-  key: WeekKey,
-  sessions: readonly FocusSessionLite[],
-): WeekBundle {
-  const days = daysInWeek(key);
-  const dayIndex = new Map(days.map((d, i) => [d, i] as const));
-  const minutesPerDay = new Array<number>(7).fill(0);
-  const pomosPerDay = new Array<number>(7).fill(0);
-  const inWeekSessions: FocusSessionLite[] = [];
-
-  for (const s of sessions) {
-    const day = dayKeyOf(s.started_at);
-    if (!day) continue;
-    const idx = dayIndex.get(day);
-    if (idx === undefined) continue;
-    inWeekSessions.push(s);
-    minutesPerDay[idx] += sessionEffectiveSeconds(s) / 60;
-    if (s.status === 'completed') pomosPerDay[idx] += 1;
-  }
-
-  return {
-    week: key,
-    days,
-    totals: {
-      pomos_completed: pomosPerDay.reduce((a, b) => a + b, 0),
-      focus_minutes: Math.round(minutesPerDay.reduce((a, b) => a + b, 0)),
-    },
-    minutes_per_day: minutesPerDay.map(m => Math.round(m)),
-    pomos_per_day: pomosPerDay,
-    by_project: aggregateByProject(inWeekSessions),
-  };
-}
-
-function buildMonthBundle(
-  key: MonthKey,
-  sessions: readonly FocusSessionLite[],
-): MonthBundle {
-  const days = daysInMonth(key);
-  const dayIndex = new Map(days.map((d, i) => [d, i] as const));
-  const minutesPerDay = new Array<number>(days.length).fill(0);
-  const pomosPerDay = new Array<number>(days.length).fill(0);
-  const inMonthSessions: FocusSessionLite[] = [];
-  const activeDays = new Set<DayKey>();
-
-  for (const s of sessions) {
-    const day = dayKeyOf(s.started_at);
-    if (!day) continue;
-    const idx = dayIndex.get(day);
-    if (idx === undefined) continue;
-    inMonthSessions.push(s);
-    minutesPerDay[idx] += sessionEffectiveSeconds(s) / 60;
-    if (s.status === 'completed') pomosPerDay[idx] += 1;
-    if ((s.actual_seconds ?? 0) > 0 || s.status === 'completed') activeDays.add(day);
-  }
-
-  return {
-    month: key,
-    days,
-    totals: {
-      pomos_completed: pomosPerDay.reduce((a, b) => a + b, 0),
-      focus_minutes: Math.round(minutesPerDay.reduce((a, b) => a + b, 0)),
-      active_days: activeDays.size,
-    },
-    minutes_per_day: minutesPerDay.map(m => Math.round(m)),
-    pomos_per_day: pomosPerDay,
-    by_project: aggregateByProject(inMonthSessions),
   };
 }
 

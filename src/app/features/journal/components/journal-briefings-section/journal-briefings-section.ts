@@ -6,9 +6,9 @@ import {
   input,
   linkedSignal,
 } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { catchError, from, of, startWith, switchMap } from 'rxjs';
+import { httpResource } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { environment } from '../../../../../environments/environment';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { BriefingsService } from '../../../briefings/data-access/briefings.service';
@@ -17,7 +17,6 @@ import type {
   BriefingAnalysis,
   BriefingRating as Rating,
 } from '../../../briefings/data-access/briefing.types';
-import { type DayKey, dayWindowIso } from '@shared/utils/date-keys';
 
 // The morning/afternoon briefings that belong to the journal day, with the same
 // rating control as the archive. Self-contained (mirrors journal-agents-section):
@@ -32,30 +31,27 @@ import { type DayKey, dayWindowIso } from '@shared/utils/date-keys';
 export class JournalBriefingsSection {
   private readonly service = inject(BriefingsService);
 
-  readonly date = input.required<DayKey>();
+  // Exact [since, until) ISO instants — the owning page supplies local
+  // period boundaries (day, week or month). Optional (not required) so the
+  // resource's request fn can run before inputs bind and return undefined.
+  readonly since = input<string>();
+  readonly until = input<string>();
 
-  // switchMap so rapid day paging can't race: a slow earlier-day response is
-  // unsubscribed rather than overwriting the current day (the old bare-async
-  // effect was last-write-wins). Local-midnight boundaries so the afternoon
-  // briefing buckets to this calendar day, not the next. startWith(null)
-  // restores the loading state while a new day loads.
-  private readonly fetched = toSignal(
-    toObservable(this.date).pipe(
-      switchMap(key => {
-        const { since, until } = dayWindowIso(key);
-        return from(this.service.fetchForDate(since, until)).pipe(
-          catchError(() => of([] as BriefingAnalysis[])),
-          startWith(null),
-        );
-      }),
-    ),
-    { initialValue: null },
-  );
+  // httpResource keyed on the window inputs: refetches (and aborts in-flight)
+  // when the period changes, so rapid paging can't land a stale period.
+  private readonly briefingsRes = httpResource<BriefingAnalysis[]>(() => {
+    const since = this.since();
+    const until = this.until();
+    if (!since || !until) return undefined;
+    return `${environment.dashboardApiUrl}/api/briefing/history?since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}&limit=10`;
+  });
 
-  protected readonly loading = computed(() => this.fetched() === null);
+  protected readonly loading = computed(() =>
+    this.briefingsRes.isLoading() && !this.briefingsRes.hasValue());
 
   // linkedSignal so onRate can patch a row in place; re-syncs on each fetch.
-  protected readonly briefings = linkedSignal<BriefingAnalysis[]>(() => this.fetched() ?? []);
+  protected readonly briefings = linkedSignal<BriefingAnalysis[]>(() =>
+    this.briefingsRes.hasValue() ? (this.briefingsRes.value() ?? []) : []);
 
   // Order morning → afternoon for the day view (API returns newest-first).
   protected readonly ordered = computed(() =>

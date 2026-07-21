@@ -59,6 +59,28 @@ export function hourlyUnionMinutes(spans: readonly SpanMs[], dayStartMs: number)
   return buckets.map(m => Math.round(m));
 }
 
+export interface DayWindow {
+  readonly startMs: number;
+  readonly endMs: number;
+}
+
+/**
+ * Union minutes clipped to each of the given local-day windows — the
+ * per-day bars for week/month rollups. A span crossing midnight contributes
+ * to both days pro-rata; overlapping evidence still counts once.
+ */
+export function dailyUnionMinutes(spans: readonly SpanMs[], days: readonly DayWindow[]): number[] {
+  const merged = mergeSpans(spans);
+  return days.map(day => {
+    let total = 0;
+    for (const s of merged) {
+      const overlap = Math.min(s.endMs, day.endMs) - Math.max(s.startMs, day.startMs);
+      if (overlap > 0) total += overlap;
+    }
+    return Math.round(total / MIN_MS);
+  });
+}
+
 export interface ProjectWorkMinutes {
   readonly project_id: string | null;
   readonly minutes: number;

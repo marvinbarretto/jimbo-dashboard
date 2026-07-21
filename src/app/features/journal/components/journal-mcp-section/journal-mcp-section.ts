@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, linkedSignal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
@@ -9,10 +10,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
-import { catchError, combineLatest, of, startWith, switchMap, timer } from 'rxjs';
-import { dayWindowIso } from '@shared/utils/date-keys';
 import {
-  McpCallsService,
   type McpCallRollupRow,
   type McpCallTailRow,
 } from '../../../hermes/data-access/mcp-calls.service';
@@ -61,41 +59,54 @@ const MAX_CALL_ROWS = 100;
   styleUrl: './journal-mcp-section.scss',
 })
 export class JournalMcpSection {
-  private readonly service = inject(McpCallsService);
+  // Exact [since, until) ISO instants — the owning page supplies local
+  // period boundaries (day, week or month). Hour buckets below are local.
+  // Optional (not required) so the resources' request fns can run before
+  // inputs bind and return undefined = "not yet".
+  readonly since = input<string>();
+  readonly until = input<string>();
 
-  // YYYY-MM-DD, windowed as a LOCAL calendar day (dayWindowIso) — matching the
-  // rest of the journal page. Hour buckets below are local for the same reason.
-  readonly date = input.required<string>();
+  private windowQs(): string | undefined {
+    const since = this.since();
+    const until = this.until();
+    if (!since || !until) return undefined;
+    return `since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}`;
+  }
 
-  // Fetch rollup + tail for the same window. Rollup gives stats; tail gives
-  // per-call detail needed for the hour chart and error spotlight. Rekeyed on
-  // the date input (immediate refetch + cancel on navigation), refreshed every
-  // 60s; startWith(null) restores the loading state while a new day loads.
-  private readonly result = toSignal(
-    toObservable(this.date).pipe(
-      switchMap((date) => timer(0, 60_000).pipe(
-        switchMap(() => {
-          const { since, until } = dayWindowIso(date);
-          return combineLatest({
-            rollup: this.service.rollup({ since, until }).pipe(
-              catchError(() => of({ items: [] as McpCallRollupRow[] })),
-            ),
-            // 1000 is the server-side max — covers a very busy day. Falls
-            // back to empty on error so the rollup view still renders.
-            tail: this.service.tail({ limit: 1000, since, until }).pipe(
-              catchError(() => of({ items: [] as McpCallTailRow[] })),
-            ),
-          });
-        }),
-        startWith(null),
-      )),
-    ),
-    { initialValue: null },
-  );
+  // Rollup gives stats; tail gives per-call detail for the hour chart and
+  // error spotlight. httpResource keyed on the window inputs — refetches
+  // (and aborts in-flight) when the period changes.
+  private readonly rollupRes = httpResource<{ items: McpCallRollupRow[] }>(() => {
+    const qs = this.windowQs();
+    return qs ? `${environment.dashboardApiUrl}/api/mcp-calls/rollup?${qs}` : undefined;
+  });
 
-  readonly loading = computed(() => this.result() === null);
-  readonly items = computed<McpCallRollupRow[]>(() => this.result()?.rollup.items ?? []);
-  private readonly tail = computed<McpCallTailRow[]>(() => this.result()?.tail.items ?? []);
+  // 1000 is the server-side max — covers a very busy day.
+  private readonly tailRes = httpResource<{ items: McpCallTailRow[] }>(() => {
+    const qs = this.windowQs();
+    return qs ? `${environment.dashboardApiUrl}/api/mcp-calls/tail?limit=1000&${qs}` : undefined;
+  });
+
+  constructor() {
+    // 60s keep-fresh, but only while the window includes now — historical
+    // periods are immutable and don't need polling.
+    const id = setInterval(() => {
+      const until = this.until();
+      if (until && Date.parse(until) > Date.now()) {
+        this.rollupRes.reload();
+        this.tailRes.reload();
+      }
+    }, 60_000);
+    inject(DestroyRef).onDestroy(() => clearInterval(id));
+  }
+
+  readonly loading = computed(() =>
+    (this.rollupRes.isLoading() && !this.rollupRes.hasValue()) ||
+    (this.tailRes.isLoading() && !this.tailRes.hasValue()));
+  readonly items = computed<McpCallRollupRow[]>(() =>
+    this.rollupRes.hasValue() ? (this.rollupRes.value().items ?? []) : []);
+  private readonly tail = computed<McpCallTailRow[]>(() =>
+    this.tailRes.hasValue() ? (this.tailRes.value().items ?? []) : []);
 
   readonly totalCalls = computed(() => this.items().reduce((s, r) => s + r.count, 0));
 

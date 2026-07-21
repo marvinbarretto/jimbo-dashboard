@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { environment } from '../../../../../environments/environment';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
@@ -8,8 +9,6 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
-import { catchError, of, startWith, switchMap, timer } from 'rxjs';
-import { dayWindowIso } from '@shared/utils/date-keys';
 import {
   AgentRunsService,
   type AgentRunOutcome,
@@ -78,9 +77,12 @@ interface JobCost {
 export class JournalAgentsSection {
   private readonly service = inject(AgentRunsService);
 
-  // YYYY-MM-DD, windowed as a LOCAL calendar day (dayWindowIso) — matching the
-  // rest of the journal page. Hermes stores UTC instants; the boundary is ours.
-  readonly date = input.required<string>();
+  // Exact [since, until) ISO instants — the owning page supplies local
+  // period boundaries (day, week or month). Hermes stores UTC instants;
+  // the boundary is ours. Optional (not required) so the resource's request
+  // fn can run before inputs bind and return undefined = "not yet".
+  readonly since = input<string>();
+  readonly until = input<string>();
 
   // Per-job usefulness verdicts (keep/watch/cut). Loaded once; updated
   // optimistically on click. Ratings are per-job, not per-day, so a single
@@ -94,6 +96,14 @@ export class JournalAgentsSection {
       for (const it of r.items) m[it.job_name] = it.rating;
       this.ratingsSig.set(m);
     });
+
+    // 60s keep-fresh, but only while the window includes now — historical
+    // periods are immutable and don't need polling.
+    const id = setInterval(() => {
+      const until = this.until();
+      if (until && Date.parse(until) > Date.now()) this.rollupRes.reload();
+    }, 60_000);
+    inject(DestroyRef).onDestroy(() => clearInterval(id));
   }
 
   rate(jobName: string, rating: JobRatingValue): void {
@@ -101,24 +111,18 @@ export class JournalAgentsSection {
     this.service.setRating(jobName, rating).subscribe({ error: () => {} });
   }
 
-  // Rekeyed on the date input so navigating days refetches immediately and
-  // cancels the in-flight request (the old shape read date() inside a
-  // once-created timer — up to 60s of the previous day after navigation).
-  // startWith(null) drops back to the loading state while the new day loads.
-  private readonly result = toSignal(
-    toObservable(this.date).pipe(
-      switchMap((date) => timer(0, 60_000).pipe(
-        switchMap(() => this.service.rollup(dayWindowIso(date)).pipe(
-          catchError(() => of({ items: [] as AgentRunRollupRow[] })),
-        )),
-        startWith(null),
-      )),
-    ),
-    { initialValue: null },
-  );
+  // httpResource keyed on the window inputs: refetches (and aborts in-flight)
+  // when the period changes, no rxjs plumbing.
+  private readonly rollupRes = httpResource<{ items: AgentRunRollupRow[] }>(() => {
+    const since = this.since();
+    const until = this.until();
+    if (!since || !until) return undefined;
+    return `${environment.dashboardApiUrl}/api/agent-runs/rollup?since=${encodeURIComponent(since)}&until=${encodeURIComponent(until)}`;
+  });
 
-  readonly loading = computed(() => this.result() === null);
-  readonly items = computed<AgentRunRollupRow[]>(() => this.result()?.items ?? []);
+  readonly loading = computed(() => this.rollupRes.isLoading() && !this.rollupRes.hasValue());
+  readonly items = computed<AgentRunRollupRow[]>(() =>
+    this.rollupRes.hasValue() ? (this.rollupRes.value().items ?? []) : []);
 
   // Collapse the section once we know there's nothing for the day; stay open
   // while loading so a data-bearing day never flickers shut. User-toggleable.

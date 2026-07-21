@@ -1,0 +1,51 @@
+<app-ui-section id="jsec-health" title="Health" [meta]="meta()"
+  [expanded]="open()" (toggled)="open.set(!open())">
+  @if (summary(); as h) {
+    <app-ui-stack gap="lg">
+      <div class="journal-day__stats">
+        @if (h.steps) {
+          <app-ui-stat-card label="Steps" [value]="(h.steps | number:'1.0-0') ?? ''" />
+        }
+        @if (h.distanceKm) {
+          <app-ui-stat-card label="Distance" [value]="((h.distanceKm | number:'1.1-1') ?? '0') + ' km'" />
+        }
+        @if (h.energyKcal) {
+          <app-ui-stat-card label="Energy" [value]="h.energyKcal.toString()" detail="kcal" />
+        }
+        @if (h.floors) {
+          <app-ui-stat-card label="Floors" [value]="h.floors.toString()" />
+        }
+      </div>
+
+      <app-ui-subhead label="Exercise" [count]="h.exercises.length" />
+      @if (h.exercises.length) {
+        <ul class="journal-day__list">
+          @for (ex of h.exercises; track ex.ts) {
+            <li class="journal-day__row">
+              <span class="journal-day__row-label">{{ ex.type }}</span>
+              <span class="journal-day__row-value">{{ formatMinutes(ex.durationMin) }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <app-ui-empty-state message="No exercise sessions recorded." />
+      }
+
+      <app-ui-subhead label="Movement" [count]="movementRows().length" />
+      @if (movementRows().length) {
+        <ul class="journal-day__list">
+          @for (row of movementRows(); track row[0]) {
+            <li class="journal-day__row">
+              <span class="journal-day__row-label">{{ row[0] }}</span>
+              <span class="journal-day__row-value">{{ row[1] }}×</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <app-ui-empty-state message="No movement transitions detected. Enable Activity collector in the jimbo app." />
+      }
+    </app-ui-stack>
+  } @else {
+    <app-ui-empty-state message="No Health Connect data. Grant permissions and ensure a data source is writing steps." />
+  }
+</app-ui-section>
