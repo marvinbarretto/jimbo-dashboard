@@ -40,12 +40,17 @@ export class UiDonutChart {
   readonly suffix = input<string>('');
   readonly height = input<number>(240);
 
+  // Per-slice colors aligned with labels. Null/missing entries fall back to
+  // the default palette, so callers with partial color data (e.g. some
+  // projects lacking a color_token) can pass what they have.
+  readonly colors = input<readonly (string | null)[]>([]);
+
   readonly chartData = computed<ChartConfiguration<'doughnut'>['data']>(() => ({
     labels: [...this.labels()],
     datasets: [
       {
         data: [...this.values()],
-        backgroundColor: this.labels().map((_, i) => PALETTE[i % PALETTE.length]),
+        backgroundColor: this.labels().map((_, i) => this.colors()[i] ?? PALETTE[i % PALETTE.length]),
         borderWidth: 0,
       },
     ],

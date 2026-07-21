@@ -53,6 +53,8 @@ import {
 
 const HOUR_LABELS = Array.from({ length: 24 }, (_, h) => `${h.toString().padStart(2, '0')}:00`);
 
+const UNASSIGNED_COLOR = '#6b7280';
+
 interface CommitRow {
   sha: string;
   subject: string;
@@ -196,6 +198,15 @@ export class JournalWorkPage {
   ));
   protected readonly projectLabels = computed(() => this.projectWork().map(p => this.projectName(p.project_id)));
   protected readonly projectValues = computed(() => this.projectWork().map(p => p.minutes));
+
+  // Slice colors from each project's color_token so the donut matches project
+  // accents everywhere else in the UI. Unassigned is deliberately grey — it's
+  // an attribution gap, not a project. Colorless projects fall back to the
+  // chart's own palette (null entry).
+  protected readonly projectColors = computed(() => this.projectWork().map(p =>
+    p.project_id === null
+      ? UNASSIGNED_COLOR
+      : this.projects.getById(p.project_id)?.color_token ?? null));
 
   // ── Day view ──────────────────────────────────────────────────────────────
   protected readonly hourlyLabels = HOUR_LABELS;
