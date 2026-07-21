@@ -1,30 +1,21 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { UiTabBar } from '@shared/components/ui-tab-bar/ui-tab-bar';
+import { RouterOutlet } from '@angular/router';
 
+/**
+ * Config's tabs are tier-2 and live in the app shell's <app-section-tabs>
+ * (see nav-config), so this is now just the routed outlet.
+ */
 @Component({
   selector: 'app-config-page',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, UiTabBar],
+  imports: [RouterOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="config">
-      <app-ui-tab-bar label="Config sections">
-        <a routerLink="projects" routerLinkActive="active" class="ui-tab">Projects</a>
-        <a routerLink="skills" routerLinkActive="active" class="ui-tab">Skills</a>
-        <a routerLink="models" routerLinkActive="active" class="ui-tab">Models</a>
-        <a routerLink="model-stacks" routerLinkActive="active" class="ui-tab">Stacks</a>
-        <a routerLink="actors" routerLinkActive="active" class="ui-tab">Actors</a>
-        <a routerLink="settings" routerLinkActive="active" class="ui-tab">Settings</a>
-      </app-ui-tab-bar>
-
-      <div class="config__body">
-        <router-outlet />
-      </div>
+      <router-outlet />
     </div>
   `,
   styles: [`
     .config { display: flex; flex-direction: column; min-height: 100%; }
-    .config__body { flex: 1; }
   `],
 })
 export class ConfigPage {}

@@ -13,7 +13,7 @@ import { UiTabBar } from '@shared/components/ui-tab-bar/ui-tab-bar';
         <p class="jw__subtitle">marvinbarretto.labs&#64;gmail.com — read-only API dump</p>
       </header>
 
-      <app-ui-tab-bar label="Workspace views">
+      <app-ui-tab-bar label="Workspace views" [sticky]="false">
         <a routerLink="mail" routerLinkActive="active" class="ui-tab">Mail</a>
         <a routerLink="calendar" routerLinkActive="active" class="ui-tab">Calendar</a>
         <a routerLink="tasks" routerLinkActive="active" class="ui-tab">Tasks</a>

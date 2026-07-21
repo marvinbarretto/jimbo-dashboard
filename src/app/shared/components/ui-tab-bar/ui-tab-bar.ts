@@ -4,10 +4,13 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   selector: 'app-ui-tab-bar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <nav class="ui-tab-bar" [attr.aria-label]="label()">
+    <nav class="ui-tab-bar" [class.ui-tab-bar--plain]="!sticky()" [attr.aria-label]="label()">
       <ng-content />
     </nav>
   `,
+  host: {
+    '[class.ui-tab-bar-host--static]': '!sticky()',
+  },
   styles: [`
     // Sticks below the app header so core sub-nav stays reachable on long
     // pages. Offset comes from --app-header-height set on .app-shell.
@@ -37,8 +40,25 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       );
       border-bottom: 1px solid color-mix(in oklch, var(--section-accent, var(--color-border)) 35%, var(--color-border));
     }
+
+    // Tier-3 variant: in-page tabs under a section's own tab bar. Drops the
+    // sticky behaviour (two sticky strips would eat the viewport) and the
+    // accent tint, so the section bar above stays the dominant one.
+    :host(.ui-tab-bar-host--static) {
+      position: static;
+      z-index: auto;
+      margin-inline: 0;
+    }
+
+    .ui-tab-bar--plain {
+      padding-inline: 0;
+      background-image: none;
+      border-bottom-color: var(--color-border);
+    }
   `],
 })
 export class UiTabBar {
   readonly label = input('Navigation');
+  /** False renders the tier-3 in-page variant — see the host class above. */
+  readonly sticky = input(true);
 }

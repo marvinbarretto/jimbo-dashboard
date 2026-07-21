@@ -14,51 +14,13 @@ export interface DataPageConfig {
   endpoints: EndpointConfig[];
 }
 
-export const TODAY_ENDPOINTS: EndpointConfig[] = [
-  { title: 'Health', path: '/api/health', summary: 'Current API health and dependency status.' },
-  { title: 'Hermes jobs', path: '/api/hermes/jobs', summary: 'Cron job state and recent run status.' },
-  { title: 'Calendar', path: '/api/google-calendar/events', summary: 'Upcoming events over the next two days.', params: { days: 2 } },
-  { title: 'Dispatch status', path: '/api/dispatch/status', summary: 'Current execution queue state.' },
-  { title: 'Grooming pipeline', path: '/api/grooming/pipeline', summary: 'Grooming work currently moving through the pipeline.' },
-  { title: 'Vault tasks', path: '/api/vault/tasks/summary', summary: 'Task summary from the vault.' },
-  { title: 'Latest briefing', path: '/api/briefing/latest', summary: 'Most recent briefing analysis.' },
-  { title: 'Recent system events', path: '/api/events', summary: 'Newest system-level events.', params: { limit: 20 } },
-];
-
+/**
+ * Raw endpoint inspectors, one page per API domain — a debugging surface, not
+ * product UI. Only domains with no real page of their own live here; the
+ * mail/calendar/tasks/triage/briefings/context inspectors were retired once
+ * /mail-activity, /calendar-settings, /tasks and /briefings covered them.
+ */
 export const DATA_PAGES: DataPageConfig[] = [
-  {
-    key: 'mail',
-    title: 'Mail',
-    hint: 'Email triage pipeline (working table) and raw Gmail visibility.',
-    endpoints: [
-      { title: 'Recent reports', path: '/api/emails/reports', summary: 'Email pipeline rows, most recent first.', params: { limit: 50 } },
-      { title: 'Gmail profile', path: '/api/google-mail/profile', summary: 'Connected Gmail account metadata.' },
-      { title: 'Recent Gmail', path: '/api/google-mail/messages', summary: 'Raw Gmail messages before processing.', params: { hours: 24, limit: 30 } },
-    ],
-  },
-  {
-    key: 'calendar',
-    title: 'Calendar',
-    hint: 'Calendar source configuration, visible calendars, upcoming events, and scheduling data.',
-    endpoints: [
-      { title: 'Upcoming events', path: '/api/google-calendar/events', summary: 'Events over the next 14 days.', params: { days: 14 } },
-      { title: 'Google calendars', path: '/api/google-calendar/calendars', summary: 'Calendars visible through the Google integration.' },
-      { title: 'Calendar config', path: '/api/calendar/config', summary: 'Jimbo calendar configuration.' },
-      { title: 'Available calendars', path: '/api/calendar/available', summary: 'Calendars available for configuration.' },
-    ],
-  },
-  {
-    key: 'tasks',
-    title: 'Tasks',
-    hint: 'Google Tasks intake, vault task summaries, and inbox shape.',
-    endpoints: [
-      { title: 'Task lists', path: '/api/google-tasks/lists', summary: 'Google Task lists visible to Jimbo.' },
-      { title: 'Incomplete Google tasks', path: '/api/google-tasks/tasks', summary: 'Current incomplete Google Tasks.' },
-      { title: 'Vault task summary', path: '/api/vault/tasks/summary', summary: 'Task counts and priority shape in the vault.' },
-      { title: 'Vault inbox summary', path: '/api/vault/inbox-summary', summary: 'Inbox grouped by type.' },
-      { title: 'Active vault notes', path: '/api/vault/notes', summary: 'Recent active vault records.', params: { status: 'active', limit: 50, sort: 'updated_at', order: 'desc' } },
-    ],
-  },
   {
     key: 'ops',
     title: 'Ops',
@@ -77,16 +39,6 @@ export const DATA_PAGES: DataPageConfig[] = [
     ],
   },
   {
-    key: 'briefings',
-    title: 'Briefings',
-    hint: 'Generated briefings and the composite snapshot they depend on.',
-    endpoints: [
-      { title: 'Latest briefing', path: '/api/briefing/latest', summary: 'Current latest briefing analysis.' },
-      { title: 'Briefing history', path: '/api/briefing/history', summary: 'Recent briefing analyses.' },
-      { title: 'Snapshot', path: '/api/snapshot', summary: 'Composite priorities, goals, active tasks, task summary, and epics.' },
-    ],
-  },
-  {
     key: 'coach',
     title: 'Coach',
     hint: 'Supplement nudges, inventory, and fitness records.',
@@ -95,25 +47,6 @@ export const DATA_PAGES: DataPageConfig[] = [
       { title: 'Inventory', path: '/api/coach/inventory', summary: 'Supplement inventory with runout projections.' },
       { title: 'Fitness summary', path: '/api/fitness/summary', summary: 'Fitness summary and daily breakdowns.' },
       { title: 'Fitness records', path: '/api/fitness/records', summary: 'Recent synced fitness records.' },
-    ],
-  },
-  {
-    key: 'context',
-    title: 'Context',
-    hint: 'Context files, expiring context items, and structured settings.',
-    endpoints: [
-      { title: 'Context files', path: '/api/context/files', summary: 'Context files with section and item counts.' },
-      { title: 'Expiring items', path: '/api/context/items/expiring', summary: 'Context items expiring soon.', params: { days: 14 } },
-      { title: 'Settings', path: '/api/settings', summary: 'Jimbo settings.' },
-    ],
-  },
-  {
-    key: 'triage',
-    title: 'Triage',
-    hint: 'Triage queue, queue stats, and review state.',
-    endpoints: [
-      { title: 'Stats', path: '/api/triage/stats', summary: 'Triage statistics.' },
-      { title: 'Queue', path: '/api/triage/queue', summary: 'Items currently waiting for triage.' },
     ],
   },
   {
@@ -130,12 +63,12 @@ export const DATA_PAGES: DataPageConfig[] = [
     ],
   },
   {
-    key: 'activity',
-    title: 'Activity',
-    hint: 'Personal activity logs, costs, experiments, and product summaries.',
+    // Trimmed to costs/experiments/summaries — the activities table itself is
+    // dead in prod, so /api/activity and /api/activity/stats were dropped.
+    key: 'costs',
+    title: 'Costs & experiments',
+    hint: 'Spend, experiment runs, and product metric summaries.',
     endpoints: [
-      { title: 'Activity stats', path: '/api/activity/stats', summary: 'Aggregate activity statistics.' },
-      { title: 'Activity log', path: '/api/activity', summary: 'Recent activity entries.', params: { days: 14 } },
       { title: 'Cost summary', path: '/api/costs/summary', summary: 'Cost summary for the current period.' },
       { title: 'Costs', path: '/api/costs', summary: 'Recent cost entries.' },
       { title: 'Experiment stats', path: '/api/experiments/stats', summary: 'Experiment aggregate statistics.' },

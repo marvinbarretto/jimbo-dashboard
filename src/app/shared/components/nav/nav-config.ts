@@ -1,81 +1,126 @@
-export interface NavLink {
+export interface NavTab {
   readonly href: string;
   readonly label: string;
-  readonly accent?: string;
 }
 
-export interface NavGroup {
+export interface NavSection {
   readonly id: string;
   readonly label: string;
-  readonly paths: readonly string[];
-  readonly items: readonly NavLink[];
+  readonly accent: string;
+  /** Tier-2 tabs. The first one is the section's landing target. */
+  readonly tabs: readonly NavTab[];
+  /**
+   * First URL segments that belong to this section but aren't tabs — detail
+   * views (`/briefing/:id`) and pages reachable only by deep link. Keeps the
+   * section bar on screen instead of blinking out when you drill in.
+   */
+  readonly extraPaths?: readonly string[];
 }
 
-export const primaryNavItems: readonly NavLink[] = [
-  { href: '/picture',               label: 'Picture',        accent: '#2dd4bf' },
-  { href: '/config',                label: 'Config',         accent: '#818cf8' },
-  { href: '/journal',               label: 'Journal',        accent: '#fde68a' },
-  { href: '/nutrition',             label: 'Nutrition',      accent: '#fda4af' },
-  { href: '/checkins',              label: 'Check-ins',      accent: '#a3e635' },
-  { href: '/exercise',              label: 'Exercise',       accent: '#38bdf8' },
-  { href: '/pomo-reports',          label: 'Pomo reports',   accent: '#fb923c' },
-  { href: '/calendar-settings',     label: 'Calendars',      accent: '#34d399' },
-  { href: '/tasks',                 label: 'Tasks',          accent: '#60a5fa' },
-  { href: '/mail-activity',         label: 'Mail',           accent: '#facc15' },
-  { href: '/vault-items',           label: 'Vault',          accent: '#c084fc' },
-  { href: '/grooming',              label: 'Grooming',       accent: '#22d3ee' },
-  { href: '/execution',             label: 'Execution',      accent: '#f87171' },
-  { href: '/review',                label: 'Review',         accent: '#fbbf24' },
-  { href: '/fleet',                 label: 'Fleet',          accent: '#e879f9' },
-  { href: '/shopping',              label: 'Shopping',       accent: '#4ade80' },
-  { href: '/jimbo-workspace',       label: 'Jimbo Workspace', accent: '#f472b6' },
-  { href: '/hermes',                label: 'Hermes',         accent: '#fb923c' },
-  { href: '/stream',                label: 'Stream',         accent: '#5eead4' },
-  { href: '/ui-lab',                label: 'UI Lab',         accent: '#a78bfa' },
-  { href: '/planner',               label: 'Planner',        accent: '#f97316' },
-];
-
-export const navGroups: readonly NavGroup[] = [
+/**
+ * Three-tier navigation:
+ *   1. sections    — this list, rendered by <app-nav>
+ *   2. tabs        — <app-ui-tab-bar>, sticky, one per section
+ *   3. in-page     — <app-ui-tab-bar [sticky]="false"> or <app-ui-inline-tabs>
+ *
+ * Work's tabs are ordered as the actual pipeline — intake → vault → grooming
+ * → planning → dispatch → review → fleet — so the bar reads left to right as
+ * throughput rather than as an alphabet soup.
+ */
+export const navSections: readonly NavSection[] = [
   {
-    id: 'archive',
-    label: 'Archive',
-    paths: [
-      'today', 'shopping', 'mail-next', 'mail-activity', 'briefings', 'calendar-settings', 'tasks',
-      'jimbo-workspace', 'nutrition', 'exercise',
-      'config', 'grooming', 'execution', 'review', 'vault-items', 'questions', 'activity',
-      'skills', 'models', 'model-stacks', 'context', 'coach', 'interrogate',
-      'hermes', 'ops', 'triage', 'stream', 'coverage', 'grooming-admin', 'pomo-reports',
-      'entities',
-    ],
-    items: [
-      { href: '/today', label: 'Today' },
+    id: 'life',
+    label: 'Life',
+    accent: '#fde68a',
+    tabs: [
+      { href: '/journal', label: 'Journal' },
       { href: '/nutrition', label: 'Nutrition' },
       { href: '/exercise', label: 'Exercise' },
-      { href: '/shopping', label: 'Shopping' },
-      { href: '/mail-next', label: 'Mail' },
-      { href: '/mail-activity', label: 'Mail activity' },
-      { href: '/briefings', label: 'Briefings' },
-      { href: '/config', label: 'Config' },
+      { href: '/checkins', label: 'Check-ins' },
+      { href: '/pomo-reports', label: 'Pomo' },
+      { href: '/picture', label: 'Picture' },
+    ],
+    extraPaths: ['pomo'],
+  },
+  {
+    id: 'work',
+    label: 'Work',
+    accent: '#60a5fa',
+    tabs: [
+      { href: '/tasks', label: 'Triage' },
+      { href: '/vault-items', label: 'Vault' },
       { href: '/grooming', label: 'Grooming' },
+      { href: '/questions', label: 'Questions' },
+      { href: '/planner', label: 'Planner' },
       { href: '/execution', label: 'Execution' },
       { href: '/review', label: 'Review' },
-      { href: '/vault-items', label: 'Vault' },
-      { href: '/questions', label: 'Questions' },
-      { href: '/entities', label: 'Entities' },
-      { href: '/activity', label: 'Activity' },
+      { href: '/fleet', label: 'Fleet' },
+    ],
+  },
+  {
+    id: 'comms',
+    label: 'Comms',
+    accent: '#facc15',
+    tabs: [
+      { href: '/mail-activity', label: 'Mail' },
+      { href: '/calendar-settings', label: 'Calendars' },
+      { href: '/jimbo-workspace', label: 'Workspace' },
+      { href: '/shopping', label: 'Shopping' },
+    ],
+    extraPaths: ['briefings', 'briefing'],
+  },
+  {
+    id: 'system',
+    label: 'System',
+    accent: '#fb923c',
+    tabs: [
+      { href: '/hermes', label: 'Hermes' },
+      { href: '/stream', label: 'Stream' },
+      { href: '/api', label: 'API' },
+      { href: '/modules', label: 'Modules' },
+      { href: '/coverage', label: 'Coverage' },
+      { href: '/ui-lab', label: 'UI Lab' },
+    ],
+    // activity/context stay: their `/:id` detail views are still top-level.
+    extraPaths: ['activity', 'context', 'test-forms', 'test'],
+  },
+  {
+    id: 'config',
+    label: 'Config',
+    accent: '#818cf8',
+    tabs: [
+      { href: '/config/projects', label: 'Projects' },
       { href: '/config/skills', label: 'Skills' },
       { href: '/config/models', label: 'Models' },
       { href: '/config/model-stacks', label: 'Stacks' },
       { href: '/config/actors', label: 'Actors' },
-      { href: '/context', label: 'Context' },
-      { href: '/coach', label: 'Coach' },
-      { href: '/interrogate', label: 'Interrogate' },
-      { href: '/hermes', label: 'Hermes' },
-      { href: '/ops', label: 'Ops' },
-      { href: '/triage', label: 'Triage' },
-      { href: '/stream', label: 'Stream' },
-      { href: '/coverage', label: 'Coverage' },
-      { href: '/grooming-admin', label: 'Grooming API' },
+      { href: '/entities', label: 'Entities' },
+      { href: '/config/settings', label: 'Settings' },
     ],
+    // No 'actors': /actors redirects, and NavState reads urlAfterRedirects.
+    // notification-settings is linked from Config → Settings, not a tab.
+    extraPaths: ['projects', 'notification-settings'],
   },
 ];
+
+/** First URL segment of every path a section owns, for O(1) active lookup. */
+const sectionBySegment = new Map<string, NavSection>();
+for (const section of navSections) {
+  const segments = [
+    ...section.tabs.map(t => t.href.split('/').filter(Boolean)[0]),
+    ...(section.extraPaths ?? []),
+  ];
+  for (const segment of segments) {
+    if (segment && !sectionBySegment.has(segment)) sectionBySegment.set(segment, section);
+  }
+}
+
+export function sectionForUrl(url: string): NavSection | null {
+  const segment = url.split('?')[0].split('#')[0].split('/').filter(Boolean)[0];
+  return segment ? sectionBySegment.get(segment) ?? null : null;
+}
+
+/** Where a primary-nav click lands: the section's first tab. */
+export function sectionLanding(section: NavSection): string {
+  return section.tabs[0].href;
+}

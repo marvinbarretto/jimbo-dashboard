@@ -1,9 +1,8 @@
-import { Component, computed, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
-import { filter, map, startWith } from 'rxjs';
+import { Component, inject } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 import { Nav } from './shared/components/nav/nav';
-import { primaryNavItems } from './shared/components/nav/nav-config';
+import { NavState } from './shared/components/nav/nav-state.service';
+import { SectionTabs } from './shared/components/nav/section-tabs';
 import { ToastStack } from './shared/components/toast/toast-stack';
 import { CommandShortcutsService } from './shared/services/command-shortcuts.service';
 import { ThemeService } from './shared/services/theme.service';
@@ -13,14 +12,18 @@ import { AuthService } from './features/auth/data-access/auth.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Nav, ToastStack],
+  imports: [RouterOutlet, Nav, SectionTabs, ToastStack],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App {
   protected readonly shortcuts = inject(CommandShortcutsService);
   protected readonly theme = inject(ThemeService);
-  private readonly router = inject(Router);
+
+  // Section accent — the active section's colour, exposed as
+  // `--section-accent` on the app shell. Sub-pages and shared primitives
+  // (e.g. <app-ui-tab-bar>) pick it up via that CSS var.
+  protected readonly nav = inject(NavState);
 
   // Eager-load shared lookup data so reference dropdowns (capture's @ trigger,
   // detail-modal pickers, etc.) always have data when first opened. The
@@ -28,23 +31,4 @@ export class App {
   protected readonly auth = inject(AuthService);
   private readonly _eagerActors = inject(ActorsService);
   private readonly _eagerProjects = inject(ProjectsService);
-
-  // Section accent — looks up the active primary-nav item by URL prefix and
-  // exposes its accent as `--section-accent` on the app shell. Sub-pages and
-  // shared primitives (e.g. <app-ui-tab-bar>) can pick it up via that CSS var.
-  private readonly url = toSignal(
-    this.router.events.pipe(
-      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
-      map(e => e.urlAfterRedirects),
-      startWith(this.router.url),
-    ),
-    { initialValue: this.router.url },
-  );
-
-  protected readonly sectionAccent = computed(() => {
-    const segment = (this.url() ?? '').split('?')[0].split('/').filter(Boolean)[0];
-    if (!segment) return null;
-    const match = primaryNavItems.find(item => item.href === `/${segment}`);
-    return match?.accent ?? null;
-  });
 }

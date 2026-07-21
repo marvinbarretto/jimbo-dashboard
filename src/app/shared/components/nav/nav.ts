@@ -1,27 +1,32 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import pkg from '../../../../../package.json';
-import { primaryNavItems } from './nav-config';
+import { sectionLanding } from './nav-config';
+import { NavState } from './nav-state.service';
 
 @Component({
   selector: 'app-nav',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <nav aria-label="Primary" class="app-nav">
-      <a class="app-nav__brand" routerLink="/ui-lab">
+      <a class="app-nav__brand" routerLink="/journal">
         <span class="app-nav__logo">jimbo</span>
         <span class="app-nav__version">v{{ version }}</span>
       </a>
 
       <ul class="app-nav__list">
-        @for (item of primaryItems; track item.href) {
-          <li class="app-nav__item" [style.--nav-accent]="item.accent">
+        @for (section of nav.sections; track section.id) {
+          <li class="app-nav__item" [style.--nav-accent]="section.accent">
+            <!-- Active state comes from NavState, not routerLinkActive: the
+                 link targets one tab but should stay lit across the whole
+                 section. -->
             <a
-              [routerLink]="item.href"
-              routerLinkActive="active"
+              [routerLink]="landing(section)"
+              [class.active]="nav.activeSection()?.id === section.id"
+              [attr.aria-current]="nav.activeSection()?.id === section.id ? 'page' : null"
               class="app-nav__link">
-              {{ item.label }}
+              {{ section.label }}
             </a>
           </li>
         }
@@ -154,5 +159,6 @@ import { primaryNavItems } from './nav-config';
 })
 export class Nav {
   readonly version = pkg.version;
-  protected readonly primaryItems = primaryNavItems;
+  protected readonly nav = inject(NavState);
+  protected readonly landing = sectionLanding;
 }

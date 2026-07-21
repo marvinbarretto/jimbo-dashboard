@@ -1,4 +1,4 @@
-<div class="app-shell" [style.--section-accent]="sectionAccent()">
+<div class="app-shell" [style.--section-accent]="nav.accent()">
   <header class="app-header">
     <div class="app-topbar">
       <div class="app-topbar__commands">
@@ -46,6 +46,7 @@
 
   <main class="app-main">
     <div class="app-main__inner">
+      <app-section-tabs />
       <router-outlet />
     </div>
   </main>

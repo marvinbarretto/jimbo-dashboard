@@ -1,70 +1,21 @@
 import { Routes } from '@angular/router';
+import { DATA_PAGES } from './data-pages';
 
+// One route per DATA_PAGES entry — the config is the source of truth, so
+// adding or sunsetting an inspector is a one-line change in data-pages.ts.
 export const apiDataRoutes: Routes = [
   {
-    path: 'mail',
-    title: 'Mail',
-    data: { domain: 'mail' },
-    loadComponent: () => import('./containers/data-page/data-page').then(m => m.DataPage),
-  },
-  {
-    path: 'calendar',
-    title: 'Calendar',
-    data: { domain: 'calendar' },
-    loadComponent: () => import('./containers/data-page/data-page').then(m => m.DataPage),
-  },
-  {
-    path: 'tasks',
-    title: 'Tasks',
-    data: { domain: 'tasks' },
-    loadComponent: () => import('./containers/data-page/data-page').then(m => m.DataPage),
-  },
-  {
-    path: 'ops',
-    title: 'Ops',
-    data: { domain: 'ops' },
-    loadComponent: () => import('./containers/data-page/data-page').then(m => m.DataPage),
-  },
-  {
-    path: 'briefings',
-    title: 'Briefings',
-    data: { domain: 'briefings' },
-    loadComponent: () => import('./containers/data-page/data-page').then(m => m.DataPage),
-  },
-  {
-    path: 'coach',
-    title: 'Coach',
-    data: { domain: 'coach' },
-    loadComponent: () => import('./containers/data-page/data-page').then(m => m.DataPage),
-  },
-  {
-    path: 'context',
-    title: 'Context',
-    data: { domain: 'context' },
-    loadComponent: () => import('./containers/data-page/data-page').then(m => m.DataPage),
-  },
-  {
-    path: 'triage',
-    title: 'Triage',
-    data: { domain: 'triage' },
-    loadComponent: () => import('./containers/data-page/data-page').then(m => m.DataPage),
-  },
-  {
-    path: 'interrogate',
-    title: 'Interrogate',
-    data: { domain: 'interrogate' },
-    loadComponent: () => import('./containers/data-page/data-page').then(m => m.DataPage),
-  },
-  {
-    path: 'activity',
-    title: 'Activity',
-    data: { domain: 'activity' },
-    loadComponent: () => import('./containers/data-page/data-page').then(m => m.DataPage),
-  },
-  {
-    path: 'grooming-admin',
-    title: 'Grooming Admin',
-    data: { domain: 'grooming-admin' },
-    loadComponent: () => import('./containers/data-page/data-page').then(m => m.DataPage),
+    path: '',
+    loadComponent: () =>
+      import('./containers/api-data-shell/api-data-shell').then(m => m.ApiDataShell),
+    children: [
+      ...DATA_PAGES.map(page => ({
+        path: page.key,
+        title: `API — ${page.title}`,
+        data: { domain: page.key },
+        loadComponent: () => import('./containers/data-page/data-page').then(m => m.DataPage),
+      })),
+      { path: '', pathMatch: 'full' as const, redirectTo: DATA_PAGES[0].key },
+    ],
   },
 ];

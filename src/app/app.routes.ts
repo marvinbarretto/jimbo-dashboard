@@ -2,11 +2,6 @@ import { Routes } from '@angular/router';
 
 export const routes: Routes = [
   {
-    path: 'today',
-    title: 'Today',
-    loadComponent: () => import('./features/api-data/containers/today-page/today-page').then(m => m.TodayPage),
-  },
-  {
     path: 'test/epic-cards',
     title: 'Epic Cards — test',
     loadComponent: () => import('./features/test/epic-cards-test').then(m => m.EpicCardsTest),
@@ -15,11 +10,6 @@ export const routes: Routes = [
     path: 'hermes',
     title: 'Hermes',
     loadChildren: () => import('./features/hermes/hermes.routes').then(m => m.hermesRoutes),
-  },
-  {
-    path: 'mail-next',
-    title: 'Mail Next',
-    loadComponent: () => import('./features/mail/containers/mail-next-page/mail-next-page').then(m => m.MailNextPage),
   },
   {
     path: 'mail-activity',
@@ -63,7 +53,9 @@ export const routes: Routes = [
     loadChildren: () => import('./features/tasks/tasks.routes').then(m => m.tasksRoutes),
   },
   {
-    path: '',
+    // Raw endpoint inspectors. Mounting these at the app root previously let
+    // `/tasks` and `/briefings` shadow two of them into unreachability.
+    path: 'api',
     loadChildren: () => import('./features/api-data/api-data.routes').then(m => m.apiDataRoutes),
   },
   {
@@ -235,5 +227,8 @@ export const routes: Routes = [
     path: 'exercise',
     loadChildren: () => import('./features/exercise/exercise.routes').then(m => m.exerciseRoutes),
   },
-  { path: '', redirectTo: 'today', pathMatch: 'full' },
+  // Journal's Overview is the glance layer (day summary + timeline, live-
+  // refreshing on today), so it's the landing. /today is a raw endpoint
+  // inspector and lives under System → API.
+  { path: '', redirectTo: 'journal', pathMatch: 'full' },
 ];

@@ -30,7 +30,7 @@ const GRANULARITIES: ReadonlySet<string> = new Set(['day', 'week', 'month']);
   imports: [RouterLink, RouterLinkActive, RouterOutlet, UiTabBar],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-ui-tab-bar label="Journal domains">
+    <app-ui-tab-bar label="Journal domains" [sticky]="false">
       @for (d of domainLinks(); track d.key) {
         <a class="jshell__tab" [routerLink]="d.link" routerLinkActive="jshell__tab--active">
           {{ d.label }}

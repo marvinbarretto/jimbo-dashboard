@@ -28,7 +28,7 @@ import { HermesService } from '../../data-access/hermes.service';
         </div>
       </header>
 
-      <app-ui-tab-bar label="Hermes views">
+      <app-ui-tab-bar label="Hermes views" [sticky]="false">
         <a routerLink="pulse" routerLinkActive="active" class="ui-tab">Pulse</a>
         <a routerLink="control-room" routerLinkActive="active" class="ui-tab">Control Room</a>
         <a routerLink="timeline" routerLinkActive="active" class="ui-tab">Timeline</a>

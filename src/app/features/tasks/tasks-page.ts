@@ -8,7 +8,7 @@ import { UiTabBar } from '@shared/components/ui-tab-bar/ui-tab-bar';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tasks">
-      <app-ui-tab-bar label="Tasks sections">
+      <app-ui-tab-bar label="Tasks sections" [sticky]="false">
         <a routerLink="triage" routerLinkActive="active" class="ui-tab">Triage</a>
         <a routerLink="swipe" routerLinkActive="active" class="ui-tab">Swipe</a>
         <a routerLink="activity" routerLinkActive="active" class="ui-tab">Activity</a>
