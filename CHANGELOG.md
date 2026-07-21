@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.119](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.118...v0.0.119) (2026-07-21)
+
+
+### Features
+
+* **grooming:** surface pump learning-loop health on the board ([a499aa8](https://github.com/marvinbarretto/jimbo-dashboard/commit/a499aa871f1878f13c72c5253cde41e50d56144e))
+* **journal:** unified period header and real phone week/month rollups ([eb8ad79](https://github.com/marvinbarretto/jimbo-dashboard/commit/eb8ad7927712b123584f076c2b5c0e846d104723))
+* **nav:** three-tier IA — 5 sections, section tab bars, journal landing ([c13852f](https://github.com/marvinbarretto/jimbo-dashboard/commit/c13852f983df260cecef0485e1d4a8af9de99db5))
+
+
+### Bug Fixes
+
+* **grooming:** read the real uningested count, not a page size ([c266bd0](https://github.com/marvinbarretto/jimbo-dashboard/commit/c266bd06db935e4117ee6594845b7030709e4fcb))
+
 ### [0.0.118](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.117...v0.0.118) (2026-07-21)
 
 
