@@ -37,10 +37,9 @@ export const navSections: readonly NavSection[] = [
       { href: '/nutrition', label: 'Nutrition' },
       { href: '/exercise', label: 'Exercise' },
       { href: '/checkins', label: 'Check-ins' },
-      { href: '/pomo-reports', label: 'Pomo' },
+      { href: '/pomo', label: 'Pomo' },
       { href: '/picture', label: 'Picture' },
     ],
-    extraPaths: ['pomo'],
   },
   {
     id: 'work',

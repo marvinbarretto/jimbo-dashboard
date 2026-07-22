@@ -62,7 +62,7 @@ header height, and section accent — one knob each, applied app-wide.
   `grooming`, `execution`, `review`, `fleet`, `picture`, `questions`,
   `config`, `projects/:id`, `briefings`/`briefing/:id`, `mail-next` /
   `mail-activity(/:gmailId)` (Discord/search deep-link target), `hermes`,
-  `stream`, `pomo`/`pomo-reports`, `nutrition`, `exercise`, `journal`,
+  `stream`, `pomo`, `nutrition`, `exercise`, `journal`,
   `shopping`, `tasks`, `jimbo-workspace`, `modules` (module-docs viewer),
   `calendar-settings`, `coverage`,
   `activity/:id`, `context/:id`, plus dev surfaces (`ui-lab` with ~40 child

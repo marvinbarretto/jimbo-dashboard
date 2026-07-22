@@ -124,11 +124,6 @@ export const routes: Routes = [
     loadChildren: () => import('./features/pomo/pomo.routes').then(m => m.pomoRoutes),
   },
   {
-    path: 'pomo-reports',
-    title: 'Pomo reports',
-    loadComponent: () => import('./features/pomo/containers/pomo-page/pomo-page').then(m => m.PomoPage),
-  },
-  {
     path: 'test-forms',
     title: 'Test forms',
     loadComponent: () => import('./features/test-forms/test-forms-page').then(m => m.TestFormsPage),

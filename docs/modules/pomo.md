@@ -42,8 +42,6 @@ session from the toolbar.
   retro), `PomoBreak` (client-only break timer via `?mins=`), `PomoRetro`
   (mood/notes/tags capture, activity breakdown donut, commits + YouTube in
   the session window, "next steps" suggestions from the same epic/project).
-- Also owns `PomoPage`, an older all-in-one setup/countdown/capture page
-  mounted separately at `/pomo-reports`.
 - Does NOT own the session state machine, activity summarisation, or
   telemetry collection (all server-side / extension-side), nor vault items
   and projects themselves.
@@ -56,8 +54,6 @@ session from the toolbar.
 - `/pomo` → `PomoShell` (redirects to `running` or `pre-session`)
 - `/pomo/pre-session` → `PomoPreSession`; `/pomo/running` → `PomoRunning`
 - `/pomo/break` → `PomoBreak`; `/pomo/retro` → `PomoRetro`
-- `/pomo-reports` → `PomoPage` (registered directly in `app.routes.ts`,
-  outside this feature's routes file)
 
 Service surface: `FocusSessionsService` (`loadActive`, `loadRecent`, `start`,
 `complete`, `abandon`, `update`, `linkNote`, `loadNotes`) — also consumed
@@ -95,9 +91,10 @@ observable evidence only.
 
 - `2026-07-07` — No test files in the feature (no `*.spec.ts` / `*.test.ts`
   under `src/app/features/pomo/`).
-- `2026-07-07` — `PomoPage` (`/pomo-reports`) duplicates the countdown maths,
-  `formatTime`, presets and capture form that the split flow implements —
-  two parallel pomo UIs over the same service.
+- `2026-07-22` — `PomoPage`/`/pomo-reports` removed: it duplicated the split
+  flow's countdown maths and never surfaced anything richer than a flat
+  7-day list. Combined pomo+code-session reporting now lives at
+  `/journal/work` (see `journal.md`).
 - `2026-07-07` — Completion race between dashboard auto-finish and the
   extension's expiry tick is handled by "server treats double-complete as
   idempotent-ish" per comments, not by any client-side coordination.
