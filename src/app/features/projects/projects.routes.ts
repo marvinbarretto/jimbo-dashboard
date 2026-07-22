@@ -12,12 +12,15 @@ export const projectsRoutes: Routes = [
     loadComponent: () => import('./containers/project-form/project-form').then(m => m.ProjectForm),
   },
   {
-    path: ':id',
-    redirectTo: '/projects/:id',
-  },
-  {
     path: ':id/edit',
     title: 'Edit project',
     loadComponent: () => import('./containers/project-form/project-form').then(m => m.ProjectForm),
+  },
+  {
+    // pathMatch 'full' — the default 'prefix' would swallow ':id/edit' too
+    // and redirect it to the landing page before the route above ever matched.
+    path: ':id',
+    pathMatch: 'full',
+    redirectTo: '/projects/:id',
   },
 ];
