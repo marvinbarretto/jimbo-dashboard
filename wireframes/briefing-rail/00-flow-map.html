@@ -4,37 +4,33 @@
 <div class="w-frame" style="min-height:auto; padding-bottom:1rem;">
   <div class="w-intent">PREMISE
 PERSONA:   Marvin, at his desk, opening the briefing from the Telegram link. He wants the
-           day's shape at a glance — not to open the planner, not to cross-reference three
-           Google Calendar tabs.
-JOB:       Read the briefing AND see/adjust today+tomorrow in one screen: what's committed,
-           what Jimbo has pencilled, and push anything pencilled to tomorrow with one drag.
+           day's shape at a glance — not to open the planner, not three Google Calendar tabs.
+JOB:       Read the briefing WITH the three calendars beside it: My schedule, Jimbo, and
+           Jimbo Suggestions — today and tomorrow visible for each. Seeing, not managing.
 ENTRY:     Telegram notification link → /briefing/:id  (also: /briefings archive → View)
-EXIT:      Briefing read; pencilled blocks either left, confirmed, or deferred. No planner
-           round-trip needed for a simple "not today".
-VIEWPORT:  desktop 1280 (briefing is read at the desk; mobile reads the report column only —
-           rail collapses below it, not wireframed here)</div>
+EXIT:      Briefing read; he knows what's committed, what Jimbo holds, what's pencilled.
+VIEWPORT:  desktop 1280 (briefing is read at the desk; mobile stacks the board below the
+           report, not wireframed here)</div>
 
   <div style="padding:1rem;">
     <div class="w-h2" style="margin-bottom:0.5rem;">Journey</div>
-    <div class="w-list-item" data-goto="01"><span>1.</span><span><b>Briefing + rail</b> — report on the left (exists today), day-board rail on the right: Today | Tomorrow, events grouped by source calendar, pencilled blocks draggable.</span></div>
-    <div class="w-list-item" data-goto="02"><span>2.</span><span><b>After defer</b> — a pencilled block dragged Today → Tomorrow: lands same-time tomorrow, PATCH to suggestions calendar, undo toast.</span></div>
+    <div class="w-list-item" data-goto="01"><span>1.</span><span><b>Briefing + calendar board</b> — report left (exists today); board right: 3 columns, one per calendar, each stacking Today then Tomorrow. Read-only in v1.</span></div>
 
     <div class="w-notes">NOTES — what exists vs what's new
 — Report column, feedback arrows, open-question prompts: already live at /briefing/:id.
-— Merged calendar read: GET /api/google-calendar/events (no calendarId) already merges all
-  calendar_config-enabled calendars and stamps calendarId + calendarTag + isPotential.
-— Suggestions calendar is fetched separately by ID (same as planner does).
-— Drag/defer PATCH rails exist in PlannerSyncService.update(); "same-time tomorrow" is new
-  but small. FullCalendar NOT needed — the rail is a list-per-day, not a time grid.</div>
+— Data: GET /api/google-calendar/events?days=2 with explicit calendarId per column
+  (3 parallel calls — same pattern the planner uses for suggestions). No FullCalendar;
+  each column is a plain list grouped by day.
+— NOT in v1 (parked, deliberately): drag-to-defer, confirm/dismiss on cards, actor
+  swimlanes. The board earns its place by being glanceable first.</div>
 
     <div class="w-notes">OPEN QUESTIONS
-1. calendar_config is uncurated: 3 calendars enabled, all tag:null + potential:true, and
-   NEITHER primary NOR the suggestions calendar is in it. Lane labels need tags (or a
-   client-side name map) and primary needs adding — otherwise "my calendars" is incomplete.
-2. Should confirm/dismiss (resolve-suggestion yes/no) live on pencilled cards here too, or
-   stay in the report's open-question prompts only? (Sketch shows a minimal ✓/✕ — cuttable.)
-3. Afternoon briefing: is "Today" the whole day or remaining-hours-only? Sketch assumes
-   whole day with past events dimmed.</div>
+1. Calendar IDs: "Jimbo Suggestions" is known (hardcoded in planner). Which calendar is
+   "Jimbo" (personal), and is "My schedule" Google primary or one of the 3 group calendars
+   currently enabled in calendar_config? Need the two IDs (or names to look up).
+2. All-day events (e.g. "Brighton") — pin at the top of the day group? (sketch: yes)
+3. Afternoon briefing: Today = whole day with past events dimmed (sketch assumes this),
+   or remaining hours only?</div>
   </div>
 </div>
 

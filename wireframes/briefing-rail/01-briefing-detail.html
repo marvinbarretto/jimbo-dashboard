@@ -1,11 +1,11 @@
 <link rel="stylesheet" href="wire-kit.css">
-<title>01 — Briefing + day-board rail</title>
+<title>01 — Briefing + calendar board</title>
 
 <div class="w-frame">
-  <div class="w-intent">GOAL:     Read the briefing and see today+tomorrow's real shape beside it — one screen, no planner round-trip.
-PERSONA:  Marvin, arrived from the Telegram link; wants "what's my day, what's pencilled, am I overcommitted tomorrow?"
-PRIMARY:  Answer open questions / act on the report (rail is glanceable context; its one gesture = drag pencilled → tomorrow)
-SUCCESS:  He closes the tab knowing the day's shape; any "not today" block moved with one drag, nothing re-planned by hand.</div>
+  <div class="w-intent">GOAL:     Read the briefing with the three calendars beside it — the day's shape without opening anything else.
+PERSONA:  Marvin, from the Telegram link; wants "what's committed, what does Jimbo hold, what's pencilled — today and tomorrow".
+PRIMARY:  Act on the report (answer questions, rate items). The board is glanceable context — zero required interaction.
+SUCCESS:  He closes the tab knowing both days' shape across all three calendars; no planner or Google Calendar round-trip.</div>
 
   <div class="w-bar">
     <span class="w-h1">◀️ Afternoon briefing</span>
@@ -16,7 +16,7 @@ SUCCESS:  He closes the tab knowing the day's shape; any "not today" block moved
   <div class="w-cols" style="padding:1rem;">
 
     <!-- LEFT: existing report column, condensed -->
-    <div class="w-col" style="flex: 1.4;">
+    <div class="w-col" style="flex: 1;">
       <div class="w-block">
         <div class="w-h3">Open questions</div>
         <div class="w-list-item"><span class="w-body">Packed for Brighton yet?</span>
@@ -32,70 +32,65 @@ SUCCESS:  He closes the tab knowing the day's shape; any "not today" block moved
 health — unchanged, as live today…</div>
 
       <div class="w-notes">NOTES
-— Left column is the existing report, untouched. Page widens from ui-page
-  "standard" (72rem) to "full"; report keeps a comfortable max-width.
-— suggested_blocks SECTION disappears from the report — those blocks now
-  LIVE in the rail as pencilled cards. One home, not two renderings.</div>
+— Report unchanged. Page widens from ui-page "standard" (72rem) to "full";
+  report keeps a readable max-width, board takes the rest.</div>
     </div>
 
-    <!-- RIGHT: the day-board rail -->
-    <div class="w-col" style="flex: 1; max-width: 460px;">
+    <!-- RIGHT: the calendar board — 3 columns, one per calendar -->
+    <div class="w-col" style="flex: 1.1; max-width: 640px;">
       <div class="w-cols" style="gap:0.5rem;">
 
-        <!-- TODAY -->
+        <!-- MY SCHEDULE -->
         <div class="w-col w-day-col">
-          <div class="w-day-head">Today <span class="w-muted">Tue 22</span></div>
+          <div class="w-day-head">My schedule</div>
 
-          <div class="w-lane-head">My calendar</div>
-          <div class="w-event"><span class="w-event__time w-muted">09:30</span><span class="w-muted">Daily triage ✓(past)</span></div>
+          <div class="w-lane-head">Today · Tue 22</div>
+          <div class="w-event"><span class="w-event__time w-muted">09:30</span><span class="w-muted">Daily triage (past)</span></div>
+          <div class="w-event"><span class="w-muted">— nothing else —</span></div>
 
-          <div class="w-lane-head">Jimbo main</div>
-          <div class="w-event"><span class="w-event__time">18:00</span><span>(none today)</span></div>
-
-          <div class="w-lane-head">Pencilled — drag to defer</div>
-          <div class="w-event w-event--pencilled" data-goto="02" title="simulate: drag to Tomorrow">
-            <span class="w-drag">⋮⋮</span><span class="w-event__time">now</span>
-            <span>Land Briefing-v2 <span class="w-chip">1 blk</span></span>
-            <span style="margin-left:auto;">✓ ✕</span></div>
-          <div class="w-event w-event--pencilled"><span class="w-drag">⋮⋮</span><span class="w-event__time">late pm</span>
-            <span>Hinge — send msgs <span class="w-chip">1 blk</span></span>
-            <span style="margin-left:auto;">✓ ✕</span></div>
-          <div class="w-event w-event--pencilled"><span class="w-drag">⋮⋮</span><span class="w-event__time">eve</span>
-            <span>Finances glance <span class="w-chip">1 blk</span></span>
-            <span style="margin-left:auto;">✓ ✕</span></div>
-          <div class="w-event w-event--pencilled"><span class="w-drag">⋮⋮</span><span class="w-event__time">eve</span>
-            <span>Pack for Brighton <span class="w-chip">1 blk</span></span>
-            <span style="margin-left:auto;">✓ ✕</span></div>
-        </div>
-
-        <!-- TOMORROW -->
-        <div class="w-col w-day-col">
-          <div class="w-day-head">Tomorrow <span class="w-muted">Wed 23</span></div>
-
-          <div class="w-lane-head">My calendar</div>
-          <div class="w-event"><span class="w-event__time">all-day</span><span>Brighton 🏖 (plans)</span></div>
+          <div class="w-lane-head">Tomorrow · Wed 23</div>
+          <div class="w-event"><span class="w-event__time">all-day</span><span>🏖 Brighton</span></div>
           <div class="w-event"><span class="w-event__time">09:30</span><span>Daily triage</span></div>
           <div class="w-event"><span class="w-event__time">13:00</span><span>🚂 Watford → Victoria</span></div>
           <div class="w-event"><span class="w-event__time">14:10</span><span>🚌 Victoria → Brighton</span></div>
+        </div>
 
-          <div class="w-lane-head">Jimbo main</div>
-          <div class="w-event"><span class="w-muted">(none)</span></div>
+        <!-- JIMBO -->
+        <div class="w-col w-day-col">
+          <div class="w-day-head">Jimbo</div>
 
-          <div class="w-lane-head">Pencilled</div>
-          <div class="w-placeholder" style="margin:0.4rem;">drop zone —
-drag a block here to defer it</div>
+          <div class="w-lane-head">Today · Tue 22</div>
+          <div class="w-event"><span class="w-event__time">16:00</span><span>Grooming pump window</span></div>
+
+          <div class="w-lane-head">Tomorrow · Wed 23</div>
+          <div class="w-event"><span class="w-muted">— empty —</span></div>
+        </div>
+
+        <!-- JIMBO SUGGESTIONS -->
+        <div class="w-col w-day-col">
+          <div class="w-day-head">Suggestions</div>
+
+          <div class="w-lane-head">Today · Tue 22</div>
+          <div class="w-event w-event--pencilled"><span class="w-event__time">now</span><span>Land Briefing-v2 <span class="w-chip">1 blk</span></span></div>
+          <div class="w-event w-event--pencilled"><span class="w-event__time">late pm</span><span>Hinge — send msgs <span class="w-chip">1 blk</span></span></div>
+          <div class="w-event w-event--pencilled"><span class="w-event__time">eve</span><span>Finances glance <span class="w-chip">1 blk</span></span></div>
+          <div class="w-event w-event--pencilled"><span class="w-event__time">eve</span><span>Pack for Brighton <span class="w-chip">1 blk</span></span></div>
+
+          <div class="w-lane-head">Tomorrow · Wed 23</div>
+          <div class="w-event"><span class="w-muted">— empty —</span></div>
         </div>
       </div>
 
       <div class="w-notes">NOTES
-— Lanes = SOURCE CALENDARS, per Marvin: my calendar(s) / Jimbo main /
-  Jimbo suggestions ("pencilled"). Lists per day, NOT a time grid.
-— Committed events are display-only (ground truth, never draggable).
-— Pencilled cards: drag handle, ✓ confirm / ✕ dismiss map to the existing
-  POST /google-tasks/resolve-suggestion. Cuttable if too busy (open q #2).
-— Past events dim, not hidden (afternoon = whole day, open q #3).
-— Overflow: >6 events in a lane → lane scrolls, day column never grows
-  past viewport.</div>
+— 3 columns = 3 calendars (Marvin's call). Each stacks Today then Tomorrow —
+  scan down a column to follow one calendar across both days.
+— Suggestions cards keep the hatched "pencilled" texture — visually
+  negotiable vs the two solid calendars. suggested_blocks section leaves
+  the report; this column is its one home.
+— Read-only v1: no drag, no confirm/dismiss. Row anatomy: time · title ·
+  size chip (suggestions only). All-day events pin to the top of a day.
+— Past events dim, not hidden. Empty day states say "— empty —" (a quiet
+  day is information, not an error).</div>
     </div>
   </div>
 </div>
@@ -104,29 +99,23 @@ drag a block here to defer it</div>
 <div class="w-state-sep">STATE: loading</div>
 <div class="w-frame" style="min-height:auto;">
   <div class="w-cols" style="padding:1rem;">
-    <div class="w-col" style="flex:1.4;"><div class="w-block">report renders immediately (already loaded)</div></div>
-    <div class="w-col" style="flex:1; max-width:460px;"><div class="w-placeholder">day-board skeleton — two grey columns
-(calendar fetch in flight; report never waits for the rail)</div></div>
+    <div class="w-col" style="flex:1;"><div class="w-block">report renders immediately (already loaded)</div></div>
+    <div class="w-col" style="flex:1.1; max-width:640px;"><div class="w-placeholder">three skeleton columns — calendar
+fetches in flight; report never waits for the board</div></div>
   </div>
 </div>
 
-<div class="w-state-sep">STATE: calendar unreachable</div>
+<div class="w-state-sep">STATE: one calendar unreachable</div>
 <div class="w-frame" style="min-height:auto;">
   <div class="w-cols" style="padding:1rem;">
-    <div class="w-col" style="flex:1.4;"><div class="w-block">report unaffected</div></div>
-    <div class="w-col" style="flex:1; max-width:460px;">
-      <div class="w-block">⚠ Couldn't load calendars — <span class="w-btn-ghost">Retry</span>
-      <div class="w-muted">pencilled blocks still shown from the briefing's suggested_blocks (degraded, no drag)</div></div>
-    </div>
-  </div>
-</div>
-
-<div class="w-state-sep">STATE: nothing pencilled</div>
-<div class="w-frame" style="min-height:auto;">
-  <div class="w-cols" style="padding:1rem;">
-    <div class="w-col" style="flex:1; max-width:460px;">
-      <div class="w-lane-head">Pencilled</div>
-      <div class="w-placeholder">Nothing pencilled today — Jimbo suggests blocks in the morning briefing</div>
+    <div class="w-col" style="flex:1.1; max-width:640px;">
+      <div class="w-cols" style="gap:0.5rem;">
+        <div class="w-col w-day-col"><div class="w-day-head">My schedule</div><div class="w-event"><span>renders fine</span></div></div>
+        <div class="w-col w-day-col"><div class="w-day-head">Jimbo</div><div class="w-placeholder" style="margin:0.4rem;">⚠ couldn't load — Retry</div></div>
+        <div class="w-col w-day-col"><div class="w-day-head">Suggestions</div><div class="w-event"><span>renders fine</span></div></div>
+      </div>
+      <div class="w-notes">Columns fail independently — 3 separate fetches; one bad calendar
+never blanks the board.</div>
     </div>
   </div>
 </div>

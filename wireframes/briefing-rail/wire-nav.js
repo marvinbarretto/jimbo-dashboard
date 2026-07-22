@@ -1,7 +1,6 @@
 const screens = [
   { id: '00', file: '00-flow-map.html',         label: 'Flow Map' },
-  { id: '01', file: '01-briefing-detail.html',  label: 'Briefing + rail' },
-  { id: '02', file: '02-deferred.html',         label: 'After defer' },
+  { id: '01', file: '01-briefing-detail.html',  label: 'Briefing + board' },
 ];
 
 (function () {
