@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.121](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.120...v0.0.121) (2026-07-22)
+
+
+### Features
+
+* **planner:** make drag and resize affordances visible ([6f91a12](https://github.com/marvinbarretto/jimbo-dashboard/commit/6f91a12d8612625d2d6195a135f4bab821054037))
+
+
+### Bug Fixes
+
+* **planner:** schedule on :00/:30 half-hour slots ([b5b91e8](https://github.com/marvinbarretto/jimbo-dashboard/commit/b5b91e8438e539df62cf10124b22ee4073b8c04c))
+* **projects:** stop the :id redirect shadowing :id/edit ([d416494](https://github.com/marvinbarretto/jimbo-dashboard/commit/d41649486691bd758ef35549a49f1e5ac42b5721))
+
+
+### Code Refactoring
+
+* **shell:** fold the topbar commands into the nav row ([8b64719](https://github.com/marvinbarretto/jimbo-dashboard/commit/8b647198fbb054090a3e7a12920b942e3ca094ba))
+
 ### [0.0.120](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.119...v0.0.120) (2026-07-21)
 
 
