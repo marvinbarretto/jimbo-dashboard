@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.133](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.132...v0.0.133) (2026-07-22)
+
+
+### Features
+
+* **briefing:** vertical divider between report and calendar board ([fe60366](https://github.com/marvinbarretto/jimbo-dashboard/commit/fe60366b1b42897b66c20a1fd2a1989199e12712))
+
 ### [0.0.132](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.131...v0.0.132) (2026-07-22)
 
 
