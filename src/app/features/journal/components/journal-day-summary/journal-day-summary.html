@@ -14,4 +14,31 @@
     <app-ui-stat-card label="Jimbo" [value]="jimboCostLabel()" [detail]="jimboDetail()" />
     <app-ui-stat-card label="YouTube" [value]="formatMinutes(youtube().minutes)" [detail]="youtubeDetail()" />
   </div>
+
+  <div class="day-summary__fuel">
+    <header class="day-summary__head">
+      <span class="day-summary__label">Fuel &amp; training</span>
+    </header>
+
+    <div class="day-summary__fuel-stats">
+      <app-ui-stat-card label="Protein" [value]="macros().protein_g.toString()" [detail]="'of ' + proteinTarget + 'g today'" />
+      <app-ui-stat-card label="Sets" [value]="gymStats().sets.toString()" detail="today" />
+      <app-ui-stat-card label="Volume" [value]="gymStats().volumeKg.toString()" detail="kg today" />
+      <app-ui-stat-card label="Cardio" [value]="formatMinutes(gymStats().cardioMin)" detail="today" />
+    </div>
+
+    <div class="day-summary__fuel-stats">
+      <app-ui-stat-card label="Protein" [value]="weekProteinG().toString()" detail="g this week" />
+      <app-ui-stat-card label="Volume" [value]="weekVolumeKg().toString()" detail="kg this week" />
+    </div>
+
+    <div class="day-summary__chart day-summary__chart--macros">
+      <span class="day-summary__chart-label">Today's macros</span>
+      @if (macros().kcal > 0) {
+        <app-ui-donut-chart [labels]="macroLabels" [values]="macroValues()" suffix=" g" [height]="160" />
+      } @else {
+        <p class="day-summary__chart-empty">Nothing logged yet</p>
+      }
+    </div>
+  </div>
 </section>

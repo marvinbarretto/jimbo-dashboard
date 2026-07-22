@@ -32,7 +32,7 @@ import { JournalDataService } from '../../data-access/journal-data.service';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-ui-page width="wide">
+    <app-ui-page width="full">
     <app-journal-period-header
       domain="overview"
       granularity="day"

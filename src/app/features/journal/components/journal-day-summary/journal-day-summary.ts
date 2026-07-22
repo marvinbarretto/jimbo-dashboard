@@ -3,14 +3,19 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of, switchMap } from 'rxjs';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiChecklist, type UiChecklistItem } from '@shared/components/ui-checklist/ui-checklist';
+import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { formatMinutes } from '@shared/utils/datetime.utils';
 import { AgentRunsService, type AgentRunRollupRow } from '../../../hermes/data-access/agent-runs.service';
-import type { SessionDetailed } from '../../../exercise/data-access/exercise.service';
+import type { SessionDetailed, GymDailyRow } from '../../../exercise/data-access/exercise.service';
 import { EXERCISE_READ } from '../../../exercise/data-access/exercise.read';
-import type { FoodLogEntry, SupplementLogEntry } from '../../../nutrition/data-access/nutrition.service';
+import { sessionStats } from '../../../exercise/utils/exercise-format';
+import type { FoodLogEntry, SupplementLogEntry, FoodDailyRow } from '../../../nutrition/data-access/nutrition.service';
 import { NUTRITION_READ } from '../../../nutrition/data-access/nutrition.read';
 import { JournalDataService } from '../../data-access/journal-data.service';
-import { dayWindowIso, type DayKey } from '@shared/utils/date-keys';
+import { dayWindowIso, dateFromDayKey, weekKeyFromDate, daysInWeek, type DayKey } from '@shared/utils/date-keys';
+
+// Daily protein target — mirrors nutrition-page.ts (no shared settings source yet).
+const PROTEIN_TARGET_G = 150;
 
 // The daily things we expect to do, each measured against a target and ticked
 // from real logged data. Adding a row is a one-liner: give it a label, a target,
@@ -44,7 +49,7 @@ const ROUTINE: readonly {
  */
 @Component({
   selector: 'app-journal-day-summary',
-  imports: [UiStatCard, UiChecklist],
+  imports: [UiStatCard, UiChecklist, UiDonutChart],
   templateUrl: './journal-day-summary.html',
   styleUrl: './journal-day-summary.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -105,6 +110,34 @@ export class JournalDaySummary {
           .rollup(dayWindowIso(date))
           .pipe(catchError(() => of({ items: [] as AgentRunRollupRow[] }))),
       ),
+    ),
+    { initialValue: null },
+  );
+
+  // Week-to-date fetches: Monday of `date`'s week through `date` itself.
+  // Not a trailing N-day window — this is a day view, so the only multi-day
+  // question it answers is "how's this week going so far" (a running
+  // total), not a trend line (that belongs on the week/month views).
+  private readonly weekVolume = toSignal(
+    this.date$.pipe(
+      switchMap(date => {
+        const weekStart = daysInWeek(weekKeyFromDate(dateFromDayKey(date)))[0];
+        return this.exercise
+          .daily({ from: weekStart, to: date })
+          .pipe(catchError(() => of({ days: [] as GymDailyRow[] })));
+      }),
+    ),
+    { initialValue: null },
+  );
+
+  private readonly weekNutrition = toSignal(
+    this.date$.pipe(
+      switchMap(date => {
+        const weekStart = daysInWeek(weekKeyFromDate(dateFromDayKey(date)))[0];
+        return this.nutrition
+          .daily({ from: weekStart, to: date })
+          .pipe(catchError(() => of({ days: [] as FoodDailyRow[] })));
+      }),
     ),
     { initialValue: null },
   );
@@ -188,6 +221,54 @@ export class JournalDaySummary {
 
   protected readonly routineDone = computed(() => this.routineItems().filter(i => i.done).length);
   protected readonly routineTotal = computed(() => this.routineItems().length);
+
+  // ── Fuel & training magnitudes ────────────────────────────────────────────
+  // The routine checklist above answers "did I do it" (adherence); these
+  // answer "how much" — a count-vs-target meter flattens both into the same
+  // bar, which loses the actual protein grams / training volume.
+  protected readonly proteinTarget = PROTEIN_TARGET_G;
+
+  protected readonly macros = computed(() =>
+    (this.food()?.items ?? []).reduce(
+      (acc, e) => ({
+        kcal: acc.kcal + (e.est_kcal ?? 0),
+        protein_g: acc.protein_g + (e.est_protein_g ?? 0),
+        carbs_g: acc.carbs_g + (e.est_carbs_g ?? 0),
+        fat_g: acc.fat_g + (e.est_fat_g ?? 0),
+      }),
+      { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+    ),
+  );
+
+  protected readonly macroLabels = ['Protein', 'Carbs', 'Fat'] as const;
+  protected readonly macroValues = computed(() => {
+    const m = this.macros();
+    return [Math.round(m.protein_g), Math.round(m.carbs_g), Math.round(m.fat_g)];
+  });
+
+  protected readonly gymStats = computed(() =>
+    (this.gym()?.items ?? []).reduce(
+      (acc, s) => {
+        const st = sessionStats(s);
+        return {
+          sets: acc.sets + st.sets,
+          volumeKg: acc.volumeKg + st.volumeKg,
+          cardioMin: acc.cardioMin + st.cardioMin,
+        };
+      },
+      { sets: 0, volumeKg: 0, cardioMin: 0 },
+    ),
+  );
+
+  // Running totals for the week so far (Monday through today) — a single
+  // number answering "how's this week going," not a day-by-day trend.
+  protected readonly weekVolumeKg = computed(() =>
+    (this.weekVolume()?.days ?? []).reduce((sum, d) => sum + d.volume_kg, 0),
+  );
+
+  protected readonly weekProteinG = computed(() =>
+    Math.round((this.weekNutrition()?.days ?? []).reduce((sum, d) => sum + d.protein_g, 0)),
+  );
 
   protected readonly formatMinutes = formatMinutes;
 }
