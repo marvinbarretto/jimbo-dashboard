@@ -26,7 +26,14 @@ export interface PriorityEntry {
 
 export interface ReviewLine { area: string; note: string; }
 export interface WeekTrackingEntry { intention: string; status: WeekTrackingStatus; note?: string; }
-export interface OpenQuestion { question: string; gates?: string; }
+export interface OpenQuestion {
+  question: string;
+  gates?: string;
+  // Present when the skill filed this as a clarification — makes it
+  // answerable inline on the briefing page.
+  clarification_id?: string;
+  options?: string[];
+}
 export interface Insight { fact: string; strategy?: string; }
 export interface OpportunityThreat { kind: 'opportunity' | 'threat'; note: string; action?: string; }
 

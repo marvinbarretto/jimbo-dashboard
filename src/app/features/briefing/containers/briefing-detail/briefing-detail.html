@@ -9,15 +9,7 @@
       <p uiPageHeaderHint>{{ b.generated_at | date: 'EEEE d MMMM, HH:mm' }} · {{ b.model }}</p>
     </app-ui-page-header>
 
-    <app-briefing-report [analysis]="b.analysis" />
-
-    <app-ui-section title="Your rating" [collapsible]="false">
-      <app-briefing-rating
-        [rating]="b.rating"
-        [note]="b.rating_note"
-        [pending]="isSaving(b.id)"
-        (rate)="onRate(b, $event)" />
-    </app-ui-section>
+    <app-briefing-report [analysis]="b.analysis" [briefingId]="b.id" />
   </app-ui-stack>
 } @else {
   <app-ui-empty-state title="Briefing not found" message="This briefing may have been removed." />

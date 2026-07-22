@@ -5,7 +5,7 @@
 import type { ClarificationId } from '@domain/ids';
 
 export type ClarificationKind = 'disambiguate' | 'validate' | 'followup' | 'ambient';
-export type ClarificationSourceKind = 'vault' | 'google_task' | 'calendar' | 'model-gap';
+export type ClarificationSourceKind = 'vault' | 'google_task' | 'calendar' | 'model-gap' | 'briefing';
 export type ClarificationStatus = 'open' | 'answered' | 'expired' | 'dismissed';
 
 // Mirrors jimbo-api/src/services/clarification-interpret.ts InterpretedAction —

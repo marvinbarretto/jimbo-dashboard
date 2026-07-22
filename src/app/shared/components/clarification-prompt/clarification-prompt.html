@@ -1,0 +1,35 @@
+<div class="report-notice" [class.report-notice--settled]="mode() === 'acked' || mode() === 'dismissed'">
+  <p class="report-notice__lead">{{ question() }}</p>
+  @if (hint()) {
+    <p class="report-notice__meta">gates: {{ hint() }}</p>
+  }
+
+  @if (answerable()) {
+    @switch (mode()) {
+      @case ('acked') {
+        <p class="report-notice__ack">✓ "{{ sentAnswer() }}" — Jimbo has your answer. It feeds the next briefing.</p>
+      }
+      @case ('dismissed') {
+        <p class="report-notice__ack report-notice__ack--muted">Dismissed — Jimbo won't raise it again today.</p>
+      }
+      @case ('error') {
+        <p class="report-notice__ack report-notice__ack--error">Couldn't reach Jimbo.
+          <button type="button" class="report-notice__dismiss" (click)="retry()">Try again</button>
+        </p>
+      }
+      @default {
+        <div class="report-notice__actions">
+          @for (opt of options(); track opt) {
+            <button type="button" class="report-notice__option" [disabled]="busy()" (click)="sendOption(opt)">{{ opt }}</button>
+          }
+          <button type="button" class="report-notice__dismiss" [disabled]="busy()" (click)="dismiss()">dismiss</button>
+        </div>
+        <form class="report-notice__reply" (ngSubmit)="sendReply()">
+          <input class="report-notice__input" type="text" [formControl]="reply"
+            placeholder="or answer in your own words…" [attr.disabled]="busy() ? '' : null" />
+          <button type="submit" class="report-notice__option" [disabled]="busy() || reply.invalid">Send</button>
+        </form>
+      }
+    }
+  }
+</div>

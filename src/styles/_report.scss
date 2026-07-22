@@ -51,14 +51,20 @@
   }
 }
 
-// ── Notice — the above-the-fold attention box ─────────────────────
-// Tone via --notice-color (defaults to warning).
+// ── Notice — the above-the-fold bulletin ──────────────────────────
+// Tone via --notice-color (defaults to warning). A rule and a tint,
+// not a frame — the serif italic lead does the talking.
 
 .report-notice {
   --notice-color: var(--color-warning);
-  padding: 1rem 1.2rem;
-  border: 3px double color-mix(in srgb, var(--notice-color) 55%, var(--color-border));
-  background: color-mix(in srgb, var(--notice-color) 4%, transparent);
+  padding: 0.85rem 1.1rem;
+  border-left: 3px solid var(--notice-color);
+  background: color-mix(in srgb, var(--notice-color) 5%, transparent);
+
+  &--settled {
+    --notice-color: var(--color-success);
+    background: transparent;
+  }
 }
 
 .report-notice__lead {
@@ -75,6 +81,107 @@
   font-size: 0.72rem;
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
+}
+
+// Inline answering — mono register, quiet until used.
+
+.report-notice__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+  font-family: var(--font-mono);
+}
+
+.report-notice__option {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--notice-color) 50%, var(--color-border));
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--notice-color) 12%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.report-notice__dismiss {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0.3rem 0.4rem;
+
+  &:hover:not(:disabled) { color: var(--color-text); }
+  &:disabled { opacity: 0.5; cursor: default; }
+}
+
+.report-notice__reply {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.report-notice__input {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+
+  &::placeholder { color: var(--color-text-muted); }
+  &:focus { outline: none; border-color: var(--color-border-strong); }
+}
+
+.report-notice__ack {
+  margin: 0.8rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-success);
+
+  &--muted { color: var(--color-text-muted); }
+  &--error { color: var(--color-danger); }
+}
+
+// ── Hit/miss feedback — per item or per section ───────────────────
+// Ghost mono buttons; invisible weight until a verdict is set.
+
+.report-fb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  font-family: var(--font-mono);
+}
+
+.report-fb__btn {
+  border: none;
+  background: none;
+  padding: 0.1rem 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1;
+  color: color-mix(in srgb, var(--color-text-muted) 55%, transparent);
+  cursor: pointer;
+
+  &:hover { color: var(--color-text); }
+
+  &--hit.report-fb__btn--active { color: var(--color-success); }
+  &--miss.report-fb__btn--active { color: var(--color-danger); }
 }
 
 // ── Pull-quote ────────────────────────────────────────────────────

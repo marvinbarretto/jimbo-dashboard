@@ -27,8 +27,10 @@ const MOCK: BriefingAnalysisData = {
     { title: 'Dinner with Sam', reasoning: 'In the calendar — the only real commitment today.', constraint: 'fixed', fixed_time: '19:00', bucket: 'Social' },
   ],
   open_questions: [
-    { question: 'Is today\'s deep block going to LocalShout, or to finishing Briefing-v2 so it runs while you\'re away?', gates: 'what your 2-3 hour focus slot is actually for today' },
-    { question: 'Do the finances get opened before Brighton spending starts, or does that honestly wait until the 27th?', gates: 'the Finances This-Week intention' },
+    // clarification_id is a lab fake — answering here 404s and shows the error
+    // state, which is itself worth previewing.
+    { question: 'Is today\'s deep block going to LocalShout, or to finishing Briefing-v2 so it runs while you\'re away?', gates: 'what your 2-3 hour focus slot is actually for today', clarification_id: 'lab-fake', options: ['LocalShout', 'Briefing-v2'] },
+    { question: 'Do the finances get opened before Brighton spending starts, or does that honestly wait until the 27th?', gates: 'the Finances This-Week intention', clarification_id: 'lab-fake-2' },
   ],
   insights: [
     { fact: 'Brighton is being kept even as LocalShout slips — your deferral pattern usually runs the other way, sacrificing the trip for the ship.', strategy: 'Let the trip win cleanly. The ship window survives a 4-day gap; the anti-deferral commitment is the fragile one worth protecting.' },
@@ -63,7 +65,7 @@ const MOCK: BriefingAnalysisData = {
           read as pull-quotes, deadlines wear their honesty (~ = ambition, allowed to slip).
           Mock content is real output from analysis 179.
         </p>
-        <app-briefing-report [analysis]="mock" />
+        <app-briefing-report [analysis]="mock" [briefingId]="0" />
       </app-ui-stack>
     </app-ui-section>
   `,

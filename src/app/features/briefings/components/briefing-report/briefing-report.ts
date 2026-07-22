@@ -1,22 +1,26 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { ClarificationPrompt } from '@shared/components/clarification-prompt/clarification-prompt';
+import { BriefingFeedback } from '../briefing-feedback/briefing-feedback';
 import type {
   BriefingAnalysisData,
   WeekTrackingStatus,
 } from '../../data-access/briefing.types';
 
-// Reading surface for a schema_version 2 briefing. Purely presentational —
-// maps the analysis blob onto the global report vocabulary (styles/_report.scss,
-// the shared newspaper register: serif = read, mono = scan). No private styles,
-// so the same look is reusable by any other rendered report.
+// Reading surface for a schema_version 2 briefing, mapped onto the global
+// report vocabulary (styles/_report.scss — serif = read, mono = scan).
+// Interactive edges: open questions answer inline (BriefingQuestion), and
+// every item/section takes hit/miss feedback (BriefingFeedback) from which
+// the overall briefing rating is derived.
 @Component({
   selector: 'app-briefing-report',
-  imports: [UiBadge],
+  imports: [UiBadge, ClarificationPrompt, BriefingFeedback],
   templateUrl: './briefing-report.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BriefingReport {
   readonly analysis = input.required<BriefingAnalysisData>();
+  readonly briefingId = input.required<number>();
 
   protected readonly hasReview = computed(() => (this.analysis().yesterday_review?.length ?? 0) > 0);
   protected readonly hasWeek = computed(() => (this.analysis().week_tracking?.length ?? 0) > 0);

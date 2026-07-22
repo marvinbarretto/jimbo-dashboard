@@ -4,12 +4,11 @@
     <section class="report__section">
       <h2 class="report__kicker report__kicker--warn">Needs your answer</h2>
       @for (q of analysis().open_questions; track $index) {
-        <div class="report-notice">
-          <p class="report-notice__lead">{{ q.question }}</p>
-          @if (q.gates) {
-            <p class="report-notice__meta">gates: {{ q.gates }}</p>
-          }
-        </div>
+        <app-clarification-prompt
+          [question]="q.question"
+          [hint]="q.gates"
+          [clarificationId]="q.clarification_id"
+          [options]="q.options" />
       }
     </section>
   }
@@ -19,7 +18,7 @@
       <h2 class="report__kicker">Insights</h2>
       @for (ins of analysis().insights; track $index) {
         <blockquote class="report-quote">
-          <p class="report-quote__lead">{{ ins.fact }}</p>
+          <p class="report-quote__lead">{{ ins.fact }}<app-briefing-feedback [briefingId]="briefingId()" section="insights" [itemIndex]="$index" /></p>
           @if (ins.strategy) {
             <p class="report-quote__support">{{ ins.strategy }}</p>
           }
@@ -33,7 +32,7 @@
       <h2 class="report__kicker">Priorities</h2>
       @for (p of analysis().priorities; track $index) {
         <article class="report-article">
-          <h3 class="report-article__headline">{{ p.title }}</h3>
+          <h3 class="report-article__headline">{{ p.title }}<app-briefing-feedback [briefingId]="briefingId()" section="priorities" [itemIndex]="$index" /></h3>
           <div class="report-article__meta">
             @if (p.constraint === 'fixed' && p.fixed_time) {
               <app-ui-badge tone="accent">{{ p.fixed_time }}</app-ui-badge>
@@ -58,7 +57,7 @@
 
   @if (hasBlocks()) {
     <section class="report__section">
-      <h2 class="report__kicker">Suggested blocks</h2>
+      <h2 class="report__kicker">Suggested blocks<app-briefing-feedback [briefingId]="briefingId()" section="suggested_blocks" /></h2>
       <div class="report-data">
         @for (blk of analysis().suggested_blocks; track $index) {
           <div class="report-data__row">
@@ -80,7 +79,7 @@
 
   @if (hasWeek()) {
     <section class="report__section">
-      <h2 class="report__kicker">This week</h2>
+      <h2 class="report__kicker">This week<app-briefing-feedback [briefingId]="briefingId()" section="week_tracking" /></h2>
       @for (w of analysis().week_tracking; track $index) {
         <div class="report-flag">
           <app-ui-badge [tone]="weekTone(w.status)">{{ w.status }}</app-ui-badge>
@@ -97,7 +96,7 @@
 
   @if (hasReview()) {
     <section class="report__section">
-      <h2 class="report__kicker">Yesterday</h2>
+      <h2 class="report__kicker">Yesterday<app-briefing-feedback [briefingId]="briefingId()" section="yesterday_review" /></h2>
       @for (line of analysis().yesterday_review; track $index) {
         <div>
           <span class="report-label">{{ line.area }}</span>
@@ -114,7 +113,7 @@
         <div class="report-flag">
           <app-ui-badge [tone]="ot.kind === 'threat' ? 'danger' : 'success'">{{ ot.kind }}</app-ui-badge>
           <div>
-            <p class="report-flag__note report-flag__note--lead">{{ ot.note }}</p>
+            <p class="report-flag__note report-flag__note--lead">{{ ot.note }}<app-briefing-feedback [briefingId]="briefingId()" section="opportunities_threats" [itemIndex]="$index" /></p>
             @if (ot.action) {
               <p class="report-flag__aside">→ {{ ot.action }}</p>
             }
@@ -126,7 +125,7 @@
 
   @if (hasTasks()) {
     <section class="report__section">
-      <h2 class="report__kicker">Tasks worth today</h2>
+      <h2 class="report__kicker">Tasks worth today<app-briefing-feedback [briefingId]="briefingId()" section="vault_tasks" /></h2>
       <div class="report-data">
         @for (t of analysis().vault_tasks; track $index) {
           <div>
@@ -143,7 +142,7 @@
 
   @if (analysis().health_status; as health) {
     <section class="report__section">
-      <h2 class="report__kicker">Body</h2>
+      <h2 class="report__kicker">Body<app-briefing-feedback [briefingId]="briefingId()" section="health_status" /></h2>
       <p class="report-prose">{{ health }}</p>
     </section>
   }
