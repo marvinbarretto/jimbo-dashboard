@@ -6,12 +6,13 @@ import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { catchError, combineLatest, of, startWith, switchMap, timer } from 'rxjs';
-import {
-  ExerciseService,
-  type ExerciseCatalogItem,
-  type SessionDetailed,
+import type {
+  ExerciseCatalogItem,
+  SessionDetailed,
 } from '../../../exercise/data-access/exercise.service';
-import { NutritionService, type FoodDailyRow } from '../../../nutrition/data-access/nutrition.service';
+import { EXERCISE_READ } from '../../../exercise/data-access/exercise.read';
+import type { FoodDailyRow } from '../../../nutrition/data-access/nutrition.service';
+import { NUTRITION_READ } from '../../../nutrition/data-access/nutrition.read';
 import {
   REGION_LABELS,
   REGION_ORDER,
@@ -51,8 +52,8 @@ interface FuelBucket {
   styleUrl: './training-fuel-section.scss',
 })
 export class TrainingFuelSection {
-  private readonly exercise = inject(ExerciseService);
-  private readonly nutrition = inject(NutritionService);
+  private readonly exercise = inject(EXERCISE_READ);
+  private readonly nutrition = inject(NUTRITION_READ);
 
   readonly from = input.required<string>(); // YYYY-MM-DD inclusive
   readonly to = input.required<string>();    // YYYY-MM-DD inclusive

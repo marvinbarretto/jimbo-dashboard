@@ -86,6 +86,28 @@ module.exports = tseslint.config(
                 '**/data-access/*.service',
                 '**/data-access/*.service.ts',
                 '@features/*/data-access/*.service',
+
+                // ── Services with nothing to funnel ────────────────────
+                // Default-deny above still catches every NEW service. These
+                // named exceptions are services whose whole surface is reads
+                // (or a single preference write that composes nothing), so
+                // there is no scattered-mutation risk for the rule to
+                // prevent — blocking them only produced ceremony.
+                //
+                // Adding a destructive method to any of these means deleting
+                // its line here. Keep this list short and justified; it is
+                // narrower than exempting whole consumer files, which is why
+                // it's preferred over the known-violations list below.
+                //
+                // journal-data / watch-queue: read-only, GETs only.
+                '!**/data-access/journal-data.service',
+                '!**/data-access/watch-queue.service',
+                // agent-runs / briefings: reads plus one single-field
+                // preference write (a job rating, a briefing rating). Both
+                // writes are self-contained — no cross-store composition,
+                // which is the drift this rule exists to stop.
+                '!**/data-access/agent-runs.service',
+                '!**/data-access/briefings.service',
               ],
               allowTypeImports: true,
               message:

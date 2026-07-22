@@ -7,7 +7,8 @@ import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { catchError, of, switchMap, timer } from 'rxjs';
-import { ExerciseService, type SessionDetailed } from '../../data-access/exercise.service';
+import type { SessionDetailed } from '../../data-access/exercise.service';
+import { EXERCISE_READ } from '../../data-access/exercise.read';
 import { ExerciseSessionCard } from '../exercise-session-card/exercise-session-card';
 import { sessionStats } from '../../utils/exercise-format';
 
@@ -19,7 +20,7 @@ import { sessionStats } from '../../utils/exercise-format';
   styleUrl: './exercise-day-section.scss',
 })
 export class ExerciseDaySection {
-  private readonly service = inject(ExerciseService);
+  private readonly service = inject(EXERCISE_READ);
 
   // London calendar day (YYYY-MM-DD). Gym sessions are bucketed by London day
   // server-side; the journal day key is treated the same way here.

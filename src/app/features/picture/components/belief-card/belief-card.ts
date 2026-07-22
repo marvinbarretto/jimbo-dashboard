@@ -6,7 +6,7 @@ import type { InterrogateEntityId } from '@domain/ids';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { relativeTime } from '@shared/utils/datetime.utils';
-import { InterrogateEntityService } from '../../data-access/interrogate-entity.service';
+import { INTERROGATE_ENTITY_READ } from '../../data-access/interrogate-entity.read';
 import { BeliefFeedbackComposer, type BeliefFeedback } from '../belief-feedback-composer/belief-feedback-composer';
 
 type BadgeTone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'info';
@@ -38,7 +38,7 @@ export interface BeliefFeedbackEvent {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BeliefCard {
-  private readonly entityService = inject(InterrogateEntityService);
+  private readonly entityService = inject(INTERROGATE_ENTITY_READ);
 
   readonly entity = input.required<BeliefEntity>();
 

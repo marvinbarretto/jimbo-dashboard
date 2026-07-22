@@ -5,8 +5,10 @@ import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiChecklist, type UiChecklistItem } from '@shared/components/ui-checklist/ui-checklist';
 import { formatMinutes } from '@shared/utils/datetime.utils';
 import { AgentRunsService, type AgentRunRollupRow } from '../../../hermes/data-access/agent-runs.service';
-import { ExerciseService, type SessionDetailed } from '../../../exercise/data-access/exercise.service';
-import { NutritionService, type FoodLogEntry, type SupplementLogEntry } from '../../../nutrition/data-access/nutrition.service';
+import type { SessionDetailed } from '../../../exercise/data-access/exercise.service';
+import { EXERCISE_READ } from '../../../exercise/data-access/exercise.read';
+import type { FoodLogEntry, SupplementLogEntry } from '../../../nutrition/data-access/nutrition.service';
+import { NUTRITION_READ } from '../../../nutrition/data-access/nutrition.read';
 import { JournalDataService } from '../../data-access/journal-data.service';
 import { dayWindowIso, type DayKey } from '@shared/utils/date-keys';
 
@@ -50,8 +52,8 @@ const ROUTINE: readonly {
 export class JournalDaySummary {
   private readonly journal = inject(JournalDataService);
   private readonly agents = inject(AgentRunsService);
-  private readonly exercise = inject(ExerciseService);
-  private readonly nutrition = inject(NutritionService);
+  private readonly exercise = inject(EXERCISE_READ);
+  private readonly nutrition = inject(NUTRITION_READ);
 
   readonly date = input.required<DayKey>();
 

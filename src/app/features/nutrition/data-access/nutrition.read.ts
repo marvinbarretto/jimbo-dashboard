@@ -27,7 +27,7 @@ import {
 /** Read-only view of the nutrition data source: lists + daily rollups. */
 export interface NutritionRead {
   list(opts?: { date?: string; days?: number; limit?: number }): Observable<{ items: FoodLogEntry[] }>;
-  daily(opts?: { days?: number }): Observable<{ days: FoodDailyRow[] }>;
+  daily(opts?: { days?: number; from?: string; to?: string }): Observable<{ days: FoodDailyRow[] }>;
   supplementLog(opts?: { date?: string; days?: number; limit?: number }): Observable<{ items: SupplementLogEntry[] }>;
 }
 

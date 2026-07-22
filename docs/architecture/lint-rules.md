@@ -46,7 +46,27 @@ context is what makes the doc valuable.
 
 **What it forbids.** Runtime imports of any module matching
 `**/data-access/*.service` (e.g. `vault-items.service`, `dispatch.service`,
-`thread.service`) from a file outside the allowed seam directories.
+`thread.service`) from a file outside the allowed seam directories, minus the
+named exceptions below.
+
+**Services with nothing to funnel (named exceptions).** The pattern is
+default-deny, so every *new* service is caught automatically. These four are
+negated in the group because their whole surface is reads, or reads plus a
+single self-contained preference write. There is no scattered-mutation risk
+for the rule to prevent, and blocking them produced only ceremony:
+
+| Service | Why it's exempt |
+|---|---|
+| `journal-data.service` | Read-only; two GETs into signals. |
+| `watch-queue.service`  | Read-only by design — see the note in the file about why it never writes. |
+| `agent-runs.service`   | Reads, plus `setRating` — one field, no cross-store composition. |
+| `briefings.service`    | Reads, plus `rate` — same shape, and the service already owns its own in-flight/error state. |
+
+**Adding a destructive method to any of these means deleting its line from
+the group in `eslint.config.js`.** Keep the list short and justified. It is
+deliberately preferred over the known-violations list below, because
+exempting one service is far narrower than exempting a whole consumer file:
+a pinned file may import *any* service freely, forever.
 
 **What it allows.** Type-only imports — `import type { Foo } from '.../foo.service'` —
 are explicitly permitted everywhere. They're erased at compile time so they
@@ -110,9 +130,33 @@ read surface, the eslint.config.js exemption list shrinks. The shape is
 the canonical Angular DI idiom (`inject(TOKEN)`) — matches
 `inject(DOCUMENT)`, `inject(MAT_DIALOG_DATA)` etc.
 
-Sibling read tokens for `actors`, `projects`, `thread`, etc. will land as
-their consumers need them. Shipped so far: `VAULT_ITEMS_READ`,
-`NUTRITION_READ`, `WATCH_QUEUE_READ`.
+Shipped so far: `VAULT_ITEMS_READ`, `NUTRITION_READ`, `EXERCISE_READ`,
+`PROJECTS_READ`, `INTERROGATE_ENTITY_READ`.
+
+**When a read token is worth it — and when it isn't.** A read token costs a
+file of interface, so it has to buy something. It buys real protection when
+the underlying service can *destroy or corrupt* data: `ExerciseService` has
+three deletes and three patches, `ProjectsService` has `remove`,
+`InterrogateEntityService` has `update`/`addEvidence`. Narrowing means a leaf
+component provably cannot reach those — enforcement the path-based lint rule
+structurally cannot provide.
+
+It buys nothing on a service that only reads. A token guarding against
+mutations that don't exist is ceremony, and the honest fix for those is the
+named-exception list above, not a wrapper. `NUTRITION_READ` is the edge case
+worth keeping despite the service being read-only today: nutrition is slated
+for the full manual POST/PATCH/DELETE surface the other log domains have, so
+the narrowing is about to start earning its keep.
+
+**Caveat — parameter widening isn't caught.** The token's
+`factory: () => inject(FooService)` fails to typecheck if the service stops
+satisfying the interface, so a *removed* or *retyped* method is caught. But
+TypeScript compares method parameters bivariantly, so a service method that
+accepts **more** options than the interface declares will not error at the
+token — it surfaces later as a confusing failure at the call site.
+`NUTRITION_READ.daily` was found understating the real signature exactly this
+way. When you write one of these, copy the signature rather than reconstruct
+it.
 
 #### Known violations of VAULT-COMMANDS-001
 
@@ -139,36 +183,9 @@ maturity ratchet.
 - `features/api-data/data-pages.ts` — its only data-access import is type-only; now allowed under `allowTypeImports`
 - `features/api-data/components/dataset-card/dataset-card.ts` — file no longer exists; stale entry removed
 - `features/grooming/components/grooming-card/grooming-card.ts` — switched to `inject(VAULT_ITEMS_READ)` for the parent-seq lookup; thread coupling already migrated to `ThreadCommands` in an earlier commit
-- `features/planner/components/watch-queue-panel/watch-queue-panel.ts` — switched to `inject(WATCH_QUEUE_READ)`; the service is read-only by design, so a read token was the whole fix
-
-#### Unpinned violations — the ratchet has slipped
-
-`npm run lint` is currently **red on 13 errors across 8 files**, none of
-which are on the "Known violations" list above and none of which are
-path-exempted in `eslint.config.js`. They post-date the rule: the step 4
-process ("decide what to do with existing violations — fix or pin") was
-skipped, so they accumulated silently.
-
-This matters more than any single entry. A permanently-red lint stops being
-a signal — once it's normal, violation #15 is invisible, and the exemption
-list stops being the maturity ratchet it was designed as.
-
-| File | Service imported |
-|------|------------------|
-| `features/journal/components/journal-agents-section/` | `agent-runs.service` |
-| `features/journal/components/journal-briefings-section/` | `briefings.service` |
-| `features/journal/components/journal-code-sessions-section/` | `projects.service` |
-| `features/journal/components/journal-day-summary/` | `agent-runs`, `exercise`, `nutrition`, `journal-data` |
-| `features/journal/components/journal-timeline-section/` | `projects.service` |
-| `features/journal/components/training-fuel-section/` | `exercise`, `nutrition` |
-| `features/picture/components/belief-card/` | `interrogate-entity.service` |
-
-Two of these need no new token at all — `NUTRITION_READ` already exists and
-covers the `nutrition.service` imports in `journal-day-summary` and
-`training-fuel-section`. The rest need sibling read tokens (`exercise`,
-`projects`, `agent-runs`, `briefings`, `journal-data`, `interrogate-entity`)
-or, where the component should not be fetching at all, the parent-passes-
-inputs treatment the legacy table prescribes.
+- `features/planner/components/watch-queue-panel/watch-queue-panel.ts` — kept on `WatchQueueService`; the service is read-only, so `watch-queue.service` was added to the named-exception list instead. A short-lived `WATCH_QUEUE_READ` token was tried first and reverted as ceremony.
+- `features/exercise/components/exercise-{day,summary}-section`, `features/journal/components/{journal-code-sessions,journal-timeline,training-fuel}-section`, `features/picture/components/belief-card` — switched to `EXERCISE_READ` / `PROJECTS_READ` / `INTERROGATE_ENTITY_READ`; all three services carry destructive methods, so the narrowing is load-bearing
+- `features/journal/components/journal-{agents,briefings}-section`, `journal-day-summary` — resolved by the named-exception list, no token needed
 
 ### THREAD-COMMANDS-002 — Thread mutations go through ThreadCommands
 

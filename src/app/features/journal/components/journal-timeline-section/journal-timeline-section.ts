@@ -6,7 +6,7 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
 import { absoluteTime } from '@shared/utils/datetime.utils';
 import { type DayKey, dateFromDayKey, todayKey } from '@shared/utils/date-keys';
 import { map, timer } from 'rxjs';
-import { ProjectsService } from '../../../projects/data-access/projects.service';
+import { PROJECTS_READ } from '../../../projects/data-access/projects.read';
 import type {
   CodeSession,
   CodeSessionHeartbeat,
@@ -97,7 +97,7 @@ interface HourTick {
   styleUrl: './journal-timeline-section.scss',
 })
 export class JournalTimelineSection {
-  private readonly projects = inject(ProjectsService);
+  private readonly projects = inject(PROJECTS_READ);
 
   readonly date = input.required<DayKey>();
   readonly sessions = input.required<readonly FocusSessionLite[]>();

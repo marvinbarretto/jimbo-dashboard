@@ -6,7 +6,7 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { absoluteTime, formatMinutes, pluralise } from '@shared/utils/datetime.utils';
-import { ProjectsService } from '../../../projects/data-access/projects.service';
+import { PROJECTS_READ } from '../../../projects/data-access/projects.read';
 import type {
   CodeSession,
   CodeSessionOutcome,
@@ -55,7 +55,7 @@ interface SessionRow {
   styleUrl: './journal-code-sessions-section.scss',
 })
 export class JournalCodeSessionsSection {
-  private readonly projects = inject(ProjectsService);
+  private readonly projects = inject(PROJECTS_READ);
 
   // Fetched once by the day page (shared with the timeline + Work rollup).
   readonly sessions = input.required<readonly CodeSession[]>();

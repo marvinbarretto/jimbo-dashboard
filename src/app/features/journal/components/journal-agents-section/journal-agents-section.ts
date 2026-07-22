@@ -9,6 +9,7 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
+import { ToastService } from '@shared/components/toast/toast.service';
 import {
   AgentRunsService,
   type AgentRunOutcome,
@@ -76,6 +77,7 @@ interface JobCost {
 })
 export class JournalAgentsSection {
   private readonly service = inject(AgentRunsService);
+  private readonly toasts = inject(ToastService);
 
   // Exact [since, until) ISO instants — the owning page supplies local
   // period boundaries (day, week or month). Hermes stores UTC instants;
@@ -107,8 +109,22 @@ export class JournalAgentsSection {
   }
 
   rate(jobName: string, rating: JobRatingValue): void {
+    const previous = this.ratingsSig()[jobName];
     this.ratingsSig.update((m) => ({ ...m, [jobName]: rating }));   // optimistic
-    this.service.setRating(jobName, rating).subscribe({ error: () => {} });
+    this.service.setRating(jobName, rating).subscribe({
+      // Roll the optimistic update back. Swallowing the error left a verdict
+      // on screen that had never reached the server, and it survived until
+      // the next reload — the rating looked saved when it wasn't.
+      error: () => {
+        this.ratingsSig.update((m) => {
+          const next = { ...m };
+          if (previous === undefined) delete next[jobName];
+          else next[jobName] = previous;
+          return next;
+        });
+        this.toasts.error(`Couldn't save the “${jobName}” rating`);
+      },
+    });
   }
 
   // httpResource keyed on the window inputs: refetches (and aborts in-flight)

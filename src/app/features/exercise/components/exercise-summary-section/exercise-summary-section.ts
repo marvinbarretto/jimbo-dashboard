@@ -8,12 +8,12 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { logicalDay } from '@shared/utils/datetime.utils';
 import { catchError, combineLatest, of, switchMap, timer } from 'rxjs';
-import {
-  ExerciseService,
-  type GymActivityRow,
-  type GymDailyRow,
-  type SessionDetailed,
+import type {
+  GymActivityRow,
+  GymDailyRow,
+  SessionDetailed,
 } from '../../data-access/exercise.service';
+import { EXERCISE_READ } from '../../data-access/exercise.read';
 import { sessionStats, shiftIsoDay } from '../../utils/exercise-format';
 
 const EMPTY = (date: string): GymDailyRow => ({
@@ -41,7 +41,7 @@ interface ActivityMixRow {
   styleUrl: './exercise-summary-section.scss',
 })
 export class ExerciseSummarySection {
-  private readonly service = inject(ExerciseService);
+  private readonly service = inject(EXERCISE_READ);
 
   readonly from = input.required<string>(); // YYYY-MM-DD inclusive
   readonly to = input.required<string>();    // YYYY-MM-DD inclusive
