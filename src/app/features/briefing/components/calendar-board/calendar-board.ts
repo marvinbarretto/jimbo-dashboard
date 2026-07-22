@@ -90,6 +90,12 @@ export class CalendarBoard {
     }),
   );
 
+  // One 🍅 per pomodoro, capped like the report's ▰-meter so an outlier
+  // suggestion can't wrap the row.
+  protected tomatoes(blocks: number): string {
+    return '🍅'.repeat(Math.min(blocks, 8));
+  }
+
   private dayEvents(raw: RawCalEvent[], day: string): BoardEvent[] {
     return raw
       .filter((e) => onDay(e, day))

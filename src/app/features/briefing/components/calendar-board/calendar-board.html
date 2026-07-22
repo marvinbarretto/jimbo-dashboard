@@ -27,7 +27,8 @@
                 <div class="cal-board__block-body">
                   <span class="cal-board__title">{{ blk.title }}</span>
                   <span class="cal-board__meta">
-                    {{ blk.size_blocks }} blk · {{ blk.start_hint || blk.constraint }}
+                    <span [attr.aria-label]="blk.size_blocks + ' pomodoros'" [title]="blk.size_blocks * 25 + 'min'">{{ tomatoes(blk.size_blocks) }}</span>
+                    · {{ blk.start_hint || blk.constraint }}
                   </span>
                 </div>
               </div>
