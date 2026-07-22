@@ -89,6 +89,7 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   // Detail surfaces — patterns specific to the vault item detail modal
   { id: 'vault-detail-primitives', name: 'Vault Detail Primitives', group: 'detail-surfaces',                                  description: 'Stat card, chip list, inline picker, dropdown, readiness panel, checklist, sticky action bar, subsection.' },
   { id: 'side-panel-inspector',    name: 'Side-Panel Inspector',  group: 'detail-surfaces',                                    description: 'Persistent inspector panel for richer detail and actions.' },
+  { id: 'briefing-report',         name: 'Briefing Report',       group: 'detail-surfaces', selector: 'app-briefing-report',   description: 'Reading surface for v2 briefings — questions first, insights as pull-quotes, honest deadlines.' },
   { id: 'expandable-rows',         name: 'Expandable Rows',       group: 'detail-surfaces',                                    description: 'Whole-row trigger revealing inline context without leaving the table.' },
 
   // Utilities — async / time / refresh primitives

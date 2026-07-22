@@ -7,19 +7,60 @@ export type BriefingRating = 'bad' | 'ok' | 'good' | 'great';
 export interface DayPlanEntry { time: string; suggestion: string; source: string; reasoning: string; }
 export interface EmailHighlight { source: string; headline: string; editorial: string; links: string[]; }
 export interface Surprise { fact: string; strategy: string; }
-export interface VaultTaskEntry { title: string; priority: number; actionability: string; note: string; }
+export interface VaultTaskEntry { title: string; priority: number; actionability: string; note: string; provenance?: string; }
+
+// ── v2 sections (schema_version 2 — the loose-timing reframe) ──────
+
+export type BlockConstraint = 'daytime' | 'anytime' | 'fixed';
+export type WeekTrackingStatus = 'on-track' | 'at-risk' | 'off-track' | 'done';
+
+export interface PriorityEntry {
+  title: string;
+  reasoning: string;
+  constraint: BlockConstraint;
+  fixed_time?: string;
+  deadline?: string;
+  deadline_confidence?: 'hard' | 'ambition';
+  bucket?: string;
+}
+
+export interface ReviewLine { area: string; note: string; }
+export interface WeekTrackingEntry { intention: string; status: WeekTrackingStatus; note?: string; }
+export interface OpenQuestion { question: string; gates?: string; }
+export interface Insight { fact: string; strategy?: string; }
+export interface OpportunityThreat { kind: 'opportunity' | 'threat'; note: string; action?: string; }
+
+export interface SuggestedBlock {
+  title: string;
+  size_blocks: number;
+  constraint: BlockConstraint;
+  start_hint?: string;
+  bucket?: string;
+  project?: string;
+}
+
+export interface BriefingAnalysisData {
+  day_plan: DayPlanEntry[];
+  email_highlights: EmailHighlight[];
+  surprise: Surprise | null;
+  vault_tasks: VaultTaskEntry[];
+  schema_version?: number;
+  yesterday_review?: ReviewLine[];
+  week_tracking?: WeekTrackingEntry[];
+  priorities?: PriorityEntry[];
+  open_questions?: OpenQuestion[];
+  insights?: Insight[];
+  opportunities_threats?: OpportunityThreat[];
+  suggested_blocks?: SuggestedBlock[];
+  health_status?: string;
+}
 
 export interface BriefingAnalysis {
   id: number;
   session: string;
   model: string;
   generated_at: string;
-  analysis: {
-    day_plan: DayPlanEntry[];
-    email_highlights: EmailHighlight[];
-    surprise: Surprise | null;
-    vault_tasks: VaultTaskEntry[];
-  };
+  analysis: BriefingAnalysisData;
   user_rating: number | null;
   rating: BriefingRating | null;
   rating_note: string | null;

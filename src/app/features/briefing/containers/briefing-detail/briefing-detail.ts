@@ -1,21 +1,20 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, TitleCasePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
-import { UiMetaList } from '@shared/components/ui-meta-list/ui-meta-list';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
-import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { loadOne } from '@shared/data-access/load-one';
 import { BriefingsService } from '../../../briefings/data-access/briefings.service';
 // Aliased: the component class shares its name with the BriefingRating *type*,
 // which confuses the template type-checker's name resolution for (rate)'s $event.
 import { BriefingRating as BriefingRatingControl } from '../../../briefings/components/briefing-rating/briefing-rating';
+import { BriefingReport } from '../../../briefings/components/briefing-report/briefing-report';
 import type {
   BriefingAnalysis,
   BriefingRating as Rating,
@@ -24,8 +23,8 @@ import type {
 @Component({
   selector: 'app-briefing-detail',
   imports: [
-    DatePipe, UiPageHeader, UiSection, UiMetaList, UiStack,
-    UiLoadingState, UiEmptyState, UiProse, BriefingRatingControl,
+    DatePipe, TitleCasePipe, UiPageHeader, UiSection, UiStack,
+    UiLoadingState, UiEmptyState, BriefingRatingControl, BriefingReport,
   ],
   templateUrl: './briefing-detail.html',
   styles: [':host { display: block; max-width: 60rem; }'],

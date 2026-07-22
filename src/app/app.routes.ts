@@ -159,6 +159,7 @@ export const routes: Routes = [
       { path: 'expandable-rows',         loadComponent: () => import('./features/ui-lab/sections/expandable-rows-section').then(m => m.ExpandableRowsSection) },
       { path: 'refresh-control',         loadComponent: () => import('./features/ui-lab/sections/refresh-control-section').then(m => m.RefreshControlSection) },
       { path: 'side-panel-inspector',    loadComponent: () => import('./features/ui-lab/sections/side-panel-inspector-section').then(m => m.SidePanelInspectorSection) },
+      { path: 'briefing-report',         loadComponent: () => import('./features/ui-lab/sections/briefing-report-section').then(m => m.BriefingReportSection) },
       { path: 'loading-states',          loadComponent: () => import('./features/ui-lab/sections/loading-states-section').then(m => m.LoadingStatesSection) },
       { path: 'datetime-pipes',          loadComponent: () => import('./features/ui-lab/sections/datetime-pipes-section').then(m => m.DatetimePipesSection) },
       { path: 'ui-prose',                loadComponent: () => import('./features/ui-lab/sections/ui-prose-section').then(m => m.UiProseSection) },
