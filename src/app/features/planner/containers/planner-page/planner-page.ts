@@ -134,6 +134,11 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
   private readonly vaultItems = inject(VAULT_ITEMS_READ);
   private readonly projects = inject(ProjectsService);
   private readonly queueEl = viewChild<ElementRef<HTMLElement>>('queueList');
+  // Hit-testing target for drag-to-unschedule. Deliberately the whole panel
+  // rather than `queueEl`: a collapsed list is display:none, so its rect is
+  // all zeros and every drop would miss it. The panel header is on screen
+  // either way, so dropping onto a collapsed queue still works.
+  private readonly queuePanelEl = viewChild<ElementRef<HTMLElement>>('queuePanel');
   private draggable: Draggable | null = null;
 
   private readonly weekDates = currentWeekDates();
@@ -145,6 +150,11 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
   readonly placements = signal<PlacedBlock[]>([]);
   readonly density = signal<Density>('comfortable');
   readonly queueCollapsed = signal(false);
+  // True only while a *placed* block is mid-drag. Drives the queue's
+  // armed-drop-target styling: drag-to-queue is how you unschedule, but the
+  // gesture was completely invisible — nothing on screen said the queue
+  // would catch it, so it read as broken rather than undiscovered.
+  readonly draggingPlaced = signal(false);
   // Locked-in-queue ids — separate from `placements` since a queue item
   // isn't a PlacedBlock at all; this is the only queue-side state we own
   // locally (everything else in `queue` is derived fresh from vault items).
@@ -295,15 +305,22 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
       this.updatePlacement(blockId, b => ({ ...b, start }));
     },
 
+    eventDragStart: (info) => {
+      if (info.event.extendedProps['blockId']) this.draggingPlaced.set(true);
+    },
+
     // Drag an already-placed block back onto the queue list — unplace it.
     // Checked here rather than eventDrop: eventDrop only fires for a drop
     // that resolves to a valid calendar position, so dropping outside the
     // grid entirely (over the queue) reverts and skips it. eventDragStop
     // fires either way, so it's the only hook that can catch this.
     eventDragStop: (info) => {
+      // Cleared first and unconditionally — every early return below would
+      // otherwise strand the queue in its armed state until the next drag.
+      this.draggingPlaced.set(false);
       const blockId = info.event.extendedProps['blockId'] as string | undefined;
       if (!blockId) return;
-      const queueRect = this.queueEl()?.nativeElement.getBoundingClientRect();
+      const queueRect = this.queuePanelEl()?.nativeElement.getBoundingClientRect();
       if (!queueRect) return;
       const { clientX, clientY } = info.jsEvent as MouseEvent;
       const overQueue = clientX >= queueRect.left && clientX <= queueRect.right

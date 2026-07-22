@@ -57,14 +57,24 @@ export type BlockCardVariant = 'queue' | 'calendar';
       overflow: hidden;
       cursor: grab;
     }
+    /* Names the gesture mid-drag. Not :hover — the pressed state is the
+       whole point, and the queue card and the placed block are dragged the
+       same way, so both variants share it. */
+    :host.block-card:active {
+      cursor: grabbing;
+    }
+    /* Draggable in both variants, so it gets the same grab cursor; the title
+       link below opts back into pointer for its own hit area. */
     :host.block-card--calendar {
-      cursor: pointer;
       height: 100%;
     }
     /* Locked applies the same look whichever context the card is in — a
        locked queue item is exempt from randomize the same way a locked
        calendar block is exempt from being moved by it. */
-    :host.block-card--locked {
+    /* :active is also matched on a locked card, and would otherwise win on
+       specificity and promise a drag that can't happen — so restate it. */
+    :host.block-card--locked,
+    :host.block-card--locked:active {
       opacity: 0.75;
       cursor: default;
     }
@@ -79,6 +89,7 @@ export type BlockCardVariant = 'queue' | 'calendar';
     .block-card__link {
       color: inherit;
       text-decoration: none;
+      cursor: pointer;
     }
     .block-card__link:hover {
       text-decoration: underline;

@@ -218,6 +218,25 @@
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   overflow: hidden;
+  /* Only the armed-state properties transition — a blanket `all` would also
+     animate the collapse, which should be instant. */
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+/* Armed while a placed block is mid-drag: the panel is a live drop target
+   for unscheduling. Dashed to read as "release into here" rather than as a
+   solid container, matching the ghost's dashed treatment on the calendar. */
+.queue--armed {
+  border: 1px dashed var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 7%, var(--color-surface));
+}
+
+.queue__drop-hint {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-align: center;
 }
 
 .queue__head {
@@ -397,5 +416,59 @@
   .fc-event.fc-block {
     background: transparent;
     border: none;
+  }
+
+  /* ── Resize affordance ─────────────────────────────────────────────────
+     FullCalendar's resizer is an invisible 8px strip, so the only way to
+     discover you *can* resize was to guess. Give it a real grip on hover
+     and the cursor that names the gesture. Locked blocks set editable:false,
+     so FullCalendar renders no resizer for them and this can't mislead. */
+  .fc-timegrid-event .fc-event-resizer {
+    height: 10px;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    cursor: ns-resize;
+    /* Above app-block-card, which fills the event box with an opaque
+       background and would otherwise swallow the grab area. */
+    z-index: 3;
+  }
+
+  .fc-timegrid-event .fc-event-resizer::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 3px;
+    transform: translateX(-50%);
+    width: 22px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--color-text-muted);
+    opacity: 0;
+    transition: opacity 120ms ease;
+  }
+
+  .fc-timegrid-event:hover .fc-event-resizer::after {
+    opacity: 0.9;
+  }
+
+  /* ── Drag ghost ────────────────────────────────────────────────────────
+     The mirror is the preview that snaps to slots while you drag — both for
+     moving a placed block and for dropping one in from the queue. Dashed +
+     translucent so it reads as a proposal, not as an already-placed block;
+     the same dashed language the armed queue panel uses. */
+  .fc-event-mirror {
+    opacity: 0.85;
+  }
+
+  .fc-event-mirror .block-card {
+    border: 1px dashed var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface-raised));
+    box-shadow: 0 4px 14px color-mix(in srgb, black 30%, transparent);
+  }
+
+  /* The slot(s) the ghost would land in. */
+  .fc-highlight {
+    background: color-mix(in srgb, var(--color-accent) 14%, transparent);
   }
 }

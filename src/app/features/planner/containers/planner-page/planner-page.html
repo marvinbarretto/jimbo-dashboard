@@ -54,7 +54,7 @@
 
     <div class="planner__sidebar">
 
-    <section class="queue">
+    <section class="queue" [class.queue--armed]="draggingPlaced()" #queuePanel>
       <div class="queue__head">
         <button type="button" class="collapse-toggle" (click)="toggleQueueCollapsed()" [attr.aria-expanded]="!queueCollapsed()">
           <span class="collapse-toggle__chevron">{{ queueCollapsed() ? '▸' : '▾' }}</span>
@@ -69,7 +69,9 @@
           <app-ui-button size="sm" variant="primary" (pressed)="randomize()">Randomize</app-ui-button>
         </span>
       </div>
-      @if (!queueCollapsed()) {
+      @if (draggingPlaced()) {
+        <div class="queue__drop-hint">Drop here to unschedule</div>
+      } @else if (!queueCollapsed()) {
         <div class="queue__sub">Your top 10 by priority, or tagged "this-week"</div>
         @if (lockedCount() > 0) {
           <div class="queue__locked-note">{{ lockedCount() }} locked — kept in place</div>
