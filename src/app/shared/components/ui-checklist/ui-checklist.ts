@@ -13,6 +13,10 @@ export interface UiChecklistMeter {
   readonly current: number;
   readonly target: number;
   readonly unit?: string;
+  /** 'dots' renders one pip per unit instead of a bar — better for tiny
+   * targets (1–5) where a near-empty bar over-dramatises the gap. Targets
+   * above 8 fall back to the bar regardless. */
+  readonly display?: 'bar' | 'dots';
 }
 
 export interface UiChecklistItem {
@@ -64,6 +68,20 @@ export interface UiChecklistItem {
                 (keydown)="onDraftKey($event, i)"
                 (blur)="commitEdit(i)"
               />
+            } @else if (!editable() && useDots(item.meter) && item.meter; as meter) {
+              <span class="ui-checklist__text">{{ item.text }}</span>
+              <span
+                class="ui-checklist__dots"
+                role="meter"
+                [attr.aria-valuenow]="meter.current"
+                [attr.aria-valuemin]="0"
+                [attr.aria-valuemax]="meter.target"
+                [attr.aria-label]="item.text">
+                @for (on of dotsFor(meter); track $index) {
+                  <span class="ui-checklist__dot" [class.ui-checklist__dot--on]="on"></span>
+                }
+              </span>
+              <span class="ui-checklist__dots-count">{{ meter.current }}/{{ meter.target }}</span>
             } @else if (!editable() && item.meter; as meter) {
               <app-ui-progress-meter
                 class="ui-checklist__meter"
@@ -176,6 +194,35 @@ export interface UiChecklistItem {
       padding: 0.1rem 0.3rem;
     }
 
+    .ui-checklist__dots {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .ui-checklist__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1.5px solid var(--color-text-muted);
+      box-sizing: border-box;
+    }
+
+    .ui-checklist__dot--on {
+      background: var(--color-success, #34d399);
+      border-color: var(--color-success, #34d399);
+    }
+
+    .ui-checklist__dots-count {
+      flex-shrink: 0;
+      min-width: 2rem;
+      text-align: right;
+      font-size: 0.68rem;
+      font-variant-numeric: tabular-nums;
+      color: var(--color-text-muted);
+    }
+
     .ui-checklist__text--clickable {
       cursor: text;
 
@@ -280,6 +327,14 @@ export class UiChecklist {
       this.items();
       this.editingIndex.set(null);
     });
+  }
+
+  protected useDots(meter: UiChecklistMeter | null | undefined): boolean {
+    return meter?.display === 'dots' && meter.target > 0 && meter.target <= 8;
+  }
+
+  protected dotsFor(meter: UiChecklistMeter): boolean[] {
+    return Array.from({ length: meter.target }, (_, i) => i < meter.current);
   }
 
   protected onTextClick(i: number): void {

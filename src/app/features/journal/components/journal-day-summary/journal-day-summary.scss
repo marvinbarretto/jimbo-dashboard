@@ -55,26 +55,60 @@
   }
 }
 
-.day-summary__fuel-stats {
+// Protein gauge + training summary + macros, side by side once there's room.
+// Week running totals ride beneath their daily figure instead of holding
+// sibling cards of equal weight.
+.day-summary__fuel-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
 
   @media (min-width: 60rem) {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr);
+  }
+}
+
+.day-summary__fuel-block {
+  border: 1px solid var(--color-border);
+  padding: 0.6rem 0.7rem;
+}
+
+.day-summary__fuel-week {
+  margin: 0.45rem 0 0;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.day-summary__fuel-week-meter {
+  margin-top: 0.55rem;
+}
+
+.day-summary__fuel-quiet {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.day-summary__training {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+
+  b {
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
   }
 }
 
 .day-summary__chart {
   border: 1px solid var(--color-border);
   padding: 0.6rem 0.7rem;
-}
-
-.day-summary__chart--macros {
-  @media (min-width: 40rem) {
-    max-width: 24rem;
-  }
 }
 
 .day-summary__chart-label {

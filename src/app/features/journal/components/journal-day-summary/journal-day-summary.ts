@@ -4,6 +4,7 @@ import { catchError, of, switchMap } from 'rxjs';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiChecklist, type UiChecklistItem } from '@shared/components/ui-checklist/ui-checklist';
 import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
+import { UiProgressMeter } from '@shared/components/ui-progress-meter/ui-progress-meter';
 import { formatMinutes } from '@shared/utils/datetime.utils';
 import { AgentRunsService, type AgentRunRollupRow } from '../../../hermes/data-access/agent-runs.service';
 import type { SessionDetailed, GymDailyRow } from '../../../exercise/data-access/exercise.service';
@@ -49,7 +50,7 @@ const ROUTINE: readonly {
  */
 @Component({
   selector: 'app-journal-day-summary',
-  imports: [UiStatCard, UiChecklist, UiDonutChart],
+  imports: [UiStatCard, UiChecklist, UiDonutChart, UiProgressMeter],
   templateUrl: './journal-day-summary.html',
   styleUrl: './journal-day-summary.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -214,7 +215,7 @@ export class JournalDaySummary {
       return {
         text: r.label,
         done: current >= r.target,
-        meter: { current, target: r.target },
+        meter: { current, target: r.target, display: 'dots' as const },
       };
     });
   });
@@ -227,6 +228,7 @@ export class JournalDaySummary {
   // answer "how much" — a count-vs-target meter flattens both into the same
   // bar, which loses the actual protein grams / training volume.
   protected readonly proteinTarget = PROTEIN_TARGET_G;
+  protected readonly weekProteinTarget = PROTEIN_TARGET_G * 7;
 
   protected readonly macros = computed(() =>
     (this.food()?.items ?? []).reduce(
@@ -246,6 +248,8 @@ export class JournalDaySummary {
     return [Math.round(m.protein_g), Math.round(m.carbs_g), Math.round(m.fat_g)];
   });
 
+  protected readonly proteinTodayG = computed(() => Math.round(this.macros().protein_g));
+
   protected readonly gymStats = computed(() =>
     (this.gym()?.items ?? []).reduce(
       (acc, s) => {
@@ -259,6 +263,11 @@ export class JournalDaySummary {
       { sets: 0, volumeKg: 0, cardioMin: 0 },
     ),
   );
+
+  protected readonly hasTraining = computed(() => {
+    const g = this.gymStats();
+    return g.sets > 0 || g.volumeKg > 0 || g.cardioMin > 0;
+  });
 
   // Running totals for the week so far (Monday through today) — a single
   // number answering "how's this week going," not a day-by-day trend.
