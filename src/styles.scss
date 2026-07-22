@@ -6,6 +6,7 @@
 @use 'breakpoints' as bp;
 @use 'utilities';
 @use 'markdown';
+@use 'report';
 
 .app-shell {
   display: flex;

@@ -6,13 +6,13 @@ import type {
 } from '../../data-access/briefing.types';
 
 // Reading surface for a schema_version 2 briefing. Purely presentational —
-// hands the analysis blob to a typographic layout tuned for scanning: big
-// bold leads, muted support lines, state colour only where it means something.
+// maps the analysis blob onto the global report vocabulary (styles/_report.scss,
+// the shared newspaper register: serif = read, mono = scan). No private styles,
+// so the same look is reusable by any other rendered report.
 @Component({
   selector: 'app-briefing-report',
   imports: [UiBadge],
   templateUrl: './briefing-report.html',
-  styleUrl: './briefing-report.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BriefingReport {

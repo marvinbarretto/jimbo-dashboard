@@ -2,28 +2,26 @@
 
   @if (hasQuestions()) {
     <section class="report__section">
-      <h2 class="report__heading report__heading--questions">Needs your answer</h2>
-      <div class="report__questions">
-        @for (q of analysis().open_questions; track $index) {
-          <div class="question">
-            <p class="question__text">{{ q.question }}</p>
-            @if (q.gates) {
-              <p class="question__gates">gates: {{ q.gates }}</p>
-            }
-          </div>
-        }
-      </div>
+      <h2 class="report__kicker report__kicker--warn">Needs your answer</h2>
+      @for (q of analysis().open_questions; track $index) {
+        <div class="report-notice">
+          <p class="report-notice__lead">{{ q.question }}</p>
+          @if (q.gates) {
+            <p class="report-notice__meta">gates: {{ q.gates }}</p>
+          }
+        </div>
+      }
     </section>
   }
 
   @if (hasInsights()) {
     <section class="report__section">
-      <h2 class="report__heading">Insights</h2>
+      <h2 class="report__kicker">Insights</h2>
       @for (ins of analysis().insights; track $index) {
-        <blockquote class="insight">
-          <p class="insight__fact">{{ ins.fact }}</p>
+        <blockquote class="report-quote">
+          <p class="report-quote__lead">{{ ins.fact }}</p>
           @if (ins.strategy) {
-            <p class="insight__strategy">{{ ins.strategy }}</p>
+            <p class="report-quote__support">{{ ins.strategy }}</p>
           }
         </blockquote>
       }
@@ -32,49 +30,47 @@
 
   @if (analysis().priorities?.length) {
     <section class="report__section">
-      <h2 class="report__heading">Priorities</h2>
-      <div class="priorities">
-        @for (p of analysis().priorities; track $index) {
-          <article class="priority">
-            <h3 class="priority__title">{{ p.title }}</h3>
-            <div class="priority__meta">
-              @if (p.constraint === 'fixed' && p.fixed_time) {
-                <app-ui-badge tone="accent">{{ p.fixed_time }}</app-ui-badge>
-              } @else {
-                <app-ui-badge tone="neutral" [subtle]="true">{{ p.constraint }}</app-ui-badge>
-              }
-              @if (p.deadline) {
-                <app-ui-badge [tone]="p.deadline_confidence === 'hard' ? 'warning' : 'neutral'" [subtle]="p.deadline_confidence !== 'hard'"
-                  [title]="p.deadline_confidence === 'hard' ? 'hard deadline' : 'ambition — allowed to slip'">
-                  {{ p.deadline }}{{ p.deadline_confidence === 'ambition' ? ' ~' : '' }}
-                </app-ui-badge>
-              }
-              @if (p.bucket) {
-                <span class="priority__bucket">{{ p.bucket }}</span>
-              }
-            </div>
-            <p class="priority__reasoning">{{ p.reasoning }}</p>
-          </article>
-        }
-      </div>
+      <h2 class="report__kicker">Priorities</h2>
+      @for (p of analysis().priorities; track $index) {
+        <article class="report-article">
+          <h3 class="report-article__headline">{{ p.title }}</h3>
+          <div class="report-article__meta">
+            @if (p.constraint === 'fixed' && p.fixed_time) {
+              <app-ui-badge tone="accent">{{ p.fixed_time }}</app-ui-badge>
+            } @else {
+              <app-ui-badge tone="neutral" [subtle]="true">{{ p.constraint }}</app-ui-badge>
+            }
+            @if (p.deadline) {
+              <app-ui-badge [tone]="p.deadline_confidence === 'hard' ? 'warning' : 'neutral'" [subtle]="p.deadline_confidence !== 'hard'"
+                [title]="p.deadline_confidence === 'hard' ? 'hard deadline' : 'ambition — allowed to slip'">
+                {{ p.deadline }}{{ p.deadline_confidence === 'ambition' ? ' ~' : '' }}
+              </app-ui-badge>
+            }
+            @if (p.bucket) {
+              <span class="report-tag report-tag--inline">{{ p.bucket }}</span>
+            }
+          </div>
+          <p class="report-article__standfirst">{{ p.reasoning }}</p>
+        </article>
+      }
     </section>
   }
 
   @if (hasBlocks()) {
     <section class="report__section">
-      <h2 class="report__heading">Suggested blocks</h2>
-      <div class="blocks">
+      <h2 class="report__kicker">Suggested blocks</h2>
+      <div class="report-data">
         @for (blk of analysis().suggested_blocks; track $index) {
-          <div class="block">
-            <span class="block__meter" [attr.aria-label]="sizeMinutes(blk.size_blocks) + ' minutes'">{{ sizeMeter(blk.size_blocks) }}</span>
-            <div class="block__body">
-              <span class="block__title">{{ blk.title }}</span>
-              <span class="block__meta">
+          <div class="report-data__row">
+            <span class="report-data__meter" [attr.aria-label]="sizeMinutes(blk.size_blocks) + ' minutes'">{{ sizeMeter(blk.size_blocks) }}</span>
+            <div class="report-data__body">
+              <span class="report-data__title">{{ blk.title }}</span>
+              <span class="report-data__meta">
                 {{ sizeMinutes(blk.size_blocks) }}min · {{ blk.constraint }}@if (blk.start_hint) {<span> · {{ blk.start_hint }}</span>}
               </span>
             </div>
             @if (blk.bucket) {
-              <span class="block__bucket">{{ blk.bucket }}</span>
+              <span class="report-tag">{{ blk.bucket }}</span>
             }
           </div>
         }
@@ -84,66 +80,60 @@
 
   @if (hasWeek()) {
     <section class="report__section">
-      <h2 class="report__heading">This week</h2>
-      <div class="week">
-        @for (w of analysis().week_tracking; track $index) {
-          <div class="week__row">
-            <app-ui-badge [tone]="weekTone(w.status)">{{ w.status }}</app-ui-badge>
-            <div class="week__body">
-              <span class="week__intention">{{ w.intention }}</span>
-              @if (w.note) {
-                <p class="week__note">{{ w.note }}</p>
-              }
-            </div>
+      <h2 class="report__kicker">This week</h2>
+      @for (w of analysis().week_tracking; track $index) {
+        <div class="report-flag">
+          <app-ui-badge [tone]="weekTone(w.status)">{{ w.status }}</app-ui-badge>
+          <div>
+            <span class="report-flag__lead">{{ w.intention }}</span>
+            @if (w.note) {
+              <p class="report-flag__note">{{ w.note }}</p>
+            }
           </div>
-        }
-      </div>
+        </div>
+      }
     </section>
   }
 
   @if (hasReview()) {
     <section class="report__section">
-      <h2 class="report__heading">Yesterday</h2>
-      <div class="review">
-        @for (line of analysis().yesterday_review; track $index) {
-          <div class="review__row">
-            <span class="review__area">{{ line.area }}</span>
-            <p class="review__note">{{ line.note }}</p>
-          </div>
-        }
-      </div>
+      <h2 class="report__kicker">Yesterday</h2>
+      @for (line of analysis().yesterday_review; track $index) {
+        <div>
+          <span class="report-label">{{ line.area }}</span>
+          <p class="report-prose">{{ line.note }}</p>
+        </div>
+      }
     </section>
   }
 
   @if (hasOppThreats()) {
     <section class="report__section">
-      <h2 class="report__heading">Opportunities &amp; threats</h2>
-      <div class="oppthreats">
-        @for (ot of analysis().opportunities_threats; track $index) {
-          <div class="oppthreat" [class.oppthreat--threat]="ot.kind === 'threat'">
-            <app-ui-badge [tone]="ot.kind === 'threat' ? 'danger' : 'success'">{{ ot.kind }}</app-ui-badge>
-            <div class="oppthreat__body">
-              <p class="oppthreat__note">{{ ot.note }}</p>
-              @if (ot.action) {
-                <p class="oppthreat__action">→ {{ ot.action }}</p>
-              }
-            </div>
+      <h2 class="report__kicker">Opportunities &amp; threats</h2>
+      @for (ot of analysis().opportunities_threats; track $index) {
+        <div class="report-flag">
+          <app-ui-badge [tone]="ot.kind === 'threat' ? 'danger' : 'success'">{{ ot.kind }}</app-ui-badge>
+          <div>
+            <p class="report-flag__note report-flag__note--lead">{{ ot.note }}</p>
+            @if (ot.action) {
+              <p class="report-flag__aside">→ {{ ot.action }}</p>
+            }
           </div>
-        }
-      </div>
+        </div>
+      }
     </section>
   }
 
   @if (hasTasks()) {
     <section class="report__section">
-      <h2 class="report__heading">Tasks worth today</h2>
-      <div class="tasks">
+      <h2 class="report__kicker">Tasks worth today</h2>
+      <div class="report-data">
         @for (t of analysis().vault_tasks; track $index) {
-          <div class="task">
-            <span class="task__title">{{ t.title }}</span>
-            <p class="task__note">{{ t.note }}</p>
+          <div>
+            <span class="report-data__title">{{ t.title }}</span>
+            <p class="report-data__note">{{ t.note }}</p>
             @if (t.provenance) {
-              <p class="task__provenance">↳ {{ t.provenance }}</p>
+              <p class="report-data__aside">↳ {{ t.provenance }}</p>
             }
           </div>
         }
@@ -153,8 +143,8 @@
 
   @if (analysis().health_status; as health) {
     <section class="report__section">
-      <h2 class="report__heading">Body</h2>
-      <p class="report__health">{{ health }}</p>
+      <h2 class="report__kicker">Body</h2>
+      <p class="report-prose">{{ health }}</p>
     </section>
   }
 
