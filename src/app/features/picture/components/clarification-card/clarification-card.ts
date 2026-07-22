@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import type { Clarification } from '@domain/clarifications';
+import { AnswerRail } from '@shared/components/answer-rail/answer-rail';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { TagChip } from '@shared/components/tag-chip/tag-chip';
 import { UiMetaList } from '@shared/components/ui-meta-list/ui-meta-list';
 import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { relativeTime } from '@shared/utils/datetime.utils';
-import { ClarificationAnswerComposer } from '../clarification-answer-composer/clarification-answer-composer';
 import { formatInterpretedAction } from '../../util/interpreted-action.format';
 
 type BadgeTone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'info';
@@ -19,7 +19,7 @@ const STATUS_TONE: Record<Clarification['status'], BadgeTone> = {
 
 @Component({
   selector: 'app-clarification-card',
-  imports: [UiBadge, TagChip, UiMetaList, UiProse, ClarificationAnswerComposer],
+  imports: [UiBadge, TagChip, UiMetaList, UiProse, AnswerRail],
   templateUrl: './clarification-card.html',
   styleUrl: './clarification-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

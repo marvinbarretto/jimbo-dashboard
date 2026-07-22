@@ -2,16 +2,17 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output, si
 import { RouterLink } from '@angular/router';
 import type { OpenQuestionView, CreateThreadMessagePayload } from '@domain/thread';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
+import { threadMessageId } from '@domain/ids';
 import { ActorsService } from '@features/actors/data-access/actors.service';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
-import { QuestionReplyComposer } from '@shared/components/question-reply-composer/question-reply-composer';
+import { AnswerRail } from '@shared/components/answer-rail/answer-rail';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { relativeTime } from '@shared/utils/datetime.utils';
 
 @Component({
   selector: 'app-question-card',
-  imports: [RouterLink, QuestionReplyComposer, EntityChip, UiProse],
+  imports: [RouterLink, AnswerRail, EntityChip, UiProse],
   templateUrl: './question-card.html',
   styleUrl: './question-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,18 +41,6 @@ export class QuestionCard {
   readonly authorKind = computed(() => {
     return this.actorsService.getById(this.question().author_actor_id)?.kind ?? 'system';
   });
-
-  // Synthetic ThreadMessage shape required by QuestionReplyComposer
-  readonly asThreadMessage = computed(() => ({
-    id: this.question().id,
-    vault_item_id: this.question().vault_item_id,
-    author_actor_id: this.question().author_actor_id,
-    kind: 'question' as const,
-    body: this.question().body,
-    in_reply_to: this.question().in_reply_to,
-    answered_by: null,
-    created_at: this.question().created_at,
-  }));
 
   readonly ageLabel = computed(() => relativeTime(this.question().created_at));
 
@@ -98,7 +87,16 @@ export class QuestionCard {
 
   toggleReply(): void { this.showReply.update(v => !v); }
 
-  onReplyPosted(payload: CreateThreadMessagePayload): void {
+  onReplySubmit(text: string): void {
+    const payload: CreateThreadMessagePayload = {
+      id: threadMessageId(`${Date.now()}-${Math.random().toString(36).slice(2)}`),
+      vault_item_id: this.question().vault_item_id,
+      author_actor_id: this.currentActorId,
+      kind: 'answer',
+      body: text,
+      in_reply_to: this.question().id,
+      answered_by: null,
+    };
     this.answered.emit(payload);
     this.showReply.set(false);
   }

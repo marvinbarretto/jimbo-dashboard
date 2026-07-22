@@ -48,6 +48,9 @@ import type { VaultItem } from '@domain/vault/vault-item';
     .vault-item-identity-header__title {
       flex: 1;
       min-width: min(24rem, 100%);
+      // ui-inline-edit's internal input/button use font: inherit, so this
+      // cascades down without touching the shared component.
+      font-family: var(--font-serif);
     }
   `],
 })

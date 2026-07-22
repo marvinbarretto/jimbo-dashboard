@@ -35,11 +35,11 @@
   <app-ui-prose class="qcard__body" [text]="question().body" />
 
   @if (showReply()) {
-    <app-question-reply-composer
-      [question]="asThreadMessage()"
-      [vaultItemId]="question().vault_item_id"
-      [currentActor]="currentActorId"
-      (posted)="onReplyPosted($event)"
+    <app-answer-rail
+      class="qcard__reply"
+      [richText]="true"
+      inputPlaceholder="Answer this question…  @ person  # task  / project"
+      (textSubmitted)="onReplySubmit($event)"
     />
   }
 

@@ -108,11 +108,15 @@
   }
 
   &__body {
+    // Typography (size/line-height/colour) comes from app-ui-prose's default
+    // .prose-read register — don't override it here.
     padding: 0 .75rem .55rem;
     margin: 0;
-    font-size: .82rem;
-    line-height: 1.5;
-    color: var(--color-text);
+  }
+
+  &__reply {
+    display: block;
+    padding: 0 .75rem .7rem;
   }
 
   &__actions {

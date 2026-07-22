@@ -1,0 +1,174 @@
+// The shared inline answer interaction — options (optional) + free-text
+// fallback + dismiss (optional) + settled states (acked/dismissed/error).
+// One visual language reused everywhere a question or clarification can be
+// answered in place, whatever shell it's embedded in (a briefing interrupt,
+// a vault item's open-questions block, a question-card, a clarification
+// card). See app-answer-rail.
+//
+// Option rows are prose (var(--font-serif)), not mono command labels —
+// answers are sentences, not short data, and need to wrap onto two lines
+// without turning into a cramped pill.
+
+.rail {
+  display: block;
+}
+
+.rail[data-state="sending"] {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.rail__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.65rem;
+}
+
+.rail__option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  font-weight: 400;
+  line-height: 1.45;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+
+  &::before {
+    content: '';
+    flex: none;
+    width: 0.55rem;
+    height: 0.55rem;
+    margin-top: 0.4em;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-text-muted);
+    transition: border-color 0.12s ease, background-color 0.12s ease;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+    background: color-mix(in srgb, var(--color-accent) 6%, var(--color-surface));
+
+    &::before {
+      border-color: var(--color-accent);
+      background: var(--color-accent);
+    }
+  }
+
+  &:disabled { cursor: default; }
+}
+
+.rail__form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+// richText mode's composer is a multi-line box, not a single-line input —
+// stacking beats a horizontal row (which stretches the submit button to
+// match the composer's height via flex's default cross-axis stretch).
+// Cross-axis stays default (stretch) so the composer keeps full width —
+// only the button pulls itself to the right, via align-self below.
+.rail__form--rich {
+  flex-direction: column;
+}
+
+.rail__form--rich .rail__submit {
+  align-self: flex-end;
+}
+
+// Sizing only here — app-smart-composer-input (richText mode) carries its
+// own box chrome and would double up if it inherited a border/background
+// from this class too. The plain <input> case gets its full box below.
+.rail__input {
+  flex: 1;
+  min-width: 0;
+}
+
+input.rail__input {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text);
+
+  &::placeholder { color: var(--color-text-muted); }
+  &:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+}
+
+.rail__submit {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.32rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  background: transparent;
+  color: var(--color-text);
+  border-radius: var(--radius);
+  cursor: pointer;
+
+  &:hover:not(:disabled) { background: color-mix(in srgb, var(--color-accent) 12%, transparent); }
+  &:disabled { opacity: 0.5; cursor: default; }
+}
+
+.rail__dismiss-row {
+  margin-top: 0.55rem;
+}
+
+.rail__dismiss {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0.15rem 0;
+
+  &:hover:not(:disabled) { color: var(--color-text); }
+  &:disabled { opacity: 0.5; cursor: default; }
+}
+
+.rail__ack {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-success);
+}
+
+.rail__dismissed {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.rail__error {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-danger);
+}
+
+.rail__retry {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  border: none;
+  background: none;
+  color: var(--color-danger);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}

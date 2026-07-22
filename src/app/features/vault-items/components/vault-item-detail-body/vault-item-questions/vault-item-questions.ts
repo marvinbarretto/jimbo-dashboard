@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { threadMessageId } from '@domain/ids';
+import { AnswerRail } from '@shared/components/answer-rail/answer-rail';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
-import { QuestionReplyComposer } from '@shared/components/question-reply-composer/question-reply-composer';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { UiSection } from '@shared/components/ui-section/ui-section';
@@ -10,7 +11,7 @@ import type { CreateThreadMessagePayload, ThreadMessage } from '@domain/thread';
 
 @Component({
   selector: 'app-vault-item-questions',
-  imports: [EntityChip, QuestionReplyComposer, UiCluster, UiProse, UiSection, RelativeTimePipe],
+  imports: [AnswerRail, EntityChip, UiCluster, UiProse, UiSection, RelativeTimePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (questions().length > 0) {
@@ -27,11 +28,11 @@ import type { CreateThreadMessagePayload, ThreadMessage } from '@domain/thread';
               <span class="vault-item-questions__age">{{ q.created_at | relativeTime }}</span>
             </app-ui-cluster>
             <app-ui-prose class="vault-item-questions__body" [text]="q.body" />
-            <app-question-reply-composer
-              [question]="q"
-              [vaultItemId]="vaultItemId()"
-              [currentActor]="currentActor()"
-              (posted)="replyPosted.emit($event)"
+            <app-answer-rail
+              class="vault-item-questions__reply"
+              [richText]="true"
+              inputPlaceholder="Answer this question…  @ person  # task  / project"
+              (textSubmitted)="onReplySubmit(q, $event)"
             />
           </div>
         }
@@ -65,9 +66,7 @@ import type { CreateThreadMessagePayload, ThreadMessage } from '@domain/thread';
     }
 
     .vault-item-questions__body {
-      font-size: 0.78rem;
-      line-height: 1.45;
-      color: var(--color-text);
+      // Typography comes from app-ui-prose's default .prose-read register.
       margin: 0 0 0.5rem;
     }
   `],
@@ -82,5 +81,18 @@ export class VaultItemQuestions {
   meta(): string {
     const n = this.questions().length;
     return `${n} blocking question${n === 1 ? '' : 's'}`;
+  }
+
+  protected onReplySubmit(question: ThreadMessage, text: string): void {
+    const payload: CreateThreadMessagePayload = {
+      id: threadMessageId(`${Date.now()}-${Math.random().toString(36).slice(2)}`),
+      vault_item_id: this.vaultItemId(),
+      author_actor_id: this.currentActor(),
+      kind: 'answer',
+      body: text,
+      in_reply_to: question.id,
+      answered_by: null,
+    };
+    this.replyPosted.emit(payload);
   }
 }

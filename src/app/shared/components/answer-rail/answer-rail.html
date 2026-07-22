@@ -6,7 +6,7 @@
       }
     </div>
   }
-  <form class="rail__form" [formGroup]="form" (ngSubmit)="submitText()">
+  <form class="rail__form" [class.rail__form--rich]="richText()" [formGroup]="form" (ngSubmit)="submitText()">
     @if (richText()) {
       <app-smart-composer-input class="rail__input" formControlName="reply"
         [placeholder]="inputPlaceholder()" ariaLabel="Reply body"

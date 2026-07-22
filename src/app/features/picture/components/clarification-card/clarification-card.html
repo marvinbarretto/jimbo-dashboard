@@ -21,7 +21,12 @@
         <button type="button" class="clarification-card__dismiss" (click)="onDismiss()">dismiss</button>
       </div>
       @if (showAnswer()) {
-        <app-clarification-answer-composer (posted)="onAnswerPosted($event)" />
+        <app-answer-rail
+          class="clarification-card__reply"
+          [richText]="true"
+          inputPlaceholder="Answer this…"
+          (textSubmitted)="onAnswerPosted($event)"
+        />
       }
     }
     @case ('answered') {

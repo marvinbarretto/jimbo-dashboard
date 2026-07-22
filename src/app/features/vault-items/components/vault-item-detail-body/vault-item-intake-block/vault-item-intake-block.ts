@@ -29,7 +29,7 @@ import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
         ></textarea>
       } @else if (body()) {
         <div
-          class="vault-item-intake-block__body markdown-body"
+          class="vault-item-intake-block__body markdown-body prose-read"
           [class.vault-item-intake-block__body--editable]="editable()"
           [attr.role]="editable() ? 'button' : null"
           [attr.tabindex]="editable() ? 0 : null"

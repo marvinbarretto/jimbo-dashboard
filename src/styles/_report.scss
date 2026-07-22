@@ -11,6 +11,19 @@
   --font-serif: 'Iowan Old Style', Palatino, 'Palatino Linotype', Georgia, 'Times New Roman', serif;
 }
 
+// ── Reading register — standalone, droppable anywhere ──────────────
+// .report-prose (below) relies on inheriting font-family/line-height from
+// the .report container. This is the same treatment self-contained, for
+// body text outside a report surface — vault item bodies, question text,
+// anywhere prose deserves to be read rather than scanned.
+.prose-read {
+  font-family: var(--font-serif);
+  font-size: 1.02rem;
+  line-height: 1.65;
+  letter-spacing: 0.005em;
+  color: var(--color-text);
+}
+
 // ── Container ─────────────────────────────────────────────────────
 
 .report {
@@ -83,77 +96,10 @@
   color: var(--color-text-muted);
 }
 
-// Inline answering — mono register, quiet until used.
-
-.report-notice__actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+// Inline answering — the shared app-answer-rail (_answer-rail.scss); this
+// surface only owns its own spacing above it.
+.report-notice .rail {
   margin-top: 0.8rem;
-  font-family: var(--font-mono);
-}
-
-.report-notice__option {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  font-weight: 700;
-  padding: 0.3rem 0.8rem;
-  border: 1px solid color-mix(in srgb, var(--notice-color) 50%, var(--color-border));
-  background: transparent;
-  color: var(--color-text);
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--notice-color) 12%, transparent);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-}
-
-.report-notice__dismiss {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  border: none;
-  background: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  padding: 0.3rem 0.4rem;
-
-  &:hover:not(:disabled) { color: var(--color-text); }
-  &:disabled { opacity: 0.5; cursor: default; }
-}
-
-.report-notice__reply {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.6rem;
-}
-
-.report-notice__input {
-  flex: 1;
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
-  padding: 0.35rem 0.6rem;
-  border: 1px solid var(--color-border);
-  background: transparent;
-  color: var(--color-text);
-
-  &::placeholder { color: var(--color-text-muted); }
-  &:focus { outline: none; border-color: var(--color-border-strong); }
-}
-
-.report-notice__ack {
-  margin: 0.8rem 0 0;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--color-success);
-
-  &--muted { color: var(--color-text-muted); }
-  &--error { color: var(--color-danger); }
 }
 
 // ── Hit/miss feedback — per item or per section ───────────────────
