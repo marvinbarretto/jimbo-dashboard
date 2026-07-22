@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.125](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.124...v0.0.125) (2026-07-22)
+
+
+### Features
+
+* **journal:** full-width overview page, richer day metrics ([8a14fa6](https://github.com/marvinbarretto/jimbo-dashboard/commit/8a14fa65bad42a8156264a22e8294c5486d32cf0))
+* **journal:** tighten day-summary viz with dot meters and gauges ([146bce8](https://github.com/marvinbarretto/jimbo-dashboard/commit/146bce85ed07f6392fd0c6cb2992f5eccdb8afc4))
+* **shared:** merge period title and date picker into one stepper ([ea2bcd9](https://github.com/marvinbarretto/jimbo-dashboard/commit/ea2bcd9a30e7907be8311133f5e187a5800be7c4))
+
 ### [0.0.124](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.123...v0.0.124) (2026-07-22)
 
 
