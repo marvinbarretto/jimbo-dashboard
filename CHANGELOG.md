@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.132](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.131...v0.0.132) (2026-07-22)
+
+
+### Bug Fixes
+
+* **briefing:** board fetches full today window so past events render dimmed ([e47e141](https://github.com/marvinbarretto/jimbo-dashboard/commit/e47e141cf1bb010be7e996b3c158cf5e4acea895))
+
 ### [0.0.131](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.130...v0.0.131) (2026-07-22)
 
 
