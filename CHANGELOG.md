@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.127](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.126...v0.0.127) (2026-07-22)
+
+
+### Features
+
+* **briefing:** miss requires a one-tap reason chip; add day-board rail wireframes ([9f99aa3](https://github.com/marvinbarretto/jimbo-dashboard/commit/9f99aa33c72055a490ad145493f3dad412ff2547))
+
 ### [0.0.126](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.125...v0.0.126) (2026-07-22)
 
 
