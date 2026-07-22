@@ -6,10 +6,10 @@
 .app-shell {
   min-height: 100vh;
   background: var(--color-bg);
-  // Measured combined height of .app-topbar + .app-header__inner (incl.
-  // borders). Used by sticky descendants (e.g. <app-ui-tab-bar>) to offset
-  // below the header. Update if the header's vertical metrics change.
-  --app-header-height: 88px;
+  // Measured height of .app-header (single row, incl. borders). Used by sticky
+  // descendants (e.g. <app-ui-tab-bar>) to offset below the header. Update if
+  // the header's vertical metrics change.
+  --app-header-height: 55px;
   // Single horizontal page gutter. The shell owns it (applied on
   // .app-main__inner) so routed pages stay layout-agnostic and align with the
   // header chrome by default — no page should set its own horizontal padding.
@@ -25,25 +25,36 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.app-topbar {
+.app-header__inner {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  // Pinned to --app-header-height so the sticky offset stays truthful even as
+  // the nav links' own metrics drift.
+  min-height: 3.25rem;
+  padding-inline: var(--app-gutter);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-header__inner app-nav {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-header__commands {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  padding: 0.2rem var(--app-gutter);
-  min-height: 1.75rem;
-  border-bottom: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-surface) 40%, var(--color-bg));
+  flex-shrink: 0;
+  gap: 0.5rem;
+  padding-left: 1.5rem;
+  // Mirrors the brand's divider at the other end of the row: commands are
+  // chrome, not navigation.
+  border-left: 1px solid var(--color-border);
   font-size: 0.72rem;
   color: var(--color-text-muted);
-  gap: 1rem;
 }
 
-.app-topbar__commands {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.app-topbar__cmd {
+.app-header__cmd {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -77,20 +88,10 @@
   }
 }
 
-.app-topbar__user {
+.app-header__user {
   font-size: 0.72rem;
   color: var(--color-text-muted);
   padding: 0.15rem 0.25rem;
-}
-
-.app-header__inner {
-  padding-inline: var(--app-gutter);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.app-header__inner {
-  display: flex;
-  flex-direction: column;
 }
 
 .app-main__inner {
@@ -106,5 +107,25 @@
   // page content together.
   .app-shell {
     --app-gutter: 0.75rem;
+    --app-header-height: 116px;
+  }
+
+  // Not enough width for nav + commands side by side: the commands drop to
+  // their own row underneath.
+  .app-header__inner {
+    flex-wrap: wrap;
+    min-height: 0;
+  }
+
+  .app-header__inner app-nav {
+    flex: 1 1 100%;
+  }
+
+  .app-header__commands {
+    flex: 1 1 100%;
+    padding-left: 0;
+    padding-block: 0.4rem;
+    border-left: none;
+    border-top: 1px solid var(--color-border);
   }
 }

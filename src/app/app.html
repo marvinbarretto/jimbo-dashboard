@@ -1,10 +1,12 @@
 <div class="app-shell" [style.--section-accent]="nav.accent()">
   <header class="app-header">
-    <div class="app-topbar">
-      <div class="app-topbar__commands">
+    <div class="app-header__inner">
+      <app-nav />
+
+      <div class="app-header__commands">
         <button
           type="button"
-          class="app-topbar__cmd app-topbar__cmd--icon"
+          class="app-header__cmd app-header__cmd--icon"
           (click)="theme.toggle()"
           [attr.aria-pressed]="theme.isLight()"
           [attr.aria-label]="theme.isLight() ? 'Switch to dark theme' : 'Switch to light theme'"
@@ -20,27 +22,24 @@
             </svg>
           }
         </button>
-        <button type="button" class="app-topbar__cmd" (click)="shortcuts.openSearch()" aria-label="Open search">
+        <button type="button" class="app-header__cmd" (click)="shortcuts.openSearch()" aria-label="Open search">
           Search <kbd>/</kbd>
         </button>
-        <button type="button" class="app-topbar__cmd" (click)="shortcuts.openCapture()" aria-label="New item">
+        <button type="button" class="app-header__cmd" (click)="shortcuts.openCapture()" aria-label="New item">
           New item <kbd>⇧N</kbd>
         </button>
 
         @if (auth.isChecked()) {
           @if (auth.isAuthenticated()) {
-            <span class="app-topbar__user">{{ auth.currentUser() }}</span>
-            <button type="button" class="app-topbar__cmd" (click)="auth.logout()" aria-label="Sign out">
+            <span class="app-header__user">{{ auth.currentUser() }}</span>
+            <button type="button" class="app-header__cmd" (click)="auth.logout()" aria-label="Sign out">
               Sign out
             </button>
           } @else {
-            <a class="app-topbar__cmd" href="/auth/login" aria-label="Sign in">Sign in</a>
+            <a class="app-header__cmd" href="/auth/login" aria-label="Sign in">Sign in</a>
           }
         }
       </div>
-    </div>
-    <div class="app-header__inner">
-      <app-nav />
     </div>
   </header>
 
