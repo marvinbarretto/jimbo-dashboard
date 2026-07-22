@@ -60,12 +60,17 @@ export class CalendarBoard {
   protected readonly tomorrowLabel = new Date(this.now.getFullYear(), this.now.getMonth(), this.now.getDate() + 1)
     .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' });
 
+  // Explicit since/until rather than days=N: days counts from *now*, which
+  // drops today's already-finished events and past-dimming never renders.
+  private readonly since = new Date(this.now.getFullYear(), this.now.getMonth(), this.now.getDate()).toISOString();
+  private readonly until = new Date(this.now.getFullYear(), this.now.getMonth(), this.now.getDate() + 2).toISOString();
+
   // One resource per configured source; columns aggregate their own sources.
   private readonly sourceResources = CALENDAR_BOARD_COLUMNS.map((config) =>
     config.sources.map((src) =>
       httpResource<{ events: RawCalEvent[] }>(() => ({
         url: `${environment.dashboardApiUrl}/api/google-calendar/events`,
-        params: { days: 2, calendarId: src.calendarId, account: src.account },
+        params: { since: this.since, until: this.until, calendarId: src.calendarId, account: src.account },
       })),
     ),
   );
