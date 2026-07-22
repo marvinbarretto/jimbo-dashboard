@@ -1,4 +1,4 @@
-<app-ui-page width="standard">
+<app-ui-page width="wide">
 @if (loading()) {
   <app-ui-loading-state message="Loading briefing…" />
 } @else if (error()) {
@@ -10,7 +10,10 @@
       <p uiPageHeaderHint>{{ b.generated_at | date: 'EEEE d MMMM, HH:mm' }} · {{ b.model }}</p>
     </app-ui-page-header>
 
-    <app-briefing-report [analysis]="b.analysis" [briefingId]="b.id" />
+    <div class="briefing-detail__cols">
+      <app-briefing-report [analysis]="b.analysis" [briefingId]="b.id" [hideSuggestedBlocks]="true" />
+      <app-calendar-board [briefingId]="b.id" [suggestedBlocks]="b.analysis.suggested_blocks ?? []" />
+    </div>
   </app-ui-stack>
 } @else {
   <app-ui-empty-state title="Briefing not found" message="This briefing may have been removed." />

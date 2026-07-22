@@ -1,0 +1,15 @@
+.briefing-detail__cols {
+  display: grid;
+  // Report keeps a readable measure; the board takes the rest, capped so
+  // three calendar columns stay dense rather than sprawling.
+  grid-template-columns: minmax(0, 46rem) minmax(20rem, 42rem);
+  gap: 2rem;
+  align-items: start;
+}
+
+// Below two comfortable columns the board stacks under the report.
+@media (max-width: 1100px) {
+  .briefing-detail__cols {
+    grid-template-columns: 1fr;
+  }
+}

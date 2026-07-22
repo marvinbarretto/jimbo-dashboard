@@ -1,0 +1,110 @@
+.cal-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  align-items: start;
+}
+
+.cal-board__col {
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  min-width: 0;
+}
+
+.cal-board__head {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.cal-board__day {
+  margin: 0;
+  padding: 0.25rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  background: color-mix(in srgb, var(--color-surface) 55%, transparent);
+  border-bottom: 1px dashed var(--color-border);
+
+  &:not(:first-of-type) {
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+.cal-board__event {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  border-bottom: 1px dashed color-mix(in srgb, var(--color-border) 50%, transparent);
+
+  &:last-child { border-bottom: none; }
+
+  &--past { opacity: 0.45; }
+
+  // Negotiable, not committed — the pencilled texture from the wireframe.
+  &--block {
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 6px,
+      color-mix(in srgb, var(--color-surface) 70%, transparent) 6px,
+      color-mix(in srgb, var(--color-surface) 70%, transparent) 12px
+    );
+  }
+}
+
+.cal-board__time {
+  flex-shrink: 0;
+  min-width: 3.2em;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.cal-board__title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cal-board__size {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+}
+
+.cal-board__empty,
+.cal-board__error {
+  margin: 0;
+  padding: 0.3rem 0.6rem 0.5rem;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.cal-board__error { color: var(--color-danger); }
+
+.cal-board__skeleton {
+  height: 8rem;
+  margin: 0.5rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+}
+
+// Board drops below the report when the page can't fit two real columns.
+@media (max-width: 1100px) {
+  .cal-board {
+    grid-template-columns: 1fr;
+  }
+}

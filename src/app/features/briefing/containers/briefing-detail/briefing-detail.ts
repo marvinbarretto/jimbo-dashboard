@@ -12,6 +12,7 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { loadOne } from '@shared/data-access/load-one';
 import { BriefingReport } from '../../../briefings/components/briefing-report/briefing-report';
 import { BriefingFeedbackService } from '../../../briefings/data-access/briefing-feedback.service';
+import { CalendarBoard } from '../../components/calendar-board/calendar-board';
 import type { BriefingAnalysis } from '../../../briefings/data-access/briefing.types';
 
 // The overall rating widget is gone from this page on purpose: quality signal
@@ -21,9 +22,10 @@ import type { BriefingAnalysis } from '../../../briefings/data-access/briefing.t
   selector: 'app-briefing-detail',
   imports: [
     DatePipe, TitleCasePipe, UiPage, UiPageHeader, UiStack,
-    UiLoadingState, UiEmptyState, BriefingReport,
+    UiLoadingState, UiEmptyState, BriefingReport, CalendarBoard,
   ],
   templateUrl: './briefing-detail.html',
+  styleUrl: './briefing-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BriefingDetail {

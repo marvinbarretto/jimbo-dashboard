@@ -1,0 +1,54 @@
+<div class="cal-board">
+  @for (col of columns(); track col.config.key) {
+    <section class="cal-board__col" [class.cal-board__col--pencilled]="col.config.pencilled">
+      <h3 class="cal-board__head">
+        {{ col.config.label }}
+        @if (col.config.pencilled) {
+          <app-briefing-feedback [briefingId]="briefingId()" section="suggested_blocks" />
+        }
+      </h3>
+
+      @if (col.loading) {
+        <div class="cal-board__skeleton" aria-label="Loading calendar"></div>
+      } @else {
+        <h4 class="cal-board__day">Today · {{ todayLabel }}</h4>
+        @if (col.today.failed) {
+          <p class="cal-board__error">⚠ couldn't load</p>
+        } @else {
+          @for (e of col.today.events; track e.id) {
+            <div class="cal-board__event" [class.cal-board__event--past]="e.past">
+              <span class="cal-board__time">{{ e.allDay ? 'all-day' : e.time }}</span>
+              <span class="cal-board__title">{{ e.title }}</span>
+            </div>
+          }
+          @if (col.config.pencilled) {
+            @for (blk of suggestedBlocks(); track $index) {
+              <div class="cal-board__event cal-board__event--block">
+                <span class="cal-board__time">{{ blk.start_hint || blk.constraint }}</span>
+                <span class="cal-board__title">{{ blk.title }}</span>
+                <span class="cal-board__size">{{ blk.size_blocks }} blk</span>
+              </div>
+            }
+          }
+          @if (col.today.events.length === 0 && !(col.config.pencilled && suggestedBlocks().length > 0)) {
+            <p class="cal-board__empty">— empty —</p>
+          }
+        }
+
+        <h4 class="cal-board__day">Tomorrow · {{ tomorrowLabel }}</h4>
+        @if (col.tomorrow.failed) {
+          <p class="cal-board__error">⚠ couldn't load</p>
+        } @else {
+          @for (e of col.tomorrow.events; track e.id) {
+            <div class="cal-board__event">
+              <span class="cal-board__time">{{ e.allDay ? 'all-day' : e.time }}</span>
+              <span class="cal-board__title">{{ e.title }}</span>
+            </div>
+          } @empty {
+            <p class="cal-board__empty">— empty —</p>
+          }
+        }
+      }
+    </section>
+  }
+</div>

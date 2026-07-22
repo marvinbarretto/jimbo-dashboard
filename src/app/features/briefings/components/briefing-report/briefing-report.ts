@@ -21,13 +21,17 @@ import type {
 export class BriefingReport {
   readonly analysis = input.required<BriefingAnalysisData>();
   readonly briefingId = input.required<number>();
+  // Set when the page renders suggested blocks elsewhere (the calendar
+  // board on briefing-detail) so they don't appear twice.
+  readonly hideSuggestedBlocks = input(false);
 
   protected readonly hasReview = computed(() => (this.analysis().yesterday_review?.length ?? 0) > 0);
   protected readonly hasWeek = computed(() => (this.analysis().week_tracking?.length ?? 0) > 0);
   protected readonly hasQuestions = computed(() => (this.analysis().open_questions?.length ?? 0) > 0);
   protected readonly hasInsights = computed(() => (this.analysis().insights?.length ?? 0) > 0);
   protected readonly hasOppThreats = computed(() => (this.analysis().opportunities_threats?.length ?? 0) > 0);
-  protected readonly hasBlocks = computed(() => (this.analysis().suggested_blocks?.length ?? 0) > 0);
+  protected readonly hasBlocks = computed(() =>
+    !this.hideSuggestedBlocks() && (this.analysis().suggested_blocks?.length ?? 0) > 0);
   protected readonly hasTasks = computed(() => this.analysis().vault_tasks.length > 0);
 
   protected weekTone(status: WeekTrackingStatus): 'success' | 'warning' | 'danger' | 'neutral' {
