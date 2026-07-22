@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -28,9 +28,19 @@ export class ClarificationPrompt {
   // Without an id the prompt is display-only.
   readonly clarificationId = input<string | undefined>(undefined);
   readonly options = input<string[] | undefined>(undefined);
+  // Preview-only (ui-lab): start in a given state without touching the API.
+  readonly initialMode = input<Mode>('idle');
+  readonly initialAnswer = input<string | null>(null);
 
   protected readonly mode = signal<Mode>('idle');
   protected readonly sentAnswer = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      this.mode.set(this.initialMode());
+      this.sentAnswer.set(this.initialAnswer());
+    });
+  }
   protected readonly reply = new FormControl('', { nonNullable: true, validators: [Validators.required] });
 
   protected readonly answerable = computed(() => !!this.clarificationId());
