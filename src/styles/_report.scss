@@ -128,6 +128,14 @@
 
   &--hit.report-fb__btn--active { color: var(--color-success); }
   &--miss.report-fb__btn--active { color: var(--color-danger); }
+
+  // A miss that carries a note — the "why" is in the title tooltip.
+  &--noted::after {
+    content: '•';
+    font-size: 0.55em;
+    vertical-align: super;
+    margin-left: 0.1rem;
+  }
 }
 
 // ── Pull-quote ────────────────────────────────────────────────────

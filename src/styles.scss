@@ -415,6 +415,13 @@ h2 { font-size: 1.25rem; font-weight: 600; }
   display: flex;
 }
 
+// CDK Dialog panel for the briefing miss-note prompt. One textarea — small.
+.cdk-overlay-pane.miss-note-dialog {
+  width: min(440px, calc(100vw - 2rem));
+  max-height: calc(100vh - 4rem);
+  display: flex;
+}
+
 // CDK Dialog panel for the vault-item detail modal. Sized to the viewport
 // with a comfortable cap so long lists scroll inside the body, not the page.
 .cdk-overlay-pane.vault-detail-dialog {
