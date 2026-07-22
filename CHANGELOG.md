@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.126](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.125...v0.0.126) (2026-07-22)
+
+
+### Features
+
+* **briefing:** miss arrow opens a note dialog so feedback carries a why ([a2f4530](https://github.com/marvinbarretto/jimbo-dashboard/commit/a2f45305f3845f4a3d23326c6ed9fc7fe45af37a))
+
 ### [0.0.125](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.124...v0.0.125) (2026-07-22)
 
 
