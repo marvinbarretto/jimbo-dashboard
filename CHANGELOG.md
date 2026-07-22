@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.130](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.129...v0.0.130) (2026-07-22)
+
+
+### Features
+
+* **briefing:** calendar board beside the report — 3 columns, today/tomorrow ([422d30f](https://github.com/marvinbarretto/jimbo-dashboard/commit/422d30fd46a10a51cf7c723606ac4d8d37516b08))
+
 ### [0.0.129](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.128...v0.0.129) (2026-07-22)
 
 ### [0.0.128](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.127...v0.0.128) (2026-07-22)
