@@ -1,43 +1,48 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { parseStructuredProse } from '@shared/utils/prose.utils';
 
-// Renders a plain-text field (context item content, belief content, ...) as
-// a paragraph — unless it contains an inline enumerated list ("Update: (1)
-// foo, (2) bar."), in which case that gets split into a real intro + <ol>.
-// Purely a display transform: the stored string is untouched, so this stays
-// agent/API-friendly while fixing the "wall of text" case in the UI.
+// Renders a free-text field (context item content, belief content, question
+// bodies, ...) as markdown — agent-authored text routinely carries **bold**,
+// lists, links, code spans, etc. that were rendering as literal characters
+// before this used `marked` (see MarkdownPipe). The one special case on top:
+// an inline enumerated list ("Update: (1) foo, (2) bar.") that reads as a
+// wall of text even once markdown-rendered, so it's split into a real intro
+// + <ol> first. Purely a display transform: the stored string is untouched.
 @Component({
   selector: 'app-ui-prose',
+  imports: [MarkdownPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (parsed(); as p) {
-      @if (p.intro) {
-        <p class="ui-prose__para">{{ p.intro }}</p>
-      }
-      <ol class="ui-prose__list">
-        @for (item of p.items; track $index) {
-          <li>{{ item }}</li>
+      <div class="markdown-body" [class.prose-read]="!plain()">
+        @if (p.intro) {
+          <div class="ui-prose__para" [innerHTML]="p.intro | markdown"></div>
         }
-      </ol>
+        <ol class="ui-prose__list">
+          @for (item of p.items; track $index) {
+            <li [innerHTML]="item | markdown"></li>
+          }
+        </ol>
+      </div>
     } @else {
-      <p class="ui-prose__para">{{ text() }}</p>
+      <div class="markdown-body" [class.prose-read]="!plain()" [innerHTML]="text() | markdown"></div>
     }
   `,
   styles: [`
-    /* The app's base font is monospace (var(--font-mono)) — good for labels,
-       code, and data, but fixed-width letterforms make paragraphs of prose
-       read slower and take more horizontal space than they need to. Actual
-       body copy gets its own treatment: a proportional face, a size below
-       the 16px page root (this is card/row-scale reading, not a document),
-       and line-height pushed up to compensate — the classic smaller-size /
-       taller-leading pairing that keeps dense text from feeling cramped. */
     :host {
       display: block;
-      font-family: var(--font-sans);
-      font-size: 0.875rem;
-      line-height: 1.6;
-      letter-spacing: 0.005em;
+      padding: 0.4rem 0;
     }
+
+    /* markdown-body (global, src/styles/_markdown.scss) sets its own
+       font-family/size directly, so an ancestor .prose-read can't win by
+       inheritance — it has to sit on the same element and out-cascade it
+       (report.scss loads after markdown.scss in styles.scss). Default is
+       that serif reading register, shared with the report surface — most
+       prose deserves to be read, not scanned. [plain] opts out for
+       dense/tabular contexts (list rows, triage cards), leaving
+       markdown-body's own compact sans treatment in place. */
 
     .ui-prose__para {
       margin: 0;
@@ -58,6 +63,9 @@ import { parseStructuredProse } from '@shared/utils/prose.utils';
 })
 export class UiProse {
   readonly text = input.required<string>();
+  // Default is the shared serif reading register (.prose-read). Set true to
+  // opt into the compact sans treatment for dense/tabular contexts.
+  readonly plain = input(false);
 
   protected readonly parsed = computed(() => parseStructuredProse(this.text()));
 }

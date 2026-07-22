@@ -14,23 +14,34 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
     <app-ui-section title="Prose" [collapsible]="false">
       <app-ui-stack gap="md">
         <p class="ui-lab__support-copy">
-          For free-text fields (context item content, belief content, ...) that sometimes hide an
-          inline enumerated list — <code>"Update: (1) foo, (2) bar, (3) baz."</code> — rendered
-          verbatim as one paragraph. <code>app-ui-prose</code> splits that into a real intro + list
-          at display time only; the stored string is untouched, so nothing downstream (agents, API
-          consumers) needs to change. Plain prose with no numbered markers renders as a single
-          paragraph, unchanged.
+          For free-text fields (context item content, belief content, question bodies, ...) that
+          are often agent-authored and carry real markdown — <code>**bold**</code>, links, code
+          spans, lists. <code>app-ui-prose</code> renders that markdown (via the same
+          <code>marked</code> pipe as vault item bodies), plus one special case on top: an inline
+          enumerated list — <code>"Update: (1) foo, (2) bar, (3) baz."</code> — that would
+          otherwise read as a wall of text even once markdown-rendered, split into a real intro +
+          list at display time only. The stored string is untouched either way, so nothing
+          downstream (agents, API consumers) needs to change.
         </p>
 
         <app-ui-meta-list>
           <dt>text</dt>
           <dd>the raw string — same one you'd otherwise interpolate directly</dd>
+          <dt>plain</dt>
+          <dd>default is the serif reading register (.prose-read, shared with the report surface) — set true to opt into the compact sans treatment for dense/tabular contexts</dd>
         </app-ui-meta-list>
 
         <div>
-          <p class="ui-lab__subhead">Plain prose — no markers, renders as-is</p>
+          <p class="ui-lab__subhead">Plain prose — no markers, renders as-is (default: serif read register)</p>
           <app-ui-card tone="soft">
             <app-ui-prose [text]="plainSample" />
+          </app-ui-card>
+        </div>
+
+        <div>
+          <p class="ui-lab__subhead">plain — compact sans register (dense list/row contexts)</p>
+          <app-ui-card tone="soft">
+            <app-ui-prose [text]="plainSample" [plain]="true" />
           </app-ui-card>
         </div>
 
@@ -47,6 +58,13 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
             <app-ui-prose [text]="falsePositiveSample" />
           </app-ui-card>
         </div>
+
+        <div>
+          <p class="ui-lab__subhead">Real markdown — bold, a link, a code span, a list</p>
+          <app-ui-card tone="soft">
+            <app-ui-prose [text]="markdownSample" />
+          </app-ui-card>
+        </div>
       </app-ui-stack>
     </app-ui-section>
   `,
@@ -60,4 +78,7 @@ export class UiProseSection {
 
   protected readonly falsePositiveSample =
     'See note (1) for details — the rest of this is ordinary prose, not a list.';
+
+  protected readonly markdownSample =
+    'Checked the **auth middleware** against `session_tokens` — see [the compliance doc](https://example.com/compliance) for context. Still open:\n\n- rotate the signing key\n- backfill expiry on old sessions\n- update the runbook';
 }
