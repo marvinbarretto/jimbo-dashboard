@@ -88,7 +88,13 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'none';
       gap: 0.4rem;
       min-width: 0;
     }
-    .item-header__left { flex: 1; }
+    /* overflow: hidden is load-bearing, not tidying — in a narrow calendar
+       block the nowrap children (seq, time) otherwise spill out of this box
+       and render *underneath* the lock/remove buttons. */
+    .item-header__left { flex: 1; overflow: hidden; }
+    /* The action buttons are the one thing that must never be squeezed or
+       overlapped; the text to their left ellipsises instead. */
+    .item-header__right { flex-shrink: 0; }
     .item-header__seq {
       font-size: 0.6rem;
       font-weight: 500;
@@ -101,6 +107,9 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'none';
       font-weight: 500;
       opacity: 0.85;
       white-space: nowrap;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .item-header__epic {
       font-size: 0.62rem;

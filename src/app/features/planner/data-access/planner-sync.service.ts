@@ -36,7 +36,10 @@ export interface ReconciledBlock extends SyncableBlock {
   readonly googleEventId: string;
 }
 
-const BLOCK_MINUTES = 25;
+// A block is 25 minutes of work in a 30-minute slot (the last 5 are the
+// break). The real calendar event books the whole slot, matching what the
+// planner grid renders — see the SLOT_MINUTES note in planner-page.ts.
+const SLOT_MINUTES = 30;
 
 // Same calendar JimboSuggestionsService reads. Marvin has reader access only
 // (shared calendar) — the owning account, and the only one that can write to
@@ -137,7 +140,7 @@ function deepLink(block: SyncableBlock): string {
 
 function endOf(block: SyncableBlock): string {
   const start = new Date(block.start);
-  return new Date(start.getTime() + block.size * BLOCK_MINUTES * 60_000).toISOString();
+  return new Date(start.getTime() + block.size * SLOT_MINUTES * 60_000).toISOString();
 }
 
 function toPrivateProps(block: SyncableBlock): Record<string, string> {

@@ -78,7 +78,16 @@ interface Interval {
 
 type Density = 'comfortable' | 'compact';
 
-const BLOCK_MINUTES = 25;
+// A pomodoro is 25 minutes of work, but it claims a 30-minute slot — the 5
+// minutes on the end are the break. That gap is why the planner reckons
+// entirely in slots: the row height, the snap, the real event duration and
+// every collision/allocation sum are all SLOT_MINUTES. The 25 survives only
+// as what a block *means* (block-card's "1×25m" label), never as geometry.
+//
+// Placing on a 25-minute cadence is what produced start times like 16:10;
+// a 30-minute cadence off an on-the-hour window start lands every block on
+// a :00 or :30 for free.
+const SLOT_MINUTES = 30;
 
 // Randomize-fill searches this daily window. Marvin works day or night, but
 // an unbounded search isn't meaningfully more useful than a wide one — keep
@@ -101,7 +110,7 @@ const SLOT_PX: Record<Density, number> = { comfortable: 56, compact: 38 };
 function totalSlotsInWindow(): number {
   const [startH, startM] = FILL_WINDOW_START.split(':').map(Number);
   const [endH, endM] = FILL_WINDOW_END.split(':').map(Number);
-  return ((endH * 60 + endM) - (startH * 60 + startM)) / BLOCK_MINUTES;
+  return ((endH * 60 + endM) - (startH * 60 + startM)) / SLOT_MINUTES;
 }
 
 const MINUTES_PER_WEEK = 7 * 24 * 60;
@@ -167,7 +176,9 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
       .map(i => ({ ...this.toBlockVM(i), locked: lockedIds.has(i.id) }));
   });
 
-  readonly queuedMinutes = computed(() => this.queue().reduce((sum, b) => sum + b.size, 0) * BLOCK_MINUTES);
+  // Slot minutes, not work minutes — this is "how much calendar do I still
+  // need to find", and a queued block needs its break time booked too.
+  readonly queuedMinutes = computed(() => this.queue().reduce((sum, b) => sum + b.size, 0) * SLOT_MINUTES);
   readonly lockedCount = computed(() =>
     this.placements().filter(b => b.locked).length + this.queue().filter(b => b.locked).length,
   );
@@ -180,13 +191,13 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
   // isn't work hours at all — sleep, evenings, weekends. Two different
   // questions ("is my work day full?" vs "how much of my week is mine?"),
   // not the same number reframed.
-  private readonly windowMinutes = totalSlotsInWindow() * BLOCK_MINUTES * 7;
+  private readonly windowMinutes = totalSlotsInWindow() * SLOT_MINUTES * 7;
 
   readonly busyMinutes = computed(() => {
     const suggestionMinutes = this.suggestions.events()
       .filter(ev => !this.sync.isOurs(ev))
       .reduce((sum, ev) => sum + minutesOf(toInterval(ev)), 0);
-    const placedMinutes = this.placements().reduce((sum, b) => sum + b.size * BLOCK_MINUTES, 0);
+    const placedMinutes = this.placements().reduce((sum, b) => sum + b.size * SLOT_MINUTES, 0);
     return suggestionMinutes + placedMinutes;
   });
 
@@ -199,7 +210,7 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
     const byProject = new Map<string, ProjectAllocation>();
     for (const b of this.placements()) {
       const existing = byProject.get(b.projectName);
-      const minutes = b.size * BLOCK_MINUTES;
+      const minutes = b.size * SLOT_MINUTES;
       byProject.set(b.projectName, existing
         ? { ...existing, minutes: existing.minutes + minutes }
         : { projectName: b.projectName, projectColor: b.projectColor, minutes });
@@ -232,8 +243,8 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
     stickyHeaderDates: true,
     firstDay: 1,
     nowIndicator: true,
-    slotDuration: `00:${BLOCK_MINUTES}:00`,
-    snapDuration: `00:${BLOCK_MINUTES}:00`,
+    slotDuration: `00:${SLOT_MINUTES}:00`,
+    snapDuration: `00:${SLOT_MINUTES}:00`,
     slotMinTime: `${FILL_WINDOW_START}:00`,
     slotMaxTime: `${FILL_WINDOW_END}:00`,
     editable: true,
@@ -272,7 +283,7 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
       const blockId = info.event.extendedProps['blockId'] as string | undefined;
       if (!blockId || !info.event.start || !info.event.end) return;
       const ms = info.event.end.getTime() - info.event.start.getTime();
-      const size = Math.max(1, Math.round(ms / (BLOCK_MINUTES * 60_000)));
+      const size = Math.max(1, Math.round(ms / (SLOT_MINUTES * 60_000)));
       this.updatePlacement(blockId, b => ({ ...b, size }));
     },
 
@@ -347,7 +358,7 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
         // throws on an undefined name, so it needs to be complete.
         return {
           title: block.title,
-          duration: { minutes: block.size * BLOCK_MINUTES },
+          duration: { minutes: block.size * SLOT_MINUTES },
           extendedProps: {
             blockId: block.id,
             seq: block.seq,
@@ -556,7 +567,7 @@ function toSuggestionEventInput(ev: SuggestionEvent): EventInput {
 
 function toBlockEventInput(b: PlacedBlock): EventInput {
   const start = new Date(b.start);
-  const end = new Date(start.getTime() + b.size * BLOCK_MINUTES * 60_000);
+  const end = new Date(start.getTime() + b.size * SLOT_MINUTES * 60_000);
   return {
     id: b.id,
     title: b.title,
@@ -594,14 +605,16 @@ function randomizeFill(
   const unplaced: RandomizeCandidate[] = [];
 
   for (const block of shuffle(candidates)) {
-    const durationMs = block.size * BLOCK_MINUTES * 60_000;
+    const durationMs = block.size * SLOT_MINUTES * 60_000;
     let placedOk = false;
 
     for (const date of shuffle(weekDates)) {
       const dayStart = new Date(`${date}T${FILL_WINDOW_START}:00`).getTime();
       const dayEnd = new Date(`${date}T${FILL_WINDOW_END}:00`).getTime();
       const candidateStarts: number[] = [];
-      for (let t = dayStart; t + durationMs <= dayEnd; t += BLOCK_MINUTES * 60_000) candidateStarts.push(t);
+      // Stepping by SLOT_MINUTES from an on-the-hour window start is what
+      // guarantees every candidate start is a :00 or :30.
+      for (let t = dayStart; t + durationMs <= dayEnd; t += SLOT_MINUTES * 60_000) candidateStarts.push(t);
 
       for (const slotStart of shuffle(candidateStarts)) {
         const slot: Interval = { start: slotStart, end: slotStart + durationMs };
@@ -638,7 +651,7 @@ function minutesOf(iv: Interval): number {
 
 function placedToInterval(b: PlacedBlock): Interval {
   const start = new Date(b.start).getTime();
-  return { start, end: start + b.size * BLOCK_MINUTES * 60_000 };
+  return { start, end: start + b.size * SLOT_MINUTES * 60_000 };
 }
 
 function shuffle<T>(arr: readonly T[]): T[] {
