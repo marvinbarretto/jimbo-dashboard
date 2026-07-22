@@ -2,11 +2,18 @@ import { Injectable, signal } from '@angular/core';
 
 export type ToastTone = 'success' | 'error' | 'info' | 'warn';
 
+/** A single inline affordance on a toast — in practice, undo. */
+export interface ToastAction {
+  label: string;
+  run: () => void;
+}
+
 export interface Toast {
   id: string;
   message: string;
   tone: ToastTone;
   count: number;
+  action?: ToastAction;
   // Set when this toast is the live aggregate for a coalescing group. Other
   // toasts pushed within the active window with the same (groupKey, tone) bump
   // this one's count instead of stacking new rows.
@@ -36,6 +43,25 @@ export class ToastService {
   error(message: string, ms = 5000): void   { this.push(message, 'error', ms); }
   info(message: string, ms = 3000): void    { this.push(message, 'info', ms); }
   warn(message: string, ms = 4000): void    { this.push(message, 'warn', ms); }
+
+  /**
+   * Toast carrying one inline action, typically undo.
+   *
+   * Deliberately skips coalescing: merging two of these would leave a single
+   * button standing for two different actions, and firing the wrong undo is
+   * worse than showing two rows. Longer default life than a plain toast for
+   * the same reason an unreachable action is worse than no action at all.
+   *
+   * @param message Text shown beside the action button.
+   * @param action  Label and callback for the button.
+   * @param opts.tone Visual tone (default `info`).
+   * @param opts.ms   Time before auto-dismiss (default 8000).
+   */
+  actionable(message: string, action: ToastAction, opts?: { tone?: ToastTone; ms?: number }): void {
+    const id = crypto.randomUUID();
+    this.toasts.update(ts => [...ts, { id, message, tone: opts?.tone ?? 'info', count: 1, action }]);
+    this.scheduleDismiss(id, opts?.ms ?? 8000);
+  }
 
   dismiss(id: string): void {
     this.toasts.update(ts => ts.filter(t => t.id !== id));

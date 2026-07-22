@@ -93,6 +93,35 @@ describe('ToastService', () => {
     expect(service.toasts().length).toBe(2);
   });
 
+  it('carries the action on an actionable toast', () => {
+    const run = vi.fn();
+    service.actionable('3 blocks unscheduled', { label: 'Undo', run });
+    const [toast] = service.toasts();
+    expect(toast.action?.label).toBe('Undo');
+    toast.action?.run();
+    expect(run).toHaveBeenCalledOnce();
+  });
+
+  it('never coalesces actionable toasts, so an action cannot stand for two operations', () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    service.beginCoalescing({ groupKey: 'planner.unschedule', successSummary: 'unscheduled' });
+    service.actionable('a', { label: 'Undo', run: first }, { tone: 'success' });
+    service.actionable('b', { label: 'Undo', run: second }, { tone: 'success' });
+    const ts = service.toasts();
+    expect(ts.length).toBe(2);
+    expect(ts[0].action?.run).toBe(first);
+    expect(ts[1].action?.run).toBe(second);
+  });
+
+  it('gives an actionable toast longer to be reached than a plain one', () => {
+    service.actionable('undo me', { label: 'Undo', run: vi.fn() });
+    vi.advanceTimersByTime(5000);
+    expect(service.toasts().length).toBe(1);
+    vi.advanceTimersByTime(3000);
+    expect(service.toasts().length).toBe(0);
+  });
+
   it('extends the dismiss timer on each bump', () => {
     service.beginCoalescing({ groupKey: 'g', successSummary: 's' });
     service.success('a', 1000);

@@ -22,6 +22,7 @@ import { VAULT_ITEMS_READ } from '@features/vault-items/data-access/vault-items.
 import { ProjectsService } from '@features/projects/data-access/projects.service';
 import { BlockCard } from '@shared/components/block-card/block-card';
 import { UiButton } from '@shared/components/ui-button/ui-button';
+import { ToastService } from '@shared/components/toast/toast.service';
 import { withVaultDetailModal } from '@shared/kanban/detail-modal';
 import { JimboSuggestionsService, type SuggestionEvent } from '../../data-access/jimbo-suggestions.service';
 import { PlannerSyncService } from '../../data-access/planner-sync.service';
@@ -133,6 +134,7 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
   private readonly sync = inject(PlannerSyncService);
   private readonly vaultItems = inject(VAULT_ITEMS_READ);
   private readonly projects = inject(ProjectsService);
+  private readonly toasts = inject(ToastService);
   private readonly queueEl = viewChild<ElementRef<HTMLElement>>('queueList');
   // Hit-testing target for drag-to-unschedule. Deliberately the whole panel
   // rather than `queueEl`: a collapsed list is display:none, so its rect is
@@ -356,15 +358,18 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
     const el = this.queueEl()?.nativeElement;
     if (!el) return;
     this.draggable = new Draggable(el, {
-      itemSelector: '.block-card',
+      // The `:not()` is the real lock gate: FullCalendar resolves the drag
+      // subject with elementClosest(target, itemSelector), so a locked card
+      // is never picked up at all. Previously it was gated in eventData
+      // below, which let you drag a locked card the whole way and then
+      // silently refused to land it — a drag that looks live and does
+      // nothing reads as a bug, not as a lock.
+      itemSelector: '.block-card:not(.block-card--locked)',
       eventData: (el) => {
         const blockId = el.getAttribute('data-block-id');
         const block = this.queue().find(b => b.id === blockId);
-        // Locked queue items refuse the drop: no blockId in extendedProps
-        // means eventReceive's own guard bails without placing it — the
-        // card can still be visually dragged (FullCalendar owns that part),
-        // it just doesn't land anywhere, matching "locked = can't move"
-        // for a calendar block too.
+        // Belt-and-braces behind itemSelector: eventReceive's own guard
+        // bails without placing when blockId is absent.
         if (!block || block.locked) return {};
         // Full extendedProps, not just blockId — FullCalendar renders this
         // via our own eventContent template immediately on drop, before
@@ -421,8 +426,10 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
   // a pure computed, on its own) and deletes the real event if it had one.
   unplace(blockId: string): void {
     const block = this.placements().find(b => b.id === blockId);
+    if (!block) return;
     this.placements.update(p => p.filter(b => b.id !== blockId));
-    if (block?.googleEventId) void this.sync.remove(block.googleEventId);
+    if (block.googleEventId) void this.sync.remove(block.googleEventId);
+    this.offerUndo([block], `Unscheduled “${block.title}”`);
   }
 
   // Bulk undo for randomize: every unlocked placement comes off the calendar
@@ -430,8 +437,32 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
   // contract as randomize itself.
   clearUnlocked(): void {
     const unlocked = this.placements().filter(b => !b.locked);
+    if (!unlocked.length) return;
     this.placements.update(p => p.filter(b => b.locked));
     for (const b of unlocked) if (b.googleEventId) void this.sync.remove(b.googleEventId);
+    this.offerUndo(unlocked, `${unlocked.length} block${unlocked.length === 1 ? '' : 's'} unscheduled`);
+  }
+
+  // Undo exists for Clear and drag-to-unschedule specifically because, unlike
+  // Randomize, repeating them doesn't get you back — they delete real
+  // calendar events, and the placement they destroyed is unrecoverable once
+  // the toast lapses.
+  private offerUndo(blocks: readonly PlacedBlock[], message: string): void {
+    this.toasts.actionable(message, { label: 'Undo', run: () => this.restore(blocks) });
+  }
+
+  private restore(blocks: readonly PlacedBlock[]): void {
+    // Anything already back on the board under the same id — re-placed by a
+    // Randomize in the meantime, say — is skipped rather than duplicated.
+    const present = new Set(this.placements().map(b => b.id));
+    // googleEventId is dropped on the way in: those events were deleted when
+    // the block was unscheduled, so each restored block needs a fresh one.
+    const restored = blocks
+      .filter(b => !present.has(b.id))
+      .map(b => ({ ...b, googleEventId: null }));
+    if (!restored.length) return;
+    this.placements.update(p => [...p, ...restored]);
+    for (const b of restored) void this.syncCreate(b);
   }
 
   // Applies a local edit to a placement and, if it's already synced to a

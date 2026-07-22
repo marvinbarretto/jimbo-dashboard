@@ -44,6 +44,23 @@
   letter-spacing: 0.02em;
 }
 
+// Reads as the toast's primary affordance — the dismiss × stays muted so the
+// two don't compete for the same glance.
+.toast__action {
+  flex-shrink: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius, 4px);
+  background: transparent;
+  color: var(--color-accent);
+  cursor: pointer;
+
+  &:hover { background: color-mix(in srgb, var(--color-accent) 14%, transparent); }
+}
+
 .toast__dismiss {
   background: none;
   border: none;
