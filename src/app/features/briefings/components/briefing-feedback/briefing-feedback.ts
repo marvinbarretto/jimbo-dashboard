@@ -4,8 +4,9 @@ import { BriefingFeedbackService } from '../../data-access/briefing-feedback.ser
 import { MissNoteDialog, type MissNoteDialogData } from './miss-note-dialog';
 
 // The tiny +/− verdict control that sits beside any report item. Ghost-weight
-// until used; a set verdict keeps its colour. A miss opens the note dialog so
-// the "why" can travel with the verdict; re-pressing ▼ reopens it to edit.
+// until used; a set verdict keeps its colour. ▲ records instantly; ▼ opens the
+// reason dialog and only records on save — every miss carries a steer, and
+// cancelling records nothing. Re-pressing ▼ reopens the dialog to edit.
 @Component({
   selector: 'app-briefing-feedback',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,8 +48,11 @@ export class BriefingFeedback {
   });
 
   protected rate(verdict: 'hit' | 'miss'): void {
+    if (verdict === 'miss') {
+      this.openNoteDialog();
+      return;
+    }
     void this.feedback.rate(this.briefingId(), this.section(), this.itemIndex(), verdict);
-    if (verdict === 'miss') this.openNoteDialog();
   }
 
   private openNoteDialog(): void {
