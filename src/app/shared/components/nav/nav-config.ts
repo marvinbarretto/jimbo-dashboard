@@ -66,8 +66,9 @@ export const navSections: readonly NavSection[] = [
       { href: '/calendar-settings', label: 'Calendars' },
       { href: '/jimbo-workspace', label: 'Workspace' },
       { href: '/shopping', label: 'Shopping' },
+      { href: '/briefings', label: 'Briefings' },
     ],
-    extraPaths: ['briefings', 'briefing'],
+    extraPaths: ['briefing'],
   },
   {
     id: 'system',
