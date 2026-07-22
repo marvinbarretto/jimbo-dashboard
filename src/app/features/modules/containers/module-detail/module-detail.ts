@@ -10,6 +10,7 @@ import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiMetaList } from '@shared/components/ui-meta-list/ui-meta-list';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
@@ -33,6 +34,7 @@ type LoadState =
     UiEmptyState,
     UiLoadingState,
     UiMetaList,
+    UiPage,
     UiPageHeader,
     UiSection,
     UiStack,

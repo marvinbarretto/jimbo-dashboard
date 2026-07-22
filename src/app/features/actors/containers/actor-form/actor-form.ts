@@ -9,10 +9,11 @@ import type { ActorKind, ActorRuntime } from '@domain/actors';
 import { ALL_CAPABILITIES, CAPABILITY_LABELS, type SkillCapability } from '@domain/capability';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 
 @Component({
   selector: 'app-actor-form',
-  imports: [ReactiveFormsModule, UiButton, UiButtonLink],
+  imports: [ReactiveFormsModule, UiButton, UiButtonLink, UiPage],
   templateUrl: './actor-form.html',
   styleUrl: './actor-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

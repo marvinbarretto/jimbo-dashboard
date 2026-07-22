@@ -1,9 +1,6 @@
-// Full-width, matching the journal page template's approach (no max-width
-// cap/centering) — a fixed-width column read as cramped for a wide board
-// like this one.
+// Horizontal gutter, vertical rhythm, and max-width are owned by <app-ui-page>.
 .planner {
   width: 100%;
-  padding: 2rem 2rem 3rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;

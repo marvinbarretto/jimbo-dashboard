@@ -7,6 +7,7 @@ import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { UiFormActions } from '@shared/components/ui-form-actions/ui-form-actions';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { SlugFromDirective } from '@shared/forms/slug-from.directive';
@@ -19,7 +20,7 @@ import { PROJECT_PALETTE } from '../../data-access/projects.service';
 
 @Component({
   selector: 'app-project-form',
-  imports: [ReactiveFormsModule, UiBackLink, UiButton, UiButtonLink, UiFormActions, UiPageHeader, UiStack, SlugFromDirective, UiTypeahead],
+  imports: [ReactiveFormsModule, UiBackLink, UiButton, UiButtonLink, UiFormActions, UiPage, UiPageHeader, UiStack, SlugFromDirective, UiTypeahead],
   templateUrl: './project-form.html',
   styleUrl: './project-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

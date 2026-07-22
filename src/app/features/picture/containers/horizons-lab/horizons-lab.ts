@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSegmented, type UiSegmentedOption } from '@shared/components/ui-segmented/ui-segmented';
@@ -78,7 +79,7 @@ function toHorizonItems(file: ContextFile | undefined): HorizonItem[] {
 
 @Component({
   selector: 'app-horizons-lab',
-  imports: [NgTemplateOutlet, RouterLink, UiStack, UiPageHeader, UiSegmented, UiBadge, KanbanColumn, UiProse, RelativeTimePipe],
+  imports: [NgTemplateOutlet, RouterLink, UiPage, UiStack, UiPageHeader, UiSegmented, UiBadge, KanbanColumn, UiProse, RelativeTimePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [`
     .horizons-lab__legend {
@@ -200,6 +201,7 @@ function toHorizonItems(file: ContextFile | undefined): HorizonItem[] {
     }
   `],
   template: `
+    <app-ui-page width="standard">
     <app-ui-stack gap="lg">
       <app-ui-page-header>
         <h1 uiPageHeaderTitle>Horizons Lab</h1>
@@ -277,6 +279,7 @@ function toHorizonItems(file: ContextFile | undefined): HorizonItem[] {
         </div>
       </ng-template>
     </app-ui-stack>
+    </app-ui-page>
   `,
 })
 export class HorizonsLab {

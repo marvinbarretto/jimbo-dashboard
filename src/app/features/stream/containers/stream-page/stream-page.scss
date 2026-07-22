@@ -1,7 +1,6 @@
+// Horizontal gutter, vertical rhythm, and max-width are owned by <app-ui-page>.
 :host {
   display: block;
-  padding-block: 1.5rem;
-  max-width: 1200px;
 }
 
 .stream-page__error {

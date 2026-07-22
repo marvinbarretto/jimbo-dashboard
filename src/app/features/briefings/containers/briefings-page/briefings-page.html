@@ -1,3 +1,4 @@
+<app-ui-page width="standard">
 <app-ui-page-header>
   <h1 uiPageHeaderTitle>Briefings</h1>
   <p uiPageHeaderHint>{{ headerHint() }}</p>
@@ -33,3 +34,4 @@
 <ng-template #linkCell let-context>
   <a class="briefings__link" [routerLink]="['/briefing', context.getValue()]">View →</a>
 </ng-template>
+</app-ui-page>

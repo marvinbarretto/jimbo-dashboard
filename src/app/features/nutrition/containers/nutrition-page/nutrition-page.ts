@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiBarChart, type BarSeries } from '@shared/components/ui-bar-chart/ui-bar-chart';
@@ -79,6 +80,7 @@ const SUPP_QUICK_ADD: readonly TrackerMeasure[] = [{ key: 'dose', label: 'dose' 
 @Component({
   selector: 'app-nutrition-page',
   imports: [
+    UiPage,
     UiStack,
     UiSection,
     UiBarChart,

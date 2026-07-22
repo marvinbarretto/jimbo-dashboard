@@ -1,11 +1,6 @@
 // Mobile-first single-card view. Footer actions are pinned at the
 // bottom on phone. Desktop just renders top-down with comfy gaps.
-:host {
-  display: block;
-  padding-block: 0.75rem;
-  max-width: 32rem;       // single-column reading width
-}
-
+// Vertical rhythm and max-width are now owned by <app-ui-page>.
 .swipe-page {
   display: flex;
   flex-direction: column;

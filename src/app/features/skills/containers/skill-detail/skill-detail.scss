@@ -1,7 +1,5 @@
+// Vertical rhythm and max-width are owned by <app-ui-page>.
 .skill-detail {
-  padding-block: 2rem;
-  max-width: 760px;
-
   &__title {
     display: flex;
     align-items: baseline;
@@ -36,8 +34,6 @@
 
 @media (max-width: 768px) {
   .skill-detail {
-    padding: 1rem;
-
     &__title {
       flex-wrap: wrap;
     }

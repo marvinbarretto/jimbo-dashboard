@@ -1,7 +1,4 @@
 .project-form {
-  padding-block: 2rem;
-  max-width: 560px;
-
   &__header h1 {
     margin: 0;
   }
@@ -46,8 +43,3 @@
   }
 }
 
-@media (max-width: 768px) {
-  .project-form {
-    padding: 1rem;
-  }
-}

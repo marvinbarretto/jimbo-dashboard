@@ -6,12 +6,13 @@ import { map } from 'rxjs';
 import { formatPageTitle } from '@app/app-title-strategy';
 import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { ModelsService } from '../../data-access/models.service';
 import { modelProvider, modelLocalName } from '@domain/models';
 
 @Component({
   selector: 'app-model-detail',
-  imports: [RouterLink, UiButtonLink, UiLoadingState],
+  imports: [RouterLink, UiButtonLink, UiLoadingState, UiPage],
   templateUrl: './model-detail.html',
   styleUrl: './model-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

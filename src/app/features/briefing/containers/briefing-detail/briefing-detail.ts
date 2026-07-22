@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
@@ -19,11 +20,10 @@ import type { BriefingAnalysis } from '../../../briefings/data-access/briefing.t
 @Component({
   selector: 'app-briefing-detail',
   imports: [
-    DatePipe, TitleCasePipe, UiPageHeader, UiStack,
+    DatePipe, TitleCasePipe, UiPage, UiPageHeader, UiStack,
     UiLoadingState, UiEmptyState, BriefingReport,
   ],
   templateUrl: './briefing-detail.html',
-  styles: [':host { display: block; max-width: 60rem; }'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BriefingDetail {

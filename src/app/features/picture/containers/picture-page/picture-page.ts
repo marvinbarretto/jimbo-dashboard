@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { take } from 'rxjs';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiInlineTabs, type UiInlineTabOption } from '@shared/components/ui-inline-tabs/ui-inline-tabs';
@@ -23,7 +24,7 @@ function isPictureTab(value: string | null): value is PictureTab {
 
 @Component({
   selector: 'app-picture-page',
-  imports: [UiStack, UiPageHeader, UiInlineTabs, BeliefsTab, ClarificationsTab, ContextTab],
+  imports: [UiPage, UiStack, UiPageHeader, UiInlineTabs, BeliefsTab, ClarificationsTab, ContextTab],
   templateUrl: './picture-page.html',
   styleUrl: './picture-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

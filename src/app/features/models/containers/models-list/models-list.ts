@@ -6,6 +6,7 @@ import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { UiDataTable } from '@shared/components/ui-data-table/ui-data-table';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { ModelsService } from '../../data-access/models.service';
@@ -27,6 +28,7 @@ function priceToMTok(s: string | undefined): number | null {
     UiDataTable,
     UiEmptyState,
     UiLoadingState,
+    UiPage,
     UiPageHeader,
     UiStack,
   ],

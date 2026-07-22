@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink } from '@angular/router';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { ModuleDocsService } from '../../data-access/module-docs.service';
@@ -14,6 +15,7 @@ import type { ModuleDocSummary } from '../../data-access/module-doc';
     RouterLink,
     UiEmptyState,
     UiLoadingState,
+    UiPage,
     UiPageHeader,
     UiStack,
     ModuleStalenessBadge,

@@ -7,6 +7,7 @@ import { ModelStacksService } from '../../data-access/model-stacks.service';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import type { ModelStack } from '@domain/model-stacks';
 
 const ID_PATTERN = /^[a-z0-9-]+$/;
@@ -21,7 +22,7 @@ function joinList(arr: readonly string[] | undefined): string {
 
 @Component({
   selector: 'app-model-stack-form',
-  imports: [ReactiveFormsModule, UiButton, UiButtonLink],
+  imports: [ReactiveFormsModule, UiButton, UiButtonLink, UiPage],
   templateUrl: './model-stack-form.html',
   styleUrl: './model-stack-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

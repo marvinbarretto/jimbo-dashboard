@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { EndpointPanel } from '../../components/endpoint-panel/endpoint-panel';
 import { DATA_PAGE_BY_KEY, type DataPageConfig } from '../../data-pages';
 
 @Component({
   selector: 'app-data-page',
-  imports: [EndpointPanel],
+  imports: [EndpointPanel, UiPage],
   templateUrl: './data-page.html',
   styleUrl: './data-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

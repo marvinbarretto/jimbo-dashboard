@@ -1,12 +1,4 @@
-:host {
-  display: block;
-  width: 100%;
-}
-
-.checkins {
-  max-width: 48rem;
-  padding-block: 2rem;
-}
+// Horizontal gutter, vertical rhythm, and max-width are owned by <app-ui-page>.
 
 .checkins__header {
   text-align: left;

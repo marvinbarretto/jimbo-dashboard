@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
@@ -45,7 +46,7 @@ const SETTINGS_ENTRIES: readonly SettingsEntry[] = [
 
 @Component({
   selector: 'app-settings-index',
-  imports: [UiButtonLink, UiPageHeader, UiSection, UiStack],
+  imports: [UiButtonLink, UiPage, UiPageHeader, UiSection, UiStack],
   templateUrl: './settings-index.html',
   styleUrl: './settings-index.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

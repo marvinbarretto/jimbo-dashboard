@@ -23,12 +23,10 @@
   --s-6: 2rem;      // 32px
   --page-inset: var(--s-6);
 
-  // Basic page: shell owns the horizontal gutter, page caps width + sets
-  // vertical rhythm, left-aligned like every other basic page. `overflow-x:
-  // clip` stops a rogue child (wide table, long URL) pushing past the viewport.
+  // Basic page: horizontal gutter is owned by the shell, max-width + vertical
+  // rhythm by <app-ui-page> (wrapping this component). `overflow-x: clip`
+  // stops a rogue child (wide table, long URL) pushing past the viewport.
   width: 100%;
-  max-width: 1440px;
-  padding-block: var(--page-inset);
   overflow-x: clip;
 
   // ── Header ────────────────────────────────────────────────────────
@@ -688,12 +686,6 @@
       border-left: none;
       padding-left: 0;
     }
-  }
-}
-
-@media (max-width: 768px) {
-  .project-landing {
-    --page-inset: var(--s-4);
   }
 }
 

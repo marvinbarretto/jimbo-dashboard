@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { formatPageTitle } from '@app/app-title-strategy';
 import { map } from 'rxjs';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import {
   type DayKey,
@@ -32,6 +33,7 @@ import { type JournalGranularity, currentKeyFor } from '../../utils/period-links
   selector: 'app-journal-body-page',
   imports: [
     UiLoadingState,
+    UiPage,
     UiStack,
     ExerciseDaySection,
     ExerciseSummarySection,
@@ -42,6 +44,7 @@ import { type JournalGranularity, currentKeyFor } from '../../utils/period-links
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <app-ui-page width="wide">
     <app-journal-period-header
       domain="body"
       [granularity]="granularity()"
@@ -62,6 +65,7 @@ import { type JournalGranularity, currentKeyFor } from '../../utils/period-links
         <app-training-fuel-section [from]="rangeFrom()" [to]="rangeTo()" />
       }
     </app-ui-stack>
+    </app-ui-page>
   `,
 })
 export class JournalBodyPage {

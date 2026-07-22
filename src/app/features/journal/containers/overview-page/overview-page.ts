@@ -6,6 +6,7 @@ import { formatPageTitle } from '@app/app-title-strategy';
 import { map } from 'rxjs';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { type DayKey, formatDayLong, isDayKey, todayKey } from '@shared/utils/date-keys';
 import { JournalDaySummary } from '../../components/journal-day-summary/journal-day-summary';
@@ -23,6 +24,7 @@ import { JournalDataService } from '../../data-access/journal-data.service';
   imports: [
     UiEmptyState,
     UiLoadingState,
+    UiPage,
     UiStack,
     JournalDaySummary,
     JournalPeriodHeader,
@@ -30,6 +32,7 @@ import { JournalDataService } from '../../data-access/journal-data.service';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <app-ui-page width="wide">
     <app-journal-period-header
       domain="overview"
       granularity="day"
@@ -55,6 +58,7 @@ import { JournalDataService } from '../../data-access/journal-data.service';
         <app-ui-empty-state title="No data" message="Couldn't load this day." />
       }
     </app-ui-stack>
+    </app-ui-page>
   `,
 })
 export class JournalOverviewPage {

@@ -1,7 +1,5 @@
+// Width, centering, and vertical page padding are owned by <app-ui-page>.
 .wiz {
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: 2rem 2rem 3rem;
   display: flex;
   flex-direction: column;
   gap: 1.75rem;

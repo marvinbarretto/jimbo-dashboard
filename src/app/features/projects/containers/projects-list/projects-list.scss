@@ -1,9 +1,5 @@
+// Horizontal gutter, vertical rhythm, and max-width are owned by <app-ui-page>.
 .projects-list {
-  // Horizontal gutter is owned by the app shell (.app-main__inner). The page
-  // only declares vertical rhythm + a max-width cap.
-  padding-block: 2rem 3rem;
-  max-width: 1600px;
-
   &__header h1 {
     margin: 0;
   }
@@ -79,10 +75,6 @@
 }
 
 @media (max-width: 768px) {
-  .projects-list {
-    padding-block: 1rem;
-  }
-
   .projects-list__grid {
     grid-template-columns: 1fr;
   }

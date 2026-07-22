@@ -3,6 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { TriageTasksService, type InboxTask, type TriageProposal, type TriageNowCachedResult } from '../triage-tasks/triage-tasks.service';
 
@@ -15,7 +16,7 @@ interface CardItem {
 
 @Component({
   selector: 'app-triage-swipe-page',
-  imports: [UiBadge, UiEmptyState, UiLoadingState, UiProse],
+  imports: [UiBadge, UiEmptyState, UiLoadingState, UiPage, UiProse],
   templateUrl: './triage-swipe-page.html',
   styleUrl: './triage-swipe-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

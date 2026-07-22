@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, TemplateRef, computed, inject, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { type CellContext, createColumnHelper, type ColumnDef } from '@tanstack/angular-table';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
@@ -12,7 +13,7 @@ import type { BriefingAnalysis, BriefingRating as Rating } from '../../data-acce
 
 @Component({
   selector: 'app-briefings-page',
-  imports: [RouterLink, UiPageHeader, UiLoadingState, UiEmptyState, UiDataTable, BriefingRating],
+  imports: [RouterLink, UiPage, UiPageHeader, UiLoadingState, UiEmptyState, UiDataTable, BriefingRating],
   templateUrl: './briefings-page.html',
   styleUrl: './briefings-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

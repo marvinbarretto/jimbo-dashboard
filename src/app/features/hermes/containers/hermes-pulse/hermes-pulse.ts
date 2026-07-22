@@ -2,13 +2,14 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { toSignal } from '@angular/core/rxjs-interop';
 import { interval, map, startWith } from 'rxjs';
 import { JobChip, jobChipKind, jobChipState, type JobChipKind, type JobChipState } from '@shared/components/job-chip/job-chip';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { HermesService } from '../../data-access/hermes.service';
 import type { HermesJob } from '../../hermes.types';
 import { formatCountdown, relativeTime, stateBadgeTone } from '../../hermes.utils';
 
 @Component({
   selector: 'app-hermes-pulse',
-  imports: [JobChip],
+  imports: [JobChip, UiPage],
   templateUrl: './hermes-pulse.html',
   styleUrl: './hermes-pulse.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

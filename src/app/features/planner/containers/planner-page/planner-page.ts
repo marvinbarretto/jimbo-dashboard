@@ -22,6 +22,7 @@ import { VAULT_ITEMS_READ } from '@features/vault-items/data-access/vault-items.
 import { ProjectsService } from '@features/projects/data-access/projects.service';
 import { BlockCard } from '@shared/components/block-card/block-card';
 import { UiButton } from '@shared/components/ui-button/ui-button';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { withVaultDetailModal } from '@shared/kanban/detail-modal';
 import { JimboSuggestionsService, type SuggestionEvent } from '../../data-access/jimbo-suggestions.service';
@@ -125,7 +126,7 @@ interface ProjectAllocation {
 @Component({
   selector: 'app-planner-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FullCalendarModule, BlockCard, UiButton, WatchQueuePanel],
+  imports: [FullCalendarModule, BlockCard, UiButton, UiPage, WatchQueuePanel],
   templateUrl: './planner-page.html',
   styleUrl: './planner-page.scss',
 })

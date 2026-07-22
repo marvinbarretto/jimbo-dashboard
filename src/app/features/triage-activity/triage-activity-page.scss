@@ -1,9 +1,4 @@
-:host {
-  display: block;
-  padding: 1.5rem 2rem;
-  max-width: 1400px;
-}
-
+// Vertical rhythm and max-width are owned by <app-ui-page>.
 .error {
   margin: 0;
   color: var(--color-warning, #c08b00);

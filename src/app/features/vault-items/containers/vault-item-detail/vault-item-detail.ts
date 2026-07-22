@@ -10,6 +10,7 @@ import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { formatPageTitle } from '@app/app-title-strategy';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { VaultItemsService } from '../../data-access/vault-items.service';
 import { VaultItemDetailBody } from '../../components/vault-item-detail-body/vault-item-detail-body';
 import type { DialogMode } from '../../dialog/vault-item-dialog-mode';
@@ -17,11 +18,12 @@ import { VaultItemDialogStore } from '../../dialog/vault-item-dialog-store';
 
 @Component({
   selector: 'app-vault-item-detail',
-  imports: [VaultItemDetailBody, RouterLink],
+  imports: [VaultItemDetailBody, RouterLink, UiPage],
   // Component-scoped store, one per page navigation. Body component shares
   // the instance via hierarchical DI.
   providers: [VaultItemDialogStore],
   template: `
+    <app-ui-page width="standard">
     @if (mode(); as m) {
       <app-vault-item-detail-body [mode]="m" surface="page" />
     } @else {
@@ -30,6 +32,7 @@ import { VaultItemDialogStore } from '../../dialog/vault-item-dialog-store';
         <p>Item not found.</p>
       </div>
     }
+    </app-ui-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

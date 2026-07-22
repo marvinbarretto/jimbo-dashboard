@@ -7,6 +7,7 @@ import { ModelsService } from '../../data-access/models.service';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import type { Model, ModelStatus, ModelSource, OpenRouterPricing } from '@domain/models';
 import { ALL_CAPABILITIES, CAPABILITY_LABELS, type SkillCapability } from '@domain/capability';
 
@@ -34,7 +35,7 @@ function joinList(arr: readonly string[] | undefined): string {
 
 @Component({
   selector: 'app-model-form',
-  imports: [ReactiveFormsModule, UiButton, UiButtonLink],
+  imports: [ReactiveFormsModule, UiButton, UiButtonLink, UiPage],
   templateUrl: './model-form.html',
   styleUrl: './model-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

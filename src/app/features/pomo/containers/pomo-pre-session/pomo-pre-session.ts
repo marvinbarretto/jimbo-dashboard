@@ -15,6 +15,7 @@ import { ProjectAvatar } from '@shared/components/project-avatar/project-avatar'
 import { UiStepper, type UiStepperStep } from '@shared/components/ui-stepper/ui-stepper';
 import { UiSelectChip } from '@shared/components/ui-select-chip/ui-select-chip';
 import { UiProgressMeter } from '@shared/components/ui-progress-meter/ui-progress-meter';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import type { Project } from '@domain/projects';
 import type { VaultItem } from '@domain/vault';
 
@@ -45,7 +46,7 @@ interface StoryVM {
 @Component({
   selector: 'app-pomo-pre-session',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, UiButton, ProjectAvatar, UiStepper, UiSelectChip, UiProgressMeter],
+  imports: [FormsModule, UiButton, ProjectAvatar, UiStepper, UiSelectChip, UiProgressMeter, UiPage],
   templateUrl: './pomo-pre-session.html',
   styleUrl: './pomo-pre-session.scss',
 })

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal }
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiRefreshControl } from '@shared/components/ui-refresh-control/ui-refresh-control';
 import { UiProse } from '@shared/components/ui-prose/ui-prose';
@@ -11,7 +12,7 @@ import { TriageActivityService, type TriageHistoryItem } from './triage-activity
 
 @Component({
   selector: 'app-triage-activity-page',
-  imports: [UiBadge, UiCluster, UiEmptyState, UiPageHeader, UiProse, UiRefreshControl, UiStack],
+  imports: [UiBadge, UiCluster, UiEmptyState, UiPage, UiPageHeader, UiProse, UiRefreshControl, UiStack],
   templateUrl: './triage-activity-page.html',
   styleUrl: './triage-activity-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

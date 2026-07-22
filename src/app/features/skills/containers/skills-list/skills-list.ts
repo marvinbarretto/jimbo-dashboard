@@ -7,6 +7,7 @@ import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiDataTable } from '@shared/components/ui-data-table/ui-data-table';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
@@ -23,6 +24,7 @@ import { skillNamespace, skillLocalName, type Skill } from '@domain/skills';
     UiDataTable,
     UiEmptyState,
     UiLoadingState,
+    UiPage,
     UiPageHeader,
     UiProse,
     UiStack,

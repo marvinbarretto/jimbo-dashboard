@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { firstValueFrom } from 'rxjs';
 import { CheckinsService } from '../../data-access/checkins.service';
 import { ToastService } from '@shared/components/toast/toast.service';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiButton } from '@shared/components/ui-button/ui-button';
@@ -20,7 +21,7 @@ const PERIODS = [
 @Component({
   selector: 'app-checkins-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [UiStack, UiCard, UiButton, UiCluster, UiBarChart, UiEmptyState, UiScorePicker],
+  imports: [UiPage, UiStack, UiCard, UiButton, UiCluster, UiBarChart, UiEmptyState, UiScorePicker],
   templateUrl: './checkins-page.html',
   styleUrl: './checkins-page.scss',
 })

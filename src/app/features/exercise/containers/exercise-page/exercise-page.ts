@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiButton } from '@shared/components/ui-button/ui-button';
@@ -67,7 +68,7 @@ const COVERAGE_LABEL: Record<TrackerPeriod, string> = {
 @Component({
   selector: 'app-exercise-page',
   imports: [
-    UiStack, UiSection, UiButton, UiBarChart, UiDonutChart, UiEmptyState, UiLoadingState,
+    UiPage, UiStack, UiSection, UiButton, UiBarChart, UiDonutChart, UiEmptyState, UiLoadingState,
     UiPeriodTotals, UiPeriodPager, ExerciseSessionRow,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

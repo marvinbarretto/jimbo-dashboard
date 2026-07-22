@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ModelsService } from '@features/models/data-access/models.service';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiTypeahead, type TypeaheadOption } from '@shared/components/ui-typeahead/ui-typeahead';
 import { HermesService } from '../../data-access/hermes.service';
 import type { HermesModelPrefs as ModelPrefsData } from '../../hermes.types';
@@ -22,7 +23,7 @@ const TIER_DESCRIPTIONS: Record<Tier, string> = {
 
 @Component({
   selector: 'app-hermes-model-prefs',
-  imports: [FormsModule, UiTypeahead],
+  imports: [FormsModule, UiPage, UiTypeahead],
   templateUrl: './hermes-model-prefs.html',
   styleUrl: './hermes-model-prefs.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

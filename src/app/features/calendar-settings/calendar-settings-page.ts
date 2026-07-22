@@ -5,6 +5,7 @@ import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
@@ -29,6 +30,7 @@ const SAVE_DEBOUNCE_MS = 300;
     UiBadge,
     UiEmptyState,
     UiLoadingState,
+    UiPage,
     UiPageHeader,
     UiSection,
     UiStack,

@@ -1,3 +1,4 @@
+<app-ui-page width="standard">
 @if (isLoading()) {
   <app-ui-loading-state label="Loading skill details" message="Fetching skill details." />
 } @else if (skill(); as skill) {
@@ -89,3 +90,4 @@
     <a routerLink="/config/skills">← Back to skills</a>
   </app-ui-empty-state>
 }
+</app-ui-page>

@@ -1,6 +1,5 @@
+// Vertical rhythm and max-width are owned by <app-ui-page>.
 .skills-list {
-  padding-block: 2rem;
-
   &__header h1 {
     margin: 0;
   }
@@ -22,8 +21,3 @@
   font-size: 0.85rem;
 }
 
-@media (max-width: 768px) {
-  .skills-list {
-    padding-block: 1rem;
-  }
-}

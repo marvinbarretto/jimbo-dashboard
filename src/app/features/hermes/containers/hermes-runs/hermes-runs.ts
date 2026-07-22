@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { toSignal } from '@angular/core/rxjs-interop';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { absoluteTime, relativeTime } from '@shared/utils/datetime.utils';
 import { Observable, catchError, map, of, shareReplay, switchMap, timer } from 'rxjs';
@@ -40,7 +41,7 @@ interface JobSummary {
 
 @Component({
   selector: 'app-hermes-runs',
-  imports: [UiBadge, UiLoadingState, UiSection],
+  imports: [UiBadge, UiLoadingState, UiPage, UiSection],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './hermes-runs.html',
   styleUrl: './hermes-runs.scss',

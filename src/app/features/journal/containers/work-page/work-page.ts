@@ -9,6 +9,7 @@ import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
@@ -82,6 +83,7 @@ interface RepoBucket {
     UiDonutChart,
     UiEmptyState,
     UiLoadingState,
+    UiPage,
     UiSection,
     UiStack,
     UiStatCard,

@@ -3,13 +3,14 @@ import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { ThreadCommands } from '@features/thread/commands/thread-commands';
 import { QuestionsService } from '../../data-access/questions.service';
 import { QuestionCard } from '../../components/question-card/question-card';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import type { CreateThreadMessagePayload } from '@domain/thread';
 
 type SortOrder = 'newest' | 'oldest';
 
 @Component({
   selector: 'app-questions-page',
-  imports: [QuestionCard],
+  imports: [QuestionCard, UiPage],
   templateUrl: './questions-page.html',
   styleUrl: './questions-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

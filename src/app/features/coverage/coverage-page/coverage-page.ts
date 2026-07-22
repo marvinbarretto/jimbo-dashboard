@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { CoverageService } from '../coverage.service';
 import type { FileRow } from '../coverage';
 
 @Component({
   selector: 'app-coverage-page',
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, UiPage],
   templateUrl: './coverage-page.html',
   styleUrl: './coverage-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

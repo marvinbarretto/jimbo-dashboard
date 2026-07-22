@@ -1,3 +1,4 @@
+<app-ui-page width="standard">
 @if (loading()) {
   <app-ui-loading-state message="Loading briefing…" />
 } @else if (error()) {
@@ -14,3 +15,4 @@
 } @else {
   <app-ui-empty-state title="Briefing not found" message="This briefing may have been removed." />
 }
+</app-ui-page>

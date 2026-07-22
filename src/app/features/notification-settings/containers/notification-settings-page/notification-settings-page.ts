@@ -6,6 +6,7 @@ import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
@@ -37,7 +38,7 @@ const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 @Component({
   selector: 'app-notification-settings-page',
-  imports: [DatePipe, UiBackLink, UiButton, UiCluster, UiLoadingState, UiPageHeader, UiSection, UiStack, UiToggle],
+  imports: [DatePipe, UiBackLink, UiButton, UiCluster, UiLoadingState, UiPage, UiPageHeader, UiSection, UiStack, UiToggle],
   templateUrl: './notification-settings-page.html',
   styleUrl: './notification-settings-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

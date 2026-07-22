@@ -14,6 +14,7 @@ import { FocusSessionsService } from '../../data-access/focus-sessions.service';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { VaultItemsService } from '../../../vault-items/data-access/vault-items.service';
 import { CheckinsService } from '../../../checkins/data-access/checkins.service';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiButton } from '@shared/components/ui-button/ui-button';
@@ -66,7 +67,7 @@ const MOOD_OPTIONS: { value: SessionMood; icon: string; label: string }[] = [
 @Component({
   selector: 'app-pomo-retro',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, UiStack, UiCard, UiButton, UiCluster, UiStatCard, UiEmptyState, UiDonutChart, UiProgressMeter, UiScorePicker, VaultChip],
+  imports: [FormsModule, UiPage, UiStack, UiCard, UiButton, UiCluster, UiStatCard, UiEmptyState, UiDonutChart, UiProgressMeter, UiScorePicker, VaultChip],
   templateUrl: './pomo-retro.html',
   styleUrl: './pomo-retro.scss',
 })

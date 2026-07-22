@@ -2,12 +2,14 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import { ApiSection } from '../../shared/api-section/api-section';
 import { JimboWorkspaceService } from '../../data-access/jimbo-workspace.service';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 
 @Component({
   selector: 'app-jimbo-workspace-mail',
-  imports: [ApiSection, JsonPipe],
+  imports: [ApiSection, JsonPipe, UiPage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <app-ui-page width="standard">
     <div class="dump">
       <app-api-section title="GET /api/google-mail/profile?account=jimbo" [source]="profile">
         <ng-template let-data>
@@ -21,6 +23,7 @@ import { JimboWorkspaceService } from '../../data-access/jimbo-workspace.service
         </ng-template>
       </app-api-section>
     </div>
+    </app-ui-page>
   `,
   styles: [`
     .dump { display: flex; flex-direction: column; gap: 1.5rem; }

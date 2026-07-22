@@ -4,6 +4,7 @@ import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
@@ -110,6 +111,7 @@ function fmtDuration(ms: number | null): string {
     UiBadge,
     UiCluster,
     UiEmptyState,
+    UiPage,
     UiPageHeader,
     UiStack,
   ],

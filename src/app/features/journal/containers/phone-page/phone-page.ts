@@ -8,6 +8,7 @@ import { map } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
@@ -68,6 +69,7 @@ interface ApiPhoneBundle {
   imports: [
     UiBarChart,
     UiLoadingState,
+    UiPage,
     UiSection,
     UiStack,
     UiStatCard,
@@ -78,6 +80,7 @@ interface ApiPhoneBundle {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <app-ui-page width="wide">
     <app-journal-period-header
       domain="phone"
       [granularity]="granularity()"
@@ -134,6 +137,7 @@ interface ApiPhoneBundle {
         <app-journal-consumption-section [events]="rangeYoutube()" />
       }
     </app-ui-stack>
+    </app-ui-page>
   `,
   styleUrl: '../../journal-sections.scss',
 })

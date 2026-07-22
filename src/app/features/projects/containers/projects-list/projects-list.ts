@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { Dialog } from '@angular/cdk/dialog';
 import { UiAddTile } from '@shared/components/ui-add-tile/ui-add-tile';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiInlineTabs, type UiInlineTabOption } from '@shared/components/ui-inline-tabs/ui-inline-tabs';
@@ -18,7 +19,7 @@ import { VaultItemsService } from '../../../vault-items/data-access/vault-items.
 
 @Component({
   selector: 'app-projects-list',
-  imports: [CdkDrag, CdkDropList, UiAddTile, UiPageHeader, UiStack, ProjectCard, UiInlineTabs, EpicMomentumRow],
+  imports: [CdkDrag, CdkDropList, UiAddTile, UiPage, UiPageHeader, UiStack, ProjectCard, UiInlineTabs, EpicMomentumRow],
   templateUrl: './projects-list.html',
   styleUrl: './projects-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

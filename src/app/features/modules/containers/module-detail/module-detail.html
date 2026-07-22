@@ -1,3 +1,4 @@
+<app-ui-page width="standard">
 @if (isLoading()) {
   <app-ui-loading-state label="Loading module doc" message="Fetching the module documentation." />
 } @else if (doc(); as doc) {
@@ -85,3 +86,4 @@
     <a routerLink="/modules">← Back to module docs</a>
   </app-ui-empty-state>
 }
+</app-ui-page>

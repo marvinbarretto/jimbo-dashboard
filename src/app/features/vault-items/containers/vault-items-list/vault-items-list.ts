@@ -3,6 +3,7 @@ import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TableShell } from '@shared/components/table-shell/table-shell';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { VaultItemsService } from '../../data-access/vault-items.service';
@@ -33,7 +34,7 @@ interface CountedOption<T> {
 
 @Component({
   selector: 'app-vault-items-list',
-  imports: [RouterLink, FormsModule, TableShell, EntityChip, RelativeTimePipe, UiTypeahead],
+  imports: [RouterLink, FormsModule, TableShell, UiPage, EntityChip, RelativeTimePipe, UiTypeahead],
   templateUrl: './vault-items-list.html',
   styleUrl: './vault-items-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

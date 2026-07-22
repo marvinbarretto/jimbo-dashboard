@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiSection } from '@shared/components/ui-section/ui-section';
@@ -15,6 +16,7 @@ import { ShoppingService, type CreateShoppingItemPayload } from '../../data-acce
   selector: 'app-shopping-list',
   imports: [
     ReactiveFormsModule,
+    UiPage,
     UiPageHeader,
     UiCard,
     UiSection,

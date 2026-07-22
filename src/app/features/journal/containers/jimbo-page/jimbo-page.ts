@@ -4,6 +4,7 @@ import { Title } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { formatPageTitle } from '@app/app-title-strategy';
 import { map } from 'rxjs';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import {
   dayWindowIso,
@@ -27,6 +28,7 @@ import { type JournalGranularity, currentKeyFor } from '../../utils/period-links
 @Component({
   selector: 'app-journal-jimbo-page',
   imports: [
+    UiPage,
     UiStack,
     JournalAgentsSection,
     JournalBriefingsSection,
@@ -35,6 +37,7 @@ import { type JournalGranularity, currentKeyFor } from '../../utils/period-links
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <app-ui-page width="wide">
     <app-journal-period-header
       domain="jimbo"
       [granularity]="granularity()"
@@ -46,6 +49,7 @@ import { type JournalGranularity, currentKeyFor } from '../../utils/period-links
       <app-journal-agents-section [since]="since()" [until]="until()" />
       <app-journal-mcp-section [since]="since()" [until]="until()" />
     </app-ui-stack>
+    </app-ui-page>
   `,
 })
 export class JournalJimboPage {

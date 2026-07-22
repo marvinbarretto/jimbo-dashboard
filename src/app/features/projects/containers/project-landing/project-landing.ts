@@ -15,6 +15,7 @@ import { UiInlineEdit } from '@shared/components/ui-inline-edit/ui-inline-edit';
 import { withVaultDetailModal } from '@shared/kanban/detail-modal';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
@@ -123,6 +124,7 @@ interface ProjectActivityItem {
     UiCard,
     UiCluster,
     UiEmptyState,
+    UiPage,
     UiPageHeader,
     UiSection,
     UiStack,

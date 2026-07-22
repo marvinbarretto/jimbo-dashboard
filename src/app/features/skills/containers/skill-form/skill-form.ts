@@ -16,6 +16,7 @@ import { SkillsService } from '../../data-access/skills.service';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import type { Skill } from '@domain/skills';
 import { ALL_CAPABILITIES, CAPABILITY_LABELS, type SkillCapability } from '@domain/capability';
 
@@ -31,7 +32,7 @@ function joinList(arr: readonly string[] | undefined): string {
 
 @Component({
   selector: 'app-skill-form',
-  imports: [ReactiveFormsModule, UiButton, UiButtonLink],
+  imports: [ReactiveFormsModule, UiButton, UiButtonLink, UiPage],
   templateUrl: './skill-form.html',
   styleUrl: './skill-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

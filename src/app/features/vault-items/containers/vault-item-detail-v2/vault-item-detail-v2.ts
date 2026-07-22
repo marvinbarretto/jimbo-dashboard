@@ -10,6 +10,7 @@ import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { formatPageTitle } from '@app/app-title-strategy';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { VaultItemsService } from '../../data-access/vault-items.service';
 import { VaultItemDetailBodyV2 } from '../../components/vault-item-detail-body-v2/vault-item-detail-body-v2';
 import type { DialogMode } from '../../dialog/vault-item-dialog-mode';
@@ -24,9 +25,10 @@ import { VaultItemDialogStore } from '../../dialog/vault-item-dialog-store';
  */
 @Component({
   selector: 'app-vault-item-detail-v2',
-  imports: [VaultItemDetailBodyV2, RouterLink],
+  imports: [VaultItemDetailBodyV2, RouterLink, UiPage],
   providers: [VaultItemDialogStore],
   template: `
+    <app-ui-page width="standard">
     @if (mode(); as m) {
       <app-vault-item-detail-body-v2 [mode]="m" surface="page" />
     } @else {
@@ -35,6 +37,7 @@ import { VaultItemDialogStore } from '../../dialog/vault-item-dialog-store';
         <p>Item not found.</p>
       </div>
     }
+    </app-ui-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

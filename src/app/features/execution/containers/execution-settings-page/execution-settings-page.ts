@@ -3,6 +3,7 @@ import { ToastService } from '@shared/components/toast/toast.service';
 import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
@@ -10,7 +11,7 @@ import { ExecutionConfigService, type ExecutionConfigValue } from '@features/exe
 
 @Component({
   selector: 'app-execution-settings-page',
-  imports: [UiBackLink, UiButton, UiLoadingState, UiPageHeader, UiSection, UiStack],
+  imports: [UiBackLink, UiButton, UiLoadingState, UiPage, UiPageHeader, UiSection, UiStack],
   templateUrl: './execution-settings-page.html',
   styleUrl: './execution-settings-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -3,6 +3,7 @@ import { ToastService } from '@shared/components/toast/toast.service';
 import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
@@ -12,7 +13,7 @@ const EXECUTOR_OPTIONS: readonly GroomingAssessmentExecutor[] = ['boris', 'kippe
 
 @Component({
   selector: 'app-grooming-settings-page',
-  imports: [UiBackLink, UiButton, UiLoadingState, UiPageHeader, UiSection, UiStack],
+  imports: [UiBackLink, UiButton, UiLoadingState, UiPage, UiPageHeader, UiSection, UiStack],
   templateUrl: './grooming-settings-page.html',
   styleUrl: './grooming-settings-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

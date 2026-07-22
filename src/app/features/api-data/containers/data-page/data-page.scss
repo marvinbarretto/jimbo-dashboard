@@ -1,8 +1,6 @@
 @use 'breakpoints' as bp;
 
-.data-page {
-  padding-block: 1.5rem;
-}
+// Vertical rhythm and max-width for .data-page are owned by <app-ui-page>.
 
 .data-page__header {
   margin-bottom: 1rem;
@@ -30,10 +28,6 @@
 }
 
 @include bp.tablet {
-  .data-page {
-    padding-block: 1rem;
-  }
-
   .data-page__grid {
     grid-template-columns: 1fr;
   }

@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiMetaList } from '@shared/components/ui-meta-list/ui-meta-list';
@@ -15,9 +16,8 @@ import type { EmailReport } from '../../mail-activity.service';
 
 @Component({
   selector: 'app-email-detail',
-  imports: [DatePipe, UiPageHeader, UiSection, UiMetaList, UiStack, UiLoadingState, UiEmptyState],
+  imports: [DatePipe, UiPage, UiPageHeader, UiSection, UiMetaList, UiStack, UiLoadingState, UiEmptyState],
   templateUrl: './email-detail.html',
-  styles: [':host { display: block; max-width: 60rem; }'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EmailDetail {

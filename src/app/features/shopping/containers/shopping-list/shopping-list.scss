@@ -2,12 +2,7 @@
 // the global theme tokens (--color-border, --color-surface, --color-text).
 // Local styles cover bare elements (input, ul, li, anchor) that have no
 // shared wrapper component yet.
-
-:host {
-  display: block;
-  max-width: 720px;
-  padding-block: 1.5rem;
-}
+// Horizontal gutter, vertical rhythm, and max-width are owned by <app-ui-page>.
 
 .add-form {
   display: block;

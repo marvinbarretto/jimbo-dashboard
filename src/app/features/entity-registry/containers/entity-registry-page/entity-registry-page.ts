@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { EntityRegistryService } from '../../data-access/entity-registry.service';
 import type { EntityRegistryKind } from '@domain/entity-registry';
 
@@ -7,7 +8,7 @@ type KindFilter = 'all' | EntityRegistryKind;
 
 @Component({
   selector: 'app-entity-registry-page',
-  imports: [FormsModule],
+  imports: [FormsModule, UiPage],
   templateUrl: './entity-registry-page.html',
   styleUrl: './entity-registry-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

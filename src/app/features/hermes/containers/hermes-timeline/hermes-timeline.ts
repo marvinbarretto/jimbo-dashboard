@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { interval, map, startWith } from 'rxjs';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { HermesService } from '../../data-access/hermes.service';
 import type { HermesJob } from '../../hermes.types';
 import { dayPercent, formatTime, relativeTime, stateBadgeTone, todayFireTimes } from '../../hermes.utils';
@@ -18,6 +19,7 @@ interface UpcomingFire {
 
 @Component({
   selector: 'app-hermes-timeline',
+  imports: [UiPage],
   templateUrl: './hermes-timeline.html',
   styleUrl: './hermes-timeline.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

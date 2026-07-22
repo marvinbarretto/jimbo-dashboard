@@ -13,6 +13,7 @@ import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiMetaList } from '@shared/components/ui-meta-list/ui-meta-list';
+import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
@@ -21,7 +22,7 @@ import { skillNamespace, skillLocalName } from '@domain/skills';
 
 @Component({
   selector: 'app-skill-detail',
-  imports: [RouterLink, UiBreadcrumb, UiBadge, UiButtonLink, UiCard, UiCluster, UiEmptyState, UiLoadingState, UiMetaList, UiPageHeader, UiSection, UiStack],
+  imports: [RouterLink, UiBreadcrumb, UiBadge, UiButtonLink, UiCard, UiCluster, UiEmptyState, UiLoadingState, UiMetaList, UiPage, UiPageHeader, UiSection, UiStack],
   templateUrl: './skill-detail.html',
   styleUrl: './skill-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
