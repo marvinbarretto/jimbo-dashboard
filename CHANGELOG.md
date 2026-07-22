@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.122](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.121...v0.0.122) (2026-07-22)
+
+
+### Features
+
+* **planner:** undo unscheduling, and stop locked cards faking a drag ([2814c56](https://github.com/marvinbarretto/jimbo-dashboard/commit/2814c565b32e77d784c083691cb5d657f93ce9c5))
+
+
+### Code Refactoring
+
+* **briefings:** move archive table onto UiDataTable, add nav entry ([8e9a20a](https://github.com/marvinbarretto/jimbo-dashboard/commit/8e9a20ac857230f936d7f43cba0765a2e9e4c9d5))
+* **planner:** read token for the watch queue panel ([e70af38](https://github.com/marvinbarretto/jimbo-dashboard/commit/e70af38e4a3f08b329cc57fffea97d783c605433))
+
 ### [0.0.121](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.120...v0.0.121) (2026-07-22)
 
 
