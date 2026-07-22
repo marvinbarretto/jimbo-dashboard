@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.123](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.122...v0.0.123) (2026-07-22)
+
+
+### Features
+
+* **briefing:** living report — inline answers, per-item hit/miss feedback ([14cb400](https://github.com/marvinbarretto/jimbo-dashboard/commit/14cb4004e1591eb07fb3bd9ee28a8e31ce269a30))
+* **briefing:** v2 report reading surface + ui-lab section ([1dcf67a](https://github.com/marvinbarretto/jimbo-dashboard/commit/1dcf67a7baead9b5864f9fdff4347c1a914af7ac))
+* **shared:** global report vocabulary — the terminal broadsheet ([338ab55](https://github.com/marvinbarretto/jimbo-dashboard/commit/338ab55cd53b3f079feabbc1a0cc4a44e3736858))
+* **ui-lab:** clarification-prompt section — all states frozen for tuning ([b2a7137](https://github.com/marvinbarretto/jimbo-dashboard/commit/b2a713743bd7de33703961f8c1976b43c9fac8f6))
+
+
+### Code Refactoring
+
+* narrow VAULT-COMMANDS-001 instead of working around it ([2bedd4a](https://github.com/marvinbarretto/jimbo-dashboard/commit/2bedd4a4468259bf2093885a8826c7932911d57f))
+
 ### [0.0.122](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.121...v0.0.122) (2026-07-22)
 
 
