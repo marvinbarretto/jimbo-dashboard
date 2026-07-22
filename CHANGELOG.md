@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.134](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.133...v0.0.134) (2026-07-22)
+
+
+### Features
+
+* **briefing:** calendar board sticks below the header while the report scrolls ([af09733](https://github.com/marvinbarretto/jimbo-dashboard/commit/af09733cb7192d273245161b729c8192dec6f979))
+
 ### [0.0.133](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.132...v0.0.133) (2026-07-22)
 
 
