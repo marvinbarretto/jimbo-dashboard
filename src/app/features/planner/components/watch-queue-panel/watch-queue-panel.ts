@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { WatchQueueService } from '../../data-access/watch-queue.service';
+import { WATCH_QUEUE_READ } from '../../data-access/watch-queue.read';
 
 /**
  * The watch queue, as a plain list.
@@ -68,7 +68,7 @@ import { WatchQueueService } from '../../data-access/watch-queue.service';
   `,
 })
 export class WatchQueuePanel implements OnInit {
-  protected readonly svc = inject(WatchQueueService);
+  protected readonly svc = inject(WATCH_QUEUE_READ);
 
   protected readonly collapsed = signal(false);
 

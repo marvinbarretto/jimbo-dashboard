@@ -111,7 +111,8 @@ the canonical Angular DI idiom (`inject(TOKEN)`) — matches
 `inject(DOCUMENT)`, `inject(MAT_DIALOG_DATA)` etc.
 
 Sibling read tokens for `actors`, `projects`, `thread`, etc. will land as
-their consumers need them.
+their consumers need them. Shipped so far: `VAULT_ITEMS_READ`,
+`NUTRITION_READ`, `WATCH_QUEUE_READ`.
 
 #### Known violations of VAULT-COMMANDS-001
 
@@ -138,6 +139,36 @@ maturity ratchet.
 - `features/api-data/data-pages.ts` — its only data-access import is type-only; now allowed under `allowTypeImports`
 - `features/api-data/components/dataset-card/dataset-card.ts` — file no longer exists; stale entry removed
 - `features/grooming/components/grooming-card/grooming-card.ts` — switched to `inject(VAULT_ITEMS_READ)` for the parent-seq lookup; thread coupling already migrated to `ThreadCommands` in an earlier commit
+- `features/planner/components/watch-queue-panel/watch-queue-panel.ts` — switched to `inject(WATCH_QUEUE_READ)`; the service is read-only by design, so a read token was the whole fix
+
+#### Unpinned violations — the ratchet has slipped
+
+`npm run lint` is currently **red on 13 errors across 8 files**, none of
+which are on the "Known violations" list above and none of which are
+path-exempted in `eslint.config.js`. They post-date the rule: the step 4
+process ("decide what to do with existing violations — fix or pin") was
+skipped, so they accumulated silently.
+
+This matters more than any single entry. A permanently-red lint stops being
+a signal — once it's normal, violation #15 is invisible, and the exemption
+list stops being the maturity ratchet it was designed as.
+
+| File | Service imported |
+|------|------------------|
+| `features/journal/components/journal-agents-section/` | `agent-runs.service` |
+| `features/journal/components/journal-briefings-section/` | `briefings.service` |
+| `features/journal/components/journal-code-sessions-section/` | `projects.service` |
+| `features/journal/components/journal-day-summary/` | `agent-runs`, `exercise`, `nutrition`, `journal-data` |
+| `features/journal/components/journal-timeline-section/` | `projects.service` |
+| `features/journal/components/training-fuel-section/` | `exercise`, `nutrition` |
+| `features/picture/components/belief-card/` | `interrogate-entity.service` |
+
+Two of these need no new token at all — `NUTRITION_READ` already exists and
+covers the `nutrition.service` imports in `journal-day-summary` and
+`training-fuel-section`. The rest need sibling read tokens (`exercise`,
+`projects`, `agent-runs`, `briefings`, `journal-data`, `interrogate-entity`)
+or, where the component should not be fetching at all, the parent-passes-
+inputs treatment the legacy table prescribes.
 
 ### THREAD-COMMANDS-002 — Thread mutations go through ThreadCommands
 
