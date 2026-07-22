@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { BriefingFeedback } from '../../../briefings/components/briefing-feedback/briefing-feedback';
@@ -39,38 +40,59 @@ interface BoardColumn {
 // pencilled column also hosts the briefing's own suggested_blocks, which is
 // why the report hides its Suggested blocks section on this page. Columns
 // fetch independently so one bad calendar never blanks the board.
+//
+// Freshness: fetches on load and again whenever the tab regains visibility —
+// a tab left open overnight re-anchors "today" and re-dims past events on
+// return. No interval polling; refocus covers the real "came back later" case.
 @Component({
   selector: 'app-calendar-board',
   imports: [BriefingFeedback],
   templateUrl: './calendar-board.html',
   styleUrl: './calendar-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(document:visibilitychange)': 'onVisibilityChange()',
+  },
 })
 export class CalendarBoard {
+  private readonly document = inject(DOCUMENT);
+
   readonly briefingId = input.required<number>();
   readonly suggestedBlocks = input<SuggestedBlock[]>([]);
 
-  // Day window is fixed at construction — the board is a snapshot, and a
-  // stale "today" after midnight is corrected by any navigation/reload.
-  private readonly now = new Date();
-  private readonly todayKey = dateKey(this.now);
-  private readonly tomorrowKey = dateKey(new Date(this.now.getFullYear(), this.now.getMonth(), this.now.getDate() + 1));
+  private readonly refreshedAt = signal(new Date());
 
-  protected readonly todayLabel = this.now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' });
-  protected readonly tomorrowLabel = new Date(this.now.getFullYear(), this.now.getMonth(), this.now.getDate() + 1)
-    .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' });
+  private readonly window = computed(() => {
+    const now = this.refreshedAt();
+    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    return {
+      now,
+      todayKey: dateKey(now),
+      tomorrowKey: dateKey(tomorrow),
+      since: dayStart.toISOString(),
+      until: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2).toISOString(),
+      todayLabel: now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' }),
+      tomorrowLabel: tomorrow.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' }),
+    };
+  });
 
-  // Explicit since/until rather than days=N: days counts from *now*, which
-  // drops today's already-finished events and past-dimming never renders.
-  private readonly since = new Date(this.now.getFullYear(), this.now.getMonth(), this.now.getDate()).toISOString();
-  private readonly until = new Date(this.now.getFullYear(), this.now.getMonth(), this.now.getDate() + 2).toISOString();
+  protected readonly todayLabel = computed(() => this.window().todayLabel);
+  protected readonly tomorrowLabel = computed(() => this.window().tomorrowLabel);
 
   // One resource per configured source; columns aggregate their own sources.
+  // Requests read the window signal, so a day rollover refetches by itself;
+  // same-day refocus goes through reload() below.
   private readonly sourceResources = CALENDAR_BOARD_COLUMNS.map((config) =>
     config.sources.map((src) =>
       httpResource<{ events: RawCalEvent[] }>(() => ({
         url: `${environment.dashboardApiUrl}/api/google-calendar/events`,
-        params: { since: this.since, until: this.until, calendarId: src.calendarId, account: src.account },
+        params: {
+          since: this.window().since,
+          until: this.window().until,
+          calendarId: src.calendarId,
+          account: src.account,
+        },
       })),
     ),
   );
@@ -84,11 +106,19 @@ export class CalendarBoard {
       return {
         config,
         loading,
-        today: { events: this.dayEvents(events, this.todayKey), failed },
-        tomorrow: { events: this.dayEvents(events, this.tomorrowKey), failed },
+        today: { events: this.dayEvents(events, this.window().todayKey), failed },
+        tomorrow: { events: this.dayEvents(events, this.window().tomorrowKey), failed },
       };
     }),
   );
+
+  protected onVisibilityChange(): void {
+    if (this.document.hidden) return;
+    this.refreshedAt.set(new Date());
+    for (const column of this.sourceResources) {
+      for (const resource of column) resource.reload();
+    }
+  }
 
   // One 🍅 per pomodoro, capped like the report's ▰-meter so an outlier
   // suggestion can't wrap the row.
@@ -99,7 +129,7 @@ export class CalendarBoard {
   private dayEvents(raw: RawCalEvent[], day: string): BoardEvent[] {
     return raw
       .filter((e) => onDay(e, day))
-      .map((e) => toBoardEvent(e, this.now))
+      .map((e) => toBoardEvent(e, this.window().now))
       .sort((a, b) => a.sortKey.localeCompare(b.sortKey));
   }
 }

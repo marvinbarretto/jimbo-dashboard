@@ -11,7 +11,7 @@
       @if (col.loading) {
         <div class="cal-board__skeleton" aria-label="Loading calendar"></div>
       } @else {
-        <h4 class="cal-board__day">Today · {{ todayLabel }}</h4>
+        <h4 class="cal-board__day">Today · {{ todayLabel() }}</h4>
         @if (col.today.failed) {
           <p class="cal-board__error">⚠ couldn't load</p>
         } @else {
@@ -39,7 +39,7 @@
           }
         }
 
-        <h4 class="cal-board__day">Tomorrow · {{ tomorrowLabel }}</h4>
+        <h4 class="cal-board__day">Tomorrow · {{ tomorrowLabel() }}</h4>
         @if (col.tomorrow.failed) {
           <p class="cal-board__error">⚠ couldn't load</p>
         } @else {
