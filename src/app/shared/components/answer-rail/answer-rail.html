@@ -1,0 +1,36 @@
+@if (state() === 'open' || state() === 'sending') {
+  @if (options() && options()!.length) {
+    <div class="rail__options">
+      @for (opt of options(); track opt) {
+        <button type="button" class="rail__option" [disabled]="busy()" (click)="selectOption(opt)">{{ opt }}</button>
+      }
+    </div>
+  }
+  <form class="rail__form" [formGroup]="form" (ngSubmit)="submitText()">
+    @if (richText()) {
+      <app-smart-composer-input class="rail__input" formControlName="reply"
+        [placeholder]="inputPlaceholder()" ariaLabel="Reply body"
+        (keydown.meta.enter)="submitText()" (keydown.ctrl.enter)="submitText()" />
+    } @else {
+      <input class="rail__input" type="text" formControlName="reply" name="reply"
+        [placeholder]="inputPlaceholder()" [attr.disabled]="busy() ? '' : null" />
+    }
+    <button type="submit" class="rail__submit" [disabled]="busy() || form.invalid">Send</button>
+  </form>
+  @if (dismissible()) {
+    <div class="rail__dismiss-row">
+      <button type="button" class="rail__dismiss" [disabled]="busy()" (click)="dismissRequested.emit()">dismiss</button>
+    </div>
+  }
+} @else if (state() === 'acked') {
+  @if (ackMessage(); as msg) {
+    <p class="rail__ack">{{ msg }}</p>
+  }
+} @else if (state() === 'dismissed') {
+  <p class="rail__dismissed">{{ dismissedMessage() }}</p>
+} @else if (state() === 'error') {
+  <p class="rail__error">
+    {{ errorMessage() }}
+    <button type="button" class="rail__retry" (click)="retryRequested.emit()">Try again</button>
+  </p>
+}
