@@ -24,9 +24,12 @@
           @if (col.config.pencilled) {
             @for (blk of suggestedBlocks(); track $index) {
               <div class="cal-board__event cal-board__event--block">
-                <span class="cal-board__time">{{ blk.start_hint || blk.constraint }}</span>
-                <span class="cal-board__title">{{ blk.title }}</span>
-                <span class="cal-board__size">{{ blk.size_blocks }} blk</span>
+                <div class="cal-board__block-body">
+                  <span class="cal-board__title">{{ blk.title }}</span>
+                  <span class="cal-board__meta">
+                    {{ blk.size_blocks }} blk · {{ blk.start_hint || blk.constraint }}
+                  </span>
+                </div>
               </div>
             }
           }

@@ -77,9 +77,14 @@
   overflow-wrap: anywhere;
 }
 
-.cal-board__size {
-  margin-left: auto;
-  flex-shrink: 0;
+.cal-board__block-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.cal-board__meta {
   font-family: var(--font-mono);
   font-size: 0.65rem;
   color: var(--color-text-muted);
