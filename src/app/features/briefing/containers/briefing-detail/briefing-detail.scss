@@ -8,6 +8,13 @@
   > :last-child {
     border-left: 1px solid var(--color-border);
     padding-left: 2.5rem;
+
+    // Board stays anchored while the report scrolls; its own overflow
+    // scrolls internally on short viewports.
+    position: sticky;
+    top: calc(var(--app-header-height) + 1.5rem);
+    max-height: calc(100vh - var(--app-header-height) - 3rem);
+    overflow-y: auto;
   }
 }
 
@@ -21,6 +28,9 @@
       padding-left: 0;
       border-top: 1px solid var(--color-border);
       padding-top: 1.5rem;
+      position: static;
+      max-height: none;
+      overflow-y: visible;
     }
   }
 }
