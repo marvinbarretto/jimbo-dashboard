@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.124](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.123...v0.0.124) (2026-07-22)
+
+
+### Features
+
+* **pomo:** remove redundant pomo-reports page ([3f71710](https://github.com/marvinbarretto/jimbo-dashboard/commit/3f717104818adcc1bea57aae6ef49e5d68ca8cd7))
+* **shared:** standardize page-container layout with UiPage primitive ([1e0cd2d](https://github.com/marvinbarretto/jimbo-dashboard/commit/1e0cd2d7e5910d806b9b52871446558131280677))
+
+
+### Bug Fixes
+
+* **answer-rail:** bind formGroup so ngSubmit fires instead of native reload ([b3773d7](https://github.com/marvinbarretto/jimbo-dashboard/commit/b3773d7c6e51a542b090a4bca785b1ddbe21d9bd))
+* **ui-prose:** render markdown instead of literal text ([017b30d](https://github.com/marvinbarretto/jimbo-dashboard/commit/017b30d446375a702674c0ff32419353d810b49e))
+
+
+### Code Refactoring
+
+* **shared:** migrate question/clarification cards onto answer-rail ([00c9d03](https://github.com/marvinbarretto/jimbo-dashboard/commit/00c9d034e54a9ae7bb3f5a4593a98d3eb41d9176))
+
 ### [0.0.123](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.122...v0.0.123) (2026-07-22)
 
 
