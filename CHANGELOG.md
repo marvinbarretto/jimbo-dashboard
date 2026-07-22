@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.128](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.127...v0.0.128) (2026-07-22)
+
+
+### Features
+
+* **briefing:** wireframe iteration — 3 calendar columns, today/tomorrow stacked, defer parked ([7115c46](https://github.com/marvinbarretto/jimbo-dashboard/commit/7115c46496e5498ccfd8d76e22d09df71960b2d0))
+
 ### [0.0.127](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.126...v0.0.127) (2026-07-22)
 
 
