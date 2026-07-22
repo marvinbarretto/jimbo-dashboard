@@ -24,13 +24,19 @@ VIEWPORT:  desktop 1280 (briefing is read at the desk; mobile stacks the board b
 — NOT in v1 (parked, deliberately): drag-to-defer, confirm/dismiss on cards, actor
   swimlanes. The board earns its place by being glanceable first.</div>
 
+    <div class="w-notes">RESOLVED — the three calendars (verified against the live API)
+— My schedule   = account marvin, calendarId primary   (marvinbarretto@gmail.com)
+— Jimbo         = account jimbo,  calendarId primary   (marvinbarretto.labs@gmail.com, named "Jimbo")
+— Suggestions   = calendarId 2244d4f6…@group (already hardcoded in the planner)
+All three via GET /events?calendarId=…&account=…&days=2 — no calendar_config changes needed.</div>
+
     <div class="w-notes">OPEN QUESTIONS
-1. Calendar IDs: "Jimbo Suggestions" is known (hardcoded in planner). Which calendar is
-   "Jimbo" (personal), and is "My schedule" Google primary or one of the 3 group calendars
-   currently enabled in calendar_config? Need the two IDs (or names to look up).
-2. All-day events (e.g. "Brighton") — pin at the top of the day group? (sketch: yes)
-3. Afternoon briefing: Today = whole day with past events dimmed (sketch assumes this),
-   or remaining hours only?</div>
+1. All-day events (e.g. "Brighton") — pin at the top of the day group? (sketch: yes)
+2. Afternoon briefing: Today = whole day with past events dimmed (sketch assumes this),
+   or remaining hours only?
+3. "My schedule" = primary only, or should the Travel + Reminders group calendars merge
+   into that column too? (Brighton + the trains currently live on those, NOT on primary —
+   primary-only would show an empty-looking tomorrow while you're on a train to Brighton.)</div>
   </div>
 </div>
 
