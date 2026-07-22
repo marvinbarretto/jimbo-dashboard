@@ -37,7 +37,6 @@ import {
   template: `
     <app-ui-period-pager
       [granularity]="granularity()"
-      eyebrow="Journal"
       [title]="title()"
       [subtitle]="subtitle()"
       [isAtToday]="isCurrent()"
