@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.135](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.134...v0.0.135) (2026-07-22)
+
+
+### Features
+
+* **briefing:** pencilled block size as 🍅 per pomodoro ([7915e8e](https://github.com/marvinbarretto/jimbo-dashboard/commit/7915e8eeb817c2b2f4f0dcef9eeb98ea30a04888))
+
 ### [0.0.134](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.133...v0.0.134) (2026-07-22)
 
 
