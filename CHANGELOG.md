@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.137](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.136...v0.0.137) (2026-07-23)
+
+
+### Features
+
+* **vault:** stacked-band item detail, retire old shell + tabbed layout ([516476c](https://github.com/marvinbarretto/jimbo-dashboard/commit/516476c12416f0c26d2f1fb76ac93ddf25c644d8)), closes [#10](https://github.com/marvinbarretto/jimbo-dashboard/issues/10)
+
+
+### Bug Fixes
+
+* **vault:** chat origin, parent title, and comment-question attention ([9834c27](https://github.com/marvinbarretto/jimbo-dashboard/commit/9834c2727b1122723558605fb87b67f5c6cf8b77))
+
 ### [0.0.136](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.135...v0.0.136) (2026-07-22)
 
 
