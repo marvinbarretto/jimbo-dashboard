@@ -13,7 +13,15 @@ import { sessionStats } from '../../../exercise/utils/exercise-format';
 import type { FoodLogEntry, SupplementLogEntry, FoodDailyRow } from '../../../nutrition/data-access/nutrition.service';
 import { NUTRITION_READ } from '../../../nutrition/data-access/nutrition.read';
 import { JournalDataService } from '../../data-access/journal-data.service';
-import { dayWindowIso, dateFromDayKey, weekKeyFromDate, daysInWeek, type DayKey } from '@shared/utils/date-keys';
+import {
+  dayWindowIso,
+  dateFromDayKey,
+  weekKeyFromDate,
+  daysInWeek,
+  shiftDay,
+  todayKey,
+  type DayKey,
+} from '@shared/utils/date-keys';
 
 // Daily protein target — mirrors nutrition-page.ts (no shared settings source yet).
 const PROTEIN_TARGET_G = 150;
@@ -143,6 +151,35 @@ export class JournalDaySummary {
     { initialValue: null },
   );
 
+  // Same day, one week back — a fair single-day comparison (controls for
+  // weekday eating patterns) for the "Protein today" meter.
+  private readonly lastWeekSameDay = toSignal(
+    this.date$.pipe(
+      switchMap(date => {
+        const sameDayLastWeek = shiftDay(date, -7);
+        return this.nutrition
+          .daily({ from: sameDayLastWeek, to: sameDayLastWeek })
+          .pipe(catchError(() => of({ days: [] as FoodDailyRow[] })));
+      }),
+    ),
+    { initialValue: null },
+  );
+
+  // Last week, Monday through the same weekday — a fair week-to-date vs
+  // week-to-date comparison for the "This week" meter (not full-week, which
+  // would unfairly compare a partial week to a complete one).
+  private readonly lastWeekToDate = toSignal(
+    this.date$.pipe(
+      switchMap(date => {
+        const weekStart = daysInWeek(weekKeyFromDate(dateFromDayKey(date)))[0];
+        return this.nutrition
+          .daily({ from: shiftDay(weekStart, -7), to: shiftDay(date, -7) })
+          .pipe(catchError(() => of({ days: [] as FoodDailyRow[] })));
+      }),
+    ),
+    { initialValue: null },
+  );
+
   // ── Work headline (from the shared bundle) ───────────────────────────────
   protected readonly focusMinutes = computed(() => this.bundle()?.totals.focus_minutes ?? 0);
   protected readonly pomos = computed(() => this.bundle()?.totals.pomos_completed ?? 0);
@@ -249,6 +286,32 @@ export class JournalDaySummary {
   });
 
   protected readonly proteinTodayG = computed(() => Math.round(this.macros().protein_g));
+
+  // "On track" pace: how much you'd have eaten by now if spread evenly across
+  // the day — only meaningful for today (a past day's pace is just its
+  // target, which the bar already shows, so skip the tick there).
+  protected readonly proteinPace = computed(() => {
+    if (this.date() !== todayKey()) return null;
+    const now = new Date();
+    const dayFraction = (now.getHours() * 60 + now.getMinutes()) / (24 * 60);
+    return Math.round(this.proteinTarget * dayFraction);
+  });
+
+  protected readonly proteinLastWeekSameDay = computed(() =>
+    Math.round(this.lastWeekSameDay()?.days[0]?.protein_g ?? 0),
+  );
+
+  // Day-of-week pace toward the weekly target — reactive off `date` (not the
+  // wall clock), so it's exact for any day, past or present.
+  protected readonly weekProteinPace = computed(() => {
+    const date = this.date();
+    const dayIndex = daysInWeek(weekKeyFromDate(dateFromDayKey(date))).indexOf(date);
+    return Math.round(this.weekProteinTarget * ((dayIndex + 1) / 7));
+  });
+
+  protected readonly weekProteinLastWeek = computed(() =>
+    Math.round((this.lastWeekToDate()?.days ?? []).reduce((sum, d) => sum + d.protein_g, 0)),
+  );
 
   protected readonly gymStats = computed(() =>
     (this.gym()?.items ?? []).reduce(

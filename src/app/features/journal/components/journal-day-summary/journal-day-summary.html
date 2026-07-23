@@ -27,6 +27,9 @@
           [current]="proteinTodayG()"
           [target]="proteinTarget"
           unit="g"
+          [pace]="proteinPace()"
+          compareLabel="same day last week"
+          [compareValue]="proteinLastWeekSameDay()"
         />
         <app-ui-progress-meter
           class="day-summary__fuel-week-meter"
@@ -34,6 +37,9 @@
           [current]="weekProteinG()"
           [target]="weekProteinTarget"
           unit="g"
+          [pace]="weekProteinPace()"
+          compareLabel="same point last week"
+          [compareValue]="weekProteinLastWeek()"
         />
       </div>
 
