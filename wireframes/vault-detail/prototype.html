@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vault detail — prototype</title>
+<style>
+:root{
+  --color-bg:#060b12; --color-surface:#0d1520; --color-surface-raised:#101b28;
+  --color-surface-soft:#091119; --color-border:#1f394c; --color-text:#e6f7ff;
+  --color-text-muted:#83a6b8; --color-text-soft:#aac8d6; --color-accent:#3dd6ff;
+  --color-danger:#ff5d7a; --color-success:#6dffb3; --color-warning:#ffd86b;
+  --font-mono:"SF Mono","Fira Code",monospace;
+  --font-serif:"Iowan Old Style",Palatino,Georgia,serif;
+  --actor-boris:#6b95d6; --actor-marvin:#e08850;
+  --proj:#6e56cf;             /* Jimbo */
+  --radius:2px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--color-bg);color:var(--color-text);font-family:var(--font-mono);font-size:13px;line-height:1.5;padding:0 0 4rem}
+
+/* ── prototype chrome (not part of the design) ─────────────────────── */
+.proto{position:sticky;top:0;z-index:50;background:#000;border-bottom:1px solid var(--color-border);
+  padding:.5rem 1rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;font-size:11px}
+.proto b{color:var(--color-warning);letter-spacing:.08em}
+.proto__group{display:flex;gap:.35rem;align-items:center}
+.proto__label{color:var(--color-text-muted)}
+.proto button{font:inherit;font-family:var(--font-mono);background:transparent;color:var(--color-text-soft);
+  border:1px solid var(--color-border);padding:.15rem .5rem;cursor:pointer;border-radius:var(--radius)}
+.proto button:hover{border-color:var(--color-accent);color:var(--color-accent)}
+.proto button[aria-pressed="true"]{background:var(--color-accent);color:#000;border-color:var(--color-accent);font-weight:700}
+
+.wrap{max-width:1180px;margin:1.5rem auto;padding:0 1rem}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius)}
+
+/* ── ZONE 1 · rail + identity ──────────────────────────────────────── */
+.head{display:flex;gap:.9rem;padding:1rem 1.15rem .85rem;align-items:flex-start;border-bottom:1px solid var(--color-border)}
+.rail{display:flex;gap:4px;align-items:center;padding-top:.3rem;flex-shrink:0;cursor:pointer}
+.rail__bar{width:5px;height:30px;border-radius:1px;background:var(--proj);transition:opacity .15s,box-shadow .15s}
+.rail__bar--project{opacity:1}
+.rail__bar--epic{opacity:.55}
+.rail__bar--item{opacity:.28}
+.rail__bar--empty{background:repeating-linear-gradient(45deg,transparent,transparent 2px,var(--color-danger) 2px,var(--color-danger) 3px);
+  border:1px dashed var(--color-danger);width:7px;opacity:.85}
+.rail:hover .rail__bar{box-shadow:0 0 0 1px var(--color-accent)}
+.crumb{font-size:11.5px;color:var(--color-text-muted);letter-spacing:.02em}
+.crumb a{color:var(--color-text-soft);text-decoration:none;border-bottom:1px solid transparent;cursor:pointer}
+.crumb a:hover{border-bottom-color:var(--color-accent);color:var(--color-accent)}
+.crumb .sep{color:var(--color-border);padding:0 .35rem}
+.crumb .unfiled{color:var(--color-danger);border-bottom:1px dashed var(--color-danger);cursor:pointer}
+.title{font-family:var(--font-serif);font-size:23px;line-height:1.25;margin-top:.3rem;color:var(--color-text)}
+.seq{color:var(--color-text-muted);font-size:11.5px}
+
+/* ── ZONE 2 · the ask ──────────────────────────────────────────────── */
+.ask{margin:.9rem 1.15rem;border-left:3px solid var(--actor-boris);background:var(--color-surface-raised);padding:.7rem .9rem}
+.ask__who{font-size:12px}
+.ask__who b{color:var(--actor-boris)}
+.ask__age{color:var(--color-text-muted)}
+.ask__quote{margin:.5rem 0 .6rem;padding-left:.8rem;border-left:1px solid var(--color-border);
+  color:var(--color-text-soft);font-size:13px;line-height:1.55}
+.ask__compose{display:flex;gap:.5rem;align-items:stretch}
+.ask__compose textarea{flex:1;background:var(--color-surface-soft);border:1px solid var(--color-border);
+  color:var(--color-text);font:inherit;font-family:var(--font-mono);padding:.4rem .55rem;border-radius:var(--radius);resize:vertical;min-height:38px}
+.ask__compose textarea:focus{outline:none;border-color:var(--color-accent)}
+.ask__hint{font-size:10.5px;color:var(--color-text-muted);margin-top:.35rem}
+.ask--dead{border-left-color:var(--color-danger)}
+.ask--dead .ask__who b{color:var(--color-danger)}
+
+/* ── ZONE 3/4 · work + sidebar ─────────────────────────────────────── */
+.cols{display:flex;gap:0;align-items:flex-start}
+.main{flex:1;min-width:0;padding:.9rem 1.15rem 1.2rem}
+.side{width:290px;flex-shrink:0;border-left:1px solid var(--color-border);padding:.9rem 1.15rem 1.2rem;align-self:stretch}
+.lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--color-text-muted);margin-bottom:.35rem}
+.side .lbl{margin-top:1.1rem}
+.side .lbl:first-child{margin-top:0}
+.work{font-size:14px;line-height:1.62;color:var(--color-text);max-width:70ch;white-space:pre-wrap}
+.work code{color:var(--color-accent);font-size:13px}
+
+/* readiness disclosure */
+.disc{margin-top:1.1rem;border:1px solid var(--color-border);border-radius:var(--radius)}
+.disc__head{padding:.5rem .7rem;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:12px}
+.disc__head:hover{background:var(--color-surface-raised)}
+.disc__body{border-top:1px solid var(--color-border);padding:.8rem .8rem .9rem;display:none}
+.disc.open .disc__body{display:block}
+.disc.open .disc__chev{transform:rotate(90deg)}
+.disc__chev{display:inline-block;transition:transform .15s;color:var(--color-text-muted)}
+.qblock{border:1px solid var(--color-border);padding:.6rem .7rem;margin-bottom:.6rem;background:var(--color-surface-soft)}
+.qblock__q{font-size:12px;font-weight:700}
+.qblock__q span{font-weight:400;color:var(--color-text-muted)}
+.check{font-size:12px;padding:.12rem 0;color:var(--color-text-soft)}
+.check b{font-weight:700}
+.check--ok b{color:var(--color-success)}
+.check--miss b{color:var(--color-danger)}
+.scope{font-size:11px;color:var(--color-text-muted);margin-top:.45rem}
+.claim{border:1px solid var(--color-accent);padding:.65rem .75rem;background:color-mix(in srgb,var(--color-accent) 7%,transparent)}
+
+/* chips + buttons */
+.chip{display:inline-block;border:1px solid var(--color-border);border-radius:999px;padding:.05rem .5rem;
+  font-size:10.5px;color:var(--color-text-soft);background:var(--color-surface-soft);white-space:nowrap}
+.chip--warn{border-color:color-mix(in srgb,var(--color-warning) 45%,var(--color-border));color:var(--color-warning)}
+.chip--ok{border-color:color-mix(in srgb,var(--color-success) 45%,var(--color-border));color:var(--color-success)}
+.chip--pick{cursor:pointer}
+.chip--pick:hover{border-color:var(--color-accent)}
+.chip__bar{display:inline-block;width:3px;height:9px;vertical-align:-1px;margin-right:4px;border-radius:1px}
+.btn{font:inherit;font-family:var(--font-mono);font-size:12px;padding:.35rem .8rem;border-radius:var(--radius);cursor:pointer;
+  background:transparent;color:var(--color-text-soft);border:1px solid var(--color-border);white-space:nowrap}
+.btn:hover{border-color:var(--color-accent);color:var(--color-accent)}
+.btn--primary{background:var(--color-accent);color:#001019;border-color:var(--color-accent);font-weight:700}
+.btn--primary:hover{color:#001019;filter:brightness(1.12)}
+.btn--danger{border-color:color-mix(in srgb,var(--color-danger) 55%,var(--color-border));color:var(--color-danger)}
+.btn--danger:hover{border-color:var(--color-danger);color:var(--color-danger)}
+.btn__sub{display:block;font-size:9.5px;font-weight:400;opacity:.75;margin-top:1px}
+.unfiled-box{border:1px dashed var(--color-danger);color:var(--color-danger);padding:.4rem .55rem;font-size:12px;cursor:pointer}
+.unfiled-box:hover{background:color-mix(in srgb,var(--color-danger) 8%,transparent)}
+.filed-box{display:flex;align-items:center;gap:.5rem;font-size:12.5px}
+.owner{color:var(--actor-marvin);font-weight:700}
+
+/* ── ZONE 5 · timeline ─────────────────────────────────────────────── */
+.tl{border-top:1px solid var(--color-border);padding:.85rem 1.15rem 1rem}
+.tl__head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
+.tl__row{display:flex;gap:.75rem;padding:.4rem .4rem;border-bottom:1px solid color-mix(in srgb,var(--color-border) 45%,transparent);align-items:baseline;font-size:12px}
+.tl__row--unanswered{border-left:2px solid var(--actor-boris);background:var(--color-surface-raised)}
+.tl__when{color:var(--color-text-muted);min-width:3.5em;font-size:11px}
+.tl__who{min-width:7em;font-weight:700}
+.tl__who--boris{color:var(--actor-boris)}
+.tl__who--marvin{color:var(--actor-marvin)}
+.tl__who--system{color:var(--color-text-muted);font-weight:400}
+.tl__what{flex:1;min-width:0;color:var(--color-text-soft)}
+
+/* ── ZONE 6 · actions ──────────────────────────────────────────────── */
+.actions{border-top:1px solid var(--color-border);background:var(--color-surface-soft);
+  padding:.75rem 1.15rem;display:flex;gap:.6rem;justify-content:flex-end;align-items:center}
+.actions__spacer{flex:1}
+
+/* toast + modal */
+.toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:var(--color-surface-raised);
+  border:1px solid var(--color-accent);color:var(--color-text);padding:.55rem 1rem;font-size:12px;z-index:80;
+  display:none;align-items:center;gap:1rem;border-radius:var(--radius)}
+.toast.show{display:flex}
+.toast a{color:var(--color-accent);cursor:pointer;text-decoration:underline}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:90;display:none;align-items:center;justify-content:center}
+.scrim.show{display:flex}
+.modal{background:var(--color-surface);border:1px solid var(--color-border);width:560px;max-width:92vw}
+.modal__head{padding:.8rem 1rem;border-bottom:1px solid var(--color-border);font-size:14px}
+.modal__body{padding:.9rem 1rem}
+.opt{border:1px solid var(--color-border);padding:.6rem .75rem;margin-bottom:.5rem;cursor:pointer;background:var(--color-surface-soft)}
+.opt:hover{border-color:var(--color-accent)}
+.opt b{display:block;font-size:12.5px}
+.opt span{font-size:11px;color:var(--color-text-muted);line-height:1.45;display:block;margin-top:.2rem}
+.opt--danger{border-color:color-mix(in srgb,var(--color-danger) 40%,var(--color-border))}
+.opt--danger b{color:var(--color-danger)}
+.modal__foot{padding:.75rem 1rem;border-top:1px solid var(--color-border);display:flex;gap:.6rem;justify-content:flex-end}
+.hide{display:none !important}
+.note{font-size:11px;color:var(--color-text-muted);padding:.5rem 1.15rem;border-top:1px dashed var(--color-border);background:var(--color-surface-soft)}
+.note b{color:var(--color-warning)}
+</style>
+</head>
+<body>
+
+<!-- ══ PROTOTYPE CONTROLS — not part of the design ══════════════════ -->
+<div class="proto">
+  <b>PROTOTYPE</b>
+  <span class="proto__label">vault item detail · #3365</span>
+  <span class="proto__group">
+    <span class="proto__label">state:</span>
+    <button id="s-ask"   aria-pressed="true"  onclick="setState('ask')">someone's waiting</button>
+    <button id="s-dead"  aria-pressed="false" onclick="setState('dead')">dead end</button>
+    <button id="s-quiet" aria-pressed="false" onclick="setState('quiet')">nothing waiting</button>
+  </span>
+  <span class="proto__group">
+    <span class="proto__label">filed:</span>
+    <button id="s-filed" aria-pressed="false" onclick="toggleFiled()">toggle project</button>
+  </span>
+  <span class="proto__group">
+    <button onclick="location.reload()">reset</button>
+  </span>
+</div>
+
+<div class="wrap">
+<div class="card">
+
+  <!-- ZONE 1 — rail + identity -->
+  <div class="head">
+    <div class="rail" id="rail" title="project → epic → item">
+      <span class="rail__bar rail__bar--empty" id="railProject"></span>
+      <span class="rail__bar rail__bar--epic"></span>
+      <span class="rail__bar rail__bar--item"></span>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div class="crumb">
+        <span id="crumbProject"><span class="unfiled" onclick="fileIt()">unfiled</span></span>
+        <span class="sep">›</span><a>#3364 Briefing v2</a>
+        <span class="sep">›</span><span class="seq">#3365</span>
+      </div>
+      <div class="title">Briefing v2 Phase 1: pipeline swap — Boris authors, API delivers Telegram</div>
+    </div>
+  </div>
+
+  <!-- ZONE 2 — the ask -->
+  <div class="ask" id="askWaiting">
+    <div class="ask__who"><b>@boris</b> is waiting on you <span class="ask__age">· asked 15h ago</span></div>
+    <div class="ask__quote">Should the cron enqueue at 06:10 UTC or 06:10 local? The spec says UTC but the planner
+      renders local, so a DST shift would drift the briefing by an hour.</div>
+    <div class="ask__compose">
+      <textarea id="reply" placeholder="Reply…">UTC — the cron is infrastructure, keep it absolute. Fix the drift in the planner's render layer, not the enqueue.</textarea>
+      <button class="btn btn--primary" onclick="postAnswer()">Answer</button>
+    </div>
+    <div class="ask__hint">posts as <b>answer</b>, linked to @boris's message · ⌘↵</div>
+  </div>
+
+  <div class="ask ask--dead hide" id="askDead">
+    <div class="ask__who"><b>Nothing is scheduled to groom this</b></div>
+    <div class="ask__quote" style="border-left-color:var(--color-danger)">It's <b>ungroomed</b> and assigned to
+      <b class="owner">@marvin</b>, but grooming only picks up notes assigned to @boris. It will sit here indefinitely.</div>
+    <div style="display:flex;gap:.5rem">
+      <button class="btn btn--primary" onclick="claimIt()">I'll run it myself</button>
+      <button class="btn" onclick="handOff()">Send to @boris to groom</button>
+    </div>
+  </div>
+
+  <!-- ZONE 3/4 — work + sidebar -->
+  <div class="cols">
+    <div class="main">
+      <div class="lbl">The work</div>
+      <div class="work">Prove the new pipeline with the CURRENT schema before changing content. jimbo-api: add optional <code>telegram_summary</code> to CreateBriefingBody, forward via sendTelegram() on POST (best-effort). hub: new skill briefing/daily-v2 (executors: [boris], curl REST not hermes wrappers, closes dispatch via /api/dispatch/complete). VPS cron enqueues at ~06:10/14:10 UTC via POST /api/dispatch/enqueue (flow=recon, auto_approve, synthetic task_id, task_source=briefing-cron). Sync skills to VPS. Pause hermes daily-briefing cron after one successful end-to-end run.</div>
+
+      <div class="disc" id="disc">
+        <div class="disc__head" onclick="document.getElementById('disc').classList.toggle('open')">
+          <span><span class="disc__chev">▸</span> <b id="discTitle">Not runnable unattended</b>
+            <span style="color:var(--color-text-muted)" id="discWhy">— no acceptance criteria, not groomed</span></span>
+          <span style="color:var(--color-text-muted)" id="discCount">2 of 4</span>
+        </div>
+        <div class="disc__body">
+          <div class="qblock">
+            <div class="qblock__q">1 · Is it well-specified? <span>— grooming</span></div>
+            <div style="margin:.4rem 0"><span class="chip chip--warn">ungroomed</span>
+              <span style="color:var(--color-text-soft);font-size:12px">nobody has broken this down or written criteria.</span></div>
+            <button class="btn" onclick="handOff()">Send to @boris to groom</button>
+            <button class="btn">Groom it now</button>
+          </div>
+          <div class="qblock">
+            <div class="qblock__q">2 · Can an agent run it unattended? <span>— readiness</span></div>
+            <div style="margin-top:.35rem">
+              <div class="check check--miss"><b>✗</b> Acceptance criteria — none set</div>
+              <div class="check check--ok"><b>✓</b> Owner assigned — @marvin</div>
+              <div class="check check--ok"><b>✓</b> Priority scored — P1</div>
+              <div class="check check--miss"><b>✗</b> Grooming complete — currently ungroomed</div>
+            </div>
+            <div class="scope">These gate <b style="color:var(--color-text-soft)">dispatch</b> only. They do not gate you.</div>
+          </div>
+          <div class="claim" id="claimBox">
+            <div style="font-size:12.5px"><b>You own this.</b> The checks above are about handing it to an agent —
+              you're not an agent.</div>
+            <div style="margin-top:.5rem;display:flex;gap:.5rem">
+              <button class="btn btn--primary" onclick="claimIt()">I'll run this myself<span class="btn__sub">clears dispatch gating while you own it</span></button>
+              <button class="btn" onclick="handOff()">Hand to @boris<span class="btn__sub">reinstates the full gate</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- sidebar -->
+    <div class="side">
+      <div class="lbl">State</div>
+      <div><span class="chip">task</span> <span class="chip">active</span> <span class="chip">P1</span></div>
+      <div style="margin-top:.45rem;font-size:12.5px">owner <span class="owner">@marvin</span>
+        <span style="color:var(--color-text-muted)">· est 1×25m</span></div>
+      <div style="margin-top:.35rem"><span class="chip chip--warn" id="groomChip">ungroomed</span></div>
+
+      <div class="lbl">Filed under</div>
+      <div id="filedSlot">
+        <div class="unfiled-box" onclick="fileIt()">no project — <u>file it</u></div>
+      </div>
+      <div style="margin-top:.4rem;font-size:12.5px;color:var(--color-text-soft)">↑ <a style="color:var(--color-text-soft)">#3364 Briefing v2</a></div>
+
+      <div class="lbl">Links</div>
+      <div style="color:var(--color-text-muted);font-size:12px">0 subtasks · 0 blockers</div>
+      <div style="margin-top:.35rem"><span class="chip">#briefing</span> <span class="chip">#boris</span></div>
+
+      <div class="lbl">Origin</div>
+      <div style="color:var(--color-text-muted);font-size:12px">chat · 18h ago</div>
+    </div>
+  </div>
+
+  <!-- ZONE 5 — one timeline -->
+  <div class="tl">
+    <div class="tl__head">
+      <span class="lbl" style="margin:0">History</span>
+      <span><span class="chip chip--pick" aria-pressed="true">all</span>
+        <span class="chip chip--pick">talk</span>
+        <span class="chip chip--pick">events</span></span>
+    </div>
+    <div id="timeline">
+      <div class="tl__row tl__row--unanswered" id="tlUnanswered">
+        <span class="tl__when">15h</span><span class="tl__who tl__who--boris">@boris</span>
+        <span class="tl__what">asked — "Should the cron enqueue at 06:10 UTC or local?…" · <b>unanswered</b></span>
+      </div>
+      <div class="tl__row"><span class="tl__when">16h</span><span class="tl__who tl__who--system">system</span>
+        <span class="tl__what">assigned to @marvin</span></div>
+      <div class="tl__row"><span class="tl__when">18h</span><span class="tl__who tl__who--marvin">@marvin</span>
+        <span class="tl__what">created from chat · linked to epic #3364</span></div>
+    </div>
+  </div>
+
+  <!-- ZONE 6 — actions -->
+  <div class="actions">
+    <span class="actions__spacer"></span>
+    <button class="btn btn--primary hide" id="btnStart">Start work</button>
+    <button class="btn" onclick="openModal()">Reclassify…<span class="btn__sub">change what pipeline it's in</span></button>
+    <button class="btn">Archive<span class="btn__sub">hide, keep, reversible</span></button>
+    <button class="btn btn--danger" onclick="openModal()">Delete<span class="btn__sub">permanent</span></button>
+  </div>
+
+  <div class="note">
+    <b>Compare:</b> today this same item shows six stacked strips before any content, the question above is a
+    "1" badge on a collapsed tab, the body is boxed as "INTAKE (immutable input)", and the banner reads
+    "WAITING ON intake review" — a wait that never resolves.
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span><a onclick="undo()">undo</a></div>
+
+<div class="scrim" id="scrim" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal__head">Reclassify <b>#3365</b>
+      <span style="color:var(--color-text-muted);font-size:11.5px">· currently task · active · ungroomed</span></div>
+    <div class="modal__body">
+      <div class="opt"><b>Keep as a task</b><span>Stays dispatchable. Can be groomed, scored, and handed to an agent. — no change</span></div>
+      <div class="opt"><b>Make it a note</b><span>Stops being dispatchable — leaves the grooming board and the execution queue,
+        and no agent will pick it up. Keeps its project, epic, tags and history. <b style="color:var(--color-success)">Reversible.</b></span></div>
+      <div class="opt opt--danger"><b>Archive</b><span>Hidden from every board and list. Nothing is lost, and you can
+        restore it. <b style="color:var(--color-success)">Reversible.</b></span></div>
+      <div class="opt opt--danger"><b>Delete permanently</b><span>The item, its thread, and its history are gone.
+        This cannot be undone. Type the item number to confirm.</span></div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn--primary" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="closeModal()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let filed = false, answered = false;
+
+function setState(s){
+  ['ask','dead','quiet'].forEach(k => $('s-'+k).setAttribute('aria-pressed', String(k===s)));
+  $('askWaiting').classList.toggle('hide', s!=='ask' || answered);
+  $('askDead').classList.toggle('hide', s!=='dead');
+  $('btnStart').classList.toggle('hide', s==='ask' && !answered);
+  $('tlUnanswered').classList.toggle('hide', s!=='ask' || answered);
+}
+
+function toggleFiled(){ filed ? unfileIt() : fileIt(); }
+
+function fileIt(){
+  filed = true;
+  $('s-filed').setAttribute('aria-pressed','true');
+  const bar = $('railProject');
+  bar.className = 'rail__bar rail__bar--project';
+  $('crumbProject').innerHTML = '<a style="color:var(--proj);font-weight:700">Jimbo</a>';
+  $('filedSlot').innerHTML = '<div class="filed-box"><span class="chip"><span class="chip__bar" style="background:var(--proj)"></span>Jimbo</span></div>';
+  toast('Filed under Jimbo');
+}
+
+function unfileIt(){
+  filed = false;
+  $('s-filed').setAttribute('aria-pressed','false');
+  $('railProject').className = 'rail__bar rail__bar--empty';
+  $('crumbProject').innerHTML = '<span class="unfiled" onclick="fileIt()">unfiled</span>';
+  $('filedSlot').innerHTML = '<div class="unfiled-box" onclick="fileIt()">no project — <u>file it</u></div>';
+}
+
+function postAnswer(){
+  answered = true;
+  const text = $('reply').value.trim() || 'UTC — keep the cron absolute.';
+  $('askWaiting').classList.add('hide');
+  $('tlUnanswered').classList.add('hide');
+  $('btnStart').classList.remove('hide');
+  const row = document.createElement('div');
+  row.className = 'tl__row';
+  row.innerHTML = '<span class="tl__when">now</span><span class="tl__who tl__who--marvin">@marvin</span>' +
+    '<span class="tl__what">answered — "' + text.slice(0,64) + '…"</span>';
+  $('timeline').prepend(row);
+  toast('Answered @boris');
+}
+
+function claimIt(){
+  $('discTitle').textContent = 'Yours — dispatch gating off';
+  $('discWhy').textContent = '— you own this, no agent handoff';
+  $('discCount').textContent = '';
+  $('groomChip').className = 'chip chip--ok';
+  $('groomChip').textContent = 'yours';
+  $('askDead').classList.add('hide');
+  $('btnStart').classList.remove('hide');
+  toast('You own this — dispatch gating off');
+}
+
+function handOff(){ toast('Sent to @boris to groom'); }
+
+let toastTimer;
+function toast(msg){
+  $('toastMsg').textContent = msg;
+  $('toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $('toast').classList.remove('show'), 4000);
+}
+function undo(){ $('toast').classList.remove('show'); }
+
+function openModal(){ $('scrim').classList.add('show'); }
+function closeModal(){ $('scrim').classList.remove('show'); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if ((e.metaKey||e.ctrlKey) && e.key === 'Enter' && !$('askWaiting').classList.contains('hide')) postAnswer();
+});
+$('rail').addEventListener('click', () => { if(!filed) fileIt(); });
+</script>
+</body>
+</html>

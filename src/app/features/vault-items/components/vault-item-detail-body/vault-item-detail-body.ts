@@ -1,29 +1,18 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
-  ElementRef,
-  Signal,
   computed,
   effect,
   inject,
   input,
   output,
-  signal,
-  viewChild,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { swapDetailSeq, closeDetail } from '@shared/kanban/detail-nav';
-import { RejectFormComponent, type RejectSubmission } from './reject-form/reject-form';
-import { ThreadView } from '../../../thread/components/thread-view/thread-view';
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
-import { staleNorm, ancientNorm } from '@domain/vault';
-import { ActivityLogComponent } from './activity-log/activity-log';
-import { UiSection } from '@shared/components/ui-section/ui-section';
-import {
-  UiInlineTabs,
-  type UiInlineTabOption,
-} from '@shared/components/ui-inline-tabs/ui-inline-tabs';
+import { CURRENT_ACTOR_ID } from '@domain/actors';
+import { UiInlineEdit } from '@shared/components/ui-inline-edit/ui-inline-edit';
+import { UiDropdown } from '@shared/components/ui-dropdown/ui-dropdown';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiMentionChipStrip } from '@shared/components/ui-mention-chip-strip/ui-mention-chip-strip';
 import {
@@ -32,117 +21,106 @@ import {
   type UiChipListPickerOption,
 } from '@shared/components/ui-chip-list/ui-chip-list';
 import { MentionDirective } from '@shared/mentions';
-import { actorId } from '@domain/ids';
-import { CURRENT_ACTOR_ID } from '@domain/actors';
-import { VaultItemActionBar } from './vault-item-action-bar/vault-item-action-bar';
-import { VaultItemBodyCapture } from './vault-item-body-capture/vault-item-body-capture';
-import { VaultItemBodyTask } from './vault-item-body-task/vault-item-body-task';
-import { VaultItemIdentityHeader } from './vault-item-identity-header/vault-item-identity-header';
-import { VaultItemIntakeRationale } from './vault-item-intake-rationale/vault-item-intake-rationale';
-import { VaultItemMetaLine } from './vault-item-meta-line/vault-item-meta-line';
-import { VaultItemNextActionComponent } from './vault-item-next-action/vault-item-next-action';
-import { VaultItemOverviewCards } from './vault-item-overview-cards/vault-item-overview-cards';
+import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
+import { ThreadView } from '../../../thread/components/thread-view/thread-view';
+import { ActivityLogComponent } from './activity-log/activity-log';
+import { RejectFormComponent, type RejectSubmission } from './reject-form/reject-form';
+import { VaultItemDeliveryBlock } from './vault-item-delivery-block/vault-item-delivery-block';
+import { VaultItemIntakeBlock } from './vault-item-intake-block/vault-item-intake-block';
+import { VaultItemLinksBlock } from './vault-item-links-block/vault-item-links-block';
 import { VaultItemQuestions } from './vault-item-questions/vault-item-questions';
-import { VaultItemStatusChips } from './vault-item-status-chips/vault-item-status-chips';
 import type { DialogMode } from '../../dialog/vault-item-dialog-mode';
 import { VaultItemDialogStore } from '../../dialog/vault-item-dialog-store';
 import type { CreateThreadMessagePayload } from '@domain/thread';
 
 /**
- * Thin layout component for the unified vault-item dialog. Owns no state of
- * its own beyond `surface` (page vs modal, which drives navigation policy).
- * All focused-item state, draft state, and operations live in the
- * VaultItemDialogStore which the host (dialog shell or page route) provides.
+ * The vault-item detail surface — one component, two modes:
+ *
+ *  - **draft** (`mode.kind === 'draft'`): the quick-create form the dialog opens
+ *    on ⌘N. Title + project/epic + notes + tags → submitDraft morphs it into an
+ *    item.
+ *  - **item**: the detail view. Layout answers five questions top-to-bottom
+ *    (stream-row-anatomy extended to the detail surface): WHERE it lives (three
+ *    colour bands, project → epic → title, one hue with an opacity ramp; `--epic`
+ *    derived from `--proj` via oklch) · WHY it's on me (a notice stack that only
+ *    renders when something is genuinely outstanding — pending replies included,
+ *    so a question filed as a plain `comment` still surfaces) · WHAT the work is
+ *    + WHAT "done" means (work panel beside a first-class AC checklist) · WHAT I
+ *    can do (consequence-labelled actions). No tabs — the tab set is what let an
+ *    unanswered question hide behind a badge.
+ *
+ * Owns no state beyond `surface` (page vs modal → navigation policy); focused
+ * item, draft, and mutations live in VaultItemDialogStore which the host provides.
  */
 @Component({
   selector: 'app-vault-item-detail-body',
   imports: [
     RouterLink,
-    ThreadView,
-    RejectFormComponent,
-    ActivityLogComponent,
-    UiSection,
-    UiInlineTabs,
+    UiInlineEdit,
+    UiDropdown,
     UiButton,
     UiMentionChipStrip,
     UiChipList,
     MentionDirective,
-    VaultItemActionBar,
-    VaultItemBodyCapture,
-    VaultItemBodyTask,
-    VaultItemIdentityHeader,
-    VaultItemIntakeRationale,
-    VaultItemMetaLine,
-    VaultItemNextActionComponent,
-    VaultItemOverviewCards,
+    RelativeTimePipe,
+    ThreadView,
+    ActivityLogComponent,
+    RejectFormComponent,
+    VaultItemDeliveryBlock,
+    VaultItemIntakeBlock,
+    VaultItemLinksBlock,
     VaultItemQuestions,
-    VaultItemStatusChips,
   ],
   templateUrl: './vault-item-detail-body.html',
   styleUrl: './vault-item-detail-body.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    // GH items age from off-white → pale yellow using the existing staleness
-    // CSS var contract. Non-GH items bind 0 so the modifier has no effect.
-    '[style.--stale-norm]':   'ghStaleNorm()',
-    '[style.--ancient-norm]': 'ghAncientNorm()',
+    // Project identity drives the three hierarchy bands. `--epic` is derived
+    // from `--proj` in SCSS via oklch — no epic colour token exists server-side.
+    '[style.--proj]': 'projColor()',
   },
 })
 export class VaultItemDetailBody {
   readonly mode = input.required<DialogMode>();
-  /** 'page' shows the in-bar × back-to-vault link; 'modal' hides it because
-   *  the dialog shell provides its own close affordance. */
+  /** 'page' shows a back-to-vault link; 'modal' hides it (the shell has its own
+   *  close affordance and navigation swaps ?detail= instead of the URL). */
   readonly surface = input<'page' | 'modal'>('page');
   /** Emitted after a Draft saves so the host can mirror the new mode. */
   readonly modeChange = output<DialogMode>();
 
   protected readonly store = inject(VaultItemDialogStore);
   private readonly router = inject(Router);
-  private readonly el = inject(ElementRef<HTMLElement>);
-  private readonly destroyRef = inject(DestroyRef);
 
-  readonly stickyHeaderRef = viewChild<ElementRef<HTMLDivElement>>('stickyHeader');
-
-  /** Which detail panel is showing. Body is the focal content; Activity and
-   *  Thread are tucked behind tabs because they're often empty and were eating
-   *  two-thirds of the width as permanent columns. All three panels stay
-   *  mounted (toggled via CSS) so tabbing away never drops thread-composer
-   *  draft text — the component isn't destroyed. */
-  protected readonly activeTab = signal<'detail' | 'activity' | 'thread'>('detail');
-
-  /** Tab options with live counts so an operator can see there's something in
-   *  Activity / Thread without opening them. */
-  protected readonly detailTabs = computed<readonly UiInlineTabOption[]>(() => [
-    { value: 'detail', label: 'Detail' },
-    { value: 'activity', label: 'Activity', count: this.store.events().length },
-    { value: 'thread', label: 'Thread', count: this.store.messages().length },
-  ]);
-
-  // Staleness norms are non-zero only for GH items — drives the yellow-aging
-  // background modifier without affecting manually-created items.
-  protected readonly ghStaleNorm = computed(() => {
-    if (!this.store.isGitHubItem()) return 0;
-    const item = this.store.item();
-    if (!item) return 0;
-    return staleNorm(item, this.store.lastActivityAt() ?? null);
-  });
-
-  protected readonly ghAncientNorm = computed(() => {
-    if (!this.store.isGitHubItem()) return 0;
-    const item = this.store.item();
-    if (!item) return 0;
-    return ancientNorm(item, this.store.lastActivityAt() ?? null);
-  });
-
-  // Template helpers — pure functions, kept here because the template
-  // references them by reference (passing to <app-activity-log> inputs etc.)
-  // and the store already exports actorLabelFn / actorKindFn for the same.
   protected readonly lifecycleOf = lifecycleState;
   protected readonly isItemArchived = isArchived;
   protected readonly currentActorId = CURRENT_ACTOR_ID;
 
-  // Adapters for UiChipList — drive the draft form's project picker. Picker
-  // options omit projects already on the draft so we don't show duplicates.
+  /** Project colour for the bands; accent when unfiled (drives the hatched slot). */
+  protected readonly projColor = computed(
+    () => this.store.projects()[0]?.color_token ?? 'var(--color-accent)',
+  );
+  protected readonly firstProject = computed(() => this.store.projects()[0]);
+
+  /** Parent shown as the epic band only when it's genuinely an epic. */
+  protected readonly epicParent = computed(() => {
+    const p = this.store.parentItem();
+    return p?.is_epic ? p : undefined;
+  });
+
+  /** Effort estimate in 25-minute pomodoro blocks; defaults to 1. */
+  protected readonly estimateBlocks = computed(() => this.store.item()?.estimated_blocks ?? 1);
+
+  /** The most recent message waiting on the viewer — kind-agnostic, so a
+   *  question filed as a plain `comment` still answers "why is this on me?".
+   *  Suppressed when a typed open-question already renders its own card. */
+  protected readonly pendingAsk = computed(() => {
+    if (this.store.openQuestions().length > 0) return null;
+    const pending = this.store.pendingReplies();
+    return pending.length ? pending[pending.length - 1] : null;
+  });
+
+  // Adapters for the draft form's UiChipList project picker. Picker options
+  // omit projects already on the draft so we don't show duplicates.
   protected readonly draftProjectChips = computed<readonly UiChipListItem[]>(() =>
     this.store.draftPayload().projects.map(p => ({
       id: p.id,
@@ -151,15 +129,6 @@ export class VaultItemDetailBody {
       color: p.color_token,
     })),
   );
-
-  /** Thread section meta — appends "· N open" when there are unresolved questions
-   *  so the section header surfaces the needs-reply signal without an inner pill. */
-  protected readonly threadMeta = computed(() => {
-    const total = this.store.messages().length;
-    const open = this.store.openQuestions().length;
-    const base = `${total} ${total === 1 ? 'message' : 'messages'}`;
-    return open > 0 ? `${base} · ${open} open` : base;
-  });
 
   protected readonly draftProjectPickerOptions = computed<readonly UiChipListPickerOption[]>(() => {
     const taken = new Set(this.store.draftPayload().projects.map(p => p.id));
@@ -174,37 +143,16 @@ export class VaultItemDetailBody {
   });
 
   constructor() {
-    // Sync the store's mode to the host's input. The store is the source of
-    // truth for transitions (Draft → Item via submitDraft); this effect just
-    // keeps it in lockstep with whatever the host passes in.
+    // Keep the store's mode in lockstep with the host input. The store owns the
+    // Draft → Item transition (submitDraft); this just mirrors the input.
     effect(() => {
       const incoming = this.mode();
-      if (incoming !== this.store.mode()) {
-        this.store.setMode(incoming);
-      }
-    });
-
-    // Measure the rendered sticky-header zone and write the real pixel height
-    // into --sticky-header-height so column section headers always clear it
-    // exactly, even when chips wrap or rationale expands.
-    effect(() => {
-      const el = this.stickyHeaderRef()?.nativeElement;
-      if (!el) return;
-      const ro = new ResizeObserver(entries => {
-        const height = entries[0]?.borderBoxSize[0]?.blockSize
-          ?? entries[0]?.contentRect.height
-          ?? 0;
-        this.el.nativeElement.style.setProperty('--sticky-header-height', `${Math.ceil(height)}px`);
-      });
-      ro.observe(el, { box: 'border-box' });
-      this.destroyRef.onDestroy(() => ro.disconnect());
+      if (incoming !== this.store.mode()) this.store.setMode(incoming);
     });
   }
 
-  // ── Navigation handlers (need Router, so live here, not in store) ─────────
+  // ── Navigation (Router lives here, not the store) ─────────────────────────
 
-  /** Modal surface updates ?detail= so withVaultDetailModal swaps; page
-   *  surface uses Router.navigate so URL stays meaningful. */
   swapToSeq(seq: number): void {
     if (this.surface() === 'modal') {
       swapDetailSeq(this.router, seq);
@@ -225,21 +173,28 @@ export class VaultItemDetailBody {
   onRejectSubmitted(submission: RejectSubmission): void {
     const ok = this.store.submitReject(submission);
     if (!ok) return;
-    // Close the modal entirely so the operator returns to the kanban and
-    // sees the card has moved to the needs_rework column. In page surface
-    // the item still exists at /vault-items/<seq> so we don't navigate away.
     if (this.surface() === 'modal') closeDetail(this.router);
   }
 
-  // ── Submit-draft trampoline ───────────────────────────────────────────────
+  postThreadReply(payload: CreateThreadMessagePayload): void {
+    this.store.postThreadReply(payload);
+  }
 
-  /** Subscribes to the store's submitDraft and re-emits modeChange so the
-   *  host (dialog shell) mirrors the morph. */
+  /** "Send for grooming" = hand the item to Boris, whom the grooming pump
+   *  actually picks up (it only grooms active, boris-assigned items). */
+  sendForGrooming(): void {
+    this.store.reassign('boris');
+  }
+
+  incEstimate(): void { this.store.updateEstimatedBlocks(this.estimateBlocks() + 1); }
+  decEstimate(): void { this.store.updateEstimatedBlocks(Math.max(1, this.estimateBlocks() - 1)); }
+
+  // ── Draft form glue ───────────────────────────────────────────────────────
+
+  /** Re-emits modeChange so the host (dialog shell) mirrors the Draft → Item morph. */
   submitDraft(): void {
     this.store.submitDraft().subscribe(next => this.modeChange.emit(next));
   }
-
-  // ── Draft DOM event glue ──────────────────────────────────────────────────
 
   onDraftBodyInput(e: Event): void {
     this.store.setDraftBody((e.target as HTMLTextAreaElement).value);
@@ -251,10 +206,5 @@ export class VaultItemDetailBody {
       e.preventDefault();
       this.submitDraft();
     }
-  }
-
-  // ── Thread reply (template passes the payload up) ─────────────────────────
-  postThreadReply(payload: CreateThreadMessagePayload): void {
-    this.store.postThreadReply(payload);
   }
 }

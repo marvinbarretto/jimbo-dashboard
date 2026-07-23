@@ -22,12 +22,6 @@ export const vaultItemsRoutes: Routes = [
   },
   // #10 tabbed redesign — side-by-side comparison surface on the same data.
   {
-    path: ':seq/v2',
-    title: 'Vault item · v2',
-    loadComponent: () =>
-      import('./containers/vault-item-detail-v2/vault-item-detail-v2').then(m => m.VaultItemDetailV2),
-  },
-  {
     path: ':seq/edit',
     title: 'Edit vault item',
     loadComponent: () =>

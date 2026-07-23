@@ -25,7 +25,6 @@
         (removed)="store.removeDraftProjectById($event)"
       />
 
-      <!-- Epic toggle: only available once a project is assigned -->
       @if (store.draftPayload().projects.length > 0) {
         <label class="draft-form__epic-label">
           <input
@@ -39,7 +38,6 @@
       }
     </div>
 
-    <!-- Notes / context (optional) -->
     <div class="draft-form__body-wrap">
       <textarea
         class="draft-form__body"
@@ -53,7 +51,6 @@
       ></textarea>
     </div>
 
-    <!-- Optional GitHub issue URL — not shown for epics -->
     @if (!store.draftPayload().is_epic) {
       <div class="draft-form__github-wrap">
         <input
@@ -97,63 +94,96 @@
     </footer>
   </div>
 } @else if (store.item(); as item) {
-  <div class="vault-item-detail">
+  <article class="v3">
 
-    <div class="vault-item-detail__sticky-header" #stickyHeader>
-    <app-vault-item-identity-header
-      [item]="item"
-      (titleChange)="store.updateTitle($event)"
-    />
+    <!-- ══ ZONE 1 · HIERARCHY BANDS (where does this live) ═══════════════════ -->
+    <div class="v3__bands">
+      @if (firstProject(); as proj) {
+        <a class="v3__band v3__band--project" [routerLink]="['/projects', proj.id]">
+          <span class="v3__band-label">{{ proj.display_name }}</span>
+        </a>
+      } @else {
+        <button type="button" class="v3__band v3__band--project v3__band--unfiled"
+          (click)="store.setEpic(false)"
+          title="Not filed under a project">
+          <span class="v3__band-label"><u>unfiled</u> — not under a project</span>
+        </button>
+      }
 
-    @if (store.nextAction(); as next) {
-      <app-vault-item-next-action class="vault-item-detail__next-action" [action]="next" />
-    }
+      @if (epicParent(); as epic) {
+        <button type="button" class="v3__band v3__band--epic" (click)="swapToSeq(epic.seq)">
+          <span class="v3__band-seq">#{{ epic.seq }}</span>
+          <span class="v3__band-label">{{ epic.title }}</span>
+        </button>
+      } @else if (store.parentRef(); as parent) {
+        <button type="button" class="v3__band v3__band--epic" (click)="swapToSeq(parent.seq)">
+          <span class="v3__band-seq">#{{ parent.seq }}</span>
+          <span class="v3__band-label">{{ parent.title }}</span>
+        </button>
+      }
 
-    <div class="vault-item-detail__zone2">
-      <!-- Decisions: the chips an operator acts on (status / owner / priority). -->
-      <app-vault-item-status-chips
-        class="vault-item-detail__zone2-decisions"
-        [item]="item"
-        [owner]="store.owner()"
-        [lifecycle]="lifecycleOf(item)"
-        [isArchived]="isItemArchived(item)"
-        [effectivePriority]="store.effectivePriority()"
-        [priorityDiverges]="store.priorityDiverges()"
-        [firstProject]="store.projects()[0]"
-        [allProjects]="store.projects()"
-        [isGitHubItem]="store.isGitHubItem()"
-        [activeActors]="store.activeActors()"
-        [showPipelineStatus]="item.type === 'task'"
-        (statusChange)="store.setStatus($event)"
-        (reassign)="store.reassign($event)"
-        (epicToggle)="store.setEpic($event)"
-        (priorityChange)="store.updateManualPriority($event)"
-      />
-
-      <!-- Context: read-only facts that inform but aren't acted on here. -->
-      <div class="vault-item-detail__zone2-context">
-        <app-vault-item-meta-line
-          [createdAt]="item.created_at"
-          [lastActivityAt]="store.lastActivityAt()"
-          [completedAt]="item.completed_at"
-          [archivedAt]="item.archived_at"
-          [dueAt]="item.due_at"
-          [rationale]="item.ai_rationale"
-          [rationaleExpanded]="store.rationaleExpanded()"
-          (toggleRationale)="store.toggleRationale()"
-        />
-
-        <app-vault-item-overview-cards
-          [source]="store.sourceSummary()"
-          [hierarchy]="store.hierarchySummary()"
-          [queue]="store.queueSummary()"
+      <div class="v3__band v3__band--title">
+        @if (store.effectivePriority(); as p) {
+          <span class="v3__pill v3__pill--p{{ p }}">P{{ p }}</span>
+        }
+        <span class="v3__band-seq v3__band-seq--title">#{{ item.seq }}</span>
+        <app-ui-inline-edit
+          class="v3__title"
+          size="lg"
+          [value]="item.title"
+          ariaLabel="Edit title"
+          (saved)="store.updateTitle($event)"
         />
       </div>
     </div>
-    </div><!-- /.vault-item-detail__sticky-header -->
 
+    <!-- ══ ZONE 2 · META + CTA ══════════════════════════════════════════════ -->
+    <div class="v3__meta-row">
+      <span class="v3__meta">created <b>{{ item.created_at | relativeTime }}</b></span>
+      <span class="v3__meta">
+        assigned
+        @if (store.owner(); as o) { <b [style.color]="'var(--actor-color-' + o.id + ', var(--color-text-soft))'">@{{ o.display_name }}</b> }
+        @else { <b>unassigned</b> }
+      </span>
+      @if (store.lastActivityAt(); as la) {
+        <span class="v3__meta">· last activity <b>{{ la | relativeTime }}</b></span>
+      }
+
+      <span class="v3__meta-spacer"></span>
+
+      @if (store.canDemote() && item.grooming_status === 'ungroomed') {
+        <button type="button" class="v3__link" (click)="sendForGrooming()">Send for grooming</button>
+      }
+
+      <app-ui-dropdown ariaHaspopup="menu" ariaLabel="Item actions" #actions>
+        <button trigger type="button" class="v3__cta">Actions ▾</button>
+        <div panel class="v3__menu" role="menu">
+          @if (store.canReject()) {
+            <button type="button" role="menuitem" class="v3__menu-item" (click)="store.openReject(); actions.close()">
+              Reject work<small>send it back with a reason</small>
+            </button>
+          }
+          @if (store.canDemote()) {
+            <button type="button" role="menuitem" class="v3__menu-item" (click)="store.demoteToNote(); actions.close()">
+              Make it a note<small>stops being dispatchable · reversible</small>
+            </button>
+          }
+          <button type="button" role="menuitem" class="v3__menu-item" [disabled]="isItemArchived(item)"
+            (click)="store.archive(); actions.close()">
+            Archive<small>hide from boards · reversible</small>
+          </button>
+          <button type="button" role="menuitem" class="v3__menu-item v3__menu-item--danger"
+            (click)="onDeleted(); actions.close()">
+            Delete permanently<small>cannot be undone</small>
+          </button>
+        </div>
+      </app-ui-dropdown>
+    </div>
+
+    <!-- ══ ZONE 3 · NOTICE STACK (why is this on me) — only when outstanding ══ -->
     @if (store.showRejectForm()) {
       <app-reject-form
+        class="v3__notice"
         [itemId]="item.id"
         [currentOwner]="item.assigned_to"
         [recentEvents]="store.events()"
@@ -163,95 +193,134 @@
       />
     }
 
-    <app-vault-item-questions
-      [questions]="store.openQuestions()"
-      [vaultItemId]="item.id"
-      [currentActor]="currentActorId"
-      (replyPosted)="postThreadReply($event)"
-    />
-
-    <!-- Intake exam — what hermes/intake-quality believes this note IS,
-         in operator-scannable form. Only renders when populated. -->
-    <app-vault-item-intake-rationale
-      [rationale]="$any(item).intake_rationale ?? null"
-    />
-
-    <div class="vault-item-detail__tabs">
-      <app-ui-inline-tabs
-        class="vault-item-detail__tab-bar"
-        [options]="detailTabs()"
-        [value]="activeTab()"
-        ariaLabel="Item detail sections"
-        (changed)="activeTab.set($any($event))"
-      />
-
-      <!-- All panels stay mounted; CSS hides the inactive ones so tabbing away
-           never drops thread-composer draft text (the component isn't
-           destroyed). -->
-      <div class="vault-item-detail__panel" [class.is-hidden]="activeTab() !== 'detail'">
-      <app-ui-section
-        title="Body"
-        [collapsible]="false"
-        [meta]="item.type === 'task' ? 'intake · delivery · links' : 'intake · links'">
-        @switch (item.type) {
-          @case ('task') {
-            <app-vault-item-body-task
-              (subtaskClicked)="swapToSeq($event)"
-              (projectClicked)="onProjectClicked($event)"
-              (blockerClicked)="swapToSeq($event)"
-              (parentClicked)="swapToSeq($event)" />
+    @if (store.openBlockers().length > 0) {
+      <div class="v3__notice v3__notice--block">
+        <span class="v3__notice-hd">
+          <b>Blocked</b> by
+          @for (b of store.openBlockers(); track b.blocker_id) {
+            <button type="button" class="v3__blocker-link" (click)="swapToSeq(b.blocker_seq)">#{{ b.blocker_seq }} {{ b.blocker_title }}</button>
           }
-          @default {
-            <app-vault-item-body-capture
-              (subtaskClicked)="swapToSeq($event)"
-              (projectClicked)="onProjectClicked($event)"
-              (blockerClicked)="swapToSeq($event)"
-              (parentClicked)="swapToSeq($event)" />
-          }
-        }
-      </app-ui-section>
+        </span>
       </div>
+    }
 
-      <div class="vault-item-detail__panel" [class.is-hidden]="activeTab() !== 'activity'">
-      <app-ui-section
-        title="Activity"
-        tone="recede"
-        [collapsible]="false"
-        [meta]="store.events().length + ' events'">
-        <app-activity-log
-          [events]="store.events()"
-          [actorLabel]="store.actorLabelFn"
+    @if (store.openQuestions().length > 0) {
+      <div class="v3__notice v3__notice--ask">
+        <app-vault-item-questions
+          [questions]="store.openQuestions()"
+          [vaultItemId]="item.id"
+          [currentActor]="currentActorId"
+          (replyPosted)="postThreadReply($event)"
         />
-      </app-ui-section>
       </div>
+    } @else if (pendingAsk(); as ask) {
+      <!-- A message posted after your last word, by someone else — the
+           attention signal typed questions miss. Points at the thread below. -->
+      <div class="v3__notice v3__notice--ask v3__notice--pending">
+        <span class="v3__notice-hd">
+          <b>{{ store.actorDisplay(ask.author_actor_id) }}</b> is waiting on you
+        </span>
+        <p class="v3__ask-quote">{{ ask.body }}</p>
+        <a class="v3__ask-jump" href="#v3-thread">Reply in thread ↓</a>
+      </div>
+    }
 
-      <div class="vault-item-detail__panel" [class.is-hidden]="activeTab() !== 'thread'">
-      <app-ui-section
-        title="Thread"
-        tone="recede"
-        [collapsible]="false"
-        [meta]="threadMeta()">
+    <!-- ══ ZONE 4 · THE WORK | ACCEPTANCE CRITERIA + META ════════════════════ -->
+    <div class="v3__body">
+      <section class="v3__work">
+        <app-vault-item-intake-block
+          label="The work"
+          [hint]="null"
+          [showNote]="false"
+          [body]="item.body"
+          [createdAt]="item.created_at"
+          [editable]="store.isManual()"
+          (bodyChange)="store.updateBody($event)"
+        />
+
+        <!-- Readiness is a dispatch concept — tasks only. Notes/bookmarks and
+             epics don't get dispatched, so it would be a false signal on them. -->
+        @if (item.type === 'task' && !item.is_epic) {
+          <p class="v3__readiness">
+            @if (store.readiness(); as r) {
+              @if (r.verdict === 'ready') {
+                <span class="v3__ready-dot v3__ready-dot--ok"></span> Ready to dispatch
+              } @else {
+                <span class="v3__ready-dot"></span>
+                <b>Not runnable unattended</b> — {{ r.passed }} of {{ r.total }} checks ·
+                <span class="v3__ready-note">these gate dispatch, not you</span>
+              }
+            }
+          </p>
+        }
+      </section>
+
+      <aside class="v3__side">
+        @if (item.type === 'task' && !item.is_epic) {
+          <div class="v3__estimate">
+            <span class="v3__estimate-label">Estimate</span>
+            <div class="v3__estimate-stepper">
+              <button type="button" (click)="decEstimate()" [disabled]="estimateBlocks() <= 1" aria-label="decrease estimate">−</button>
+              <span>{{ estimateBlocks() }}×25m</span>
+              <button type="button" (click)="incEstimate()" aria-label="increase estimate">+</button>
+            </div>
+          </div>
+
+          <!-- readiness omitted here — it's the one-line verdict under the work;
+               this panel is just "define done" (the AC checklist + override). -->
+          <app-vault-item-delivery-block
+            [criteria]="item.acceptance_criteria"
+            [editable]="true"
+            [groomingOverridable]="store.groomingOverridable()"
+            [groomingOverride]="item.grooming_override"
+            (criteriaChange)="store.updateCriteria($event)"
+            (groomingOverrideChange)="store.setGroomingOverride($event)"
+          />
+        }
+
+        <app-vault-item-links-block
+          [subtasks]="store.children()"
+          [parentIsEpic]="item.is_epic"
+          [projects]="store.projects()"
+          [activeProjects]="store.activeProjects()"
+          [openBlockers]="store.openBlockers()"
+          [tags]="item.tags"
+          [addBlockerSeqInput]="store.addBlockerSeqInput()"
+          [availableEpics]="store.availableEpics()"
+          [parent]="store.parentRef()"
+          [editable]="true"
+          (subtaskClicked)="swapToSeq($event)"
+          (projectClicked)="onProjectClicked($event)"
+          (projectAdded)="store.addProject($event)"
+          (projectRemoved)="store.removeProject($event)"
+          (blockerClicked)="swapToSeq($event)"
+          (blockerRemoved)="store.removeBlocker($event)"
+          (blockerAddBySeq)="store.addBlockerBySeq()"
+          (blockerSeqInputChange)="store.addBlockerSeqInput.set($event)"
+          (tagsChange)="store.updateTags($event)"
+          (parentClicked)="swapToSeq($event)"
+          (parentChange)="store.updateParent($event)"
+        />
+      </aside>
+    </div>
+
+    <!-- ══ ZONE 5 · HISTORY (activity + thread, one column, no tabs) ═════════ -->
+    <div class="v3__history">
+      <div class="v3__history-col">
+        <div class="v3__lab">Activity</div>
+        <app-activity-log [events]="store.events()" [actorLabel]="store.actorLabelFn" />
+      </div>
+      <div class="v3__history-col" id="v3-thread">
+        <div class="v3__lab">Thread</div>
         <app-thread-view
           [vaultItemId]="item.id"
           [currentActor]="currentActorId"
-          [actorMap]="store.actorMap()">
-        </app-thread-view>
-      </app-ui-section>
+          [actorMap]="store.actorMap()"
+        />
       </div>
-
     </div>
 
-    <app-vault-item-action-bar
-      [canReject]="store.canReject()"
-      [canDemote]="store.canDemote()"
-      [isArchived]="isItemArchived(item)"
-      (rejected)="store.openReject()"
-      (demoted)="store.demoteToNote()"
-      (archived)="store.archive()"
-      (deleted)="onDeleted()"
-    />
-
-  </div>
+  </article>
 } @else {
   <div class="vault-item-not-found">
     <a routerLink="/vault-items" class="back-link">← Vault</a>

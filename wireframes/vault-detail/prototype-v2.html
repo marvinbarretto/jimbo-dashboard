@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vault detail — prototype v2 (stacked bands)</title>
+<style>
+:root{
+  --color-bg:#060b12; --color-surface:#0d1520; --color-surface-raised:#101b28;
+  --color-surface-soft:#091119; --color-border:#1f394c; --color-text:#e6f7ff;
+  --color-text-muted:#83a6b8; --color-text-soft:#aac8d6; --color-accent:#3dd6ff;
+  --color-danger:#ff5d7a; --color-success:#6dffb3; --color-warning:#ffd86b;
+  --font-mono:"SF Mono","Fira Code",monospace;
+  --font-serif:"Iowan Old Style",Palatino,Georgia,serif;
+  --actor-boris:#6b95d6; --actor-marvin:#e08850;
+  --proj:#6e56cf;             /* Jimbo */
+  --radius:2px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--color-bg);color:var(--color-text);font-family:var(--font-mono);font-size:13px;line-height:1.5;padding:0 0 4rem}
+
+/* ── prototype chrome (not part of the design) ─────────────────────── */
+.proto{position:sticky;top:0;z-index:50;background:#000;border-bottom:1px solid var(--color-border);
+  padding:.5rem 1rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;font-size:11px}
+.proto b{color:var(--color-warning);letter-spacing:.08em}
+.proto__group{display:flex;gap:.35rem;align-items:center}
+.proto__label{color:var(--color-text-muted)}
+.proto button{font:inherit;font-family:var(--font-mono);background:transparent;color:var(--color-text-soft);
+  border:1px solid var(--color-border);padding:.15rem .5rem;cursor:pointer;border-radius:var(--radius)}
+.proto button:hover{border-color:var(--color-accent);color:var(--color-accent)}
+.proto button[aria-pressed="true"]{background:var(--color-accent);color:#000;border-color:var(--color-accent);font-weight:700}
+
+.wrap{max-width:1180px;margin:1.25rem auto;padding:0 1rem}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);overflow:hidden}
+
+/* ── ZONE 1 · STACKED HIERARCHY BANDS ──────────────────────────────── */
+/* project → epic → title, same hue, opacity ramps up toward the title so
+   the thing you're looking at is the strongest band. Full-width, not a rail. */
+.bands{display:flex;flex-direction:column}
+.band{padding:.5rem 1.1rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;
+  border-left:3px solid var(--proj)}
+.band--project{background:color-mix(in srgb,var(--proj) 22%,var(--color-surface));font-size:12.5px;color:var(--color-text-soft)}
+.band--epic{background:color-mix(in srgb,var(--proj) 32%,var(--color-surface));font-size:13.5px;color:var(--color-text)}
+.band--title{background:color-mix(in srgb,var(--proj) 46%,var(--color-surface));padding:.7rem 1.1rem}
+.band--project:hover,.band--epic:hover{filter:brightness(1.18)}
+.band__seq{color:var(--color-text-muted);font-size:11px}
+.band--epic .band__seq{color:var(--color-text-soft)}
+.band__title{font-family:var(--font-serif);font-size:26px;line-height:1.15;color:#fff}
+.pill{display:inline-block;background:var(--color-danger);color:#1a0008;font-weight:700;
+  font-size:11px;padding:.1rem .45rem;border-radius:var(--radius);letter-spacing:.03em}
+/* unfiled project band — hatched, clearly not-yet-filed */
+.band--unfiled{background:repeating-linear-gradient(45deg,var(--color-surface),var(--color-surface) 7px,
+  color-mix(in srgb,var(--color-danger) 14%,var(--color-surface)) 7px,color-mix(in srgb,var(--color-danger) 14%,var(--color-surface)) 14px);
+  border-left-color:var(--color-danger);color:var(--color-danger)}
+.band--unfiled u{cursor:pointer}
+
+/* ── ZONE 2 · META + CTA ROW ───────────────────────────────────────── */
+.metarow{display:flex;align-items:center;gap:1.1rem;padding:.6rem 1.1rem;border-bottom:1px solid var(--color-border);flex-wrap:wrap}
+.metarow .m{font-size:11.5px;color:var(--color-text-muted)}
+.metarow .m b{color:var(--color-text-soft);font-weight:700}
+.metarow .marvin{color:var(--actor-marvin)}
+.metarow .jimbo{color:#a878d6}
+.metarow__spacer{flex:1}
+.metalink{color:var(--color-accent);font-size:12px;text-decoration:underline;cursor:pointer;white-space:nowrap}
+
+/* ── ZONE 3 · NOTICE STACK (only when present) ─────────────────────── */
+.notices{display:flex;flex-direction:column;gap:.5rem;padding:.8rem 1.1rem 0}
+.notice{border:1px solid var(--color-border);border-left:3px solid var(--color-border);
+  padding:.55rem .8rem;background:var(--color-surface-raised);font-size:12.5px}
+.notice__hd{display:flex;justify-content:space-between;align-items:center;gap:.6rem}
+.notice--ask{border-left-color:var(--actor-boris)}
+.notice--ask .who b{color:var(--actor-boris)}
+.notice--block{border-left-color:var(--color-danger)}
+.notice--block .who b{color:var(--color-danger)}
+.notice__quote{margin:.4rem 0 .5rem;padding-left:.75rem;border-left:1px solid var(--color-border);
+  color:var(--color-text-soft);font-size:12.5px;line-height:1.5}
+.notice__compose{display:flex;gap:.5rem}
+.notice__compose textarea{flex:1;background:var(--color-surface-soft);border:1px solid var(--color-border);
+  color:var(--color-text);font:inherit;font-family:var(--font-mono);padding:.35rem .5rem;border-radius:var(--radius);resize:vertical;min-height:34px}
+.notice__compose textarea:focus{outline:none;border-color:var(--color-accent)}
+.who{font-size:12px}
+.age{color:var(--color-text-muted)}
+
+/* ── ZONE 4 · BODY: THE WORK | ACs ─────────────────────────────────── */
+.body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:1.1rem;padding:1rem 1.1rem 1.2rem}
+.panel{border:1px solid var(--color-border);border-radius:var(--radius);background:var(--color-surface-soft)}
+.panel__hd{padding:.5rem .75rem;border-bottom:1px solid var(--color-border);font-size:10px;
+  text-transform:uppercase;letter-spacing:.11em;color:var(--color-text-muted);display:flex;justify-content:space-between;align-items:center}
+.panel__bd{padding:.8rem .85rem}
+.work{font-size:14px;line-height:1.62;color:var(--color-text);white-space:pre-wrap}
+.work code{color:var(--color-accent);font-size:13px}
+
+/* AC panel — the "define done" surface, first-class not hidden */
+.ac{display:flex;gap:.5rem;align-items:flex-start;padding:.35rem 0;border-bottom:1px solid color-mix(in srgb,var(--color-border) 45%,transparent);font-size:12.5px}
+.ac__box{width:13px;height:13px;border:1px solid var(--color-text-muted);border-radius:2px;flex-shrink:0;margin-top:2px}
+.ac__box--done{background:var(--color-success);border-color:var(--color-success)}
+.ac--done{color:var(--color-text-muted);text-decoration:line-through}
+.ac-empty{border:1px dashed color-mix(in srgb,var(--color-warning) 50%,var(--color-border));
+  background:color-mix(in srgb,var(--color-warning) 7%,transparent);padding:.6rem .7rem;border-radius:var(--radius)}
+.ac-empty b{color:var(--color-warning)}
+.metaline{font-size:12px;color:var(--color-text-soft);padding:.25rem 0;display:flex;justify-content:space-between;gap:.5rem}
+.metaline dt{color:var(--color-text-muted)}
+.chip{display:inline-block;border:1px solid var(--color-border);border-radius:999px;padding:.05rem .5rem;
+  font-size:10.5px;color:var(--color-text-soft);background:var(--color-surface-soft);white-space:nowrap}
+.chip--warn{border-color:color-mix(in srgb,var(--color-warning) 45%,var(--color-border));color:var(--color-warning)}
+.chip--ok{border-color:color-mix(in srgb,var(--color-success) 45%,var(--color-border));color:var(--color-success)}
+.chip__bar{display:inline-block;width:3px;height:9px;vertical-align:-1px;margin-right:4px;border-radius:1px}
+
+/* readiness — one honest line under the work, expandable */
+.ready{margin-top:.9rem;font-size:12px;color:var(--color-text-muted);display:flex;align-items:center;gap:.5rem}
+.ready b{color:var(--color-text-soft)}
+.ready a{color:var(--color-accent);cursor:pointer;text-decoration:underline}
+
+/* ── ZONE 5 · ACTIVITY (full width) ────────────────────────────────── */
+.tl{border-top:1px solid var(--color-border);padding:.8rem 1.1rem 1rem}
+.tl__head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.45rem}
+.lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.11em;color:var(--color-text-muted)}
+.tl__row{display:flex;gap:.75rem;padding:.35rem .4rem;border-bottom:1px solid color-mix(in srgb,var(--color-border) 45%,transparent);align-items:baseline;font-size:12px}
+.tl__row--unanswered{border-left:2px solid var(--actor-boris);background:var(--color-surface-raised)}
+.tl__when{color:var(--color-text-muted);min-width:3.5em;font-size:11px}
+.tl__who{min-width:7em;font-weight:700}
+.tl__who--boris{color:var(--actor-boris)}
+.tl__who--marvin{color:var(--actor-marvin)}
+.tl__who--system{color:var(--color-text-muted);font-weight:400}
+.tl__what{flex:1;min-width:0;color:var(--color-text-soft)}
+
+/* buttons */
+.btn{font:inherit;font-family:var(--font-mono);font-size:12px;padding:.35rem .8rem;border-radius:var(--radius);cursor:pointer;
+  background:transparent;color:var(--color-text-soft);border:1px solid var(--color-border);white-space:nowrap}
+.btn:hover{border-color:var(--color-accent);color:var(--color-accent)}
+.btn--primary{background:var(--color-accent);color:#001019;border-color:var(--color-accent);font-weight:700}
+.btn--primary:hover{color:#001019;filter:brightness(1.12)}
+.btn--sm{font-size:11px;padding:.2rem .55rem}
+
+/* CTA menu */
+.cta-wrap{position:relative}
+.cta-menu{position:absolute;right:0;top:calc(100% + 4px);background:var(--color-surface-raised);
+  border:1px solid var(--color-border);border-radius:var(--radius);min-width:220px;z-index:30;display:none;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.cta-menu.show{display:block}
+.cta-item{padding:.5rem .7rem;font-size:12px;cursor:pointer;border-bottom:1px solid color-mix(in srgb,var(--color-border) 50%,transparent);color:var(--color-text-soft)}
+.cta-item:last-child{border-bottom:none}
+.cta-item:hover{background:var(--color-surface);color:var(--color-text)}
+.cta-item small{display:block;color:var(--color-text-muted);font-size:10px}
+.cta-item--danger{color:var(--color-danger)}
+
+.hide{display:none !important}
+.toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:var(--color-surface-raised);
+  border:1px solid var(--color-accent);color:var(--color-text);padding:.55rem 1rem;font-size:12px;z-index:80;
+  display:none;align-items:center;gap:1rem;border-radius:var(--radius)}
+.toast.show{display:flex}
+.toast a{color:var(--color-accent);cursor:pointer;text-decoration:underline}
+.note{font-size:11px;color:var(--color-text-muted);padding:.5rem 1.1rem;border-top:1px dashed var(--color-border);background:var(--color-surface-soft)}
+.note b{color:var(--color-warning)}
+</style>
+</head>
+<body>
+
+<div class="proto">
+  <b>PROTOTYPE v2</b>
+  <span class="proto__label">stacked bands · #3365</span>
+  <span class="proto__group">
+    <span class="proto__label">notices:</span>
+    <button id="n-ask"   aria-pressed="true"  onclick="toggleNotice('ask')">question</button>
+    <button id="n-block" aria-pressed="false" onclick="toggleNotice('block')">blocked-by</button>
+  </span>
+  <span class="proto__group">
+    <span class="proto__label">ACs:</span>
+    <button id="n-ac" aria-pressed="false" onclick="toggleAC()">has criteria</button>
+  </span>
+  <span class="proto__group">
+    <span class="proto__label">filed:</span>
+    <button id="n-filed" aria-pressed="false" onclick="toggleFiled()">toggle project</button>
+  </span>
+  <button onclick="location.reload()">reset</button>
+</div>
+
+<div class="wrap">
+<div class="card">
+
+  <!-- ZONE 1 — stacked hierarchy bands -->
+  <div class="bands">
+    <div class="band band--project band--unfiled" id="bandProject" onclick="fileIt()">
+      <span><u>unfiled</u> — click to file under a project</span>
+    </div>
+    <div class="band band--epic" title="open epic #3364">
+      <span class="band__seq">#3364</span> <span>Briefing v2 — Boris-authored, loose-timed, planner-connected</span>
+    </div>
+    <div class="band band--title">
+      <span class="pill">P1</span>
+      <span class="band__title">#3365 · Briefing v2 Phase 1: pipeline swap</span>
+    </div>
+  </div>
+
+  <!-- ZONE 2 — meta + CTA -->
+  <div class="metarow">
+    <span class="m">Created by <b class="jimbo">@jimbo</b> · 22 Jul 10:00</span>
+    <span class="m">Assigned to <b class="marvin">@marvin</b> · 22 Jul 10:00</span>
+    <span class="metarow__spacer"></span>
+    <span class="metalink" onclick="toast('Sent to @boris to groom')">Send for grooming</span>
+    <span class="cta-wrap">
+      <button class="btn btn--primary" onclick="document.getElementById('ctaMenu').classList.toggle('show')">Actions ▾</button>
+      <div class="cta-menu" id="ctaMenu">
+        <div class="cta-item" onclick="claimIt()">I'll run this myself<small>clears dispatch gating while you own it</small></div>
+        <div class="cta-item" onclick="toast('Sent to @boris to groom')">Hand to @boris<small>reinstates the full gate</small></div>
+        <div class="cta-item" onclick="toast('Marked as note')">Make it a note<small>stops being dispatchable · reversible</small></div>
+        <div class="cta-item" onclick="toast('Archived')">Archive<small>hide, keep · reversible</small></div>
+        <div class="cta-item cta-item--danger" onclick="toast('Delete — needs confirm')">Delete permanently<small>cannot be undone</small></div>
+      </div>
+    </span>
+  </div>
+
+  <!-- ZONE 3 — notice stack -->
+  <div class="notices" id="notices">
+    <div class="notice notice--ask" id="noticeAsk">
+      <div class="notice__hd"><span class="who"><b>@boris</b> is waiting on you <span class="age">· asked 15h ago</span></span></div>
+      <div class="notice__quote">Should the cron enqueue at 06:10 UTC or 06:10 local? Spec says UTC but the planner
+        renders local, so a DST shift would drift the briefing by an hour.</div>
+      <div class="notice__compose">
+        <textarea id="reply" placeholder="Reply…">UTC — the cron is infrastructure, keep it absolute. Fix the drift in the planner's render layer.</textarea>
+        <button class="btn btn--primary" onclick="postAnswer()">Answer</button>
+      </div>
+    </div>
+    <div class="notice notice--block hide" id="noticeBlock">
+      <div class="notice__hd">
+        <span class="who"><b>Blocked</b> by <a style="color:var(--color-accent)">#3390 telegram_summary schema</a> — still open</span>
+        <button class="btn btn--sm" onclick="toast('Cleared blocker')">Clear blocker</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ZONE 4 — the work | ACs -->
+  <div class="body">
+    <div class="panel">
+      <div class="panel__hd"><span>The work</span><span style="text-transform:none;letter-spacing:0">edit</span></div>
+      <div class="panel__bd">
+        <div class="work">Prove the new pipeline with the CURRENT schema before changing content. jimbo-api: add optional <code>telegram_summary</code> to CreateBriefingBody, forward via sendTelegram() on POST (best-effort). hub: new skill briefing/daily-v2 (executors: [boris], curl REST not hermes wrappers, closes dispatch via /api/dispatch/complete). VPS cron enqueues at ~06:10/14:10 UTC via POST /api/dispatch/enqueue (flow=recon, auto_approve, synthetic task_id, task_source=briefing-cron). Sync skills to VPS. Pause hermes daily-briefing cron after one successful end-to-end run.</div>
+        <div class="ready" id="readyLine">
+          <span><b>Not runnable unattended</b> — 2 of 4 checks · <a onclick="toast('grooming vs readiness detail')">why?</a></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel__hd"><span>Acceptance criteria</span><span id="acCount" style="text-transform:none;letter-spacing:0">0</span></div>
+      <div class="panel__bd" id="acBody">
+        <div class="ac-empty">
+          <b>No criteria yet.</b> Acceptance criteria are what "done" means — the checks an agent (or you)
+          verifies before closing this. Nothing can be dispatched without at least one.
+          <div style="margin-top:.5rem"><button class="btn btn--sm" onclick="toggleAC()">+ Add criterion</button></div>
+        </div>
+
+        <div style="margin-top:1rem">
+          <div class="lbl" style="margin-bottom:.4rem">Meta</div>
+          <div class="metaline"><dt>type</dt><span><span class="chip">task</span></span></div>
+          <div class="metaline"><dt>status</dt><span><span class="chip">active</span></span></div>
+          <div class="metaline"><dt>grooming</dt><span><span class="chip chip--warn" id="groomChip">ungroomed</span></span></div>
+          <div class="metaline"><dt>estimate</dt><span>1×25m</span></div>
+          <div class="metaline"><dt>tags</dt><span><span class="chip">#briefing</span> <span class="chip">#boris</span></span></div>
+          <div class="metaline"><dt>links</dt><span>0 subtasks · 0 blockers</span></div>
+          <div class="metaline"><dt>origin</dt><span>chat · 18h ago</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ZONE 5 — activity -->
+  <div class="tl">
+    <div class="tl__head">
+      <span class="lbl">History</span>
+      <span><span class="chip">all</span> <span class="chip">talk</span> <span class="chip">events</span></span>
+    </div>
+    <div id="timeline">
+      <div class="tl__row tl__row--unanswered" id="tlUnanswered">
+        <span class="tl__when">15h</span><span class="tl__who tl__who--boris">@boris</span>
+        <span class="tl__what">asked — "Should the cron enqueue at 06:10 UTC or local?…" · <b>unanswered</b></span>
+      </div>
+      <div class="tl__row"><span class="tl__when">16h</span><span class="tl__who tl__who--system">system</span>
+        <span class="tl__what">assigned to @marvin</span></div>
+      <div class="tl__row"><span class="tl__when">18h</span><span class="tl__who tl__who--marvin">@marvin</span>
+        <span class="tl__what">created from chat · linked to epic #3364</span></div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>vs today:</b> six stacked strips before content · the question was a "1" badge on a collapsed tab ·
+    ACs were behind a "2/4 checks / NOT_READY" card · banner read "WAITING ON intake review".
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span><a onclick="document.getElementById('toast').classList.remove('show')">undo</a></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let filed=false, answered=false, hasAC=false;
+
+function toggleNotice(k){
+  const el = k==='ask' ? $('noticeAsk') : $('noticeBlock');
+  const btn = $('n-'+k);
+  const willShow = el.classList.contains('hide');
+  el.classList.toggle('hide', !willShow);
+  btn.setAttribute('aria-pressed', String(willShow));
+}
+
+function toggleFiled(){ filed ? unfileIt() : fileIt(); }
+function fileIt(){
+  filed=true; $('n-filed').setAttribute('aria-pressed','true');
+  const b=$('bandProject');
+  b.className='band band--project';
+  b.innerHTML='<span class="band__seq">Jimbo</span>';
+  b.onclick=null;
+  toast('Filed under Jimbo');
+}
+function unfileIt(){
+  filed=false; $('n-filed').setAttribute('aria-pressed','false');
+  const b=$('bandProject');
+  b.className='band band--project band--unfiled';
+  b.innerHTML='<span><u>unfiled</u> — click to file under a project</span>';
+  b.onclick=fileIt;
+}
+
+function toggleAC(){
+  hasAC=!hasAC; $('n-ac').setAttribute('aria-pressed',String(hasAC));
+  if(hasAC){
+    $('acCount').textContent='3';
+    $('acBody').querySelector('.ac-empty').outerHTML =
+      '<div class="ac ac--done"><span class="ac__box ac__box--done"></span><span>telegram_summary field accepted on POST /briefings and forwarded via sendTelegram()</span></div>'+
+      '<div class="ac"><span class="ac__box"></span><span>briefing/daily-v2 skill closes its dispatch via /api/dispatch/complete</span></div>'+
+      '<div class="ac"><span class="ac__box"></span><span>one full end-to-end cron run succeeds before hermes cron is paused</span></div>';
+    $('readyLine').innerHTML='<span><b>Almost runnable</b> — 3 of 4 checks · needs grooming · <a onclick="toast(\'detail\')">why?</a></span>';
+  } else { location.reload(); }
+}
+
+function postAnswer(){
+  answered=true;
+  const t=$('reply').value.trim()||'UTC — keep the cron absolute.';
+  $('noticeAsk').classList.add('hide');
+  $('n-ask').setAttribute('aria-pressed','false');
+  $('tlUnanswered').classList.add('hide');
+  const row=document.createElement('div');
+  row.className='tl__row';
+  row.innerHTML='<span class="tl__when">now</span><span class="tl__who tl__who--marvin">@marvin</span>'+
+    '<span class="tl__what">answered — "'+t.slice(0,60)+'…"</span>';
+  $('timeline').prepend(row);
+  toast('Answered @boris');
+}
+
+function claimIt(){
+  $('ctaMenu').classList.remove('show');
+  $('groomChip').className='chip chip--ok'; $('groomChip').textContent='yours';
+  $('readyLine').innerHTML='<span><b style="color:var(--color-success)">Yours</b> — dispatch gating off, you own this</span>';
+  toast('You own this — dispatch gating off');
+}
+
+let tt;
+function toast(m){ $('toastMsg').textContent=m; $('toast').classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>$('toast').classList.remove('show'),4000); }
+document.addEventListener('click',e=>{ if(!e.target.closest('.cta-wrap')) $('ctaMenu').classList.remove('show'); });
+document.addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&e.key==='Enter'&&!$('noticeAsk').classList.contains('hide')) postAnswer(); });
+</script>
+</body>
+</html>

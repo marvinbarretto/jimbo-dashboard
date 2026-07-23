@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>02 — Ask answered</title>
+<link rel="stylesheet" href="wire-kit.css">
+</head>
+<body>
+
+<div class="w-frame">
+  <div class="w-intent">GOAL:     Close the loop on an inbound ask without leaving the item, and show the page settling afterwards.
+PERSONA:  Marvin, mid-triage. He has the answer in his head; the cost of recording it must be near zero.
+PRIMARY:  Post the answer.
+SUCCESS:  The ask slot empties, the timeline shows the exchange, and the item stops claiming his attention.</div>
+
+  <div class="w-bar" style="align-items:flex-start;">
+    <span class="w-rail" style="--proj:#6e56cf">
+      <span class="w-rail__bar w-rail__bar--empty"></span>
+      <span class="w-rail__bar w-rail__bar--epic"></span>
+      <span class="w-rail__bar w-rail__bar--item"></span>
+    </span>
+    <div style="flex:1;">
+      <div class="w-crumb"><span style="border-bottom:1px dashed #b00; color:#b00;">unfiled</span><span class="sep">›</span> <b>#3364 Briefing v2</b><span class="sep">›</span> #3365</div>
+      <div class="w-h1" style="margin-top:0.25rem;">Briefing v2 Phase 1: pipeline swap — Boris authors, API delivers Telegram</div>
+    </div>
+  </div>
+
+  <div class="w-ask">
+    <div class="w-ask__who">@boris is waiting on you <span class="w-muted" style="font-weight:400">· asked 15h ago</span></div>
+    <div class="w-ask__quote">Should the cron enqueue at 06:10 UTC or 06:10 local? The spec says UTC but the
+      planner renders local, so a DST shift would drift the briefing by an hour.</div>
+    <div style="display:flex; gap:0.5rem; align-items:flex-start; margin-top:0.5rem;">
+      <div style="flex:1; border:2px solid #222; padding:0.4rem 0.5rem; background:#fff;">
+        UTC — the cron is infrastructure, keep it absolute. Fix the drift in the planner's render layer,
+        not the enqueue.<span style="border-left:1px solid #222; margin-left:1px;">&nbsp;</span>
+      </div>
+      <span class="w-btn-primary">Post answer</span>
+    </div>
+    <div class="w-muted" style="font-size:11px; margin-top:0.3rem;">posts as <b>answer</b>, linked to @boris's message · ⌘↵</div>
+  </div>
+
+  <div class="w-notes">NOTES:
+— Composing happens in place. No modal-on-modal, no navigating to a Thread tab and losing the question
+  you're answering — the question stays quoted directly above the box while you type.
+— The reply is typed as `answer` with in_reply_to set, so it closes the loop in the data model too, not
+  just visually. That's what makes the ask slot empty on the next render.
+— ⌘↵ to post. The current thread composer already supports this; keep it.</div>
+
+  <div class="w-work" style="padding-top:0.5rem;">
+    <div class="w-h3" style="margin-bottom:0.4rem;">The work</div>
+    <div class="w-work__body w-muted">Prove the new pipeline with the CURRENT schema before changing content. jimbo-api: add optional
+      telegram_summary to CreateBriefingBody, forward via sendTelegram() on POST (best-effort)…</div>
+  </div>
+</div>
+
+<div class="w-state-sep">AFTER — answer posted</div>
+
+<div class="w-frame" style="min-height:0;">
+  <div class="w-bar" style="align-items:flex-start;">
+    <span class="w-rail" style="--proj:#6e56cf">
+      <span class="w-rail__bar w-rail__bar--empty"></span>
+      <span class="w-rail__bar w-rail__bar--epic"></span>
+      <span class="w-rail__bar w-rail__bar--item"></span>
+    </span>
+    <div style="flex:1;">
+      <div class="w-crumb"><span style="border-bottom:1px dashed #b00; color:#b00;">unfiled</span><span class="sep">›</span> <b>#3364 Briefing v2</b><span class="sep">›</span> #3365</div>
+      <div class="w-h1" style="margin-top:0.25rem;">Briefing v2 Phase 1: pipeline swap — Boris authors, API delivers Telegram</div>
+    </div>
+  </div>
+
+  <div style="padding:0 1rem;"><div class="w-toast">Answered @boris · <span style="text-decoration:underline;">undo</span></div></div>
+
+  <div class="w-cols" style="gap:0; margin-top:0.75rem;">
+    <div class="w-col w-work">
+      <div class="w-h3" style="margin-bottom:0.4rem;">The work</div>
+      <div class="w-work__body">Prove the new pipeline with the CURRENT schema before changing content. jimbo-api: add optional
+        telegram_summary to CreateBriefingBody, forward via sendTelegram() on POST (best-effort). hub: new skill
+        briefing/daily-v2 (executors: [boris], curl REST not hermes wrappers, closes dispatch via
+        /api/dispatch/complete)…</div>
+      <div class="w-disclose" data-goto="03">
+        <div class="w-disclose__head">
+          <span><b>▸ Not runnable unattended</b> <span class="w-muted">— no acceptance criteria, not groomed</span></span>
+          <span class="w-muted">2 of 4 ▾</span>
+        </div>
+      </div>
+    </div>
+    <div class="w-side">
+      <div class="w-side__label">State</div>
+      <div><span class="w-chip">task</span> <span class="w-chip">active</span> <span class="w-chip">P1</span></div>
+      <div style="margin-top:0.4rem;">owner <b>@marvin</b> <span class="w-muted">· est 1×25m</span></div>
+      <div class="w-side__label">Filed under</div>
+      <div style="border:1px dashed #b00; padding:0.4rem 0.5rem; color:#b00;">no project — <span style="text-decoration:underline;">file it</span></div>
+    </div>
+  </div>
+
+  <div class="w-tl">
+    <div class="w-h3">History</div>
+    <div class="w-tl__row w-tl__row--talk">
+      <span class="w-tl__when">now</span><span class="w-tl__who">@marvin</span>
+      <span class="w-tl__what">answered — “UTC — the cron is infrastructure, keep it absolute…”</span>
+    </div>
+    <div class="w-tl__row w-tl__row--talk">
+      <span class="w-tl__when">15h</span><span class="w-tl__who">@boris</span>
+      <span class="w-tl__what">asked — “Should the cron enqueue at 06:10 UTC or local?…” <span class="w-muted">· answered</span></span>
+    </div>
+    <div class="w-tl__row">
+      <span class="w-tl__when">16h</span><span class="w-tl__who">system</span><span class="w-tl__what">assigned to @marvin</span>
+    </div>
+  </div>
+
+  <div class="w-actions"><span class="w-btn-primary">Start work</span></div>
+
+  <div class="w-notes">NOTES:
+— The ask slot is GONE, not empty. The page visibly relaxes — that's the reward for answering, and it's
+  what makes the slot trustworthy: it only ever appears when something is genuinely outstanding.
+— Primary action promotes from "Answer" to "Start work". Exactly one primary at all times.
+— Undo toast, not a confirm dialog. Posting a message is cheap to reverse and shouldn't be gated.
+— OPEN: does answering also clear the item off the operator's queue elsewhere (briefing, boards)? If the
+  ask was what surfaced it, answering should retire it — otherwise it'll reappear tomorrow.</div>
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>

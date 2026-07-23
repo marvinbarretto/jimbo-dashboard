@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, effect, input, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, input, output, signal, viewChild } from '@angular/core';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
@@ -13,8 +13,8 @@ import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-ui-subsection
-      label="Intake"
-      [hint]="editable() ? '(working notes — click to edit)' : '(immutable input)'"
+      [label]="label()"
+      [hint]="resolvedHint()"
     >
       @if (editable() && editing()) {
         <textarea
@@ -47,7 +47,9 @@ import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
       } @else {
         <p class="vault-item-intake-block__muted">no body content</p>
       }
-      <p class="vault-item-intake-block__note">{{ createdAt() | relativeTime }} · operator intake</p>
+      @if (showNote()) {
+        <p class="vault-item-intake-block__note">{{ createdAt() | relativeTime }} · operator intake</p>
+      }
     </app-ui-subsection>
   `,
   styles: [`
@@ -127,6 +129,19 @@ export class VaultItemIntakeBlock {
   readonly createdAt = input.required<string>();
   readonly editable = input<boolean>(false);
   readonly bodyChange = output<string>();
+
+  // Presentation overrides. Defaults preserve the original "Intake / (immutable
+  // input)" framing for existing callers (body-task, body-capture); the bands
+  // layout passes label="The work", hint=null to drop the archived-input feel.
+  readonly label = input('Intake');
+  readonly hint = input<string | null | undefined>(undefined);
+  readonly showNote = input(true);
+
+  protected readonly resolvedHint = computed(() => {
+    const override = this.hint();
+    if (override !== undefined) return override; // string OR explicit null (no hint)
+    return this.editable() ? '(working notes — click to edit)' : '(immutable input)';
+  });
 
   protected readonly editing = signal(false);
   protected readonly draft = signal('');

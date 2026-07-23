@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>00 — Vault detail · Flow map</title>
+<link rel="stylesheet" href="wire-kit.css">
+<style>
+  .step { border: 1px solid #666; padding: 0.7rem 0.9rem; margin-bottom: 0.6rem; background: #fff; }
+  .step__num { font-weight: 700; color: #888; margin-right: 0.5rem; }
+  .step__q { font-size: 11px; color: #888; margin-top: 0.3rem; }
+  .prob { border-left: 3px solid #b00; padding: 0.4rem 0.7rem; margin-bottom: 0.4rem; background: #fff6f6; font-size: 12px; }
+  .prob b { color: #b00; }
+  .legend { display: flex; gap: 1.5rem; align-items: center; margin: 0.5rem 0 1rem; font-size: 11px; color: #666; }
+</style>
+</head>
+<body>
+<div class="w-frame">
+
+  <div class="w-intent">FLOW:     Vault item detail — the surface where an operator decides what an item is and what to do with it
+PERSONA:  Marvin. Owner + only human actor. Arrives from a board, a briefing link, or a Telegram nudge.
+          He did not choose this item — something put it in front of him. He needs to know why, fast.
+JOB:      Answer five questions without a click: WHERE it lives / WHY it's on me / WHAT the work is /
+          WHAT state it's in and who owns it / WHAT I can do.
+ENTRY:    Kanban card click (modal) · direct URL /vault-items/:seq (page) · briefing deep-link
+EXIT:     Answered, dispatched, filed, reclassified, or closed with an accurate mental model
+VIEWPORT: desktop 1280 — same body renders in a modal and a page, so the modal sets the width budget</div>
+
+  <div class="w-bar"><span class="w-h1">Vault item detail — redesign</span><span class="w-muted">reference item #3365 · 2026-07-22</span></div>
+
+  <div style="padding: 1rem;">
+
+    <div class="w-h3">The rail (the one colour decision)</div>
+    <div class="legend">
+      <span class="w-rail" style="--proj:#6e56cf">
+        <span class="w-rail__bar w-rail__bar--project"></span>
+        <span class="w-rail__bar w-rail__bar--epic"></span>
+        <span class="w-rail__bar w-rail__bar--item"></span>
+      </span>
+      <span>project 100% → epic 55% → item 28%, all from one <code>color_token</code></span>
+    </div>
+    <div class="legend">
+      <span class="w-rail" style="--proj:#6e56cf">
+        <span class="w-rail__bar w-rail__bar--empty"></span>
+        <span class="w-rail__bar w-rail__bar--epic"></span>
+        <span class="w-rail__bar w-rail__bar--item"></span>
+      </span>
+      <span>unfiled — hatched slot, never silently Admin. Click to file.</span>
+    </div>
+
+    <div class="w-notes">NOTES:
+— Greyscale is the house rule for these wireframes; the rail is the deliberate exception. Its whole
+  premise is colour-encoded depth, so a greyscale rail can't be judged. Everything else stays grey.
+— All 17 projects now carry a color_token (backfilled 2026-07-22), so the rail always has a hue to use.
+— Epic alpha is derived from the project hue, NOT a second token. An epic has no colour of its own —
+  that's what makes the rail read as containment rather than as three unrelated tags.
+— OPEN: at 5px × 3 bars the rail is ~25px wide. Enough to recognise a project by colour once you know
+  the palette, not enough to distinguish #7ac4c4 PMQ Bingo from #7ac4a4 Film Planner cold. The
+  breadcrumb text carries the real identity; the rail carries the *shape*. Is that the right split?</div>
+
+    <div class="w-h3" style="margin-top:1.5rem;">The journey</div>
+
+    <div class="step" data-goto="01">
+      <span class="step__num">01</span><b>Land on the item</b>
+      <div class="step__q">Everything above the fold answers WHERE / WHY / WHAT. The unanswered question is
+        <i>on the page</i>, not behind a tab — that alone fixes the original complaint.</div>
+    </div>
+    <div class="w-muted" style="text-align:center;">↓</div>
+
+    <div class="step" data-goto="02">
+      <span class="step__num">02</span><b>Answer the ask</b>
+      <div class="step__q">Reply inline. The ask slot empties, the timeline records it, and the item stops
+        claiming attention. Shows what the page looks like when nothing wants anything.</div>
+    </div>
+    <div class="w-muted" style="text-align:center;">↓</div>
+
+    <div class="step" data-goto="03">
+      <span class="step__num">03</span><b>Decide if it's runnable</b>
+      <div class="step__q">Splits the two questions the current UI conflates: "is this well-specified?"
+        (grooming) vs "can an agent run it unattended?" (readiness). "I'll run this myself" becomes a
+        real button instead of a checkbox under a failing checklist.</div>
+    </div>
+    <div class="w-muted" style="text-align:center;">↓</div>
+
+    <div class="step" data-goto="04">
+      <span class="step__num">04</span><b>Reclassify / retire</b>
+      <div class="step__q">Actions labelled by consequence, not mechanic. The "→ note" trap gets a
+        confirm naming what actually changes, plus undo.</div>
+    </div>
+
+    <div class="w-h3" style="margin-top:1.5rem;">What each problem maps to</div>
+    <div class="prob"><b>1. Six strips, no fold.</b> → 01. Three zones above the fold: rail+title, the ask, the work. Chips demoted to a sidebar.</div>
+    <div class="prob"><b>2. "WAITING ON intake review" names a stage, not an action.</b> → 01. The ask slot names a party and a verb, or doesn't render at all.</div>
+    <div class="prob"><b>3. The real ask hid in a tab.</b> → 01 + 02. Tabs gone; one merged timeline; unanswered messages promoted above the fold.</div>
+    <div class="prob"><b>4. "→ note" changed the pipeline silently.</b> → 04. Consequence label + confirm + undo.</div>
+    <div class="prob"><b>5. Body styled as archived input; readiness card equal weight.</b> → 01. Body is the hero at full measure; readiness collapses to one line.</div>
+    <div class="prob"><b>6. Grooming vs readiness conflated.</b> → 03. Two named questions, two answers, two exits.</div>
+
+    <div class="w-notes">OPEN QUESTIONS FOR REVIEW:
+— The ask slot can only name a party if something/someone is genuinely waiting. For #3365 nothing
+  grooms tasks assigned to jimbo, so the honest render is a DEAD END ("nothing is scheduled to groom
+  this") with a fix, not a wait. Screen 01 shows both variants. Is the dead-end wording too alarming
+  for what is really just an unrouted item?
+— One merged timeline means agent chatter and state events interleave. On a busy item that's noisy.
+  Filter chips [all | talk | events] are drawn — is a default of "talk" better than "all"?
+— The modal and the page share this body. The sidebar costs 300px; at modal width that squeezes the
+  body to ~68ch, which is fine, but the modal will need to be wider than it is today.
+— Estimate (1×25m) currently sits mid-body. Drawn into the sidebar with the other state. Agree?</div>
+
+  </div>
+</div>
+<script src="wire-nav.js"></script>
+</body>
+</html>

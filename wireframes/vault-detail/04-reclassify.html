@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>04 — Reclassify / retire</title>
+<link rel="stylesheet" href="wire-kit.css">
+<style>
+  .opt { border: 1px solid #666; padding: 0.6rem 0.8rem; margin-bottom: 0.5rem; background:#fff; cursor:pointer; }
+  .opt b { display: block; }
+  .opt span { font-size: 11px; color: #666; }
+  .opt--danger { border-color: #b00; }
+  .opt--danger b { color: #b00; }
+</style>
+</head>
+<body>
+
+<div class="w-frame">
+  <div class="w-intent">GOAL:     Let an operator change what an item IS, or retire it, without ever guessing what a button does.
+PERSONA:  Marvin, who pressed "→ note" purely to find out what it did and then couldn't tell whether he'd
+          broken the item. That is the exact failure this screen exists to prevent.
+PRIMARY:  Cancel. The safe exit is the default on a destructive surface.
+SUCCESS:  Every option states its consequence in the operator's language before he commits, and anything
+          reversible says so.</div>
+
+  <div class="w-bar"><span class="w-h2">Reclassify #3365</span><span class="w-muted">currently: task · active · ungroomed</span></div>
+
+  <div style="padding: 1rem;">
+    <div class="opt">
+      <b>Keep as a task</b>
+      <span>Stays dispatchable. Can be groomed, scored, and handed to an agent. — no change</span>
+    </div>
+    <div class="opt">
+      <b>Make it a note</b>
+      <span>Stops being dispatchable — leaves the grooming board and the execution queue, and no agent
+        will pick it up. Keeps its project, epic, tags and history. Reversible.</span>
+    </div>
+    <div class="opt">
+      <b>Make it a reference</b>
+      <span>Something to read later, not to do. Same as a note but shows in reference lists.</span>
+    </div>
+
+    <div style="margin-top:1rem; border-top:1px solid #ccc; padding-top:0.8rem;">
+      <div class="opt opt--danger">
+        <b>Archive</b>
+        <span>Hidden from every board and list. Nothing is lost, and you can restore it. Reversible.</span>
+      </div>
+      <div class="opt opt--danger">
+        <b>Delete permanently</b>
+        <span>The item, its thread, and its history are gone. This cannot be undone.
+          Type the item number to confirm.</span>
+      </div>
+    </div>
+
+    <div class="w-actions" style="border-top:none; background:none;">
+      <span class="w-btn-primary" data-goto="01">Cancel</span>
+      <span class="w-btn-ghost">Apply</span>
+    </div>
+
+    <div class="w-notes">NOTES:
+— THE FIX for "I pressed → note and don't know if it still gets worked on". Every label now names the
+  consequence in the operator's own terms: "stops being dispatchable / no agent will pick it up", not
+  "→ note".
+— The arrow notation is gone. "→ note" describes a state transition in the data model; nobody reading
+  a button wants a state transition, they want to know what happens to their work.
+— Note the inversion: CANCEL is the filled primary. On a surface whose whole job is preventing an
+  accidental destructive action, the safe exit gets the visual weight. Elsewhere primary = the useful
+  action; here the useful action is leaving.
+— Reversibility is stated explicitly on every option that has it. "Reversible" is the single most
+  calming word available and it costs nothing.
+— Delete requires typing the item number. Archive doesn't — it's genuinely reversible.
+— On apply, a toast with undo (as screen 02), so even the confirmed path has a way back.
+— OPEN: is "reference" a real type in the schema alongside note/bookmark, or am I inventing it? Drawn
+  because /synthesize emits reference-shaped items, but check before building.
+— OPEN: today `demoteToNote()` also resets grooming_status to 'ungroomed'. That's a second, unstated
+  consequence — should the copy mention it, or should the reset just stop happening?</div>
+  </div>
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>03 — Groomed vs runnable</title>
+<link rel="stylesheet" href="wire-kit.css">
+<style>
+  .q { border: 1px solid #666; padding: 0.7rem 0.9rem; margin-bottom: 0.6rem; background:#fff; }
+  .q__ask { font-weight: 700; }
+  .q__ans { margin-top: 0.3rem; }
+  .check { padding: 0.2rem 0; }
+  .check--ok::before   { content: "✓ "; color: #060; font-weight: 700; }
+  .check--miss::before { content: "✗ "; color: #b00; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="w-frame">
+  <div class="w-intent">GOAL:     Separate two questions the current UI fuses into one failing checklist:
+          (a) is this well-specified?  (b) can an agent run it unattended?
+PERSONA:  Marvin deciding whether to do this himself or hand it to Boris. Today the UI only offers
+          "not ready" and buries the human escape hatch under the failure.
+PRIMARY:  Claim it — "I'll run this myself" — which is the true answer for most P1 items he opens.
+SUCCESS:  He leaves knowing which of the two questions actually blocks him, and never sees a checklist
+          demanding acceptance criteria for work he's about to do by hand in the next 25 minutes.</div>
+
+  <div class="w-bar">
+    <span class="w-rail" style="--proj:#6e56cf">
+      <span class="w-rail__bar w-rail__bar--empty"></span>
+      <span class="w-rail__bar w-rail__bar--epic"></span>
+      <span class="w-rail__bar w-rail__bar--item"></span>
+    </span>
+    <span class="w-h2">#3365 · readiness expanded</span>
+  </div>
+
+  <div style="padding: 1rem;">
+
+    <div class="q">
+      <div class="q__ask">1 · Is it well-specified?  <span class="w-muted" style="font-weight:400">— grooming</span></div>
+      <div class="q__ans"><span class="w-chip">ungroomed</span> nobody has broken this down or written criteria.</div>
+      <div style="margin-top:0.5rem;">
+        <span class="w-btn-ghost">Send to @boris to groom</span>
+        <span class="w-btn-ghost">Groom it now</span>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="q__ask">2 · Can an agent run it unattended?  <span class="w-muted" style="font-weight:400">— readiness</span></div>
+      <div class="q__ans">
+        <div class="check check--miss">Acceptance criteria — none set</div>
+        <div class="check check--ok">Owner assigned — @marvin</div>
+        <div class="check check--ok">Priority scored — P1</div>
+        <div class="check check--miss">Grooming complete — currently ungroomed</div>
+      </div>
+      <div class="w-muted" style="margin-top:0.4rem; font-size:11px;">These gate <b>dispatch</b> only. They do not gate you.</div>
+    </div>
+
+    <div class="w-block" style="border-width:2px;">
+      <div><b>You own this.</b> The checks above are about handing it to an agent — you're not an agent.</div>
+      <div style="margin-top:0.5rem;">
+        <span class="w-btn-primary">I'll run this myself<span class="w-conseq" style="color:#ccc;">clears dispatch gating while you own it</span></span>
+        <span class="w-btn-ghost">Hand to @boris<span class="w-conseq">reinstates the full gate</span></span>
+      </div>
+    </div>
+
+    <div class="w-notes">NOTES:
+— Two questions, two headings, two exits. Today they're one merged "2/4 checks passed / NOT_READY" card
+  that implies a human needs permission from a checklist to start work on his own task.
+— "I'll run this myself" IS the existing `grooming_override` flag — promoted from a checkbox reading
+  "Not groomed — mark good enough for me" tucked underneath the failing list, to the primary action.
+  No schema change; it already only applies while a human owns the item, and reassigning to an agent
+  already reinstates the gate. The wording just needs to stop apologising.
+— The readiness checks stay visible but are explicitly scoped: "These gate dispatch only. They do not
+  gate you." One sentence removes the entire false-failure feeling.
+— OPEN: after "I'll run this myself", should the collapsed line on screen 01 read "Runnable by you" or
+  disappear entirely? Leaning: it becomes "Yours — dispatch gating off", so the override is never
+  invisible. An override you can't see is how you get surprised later.
+— OPEN: "Groom it now" opens what? The grooming board, or an inline AC editor here? Inline is fewer
+  jumps but duplicates a surface that already exists.</div>
+
+    <div class="w-h3" style="margin-top:1.5rem;">Filing — the other gap on this item</div>
+    <div class="w-block">
+      <div class="w-muted" style="font-size:11px; margin-bottom:0.4rem;">no project · click to file</div>
+      <div>
+        <span class="w-chip" style="border-color:#6e56cf; border-width:2px;"><b style="color:#6e56cf">▌</b> Jimbo</span>
+        <span class="w-chip"><b style="color:#a4c47a">▌</b> Collectr</span>
+        <span class="w-chip"><b style="color:#c47a8f">▌</b> Localshout</span>
+        <span class="w-chip"><b style="color:#7ac4c4">▌</b> PMQ Bingo</span>
+        <span class="w-chip"><b style="color:#7ac47a">▌</b> Munro Bagger</span>
+        <span class="w-chip"><b style="color:#8c8c8c">▌</b> Admin</span>
+        <span class="w-muted">…17</span>
+      </div>
+      <div class="w-muted" style="font-size:11px; margin-top:0.5rem;">
+        suggested: <b>Jimbo</b> — the parent epic #3364 has no project either, but this item's body
+        references jimbo-api and hub
+      </div>
+    </div>
+
+    <div class="w-notes">NOTES:
+— Projectless is legitimate (your call) but it must be one click from resolved, and it must never
+  silently render as Admin. Admin is a real destination in the list — chosen, not defaulted.
+— Each option carries its project colour as a leading bar, so filing is also how you learn the palette.
+— The suggestion line is speculative: inferring "Jimbo" from body text is a nice-to-have, not required
+  for v1. Cut it if it complicates the build.
+— NOTE FOR BUILD: #3364 (the epic) is itself projectless. Filing the child alone leaves the rail's
+  first slot filled but the epic's own rail still hatched elsewhere. Should filing a child offer
+  "…and file its epic too"?</div>
+  </div>
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>

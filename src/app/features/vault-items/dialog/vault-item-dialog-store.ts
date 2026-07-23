@@ -45,7 +45,6 @@ import {
   stageFor,
 } from './vault-item-dialog-mode';
 import type { RejectSubmission } from '../components/vault-item-detail-body/reject-form/reject-form';
-import type { VaultItemSummary } from '../components/vault-item-detail-body/vault-item-overview-cards/vault-item-overview-cards';
 
 /**
  * Component-scoped state owner for the unified vault-item dialog (and the
@@ -260,107 +259,6 @@ export class VaultItemDialogStore {
 
   readonly canDemote = computed(() => this.item()?.type === 'task');
 
-  // ── Section-summary cards ────────────────────────────────────────────────
-
-  // `detail` is reserved for identity the operator can't reconstruct (a parent's
-  // title, a source URL) — never restated prose. The strip renders it verbatim,
-  // so anything that only paraphrases `value` is dead pixels.
-  readonly sourceSummary = computed((): VaultItemSummary => {
-    const source = this.item()?.source;
-    if (!source) return { label: 'Origin', value: 'Unknown', detail: null };
-
-    if (source.kind === 'agent') return { label: 'Origin', value: `Agent · ${source.ref}`, detail: null };
-    if (source.kind === 'manual') return { label: 'Origin', value: `Manual · ${source.ref}`, detail: null };
-    // Chat captures usually have no ref — naming the kind alone still beats "Unknown".
-    if (source.kind === 'chat') {
-      return { label: 'Origin', value: source.ref ? `Chat · ${source.ref}` : 'Chat', detail: null };
-    }
-
-    return {
-      label: 'Origin',
-      value: `${source.kind} · ${source.ref}`,
-      detail: source.url ?? null,
-    };
-  });
-
-  readonly hierarchySummary = computed((): VaultItemSummary => {
-    const item = this.item();
-    const parent = this.parentItem();
-    const childCount = this.children().length;
-
-    if (parent) {
-      return {
-        label: 'Hierarchy',
-        value: `Sub-item of #${parent.seq}`,
-        detail: parent.title,
-      };
-    }
-
-    // Parent linked but not yet loaded. Say so — the old branch fell through to
-    // "Standalone" and leaked the raw parent_id as its detail.
-    if (item?.parent_id) {
-      return { label: 'Hierarchy', value: 'Sub-item', detail: null };
-    }
-
-    // "Epic" is the deliberate `is_epic` flag, never derived from child count —
-    // see vault-item.ts. A plain task can own children (subtasks) without being
-    // an epic, so key the label off the flag and describe the rest as a parent.
-    if (item?.is_epic) {
-      return {
-        label: 'Hierarchy',
-        value: `Epic · ${childCount} task${childCount === 1 ? '' : 's'}`,
-        detail: null,
-      };
-    }
-
-    if (childCount > 0) {
-      return {
-        label: 'Hierarchy',
-        value: `Parent · ${childCount} subtask${childCount === 1 ? '' : 's'}`,
-        detail: null,
-      };
-    }
-
-    // "Top-level", not "Standalone" — the latter collided with the no-project
-    // chip two rows up, so an item with a parent read as both at once.
-    return { label: 'Hierarchy', value: 'Top-level', detail: null };
-  });
-
-  readonly timelineSummary = computed(() => {
-    const item = this.item();
-    if (!item) return { label: 'Timeline', value: 'Unknown', detail: '' };
-
-    const created = `Added ${formatDatetime(item.created_at)}`;
-    const latest = item.latest_activity_at
-      ? `Last change ${formatDatetime(item.latest_activity_at)}`
-      : 'No later activity recorded';
-
-    return { label: 'Timeline', value: created, detail: latest };
-  });
-
-  // Project deliberately isn't repeated here — it's already an entity chip in the
-  // decisions row. This pair answers "what's outstanding on it?" only, and counts
-  // pending replies alongside typed questions so a comment that asks something
-  // stops reading as "0 open questions".
-  readonly queueSummary = computed((): VaultItemSummary => {
-    const item = this.item();
-    if (!item) return { label: 'Outstanding', value: 'Unknown', detail: null };
-
-    const parts: string[] = [];
-    const blockers = this.openBlockers().length;
-    const questions = this.openQuestions().length;
-    const replies = this.pendingReplies().length;
-
-    if (blockers) parts.push(`${blockers} blocker${blockers === 1 ? '' : 's'}`);
-    if (questions) parts.push(`${questions} open question${questions === 1 ? '' : 's'}`);
-    if (replies) parts.push(`${replies} awaiting your reply`);
-
-    return {
-      label: 'Outstanding',
-      value: parts.length ? parts.join(' · ') : 'Nothing',
-      detail: null,
-    };
-  });
 
   // ── UI state ──────────────────────────────────────────────────────────────
 

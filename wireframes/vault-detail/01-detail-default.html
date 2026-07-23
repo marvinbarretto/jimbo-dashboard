@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>01 — Detail · landing</title>
+<link rel="stylesheet" href="wire-kit.css">
+</head>
+<body>
+
+<div class="w-frame">
+  <div class="w-intent">GOAL:     Land an operator on an item and answer WHERE / WHY / WHAT / STATE / ACTIONS without a click.
+PERSONA:  Marvin. Didn't choose this item — a board, a briefing or a nudge put it here. First question is "why me?"
+PRIMARY:  Answer the outstanding ask. (When nothing is asked, primary demotes to "Start work".)
+SUCCESS:  He can say out loud what this item is, whose court it's in, and what happens next — from the fold alone.</div>
+
+  <!-- ── ZONE 1: rail + identity ─────────────────────────────────────── -->
+  <div class="w-bar" style="align-items:flex-start;">
+    <span class="w-rail" style="--proj:#6e56cf" data-goto="03" title="click a bar to jump to that level">
+      <span class="w-rail__bar w-rail__bar--empty" title="no project — click to file"></span>
+      <span class="w-rail__bar w-rail__bar--epic"></span>
+      <span class="w-rail__bar w-rail__bar--item"></span>
+    </span>
+    <div style="flex:1; min-width:0;">
+      <div class="w-crumb">
+        <span style="border-bottom:1px dashed #b00; color:#b00;">unfiled</span>
+        <span class="sep">›</span> <b>#3364 Briefing v2</b>
+        <span class="sep">›</span> #3365
+      </div>
+      <div class="w-h1" style="margin-top:0.25rem;">Briefing v2 Phase 1: pipeline swap — Boris authors, API delivers Telegram</div>
+    </div>
+    <span class="w-btn-ghost">×</span>
+  </div>
+
+  <div class="w-notes">NOTES:
+— Rail + breadcrumb + title is ONE zone, ~3 lines. Today this is six stacked strips.
+— The epic bar carries Jimbo's hue at 55% even though the item has no project: the epic's ancestry is
+  known even when this item's own link is missing. The hatched first slot is what's actually broken,
+  and it's the only red thing on the page. That's deliberate — unfiled is legitimate but never invisible.
+— Title is editable in place (existing behaviour, kept).
+— The type chip (TASK) is GONE from here — it moved to the sidebar. Type is state, not identity, and it
+  was competing with the title.</div>
+
+  <!-- ── ZONE 2: THE ASK ─────────────────────────────────────────────── -->
+  <div class="w-ask">
+    <div class="w-ask__who">@boris is waiting on you <span class="w-muted" style="font-weight:400">· asked 15h ago</span></div>
+    <div class="w-ask__quote">Should the cron enqueue at 06:10 UTC or 06:10 local? The spec says UTC but the
+      planner renders local, so a DST shift would drift the briefing by an hour.</div>
+    <div style="display:flex; gap:0.5rem; align-items:center; margin-top:0.5rem;">
+      <span class="w-input" style="flex:1; border:1px solid #666; padding:0.35rem 0.5rem; color:#999;">Reply…</span>
+      <span class="w-btn-primary" data-goto="02">Answer</span>
+    </div>
+  </div>
+
+  <div class="w-notes">NOTES:
+— THIS IS THE FIX for the original complaint. The message that explains why the item is assigned to him
+  is quoted on the fold with a reply box, instead of being a "1" badge on a collapsed tab.
+— The slot names a PARTY and a VERB ("@boris is waiting on you"), never a pipeline stage. If no party is
+  waiting, the slot does not render — no reserved empty space, no invented wait.
+— Kind-agnostic: this fires for any unanswered inbound message, not just kind:'question'. That's the
+  pendingRepliesFor() projection already shipped today.
+— Priority order when several could fire: unanswered ask > blocked-by > dead end > ready-to-dispatch.
+  Only ONE renders. Competing banners are how the current design got to six strips.
+— OPEN: "Dismiss" was drawn here and then cut — dismissing someone's question without answering is
+  exactly the behaviour that lost the question last time. Should there be an explicit "not my call,
+  reassign" instead?</div>
+
+  <!-- ── ZONE 3+4: the work | state ──────────────────────────────────── -->
+  <div class="w-cols" style="gap:0;">
+    <div class="w-col w-work">
+      <div class="w-h3" style="margin-bottom:0.4rem;">The work</div>
+      <div class="w-work__body">
+        Prove the new pipeline with the CURRENT schema before changing content. jimbo-api: add optional
+        <code>telegram_summary</code> to CreateBriefingBody, forward via sendTelegram() on POST (best-effort).
+        hub: new skill briefing/daily-v2 (executors: [boris], curl REST not hermes wrappers, closes dispatch
+        via /api/dispatch/complete). VPS cron enqueues at ~06:10/14:10 UTC via POST /api/dispatch/enqueue
+        (flow=recon, auto_approve, synthetic task_id, task_source=briefing-cron). Sync skills to VPS.
+        Pause hermes daily-briefing cron after one successful end-to-end run.
+      </div>
+
+      <div class="w-disclose" data-goto="03">
+        <div class="w-disclose__head">
+          <span><b>▸ Not runnable unattended</b> <span class="w-muted">— no acceptance criteria, not groomed</span></span>
+          <span class="w-muted">2 of 4 ▾</span>
+        </div>
+      </div>
+
+      <div class="w-notes">NOTES:
+— The body is the hero: full measure (~68ch), normal text colour, no box, no "INTAKE (immutable input)"
+  label, no grey recess. It is the single most-read thing on the page and it was styled like an archive.
+— "immutable input" is a data-provenance fact, not something the reader needs at the top. It moves to a
+  hover/edit affordance.
+— Readiness collapses from a 4-row bordered card to ONE line stating the conclusion in plain words.
+  "2/4 checks passed / NOT_READY" told him a score; "Not runnable unattended" tells him what it means.
+— Expanding is screen 03.</div>
+    </div>
+
+    <div class="w-side">
+      <div class="w-side__label">State</div>
+      <div><span class="w-chip">task</span> <span class="w-chip">active</span> <span class="w-chip">P1</span></div>
+      <div style="margin-top:0.4rem;">owner <b>@marvin</b> <span class="w-muted">· est 1×25m</span></div>
+      <div style="margin-top:0.2rem;"><span class="w-chip">ungroomed</span></div>
+
+      <div class="w-side__label">Filed under</div>
+      <div style="border:1px dashed #b00; padding:0.4rem 0.5rem; color:#b00;">
+        no project — <span style="text-decoration:underline; cursor:pointer;">file it</span>
+      </div>
+      <div style="margin-top:0.35rem;">↑ <span style="text-decoration:underline;">#3364 Briefing v2</span></div>
+
+      <div class="w-side__label">Links</div>
+      <div class="w-muted">0 subtasks · 0 blockers</div>
+      <div style="margin-top:0.3rem;"><span class="w-chip">#briefing</span> <span class="w-chip">#boris</span></div>
+
+      <div class="w-side__label">Origin</div>
+      <div class="w-muted">chat · 18h ago</div>
+    </div>
+  </div>
+
+  <div class="w-notes">NOTES:
+— Everything that was two rows of full-width chips is now a 300px sidebar. None of it is the reason he
+  opened the item, but all of it is one glance away. Nothing was deleted — it was ranked.
+— "Filed under" leads with the missing project because that's the actionable gap. The parent shows its
+  real title (the store computed it and the old template threw it away — fixed today).
+— OPEN: sidebar costs 300px. In the modal that leaves the body at ~68ch, which is fine, but today's
+  modal is narrower than this. The modal needs to grow or the sidebar needs to collapse under the body
+  below ~1100px. Drawn as a sidebar; happy to do stacked instead.</div>
+
+  <!-- ── ZONE 5: one timeline ────────────────────────────────────────── -->
+  <div class="w-tl">
+    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+      <span class="w-h3">History</span>
+      <span><span class="w-chip"><b>all</b></span> <span class="w-chip">talk</span> <span class="w-chip">events</span></span>
+    </div>
+    <div class="w-tl__row w-tl__row--unanswered">
+      <span class="w-tl__when">15h</span><span class="w-tl__who">@boris</span>
+      <span class="w-tl__what">asked — “Should the cron enqueue at 06:10 UTC or local?…” <b>· unanswered</b></span>
+    </div>
+    <div class="w-tl__row">
+      <span class="w-tl__when">16h</span><span class="w-tl__who">system</span>
+      <span class="w-tl__what">assigned to @marvin</span>
+    </div>
+    <div class="w-tl__row">
+      <span class="w-tl__when">18h</span><span class="w-tl__who">@marvin</span>
+      <span class="w-tl__what">created from chat · linked to epic #3364</span>
+    </div>
+  </div>
+
+  <div class="w-notes">NOTES:
+— Activity and Thread were two tabs; they are one chronological list. They were always the same story
+  told twice, and splitting them is precisely how an unanswered question became invisible.
+— The unanswered row keeps a marker even though it's also quoted above — the timeline is the audit
+  trail, the ask slot is the prompt. Duplication here is correct.
+— Filters are chips, not tabs: a filter narrows what you see, a tab hides that something exists.</div>
+
+  <!-- ── ZONE 6: actions ─────────────────────────────────────────────── -->
+  <div class="w-actions">
+    <span class="w-btn-ghost" data-goto="04">Reclassify…<span class="w-conseq">change what pipeline it's in</span></span>
+    <span class="w-btn-ghost">Archive<span class="w-conseq">hide, keep, reversible</span></span>
+    <span class="w-btn-danger" data-goto="04">Delete<span class="w-conseq">permanent</span></span>
+  </div>
+</div>
+
+<!-- ══ ALTERNATE STATES ═══════════════════════════════════════════════ -->
+
+<div class="w-state-sep">STATE — nothing is waiting on anyone (the common case)</div>
+<div class="w-frame" style="min-height:0;">
+  <div class="w-bar" style="align-items:flex-start;">
+    <span class="w-rail" style="--proj:#a4c47a">
+      <span class="w-rail__bar w-rail__bar--project"></span>
+      <span class="w-rail__bar w-rail__bar--epic"></span>
+      <span class="w-rail__bar w-rail__bar--item"></span>
+    </span>
+    <div style="flex:1;">
+      <div class="w-crumb"><b>Collectr</b><span class="sep">›</span> <b>#2201 Import pipeline</b><span class="sep">›</span> #2214</div>
+      <div class="w-h1" style="margin-top:0.25rem;">Add CSV column mapping UI</div>
+    </div>
+  </div>
+  <div class="w-work" style="padding-top:0.75rem;">
+    <div class="w-h3" style="margin-bottom:0.4rem;">The work</div>
+    <div class="w-work__body">Let the user map incoming CSV headers to collection fields before import commits…</div>
+  </div>
+  <div class="w-actions"><span class="w-btn-primary">Start work</span></div>
+  <div class="w-notes">NOTES: No ask slot at all — not an empty one. A fully-filed, quiet item shows rail → title → work →
+one primary action. This is what the page should look like most of the time, and today it can't: the
+banner always renders something, so every item claims to be waiting on a stage.</div>
+</div>
+
+<div class="w-state-sep">STATE — dead end (what #3365 actually is)</div>
+<div class="w-frame" style="min-height:0;">
+  <div class="w-ask w-ask--dead" style="margin-top:1rem;">
+    <div class="w-ask__who">Nothing is scheduled to groom this</div>
+    <div class="w-body" style="margin-top:0.3rem;">It's <b>ungroomed</b> and assigned to <b>@marvin</b>, but grooming only
+      picks up notes assigned to @boris. It will sit here indefinitely.</div>
+    <div style="margin-top:0.5rem;">
+      <span class="w-btn-primary" data-goto="03">I'll run it myself</span>
+      <span class="w-btn-ghost">Send to @boris to groom</span>
+    </div>
+  </div>
+  <div class="w-notes">NOTES:
+— This is the honest version of "WAITING ON intake review". The old banner announced a wait for
+  something that will never arrive; this names the dead end and offers the two ways out.
+— Requires the UI to know the pump's reach (grooming pumps active + boris-assigned notes). That rule is
+  currently only in the pump. Surfacing it here means encoding it dashboard-side or having the API
+  report "who, if anyone, will act on this" — worth deciding before build.
+— OPEN (flagged on the flow map): is "dead end" too alarming for what's really just an unrouted item?</div>
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>
