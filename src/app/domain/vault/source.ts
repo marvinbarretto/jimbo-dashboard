@@ -37,6 +37,16 @@ export interface AgentSource {
   url:  null;
 }
 
+// Captured out of a conversation (Claude session, /synthesize, deep-dive).
+// The only kind with a nullable `ref`: chat transcripts have no stable,
+// addressable id, and dropping the source entirely for want of one is how
+// conversationally-created items ended up rendering as "Origin Unknown".
+export interface ChatSource {
+  kind: 'chat';
+  ref:  string | null;
+  url:  null;
+}
+
 export interface UrlSource {
   kind: 'url';
   ref:  string;            // canonical/cleaned URL for dedup
@@ -60,6 +70,7 @@ export type Source =
   | EmailSource
   | TelegramSource
   | AgentSource
+  | ChatSource
   | UrlSource
   | PrCommentSource
   | GitHubSource;

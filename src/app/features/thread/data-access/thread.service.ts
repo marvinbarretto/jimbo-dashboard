@@ -5,7 +5,8 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import type { ThreadMessage, CreateThreadMessagePayload, MarkAnsweredPayload } from '@domain/thread';
-import type { VaultItemId, ThreadMessageId } from '@domain/ids';
+import { pendingRepliesFor } from '@domain/thread';
+import type { ActorId, VaultItemId, ThreadMessageId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { isSeedMode } from '@shared/seed-mode';
@@ -29,6 +30,12 @@ export class ThreadService {
         m => m.kind === 'question' && m.answered_by === null
       )
     );
+  }
+
+  /** Messages sitting after `viewer`'s last word, from someone else — see
+   *  `pendingRepliesFor`. Attention signal, NOT a readiness gate. */
+  pendingRepliesFor(vaultItemId: VaultItemId, viewer: ActorId) {
+    return computed(() => pendingRepliesFor(this._messagesByItem()[vaultItemId] ?? [], viewer));
   }
 
   loadFor(vaultItemId: VaultItemId): void {

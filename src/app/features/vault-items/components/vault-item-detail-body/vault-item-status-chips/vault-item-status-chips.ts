@@ -94,8 +94,11 @@ import type { LifecycleState, Priority, VaultItem } from '@domain/vault/vault-it
             </span>
           }
         } @else {
+          <!-- "no project", not "standalone" — this chip is about project linkage
+               only, and the old wording collided with the Hierarchy pair below,
+               so a sub-item of an epic read as standalone at the same time. -->
           <app-ui-badge tone="neutral" [subtle]="true" title="Not linked to any project">
-            standalone
+            no project
           </app-ui-badge>
         }
       </app-ui-cluster>

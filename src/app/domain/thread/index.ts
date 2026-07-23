@@ -5,3 +5,4 @@ export type {
   MarkAnsweredPayload,
 } from './thread-message';
 export type { OpenQuestionView } from './open-question-view';
+export { pendingRepliesFor } from './pending-reply';

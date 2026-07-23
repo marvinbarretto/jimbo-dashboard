@@ -794,7 +794,12 @@ function narrowPriority(p: number | null): Priority | null {
 }
 
 function buildSource(kind: string | null, ref: string | null, url: string | null): Source | null {
-  if (!kind || !ref) return null;
+  if (!kind) return null;
+  // `chat` is deliberately checked before the ref guard — a conversational
+  // capture has no addressable id, and requiring one silently erased the
+  // origin of every item created from a Claude session.
+  if (kind === 'chat') return { kind, ref, url: null };
+  if (!ref) return null;
   switch (kind) {
     case 'manual':    return { kind, ref, url: null };
     case 'email':     return { kind, ref, url: url ?? null };
