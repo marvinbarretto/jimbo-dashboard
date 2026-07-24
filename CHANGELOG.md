@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.140](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.139...v0.0.140) (2026-07-24)
+
+
+### Features
+
+* **briefing:** bucket-mirror panel on briefing detail ([b750c8a](https://github.com/marvinbarretto/jimbo-dashboard/commit/b750c8ab48e4b5dfb3a0038969494aa9ffbec548))
+* **briefing:** render Body life-bucket metrics in the mirror panel ([a862e3b](https://github.com/marvinbarretto/jimbo-dashboard/commit/a862e3b12dc84e15dae0057367bb38167df86f46))
+* **briefing:** render vault-linked suggested_blocks as block-cards ([83ea534](https://github.com/marvinbarretto/jimbo-dashboard/commit/83ea5343c584656978913829e59a78aafe690e68))
+
+
+### Bug Fixes
+
+* **briefing:** drop "yet" from the mirror's not-tracked line ([f88e22a](https://github.com/marvinbarretto/jimbo-dashboard/commit/f88e22af4aee44eb7afdbe299f47777c6ebd0a44))
+
 ### [0.0.139](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.138...v0.0.139) (2026-07-24)
 
 
