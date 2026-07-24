@@ -10,6 +10,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { loadOne } from '@shared/data-access/load-one';
+import { withVaultDetailModal } from '@shared/kanban/detail-modal';
 import { BriefingReport } from '../../../briefings/components/briefing-report/briefing-report';
 import { BriefingFeedbackService } from '../../../briefings/data-access/briefing-feedback.service';
 import { CalendarBoard } from '../../components/calendar-board/calendar-board';
@@ -60,6 +61,8 @@ export class BriefingDetail {
   });
 
   constructor() {
+    // Opens the ?detail=<seq> vault modal for the block-cards' title links.
+    withVaultDetailModal();
     effect(() => {
       const b = this.briefing();
       if (b) void this.feedback.load(b.id);

@@ -113,6 +113,17 @@
   min-height: 1.5rem;
 }
 
+// Vault-linked suggested_block: the shared block-card plus its pencil action.
+.cal-board__vault-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px dashed color-mix(in srgb, var(--color-border) 50%, transparent);
+
+  &:last-child { border-bottom: none; }
+}
+
 // Pencil-onto-Suggestions affordance on a suggested_block.
 .cal-board__pencil-btn {
   align-self: flex-start;

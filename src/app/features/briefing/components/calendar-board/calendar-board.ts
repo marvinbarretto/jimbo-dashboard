@@ -7,9 +7,36 @@ import { environment } from '../../../../../environments/environment';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { PlannerSyncService } from '../../../planner/data-access/planner-sync.service';
 import { BriefingFeedback } from '../../../briefings/components/briefing-feedback/briefing-feedback';
+import { BlockCard } from '@shared/components/block-card/block-card';
+import { VAULT_ITEMS_READ } from '@features/vault-items/data-access/vault-items.read';
+import { ProjectsService } from '@features/projects/data-access/projects.service';
+import { effectivePriority } from '@domain/vault/readiness';
+import type { Priority } from '@domain/vault/vault-item';
+import type { ActorId } from '@domain/ids';
 import { CALENDAR_BOARD_COLUMNS, type BoardColumnConfig } from './calendar-board.config';
 import { dateKey, shiftIsoDays } from './calendar-board.utils';
 import type { SuggestedBlock } from '../../../briefings/data-access/briefing.types';
+
+// A suggested_block resolved to a real vault item — the shape block-card + the
+// round-trippable PlannerSyncService.create both need.
+interface VaultBlockView {
+  id: string;
+  seq: number;
+  title: string;
+  projectName: string;
+  projectColor: string;
+  priority: Priority;
+  owner: ActorId | null;
+  epicLabel: string | null;
+  size: number;
+  start: string | null;
+  timeText: string | null;
+}
+
+interface ResolvedBlock {
+  blk: SuggestedBlock;
+  vault: VaultBlockView | null;
+}
 
 interface RawCalEvent {
   readonly id: string;
@@ -62,7 +89,7 @@ interface BoardColumn {
 // return. No interval polling; refocus covers the real "came back later" case.
 @Component({
   selector: 'app-calendar-board',
-  imports: [BriefingFeedback, CdkDropList, CdkDrag],
+  imports: [BriefingFeedback, CdkDropList, CdkDrag, BlockCard],
   templateUrl: './calendar-board.html',
   styleUrl: './calendar-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -75,9 +102,17 @@ export class CalendarBoard {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
   private readonly plannerSync = inject(PlannerSyncService);
+  private readonly vaultItems = inject(VAULT_ITEMS_READ);
+  private readonly projects = inject(ProjectsService);
 
   readonly briefingId = input.required<number>();
   readonly suggestedBlocks = input<SuggestedBlock[]>([]);
+
+  // Each suggested_block paired with its resolved vault item (when it carries a
+  // vault_seq that's loaded) — a vault-linked block renders as a first-class
+  // block-card and pencils round-trippably; the rest fall back to prose.
+  protected readonly resolvedBlocks = computed<ResolvedBlock[]>(() =>
+    this.suggestedBlocks().map(blk => ({ blk, vault: this.resolveVaultBlock(blk) })));
 
   private readonly refreshedAt = signal(new Date());
 
@@ -158,6 +193,53 @@ export class CalendarBoard {
     }
   }
 
+  private resolveVaultBlock(blk: SuggestedBlock): VaultBlockView | null {
+    if (blk.vault_seq == null) return null;
+    const item = this.vaultItems.getBySeq(blk.vault_seq);
+    if (!item) return null;
+    const parent = item.parent_id ? this.vaultItems.getById(item.parent_id) : undefined;
+    return {
+      id: item.id,
+      seq: item.seq,
+      title: item.title,
+      projectName: item.primary_project_name ?? 'No project',
+      projectColor: this.colorForProject(item.primary_project_id),
+      priority: effectivePriority(item) ?? 3,
+      owner: item.assigned_to,
+      epicLabel: parent ? `↳ #${parent.seq} ${parent.title}` : null,
+      size: blk.size_blocks, // the briefing's suggested size wins over the item's estimate
+      start: blk.start ?? null,
+      timeText: blk.start ? hhmm(blk.start) : null,
+    };
+  }
+
+  private colorForProject(projectId: string | null | undefined): string {
+    if (!projectId) return 'var(--color-text-muted)';
+    return this.projects.activeProjects().find(p => p.id === projectId)?.color_token || 'var(--color-accent)';
+  }
+
+  // Pencil a vault-linked block onto the Suggestions calendar round-trippably —
+  // real deep-link + full extendedProperties via the planner's own sync path,
+  // at the block's concrete start (or next hour if the skill gave none). The
+  // planner then recognises and can shuffle/lock it.
+  protected async pencilVaultBlock(v: VaultBlockView): Promise<void> {
+    if (this.pencilledTitles().has(v.title)) return;
+    this.pencilledTitles.update(s => new Set(s).add(v.title));
+    const id = await this.plannerSync.create({
+      id: v.id, seq: v.seq, title: v.title,
+      projectName: v.projectName, projectColor: v.projectColor,
+      priority: v.priority, owner: v.owner, epicLabel: v.epicLabel,
+      size: v.size, locked: false, start: v.start ?? nextHourIso(),
+    });
+    if (id) {
+      this.toast.success(`Pencilled “${v.title}” onto Suggestions`);
+      this.reload();
+    } else {
+      this.pencilledTitles.update(s => { const n = new Set(s); n.delete(v.title); return n; });
+      this.toast.error(`Couldn't pencil “${v.title}”`);
+    }
+  }
+
   // Pencil a suggested_block onto the Suggestions calendar at a rough starting
   // time (next full hour) — a first placement to refine in the planner, not a
   // committed slot. The block carries no vault item, so this uses the
@@ -166,10 +248,8 @@ export class CalendarBoard {
     if (this.pencilledTitles().has(blk.title)) return;
     this.pencilledTitles.update((s) => new Set(s).add(blk.title));
 
-    const start = new Date();
-    start.setHours(start.getHours() + 1, 0, 0, 0);
     const id = await this.plannerSync.pencilBriefingBlock(
-      { title: blk.title, size: blk.size_blocks }, start.toISOString(),
+      { title: blk.title, size: blk.size_blocks }, blk.start ?? nextHourIso(),
     );
     if (id) {
       this.toast.success(`Pencilled “${blk.title}” onto Suggestions`);
@@ -233,6 +313,16 @@ export class CalendarBoard {
       })
       .sort((a, b) => a.sortKey.localeCompare(b.sortKey));
   }
+}
+
+function hhmm(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+function nextHourIso(): string {
+  const d = new Date();
+  d.setHours(d.getHours() + 1, 0, 0, 0);
+  return d.toISOString();
 }
 
 function onDay(e: BoardEvent, day: string): boolean {

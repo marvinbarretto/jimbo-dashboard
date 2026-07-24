@@ -33,22 +33,40 @@
               </div>
             }
             @if (col.config.pencilled) {
-              @for (blk of suggestedBlocks(); track $index) {
-                <div class="cal-board__event cal-board__event--block">
-                  <div class="cal-board__block-body">
-                    <span class="cal-board__title">{{ blk.title }}</span>
-                    <span class="cal-board__meta">
-                      <span [attr.aria-label]="blk.size_blocks + ' pomodoros'" [title]="blk.size_blocks * 25 + 'min'">{{ tomatoes(blk.size_blocks) }}</span>
-                      · {{ blk.start_hint || blk.constraint }}
-                    </span>
+              @for (rb of resolvedBlocks(); track $index) {
+                @if (rb.vault; as v) {
+                  <!-- Vault-linked: first-class block-card + round-trippable pencil -->
+                  <div class="cal-board__vault-block">
+                    <app-block-card
+                      [seq]="v.seq" [title]="v.title"
+                      [projectName]="v.projectName" [projectColor]="v.projectColor"
+                      [priority]="v.priority" [owner]="v.owner" [epicLabel]="v.epicLabel"
+                      [size]="v.size" [timeText]="v.timeText" />
+                    @if (pencilledTitles().has(v.title)) {
+                      <span class="cal-board__pencilled" title="Pencilled onto the Suggestions calendar">✓ pencilled</span>
+                    } @else {
+                      <button type="button" class="cal-board__pencil-btn"
+                        title="Pencil onto the Suggestions calendar" (click)="pencilVaultBlock(v)">✎ pencil in</button>
+                    }
                   </div>
-                  @if (pencilledTitles().has(blk.title)) {
-                    <span class="cal-board__pencilled" title="Pencilled onto the Suggestions calendar">✓ pencilled</span>
-                  } @else {
-                    <button type="button" class="cal-board__pencil-btn"
-                      title="Pencil onto the Suggestions calendar" (click)="pencilBlock(blk)">✎ pencil in</button>
-                  }
-                </div>
+                } @else {
+                  <!-- Prose fallback: block with no vault linkage -->
+                  <div class="cal-board__event cal-board__event--block">
+                    <div class="cal-board__block-body">
+                      <span class="cal-board__title">{{ rb.blk.title }}</span>
+                      <span class="cal-board__meta">
+                        <span [attr.aria-label]="rb.blk.size_blocks + ' pomodoros'" [title]="rb.blk.size_blocks * 25 + 'min'">{{ tomatoes(rb.blk.size_blocks) }}</span>
+                        · {{ rb.blk.start_hint || rb.blk.constraint }}
+                      </span>
+                    </div>
+                    @if (pencilledTitles().has(rb.blk.title)) {
+                      <span class="cal-board__pencilled" title="Pencilled onto the Suggestions calendar">✓ pencilled</span>
+                    } @else {
+                      <button type="button" class="cal-board__pencil-btn"
+                        title="Pencil onto the Suggestions calendar" (click)="pencilBlock(rb.blk)">✎ pencil in</button>
+                    }
+                  </div>
+                }
               }
             }
             @if (col.today.events.length === 0 && !(col.config.pencilled && suggestedBlocks().length > 0)) {

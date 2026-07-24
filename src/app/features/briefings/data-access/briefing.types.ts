@@ -49,6 +49,11 @@ export interface SuggestedBlock {
   start_hint?: string;
   bucket?: string;
   project?: string;
+  // When the block represents a real vault task: its seq. Lets the dashboard
+  // render a first-class block-card and pencil it round-trippably.
+  vault_seq?: number;
+  // Concrete best-guess start (ISO 8601) — supersedes start_hint for placement.
+  start?: string;
 }
 
 export interface BriefingAnalysisData {
