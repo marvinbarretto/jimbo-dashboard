@@ -15,42 +15,65 @@
         @if (col.today.failed) {
           <p class="cal-board__error">⚠ couldn't load</p>
         } @else {
-          @for (e of col.today.events; track e.id) {
-            <div class="cal-board__event" [class.cal-board__event--past]="e.past">
-              <span class="cal-board__time">{{ e.allDay ? 'all-day' : e.time }}</span>
-              <span class="cal-board__title">{{ e.title }}</span>
-            </div>
-          }
-          @if (col.config.pencilled) {
-            @for (blk of suggestedBlocks(); track $index) {
-              <div class="cal-board__event cal-board__event--block">
-                <div class="cal-board__block-body">
-                  <span class="cal-board__title">{{ blk.title }}</span>
-                  <span class="cal-board__meta">
-                    <span [attr.aria-label]="blk.size_blocks + ' pomodoros'" [title]="blk.size_blocks * 25 + 'min'">{{ tomatoes(blk.size_blocks) }}</span>
-                    · {{ blk.start_hint || blk.constraint }}
-                  </span>
-                </div>
+          <div class="cal-board__list"
+            cdkDropList
+            [id]="col.config.key + '-today'"
+            [cdkDropListData]="'today'"
+            [cdkDropListConnectedTo]="[col.config.key + '-tomorrow']"
+            [cdkDropListDisabled]="!col.config.deferrable"
+            (cdkDropListDropped)="onDrop($event)">
+            @for (e of col.today.events; track e.id) {
+              <div class="cal-board__event"
+                cdkDrag [cdkDragData]="e"
+                [cdkDragDisabled]="e.allDay || !col.config.deferrable"
+                [class.cal-board__event--past]="e.past"
+                [class.cal-board__event--draggable]="col.config.deferrable && !e.allDay">
+                <span class="cal-board__time">{{ e.allDay ? 'all-day' : e.time }}</span>
+                <span class="cal-board__title">{{ e.title }}</span>
               </div>
             }
-          }
-          @if (col.today.events.length === 0 && !(col.config.pencilled && suggestedBlocks().length > 0)) {
-            <p class="cal-board__empty">— empty —</p>
-          }
+            @if (col.config.pencilled) {
+              @for (blk of suggestedBlocks(); track $index) {
+                <div class="cal-board__event cal-board__event--block">
+                  <div class="cal-board__block-body">
+                    <span class="cal-board__title">{{ blk.title }}</span>
+                    <span class="cal-board__meta">
+                      <span [attr.aria-label]="blk.size_blocks + ' pomodoros'" [title]="blk.size_blocks * 25 + 'min'">{{ tomatoes(blk.size_blocks) }}</span>
+                      · {{ blk.start_hint || blk.constraint }}
+                    </span>
+                  </div>
+                </div>
+              }
+            }
+            @if (col.today.events.length === 0 && !(col.config.pencilled && suggestedBlocks().length > 0)) {
+              <p class="cal-board__empty">— empty —</p>
+            }
+          </div>
         }
 
         <h4 class="cal-board__day">Tomorrow · {{ tomorrowLabel() }}</h4>
         @if (col.tomorrow.failed) {
           <p class="cal-board__error">⚠ couldn't load</p>
         } @else {
-          @for (e of col.tomorrow.events; track e.id) {
-            <div class="cal-board__event">
-              <span class="cal-board__time">{{ e.allDay ? 'all-day' : e.time }}</span>
-              <span class="cal-board__title">{{ e.title }}</span>
-            </div>
-          } @empty {
-            <p class="cal-board__empty">— empty —</p>
-          }
+          <div class="cal-board__list"
+            cdkDropList
+            [id]="col.config.key + '-tomorrow'"
+            [cdkDropListData]="'tomorrow'"
+            [cdkDropListConnectedTo]="[col.config.key + '-today']"
+            [cdkDropListDisabled]="!col.config.deferrable"
+            (cdkDropListDropped)="onDrop($event)">
+            @for (e of col.tomorrow.events; track e.id) {
+              <div class="cal-board__event"
+                cdkDrag [cdkDragData]="e"
+                [cdkDragDisabled]="e.allDay || !col.config.deferrable"
+                [class.cal-board__event--draggable]="col.config.deferrable && !e.allDay">
+                <span class="cal-board__time">{{ e.allDay ? 'all-day' : e.time }}</span>
+                <span class="cal-board__title">{{ e.title }}</span>
+              </div>
+            } @empty {
+              <p class="cal-board__empty">— empty —</p>
+            }
+          </div>
         }
       }
     </section>

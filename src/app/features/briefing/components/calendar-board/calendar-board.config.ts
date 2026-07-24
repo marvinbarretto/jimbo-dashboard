@@ -18,6 +18,13 @@ export interface BoardColumnConfig {
   label: string;
   /** Hatched "negotiable" styling + the briefing's suggested_blocks render here. */
   pencilled?: boolean;
+  /**
+   * Events here can be dragged today↔tomorrow to defer/pull them. Only set it
+   * when the column's `account` actually owns every calendar under it — the
+   * Suggestions calendar, for instance, Marvin only *reads* (writes go through
+   * the jimbo account), so a defer PATCH as `marvin` would 403.
+   */
+  deferrable?: boolean;
   sources: BoardCalendarSource[];
 }
 
@@ -25,6 +32,7 @@ export const CALENDAR_BOARD_COLUMNS: BoardColumnConfig[] = [
   {
     key: 'schedule',
     label: 'My schedule',
+    deferrable: true,
     // "Where I'll be" — primary plus the group calendars real plans live on.
     sources: [
       { calendarId: 'primary', account: 'marvin' },
@@ -37,6 +45,7 @@ export const CALENDAR_BOARD_COLUMNS: BoardColumnConfig[] = [
   {
     key: 'jimbo',
     label: 'Jimbo',
+    deferrable: true,
     // The jimbo account's own calendar (marvinbarretto.labs@gmail.com).
     sources: [{ calendarId: 'primary', account: 'jimbo' }],
   },

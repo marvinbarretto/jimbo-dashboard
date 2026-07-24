@@ -107,6 +107,45 @@
   background: color-mix(in srgb, var(--color-surface) 80%, transparent);
 }
 
+// Each day's events are a drop list; a min-height keeps an empty day a
+// reachable defer target.
+.cal-board__list {
+  min-height: 1.5rem;
+}
+
+// A timed event on a deferrable column advertises the grab.
+.cal-board__event--draggable {
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// CDK drag chrome: the floating copy keeps the card look; the gap left behind
+// dims; the target list gets a dashed outline while a drag is over it.
+.cdk-drag-preview {
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface-raised);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.25);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.4;
+}
+
+.cdk-drag-animating {
+  transition: transform 150ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cal-board__list.cdk-drop-list-receiving,
+.cal-board__list.cdk-drop-list-dragging {
+  outline: 1px dashed color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 // Board drops below the report when the page can't fit two real columns.
 @media (max-width: 1100px) {
   .cal-board {
