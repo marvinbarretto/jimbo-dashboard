@@ -38,7 +38,7 @@
     }
 
     @if (pendingLabels().length) {
-      <p class="mirror__pending">Not tracked yet: {{ pendingLabels().join(' · ') }}</p>
+      <p class="mirror__pending">Not tracked: {{ pendingLabels().join(' · ') }}</p>
     }
     @if (unassignedHours() > 0) {
       <p class="mirror__pending">Unassigned: {{ unassignedHours() }}h (projects in no bucket)</p>
