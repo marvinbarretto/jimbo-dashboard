@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.139](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.138...v0.0.139) (2026-07-24)
+
+
+### Features
+
+* **briefing:** add watch-queue panel to briefing detail side column ([2cf5c34](https://github.com/marvinbarretto/jimbo-dashboard/commit/2cf5c345e3d1059915dcf5dcf26289a6fdaed27d))
+* **briefing:** answer cap-blocked open questions inline via file-on-answer ([5511e22](https://github.com/marvinbarretto/jimbo-dashboard/commit/5511e22d59fe49fe4bb3d3ad43a1b0d53da7e7a3))
+* **briefing:** drag calendar events today↔tomorrow to defer ([1b1036f](https://github.com/marvinbarretto/jimbo-dashboard/commit/1b1036fbcf25f9847dca72d93222f8a9a1af1f7b))
+* **briefing:** pencil suggested_blocks onto the Suggestions calendar ([c78a58f](https://github.com/marvinbarretto/jimbo-dashboard/commit/c78a58f162c10269d2f9dec5af5dee5dccf79524))
+* **briefing:** per-actor activity swimlanes on briefing detail ([55ef679](https://github.com/marvinbarretto/jimbo-dashboard/commit/55ef679a5a7cd86ec407d677814b6f8bb602590d))
+
+
+### Bug Fixes
+
+* **briefing:** type onDrop for CDK's widened drop-list data ([49c9e23](https://github.com/marvinbarretto/jimbo-dashboard/commit/49c9e23fcabbf3206fff785698a7266b31e2b015))
+
+
+### Code Refactoring
+
+* **briefing:** extract + test actor-activity lane assembly ([6544a9c](https://github.com/marvinbarretto/jimbo-dashboard/commit/6544a9c110888a8df3a7611ce3008b546799e66a))
+
 ### [0.0.138](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.137...v0.0.138) (2026-07-23)
 
 
