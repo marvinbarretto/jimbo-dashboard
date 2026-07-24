@@ -58,6 +58,11 @@ const DASHBOARD_BASE_URL = 'https://jimbo.fourfoldmedia.uk';
 // two apart on reload.
 const SOURCE_MARKER = 'jimbo-planner';
 
+// Briefing suggested_blocks pencilled onto the Suggestions calendar — a
+// separate marker so they're never mistaken for round-trippable planner
+// placements (they have no vault item behind them).
+const BRIEFING_SUGGESTION_MARKER = 'briefing-suggestion';
+
 interface CreateEventResponse {
   readonly id: string;
 }
@@ -102,6 +107,31 @@ export class PlannerSyncService {
       );
     } catch (e) {
       console.error('PlannerSyncService.update failed', e);
+    }
+  }
+
+  // Pencil a briefing suggested_block onto the Suggestions calendar. Unlike a
+  // planner placement these carry no vault identity (the block is prose-level —
+  // just a title + size), so they're marked with their own source and skipped
+  // by reconcileAll/isOurs. The time is a rough starting pencil; fine placement
+  // happens in the planner. Returns the new event id, or null on failure.
+  async pencilBriefingBlock(block: { title: string; size: number }, startIso: string): Promise<string | null> {
+    const end = new Date(new Date(startIso).getTime() + block.size * SLOT_MINUTES * 60_000).toISOString();
+    try {
+      const res = await firstValueFrom(
+        this.http.post<CreateEventResponse>(`${this.base}/api/google-calendar/events`, {
+          calendarId: JIMBO_SUGGESTIONS_CALENDAR_ID,
+          account: WRITE_ACCOUNT,
+          summary: `✎ ${block.title}`,
+          start: startIso,
+          end,
+          extendedProperties: { private: { source: BRIEFING_SUGGESTION_MARKER, size: String(block.size) } },
+        }),
+      );
+      return res.id;
+    } catch (e) {
+      console.error('PlannerSyncService.pencilBriefingBlock failed', e);
+      return null;
     }
   }
 

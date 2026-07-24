@@ -42,6 +42,12 @@
                       · {{ blk.start_hint || blk.constraint }}
                     </span>
                   </div>
+                  @if (pencilledTitles().has(blk.title)) {
+                    <span class="cal-board__pencilled" title="Pencilled onto the Suggestions calendar">✓ pencilled</span>
+                  } @else {
+                    <button type="button" class="cal-board__pencil-btn"
+                      title="Pencil onto the Suggestions calendar" (click)="pencilBlock(blk)">✎ pencil in</button>
+                  }
                 </div>
               }
             }

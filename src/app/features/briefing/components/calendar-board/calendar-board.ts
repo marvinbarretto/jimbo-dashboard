@@ -5,6 +5,7 @@ import { CdkDropList, CdkDrag, type CdkDragDrop } from '@angular/cdk/drag-drop';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { ToastService } from '@shared/components/toast/toast.service';
+import { PlannerSyncService } from '../../../planner/data-access/planner-sync.service';
 import { BriefingFeedback } from '../../../briefings/components/briefing-feedback/briefing-feedback';
 import { CALENDAR_BOARD_COLUMNS, type BoardColumnConfig } from './calendar-board.config';
 import type { SuggestedBlock } from '../../../briefings/data-access/briefing.types';
@@ -72,11 +73,17 @@ export class CalendarBoard {
   private readonly document = inject(DOCUMENT);
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
+  private readonly plannerSync = inject(PlannerSyncService);
 
   readonly briefingId = input.required<number>();
   readonly suggestedBlocks = input<SuggestedBlock[]>([]);
 
   private readonly refreshedAt = signal(new Date());
+
+  // Titles of suggested_blocks pencilled onto the Suggestions calendar this
+  // session — flips the block's button to a settled state. Cleared on reload,
+  // where the pencilled event itself then shows up in the Suggestions column.
+  protected readonly pencilledTitles = signal<ReadonlySet<string>>(new Set());
 
   // Optimistic day placement while a defer PATCH is in flight (and until the
   // next reload brings ground truth). Keyed by event id → 'today' | 'tomorrow'.
@@ -144,8 +151,35 @@ export class CalendarBoard {
   private reload(): void {
     this.refreshedAt.set(new Date());
     this.dayOverrides.set({});
+    this.pencilledTitles.set(new Set());
     for (const column of this.sourceResources) {
       for (const resource of column) resource.reload();
+    }
+  }
+
+  // Pencil a suggested_block onto the Suggestions calendar at a rough starting
+  // time (next full hour) — a first placement to refine in the planner, not a
+  // committed slot. The block carries no vault item, so this uses the
+  // suggestion-only sync path.
+  protected async pencilBlock(blk: SuggestedBlock): Promise<void> {
+    if (this.pencilledTitles().has(blk.title)) return;
+    this.pencilledTitles.update((s) => new Set(s).add(blk.title));
+
+    const start = new Date();
+    start.setHours(start.getHours() + 1, 0, 0, 0);
+    const id = await this.plannerSync.pencilBriefingBlock(
+      { title: blk.title, size: blk.size_blocks }, start.toISOString(),
+    );
+    if (id) {
+      this.toast.success(`Pencilled “${blk.title}” onto Suggestions`);
+      this.reload();
+    } else {
+      this.pencilledTitles.update((s) => {
+        const next = new Set(s);
+        next.delete(blk.title);
+        return next;
+      });
+      this.toast.error(`Couldn't pencil “${blk.title}”`);
     }
   }
 
