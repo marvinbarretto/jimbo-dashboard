@@ -1,5 +1,29 @@
 import { describe, it, expect } from 'vitest';
-import { nextDay, fmtDuration, prettySkill, shortRepo, titleCase, timeRange } from './actor-activity.utils';
+import { nextDay, fmtDuration, prettySkill, shortRepo, titleCase, timeRange, buildLanes } from './actor-activity.utils';
+import type { FleetReportActor } from '@domain/dispatch';
+import type { CodeSession } from '../../../journal/data-access/code-sessions.service';
+
+// Minimal builders — only the fields buildLanes reads; the rest is noise.
+function agent(over: Partial<FleetReportActor> & { executor: string }): FleetReportActor {
+  return {
+    executor: over.executor,
+    total_jobs: over.total_jobs ?? 0,
+    completed: over.completed ?? over.total_jobs ?? 0,
+    failed: over.failed ?? 0,
+    estimated_cost: over.estimated_cost ?? 0,
+    input_tokens: 0,
+    output_tokens: 0,
+    models_used: [],
+    by_skill: over.by_skill ?? [],
+    failures: [],
+  };
+}
+
+function session(over: Partial<CodeSession>): CodeSession {
+  return { actor: null, repo: null, duration_minutes: null, headline: null, friction: null, ...over } as CodeSession;
+}
+
+const idLabel = (slug: string) => slug;
 
 describe('nextDay', () => {
   it('advances one UTC day, including month/year rollover', () => {
@@ -63,5 +87,63 @@ describe('timeRange', () => {
   it('shows a range when first and last differ', () => {
     const range = timeRange('2026-07-24T05:00:00.000Z', '2026-07-24T19:00:00.000Z');
     expect(range).toContain('–');
+  });
+});
+
+describe('buildLanes', () => {
+  it('leads with Marvin, then agents busiest-first', () => {
+    const lanes = buildLanes(
+      [agent({ executor: 'kipper', total_jobs: 2 }), agent({ executor: 'boris', total_jobs: 12 })],
+      [session({ headline: 'shipped X' })],
+      idLabel,
+    );
+    expect(lanes.map(l => l.id)).toEqual(['marvin', 'boris', 'kipper']);
+  });
+
+  it('omits the Marvin lane when there are no interactive sessions', () => {
+    const lanes = buildLanes([agent({ executor: 'boris', total_jobs: 3 })], [], idLabel);
+    expect(lanes.map(l => l.id)).toEqual(['boris']);
+  });
+
+  it('drops agents that ran no jobs', () => {
+    const lanes = buildLanes(
+      [agent({ executor: 'boris', total_jobs: 3 }), agent({ executor: 'kipper', total_jobs: 0 })],
+      [], idLabel,
+    );
+    expect(lanes.map(l => l.id)).toEqual(['boris']);
+  });
+
+  it('summarises Marvin as sessions · duration · repos', () => {
+    const lanes = buildLanes([], [
+      session({ headline: 'a', duration_minutes: 43, repo: 'x/dash' }),
+      session({ headline: 'b', duration_minutes: 117, repo: 'x/api' }),
+    ], idLabel);
+    expect(lanes[0]!.summary).toBe('2 sessions · 2h 40min · 2 repos');
+  });
+
+  it('surfaces failures and cost in the agent summary', () => {
+    const lanes = buildLanes(
+      [agent({ executor: 'boris', total_jobs: 5, completed: 4, failed: 1, estimated_cost: 2.977 })],
+      [], idLabel,
+    );
+    expect(lanes[0]!.summary).toBe('4/5 done · 1 failed · $2.98');
+  });
+
+  it('flags sustained-loop skills and high-friction sessions', () => {
+    const [marvin, boris] = buildLanes(
+      [agent({ executor: 'boris', total_jobs: 1, by_skill: [
+        { skill: 'triage/email-triage', flow: 'commission', count: 6, first_at: null, last_at: null, sustained_loop: true },
+      ] })],
+      [session({ headline: 'grind', friction: { level: 'high', turns: 40, corrections: 3 } })],
+      idLabel,
+    );
+    expect(marvin!.items[0]!.flagged).toBe(true);
+    expect(boris!.items[0]!.flagged).toBe(true);
+    expect(boris!.items[0]!.label).toBe('email triage ×6');
+  });
+
+  it('routes slugs through the label resolver', () => {
+    const lanes = buildLanes([agent({ executor: 'boris', total_jobs: 1 })], [], slug => `Actor:${slug}`);
+    expect(lanes[0]!.label).toBe('Actor:boris');
   });
 });
