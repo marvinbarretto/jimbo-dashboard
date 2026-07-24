@@ -14,6 +14,7 @@ import { BriefingReport } from '../../../briefings/components/briefing-report/br
 import { BriefingFeedbackService } from '../../../briefings/data-access/briefing-feedback.service';
 import { CalendarBoard } from '../../components/calendar-board/calendar-board';
 import { ActorActivity } from '../../components/actor-activity/actor-activity';
+import { WatchQueuePanel } from '../../../planner/components/watch-queue-panel/watch-queue-panel';
 import type { BriefingAnalysis } from '../../../briefings/data-access/briefing.types';
 
 // The overall rating widget is gone from this page on purpose: quality signal
@@ -24,6 +25,7 @@ import type { BriefingAnalysis } from '../../../briefings/data-access/briefing.t
   imports: [
     DatePipe, TitleCasePipe, UiPage, UiPageHeader, UiStack,
     UiLoadingState, UiEmptyState, BriefingReport, CalendarBoard, ActorActivity,
+    WatchQueuePanel,
   ],
   templateUrl: './briefing-detail.html',
   styleUrl: './briefing-detail.scss',
