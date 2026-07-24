@@ -187,8 +187,9 @@ export class CalendarBoard {
   // Drag today↔tomorrow within a deferrable column. Container ids are
   // `${col.key}-today` / `${col.key}-tomorrow`; a drop into the other list is a
   // one-day shift, same list is a no-op.
-  protected async onDrop(event: CdkDragDrop<'today' | 'tomorrow'>): Promise<void> {
-    const target = event.container.data;
+  protected async onDrop(event: CdkDragDrop<string>): Promise<void> {
+    // CDK widens the drop-list data to string; narrow back to the two slots.
+    const target: 'today' | 'tomorrow' = event.container.data === 'tomorrow' ? 'tomorrow' : 'today';
     if (target === event.previousContainer.data) return;
     const e = event.item.data as BoardEvent;
     if (!e.rawStart || !e.rawEnd) return; // all-day / malformed — not deferrable
