@@ -22,6 +22,21 @@
       }
     </div>
 
+    @if (lifeRows().length) {
+      <div class="mirror__life">
+        @for (b of lifeRows(); track b.key) {
+          <div class="mirror-life-row">
+            <span class="mirror-life-row__label">{{ b.label }}</span>
+            <span class="mirror-life-row__metrics">
+              @for (m of b.metrics; track m.label) {
+                <span class="mirror-chip">{{ m.value }} {{ m.label }}</span>
+              }
+            </span>
+          </div>
+        }
+      </div>
+    }
+
     @if (pendingLabels().length) {
       <p class="mirror__pending">Not tracked yet: {{ pendingLabels().join(' · ') }}</p>
     }

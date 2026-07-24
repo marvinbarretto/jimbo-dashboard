@@ -7,6 +7,12 @@ interface ProjectMinutes {
   minutes: number;
 }
 
+interface BucketMetric {
+  label: string;
+  value: number;
+  unit: string;
+}
+
 interface BucketWeekly {
   key: string;
   label: string;
@@ -15,6 +21,7 @@ interface BucketWeekly {
   hours: number;
   sessions: number;
   projects: ProjectMinutes[];
+  metrics?: BucketMetric[];
   pending?: boolean;
 }
 
@@ -55,8 +62,7 @@ export class BucketMirror {
   protected readonly failed = computed(() => this.resource.error() !== undefined);
 
   protected readonly workRows = computed<BucketRow[]>(() => {
-    const buckets = this.resource.value()?.buckets ?? [];
-    const work = buckets.filter(b => !b.pending);
+    const work = (this.resource.value()?.buckets ?? []).filter(b => b.kind === 'work');
     const total = work.reduce((n, b) => n + b.minutes, 0) || 1;
     const max = Math.max(1, ...work.map(b => b.minutes));
     return work.map(b => ({
@@ -65,6 +71,10 @@ export class BucketMirror {
       barPct: Math.round((b.minutes / max) * 100),
     }));
   });
+
+  // Life buckets that have data — rendered as count chips, not bars.
+  protected readonly lifeRows = computed(() =>
+    (this.resource.value()?.buckets ?? []).filter(b => b.kind === 'life' && !b.pending));
 
   protected readonly pendingLabels = computed(() =>
     (this.resource.value()?.buckets ?? []).filter(b => b.pending).map(b => b.label));
