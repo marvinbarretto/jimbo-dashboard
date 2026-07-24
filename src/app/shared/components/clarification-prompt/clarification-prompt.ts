@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import type { AnswerClarificationResponse, Clarification } from '@domain/clarifications';
+import type {
+  AnswerClarificationCreate, AnswerClarificationResponse, Clarification,
+  ClarificationKind, ClarificationSourceKind,
+} from '@domain/clarifications';
 import { AnswerRail, type AnswerRailState } from '@shared/components/answer-rail/answer-rail';
 import { environment } from '../../../../environments/environment';
 
@@ -26,8 +29,16 @@ export class ClarificationPrompt {
   readonly question = input.required<string>();
   // Small mono context line under the question (e.g. what it gates).
   readonly hint = input<string | undefined>(undefined);
-  // Without an id the prompt is display-only.
+  // The prompt is answerable when it either points at a filed clarification
+  // (clarificationId) OR carries a sourceRef to file-on-answer. With neither
+  // it's display-only (e.g. the briefing's "queue is full" notice).
   readonly clarificationId = input<string | undefined>(undefined);
+  // File-on-answer: when there's no clarificationId, answering describes the
+  // question via these and the server find-or-creates then answers it. Keeps a
+  // cap-blocked briefing question answerable in place instead of dead prose.
+  readonly sourceRef = input<string | undefined>(undefined);
+  readonly sourceKind = input<ClarificationSourceKind>('briefing');
+  readonly kind = input<ClarificationKind>('followup');
   readonly options = input<string[] | undefined>(undefined);
   // Preview-only (ui-lab): start in a given state without touching the API.
   readonly initialMode = input<Mode>('idle');
@@ -43,7 +54,7 @@ export class ClarificationPrompt {
     });
   }
 
-  protected readonly answerable = computed(() => !!this.clarificationId());
+  protected readonly answerable = computed(() => !!this.clarificationId() || !!this.sourceRef());
   protected readonly railState = computed<AnswerRailState>(() => {
     const mode = this.mode();
     return mode === 'idle' ? 'open' : mode;
@@ -62,13 +73,26 @@ export class ClarificationPrompt {
   }
 
   private async send(text: string): Promise<void> {
+    if (!text || !this.answerable() || this.mode() === 'sending') return;
     const id = this.clarificationId();
-    if (!id || !text || this.mode() === 'sending') return;
+    // With an id we answer it directly; without, we hand the server enough to
+    // find-or-create the question (cap-bypassed) and answer it in one call.
+    const body = id
+      ? { clarification_id: id, answer_text: text }
+      : {
+          create: {
+            content: this.question(),
+            kind: this.kind(),
+            source_kind: this.sourceKind(),
+            source_ref: this.sourceRef(),
+          } satisfies AnswerClarificationCreate,
+          answer_text: text,
+        };
     this.mode.set('sending');
     try {
       await firstValueFrom(this.http.post<AnswerClarificationResponse>(
         `${this.base}/api/clarifications/answer`,
-        { clarification_id: id, answer_text: text },
+        body,
       ));
       this.sentAnswer.set(text);
       this.mode.set('acked');
@@ -78,8 +102,15 @@ export class ClarificationPrompt {
   }
 
   protected async dismiss(): Promise<void> {
+    if (this.mode() === 'sending') return;
     const id = this.clarificationId();
-    if (!id || this.mode() === 'sending') return;
+    // Nothing was ever filed for a file-on-answer question, so there's no row
+    // to dismiss — just hide it. Its ref is briefing-scoped, so the next
+    // briefing regenerates the question fresh if it still matters.
+    if (!id) {
+      this.mode.set('dismissed');
+      return;
+    }
     this.mode.set('sending');
     try {
       await firstValueFrom(this.http.patch<Clarification>(

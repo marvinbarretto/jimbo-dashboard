@@ -39,3 +39,13 @@ export interface AnswerClarificationResponse {
   clarification: Clarification;
   echo: string;
 }
+
+// File-on-answer: describes a question that was surfaced but never filed (a
+// briefing open_question the generator couldn't POST past the cap), so the
+// answer endpoint can find-or-create then answer it in one call.
+export interface AnswerClarificationCreate {
+  content: string;
+  kind: ClarificationKind;
+  source_kind: ClarificationSourceKind;
+  source_ref?: string | null;
+}

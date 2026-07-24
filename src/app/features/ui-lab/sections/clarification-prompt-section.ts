@@ -48,7 +48,12 @@ import { ClarificationPrompt } from '@shared/components/clarification-prompt/cla
             initialMode="error" />
 
           <app-clarification-prompt
-            question="Display-only: a question with no clarification behind it renders without controls." />
+            question="File-on-answer: no clarification filed yet, but a sourceRef makes it answerable — the server files-then-answers on submit."
+            hint="a cap-blocked briefing question, answerable in place"
+            sourceRef="lab-file-on-answer" />
+
+          <app-clarification-prompt
+            question="Display-only: no clarificationId and no sourceRef renders without controls (the 'queue is full' notice)." />
         </div>
       </app-ui-stack>
     </app-ui-section>

@@ -32,6 +32,11 @@ export interface OpenQuestion {
   // Present when the skill filed this as a clarification — makes it
   // answerable inline on the briefing page.
   clarification_id?: string;
+  // The ref the skill filed (or would have filed) this under. Present on every
+  // real question even when the cap blocked the file, so it stays answerable
+  // in place via file-on-answer. Absent on the "queue is full" notice, which
+  // stays display-only.
+  source_ref?: string;
   options?: string[];
 }
 export interface Insight { fact: string; strategy?: string; }
