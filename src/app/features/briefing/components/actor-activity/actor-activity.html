@@ -1,0 +1,30 @@
+<section class="actor-activity">
+  <h2 class="actor-activity__kicker">Who did what</h2>
+
+  @if (loading()) {
+    <p class="actor-activity__muted">Loading activity…</p>
+  } @else if (lanes().length === 0) {
+    <p class="actor-activity__muted">No fleet or session activity recorded for this day.</p>
+  } @else {
+    <div class="actor-activity__lanes">
+      @for (lane of lanes(); track lane.id) {
+        <div class="lane">
+          <div class="lane__head">
+            <app-entity-chip type="actor" [id]="lane.id" [label]="lane.label" size="sm" />
+            <span class="lane__summary">{{ lane.summary }}</span>
+          </div>
+          <ul class="lane__items">
+            @for (item of lane.items; track $index) {
+              <li class="lane__item" [class.lane__item--flagged]="item.flagged">
+                <span class="lane__item-label">{{ item.label }}</span>
+                @if (item.meta) {
+                  <span class="lane__item-meta">{{ item.meta }}</span>
+                }
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  }
+</section>

@@ -12,7 +12,12 @@
 
     <div class="briefing-detail__cols">
       <app-briefing-report [analysis]="b.analysis" [briefingId]="b.id" [hideSuggestedBlocks]="true" />
-      <app-calendar-board [briefingId]="b.id" [suggestedBlocks]="b.analysis.suggested_blocks ?? []" />
+      <div class="briefing-detail__side">
+        <app-calendar-board [briefingId]="b.id" [suggestedBlocks]="b.analysis.suggested_blocks ?? []" />
+        @if (reviewDay(); as day) {
+          <app-actor-activity [day]="day" />
+        }
+      </div>
     </div>
   </app-ui-stack>
 } @else {

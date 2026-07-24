@@ -13,6 +13,7 @@ import { loadOne } from '@shared/data-access/load-one';
 import { BriefingReport } from '../../../briefings/components/briefing-report/briefing-report';
 import { BriefingFeedbackService } from '../../../briefings/data-access/briefing-feedback.service';
 import { CalendarBoard } from '../../components/calendar-board/calendar-board';
+import { ActorActivity } from '../../components/actor-activity/actor-activity';
 import type { BriefingAnalysis } from '../../../briefings/data-access/briefing.types';
 
 // The overall rating widget is gone from this page on purpose: quality signal
@@ -22,7 +23,7 @@ import type { BriefingAnalysis } from '../../../briefings/data-access/briefing.t
   selector: 'app-briefing-detail',
   imports: [
     DatePipe, TitleCasePipe, UiPage, UiPageHeader, UiStack,
-    UiLoadingState, UiEmptyState, BriefingReport, CalendarBoard,
+    UiLoadingState, UiEmptyState, BriefingReport, CalendarBoard, ActorActivity,
   ],
   templateUrl: './briefing-detail.html',
   styleUrl: './briefing-detail.scss',
@@ -44,6 +45,17 @@ export class BriefingDetail {
   protected readonly loading = computed(() => this.state().loading);
   protected readonly error = computed(() => this.state().error);
   protected readonly briefing = computed(() => this.state().data);
+
+  // The logical day the briefing reviews: a morning briefing looks back at
+  // yesterday, an afternoon one at today so far. Drives the actor-activity
+  // swimlanes' fleet + code-session window.
+  protected readonly reviewDay = computed(() => {
+    const b = this.briefing();
+    if (!b) return null;
+    const d = new Date(b.generated_at);
+    if (b.session === 'morning') d.setDate(d.getDate() - 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
 
   constructor() {
     effect(() => {

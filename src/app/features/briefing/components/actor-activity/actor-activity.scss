@@ -1,0 +1,82 @@
+.actor-activity {
+  margin-top: 1rem;
+}
+
+.actor-activity__kicker {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.actor-activity__muted {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.actor-activity__lanes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.lane {
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.5rem 0.6rem;
+  min-width: 0;
+}
+
+.lane__head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.lane__summary {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.lane__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.5rem;
+}
+
+.lane__item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: 0.78rem;
+  min-width: 0;
+}
+
+.lane__item--flagged {
+  // Sustained loop / high friction — a subtle accent edge, not an alarm.
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+}
+
+.lane__item-label {
+  overflow-wrap: anywhere;
+}
+
+.lane__item-meta {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}

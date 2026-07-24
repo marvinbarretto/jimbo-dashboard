@@ -18,6 +18,14 @@
   }
 }
 
+// Calendar board + actor-activity share the sticky side column, stacked.
+.briefing-detail__side {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
 // Below two comfortable columns the board stacks under the report.
 @media (max-width: 1100px) {
   .briefing-detail__cols {
