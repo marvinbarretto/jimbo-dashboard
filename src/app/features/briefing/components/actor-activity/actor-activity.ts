@@ -6,6 +6,7 @@ import { ApiDailyFleetReportSchema, type FleetReportActor } from '@domain/dispat
 import type { CodeSession } from '../../../journal/data-access/code-sessions.service';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import { environment } from '../../../../../environments/environment';
+import { nextDay, fmtDuration, prettySkill, shortRepo, timeRange, titleCase } from './actor-activity.utils';
 
 interface LaneItem {
   label: string;
@@ -125,42 +126,4 @@ export class ActorActivity {
   private actorLabel(slug: string): string {
     return this.actors.getById(actorId(slug))?.display_name ?? titleCase(slug);
   }
-}
-
-function nextDay(day: string): string {
-  const d = new Date(`${day}T00:00:00.000Z`);
-  d.setUTCDate(d.getUTCDate() + 1);
-  return d.toISOString().slice(0, 10);
-}
-
-function fmtDuration(mins: number): string {
-  if (mins < 60) return `${Math.round(mins)}min`;
-  const h = Math.floor(mins / 60);
-  const m = Math.round(mins % 60);
-  return m ? `${h}h ${m}min` : `${h}h`;
-}
-
-// 'triage/email-triage' → 'email triage'; keeps the flow-level noise out.
-function prettySkill(skill: string | null): string {
-  if (!skill) return 'work';
-  return (skill.split('/').at(-1) ?? skill).replace(/-/g, ' ');
-}
-
-function shortRepo(repo: string | null): string | null {
-  return repo ? (repo.split('/').at(-1) ?? repo) : null;
-}
-
-function timeRange(first: string | null, last: string | null): string | null {
-  if (!first) return null;
-  const f = hhmm(first);
-  const l = last ? hhmm(last) : null;
-  return l && l !== f ? `${f}–${l}` : f;
-}
-
-function hhmm(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-}
-
-function titleCase(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }

@@ -8,6 +8,7 @@ import { ToastService } from '@shared/components/toast/toast.service';
 import { PlannerSyncService } from '../../../planner/data-access/planner-sync.service';
 import { BriefingFeedback } from '../../../briefings/components/briefing-feedback/briefing-feedback';
 import { CALENDAR_BOARD_COLUMNS, type BoardColumnConfig } from './calendar-board.config';
+import { dateKey, shiftIsoDays } from './calendar-board.utils';
 import type { SuggestedBlock } from '../../../briefings/data-access/briefing.types';
 
 interface RawCalEvent {
@@ -233,10 +234,6 @@ export class CalendarBoard {
   }
 }
 
-function dateKey(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 function onDay(e: BoardEvent, day: string): boolean {
   if (e.allDay) {
     // All-day: the raw date is the start; single-day match is enough here.
@@ -263,17 +260,4 @@ function toBoardEvent(e: RawCalEvent, now: Date, calendarId: string, account: st
     rawStart: e.start.dateTime!,
     rawEnd: e.end.dateTime ?? e.start.dateTime!,
   };
-}
-
-// Shift an ISO instant OR an all-day date string by whole days, preserving
-// time-of-day for timed events and the date shape for all-day ones.
-function shiftIsoDays(iso: string, days: number): string {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-    const d = new Date(`${iso}T00:00:00.000Z`);
-    d.setUTCDate(d.getUTCDate() + days);
-    return d.toISOString().slice(0, 10);
-  }
-  const d = new Date(iso);
-  d.setDate(d.getDate() + days);
-  return d.toISOString();
 }
