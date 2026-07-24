@@ -13,6 +13,7 @@
     <div class="briefing-detail__cols">
       <app-briefing-report [analysis]="b.analysis" [briefingId]="b.id" [hideSuggestedBlocks]="true" />
       <div class="briefing-detail__side">
+        <app-bucket-mirror />
         <app-calendar-board [briefingId]="b.id" [suggestedBlocks]="b.analysis.suggested_blocks ?? []" />
         <app-watch-queue-panel />
         @if (reviewDay(); as day) {

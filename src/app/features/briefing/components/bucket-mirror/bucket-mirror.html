@@ -1,0 +1,32 @@
+<section class="mirror">
+  <h2 class="mirror__kicker">This week · where the time went</h2>
+
+  @if (loading()) {
+    <p class="mirror__muted">Loading…</p>
+  } @else if (failed()) {
+    <p class="mirror__muted">Couldn't load the attention split.</p>
+  } @else {
+    <p class="mirror__total">{{ totalHours() }}h active, last {{ days() }} days</p>
+
+    <div class="mirror__rows">
+      @for (b of workRows(); track b.key) {
+        <div class="mirror-row">
+          <div class="mirror-row__head">
+            <span class="mirror-row__label">{{ b.label }}</span>
+            <span class="mirror-row__value">{{ b.hours }}h · {{ b.pct }}%</span>
+          </div>
+          <div class="mirror-row__track">
+            <div class="mirror-row__fill" [style.width.%]="b.barPct"></div>
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (pendingLabels().length) {
+      <p class="mirror__pending">Not tracked yet: {{ pendingLabels().join(' · ') }}</p>
+    }
+    @if (unassignedHours() > 0) {
+      <p class="mirror__pending">Unassigned: {{ unassignedHours() }}h (projects in no bucket)</p>
+    }
+  }
+</section>

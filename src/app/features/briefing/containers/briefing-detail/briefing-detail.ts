@@ -15,6 +15,7 @@ import { BriefingReport } from '../../../briefings/components/briefing-report/br
 import { BriefingFeedbackService } from '../../../briefings/data-access/briefing-feedback.service';
 import { CalendarBoard } from '../../components/calendar-board/calendar-board';
 import { ActorActivity } from '../../components/actor-activity/actor-activity';
+import { BucketMirror } from '../../components/bucket-mirror/bucket-mirror';
 import { WatchQueuePanel } from '../../../planner/components/watch-queue-panel/watch-queue-panel';
 import type { BriefingAnalysis } from '../../../briefings/data-access/briefing.types';
 
@@ -26,7 +27,7 @@ import type { BriefingAnalysis } from '../../../briefings/data-access/briefing.t
   imports: [
     DatePipe, TitleCasePipe, UiPage, UiPageHeader, UiStack,
     UiLoadingState, UiEmptyState, BriefingReport, CalendarBoard, ActorActivity,
-    WatchQueuePanel,
+    WatchQueuePanel, BucketMirror,
   ],
   templateUrl: './briefing-detail.html',
   styleUrl: './briefing-detail.scss',

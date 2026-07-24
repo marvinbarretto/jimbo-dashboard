@@ -1,0 +1,68 @@
+.mirror {
+  min-width: 0;
+}
+
+.mirror__kicker {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.mirror__total {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.mirror__muted,
+.mirror__pending {
+  margin: 0.4rem 0 0;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.mirror__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.mirror-row__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.mirror-row__label {
+  font-size: 0.82rem;
+}
+
+.mirror-row__value {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.mirror-row__track {
+  height: 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-surface) 70%, transparent);
+  overflow: hidden;
+}
+
+// One neutral fill — the mirror shows the split, it doesn't grade it.
+.mirror-row__fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--color-accent);
+  min-width: 2px;
+  transition: width 200ms ease;
+}
