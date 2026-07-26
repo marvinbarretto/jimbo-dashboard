@@ -15,6 +15,15 @@ export type AgentRunOutcome =
   | 'POLL_CORRUPTED'
   | 'PROSE_RESPONSE';
 
+/**
+ * How the work in a rollup group was paid for.
+ * `flat` — covered by a subscription (Claude Max, ChatGPT/codex), so cost_usd
+ * is 0 by design and tokens are the only meaningful cost signal.
+ * `unknown` is kept distinct from `metered` so a telemetry gap never reads as
+ * a job that costs nothing.
+ */
+export type BillingMode = 'flat' | 'metered' | 'mixed' | 'unknown';
+
 export interface AgentRunRollupRow {
   job_name: string;
   model: string | null;
@@ -24,6 +33,7 @@ export interface AgentRunRollupRow {
   last_ts: string;
   cost_usd: number | null;      // SUM of estimated cost (USD) across this group
   tokens_total: number | null;  // SUM of total tokens across this group
+  billing: BillingMode;
 }
 
 export interface AgentRunTailRow {

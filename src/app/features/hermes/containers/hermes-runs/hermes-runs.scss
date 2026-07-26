@@ -27,11 +27,51 @@
   }
 }
 
+.runs__controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
 .runs__window {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   font-size: 0.72rem;
+}
+
+.runs__totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-strong);
+}
+
+.runs__total {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+
+  dt {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
+  }
 }
 
 .runs__window-label {
@@ -125,6 +165,70 @@
   color: var(--color-text-soft);
 }
 
+// Tokens are the headline number on a flat plan — weighted to read first.
+.runs__td--tokens {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.runs__td--cost {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.runs__td--billing,
+.runs__td--rating {
+  white-space: nowrap;
+}
+
+.runs__rating {
+  display: inline-flex;
+  gap: 0.15rem;
+}
+
+.runs__rating-btn {
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  border-radius: var(--radius);
+  color: color-mix(in srgb, var(--color-text-muted) 80%, transparent);
+  font-size: 0.66rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-border-strong);
+    color: var(--color-text);
+  }
+}
+
+// Only the chosen verdict carries colour; the alternatives stay quiet so a
+// row's judgement is readable at a glance down the column.
+.runs__rating-btn--active {
+  color: var(--color-text);
+  border-color: currentColor;
+}
+
+.runs__rating-btn--success.runs__rating-btn--active {
+  background: color-mix(in srgb, var(--color-success) 16%, transparent);
+  border-color: color-mix(in srgb, var(--color-success) 55%, var(--color-border));
+}
+
+.runs__rating-btn--warning.runs__rating-btn--active {
+  background: color-mix(in srgb, var(--color-warning) 16%, transparent);
+  border-color: color-mix(in srgb, var(--color-warning) 55%, var(--color-border));
+}
+
+.runs__rating-btn--danger.runs__rating-btn--active {
+  background: color-mix(in srgb, var(--color-danger) 16%, transparent);
+  border-color: color-mix(in srgb, var(--color-danger) 55%, var(--color-border));
+}
+
 .runs__td--outcome {
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -159,7 +263,7 @@
 
 .runs__tail-row {
   display: grid;
-  grid-template-columns: 7ch 12ch auto 18ch 5ch 1fr;
+  grid-template-columns: 7ch 12ch auto 18ch 5ch 6ch 1fr;
   align-items: center;
   gap: 0.55rem;
   padding: 0.35rem 0.25rem;
@@ -193,6 +297,13 @@
 .runs__tail-dur {
   font-variant-numeric: tabular-nums;
   color: var(--color-text-muted);
+  font-size: 0.7rem;
+  text-align: right;
+}
+
+.runs__tail-tokens {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-soft);
   font-size: 0.7rem;
   text-align: right;
 }
