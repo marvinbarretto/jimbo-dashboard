@@ -84,5 +84,32 @@
   <ng-template #descriptionCell let-context>
     <app-ui-prose [text]="context.getValue()" />
   </ng-template>
+
+  <!-- Never-dispatched reads as a dash, not 0: "no history" and "tried and did
+       nothing" are different verdicts and should not look alike. -->
+  <ng-template #runsCell let-context>
+    @if (usageFor(context.row.original.id); as u) {
+      <span class="runs" [title]="u.completed + ' completed · ' + u.rejected + ' rejected · ' + u.proposed + ' awaiting approval'">
+        {{ u.runs }}
+      </span>
+    } @else {
+      <span class="hint">—</span>
+    }
+  </ng-template>
+
+  <ng-template #declinedCell let-context>
+    @if (usageFor(context.row.original.id); as u) {
+      @if (u.rejected + u.proposed > 0) {
+        <app-ui-badge [tone]="declinedPct(context.row.original.id) >= 50 ? 'danger' : 'warning'"
+                      [title]="u.rejected + ' rejected, ' + u.proposed + ' never approved'">
+          {{ declinedPct(context.row.original.id) }}%
+        </app-ui-badge>
+      } @else {
+        <span class="hint">—</span>
+      }
+    } @else {
+      <span class="hint">—</span>
+    }
+  </ng-template>
 </app-ui-stack>
 </app-ui-page>

@@ -12,6 +12,11 @@ export const routes: Routes = [
     loadChildren: () => import('./features/hermes/hermes.routes').then(m => m.hermesRoutes),
   },
   {
+    path: 'skills',
+    title: 'Skills',
+    loadChildren: () => import('./features/skills/skills.routes').then(m => m.skillsRoutes),
+  },
+  {
     path: 'mail-activity',
     title: 'Mail activity',
     loadComponent: () => import('./features/mail-activity/containers/mail-activity-page/mail-activity-page').then(m => m.MailActivityPage),

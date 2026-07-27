@@ -18,6 +18,23 @@ export interface SkillPatch {
   body?: string;
 }
 
+/**
+ * Dispatch outcomes for one skill. The registry says what a skill IS; this
+ * says whether it earns its place — `rejected`/`proposed` matter as much as
+ * `completed`, since a skill whose work is consistently declined is producing
+ * something nobody wants. Skills with no dispatch history are absent from the
+ * response, so a missing row means zero runs, not unknown.
+ */
+export interface SkillUsage {
+  skill_id: string;
+  runs: number;
+  completed: number;
+  rejected: number;
+  proposed: number;
+  failed: number;
+  last_run_at: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SkillsService {
   private readonly http = inject(HttpClient);
@@ -26,6 +43,10 @@ export class SkillsService {
   private readonly _skills = signal<Skill[]>([]);
   private readonly _loading = signal(true);
   private readonly _error = signal<string | null>(null);
+  private readonly _usage = signal<Map<string, SkillUsage>>(new Map());
+
+  /** Dispatch outcomes keyed by skill id. Empty map until loaded, or on failure. */
+  readonly usage = this._usage.asReadonly();
 
   readonly skills = this._skills.asReadonly();
   readonly activeSkills = computed(() =>
@@ -48,6 +69,13 @@ export class SkillsService {
         this._error.set(err?.message ?? 'failed to load skills');
         this._loading.set(false);
       },
+    });
+    // Usage is a separate, non-blocking fetch: the registry is the page's
+    // reason to exist, so a dispatch-stats failure must degrade to blank
+    // columns rather than an empty page.
+    this.http.get<{ items: SkillUsage[] }>(`${this.url}/usage`).subscribe({
+      next: r => this._usage.set(new Map(r.items.map(u => [u.skill_id, u]))),
+      error: () => this._usage.set(new Map()),
     });
   }
 

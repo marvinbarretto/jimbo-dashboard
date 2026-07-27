@@ -11,7 +11,7 @@ import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
-import { SkillsService } from '../../data-access/skills.service';
+import { SkillsService, type SkillUsage } from '../../data-access/skills.service';
 import { skillNamespace, skillLocalName, type Skill } from '@domain/skills';
 
 @Component({
@@ -71,6 +71,25 @@ export class SkillsList {
     viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, Skill['metadata']['status']> }>>('statusCell');
   private readonly descriptionCell =
     viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, string> }>>('descriptionCell');
+  private readonly runsCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, number> }>>('runsCell');
+  private readonly declinedCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, number> }>>('declinedCell');
+
+  /** Dispatch outcomes for a skill, or undefined if it has never been dispatched. */
+  usageFor(id: string): SkillUsage | undefined {
+    return this.service.usage().get(id);
+  }
+
+  /**
+   * Declined work as a share of attempts. A skill can look busy on `runs` and
+   * still be failing its job if most of those were rejected or left unapproved.
+   */
+  declinedPct(id: string): number {
+    const u = this.usageFor(id);
+    if (!u || !u.runs) return 0;
+    return Math.round(100 * (u.rejected + u.proposed) / u.runs);
+  }
 
   readonly columns: ColumnDef<Skill, any>[] = [
     this.columnHelper.accessor(row => this.namespace(row.id), {
@@ -104,6 +123,21 @@ export class SkillsList {
       header: 'Status',
       cell: () => this.statusCell(),
       enableSorting: false,
+    }),
+    // Dispatch reality, next to the stated verdict — the two disagreeing is the
+    // signal worth acting on (a 'keep' skill that has never run, or one whose
+    // work is consistently rejected).
+    this.columnHelper.accessor(row => this.usageFor(row.id)?.runs ?? 0, {
+      id: 'runs',
+      header: 'Runs',
+      cell: () => this.runsCell(),
+      sortingFn: 'basic',
+    }),
+    this.columnHelper.accessor(row => this.usageFor(row.id)?.rejected ?? 0, {
+      id: 'declined',
+      header: 'Declined',
+      cell: () => this.declinedCell(),
+      sortingFn: 'basic',
     }),
     this.columnHelper.accessor('type', {
       header: 'Type',
