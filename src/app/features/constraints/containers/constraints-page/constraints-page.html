@@ -1,0 +1,60 @@
+<app-ui-page width="standard">
+  <header class="cx__header">
+    <h1 class="cx__title">Constraints</h1>
+    <p class="cx__lede">
+      Rules agents apply when they plan or price something. A constraint that is
+      <strong>on</strong> is included in every skill's snapshot; one that is
+      <strong>off</strong> is invisible to them. Switch things off rather than
+      deleting them — the point is that a rule can come back.
+    </p>
+    <p class="cx__count">
+      <strong>{{ activeCount() }}</strong> of {{ totalCount() }} currently applied
+    </p>
+  </header>
+
+  @if (isLoading()) {
+    <app-ui-loading-state message="Loading constraints…" />
+  } @else if (error(); as e) {
+    <app-ui-empty-state [title]="'Could not load constraints'" [message]="e" />
+  } @else if (!sections().length) {
+    <app-ui-empty-state
+      title="No constraints yet"
+      message="Add one below — a rule you'd otherwise retype every time you ask for a plan." />
+  } @else {
+    @for (section of sections(); track section.id) {
+      <app-ui-section [title]="section.name" [meta]="sectionMeta(section)">
+        <ul class="cx__list">
+          @for (item of section.items; track item.id) {
+            <li class="cx__item" [class.cx__item--off]="!isOn(item)">
+              <app-ui-toggle
+                [checked]="isOn(item)"
+                [label]="isOn(item) ? 'On' : 'Off'"
+                (changed)="toggle(item, $event)" />
+              <span class="cx__text">{{ item.content }}</span>
+              @if (item.expires_at) {
+                <span class="cx__expiry" [title]="'Expires ' + item.expires_at">expires</span>
+              }
+              <button
+                type="button"
+                class="cx__remove"
+                [attr.aria-label]="'Delete constraint: ' + item.content"
+                (click)="remove(item)">×</button>
+            </li>
+          }
+        </ul>
+
+        <form class="cx__add" (ngSubmit)="submit(section)">
+          <input
+            class="cx__input"
+            type="text"
+            [ngModel]="draftFor(section.id)"
+            (ngModelChange)="setDraft(section.id, $event)"
+            [name]="'draft-' + section.id"
+            [attr.aria-label]="'Add a constraint to ' + section.name"
+            placeholder="Add a constraint…" />
+          <button class="cx__submit" type="submit" [disabled]="!draftFor(section.id).trim()">Add</button>
+        </form>
+      </app-ui-section>
+    }
+  }
+</app-ui-page>
