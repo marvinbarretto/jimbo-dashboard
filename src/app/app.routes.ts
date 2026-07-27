@@ -49,6 +49,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/context-item/containers/context-item-detail/context-item-detail').then(m => m.ContextItemDetail),
   },
   {
+    path: 'constraints',
+    title: 'Constraints',
+    loadChildren: () => import('./features/constraints/constraints.routes').then(m => m.constraintsRoutes),
+  },
+  {
     path: 'shopping',
     loadChildren: () => import('./features/shopping/shopping.routes').then(m => m.shoppingRoutes),
   },
