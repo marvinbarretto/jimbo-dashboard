@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.141](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.140...v0.0.141) (2026-07-28)
+
+
+### Features
+
+* **constraints:** scratchpad of agent rules you can switch on and off ([99824e1](https://github.com/marvinbarretto/jimbo-dashboard/commit/99824e1f4baa5b26682918a86af02507fa9351e6))
+* **hermes-runs:** surface tokens, billing mode and per-job verdicts ([18cbfea](https://github.com/marvinbarretto/jimbo-dashboard/commit/18cbfeae6bb5c65a9d90bffdeef49dba6163e6a7))
+* **skills:** route the skills page and show dispatch reality ([f5dd30d](https://github.com/marvinbarretto/jimbo-dashboard/commit/f5dd30da19c622119367f455683bce45b1577dab))
+
 ### [0.0.140](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.139...v0.0.140) (2026-07-24)
 
 
