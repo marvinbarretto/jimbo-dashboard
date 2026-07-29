@@ -232,9 +232,16 @@ import {
         row-gap: 0.25rem;
       }
 
+      /* Fixed-size cell in BOTH states so opening the editor never reflows the
+         row: 1rem matches the coarse-pointer editor floor (no font jump), and
+         the locked width clips the open datetime-local — costless, since the
+         native picker does the real editing on touch. */
       .tracker-row__time {
         grid-area: time;
-        font-size: 0.8rem;
+        display: flex;
+        width: 3.2rem;
+        overflow: hidden;
+        font-size: 1rem;
       }
 
       /* Reserved datetime width is a desktop concern — mobile gets the native
