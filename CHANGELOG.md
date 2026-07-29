@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.149](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.148...v0.0.149) (2026-07-29)
+
+
+### Bug Fixes
+
+* **mentions:** close active mention on directive destroy, add ui-lab isolation ([27976e9](https://github.com/marvinbarretto/jimbo-dashboard/commit/27976e946da06caf592d3b4d3a06db377850fec9))
+
 ### [0.0.148](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.147...v0.0.148) (2026-07-29)
 
 
