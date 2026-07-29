@@ -1,4 +1,4 @@
-import { DestroyRef, Directive, ElementRef, inject, input } from '@angular/core';
+import { DestroyRef, Directive, ElementRef, OnDestroy, inject, input } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MentionService } from './mention.service';
 import type { MentionTrigger } from './mention-trigger';
@@ -25,7 +25,7 @@ type FieldEl = HTMLInputElement | HTMLTextAreaElement;
     '(mousedown)': 'onMouseDown()',
   },
 })
-export class PickerInputDirective {
+export class PickerInputDirective implements OnDestroy {
   private readonly hostRef = inject(ElementRef<FieldEl>);
   private readonly mentionService = inject(MentionService);
   private readonly destroyRef = inject(DestroyRef);
@@ -76,6 +76,18 @@ export class PickerInputDirective {
       this.active = false;
       this.mentionService.close();
     }, 150);
+  }
+
+  /**
+   * Same fix as MentionDirective — the host element can be destroyed while
+   * `active` is still true (e.g. the picker's parent row is removed before
+   * blur's deferred close fires). Without this, MentionService is left
+   * thinking a mention is open and its overlay never releases.
+   */
+  ngOnDestroy(): void {
+    if (!this.active) return;
+    this.active = false;
+    this.mentionService.close();
   }
 
   protected onKeydown(ev: Event): void {

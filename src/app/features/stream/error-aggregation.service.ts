@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import type { SystemEventFull } from './event-detail.service';
@@ -81,6 +81,12 @@ export class ErrorAggregationService {
     if (this.timerHandle !== null) return;
     void this.refresh();
     this.timerHandle = setInterval(() => void this.refresh(), REFRESH_INTERVAL_MS);
+
+    // Self-registered fallback tied to whichever component's injection
+    // context called start() — matches triage-activity.service.ts /
+    // fleet.service.ts, so a future consumer that forgets to call stop()
+    // in its own ngOnDestroy doesn't leave this polling forever.
+    inject(DestroyRef).onDestroy(() => this.stop());
   }
 
   stop(): void {

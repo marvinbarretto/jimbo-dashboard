@@ -1,4 +1,4 @@
-import { effect, inject } from '@angular/core';
+import { DestroyRef, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Dialog, type DialogRef } from '@angular/cdk/dialog';
@@ -33,6 +33,7 @@ export function withVaultDetailModal(): void {
   const dialog = inject(Dialog);
   const route = inject(ActivatedRoute);
   const router = inject(Router);
+  const destroyRef = inject(DestroyRef);
 
   const detailSeq = toSignal(
     route.queryParamMap.pipe(
@@ -104,5 +105,21 @@ export function withVaultDetailModal(): void {
         replaceUrl: true,
       });
     });
+  });
+
+  // CDK Dialog attaches to the global overlay container on <body>, outside
+  // the router-outlet tree — if the host component (board/detail page) is
+  // destroyed while a dialog is open (e.g. the operator navigates away
+  // without closing it first), the effect above never gets a chance to run
+  // its close branch, and the dialog + backdrop stay visibly stuck on
+  // screen. Null `ref` before closing, same as the param-cleared branch, so
+  // `opened.closed`'s handler sees wasFromUrl=true and skips navigating a
+  // route we're already leaving.
+  destroyRef.onDestroy(() => {
+    if (ref) {
+      const r = ref;
+      ref = null;
+      r.close();
+    }
   });
 }
