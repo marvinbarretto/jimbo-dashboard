@@ -64,27 +64,57 @@ import {
         }
       </span>
 
+      <!-- Hero (primary measures) and cluster (the rest) are separate spans so
+           the mobile grid can seat them on different lines; desktop renders
+           them as one flex run, identical to the previous flat list. -->
       <span class="tracker-row__measures" aria-label="measures">
         @if (entry().pending && !editable()) {
           <span class="tracker-row__pending" title="Awaiting estimate">estimating…</span>
         } @else {
-          @for (m of shownMeasures(); track m.key) {
-            <span class="tracker-row__measure" [class.tracker-row__measure--primary]="m.primary">
-              @if (editable() && rowEditable() && (m.editable ?? true)) {
-                <app-ui-inline-edit
-                  kind="number"
-                  size="lg"
-                  [min]="0"
-                  [step]="m.kind === 'number' ? 0.1 : 1"
-                  [value]="valueText(m)"
-                  [ariaLabel]="'Edit ' + m.label"
-                  (saved)="saveMeasure(m, $event)"
-                />
-              } @else {
-                <span class="tracker-row__measure-value">{{ valueText(m) }}</span>
+          @if (heroMeasures().length) {
+            <span class="tracker-row__hero">
+              @for (m of heroMeasures(); track m.key) {
+                <span class="tracker-row__measure tracker-row__measure--primary">
+                  @if (editable() && rowEditable() && (m.editable ?? true)) {
+                    <app-ui-inline-edit
+                      kind="number"
+                      size="lg"
+                      [min]="0"
+                      [step]="m.kind === 'number' ? 0.1 : 1"
+                      [value]="valueText(m)"
+                      [ariaLabel]="'Edit ' + m.label"
+                      (saved)="saveMeasure(m, $event)"
+                    />
+                  } @else {
+                    <span class="tracker-row__measure-value">{{ valueText(m) }}</span>
+                  }
+                  @if (unitFor(m); as u) {
+                    <span class="tracker-row__measure-unit">{{ u }}</span>
+                  }
+                </span>
               }
-              @if (unitFor(m); as u) {
-                <span class="tracker-row__measure-unit">{{ u }}</span>
+            </span>
+          }
+          @if (clusterMeasures().length) {
+            <span class="tracker-row__cluster">
+              @for (m of clusterMeasures(); track m.key) {
+                <span class="tracker-row__measure">
+                  @if (editable() && rowEditable() && (m.editable ?? true)) {
+                    <app-ui-inline-edit
+                      kind="number"
+                      [min]="0"
+                      [step]="m.kind === 'number' ? 0.1 : 1"
+                      [value]="valueText(m)"
+                      [ariaLabel]="'Edit ' + m.label"
+                      (saved)="saveMeasure(m, $event)"
+                    />
+                  } @else {
+                    <span class="tracker-row__measure-value">{{ valueText(m) }}</span>
+                  }
+                  @if (unitFor(m); as u) {
+                    <span class="tracker-row__measure-unit">{{ u }}</span>
+                  }
+                </span>
               }
             </span>
           }
@@ -96,6 +126,7 @@ import {
           variant="ghost"
           size="sm"
           [iconOnly]="true"
+          [bare]="true"
           ariaLabel="Remove entry"
           (pressed)="remove.emit(entry().id)"
         >
@@ -151,6 +182,15 @@ import {
       font-variant-numeric: tabular-nums;
     }
 
+    /* Same flex run and gap as the parent, so hero + cluster read as the one
+       flat measure list they used to be. */
+    .tracker-row__hero,
+    .tracker-row__cluster {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
     .tracker-row__measure {
       display: inline-flex;
       align-items: baseline;
@@ -174,6 +214,141 @@ import {
       color: var(--color-text-soft, var(--color-text-muted));
       opacity: 0.85;
     }
+
+    /* Mobile: designed two-line grid, not a squeezed flex line.
+         time · label ······· kcal (hero)
+                chip · macro cluster · 🗑
+       The label wraps in full (no truncation); the delete affordance is hidden
+       at rest and revealed by engaging the row (:focus-within / :hover). */
+    @media (max-width: 768px) {
+      .tracker-row {
+        display: grid;
+        grid-template-columns: auto auto 1fr auto;
+        grid-template-areas:
+          'time label label hero'
+          '.    kind  cluster del';
+        align-items: baseline;
+        column-gap: 0.6rem;
+        row-gap: 0.25rem;
+      }
+
+      .tracker-row__time {
+        grid-area: time;
+        font-size: 0.8rem;
+      }
+
+      /* Reserved datetime width is a desktop concern — mobile gets the native
+         picker, so the column can hug HH:MM. */
+      .tracker-row--editable .tracker-row__time {
+        min-width: 0;
+      }
+
+      .tracker-row__kind {
+        grid-area: kind;
+        align-self: center;
+      }
+
+      /* 'food' is the ledger's default kind — at phone width the chip is
+         noise. Distinct kinds (supplement) keep theirs. */
+      .tracker-row__kind[data-kind='food'] {
+        display: none;
+      }
+
+      .tracker-row__label {
+        grid-area: label;
+        font-size: 1rem;
+        overflow-wrap: break-word;
+      }
+
+      /* Comfortable tap target for the label editor without growing the text. */
+      .tracker-row__label app-ui-inline-edit {
+        min-height: 2.75rem;
+        align-items: center;
+      }
+
+      /* Dissolve the wrapper so hero and cluster become grid items. */
+      .tracker-row__measures {
+        display: contents;
+      }
+
+      .tracker-row__hero {
+        grid-area: hero;
+        justify-self: end;
+        /* Hero number with its unit tucked beneath, both right-aligned. */
+        --ui-inline-edit-lg-size: 1.25rem;
+      }
+
+      .tracker-row__hero .tracker-row__measure {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0;
+      }
+
+      .tracker-row__hero .tracker-row__measure-value {
+        font-size: 1.25rem;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+        line-height: 1.1;
+      }
+
+      .tracker-row__hero .tracker-row__measure-unit {
+        font-size: 0.65rem;
+      }
+
+      .tracker-row__hero app-ui-inline-edit {
+        width: auto;
+        max-width: 6rem;
+      }
+
+      .tracker-row__cluster {
+        grid-area: cluster;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 0 0.5rem;
+        font-size: 0.85rem;
+      }
+
+      /* "79p" — value and unit read as one token; dots bind the trio. */
+      .tracker-row__cluster .tracker-row__measure {
+        gap: 0.05rem;
+      }
+
+      .tracker-row__cluster .tracker-row__measure + .tracker-row__measure::before {
+        content: '·';
+        margin-right: 0.5rem;
+        opacity: 0.6;
+      }
+
+      .tracker-row__cluster app-ui-inline-edit {
+        width: auto;
+        max-width: 5rem;
+        min-height: 2.75rem;
+        align-items: center;
+      }
+
+      /* Delete: revealed by engaging the row. pointer-events guards against
+         taps on the invisible button; focusing the button itself (keyboard)
+         also reveals it via :focus-within. */
+      app-ui-button {
+        grid-area: del;
+        justify-self: end;
+        align-self: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 120ms ease;
+      }
+
+      .tracker-row:focus-within app-ui-button,
+      .tracker-row:hover app-ui-button {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .tracker-row__pending {
+        grid-area: cluster;
+        font-size: 0.85rem;
+      }
+    }
   `],
 })
 export class UiTrackerRow {
@@ -195,6 +370,8 @@ export class UiTrackerRow {
   protected readonly rowEditable = computed(() => this.entry().editable ?? true);
   protected readonly labelEditable = computed(() => this.entry().labelEditable ?? true);
   protected readonly shownMeasures = computed(() => measuresFor(this.entry(), this.measures()));
+  protected readonly heroMeasures = computed(() => this.shownMeasures().filter((m) => m.primary));
+  protected readonly clusterMeasures = computed(() => this.shownMeasures().filter((m) => !m.primary));
 
   protected valueText(m: TrackerMeasure): string {
     const v = this.entry().values[m.key];

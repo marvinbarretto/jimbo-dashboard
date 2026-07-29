@@ -170,7 +170,7 @@ export interface UiInlineEditOption {
       }
 
       &--lg {
-        font-size: 1.05rem;
+        font-size: var(--ui-inline-edit-lg-size, 1.05rem);
         font-weight: 650;
         letter-spacing: -0.01em;
         padding: 0.3rem 0.5rem;
@@ -186,7 +186,7 @@ export interface UiInlineEditOption {
       &:focus { outline: none; }
 
       &--lg {
-        font-size: 1.05rem;
+        font-size: var(--ui-inline-edit-lg-size, 1.05rem);
         font-weight: 650;
         letter-spacing: -0.01em;
         padding: 0.3rem 0.5rem;
@@ -206,6 +206,15 @@ export interface UiInlineEditOption {
       &--datetime {
         font-variant-numeric: tabular-nums;
         color-scheme: dark;
+      }
+    }
+
+    /* iOS zooms into any focused input rendering under 16px. Editors on touch
+       devices never open smaller than 1rem, regardless of the host's read-mode
+       type scale. (--lg keeps its explicit size — it's already over 1rem.) */
+    @media (pointer: coarse) {
+      .ui-inline-edit__field {
+        font-size: max(1rem, 1em);
       }
     }
   `],

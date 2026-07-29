@@ -26,12 +26,15 @@ export class UiButton {
   readonly type      = input<'button' | 'submit' | 'reset'>('button');
   readonly variant   = input<UiButtonVariant>('secondary');
   readonly iconOnly  = input(false);
+  /** Strip the box (border + background) — for inline affordances that shouldn't read as chrome. */
+  readonly bare      = input(false);
 
   readonly pressed = output<void>();
 
   readonly classes = computed(() => {
     const parts = ['ui-button', `ui-button--${this.variant()}`, `ui-button--${this.size()}`];
     if (this.iconOnly()) parts.push('ui-button--icon-only');
+    if (this.bare()) parts.push('ui-button--bare');
     return parts.join(' ');
   });
 }

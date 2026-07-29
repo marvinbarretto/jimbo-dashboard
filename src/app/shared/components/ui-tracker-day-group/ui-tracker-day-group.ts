@@ -81,6 +81,14 @@ import { londonToday, relativeDayLabel } from '@shared/utils/datetime.utils';
       padding-top: 0.5rem;
       border-top: 1px dashed color-mix(in srgb, var(--color-border) 55%, transparent);
     }
+
+    /* Mobile rows are two lines tall — whitespace, not borders, keeps them
+       reading as separate entries. */
+    @media (max-width: 768px) {
+      .day-group {
+        gap: 1rem;
+      }
+    }
   `],
 })
 export class UiTrackerDayGroup {

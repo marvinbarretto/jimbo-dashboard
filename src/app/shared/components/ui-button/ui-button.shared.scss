@@ -82,3 +82,17 @@
   color: color-mix(in srgb, var(--color-danger) 88%, white);
   box-shadow: inset 0 0 0 1px var(--color-danger-glow);
 }
+
+// Bare — no box. Composes with any variant (keeps its colour, sizing, focus
+// ring); hover swaps the border cue for a soft fill since there is no border.
+// Last in the file so its resets win over the variant border rules above.
+.ui-button--bare {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ui-button--bare:hover:not(:disabled) {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--button-color, var(--color-text-soft)) 12%, transparent);
+}
