@@ -8,7 +8,8 @@
 // create/delete.
 
 import { HttpClient } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { environment } from '../../../../environments/environment';
 
 /** Mirrors jimbo-api's ReadItemStatus. Only active/paused are set from here. */
@@ -43,6 +44,11 @@ export interface ConstraintSection {
 export class ConstraintsService {
   private readonly http = inject(HttpClient);
   private readonly base = environment.dashboardApiUrl;
+  // Component-scoped, not root — a project page's embed is created/destroyed
+  // with the route. Ties every request to this instance's lifetime so a
+  // response that lands after the consumer navigated away can't mutate state
+  // nothing reads anymore.
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly _sections = signal<ConstraintSection[]>([]);
   private readonly _loading = signal(true);
@@ -66,12 +72,14 @@ export class ConstraintsService {
   load(projectId?: string): void {
     this._loading.set(true);
     const scope = projectId ?? 'none';
+    console.debug('[ConstraintsService] load() dispatching', { scope, at: performance.now() });
     this.http.get<{ sections: ConstraintSection[] }>(
       `${this.base}/api/context/files/constraints?project_id=${encodeURIComponent(scope)}`,
-    ).subscribe({
+    ).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: f => {
           // Archived items are the expiry job's tombstones — history, not
           // something to switch back on, so they never reach the list.
+          console.debug('[ConstraintsService] load() resolved', { scope, sectionCount: f?.sections?.length ?? 0 });
           this._sections.set((f?.sections ?? []).map(s => ({
             ...s,
             items: (s.items ?? []).filter(i => i.status !== 'archived'),
@@ -80,6 +88,7 @@ export class ConstraintsService {
           this._error.set(null);
         },
         error: err => {
+          console.debug('[ConstraintsService] load() failed', { scope, err });
           this._error.set(err?.message ?? 'failed to load constraints');
           this._loading.set(false);
         },
@@ -94,9 +103,11 @@ export class ConstraintsService {
   setStatus(item: ConstraintItem, status: ConstraintStatus): void {
     const previous = item.status;
     this.patchLocal(item.id, status);
-    this.http.put(`${this.base}/api/context/items/${item.id}`, { status }).subscribe({
-      error: () => this.patchLocal(item.id, previous),
-    });
+    this.http.put(`${this.base}/api/context/items/${item.id}`, { status })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        error: () => this.patchLocal(item.id, previous),
+      });
   }
 
   private patchLocal(id: number, status: ConstraintStatus | null): void {
@@ -110,7 +121,7 @@ export class ConstraintsService {
     this.http.post<ConstraintItem>(
       `${this.base}/api/context/sections/${sectionId}/items`,
       { content, status: 'active', category: 'life-area' },
-    ).subscribe({
+    ).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: created => this._sections.update(secs => secs.map(s =>
         s.id === sectionId ? { ...s, items: [...s.items, created] } : s,
       )),
@@ -119,12 +130,14 @@ export class ConstraintsService {
   }
 
   remove(item: ConstraintItem): void {
-    this.http.delete(`${this.base}/api/context/items/${item.id}`).subscribe({
-      next: () => this._sections.update(secs => secs.map(s => ({
-        ...s,
-        items: s.items.filter(i => i.id !== item.id),
-      }))),
-      error: err => this._error.set(err?.message ?? 'failed to remove constraint'),
-    });
+    this.http.delete(`${this.base}/api/context/items/${item.id}`)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this._sections.update(secs => secs.map(s => ({
+          ...s,
+          items: s.items.filter(i => i.id !== item.id),
+        }))),
+        error: err => this._error.set(err?.message ?? 'failed to remove constraint'),
+      });
   }
 }

@@ -453,11 +453,10 @@
         <!-- Project brief: chunky textareas with @ / ~ typeahead -->
         <app-ui-section title="Brief — purpose" [collapsible]="false">
           <app-ui-stack gap="md">
-            <app-project-brief-field
+            <app-project-brief-bullet-field
               label="Intent"
               [value]="p.intent"
-              placeholder="One-line purpose / north star"
-              [rows]="2"
+              placeholder="+ add a point (Enter)"
               [triggers]="briefTriggers"
               [readonly]="isRepoSynced()"
               (saved)="patch(p.id, { intent: $event })"

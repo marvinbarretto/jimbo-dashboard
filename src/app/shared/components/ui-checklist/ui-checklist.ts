@@ -39,7 +39,7 @@ export interface UiChecklistItem {
   template: `
     @if (items().length > 0) {
       <ul class="ui-checklist">
-        @for (item of items(); track item.text; let i = $index) {
+        @for (item of items(); track $index; let i = $index) {
           <li
             class="ui-checklist__item"
             [class.ui-checklist__item--done]="checkable() && item.done"
@@ -53,13 +53,15 @@ export interface UiChecklistItem {
                   class="ui-checklist__check"
                   [checked]="item.done"
                   [attr.aria-label]="'mark ' + (item.done ? 'pending' : 'done')"
-                  (change)="toggled.emit(i)"
+                  (change)="onToggle(i)"
                 />
               } @else {
                 <span class="ui-checklist__mark" [attr.aria-label]="item.done ? 'done' : 'pending'">
                   {{ item.done ? '✓' : '○' }}
                 </span>
               }
+            } @else {
+              <span class="ui-checklist__bullet" aria-hidden="true">•</span>
             }
             @if (editable() && editingIndex() === i) {
               <input
@@ -117,7 +119,7 @@ export interface UiChecklistItem {
                 type="button"
                 class="ui-checklist__remove"
                 aria-label="remove"
-                (click)="removed.emit(i)">×</button>
+                (click)="onRemove(i)">×</button>
             }
           </li>
         }
@@ -140,10 +142,15 @@ export interface UiChecklistItem {
     }
   `,
   styles: [`
+    /* List-item text reads like anywhere else in the app (briefings, prose
+       fields) — the shared serif reading register, not a dense UI-chrome
+       font. See src/styles/_report.scss .prose-read for the same values;
+       hardcoded here rather than applied as a class since component-style
+       vs global-stylesheet load order isn't guaranteed. */
     .ui-checklist {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 0.5rem;
       list-style: none;
       padding: 0;
       margin: 0;
@@ -152,11 +159,11 @@ export interface UiChecklistItem {
     .ui-checklist__item {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 0.25rem 0.5rem;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      font-size: 0.75rem;
+      gap: 0.5rem;
+      padding: 0.3rem 0;
+      font-family: var(--font-serif);
+      font-size: 1.02rem;
+      line-height: 1.65;
     }
 
     .ui-checklist__item--done {
@@ -182,6 +189,11 @@ export interface UiChecklistItem {
       width: 1rem;
     }
 
+    .ui-checklist__bullet {
+      flex-shrink: 0;
+      color: var(--color-text-muted);
+    }
+
     .ui-checklist__check {
       flex-shrink: 0;
       margin: 0;
@@ -191,6 +203,7 @@ export interface UiChecklistItem {
       flex: 1;
       padding: 0.1rem 0.3rem;
       border-radius: var(--radius);
+      letter-spacing: 0.005em;
     }
 
     .ui-checklist__meter {
@@ -228,21 +241,23 @@ export interface UiChecklistItem {
       color: var(--color-text-muted);
     }
 
+    // Underline cue reads better on serif prose than a highlight box.
     .ui-checklist__text--clickable {
       cursor: text;
 
-      &:hover { background: color-mix(in srgb, var(--color-accent) 8%, transparent); }
-      &:focus-visible {
-        outline: 2px solid var(--color-accent);
-        outline-offset: 1px;
+      &:hover, &:focus-visible {
+        text-decoration: underline dotted;
+        text-decoration-color: var(--color-text-muted);
+        outline: none;
       }
     }
 
     .ui-checklist__edit-input {
       flex: 1;
       padding: 0.1rem 0.3rem;
-      font: inherit;
-      font-size: 0.78rem;
+      font-family: var(--font-serif);
+      font-size: 1.02rem;
+      letter-spacing: 0.005em;
       border: 1px solid var(--color-accent);
       border-radius: var(--radius);
       background: var(--color-bg-elevated, var(--color-bg));
@@ -292,18 +307,19 @@ export interface UiChecklistItem {
       margin-top: 0.4rem;
       width: 100%;
       box-sizing: border-box;
-      padding: 0.45rem 0.6rem;
-      font: inherit;
-      font-size: 0.75rem;
+      padding: 0.4rem 0.3rem;
+      font-family: var(--font-serif);
+      font-size: 1.02rem;
+      letter-spacing: 0.005em;
       background: transparent;
-      border: 1px dashed var(--color-border);
-      border-radius: var(--radius);
+      border: none;
+      border-bottom: 1px dashed var(--color-border);
       color: var(--color-text);
 
       &:focus {
         outline: none;
-        border-color: var(--color-accent);
-        border-style: solid;
+        border-bottom-color: var(--color-accent);
+        border-bottom-style: solid;
       }
     }
   `],
@@ -314,7 +330,8 @@ export class UiChecklist {
   readonly editable          = input<boolean>(false);
   readonly appendPlaceholder = input<string>('+ add item (Enter)');
   // false for plain editable-list use (e.g. brief bullets) where an item is
-  // a standing statement, not a completable to-do — item.done is ignored.
+  // a standing statement, not a completable to-do — item.done is ignored
+  // and a plain bullet marker replaces the checkbox/mark.
   readonly checkable         = input<boolean>(true);
   // @ / ~ mention support on the edit and append inputs — empty by default,
   // which leaves the directive inert.
@@ -331,11 +348,21 @@ export class UiChecklist {
   private readonly editRef        = viewChild<ElementRef<HTMLInputElement>>('editInput');
   private readonly appendRef      = viewChild<ElementRef<HTMLInputElement>>('appendInput');
 
+  private renderCount = 0;
+
   constructor() {
     // Cancel in-flight edit when the items array changes underneath us
-    // (consumer swapped the bound list).
+    // (consumer swapped the bound list). Logged so a runaway loop here (the
+    // parent recreating `items` every cycle instead of memoizing it) shows
+    // up as a burst of these lines with near-identical timestamps.
     effect(() => {
-      this.items();
+      const count = this.items().length;
+      this.renderCount++;
+      console.debug('[UiChecklist] items() changed — resetting editingIndex', {
+        itemCount: count,
+        effectRun: this.renderCount,
+        at: performance.now(),
+      });
       this.editingIndex.set(null);
     });
   }
@@ -379,14 +406,32 @@ export class UiChecklist {
     if (this.editingIndex() !== i) return;
     const next = this.draft().trim();
     this.editingIndex.set(null);
-    if (!next) { this.removed.emit(i); return; }
-    if (next === this.items()[i]?.text) return;
+    if (!next) {
+      console.debug('[UiChecklist] commitEdit — blank draft, treating as remove', { index: i });
+      this.removed.emit(i);
+      return;
+    }
+    if (next === this.items()[i]?.text) {
+      console.debug('[UiChecklist] commitEdit — unchanged, no emit', { index: i });
+      return;
+    }
+    console.debug('[UiChecklist] commitEdit — emitting edited', { index: i, text: next });
     this.edited.emit({ index: i, text: next });
   }
 
   private cancelEdit(): void {
     this.editingIndex.set(null);
     this.draft.set('');
+  }
+
+  protected onToggle(i: number): void {
+    console.debug('[UiChecklist] onToggle', { index: i });
+    this.toggled.emit(i);
+  }
+
+  protected onRemove(i: number): void {
+    console.debug('[UiChecklist] onRemove', { index: i });
+    this.removed.emit(i);
   }
 
   protected onAppendInput(e: Event): void {
@@ -398,6 +443,7 @@ export class UiChecklist {
       e.preventDefault();
       const text = this.appendDraft().trim();
       if (!text) return;
+      console.debug('[UiChecklist] onAppendKey — emitting appended', { text });
       this.appended.emit(text);
       this.appendDraft.set('');
       queueMicrotask(() => this.appendRef()?.nativeElement.focus());

@@ -35,22 +35,27 @@ export class ProjectBriefBulletField {
   );
 
   protected onEdited({ index, text }: { index: number; text: string }): void {
+    console.debug('[ProjectBriefBulletField] onEdited', { label: this.label(), index, text });
     const lines = this.items().map(i => i.text);
     lines[index] = text;
     this.commit(lines);
   }
 
   protected onRemoved(index: number): void {
+    console.debug('[ProjectBriefBulletField] onRemoved', { label: this.label(), index });
     const lines = this.items().map(i => i.text);
     lines.splice(index, 1);
     this.commit(lines);
   }
 
   protected onAppended(text: string): void {
+    console.debug('[ProjectBriefBulletField] onAppended', { label: this.label(), text });
     this.commit([...this.items().map(i => i.text), text]);
   }
 
   private commit(lines: string[]): void {
-    this.saved.emit(serializeBulletLines(lines));
+    const serialized = serializeBulletLines(lines);
+    console.debug('[ProjectBriefBulletField] commit — emitting saved', { label: this.label(), serialized });
+    this.saved.emit(serialized);
   }
 }

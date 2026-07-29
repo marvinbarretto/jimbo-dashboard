@@ -38,8 +38,14 @@ export class ProjectConstraintsSection {
 
   constructor() {
     // ProjectLanding reuses its component instance across a route id change
-    // (signal-driven, no destroy/recreate) — reload whenever the project changes.
-    effect(() => this.service.load(this.projectId()));
+    // (signal-driven, no destroy/recreate) — reload whenever the project
+    // changes. Logged so a re-trigger loop (this effect firing repeatedly
+    // for the same projectId) is visible rather than silently burning CPU.
+    effect(() => {
+      const id = this.projectId();
+      console.debug('[ProjectConstraintsSection] projectId changed — reloading', { id, at: performance.now() });
+      this.service.load(id);
+    });
   }
 
   isOn(item: ConstraintItem): boolean {
