@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.142](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.141...v0.0.142) (2026-07-29)
+
+
+### Features
+
+* **constraints:** scope constraints to a project, embed on project page ([ad537a3](https://github.com/marvinbarretto/jimbo-dashboard/commit/ad537a389c9d974751040338008f03264788b016))
+
 ### [0.0.141](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.140...v0.0.141) (2026-07-28)
 
 
