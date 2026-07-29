@@ -1,14 +1,14 @@
 <app-ui-page width="wide">
 <app-ui-period-pager
-  [granularity]="granularity"
+  [granularity]="pager.granularity"
   eyebrow="Exercise"
-  [title]="window().label"
-  [isAtToday]="isAtToday()"
-  [value]="key()"
-  (previous)="previous()"
-  (next)="next()"
-  (today)="today()"
-  (dateChange)="onDateChange($event)"
+  [title]="pager.window().label"
+  [isAtToday]="pager.isAtToday()"
+  [value]="pager.key()"
+  (previous)="pager.previous()"
+  (next)="pager.next()"
+  (today)="pager.today()"
+  (dateChange)="pager.onDateChange($event)"
 />
 
 @if (loading()) {
@@ -21,14 +21,14 @@
         [measures]="totalsMeasures"
         [daily]="dailyTotals()"
         [period]="granularity"
-        [anchor]="window().start"
+        [anchor]="pager.window().start"
         [today]="todayIso"
         [showToggle]="false"
       />
     </app-ui-section>
 
     <!-- Trend + body-parts: multi-day pattern views, not shown on a single day -->
-    @if (showPatterns()) {
+    @if (pager.showPatterns()) {
       <app-ui-section title="Volume per day" [collapsible]="false">
         @if (hasTrend()) {
           <app-ui-bar-chart [labels]="trendLabels()" [values]="trendValues()" label="volume" suffix=" kg" [showTrend]="true" />
@@ -37,7 +37,7 @@
         }
       </app-ui-section>
 
-      <app-ui-section title="Body parts worked" [meta]="window().label" [collapsible]="false">
+      <app-ui-section title="Body parts worked" [meta]="pager.window().label" [collapsible]="false">
         @if (hasBodyPartData()) {
           <app-ui-donut-chart [labels]="bodyPartLabels()" [values]="bodyPartValues()" suffix=" sets" />
           <ul class="body-part-coverage">
