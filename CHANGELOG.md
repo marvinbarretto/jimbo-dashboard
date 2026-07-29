@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.145](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.144...v0.0.145) (2026-07-29)
+
+
+### Features
+
+* **projects:** differentiate note/task chips, fix item table truncation ([d02a0dc](https://github.com/marvinbarretto/jimbo-dashboard/commit/d02a0dc3e73a3f5e9fa38833773877e5e2597ffe))
+
 ### [0.0.144](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.143...v0.0.144) (2026-07-29)
 
 
