@@ -37,6 +37,7 @@ import { ProjectStatTile } from '../../components/project-stat-tile/project-stat
 import { ProjectFocusSessionRow } from '../../components/project-focus-session-row/project-focus-session-row';
 import { ProjectBriefField } from '../../components/project-brief-field/project-brief-field';
 import { ProjectConstraintsSection } from '../../components/project-constraints-section/project-constraints-section';
+import { ProjectOperatingContextSection } from '../../components/project-operating-context-section/project-operating-context-section';
 import { VaultChip } from '@shared/components/vault-chip/vault-chip';
 import { briefActorProjectTrigger, briefVaultItemTrigger } from '../../util/brief-mention-triggers';
 import type { Priority, VaultItem } from '@domain/vault/vault-item';
@@ -136,6 +137,7 @@ interface ProjectActivityItem {
     ProjectFocusSessionRow,
     ProjectBriefField,
     ProjectConstraintsSection,
+    ProjectOperatingContextSection,
     ActorChip,
     UiDataTable,
     PriorityBadge,

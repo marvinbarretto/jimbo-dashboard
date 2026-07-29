@@ -1,0 +1,50 @@
+@if (isRelevant()) {
+  <app-ui-section title="Brief — operating context" [collapsible]="true">
+    <app-ui-stack gap="md">
+      <app-project-brief-field
+        label="Entry points"
+        [value]="project().entry_points"
+        placeholder="Start reading here — files, docs"
+        [rows]="3"
+        [triggers]="triggers()"
+        [readonly]="fieldsReadonly()"
+        hint="Where a newcomer should open the codebase or docs first."
+        (saved)="saved.emit({ entry_points: $event })"
+      />
+      <app-project-brief-field
+        label="Conventions URL"
+        [value]="project().conventions_url"
+        placeholder="Link to AGENTS.md / CLAUDE.md / style guide"
+        [rows]="1"
+        [triggers]="triggers()"
+        [readonly]="fieldsReadonly()"
+        (saved)="saved.emit({ conventions_url: $event })"
+      />
+      <app-project-brief-field
+        label="Footguns"
+        [value]="project().footguns"
+        placeholder="Gotchas a newcomer would trip on"
+        [rows]="4"
+        [triggers]="triggers()"
+        [readonly]="fieldsReadonly()"
+        (saved)="saved.emit({ footguns: $event })"
+      />
+      <app-project-brief-field
+        label="Deploy target"
+        [value]="project().deploy_target"
+        placeholder="How it ships, where it runs"
+        [rows]="2"
+        [triggers]="triggers()"
+        (saved)="saved.emit({ deploy_target: $event })"
+      />
+      <app-project-brief-field
+        label="Observability"
+        [value]="project().observability"
+        placeholder="Logs / metrics / dashboards"
+        [rows]="2"
+        [triggers]="triggers()"
+        (saved)="saved.emit({ observability: $event })"
+      />
+    </app-ui-stack>
+  </app-ui-section>
+}

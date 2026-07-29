@@ -511,52 +511,18 @@
           </app-ui-stack>
         </app-ui-section>
 
-        <app-ui-section title="Brief — operating context" [collapsible]="true">
+        <app-project-operating-context-section
+          [project]="p"
+          [triggers]="briefTriggers"
+          (saved)="patch(p.id, $event)"
+        />
+
+        <!-- Resources/checklists apply to any project, code or not — a travel
+             project wants hostel/flight links here just as much as a repo
+             wants docs links. Kept separate from operating-context, which is
+             gated to projects that actually have a codebase. -->
+        <app-ui-section title="Brief — resources" [collapsible]="true">
           <app-ui-stack gap="md">
-            <app-project-brief-field
-              label="Entry points"
-              [value]="p.entry_points"
-              placeholder="Start reading here — files, docs"
-              [rows]="3"
-              [triggers]="briefTriggers"
-              [readonly]="isRepoSynced()"
-              hint="Where a newcomer should open the codebase or docs first."
-              (saved)="patch(p.id, { entry_points: $event })"
-            />
-            <app-project-brief-field
-              label="Conventions URL"
-              [value]="p.conventions_url"
-              placeholder="Link to AGENTS.md / CLAUDE.md / style guide"
-              [rows]="1"
-              [triggers]="briefTriggers"
-              [readonly]="isRepoSynced()"
-              (saved)="patch(p.id, { conventions_url: $event })"
-            />
-            <app-project-brief-field
-              label="Footguns"
-              [value]="p.footguns"
-              placeholder="Gotchas a newcomer would trip on"
-              [rows]="4"
-              [triggers]="briefTriggers"
-              [readonly]="isRepoSynced()"
-              (saved)="patch(p.id, { footguns: $event })"
-            />
-            <app-project-brief-field
-              label="Deploy target"
-              [value]="p.deploy_target"
-              placeholder="How it ships, where it runs"
-              [rows]="2"
-              [triggers]="briefTriggers"
-              (saved)="patch(p.id, { deploy_target: $event })"
-            />
-            <app-project-brief-field
-              label="Observability"
-              [value]="p.observability"
-              placeholder="Logs / metrics / dashboards"
-              [rows]="2"
-              [triggers]="briefTriggers"
-              (saved)="patch(p.id, { observability: $event })"
-            />
             <app-project-brief-field
               label="Key resources"
               [value]="p.key_resources"
@@ -568,7 +534,7 @@
             <app-project-brief-field
               label="Common tasks"
               [value]="p.common_tasks"
-              placeholder="Templated entry points (e.g. add a new X, fix Y)"
+              placeholder="Templated/recurring actions (e.g. add a new X, check Y)"
               [rows]="4"
               [triggers]="briefTriggers"
               (saved)="patch(p.id, { common_tasks: $event })"
