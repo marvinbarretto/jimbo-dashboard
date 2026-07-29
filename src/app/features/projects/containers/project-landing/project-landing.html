@@ -51,6 +51,35 @@
       <!-- LEFT column: work surface ─────────────────────────────────── -->
       <app-ui-stack class="project-landing__main" gap="lg">
 
+        <!-- Attention: overdue tasks + system-flagged `assertion` items —
+             things that need a decision now, not reference material to muse
+             over. Leads the page on purpose. -->
+        @if (attentionItems().length > 0) {
+          <app-ui-section [title]="'Attention (' + attentionItems().length + ')'" [collapsible]="false">
+            <ul class="attention__list">
+              @for (item of attentionItems(); track item.id) {
+                <li class="attention__item">
+                  <app-ui-badge [tone]="isFlagged(item) ? 'warning' : 'danger'" [subtle]="true">
+                    {{ isFlagged(item) ? 'flagged' : 'overdue' }}
+                  </app-ui-badge>
+                  <app-vault-chip
+                    [kind]="item.parent_id ? 'subtask' : 'task'"
+                    size="sm"
+                    [seq]="item.seq"
+                    [title]="item.title" />
+                  <span class="attention__meta">
+                    @if (item.due_at) {
+                      due {{ item.due_at | relativeTime }}
+                    } @else {
+                      {{ item.created_at | relativeTime }}
+                    }
+                  </span>
+                </li>
+              }
+            </ul>
+          </app-ui-section>
+        }
+
         <!-- Member repos (multi-repo projects). Synced from each repo's
              docs/repo.md; one operating card per codebase. -->
         @if (p.repos?.length) {
@@ -84,67 +113,6 @@
             </app-ui-stack>
           </app-ui-section>
         }
-
-        <!-- Understanding: belief blocks synthesised from recons + working doc.
-             Placed top of main column so live state is the primary read. -->
-        @if (understanding(); as u) {
-          <app-ui-section title="Understanding" [collapsible]="true" [expanded]="true">
-            @if (u.working_doc_url) {
-              <p class="understanding__doc-link">
-                Working doc: <a [href]="u.working_doc_url" target="_blank" rel="noopener">open</a>
-              </p>
-            }
-            @if (openBeliefs().length > 0) {
-              <div class="open-flags">
-                <p class="open-flags__label">Open questions</p>
-                <ul class="open-flags__list">
-                  @for (b of openBeliefs(); track b.id) {
-                    <li class="open-flags__item">
-                      <code class="belief__id">{{ b.id }}</code>
-                      <span class="open-flags__text">{{ b.text }}</span>
-                    </li>
-                  }
-                </ul>
-              </div>
-            }
-            @if (u.sections.length === 0) {
-              <p class="understanding__empty">No beliefs yet. Run the synthesise-understanding skill post-recon to populate.</p>
-            } @else {
-              <div class="belief-grid">
-                @for (section of u.sections; track section.letter) {
-                  <div class="belief-section">
-                    <h3 class="belief-section__heading">
-                      <span class="belief-section__letter">{{ section.letter }}</span>
-                      {{ section.name }}
-                    </h3>
-                    <ul class="belief-section__list">
-                      @for (belief of section.beliefs; track belief.id) {
-                        <li class="belief" [class.belief--corrected]="beliefTag(belief, 'corrected')">
-                          <code class="belief__id">{{ belief.id }}</code>
-                          <span class="belief__text">{{ belief.text }}</span>
-                          @if (beliefTag(belief, 'corrected'); as correctedDate) {
-                            <span class="belief__badge belief__badge--corrected" [title]="'Corrected ' + correctedDate">corrected</span>
-                          }
-                          @if (beliefTag(belief, 'expires'); as expiresDate) {
-                            <span class="belief__badge belief__badge--expires" [title]="'Expires ' + expiresDate">exp {{ expiresDate }}</span>
-                          }
-                        </li>
-                      }
-                    </ul>
-                  </div>
-                }
-              </div>
-            }
-            @if (u.last_updated) {
-              <p class="understanding__updated">Last updated {{ u.last_updated }}</p>
-            }
-          </app-ui-section>
-        }
-
-        <!-- Constraints: rules agents apply when planning/pricing work on
-             this project. Same feature as the global /constraints page,
-             scoped to just this project's own sections. -->
-        <app-project-constraints-section [projectId]="p.id" />
 
         <!-- In-flight dispatch tasks — running or approved for this project -->
         @if (inFlightTasks().length > 0) {
@@ -263,6 +231,33 @@
           }
         </app-ui-section>
 
+        <!-- Constraints: rules agents apply when planning/pricing work on
+             this project. Same feature as the global /constraints page,
+             scoped to just this project's own sections. -->
+        <app-project-constraints-section [projectId]="p.id" />
+
+        <!-- Project activity — note_activity rows for vault notes linked to this project -->
+        <app-ui-section title="Project activity" [collapsible]="true">
+          @if (projectActivity().length === 0) {
+            <app-ui-empty-state message="No activity on project notes yet." />
+          } @else {
+            <app-ui-card tone="soft" [compact]="true">
+              <ul class="project-landing__activity">
+                @for (item of projectActivity(); track item.id) {
+                  <li class="project-landing__activity-row">
+                    <span class="project-landing__activity-actor">@{{ item.actor }}</span>
+                    <span class="project-landing__activity-desc">{{ activityDesc(item) }}</span>
+                    @if (item.note_title) {
+                      <span class="project-landing__activity-note" [title]="item.note_id">· {{ item.note_title }}</span>
+                    }
+                    <span class="project-landing__activity-when">· {{ item.ts | relativeTime }}</span>
+                  </li>
+                }
+              </ul>
+            </app-ui-card>
+          }
+        </app-ui-section>
+
         <!-- Items not under any epic this project owns -->
         <app-ui-section title="Unassigned items" [collapsible]="false">
           <div class="unassigned-table">
@@ -332,27 +327,63 @@
           }
         </app-ui-section>
 
-        <!-- Project activity — note_activity rows for vault notes linked to this project -->
-        <app-ui-section title="Project activity" [collapsible]="true">
-          @if (projectActivity().length === 0) {
-            <app-ui-empty-state message="No activity on project notes yet." />
-          } @else {
-            <app-ui-card tone="soft" [compact]="true">
-              <ul class="project-landing__activity">
-                @for (item of projectActivity(); track item.id) {
-                  <li class="project-landing__activity-row">
-                    <span class="project-landing__activity-actor">@{{ item.actor }}</span>
-                    <span class="project-landing__activity-desc">{{ activityDesc(item) }}</span>
-                    @if (item.note_title) {
-                      <span class="project-landing__activity-note" [title]="item.note_id">· {{ item.note_title }}</span>
-                    }
-                    <span class="project-landing__activity-when">· {{ item.ts | relativeTime }}</span>
-                  </li>
+        <!-- Understanding: belief blocks synthesised from recons + working doc.
+             Demoted below the day-to-day monitoring sections — this is
+             reference/narrative material, refreshed only by a recon pass,
+             not something to check on every visit. -->
+        @if (understanding(); as u) {
+          <app-ui-section title="Understanding" [collapsible]="true" [expanded]="false">
+            @if (u.working_doc_url) {
+              <p class="understanding__doc-link">
+                Working doc: <a [href]="u.working_doc_url" target="_blank" rel="noopener">open</a>
+              </p>
+            }
+            @if (openBeliefs().length > 0) {
+              <div class="open-flags">
+                <p class="open-flags__label">Open questions</p>
+                <ul class="open-flags__list">
+                  @for (b of openBeliefs(); track b.id) {
+                    <li class="open-flags__item">
+                      <code class="belief__id">{{ b.id }}</code>
+                      <span class="open-flags__text">{{ b.text }}</span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+            @if (u.sections.length === 0) {
+              <p class="understanding__empty">No beliefs yet. Run the synthesise-understanding skill post-recon to populate.</p>
+            } @else {
+              <div class="belief-grid">
+                @for (section of u.sections; track section.letter) {
+                  <div class="belief-section">
+                    <h3 class="belief-section__heading">
+                      <span class="belief-section__letter">{{ section.letter }}</span>
+                      {{ section.name }}
+                    </h3>
+                    <ul class="belief-section__list">
+                      @for (belief of section.beliefs; track belief.id) {
+                        <li class="belief" [class.belief--corrected]="beliefTag(belief, 'corrected')">
+                          <code class="belief__id">{{ belief.id }}</code>
+                          <span class="belief__text">{{ belief.text }}</span>
+                          @if (beliefTag(belief, 'corrected'); as correctedDate) {
+                            <span class="belief__badge belief__badge--corrected" [title]="'Corrected ' + correctedDate">corrected</span>
+                          }
+                          @if (beliefTag(belief, 'expires'); as expiresDate) {
+                            <span class="belief__badge belief__badge--expires" [title]="'Expires ' + expiresDate">exp {{ expiresDate }}</span>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  </div>
                 }
-              </ul>
-            </app-ui-card>
-          }
-        </app-ui-section>
+              </div>
+            }
+            @if (u.last_updated) {
+              <p class="understanding__updated">Last updated {{ u.last_updated }}</p>
+            }
+          </app-ui-section>
+        }
 
         @if (p.criteria) {
           <app-ui-section title="Criteria (legacy)" [collapsible]="true">

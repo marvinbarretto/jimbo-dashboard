@@ -369,6 +369,36 @@ export class ProjectLanding {
     );
   });
 
+  // Things that need a human decision now: overdue tasks, and `assertion`-type
+  // items — a system-generated "these facts don't add up" note (e.g. a
+  // booking task still open with days to the deadline and no calendar
+  // block). Both are read from `items()`, so only items already linked to
+  // this project surface here — an item tagged/mentioned but never linked
+  // via vault_item_projects won't show up until that linkage exists.
+  // VaultItemType doesn't list 'assertion' yet (the dashboard's type union
+  // predates it), hence the cast.
+  readonly attentionItems = computed<readonly VaultItem[]>(() => {
+    const now = Date.now();
+    return this.items()
+      .filter(i => isActive(i) && (this.isFlagged(i) || (i.due_at !== null && new Date(i.due_at).getTime() < now)))
+      .sort((a, b) => {
+        // Overdue-longest first; undated (flagged) items sort after dated
+        // ones, newest-created first among themselves.
+        if (a.due_at && b.due_at) return a.due_at.localeCompare(b.due_at);
+        if (a.due_at) return -1;
+        if (b.due_at) return 1;
+        return b.created_at.localeCompare(a.created_at);
+      });
+  });
+
+  isFlagged(item: VaultItem): boolean {
+    return (item.type as string) === 'assertion';
+  }
+
+  isOverdue(item: VaultItem): boolean {
+    return item.due_at !== null && new Date(item.due_at).getTime() < Date.now();
+  }
+
   readonly sessionsForProject = computed(() => {
     const p = this.project();
     if (!p) return [];
