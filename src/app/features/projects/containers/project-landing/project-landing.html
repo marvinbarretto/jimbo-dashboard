@@ -64,6 +64,7 @@
                   </app-ui-badge>
                   <app-vault-chip
                     [kind]="item.parent_id ? 'subtask' : 'task'"
+                    [itemType]="item.type"
                     size="sm"
                     [seq]="item.seq"
                     [title]="item.title" />
@@ -273,6 +274,7 @@
             <span class="chip-cell">
               <app-vault-chip
                 [kind]="context.row.original.parent_id ? 'subtask' : 'task'"
+                [itemType]="context.row.original.type"
                 size="sm"
                 [seq]="context.row.original.seq"
                 [title]="context.row.original.title"
@@ -303,6 +305,7 @@
                 <li>
                   <app-vault-chip
                     kind="task"
+                    [itemType]="item.type"
                     [seq]="item.seq"
                     [title]="item.title"
                   />
@@ -430,15 +433,17 @@
                   <span class="hint">unowned</span>
                 }
               </dd>
-              <dt>Repo</dt>
-              <dd>
-                <app-ui-inline-edit
-                  [value]="p.repo_url ?? ''"
-                  placeholder="Add repo URL…"
-                  ariaLabel="Edit repo URL"
-                  (saved)="patch(p.id, { repo_url: $event || null })"
-                />
-              </dd>
+              @if (p.repo_url || (p.repos && p.repos.length > 0)) {
+                <dt>Repo</dt>
+                <dd>
+                  <app-ui-inline-edit
+                    [value]="p.repo_url ?? ''"
+                    placeholder="Add repo URL…"
+                    ariaLabel="Edit repo URL"
+                    (saved)="patch(p.id, { repo_url: $event || null })"
+                  />
+                </dd>
+              }
               <dt>Created</dt>
               <dd>{{ p.created_at | relativeTime }}</dd>
             </dl>

@@ -446,17 +446,23 @@ export class ProjectLanding {
   private readonly relativeCell =
     viewChild.required<TemplateRef<{ $implicit: CellContext<VaultItem, string> }>>('relativeCell');
 
+  // TanStack defaults every column to a fixed 150px unless `size` is set —
+  // fine for "Type"/"Priority"/dates, but it starved the one column holding a
+  // free-text title, truncating it far earlier than the row had room for.
   readonly itemColumns: ColumnDef<VaultItem, any>[] = [
     this.columnHelper.accessor(row => row.seq, {
       id: 'seq',
       header: 'Item',
       cell: () => this.chipCell(),
       sortingFn: 'basic',
+      size: 480,
+      minSize: 240,
     }),
     this.columnHelper.accessor(row => row.type, {
       id: 'type',
       header: 'Type',
       sortingFn: 'alphanumeric',
+      size: 80,
     }),
     this.columnHelper.accessor(row => effectivePriority(row), {
       id: 'priority',
@@ -472,18 +478,21 @@ export class ProjectLanding {
         if (pb === null) return -1;
         return pa - pb;
       },
+      size: 90,
     }),
     this.columnHelper.accessor(row => row.created_at, {
       id: 'created',
       header: 'Created',
       cell: () => this.relativeCell(),
       sortingFn: 'alphanumeric',
+      size: 110,
     }),
     this.columnHelper.accessor(row => row.latest_activity_at ?? row.created_at, {
       id: 'touched',
       header: 'Last touched',
       cell: () => this.relativeCell(),
       sortingFn: 'alphanumeric',
+      size: 110,
     }),
   ];
 

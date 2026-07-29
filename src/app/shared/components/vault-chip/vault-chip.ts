@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import type { VaultItemType } from '@domain/vault/vault-item';
 
 export type VaultChipKind = 'task' | 'subtask' | 'epic';
 export type VaultChipCreator = 'agent' | 'human';
@@ -19,6 +20,9 @@ export type VaultChipSize = 'sm' | 'md' | 'lg';
       <span class="vault-chip__seq">{{ seq() }}</span>
       @if (title()) {
         <span class="vault-chip__title">{{ title() }}</span>
+      }
+      @if (itemType() !== 'task') {
+        <span class="vault-chip__type-tag">{{ itemType() }}</span>
       }
       @if (epicSeq() !== null) {
         <span class="vault-chip__epic-marker">⊞ #{{ epicSeq() }}</span>
@@ -117,6 +121,29 @@ export type VaultChipSize = 'sm' | 'md' | 'lg';
       color: var(--color-text-muted);
     }
 
+    /* Content type (task/bookmark/note) is orthogonal to hierarchy 'kind' —
+       'task' is the common case and stays unmarked; anything else (a note,
+       a bookmark) is informational rather than actionable, so it reads as
+       dimmer with an explicit tag rather than looking like more work. */
+    .vault-chip--informational {
+      border-style: dashed;
+    }
+    .vault-chip--informational .vault-chip__title {
+      color: var(--color-text-muted);
+      font-style: italic;
+    }
+    .vault-chip__type-tag {
+      flex-shrink: 0;
+      margin-left: 0.35rem;
+      padding: 0 0.3rem;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-text-muted);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+    }
+
     /* Epic — wash with project tint at 45%; human-conceived = dashed border */
     .vault-chip--epic {
       border-color: color-mix(in srgb, var(--proj-tint, var(--color-border)) 70%, var(--color-border));
@@ -137,6 +164,9 @@ export class VaultChip {
   readonly seq         = input.required<number>();
   readonly title       = input<string | null>(null);
   readonly creator     = input<VaultChipCreator>('agent');
+  // Content type — orthogonal to `kind` (hierarchy position). Default 'task'
+  // matches the common case and adds no visual weight.
+  readonly itemType    = input<VaultItemType>('task');
   readonly epicSeq     = input<number | null>(null);
   readonly href        = input<string | null>(null);
   readonly size        = input<VaultChipSize>('md');
@@ -160,6 +190,7 @@ export class VaultChip {
   protected readonly cls = computed(() => {
     const parts = ['vault-chip', `vault-chip--${this.kind()}`, `vault-chip--${this.size()}`];
     if (this.kind() === 'epic' && this.creator() === 'human') parts.push('vault-chip--human');
+    if (this.itemType() !== 'task') parts.push('vault-chip--informational');
     return parts.join(' ');
   });
 
