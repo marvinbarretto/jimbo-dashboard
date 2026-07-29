@@ -1,14 +1,14 @@
 <app-ui-page width="wide">
 <app-ui-period-pager
-  [granularity]="granularity"
+  [granularity]="pager.granularity"
   eyebrow="Nutrition"
-  [title]="window().label"
-  [isAtToday]="isAtToday()"
-  [value]="key()"
-  (previous)="previous()"
-  (next)="next()"
-  (today)="today()"
-  (dateChange)="onDateChange($event)"
+  [title]="pager.window().label"
+  [isAtToday]="pager.isAtToday()"
+  [value]="pager.key()"
+  (previous)="pager.previous()"
+  (next)="pager.next()"
+  (today)="pager.today()"
+  (dateChange)="pager.onDateChange($event)"
 />
 
 @if (loading()) {
@@ -22,14 +22,14 @@
         [daily]="dailyTotals()"
         [targets]="targets"
         [period]="granularity"
-        [anchor]="window().start"
+        [anchor]="pager.window().start"
         [today]="todayIso"
         [showToggle]="false"
       />
     </app-ui-section>
 
     <!-- Trend: calories per day — food vs alcohol (not shown for a single-day window) -->
-    @if (showPatterns()) {
+    @if (pager.showPatterns()) {
       <app-ui-section title="Calories per day — food vs alcohol" [collapsible]="false">
         @if (hasTrend()) {
           <app-ui-bar-chart
