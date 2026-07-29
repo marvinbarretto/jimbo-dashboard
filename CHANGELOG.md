@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.144](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.143...v0.0.144) (2026-07-29)
+
+
+### Features
+
+* **projects:** self-contained operating-context section, split out resources ([b303e58](https://github.com/marvinbarretto/jimbo-dashboard/commit/b303e58013cbfdac37effaa850343a5ce5305735))
+
 ### [0.0.143](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.142...v0.0.143) (2026-07-29)
 
 
