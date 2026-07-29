@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.146](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.145...v0.0.146) (2026-07-29)
+
+
+### Features
+
+* **projects:** editable bullet-list brief fields, piloted on success criteria ([73dd2f0](https://github.com/marvinbarretto/jimbo-dashboard/commit/73dd2f07a4b3288f51005b2d8b561dee5604846e))
+
 ### [0.0.145](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.144...v0.0.145) (2026-07-29)
 
 
