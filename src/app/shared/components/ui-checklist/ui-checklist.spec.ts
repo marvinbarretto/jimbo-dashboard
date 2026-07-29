@@ -50,68 +50,78 @@ describe('UiChecklist', () => {
     expect(fixture.nativeElement.querySelector('.ui-checklist__bullet')).toBeTruthy();
   });
 
-  it('starts inline edit when the text is clicked while editable', () => {
-    const { comp } = build([{ text: 'one', done: false }]);
-    comp['onTextClick'](0);
-    expect(comp['editingIndex']()).toBe(0);
-    expect(comp['draft']()).toBe('one');
+  it('renders one UiInlineEdit per row when editable, showing the row text in display mode', () => {
+    const { fixture } = build([{ text: 'one', done: false }, { text: 'two', done: false }]);
+    const rows = fixture.nativeElement.querySelectorAll('app-ui-inline-edit button.ui-inline-edit__display');
+    expect(rows.length).toBe(2);
+    expect(rows[0].textContent.trim()).toBe('one');
+    expect(rows[1].textContent.trim()).toBe('two');
   });
 
-  it('does not start edit when not editable', () => {
-    const { comp } = build([{ text: 'one', done: false }], false);
-    comp['onTextClick'](0);
-    expect(comp['editingIndex']()).toBeNull();
+  it('clicking a row focuses an input immediately — no second click needed', async () => {
+    const { fixture } = build([{ text: 'one', done: false }]);
+    const display = fixture.nativeElement.querySelector('app-ui-inline-edit button.ui-inline-edit__display');
+    display.click();
+    fixture.detectChanges();
+
+    const input = fixture.nativeElement.querySelector('app-ui-inline-edit input.ui-inline-edit__field');
+    expect(input).toBeTruthy();
+    expect(input.value).toBe('one');
+
+    // startEdit() focuses via queueMicrotask — flush it.
+    await Promise.resolve();
+    expect(document.activeElement).toBe(input);
   });
 
-  it('commits the edited text on Enter and exits edit mode', () => {
-    const { comp, edited } = build([{ text: 'one', done: false }]);
-    comp['onTextClick'](0);
-    comp['draft'].set('changed');
-    comp['onDraftKey'](new KeyboardEvent('keydown', { key: 'Enter' }), 0);
-    expect(edited).toEqual([{ index: 0, text: 'changed' }]);
-    expect(comp['editingIndex']()).toBeNull();
+  it('emits edited with the trimmed text after a full click → type → blur cycle', async () => {
+    const { fixture, edited } = build([{ text: 'one', done: false }]);
+    fixture.nativeElement.querySelector('app-ui-inline-edit button.ui-inline-edit__display').click();
+    fixture.detectChanges();
+
+    const input = fixture.nativeElement.querySelector('app-ui-inline-edit input.ui-inline-edit__field');
+    input.value = 'one (revised)  ';
+    input.dispatchEvent(new Event('input'));
+    input.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+
+    expect(edited).toEqual([{ index: 0, text: 'one (revised)' }]);
   });
 
-  it('commits on blur too, not just Enter', () => {
-    const { comp, edited } = build([{ text: 'one', done: false }]);
-    comp['onTextClick'](0);
-    comp['draft'].set('changed via blur');
-    comp['commitEdit'](0);
-    expect(edited).toEqual([{ index: 0, text: 'changed via blur' }]);
-  });
+  it('emits removed instead of edited when the row is cleared to empty', async () => {
+    const { fixture, edited, removed } = build([{ text: 'one', done: false }]);
+    fixture.nativeElement.querySelector('app-ui-inline-edit button.ui-inline-edit__display').click();
+    fixture.detectChanges();
 
-  it('does not emit edited when the committed text is unchanged', () => {
-    const { comp, edited } = build([{ text: 'one', done: false }]);
-    comp['onTextClick'](0);
-    comp['commitEdit'](0);
-    expect(edited).toEqual([]);
-  });
+    const input = fixture.nativeElement.querySelector('app-ui-inline-edit input.ui-inline-edit__field');
+    input.value = '   ';
+    input.dispatchEvent(new Event('input'));
+    input.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
 
-  it('emits removed instead of edited when the edit is cleared to empty', () => {
-    const { comp, edited, removed } = build([{ text: 'one', done: false }]);
-    comp['onTextClick'](0);
-    comp['draft'].set('   ');
-    comp['commitEdit'](0);
     expect(edited).toEqual([]);
     expect(removed).toEqual([0]);
   });
 
-  it('cancels on Escape without emitting, reverting the draft', () => {
-    const { comp, edited } = build([{ text: 'one', done: false }]);
-    comp['onTextClick'](0);
-    comp['draft'].set('typed but escaped');
-    comp['onDraftKey'](new KeyboardEvent('keydown', { key: 'Escape' }), 0);
-    expect(comp['editingIndex']()).toBeNull();
+  it('does not emit edited when blurring without changing the text', async () => {
+    const { fixture, edited } = build([{ text: 'one', done: false }]);
+    fixture.nativeElement.querySelector('app-ui-inline-edit button.ui-inline-edit__display').click();
+    fixture.detectChanges();
+
+    const input = fixture.nativeElement.querySelector('app-ui-inline-edit input.ui-inline-edit__field');
+    input.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+
     expect(edited).toEqual([]);
   });
 
-  it('cancels any in-flight edit when the bound items array changes', () => {
-    const { fixture, comp } = build([{ text: 'one', done: false }]);
-    comp['onTextClick'](0);
-    expect(comp['editingIndex']()).toBe(0);
-    fixture.componentRef.setInput('items', [{ text: 'one', done: false }, { text: 'two', done: false }]);
-    fixture.detectChanges();
-    expect(comp['editingIndex']()).toBeNull();
+  it('routes onRowSaved directly: blank text emits removed, non-blank emits edited', () => {
+    const { comp, edited, removed } = build([{ text: 'one', done: false }]);
+    comp['onRowSaved'](0, '  ');
+    expect(removed).toEqual([0]);
+    expect(edited).toEqual([]);
+
+    comp['onRowSaved'](0, ' changed ');
+    expect(edited).toEqual([{ index: 0, text: 'changed' }]);
   });
 
   it('emits removed with the row index when the remove button is clicked', () => {

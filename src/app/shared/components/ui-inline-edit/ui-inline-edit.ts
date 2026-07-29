@@ -9,6 +9,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { MentionDirective, type MentionTrigger } from '@shared/mentions';
 
 export type UiInlineEditKind = 'text' | 'textarea' | 'select' | 'number' | 'datetime';
 
@@ -33,6 +34,7 @@ export interface UiInlineEditOption {
  */
 @Component({
   selector: 'app-ui-inline-edit',
+  imports: [MentionDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (editing()) {
@@ -45,6 +47,7 @@ export interface UiInlineEditOption {
             [value]="draft()"
             [attr.aria-label]="ariaLabel()"
             [attr.rows]="rows()"
+            [appMention]="triggers()"
             (input)="onInput($any($event))"
             (keydown)="onKey($event)"
             (blur)="commit()"
@@ -104,6 +107,7 @@ export interface UiInlineEditOption {
             [class.ui-inline-edit__field--lg]="size() === 'lg'"
             [value]="draft()"
             [attr.aria-label]="ariaLabel()"
+            [appMention]="triggers()"
             (input)="onInput($any($event))"
             (keydown)="onKey($event)"
             (blur)="commit()"
@@ -226,6 +230,10 @@ export class UiInlineEdit {
    * back to the value itself for text/textarea.
    */
   readonly displayFor = input<((v: string) => string) | undefined>(undefined);
+
+  // @ / ~ mention support on text/textarea variants — empty by default,
+  // which leaves the directive inert.
+  readonly triggers = input<MentionTrigger[]>([]);
 
   readonly saved = output<string>();
 

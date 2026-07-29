@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, input, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, input, output, signal, viewChild } from '@angular/core';
 import { UiProgressMeter } from '../ui-progress-meter/ui-progress-meter';
+import { UiInlineEdit } from '../ui-inline-edit/ui-inline-edit';
 import { MentionDirective, type MentionTrigger } from '@shared/mentions';
 
 export type UiChecklistTone = 'warn' | 'err';
@@ -32,9 +33,14 @@ export interface UiChecklistItem {
 // Editable mode emits granular events keyed by index so consumers don't have
 // to mirror the array math. Append fires with the new text only; the consumer
 // is responsible for pushing it onto whatever state shape it owns.
+//
+// Row text-editing is delegated entirely to UiInlineEdit rather than a
+// parallel hand-rolled click-to-edit implementation — one proven click →
+// focus → commit/cancel mechanism, reused, instead of two subtly different
+// ones to keep in sync.
 @Component({
   selector: 'app-ui-checklist',
-  imports: [UiProgressMeter, MentionDirective],
+  imports: [UiProgressMeter, UiInlineEdit, MentionDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (items().length > 0) {
@@ -63,18 +69,15 @@ export interface UiChecklistItem {
             } @else {
               <span class="ui-checklist__bullet" aria-hidden="true">•</span>
             }
-            @if (editable() && editingIndex() === i) {
-              <input
-                #editInput
-                type="text"
-                class="ui-checklist__edit-input"
-                [value]="draft()"
-                [appMention]="triggers()"
-                (input)="onDraftInput($event)"
-                (keydown)="onDraftKey($event, i)"
-                (blur)="commitEdit(i)"
+            @if (editable()) {
+              <app-ui-inline-edit
+                class="ui-checklist__text"
+                [value]="item.text"
+                [triggers]="triggers()"
+                [ariaLabel]="'Edit: ' + item.text"
+                (saved)="onRowSaved(i, $event)"
               />
-            } @else if (!editable() && useDots(item.meter) && item.meter; as meter) {
+            } @else if (useDots(item.meter) && item.meter; as meter) {
               <span class="ui-checklist__text">{{ item.text }}</span>
               <span
                 class="ui-checklist__dots"
@@ -88,7 +91,7 @@ export interface UiChecklistItem {
                 }
               </span>
               <span class="ui-checklist__dots-count">{{ meter.current }}/{{ meter.target }}</span>
-            } @else if (!editable() && item.meter; as meter) {
+            } @else if (item.meter; as meter) {
               <app-ui-progress-meter
                 class="ui-checklist__meter"
                 [label]="item.text"
@@ -97,13 +100,7 @@ export interface UiChecklistItem {
                 [unit]="meter.unit ?? ''"
               />
             } @else {
-              <span
-                class="ui-checklist__text"
-                [class.ui-checklist__text--clickable]="editable()"
-                [attr.role]="editable() ? 'button' : null"
-                [attr.tabindex]="editable() ? 0 : null"
-                (click)="onTextClick(i)"
-                (keydown.enter)="onTextEnter(i)">{{ item.text }}</span>
+              <span class="ui-checklist__text">{{ item.text }}</span>
             }
             @if (item.status; as s) {
               <span
@@ -204,6 +201,9 @@ export interface UiChecklistItem {
       padding: 0.1rem 0.3rem;
       border-radius: var(--radius);
       letter-spacing: 0.005em;
+      font-family: var(--font-serif);
+      font-size: 1.02rem;
+      line-height: 1.65;
     }
 
     .ui-checklist__meter {
@@ -239,31 +239,6 @@ export interface UiChecklistItem {
       font-size: 0.68rem;
       font-variant-numeric: tabular-nums;
       color: var(--color-text-muted);
-    }
-
-    // Underline cue reads better on serif prose than a highlight box.
-    .ui-checklist__text--clickable {
-      cursor: text;
-
-      &:hover, &:focus-visible {
-        text-decoration: underline dotted;
-        text-decoration-color: var(--color-text-muted);
-        outline: none;
-      }
-    }
-
-    .ui-checklist__edit-input {
-      flex: 1;
-      padding: 0.1rem 0.3rem;
-      font-family: var(--font-serif);
-      font-size: 1.02rem;
-      letter-spacing: 0.005em;
-      border: 1px solid var(--color-accent);
-      border-radius: var(--radius);
-      background: var(--color-bg-elevated, var(--color-bg));
-      color: var(--color-text);
-
-      &:focus { outline: none; }
     }
 
     .ui-checklist__chip {
@@ -333,8 +308,8 @@ export class UiChecklist {
   // a standing statement, not a completable to-do — item.done is ignored
   // and a plain bullet marker replaces the checkbox/mark.
   readonly checkable         = input<boolean>(true);
-  // @ / ~ mention support on the edit and append inputs — empty by default,
-  // which leaves the directive inert.
+  // @ / ~ mention support on the row-edit (via UiInlineEdit) and append
+  // inputs — empty by default, which leaves the directive inert.
   readonly triggers          = input<MentionTrigger[]>([]);
 
   readonly toggled  = output<number>();
@@ -342,30 +317,8 @@ export class UiChecklist {
   readonly removed  = output<number>();
   readonly appended = output<string>();
 
-  protected readonly editingIndex = signal<number | null>(null);
-  protected readonly draft        = signal('');
-  protected readonly appendDraft  = signal('');
-  private readonly editRef        = viewChild<ElementRef<HTMLInputElement>>('editInput');
-  private readonly appendRef      = viewChild<ElementRef<HTMLInputElement>>('appendInput');
-
-  private renderCount = 0;
-
-  constructor() {
-    // Cancel in-flight edit when the items array changes underneath us
-    // (consumer swapped the bound list). Logged so a runaway loop here (the
-    // parent recreating `items` every cycle instead of memoizing it) shows
-    // up as a burst of these lines with near-identical timestamps.
-    effect(() => {
-      const count = this.items().length;
-      this.renderCount++;
-      console.debug('[UiChecklist] items() changed — resetting editingIndex', {
-        itemCount: count,
-        effectRun: this.renderCount,
-        at: performance.now(),
-      });
-      this.editingIndex.set(null);
-    });
-  }
+  protected readonly appendDraft = signal('');
+  private readonly appendRef     = viewChild<ElementRef<HTMLInputElement>>('appendInput');
 
   protected useDots(meter: UiChecklistMeter | null | undefined): boolean {
     return meter?.display === 'dots' && meter.target > 0 && meter.target <= 8;
@@ -373,55 +326,6 @@ export class UiChecklist {
 
   protected dotsFor(meter: UiChecklistMeter): boolean[] {
     return Array.from({ length: meter.target }, (_, i) => i < meter.current);
-  }
-
-  protected onTextClick(i: number): void {
-    if (this.editable()) this.startEdit(i);
-  }
-
-  protected onTextEnter(i: number): void {
-    if (this.editable()) this.startEdit(i);
-  }
-
-  private startEdit(i: number): void {
-    this.draft.set(this.items()[i]?.text ?? '');
-    this.editingIndex.set(i);
-    queueMicrotask(() => {
-      const el = this.editRef()?.nativeElement;
-      el?.focus();
-      el?.select();
-    });
-  }
-
-  protected onDraftInput(e: Event): void {
-    this.draft.set((e.target as HTMLInputElement).value);
-  }
-
-  protected onDraftKey(e: KeyboardEvent, i: number): void {
-    if (e.key === 'Enter')       { e.preventDefault(); this.commitEdit(i); }
-    else if (e.key === 'Escape') { e.preventDefault(); this.cancelEdit(); }
-  }
-
-  protected commitEdit(i: number): void {
-    if (this.editingIndex() !== i) return;
-    const next = this.draft().trim();
-    this.editingIndex.set(null);
-    if (!next) {
-      console.debug('[UiChecklist] commitEdit — blank draft, treating as remove', { index: i });
-      this.removed.emit(i);
-      return;
-    }
-    if (next === this.items()[i]?.text) {
-      console.debug('[UiChecklist] commitEdit — unchanged, no emit', { index: i });
-      return;
-    }
-    console.debug('[UiChecklist] commitEdit — emitting edited', { index: i, text: next });
-    this.edited.emit({ index: i, text: next });
-  }
-
-  private cancelEdit(): void {
-    this.editingIndex.set(null);
-    this.draft.set('');
   }
 
   protected onToggle(i: number): void {
@@ -432,6 +336,19 @@ export class UiChecklist {
   protected onRemove(i: number): void {
     console.debug('[UiChecklist] onRemove', { index: i });
     this.removed.emit(i);
+  }
+
+  // UiInlineEdit already skips emitting when the committed text is unchanged
+  // from its bound value — this only fires on a real edit.
+  protected onRowSaved(i: number, text: string): void {
+    const next = text.trim();
+    if (!next) {
+      console.debug('[UiChecklist] onRowSaved — blank, treating as remove', { index: i });
+      this.removed.emit(i);
+      return;
+    }
+    console.debug('[UiChecklist] onRowSaved — emitting edited', { index: i, text: next });
+    this.edited.emit({ index: i, text: next });
   }
 
   protected onAppendInput(e: Event): void {
