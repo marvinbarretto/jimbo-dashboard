@@ -103,6 +103,7 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   // Workflows — page-level patterns
   { id: 'list-workflow',           name: 'List Workflow',         group: 'workflows',                                          description: 'Typical page header + table pattern for browsable lists.' },
   { id: 'detail-workflow',         name: 'Detail Workflow',       group: 'workflows',                                          description: 'Typical back-link + meta-list pattern for entity detail pages.' },
+  { id: 'nutrition-mobile',        name: 'Nutrition · Mobile Wireframe', group: 'workflows',                                   description: 'Throwaway wireframe — mobile day-ledger row anatomy, 3 read-state variants (ledger / name-first / timeline). Static data, zero shared primitives; winner gets extracted into the tracker family.' },
 ];
 
 interface GroupedSection {

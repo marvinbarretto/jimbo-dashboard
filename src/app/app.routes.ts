@@ -194,6 +194,7 @@ export const routes: Routes = [
       { path: 'vault-card-kanban',      loadComponent: () => import('./features/ui-lab/sections/vault-card-kanban-section').then(m => m.VaultCardKanbanSection) },
       { path: 'nutrition-row',           loadComponent: () => import('./features/ui-lab/sections/nutrition-row-section').then(m => m.NutritionRowSection) },
       { path: 'tracker',                 loadComponent: () => import('./features/ui-lab/sections/tracker-section').then(m => m.TrackerSection) },
+      { path: 'nutrition-mobile',        loadComponent: () => import('./features/ui-lab/sections/nutrition-mobile-section').then(m => m.NutritionMobileSection) },
     ],
   },
   {
