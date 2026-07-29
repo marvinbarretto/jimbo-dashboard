@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.150](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.149...v0.0.150) (2026-07-29)
+
+
+### Bug Fixes
+
+* **lifecycle:** close CDK dialog/mention state on destroy, harden polling ([594a612](https://github.com/marvinbarretto/jimbo-dashboard/commit/594a6123f0ee1e292067b4cba2219b1929a7f8be))
+
 ### [0.0.149](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.148...v0.0.149) (2026-07-29)
 
 
