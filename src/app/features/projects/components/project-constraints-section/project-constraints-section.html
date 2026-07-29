@@ -1,0 +1,51 @@
+<app-ui-section
+  [title]="'Constraints (' + activeCount() + ' of ' + totalCount() + ')'"
+  [collapsible]="true"
+  [expanded]="true">
+  @if (isLoading()) {
+    <app-ui-loading-state message="Loading constraints…" />
+  } @else if (error(); as e) {
+    <app-ui-empty-state title="Could not load constraints" [message]="e" />
+  } @else if (!sections().length) {
+    <app-ui-empty-state
+      title="No constraints yet"
+      message="Rules agents apply when they plan or price work on this project." />
+  } @else {
+    @for (section of sections(); track section.id) {
+      <div class="pcx__group">
+        <h4 class="pcx__group-title">{{ section.name }}</h4>
+        <ul class="pcx__list">
+          @for (item of section.items; track item.id) {
+            <li class="pcx__item" [class.pcx__item--off]="!isOn(item)">
+              <app-ui-toggle
+                [checked]="isOn(item)"
+                [label]="isOn(item) ? 'On' : 'Off'"
+                (changed)="toggle(item, $event)" />
+              <span class="pcx__text">{{ item.content }}</span>
+              @if (item.expires_at) {
+                <span class="pcx__expiry" [title]="'Expires ' + item.expires_at">expires</span>
+              }
+              <button
+                type="button"
+                class="pcx__remove"
+                [attr.aria-label]="'Delete constraint: ' + item.content"
+                (click)="remove(item)">×</button>
+            </li>
+          }
+        </ul>
+
+        <form class="pcx__add" (ngSubmit)="submit(section)">
+          <input
+            class="pcx__input"
+            type="text"
+            [ngModel]="draftFor(section.id)"
+            (ngModelChange)="setDraft(section.id, $event)"
+            [name]="'draft-' + section.id"
+            [attr.aria-label]="'Add a constraint to ' + section.name"
+            placeholder="Add a constraint…" />
+          <button class="pcx__submit" type="submit" [disabled]="!draftFor(section.id).trim()">Add</button>
+        </form>
+      </div>
+    }
+  }
+</app-ui-section>

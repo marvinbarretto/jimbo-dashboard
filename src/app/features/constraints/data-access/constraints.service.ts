@@ -29,10 +29,17 @@ export interface ConstraintSection {
   id: number;
   name: string;
   sort_order: number;
+  /** Section-level scope. Null = global; a project id restricts it to that project's own view. */
+  project_id: string | null;
   items: ConstraintItem[];
 }
 
-@Injectable({ providedIn: 'root' })
+/**
+ * Not root-provided — each consumer (the standalone global page, and each
+ * project-landing embed) provides its own instance so scope never leaks
+ * between a global load and a project-scoped one.
+ */
+@Injectable()
 export class ConstraintsService {
   private readonly http = inject(HttpClient);
   private readonly base = environment.dashboardApiUrl;
@@ -52,12 +59,16 @@ export class ConstraintsService {
     this._sections().reduce((n, s) => n + s.items.length, 0),
   );
 
-  constructor() { this.load(); }
-
-  load(): void {
+  /**
+   * Load constraints scoped to `projectId`, or the global-only tier when
+   * omitted/'none' — see `ProjectScopeQuery` on jimbo-api's GET /files/{slug}.
+   */
+  load(projectId?: string): void {
     this._loading.set(true);
-    this.http.get<{ sections: ConstraintSection[] }>(`${this.base}/api/context/files/constraints`)
-      .subscribe({
+    const scope = projectId ?? 'none';
+    this.http.get<{ sections: ConstraintSection[] }>(
+      `${this.base}/api/context/files/constraints?project_id=${encodeURIComponent(scope)}`,
+    ).subscribe({
         next: f => {
           // Archived items are the expiry job's tombstones — history, not
           // something to switch back on, so they never reach the list.

@@ -141,6 +141,11 @@
           </app-ui-section>
         }
 
+        <!-- Constraints: rules agents apply when planning/pricing work on
+             this project. Same feature as the global /constraints page,
+             scoped to just this project's own sections. -->
+        <app-project-constraints-section [projectId]="p.id" />
+
         <!-- In-flight dispatch tasks — running or approved for this project -->
         @if (inFlightTasks().length > 0) {
           <app-ui-section [title]="'In flight (' + inFlightTasks().length + ')'" [collapsible]="true" [expanded]="true">
