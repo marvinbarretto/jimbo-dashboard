@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.147](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.146...v0.0.147) (2026-07-29)
+
+
+### Bug Fixes
+
+* **projects:** harden checklist/bullet-field chain, add diagnostics ([7fdae2b](https://github.com/marvinbarretto/jimbo-dashboard/commit/7fdae2b5ee252b403f45c3c07dcaaa23109bd729))
+
 ### [0.0.146](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.145...v0.0.146) (2026-07-29)
 
 
