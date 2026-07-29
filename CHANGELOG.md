@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.148](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.147...v0.0.148) (2026-07-29)
+
+
+### Bug Fixes
+
+* **ui:** compose UiInlineEdit for checklist row editing, not a parallel impl ([6ccde3e](https://github.com/marvinbarretto/jimbo-dashboard/commit/6ccde3e62febf00d19234f84e84aa9a64dd50a44))
+
 ### [0.0.147](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.146...v0.0.147) (2026-07-29)
 
 
