@@ -208,6 +208,20 @@ export interface UiInlineEditOption {
         color-scheme: dark;
       }
     }
+
+    @media (max-width: 768px) {
+      .ui-inline-edit__display,
+      .ui-inline-edit__field {
+        padding: 0.35rem 0.45rem;
+        margin: -0.35rem -0.45rem;
+        min-height: 2.4rem;
+        font-size: 1rem;
+      }
+
+      .ui-inline-edit__field--number {
+        min-width: 3.2rem;
+      }
+    }
   `],
 })
 export class UiInlineEdit {

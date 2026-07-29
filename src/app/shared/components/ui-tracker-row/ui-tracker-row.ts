@@ -174,6 +174,38 @@ import {
       color: var(--color-text-soft, var(--color-text-muted));
       opacity: 0.85;
     }
+
+    @media (max-width: 768px) {
+      .tracker-row {
+        flex-wrap: wrap;
+        gap: 0.35rem 0.5rem;
+        padding: 0.45rem 0;
+      }
+
+      .tracker-row__time {
+        min-width: auto;
+        font-size: 0.78rem;
+      }
+      .tracker-row--editable .tracker-row__time {
+        min-width: auto;
+        flex: 0 0 auto;
+      }
+
+      .tracker-row__label {
+        flex: 1 1 0;
+        min-width: 6rem;
+      }
+
+      .tracker-row__measures {
+        flex: 0 0 auto;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+      }
+
+      .tracker-row__measure app-ui-inline-edit {
+        width: 3.5rem;
+      }
+    }
   `],
 })
 export class UiTrackerRow {

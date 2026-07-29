@@ -136,6 +136,21 @@ type UiSectionTone = 'default' | 'subtle' | 'recede' | 'alert';
       background: color-mix(in srgb, var(--color-danger) 5%, var(--color-surface-soft));
       border-left: 2px solid var(--color-danger);
     }
+
+    @media (max-width: 768px) {
+      .ui-section__header,
+      .ui-section__trigger {
+        padding: 0.7rem 0.75rem;
+      }
+
+      .ui-section__trigger {
+        min-height: 2.75rem;
+      }
+
+      .ui-section__content {
+        padding: 0.65rem 0.75rem 0.85rem;
+      }
+    }
   `],
 })
 export class UiSection {

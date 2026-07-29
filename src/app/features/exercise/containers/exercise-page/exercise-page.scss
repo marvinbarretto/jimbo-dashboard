@@ -45,3 +45,19 @@
 .body-part-coverage__row--stale .body-part-coverage__status {
   color: var(--color-warning);
 }
+
+@media (max-width: 768px) {
+  .exercise-ledger__add {
+    align-self: stretch;
+    justify-content: center;
+  }
+
+  .body-part-coverage {
+    gap: 0.25rem;
+  }
+
+  .body-part-coverage__row {
+    font-size: 0.88rem;
+    padding: 0.3rem 0;
+  }
+}

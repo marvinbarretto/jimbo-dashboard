@@ -120,6 +120,28 @@ const norm = (s: string): string => s.trim().toLowerCase();
       font-size: 0.74rem;
       color: var(--color-text-muted);
     }
+
+    @media (max-width: 768px) {
+      .quick-add {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .quick-add__label {
+        flex: 1 1 100%;
+      }
+
+      .quick-add__measure {
+        flex: 1 1 auto;
+      }
+
+      .quick-add__num {
+        width: 100%;
+        min-height: 2.75rem;
+        font-size: 1rem;
+        padding: 0.55rem 0.65rem;
+      }
+    }
   `],
 })
 export class UiQuickAddRow {

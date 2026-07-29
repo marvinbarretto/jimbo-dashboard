@@ -342,6 +342,63 @@ const CARDIO_PRESETS: readonly CardioPreset[] = [
 
       &:hover { border-color: var(--color-accent); }
     }
+
+    @media (max-width: 768px) {
+      .session__head {
+        flex-wrap: wrap;
+        gap: 0.35rem 0.5rem;
+        padding: 0.55rem 0.5rem;
+      }
+
+      .session__summary {
+        flex: 1 1 100%;
+        font-size: 0.78rem;
+        order: 10;
+      }
+
+      .session__body {
+        padding: 0.3rem 0.5rem 0.65rem 0.5rem;
+        gap: 0.5rem;
+      }
+
+      .setrow {
+        flex-wrap: wrap;
+        gap: 0.3rem 0.5rem;
+        padding: 0.35rem 0;
+        border-bottom: 1px solid color-mix(in srgb, var(--color-border) 30%, transparent);
+      }
+
+      .setrow__name {
+        flex: 1 1 100%;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      .setrow__note {
+        gap: 0.35rem;
+        font-size: 0.95rem;
+      }
+
+      .setrow__note app-ui-inline-edit { width: 3.8rem; }
+
+      .setrow__rpe {
+        font-size: 0.78rem;
+      }
+
+      .setrow__rpe app-ui-inline-edit { width: 3rem; }
+
+      .session__energy-dot {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.82rem;
+      }
+
+      .session__preset {
+        padding: 0.45rem 0.85rem;
+        font-size: 0.85rem;
+        min-height: 2.4rem;
+      }
+    }
   `],
 })
 export class ExerciseSessionRow {

@@ -152,6 +152,23 @@ import { UiPeriodDatePicker } from './ui-period-date-picker';
       }
     }
 
+    @media (max-width: 768px) {
+      .period-pager {
+        padding-bottom: 0.75rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .period-pager__title {
+        font-size: 1.25rem;
+        padding: 0.3rem 0.5rem;
+      }
+
+      .period-pager__step {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        font-size: 1.2rem;
+      }
+    }
   `],
 })
 export class UiPeriodPager {

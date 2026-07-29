@@ -138,6 +138,23 @@ const norm = (s: string): string => s.trim().toLowerCase();
       &:disabled { opacity: 0.55; cursor: not-allowed; }
     }
 
+    @media (max-width: 768px) {
+      .ta__input {
+        min-height: 2.75rem;
+        font-size: 1rem;
+        padding: 0.55rem 0.65rem;
+      }
+
+      .ta__opt {
+        padding: 0.55rem 0.5rem;
+        font-size: 0.9rem;
+      }
+
+      .ta__list {
+        max-height: 45vh;
+      }
+    }
+
     .ta__clear {
       position: absolute;
       top: 50%;

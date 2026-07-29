@@ -82,3 +82,17 @@
   color: color-mix(in srgb, var(--color-danger) 88%, white);
   box-shadow: inset 0 0 0 1px var(--color-danger-glow);
 }
+
+@media (max-width: 768px) {
+  .ui-button {
+    --ui-button-size: 2.75rem;
+    min-height: var(--ui-button-size);
+    padding: 0.55rem 1rem;
+  }
+
+  .ui-button--sm {
+    --ui-button-size: 2.5rem;
+    font-size: 0.75rem;
+    padding-inline: 0.85rem;
+  }
+}
