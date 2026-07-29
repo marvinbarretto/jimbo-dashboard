@@ -36,6 +36,7 @@ import { FocusSessionsService } from '../../../pomo/data-access/focus-sessions.s
 import { ProjectStatTile } from '../../components/project-stat-tile/project-stat-tile';
 import { ProjectFocusSessionRow } from '../../components/project-focus-session-row/project-focus-session-row';
 import { ProjectBriefField } from '../../components/project-brief-field/project-brief-field';
+import { ProjectBriefBulletField } from '../../components/project-brief-bullet-field/project-brief-bullet-field';
 import { ProjectConstraintsSection } from '../../components/project-constraints-section/project-constraints-section';
 import { ProjectOperatingContextSection } from '../../components/project-operating-context-section/project-operating-context-section';
 import { VaultChip } from '@shared/components/vault-chip/vault-chip';
@@ -136,6 +137,7 @@ interface ProjectActivityItem {
     VaultChip,
     ProjectFocusSessionRow,
     ProjectBriefField,
+    ProjectBriefBulletField,
     ProjectConstraintsSection,
     ProjectOperatingContextSection,
     ActorChip,

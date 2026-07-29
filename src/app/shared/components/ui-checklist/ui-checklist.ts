@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, input, output, signal, viewChild } from '@angular/core';
 import { UiProgressMeter } from '../ui-progress-meter/ui-progress-meter';
+import { MentionDirective, type MentionTrigger } from '@shared/mentions';
 
 export type UiChecklistTone = 'warn' | 'err';
 
@@ -33,7 +34,7 @@ export interface UiChecklistItem {
 // is responsible for pushing it onto whatever state shape it owns.
 @Component({
   selector: 'app-ui-checklist',
-  imports: [UiProgressMeter],
+  imports: [UiProgressMeter, MentionDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (items().length > 0) {
@@ -41,22 +42,24 @@ export interface UiChecklistItem {
         @for (item of items(); track item.text; let i = $index) {
           <li
             class="ui-checklist__item"
-            [class.ui-checklist__item--done]="item.done"
+            [class.ui-checklist__item--done]="checkable() && item.done"
             [class.ui-checklist__item--warn]="item.status?.tone === 'warn'"
             [class.ui-checklist__item--err]="item.status?.tone === 'err'"
             [class.ui-checklist__item--editable]="editable()">
-            @if (editable()) {
-              <input
-                type="checkbox"
-                class="ui-checklist__check"
-                [checked]="item.done"
-                [attr.aria-label]="'mark ' + (item.done ? 'pending' : 'done')"
-                (change)="toggled.emit(i)"
-              />
-            } @else {
-              <span class="ui-checklist__mark" [attr.aria-label]="item.done ? 'done' : 'pending'">
-                {{ item.done ? '✓' : '○' }}
-              </span>
+            @if (checkable()) {
+              @if (editable()) {
+                <input
+                  type="checkbox"
+                  class="ui-checklist__check"
+                  [checked]="item.done"
+                  [attr.aria-label]="'mark ' + (item.done ? 'pending' : 'done')"
+                  (change)="toggled.emit(i)"
+                />
+              } @else {
+                <span class="ui-checklist__mark" [attr.aria-label]="item.done ? 'done' : 'pending'">
+                  {{ item.done ? '✓' : '○' }}
+                </span>
+              }
             }
             @if (editable() && editingIndex() === i) {
               <input
@@ -64,6 +67,7 @@ export interface UiChecklistItem {
                 type="text"
                 class="ui-checklist__edit-input"
                 [value]="draft()"
+                [appMention]="triggers()"
                 (input)="onDraftInput($event)"
                 (keydown)="onDraftKey($event, i)"
                 (blur)="commitEdit(i)"
@@ -129,6 +133,7 @@ export interface UiChecklistItem {
         class="ui-checklist__append"
         [value]="appendDraft()"
         [placeholder]="appendPlaceholder()"
+        [appMention]="triggers()"
         (input)="onAppendInput($event)"
         (keydown)="onAppendKey($event)"
       />
@@ -308,6 +313,12 @@ export class UiChecklist {
   readonly emptyMessage      = input<string | null>(null);
   readonly editable          = input<boolean>(false);
   readonly appendPlaceholder = input<string>('+ add item (Enter)');
+  // false for plain editable-list use (e.g. brief bullets) where an item is
+  // a standing statement, not a completable to-do — item.done is ignored.
+  readonly checkable         = input<boolean>(true);
+  // @ / ~ mention support on the edit and append inputs — empty by default,
+  // which leaves the directive inert.
+  readonly triggers          = input<MentionTrigger[]>([]);
 
   readonly toggled  = output<number>();
   readonly edited   = output<{ index: number; text: string }>();

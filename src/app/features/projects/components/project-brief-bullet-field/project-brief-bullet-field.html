@@ -1,0 +1,17 @@
+<label class="brief-bullet-field">
+  <span class="brief-bullet-field__label">{{ label() }}</span>
+  <app-ui-checklist
+    [items]="items()"
+    [editable]="!readonly()"
+    [checkable]="false"
+    [triggers]="triggers()"
+    [appendPlaceholder]="placeholder()"
+    emptyMessage="Nothing yet."
+    (edited)="onEdited($event)"
+    (removed)="onRemoved($event)"
+    (appended)="onAppended($event)"
+  />
+  @if (hint(); as h) {
+    <span class="brief-bullet-field__hint">{{ h }}</span>
+  }
+</label>

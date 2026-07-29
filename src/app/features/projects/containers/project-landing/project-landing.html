@@ -470,11 +470,10 @@
               [triggers]="briefTriggers"
               (saved)="patch(p.id, { personas: $event })"
             />
-            <app-project-brief-field
+            <app-project-brief-bullet-field
               label="Success criteria"
               [value]="p.success_criteria"
-              placeholder="What done looks like"
-              [rows]="4"
+              placeholder="+ add a criterion (Enter)"
               [triggers]="briefTriggers"
               (saved)="patch(p.id, { success_criteria: $event })"
             />

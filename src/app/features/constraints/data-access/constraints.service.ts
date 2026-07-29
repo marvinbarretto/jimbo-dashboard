@@ -72,7 +72,7 @@ export class ConstraintsService {
         next: f => {
           // Archived items are the expiry job's tombstones — history, not
           // something to switch back on, so they never reach the list.
-          this._sections.set((f.sections ?? []).map(s => ({
+          this._sections.set((f?.sections ?? []).map(s => ({
             ...s,
             items: (s.items ?? []).filter(i => i.status !== 'archived'),
           })));
