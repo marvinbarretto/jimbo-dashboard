@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.143](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.142...v0.0.143) (2026-07-29)
+
+
+### Features
+
+* **projects:** surface overdue/flagged items, reorder project page for monitoring ([09438b7](https://github.com/marvinbarretto/jimbo-dashboard/commit/09438b76bfa27454ef19b35a5f9b9f21ffccaea4))
+
 ### [0.0.142](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.141...v0.0.142) (2026-07-29)
 
 
