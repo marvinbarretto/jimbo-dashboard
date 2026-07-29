@@ -160,6 +160,7 @@ export const routes: Routes = [
       { path: 'detail-workflow',         loadComponent: () => import('./features/ui-lab/sections/detail-workflow-section').then(m => m.DetailWorkflowSection) },
       { path: 'hybrid-edit',             loadComponent: () => import('./features/ui-lab/sections/hybrid-edit-section').then(m => m.HybridEditSection) },
       { path: 'inline-edit',             loadComponent: () => import('./features/ui-lab/sections/inline-edit-section').then(m => m.InlineEditSection) },
+      { path: 'project-brief-bullet-field', loadComponent: () => import('./features/ui-lab/sections/project-brief-bullet-field-section').then(m => m.ProjectBriefBulletFieldSection) },
       { path: 'mention-chip-strip',      loadComponent: () => import('./features/ui-lab/sections/mention-chip-strip-section').then(m => m.MentionChipStripSection) },
       { path: 'expandable-rows',         loadComponent: () => import('./features/ui-lab/sections/expandable-rows-section').then(m => m.ExpandableRowsSection) },
       { path: 'refresh-control',         loadComponent: () => import('./features/ui-lab/sections/refresh-control-section').then(m => m.RefreshControlSection) },

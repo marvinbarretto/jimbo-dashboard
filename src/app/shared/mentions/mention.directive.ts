@@ -1,4 +1,4 @@
-import { DestroyRef, Directive, ElementRef, inject, input } from '@angular/core';
+import { DestroyRef, Directive, ElementRef, OnDestroy, inject, input } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MentionService } from './mention.service';
 import type { MentionTrigger } from './mention-trigger';
@@ -25,7 +25,7 @@ type FieldEl = HTMLTextAreaElement | HTMLInputElement;
     '(keyup)': 'onCaretMove()',
   },
 })
-export class MentionDirective {
+export class MentionDirective implements OnDestroy {
   private readonly hostRef = inject(ElementRef<FieldEl>);
   private readonly mentionService = inject(MentionService);
   private readonly destroyRef = inject(DestroyRef);
@@ -108,6 +108,21 @@ export class MentionDirective {
       e.stopPropagation();
       this.deactivate();
     }
+  }
+
+  /**
+   * The host element (and this directive with it) can be destroyed while a
+   * mention is still active — e.g. a click-to-edit field like UiInlineEdit
+   * commits on blur and Angular tears down the `<input>` immediately, with
+   * no chance for the user to press Escape first. Without this, the shared
+   * MentionService is left thinking a mention is open: its CDK overlay stays
+   * attached to a now-detached anchor (a live scroll/resize listener
+   * repositioning against a dead element, forever), and since `openOverlay`
+   * no-ops while `overlayRef` is set, the mention popup can never open again
+   * for ANY field on the page until a full reload.
+   */
+  ngOnDestroy(): void {
+    this.deactivate();
   }
 
   protected onCaretMove(): void {
