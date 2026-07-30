@@ -107,15 +107,15 @@
   // page content together.
   .app-shell {
     --app-gutter: 0.75rem;
-    // Measured at 412px: nav column (brand + scrollable list) 80px + commands
-    // row 40px + borders. Was 116px, which left sticky descendants tucked
-    // 22px under the header.
-    --app-header-height: 138px;
+    // Measured at 412px: brand row (commands overlaid, 44px) + scrollable nav
+    // list + borders. Keep truthful — sticky descendants offset by this.
+    --app-header-height: 102px;
   }
 
-  // Not enough width for nav + commands side by side: the commands drop to
-  // their own row underneath.
+  // Commands collapse to icon-only buttons overlaid on the brand row — no
+  // third header row, and keyboard hints mean nothing to a thumb.
   .app-header__inner {
+    position: relative;
     flex-wrap: wrap;
     min-height: 0;
   }
@@ -125,10 +125,20 @@
   }
 
   .app-header__commands {
-    flex: 1 1 100%;
+    position: absolute;
+    top: 0.3rem;
+    right: var(--app-gutter);
     padding-left: 0;
-    padding-block: 0.4rem;
     border-left: none;
-    border-top: 1px solid var(--color-border);
+    gap: 0.25rem;
+  }
+
+  .app-header__cmd {
+    padding: 0.65rem;
+  }
+
+  .app-header__cmd-label,
+  .app-header__user {
+    display: none;
   }
 }

@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { AppIcon } from './shared/components/app-icon/app-icon';
 import { Nav } from './shared/components/nav/nav';
 import { NavState } from './shared/components/nav/nav-state.service';
 import { SectionTabs } from './shared/components/nav/section-tabs';
@@ -12,7 +13,7 @@ import { AuthService } from './features/auth/data-access/auth.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Nav, SectionTabs, ToastStack],
+  imports: [AppIcon, RouterOutlet, Nav, SectionTabs, ToastStack],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

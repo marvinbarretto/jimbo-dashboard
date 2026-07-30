@@ -141,6 +141,15 @@ import { NavState } from './nav-state.service';
         align-items: stretch;
       }
 
+      /* Brand row hosts the shell's overlaid command icons (see app.scss) —
+         give it their height and drop the desktop divider. */
+      .app-nav__brand {
+        min-height: 2.75rem;
+        padding: 0;
+        margin-right: 0;
+        border-right: none;
+      }
+
       .app-nav__list {
         overflow-x: auto;
         padding-bottom: 0.2rem;

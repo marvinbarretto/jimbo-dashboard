@@ -7,10 +7,12 @@ import {
   Github,
   GitBranch,
   GripVertical,
+  LogOut,
   MessageSquare,
   Pencil,
   Plus,
   RotateCcw,
+  Search,
   Trash2,
   X,
   type LucideIconData,
@@ -34,6 +36,8 @@ export const ICONS = {
   demote:         ChevronsDown,
   'mark-done':    Check,
   github:         Github,
+  search:         Search,
+  'sign-out':     LogOut,
 } as const satisfies Record<string, LucideIconData>;
 
 export type IconName = keyof typeof ICONS;
