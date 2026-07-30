@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.152](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.151...v0.0.152) (2026-07-30)
+
+
+### Features
+
+* **shell:** compact mobile header — icon commands overlaid on brand row ([45dbfd8](https://github.com/marvinbarretto/jimbo-dashboard/commit/45dbfd8480c9c597edfd9474d92aacd1fca1cf08))
+* **tracker:** sheet editing on mobile — wireframe design extracted to real components ([20e9887](https://github.com/marvinbarretto/jimbo-dashboard/commit/20e988709cbe39dcaf65ddbd2cae61eef572df1f))
+
 ### [0.0.151](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.150...v0.0.151) (2026-07-30)
 
 
