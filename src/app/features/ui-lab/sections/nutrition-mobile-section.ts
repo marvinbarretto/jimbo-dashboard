@@ -372,7 +372,8 @@ const WIRE_DAY = '2026-07-30'; // static date for the datetime-local field — w
       position: fixed;
       inset: auto 0 0 0;
       z-index: 41;
-      max-width: 28rem;
+      /* same clamp as .frame so lab-on-desktop and real phone agree */
+      max-width: 24.5rem;
       margin: 0 auto;
       padding: 0.4rem 1.1rem calc(1.1rem + env(safe-area-inset-bottom));
       background: var(--color-surface, var(--color-bg));
@@ -470,6 +471,9 @@ const WIRE_DAY = '2026-07-30'; // static date for the datetime-local field — w
     input[type='datetime-local'].field__input {
       font-variant-numeric: tabular-nums;
       color-scheme: dark;
+      /* datetime-local has a stubborn intrinsic width — never let it push the sheet */
+      min-width: 0;
+      max-width: 100%;
     }
 
     /* number + unit as one bound control */
