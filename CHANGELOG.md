@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.151](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.150...v0.0.151) (2026-07-30)
+
+
+### Features
+
+* **tracker:** mobile-first two-line ledger row ([b53b72c](https://github.com/marvinbarretto/jimbo-dashboard/commit/b53b72c759b162374dfd1e533789af2a73e78552))
+* **ui-lab:** mobile drawer nav for the component list ([1460173](https://github.com/marvinbarretto/jimbo-dashboard/commit/1460173a386fe61ab635880cf73d8193417f0b9c))
+* **ui-lab:** nutrition mobile wireframe — 3 read-state row variants ([fcad781](https://github.com/marvinbarretto/jimbo-dashboard/commit/fcad781c7d88c2dbedebc99fa9948d10f9fc6039))
+* **ui-lab:** nutrition wireframe round 2 — sheet editing + quick add ([03cd9fe](https://github.com/marvinbarretto/jimbo-dashboard/commit/03cd9fefdc9a6a3de8688f63bb4232501ed4aa46))
+
+
+### Bug Fixes
+
+* **nav:** stop tab bar forcing horizontal viewport overflow on mobile ([7d90927](https://github.com/marvinbarretto/jimbo-dashboard/commit/7d9092706bed266de6dead0b401ac14979083cde))
+* **tracker:** stable time cell across read/edit on mobile ([a6e12d0](https://github.com/marvinbarretto/jimbo-dashboard/commit/a6e12d0d1c3b394f3e20c11d1330013d374e9949))
+* **ui-lab:** nutrition wireframe sheet width matches frame clamp ([782f525](https://github.com/marvinbarretto/jimbo-dashboard/commit/782f525655f547c7cc26334e20478908ba1af2b7))
+
 ### [0.0.150](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.149...v0.0.150) (2026-07-29)
 
 
