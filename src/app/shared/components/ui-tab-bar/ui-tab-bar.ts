@@ -32,6 +32,11 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     // scrolling underneath doesn't bleed through the sticky strip.
     .ui-tab-bar {
       display: flex;
+      /* Tabs never squeeze or wrap — past the available width they scroll.
+         Without this the bar pushes the document wider than the viewport on
+         phones (tab rows are the classic mobile horizontal-overflow source). */
+      overflow-x: auto;
+      scrollbar-width: thin;
       padding: 0 var(--app-gutter, 1.5rem);
       background-color: var(--color-bg);
       background-image: linear-gradient(

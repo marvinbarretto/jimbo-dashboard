@@ -461,6 +461,8 @@ h2 { font-size: 1.25rem; font-weight: 600; }
 .ui-tab {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
   padding: 0.6rem 1.1rem;
   font-size: 0.78rem;
   font-weight: 600;

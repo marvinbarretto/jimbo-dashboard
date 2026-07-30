@@ -107,7 +107,10 @@
   // page content together.
   .app-shell {
     --app-gutter: 0.75rem;
-    --app-header-height: 116px;
+    // Measured at 412px: nav column (brand + scrollable list) 80px + commands
+    // row 40px + borders. Was 116px, which left sticky descendants tucked
+    // 22px under the header.
+    --app-header-height: 138px;
   }
 
   // Not enough width for nav + commands side by side: the commands drop to
