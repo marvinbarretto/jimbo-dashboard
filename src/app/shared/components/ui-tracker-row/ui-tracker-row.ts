@@ -30,10 +30,20 @@ import {
   imports: [AppIcon, UiButton, UiInlineEdit, LondonTimePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="tracker-row" [class.tracker-row--editable]="editable()">
+    <div
+      class="tracker-row"
+      [class.tracker-row--editable]="editable()"
+      [class.tracker-row--tappable]="sheetTappable()"
+      [attr.role]="sheetTappable() ? 'button' : null"
+      [attr.tabindex]="sheetTappable() ? 0 : null"
+      [attr.aria-label]="sheetTappable() ? 'Edit ' + entry().label : null"
+      (click)="rowTap()"
+      (keydown.enter)="rowTap()"
+      (keydown.space)="rowTapKey($event)"
+    >
       @if (showTime()) {
         <span class="tracker-row__time">
-          @if (editable() && rowEditable()) {
+          @if (inlineEdit()) {
             <app-ui-inline-edit
               kind="datetime"
               [value]="timeInput()"
@@ -52,7 +62,7 @@ import {
       }
 
       <span class="tracker-row__label">
-        @if (editable() && rowEditable() && labelEditable()) {
+        @if (inlineEdit() && labelEditable()) {
           <app-ui-inline-edit
             [value]="entry().label"
             ariaLabel="Edit label"
@@ -68,14 +78,14 @@ import {
            the mobile grid can seat them on different lines; desktop renders
            them as one flex run, identical to the previous flat list. -->
       <span class="tracker-row__measures" aria-label="measures">
-        @if (entry().pending && !editable()) {
+        @if (entry().pending && !inlineEdit()) {
           <span class="tracker-row__pending" title="Awaiting estimate">estimating…</span>
         } @else {
           @if (heroMeasures().length) {
             <span class="tracker-row__hero">
               @for (m of heroMeasures(); track m.key) {
                 <span class="tracker-row__measure tracker-row__measure--primary">
-                  @if (editable() && rowEditable() && (m.editable ?? true)) {
+                  @if (inlineEdit() && (m.editable ?? true)) {
                     <app-ui-inline-edit
                       kind="number"
                       size="lg"
@@ -99,7 +109,7 @@ import {
             <span class="tracker-row__cluster">
               @for (m of clusterMeasures(); track m.key) {
                 <span class="tracker-row__measure">
-                  @if (editable() && rowEditable() && (m.editable ?? true)) {
+                  @if (inlineEdit() && (m.editable ?? true)) {
                     <app-ui-inline-edit
                       kind="number"
                       [min]="0"
@@ -121,7 +131,7 @@ import {
         }
       </span>
 
-      @if (editable() && rowEditable()) {
+      @if (inlineEdit()) {
         <app-ui-button
           variant="ghost"
           size="sm"
@@ -141,6 +151,22 @@ import {
       align-items: center;
       gap: 0.7rem;
       font-size: 0.86rem;
+    }
+
+    .tracker-row--tappable {
+      cursor: pointer;
+      border-radius: var(--radius);
+      -webkit-tap-highlight-color: transparent;
+      transition: background 100ms ease;
+    }
+
+    .tracker-row--tappable:active {
+      background: color-mix(in srgb, var(--color-accent) 9%, transparent);
+    }
+
+    .tracker-row--tappable:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: -2px;
     }
 
     .tracker-row__time {
@@ -230,6 +256,9 @@ import {
         align-items: baseline;
         column-gap: 0.6rem;
         row-gap: 0.25rem;
+        /* Rows own their rhythm on mobile — the day group draws hairlines
+           between them instead of gaps. */
+        padding: 0.7rem 0.15rem;
       }
 
       /* Fixed-size cell in BOTH states so opening the editor never reflows the
@@ -365,9 +394,19 @@ export class UiTrackerRow {
   readonly labelPlaceholder = input<string>('label…');
   /** Show the leading time column. Off for sub-entries that aren't independently timed (e.g. a set within a session). */
   readonly showTime = input<boolean>(true);
+  /**
+   * How an editable row edits. 'inline' swaps fields for in-place editors
+   * (desktop). 'sheet' keeps the row a read-only display and emits `(open)`
+   * on tap — the host presents a {@link UiTrackerEditSheet}. Native controls
+   * morphing inside a dense row is what broke mobile; sheet mode exists so
+   * rows never change shape at phone width.
+   */
+  readonly editMode = input<'inline' | 'sheet'>('inline');
 
   readonly patch = output<TrackerPatch>();
   readonly remove = output<string>();
+  /** Sheet mode: the row was activated — host opens the edit sheet for this entry id. */
+  readonly open = output<string>();
 
   protected readonly timeInput = computed(() => isoToLocalInput(this.entry().at));
 
@@ -376,6 +415,22 @@ export class UiTrackerRow {
   protected readonly displayTime = (v: string): string => (v.length >= 16 ? v.slice(11, 16) : v);
   protected readonly rowEditable = computed(() => this.entry().editable ?? true);
   protected readonly labelEditable = computed(() => this.entry().labelEditable ?? true);
+  protected readonly inlineEdit = computed(
+    () => this.editable() && this.rowEditable() && this.editMode() === 'inline',
+  );
+  protected readonly sheetTappable = computed(
+    () => this.editable() && this.rowEditable() && this.editMode() === 'sheet',
+  );
+
+  protected rowTap(): void {
+    if (this.sheetTappable()) this.open.emit(this.entry().id);
+  }
+
+  protected rowTapKey(event: Event): void {
+    if (!this.sheetTappable()) return;
+    event.preventDefault(); // space would scroll the page
+    this.open.emit(this.entry().id);
+  }
   protected readonly shownMeasures = computed(() => measuresFor(this.entry(), this.measures()));
   protected readonly heroMeasures = computed(() => this.shownMeasures().filter((m) => m.primary));
   protected readonly clusterMeasures = computed(() => this.shownMeasures().filter((m) => !m.primary));

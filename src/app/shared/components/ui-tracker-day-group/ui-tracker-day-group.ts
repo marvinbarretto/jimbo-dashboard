@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiTrackerRow } from '@shared/components/ui-tracker-row/ui-tracker-row';
+import { UiTrackerEditSheet } from '@shared/components/ui-tracker-edit-sheet/ui-tracker-edit-sheet';
 import { UiQuickAddRow, type QuickAddOption } from '@shared/components/ui-quick-add-row/ui-quick-add-row';
+import { ViewportService } from '@shared/services/viewport.service';
 import {
   sumMeasures,
   type TrackerDraft,
@@ -22,7 +24,7 @@ import { londonToday, relativeDayLabel } from '@shared/utils/datetime.utils';
  */
 @Component({
   selector: 'app-ui-tracker-day-group',
-  imports: [UiSection, UiTrackerRow, UiQuickAddRow],
+  imports: [UiSection, UiTrackerRow, UiTrackerEditSheet, UiQuickAddRow],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-ui-section
@@ -37,8 +39,10 @@ import { londonToday, relativeDayLabel } from '@shared/utils/datetime.utils';
             [entry]="e"
             [measures]="measures()"
             [editable]="editable()"
+            [editMode]="editMode()"
             (patch)="patch.emit($event)"
             (remove)="remove.emit($event)"
+            (open)="openSheet($event)"
           />
         } @empty {
           <p class="day-group__empty">{{ emptyMessage() }}</p>
@@ -61,6 +65,16 @@ import { londonToday, relativeDayLabel } from '@shared/utils/datetime.utils';
         }
       </div>
     </app-ui-section>
+
+    @if (sheetEntry(); as e) {
+      <app-ui-tracker-edit-sheet
+        [entry]="e"
+        [measures]="measures()"
+        (patch)="patch.emit($event)"
+        (remove)="remove.emit($event)"
+        (closed)="sheetEntryId.set(null)"
+      />
+    }
   `,
   styles: [`
     .day-group {
@@ -82,11 +96,20 @@ import { londonToday, relativeDayLabel } from '@shared/utils/datetime.utils';
       border-top: 1px dashed color-mix(in srgb, var(--color-border) 55%, transparent);
     }
 
-    /* Mobile rows are two lines tall — whitespace, not borders, keeps them
-       reading as separate entries. */
+    /* Mobile rows are two lines tall and carry their own padding — hairlines,
+       not gaps, keep the ledger reading as one list of separate entries. */
     @media (max-width: 768px) {
       .day-group {
-        gap: 1rem;
+        gap: 0;
+      }
+
+      .day-group app-ui-tracker-row + app-ui-tracker-row {
+        border-top: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+      }
+
+      .day-group__add {
+        margin-top: 0.6rem;
+        padding-top: 0.75rem;
       }
     }
   `],
@@ -118,7 +141,24 @@ export class UiTrackerDayGroup {
   readonly remove = output<string>();
   readonly add = output<TrackerDraft>();
 
+  private readonly viewport = inject(ViewportService);
+
   protected readonly open = linkedSignal(() => this.expanded());
+
+  // Mobile rows are read-only displays that edit via sheet; desktop keeps
+  // inline editing. The group decides so hosts stay layout-agnostic.
+  protected readonly editMode = computed(() => (this.viewport.isMobile() ? 'sheet' : 'inline'));
+
+  /** Id (not object) so the sheet always renders the freshest entry after a patch round-trips. */
+  protected readonly sheetEntryId = signal<string | null>(null);
+  protected readonly sheetEntry = computed(() => {
+    const id = this.sheetEntryId();
+    return id ? this.entries().find((e) => e.id === id) ?? null : null;
+  });
+
+  protected openSheet(id: string): void {
+    this.sheetEntryId.set(id);
+  }
 
   // Quick-add backdates to the group day unless the day is today, where "now"
   // (an omitted timestamp → server now()) reads more naturally than midday.

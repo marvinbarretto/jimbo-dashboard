@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiTypeahead, type TypeaheadOption } from '@shared/components/ui-typeahead/ui-typeahead';
+import { ViewportService } from '@shared/services/viewport.service';
 import {
   localInputToIso,
   roundForMeasure,
@@ -28,6 +29,9 @@ const norm = (s: string): string => s.trim().toLowerCase();
   selector: 'app-ui-quick-add-row',
   imports: [UiButton, UiTypeahead],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Instant-commit rows are pure capture (numbers arrive via async estimate /
+  // sheet refinement), so mobile collapses them to a single text field.
+  host: { '[class.quick-add-host--capture]': 'instantCommit()' },
   template: `
     <div class="quick-add-block">
     <div class="quick-add">
@@ -64,7 +68,7 @@ const norm = (s: string): string => s.trim().toLowerCase();
 
       <app-ui-button
         variant="secondary"
-        size="sm"
+        [size]="viewport.isMobile() ? 'md' : 'sm'"
         ariaLabel="Add entry"
         [disabled]="!canAdd()"
         (pressed)="commit()"
@@ -120,6 +124,19 @@ const norm = (s: string): string => s.trim().toLowerCase();
       font-size: 0.74rem;
       color: var(--color-text-muted);
     }
+
+    @media (max-width: 768px) {
+      /* 1rem stops iOS focus-zoom (the typeahead input inherits font). */
+      .quick-add {
+        font-size: 1rem;
+      }
+
+      /* Capture rows: one thumb, one field — measure inputs disappear and the
+         numbers arrive via the async estimate (refine in the edit sheet). */
+      :host(.quick-add-host--capture) .quick-add__measure {
+        display: none;
+      }
+    }
   `],
 })
 export class UiQuickAddRow {
@@ -153,6 +170,8 @@ export class UiQuickAddRow {
   readonly hints = input<Readonly<Record<string, string>>>({});
 
   readonly add = output<TrackerDraft>();
+
+  protected readonly viewport = inject(ViewportService);
 
   /** The typeahead's visible text — the label source of truth (two-way bound). */
   protected readonly query = signal('');

@@ -7,6 +7,7 @@ type UiButtonSize = 'sm' | 'md';
   selector: 'app-ui-button',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './ui-button.shared.scss',
+  host: { '[class.ui-button-host--block]': 'block()' },
   template: `
     <button
       [attr.aria-label]="ariaLabel()"
@@ -28,6 +29,8 @@ export class UiButton {
   readonly iconOnly  = input(false);
   /** Strip the box (border + background) — for inline affordances that shouldn't read as chrome. */
   readonly bare      = input(false);
+  /** Fill the container's width — for sheet/dialog primary actions. */
+  readonly block     = input(false);
 
   readonly pressed = output<void>();
 
@@ -35,6 +38,7 @@ export class UiButton {
     const parts = ['ui-button', `ui-button--${this.variant()}`, `ui-button--${this.size()}`];
     if (this.iconOnly()) parts.push('ui-button--icon-only');
     if (this.bare()) parts.push('ui-button--bare');
+    if (this.block()) parts.push('ui-button--block');
     return parts.join(' ');
   });
 }
