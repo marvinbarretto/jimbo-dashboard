@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { UiBackLink } from '@shared/components/ui-back-link/ui-back-link';
 
@@ -117,10 +117,30 @@ interface GroupedSection {
   imports: [RouterLink, RouterLinkActive, RouterOutlet, UiBackLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Full-bleed layout — the lab owns its sidebar + content edges; opt out of the shell gutter.
-  host: { class: 'page-bleed' },
+  host: {
+    class: 'page-bleed',
+    '(document:keydown.escape)': 'menuOpen.set(false)',
+  },
   template: `
     <div class="ui-lab">
-      <nav class="ui-lab__sidenav" aria-label="Component sections">
+      <!-- Mobile only: the ~50-section list is a wall at phone width, so it
+           hides behind a drawer. Desktop keeps the permanent sidebar. -->
+      <button
+        type="button"
+        class="ui-lab__menu-btn"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="menuOpen.set(true)"
+      >☰ Components</button>
+
+      @if (menuOpen()) {
+        <div class="ui-lab__scrim" (click)="menuOpen.set(false)"></div>
+      }
+
+      <nav
+        class="ui-lab__sidenav"
+        [class.ui-lab__sidenav--open]="menuOpen()"
+        aria-label="Component sections"
+      >
         <app-ui-back-link [to]="['/today']" class="ui-lab__back">← Today</app-ui-back-link>
         @for (section of groupedSections(); track section.group) {
           <div class="ui-lab__group">
@@ -130,7 +150,8 @@ interface GroupedSection {
                 <li>
                   <a class="ui-lab__sidenav-link"
                      [routerLink]="['/ui-lab', entry.id]"
-                     routerLinkActive="ui-lab__sidenav-link--active">
+                     routerLinkActive="ui-lab__sidenav-link--active"
+                     (click)="menuOpen.set(false)">
                     {{ entry.name }}
                   </a>
                 </li>
@@ -220,54 +241,85 @@ interface GroupedSection {
       min-width: 0;
     }
 
+    .ui-lab__menu-btn {
+      display: none;
+    }
+
+    .ui-lab__scrim {
+      position: fixed;
+      inset: 0;
+      z-index: 119; /* above the sticky app header (100) */
+      background: rgb(0 0 0 / 0.55);
+    }
+
     @media (max-width: 768px) {
       .ui-lab {
         grid-template-columns: 1fr;
       }
 
+      .ui-lab__menu-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        width: fit-content;
+        /* grid item in a min-height:100vh grid — don't let the row stretch it */
+        align-self: start;
+        justify-self: start;
+        min-height: 2.75rem;
+        margin: 0.6rem 0.75rem 0;
+        padding: 0 0.85rem;
+        font: inherit;
+        font-size: 0.8rem;
+        color: var(--color-text-muted);
+        background: transparent;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        cursor: pointer;
+
+        &:focus-visible {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 1px;
+        }
+      }
+
+      /* The sidenav becomes an off-canvas drawer; same markup, same grouped
+         list — it just slides in over everything instead of living in a
+         grid column. */
       .ui-lab__sidenav {
-        position: static;
-        height: auto;
-        border-right: none;
-        border-bottom: 1px solid var(--color-border, #e5e7eb);
-        padding: 0.75rem 0.5rem;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 120;
+        width: min(80vw, 18rem);
+        height: 100dvh;
+        padding-top: 1rem;
+        transform: translateX(-100%);
+        transition: transform 200ms ease;
       }
 
-      .ui-lab__group {
-        padding-top: 0.4rem;
+      .ui-lab__sidenav--open {
+        transform: translateX(0);
+        box-shadow: 0.5rem 0 2rem rgb(0 0 0 / 0.35);
       }
 
-      .ui-lab__group-label {
-        margin-left: 0.5rem;
+      @media (prefers-reduced-motion: reduce) {
+        .ui-lab__sidenav {
+          transition: none;
+        }
       }
 
-      .ui-lab__sidenav-list {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 0.25rem;
-      }
-
+      /* Drawer links are touch targets, not desktop dense rows. */
       .ui-lab__sidenav-link {
-        border-left: none;
-        border-bottom: 2px solid transparent;
-        border-radius: 0;
-        padding: 0.3rem 0.5rem;
-
-        &:hover {
-          border-left-color: transparent;
-          border-bottom-color: var(--color-border);
-        }
-
-        &--active {
-          border-left-color: transparent;
-          border-bottom-color: var(--color-accent);
-        }
+        padding: 0.55rem 0.75rem;
+        font-size: 0.9rem;
       }
     }
   `],
 })
 export class UiLabShell {
   protected readonly registry = componentRegistry;
+  protected readonly menuOpen = signal(false);
 
   // Group sorted alphabetically within each group, groups in canonical order.
   protected readonly groupedSections = computed<readonly GroupedSection[]>(() => {
