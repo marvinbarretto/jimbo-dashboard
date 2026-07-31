@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.153](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.152...v0.0.153) (2026-07-31)
+
+
+### Features
+
+* **kanban:** cap rendered cards per column, with indexed card lookups ([09dc439](https://github.com/marvinbarretto/jimbo-dashboard/commit/09dc439dac216da99f8a16d0147b28d97caa42d2))
+
+
+### Bug Fixes
+
+* **actors:** give jeffrey a colour and every actor a fallback ([8a5b550](https://github.com/marvinbarretto/jimbo-dashboard/commit/8a5b55028b5ba446cd9d71d8e64352676f2fac4e))
+* **fleet:** an unpriced model no longer takes the whole fleet page down ([e180abb](https://github.com/marvinbarretto/jimbo-dashboard/commit/e180abbc8cb6d51e673146309f94e69a8589e620))
+
 ### [0.0.152](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.151...v0.0.152) (2026-07-30)
 
 
