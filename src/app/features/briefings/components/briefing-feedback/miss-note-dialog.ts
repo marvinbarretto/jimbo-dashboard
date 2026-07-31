@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ModalShell } from '@shared/components/modal-shell/modal-shell';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiFormActions } from '@shared/components/ui-form-actions/ui-form-actions';
@@ -49,7 +49,7 @@ function parseMissNote(note: string | null): { reason: MissReasonTag | null; tex
     <app-modal-shell [titleId]="titleId" closeLabel="Cancel" (close)="cancel()">
       <h2 modal-header [id]="titleId" class="miss-note__title">Miss — teach the briefing</h2>
 
-      <form modal-body class="miss-note__form" (ngSubmit)="save()">
+      <form modal-body class="miss-note__form" [formGroup]="form" (ngSubmit)="save()">
         <div class="miss-note__chips" role="radiogroup" aria-label="Why is this a miss?">
           @for (r of reasons; track r.tag) {
             <button type="button" class="miss-note__chip"
@@ -65,7 +65,7 @@ function parseMissNote(note: string | null): { reason: MissReasonTag | null; tex
         <textarea
           id="miss-note-text"
           rows="3"
-          [formControl]="note"
+          formControlName="note"
           placeholder="Optional detail — what would you rather see?"
         ></textarea>
 
@@ -135,7 +135,14 @@ export class MissNoteDialog {
 
   private readonly parsed = parseMissNote(this.data.note);
   readonly reason = signal<MissReasonTag | null>(this.parsed.reason);
-  readonly note = new FormControl(this.parsed.text, { nonNullable: true });
+  // [formGroup], not a bare [formControl] — FormGroupDirective is what claims
+  // the form's native submit and prevent-defaults it. Without a directive on
+  // the <form>, (ngSubmit) is a listener for an event nothing raises, the
+  // browser submits natively, and the page reloads before the dialog can
+  // close: every miss silently lost. Same fix as answer-rail.
+  readonly form = new FormGroup({
+    note: new FormControl(this.parsed.text, { nonNullable: true }),
+  });
   readonly showReasonError = signal(false);
 
   pick(tag: MissReasonTag): void {
@@ -149,7 +156,7 @@ export class MissNoteDialog {
       this.showReasonError.set(true);
       return;
     }
-    this.dialogRef.close(composeMissNote(reason, this.note.value));
+    this.dialogRef.close(composeMissNote(reason, this.form.controls.note.value));
   }
 
   cancel(): void { this.dialogRef.close(undefined); }
