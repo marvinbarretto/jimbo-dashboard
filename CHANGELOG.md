@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.156](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.155...v0.0.156) (2026-07-31)
+
+
+### Features
+
+* **journal:** week and month views on the overview ([268ddc6](https://github.com/marvinbarretto/jimbo-dashboard/commit/268ddc6d119f2b6546a31887cd7fbb8b8f498437))
+
 ### [0.0.155](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.154...v0.0.155) (2026-07-31)
 
 
