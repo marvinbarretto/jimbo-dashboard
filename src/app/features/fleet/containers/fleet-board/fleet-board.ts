@@ -6,7 +6,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
-import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
@@ -64,7 +63,7 @@ const FOLD_STALE_MS = 3 * 24 * 60 * 60_000;
 @Component({
   selector: 'app-fleet-board',
   imports: [
-    UiStack, UiCluster, UiPageHeader, UiCard, UiBadge, UiEmptyState,
+    UiStack, UiPageHeader, UiCard, UiBadge, UiEmptyState,
     UiRefreshControl, UiStatCard, RelativeTimePipe, RouterLink, JobChip,
   ],
   templateUrl: './fleet-board.html',
@@ -85,6 +84,24 @@ export class FleetBoard {
   readonly workers = this.service.workers;
   readonly recent = this.service.recent;
   readonly folds = this.service.folds;
+  readonly now = this.service.now;
+  readonly failures = this.service.failures;
+  readonly stuckNotes = this.service.stuckNotes;
+  readonly lastPipelineEnqueueAt = this.service.lastPipelineEnqueueAt;
+
+  // Anything here means the machinery needs a human: a run failed, or a note
+  // is parked where nothing will ever pick it up.
+  readonly attentionCount = computed(() => this.failures().length + this.stuckNotes().length);
+
+  // Pump liveness: the tick runs every ~30 min; two missed ticks = presumed
+  // dead. Distinguishes "queue empty" from "pump dead" — they look identical
+  // from the queue alone.
+  readonly pumpStale = computed(() => {
+    this.lastFetch();
+    const last = this.lastPipelineEnqueueAt();
+    if (!last) return true;
+    return Date.now() - Date.parse(last) > 70 * 60_000;
+  });
 
   constructor() {
     this.service.start();

@@ -33,6 +33,10 @@ export class FleetService {
   readonly recent = computed(() => this._stats()?.recent ?? []);
   readonly burn = computed(() => this._stats()?.burn_5h ?? []);
   readonly folds = computed(() => this._stats()?.folds ?? []);
+  readonly now = computed(() => this._stats()?.now ?? []);
+  readonly failures = computed(() => this._stats()?.failures_24h ?? []);
+  readonly stuckNotes = computed(() => this._stats()?.stuck_notes ?? []);
+  readonly lastPipelineEnqueueAt = computed(() => this._stats()?.last_pipeline_enqueue_at ?? null);
 
   private timerHandle: ReturnType<typeof setInterval> | null = null;
   private started = false;

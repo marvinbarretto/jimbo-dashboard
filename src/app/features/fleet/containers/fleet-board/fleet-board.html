@@ -16,6 +16,100 @@
     </app-ui-card>
   }
 
+  <!-- Right now — what the fleet is doing at this moment -->
+  <section>
+    <h2 class="fleet__section-title">
+      Right now
+      @if (pumpStale()) {
+        <app-ui-badge tone="danger">pump silent</app-ui-badge>
+      }
+      <span class="fleet__section-hint">
+        @if (lastPipelineEnqueueAt(); as ts) {
+          pipeline last enqueued <span [title]="ts">{{ ts | relativeTime }}</span>
+        } @else {
+          pipeline has never enqueued
+        }
+      </span>
+    </h2>
+    @if (now().length === 0) {
+      <app-ui-empty-state message="Nothing running at this moment." />
+    } @else {
+      <div class="fleet__now-grid">
+        @for (job of now(); track job.id) {
+          <app-ui-card tone="soft" [compact]="true">
+            <div class="fleet-now">
+              <span class="fleet-now__executor">{{ job.executor ?? '?' }}</span>
+              <div class="fleet-now__body">
+                <span class="fleet-now__skill fleet__mono">{{ job.skill ?? job.flow }}</span>
+                <span class="fleet-now__title" [title]="job.task_id">{{ job.note_title ?? job.task_id }}</span>
+              </div>
+              <span class="fleet-now__since" [title]="job.started_at ?? ''">{{ job.started_at | relativeTime }}</span>
+            </div>
+          </app-ui-card>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- Needs attention — failures and silently parked notes -->
+  <section>
+    <h2 class="fleet__section-title">
+      Needs attention
+      @if (attentionCount() > 0) {
+        <app-ui-badge tone="danger">{{ attentionCount() }}</app-ui-badge>
+      }
+    </h2>
+    @if (attentionCount() === 0) {
+      <app-ui-empty-state message="No failures in the last 24h, nothing stuck." />
+    }
+    @if (failures().length > 0) {
+      <div class="fleet__table-wrap">
+        <table class="fleet__table">
+          <thead>
+            <tr><th>#</th><th>skill</th><th>executor</th><th>note</th><th>error</th><th>retries</th><th>failed</th></tr>
+          </thead>
+          <tbody>
+            @for (row of failures(); track row.id) {
+              <tr class="fleet__row--failed">
+                <td>{{ row.id }}</td>
+                <td class="fleet__mono">{{ row.skill ?? row.flow }}</td>
+                <td>{{ row.executor ?? '—' }}</td>
+                <td class="fleet__note-title" [title]="row.task_id">{{ row.note_title ?? row.task_id }}</td>
+                <td class="fleet__error-message" [title]="row.error_message ?? ''">{{ row.error_message ?? '—' }}</td>
+                <td>{{ row.retry_count }}</td>
+                <td [title]="row.completed_at ?? ''">{{ row.completed_at | relativeTime }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    @if (stuckNotes().length > 0) {
+      <!-- Grooming lock held, no active dispatch, past the reap window: the
+           reaper refuses these at the retry cap, so nothing will ever pick
+           them up without a human. -->
+      <h3 class="fleet__subsection-title">Stuck notes — grooming-locked with no dispatch</h3>
+      <div class="fleet__table-wrap">
+        <table class="fleet__table">
+          <thead>
+            <tr><th>seq</th><th>title</th><th>stage</th><th>retries</th><th>locked since</th></tr>
+          </thead>
+          <tbody>
+            @for (note of stuckNotes(); track note.note_id) {
+              <tr class="fleet__row--failed">
+                <td>{{ note.seq ?? '—' }}</td>
+                <td class="fleet__note-title" [title]="note.note_id">{{ note.title ?? note.note_id }}</td>
+                <td class="fleet__mono">{{ note.grooming_status ?? '—' }}</td>
+                <td>{{ note.retry_count }}</td>
+                <td [title]="note.grooming_started_at ?? ''">{{ note.grooming_started_at | relativeTime }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
   <!-- Workers -->
   <section>
     <h2 class="fleet__section-title">Workers</h2>

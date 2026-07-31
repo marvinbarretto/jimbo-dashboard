@@ -65,6 +65,42 @@ export const ApiFleetFoldSchema = z.object({
   runs_7d:           z.number().int(),
 });
 
+// Running dispatch with the note title joined on — "jeffrey: decomposing
+// 'Audit film entity schema…'" rather than a bare count.
+export const ApiFleetRunningSchema = z.object({
+  id:         z.string(),
+  task_id:    z.string(),
+  note_title: z.string().nullable(),
+  skill:      z.string().nullable(),
+  flow:       z.string(),
+  executor:   z.string().nullable(),
+  started_at: z.string().nullable(),
+});
+
+// Failed dispatch in the trailing 24h — the explicit error feed this page flags.
+export const ApiFleetFailureSchema = z.object({
+  id:            z.string(),
+  task_id:       z.string(),
+  note_title:    z.string().nullable(),
+  skill:         z.string().nullable(),
+  flow:          z.string(),
+  executor:      z.string().nullable(),
+  error_message: z.string().nullable(),
+  retry_count:   z.number().int(),
+  completed_at:  z.string().nullable(),
+});
+
+// Note the grooming machinery parked: lock held past the reap window, no
+// active dispatch — invisible everywhere else on the dashboard.
+export const ApiFleetStuckNoteSchema = z.object({
+  note_id:             z.string(),
+  seq:                 z.string().nullable(),
+  title:               z.string().nullable(),
+  grooming_status:     z.string().nullable(),
+  retry_count:         z.number().int(),
+  grooming_started_at: z.string().nullable(),
+});
+
 export const ApiFleetStatsSchema = z.object({
   generated_at: z.string(),
   queue:        z.array(ApiFleetQueueDepthSchema),
@@ -72,6 +108,12 @@ export const ApiFleetStatsSchema = z.object({
   recent:       z.array(ApiFleetCompletionSchema),
   burn_5h:      z.array(ApiFleetBurnRowSchema),
   folds:        z.array(ApiFleetFoldSchema),
+  // Optional-with-default: these landed 2026-07-31; the page must tolerate an
+  // API that predates them rather than going down as "malformed".
+  now:          z.array(ApiFleetRunningSchema).optional().default([]),
+  failures_24h: z.array(ApiFleetFailureSchema).optional().default([]),
+  stuck_notes:  z.array(ApiFleetStuckNoteSchema).optional().default([]),
+  last_pipeline_enqueue_at: z.string().nullable().optional().default(null),
 });
 
 export type ApiFleetStats = z.infer<typeof ApiFleetStatsSchema>;
@@ -80,3 +122,6 @@ export type FleetWorker = z.infer<typeof ApiFleetWorkerSchema>;
 export type FleetCompletion = z.infer<typeof ApiFleetCompletionSchema>;
 export type FleetBurnRow = z.infer<typeof ApiFleetBurnRowSchema>;
 export type FleetFold = z.infer<typeof ApiFleetFoldSchema>;
+export type FleetRunning = z.infer<typeof ApiFleetRunningSchema>;
+export type FleetFailure = z.infer<typeof ApiFleetFailureSchema>;
+export type FleetStuckNote = z.infer<typeof ApiFleetStuckNoteSchema>;

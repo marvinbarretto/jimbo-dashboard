@@ -22,6 +22,9 @@ export type {
   FleetCompletion,
   FleetBurnRow,
   FleetFold,
+  FleetRunning,
+  FleetFailure,
+  FleetStuckNote,
 } from './fleet-stats.api-schema';
 export { ApiFleetStatsSchema } from './fleet-stats.api-schema';
 

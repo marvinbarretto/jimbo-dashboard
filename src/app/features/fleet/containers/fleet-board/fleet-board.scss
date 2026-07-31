@@ -50,6 +50,77 @@
   }
 }
 
+.fleet__subsection-title {
+  margin: 0.9rem 0 0;
+  font-size: 0.7rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-soft);
+}
+
+.fleet__now-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
+}
+
+.fleet-now {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+}
+
+.fleet-now__executor {
+  font-weight: 650;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  flex-shrink: 0;
+}
+
+.fleet-now__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.fleet-now__skill {
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+}
+
+.fleet-now__title {
+  font-size: 0.78rem;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fleet-now__since {
+  font-size: 0.7rem;
+  color: var(--color-text-soft);
+  flex-shrink: 0;
+}
+
+// Error and title cells are the two columns allowed to eat width; cap them so
+// one verbose error_message doesn't force the whole table sideways.
+.fleet__error-message,
+.fleet__note-title {
+  max-width: 26rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fleet__error-message {
+  color: var(--color-danger);
+  font-size: 0.72rem;
+}
+
 .fleet-worker {
   display: flex;
   align-items: center;
