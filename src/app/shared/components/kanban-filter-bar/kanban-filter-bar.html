@@ -27,6 +27,22 @@
       </div>
     }
 
+    <!-- Per-column render cap. Deliberately NOT part of hasActive() / reset:
+         it's a view-density preference, not a filter, and clearing filters
+         shouldn't dump every card in the vault into the DOM. -->
+    @if (limitOptions().length > 0) {
+      <div class="filters__limit">
+        <span class="filters__label">Show</span>
+        @for (opt of limitOptions(); track limitLabel(opt)) {
+          <app-chip
+            [active]="activeLimit() === opt"
+            (toggle)="limitChange.emit(opt)"
+          >{{ limitLabel(opt) }}</app-chip>
+        }
+        <span class="filters__limit-hint">per column</span>
+      </div>
+    }
+
     @if (hasActive()) {
       <button type="button" class="filters__reset" (click)="reset.emit()">
         Reset filters

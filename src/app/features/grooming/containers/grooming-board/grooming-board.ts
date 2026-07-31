@@ -16,7 +16,6 @@ import {
   GROOMING_STATUS_LABELS,
   GROOMING_EMPTY_LABELS,
   isActive,
-  isDone,
   effectivePriority,
   stuckDays,
   compareCardsBy,
@@ -48,6 +47,10 @@ import {
 } from '@shared/kanban/filter-groups';
 import { createKanbanDragState } from '@shared/kanban/drag-state';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
+import {
+  createKanbanColumnLimit, parseColumnLimit, serializeColumnLimit,
+  COLUMN_LIMIT_OPTIONS,
+} from '@shared/kanban/column-limit';
 import { withVaultDetailModal, swapDetailSeq } from '@shared/kanban/detail-modal';
 import { CommandShortcutsService } from '@shared/services/command-shortcuts.service';
 import { isSeedMode } from '@shared/seed-mode';
@@ -56,11 +59,32 @@ import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 // Filter dimension ids + sentinels (UNASSIGNED / NO_PRIORITY) come from the shared
 // kanban facet module, so the grooming and execution boards stay in lockstep.
 
+// One rendered card, fully resolved. Built inside the `columns` computed so the
+// template never calls a method: a `[context]="cardContextFor(item)"` binding
+// re-runs the whole context build — project lookup, child rollup, open-question
+// scan — on every change-detection pass, for every card on the board. Resolving
+// here means it runs once per data change, and only for cards that survive the
+// render cap.
+interface CardView {
+  item:        VaultItem;
+  context:     GroomingCardContext;
+  epicOptions: readonly VaultItem[];
+}
+
+// Shared empties — returning a fresh `[]` from a helper called inside a computed
+// hands the card a new array identity on every rebuild, which defeats OnPush
+// input diffing downstream.
+const EMPTY_EPICS: readonly VaultItem[] = [];
+const EMPTY_LINKS: { project_id: string }[] = [];
+
 interface ColumnView {
   status:     GroomingStatus;
   label:      string;
   emptyLabel: string;
-  cards:      VaultItem[];
+  /** Cards actually rendered — the head of the sorted list, capped. */
+  cards:      readonly CardView[];
+  /** Cards the column holds before the cap. Drives the header ratio + show-more. */
+  total:      number;
 }
 
 @Component({
@@ -117,6 +141,14 @@ export class GroomingBoard {
   private readonly priorityFilter = this.filter.active<number>(PRIORITY);
   private readonly epicFilter     = this.filter.active<string>(EPIC);
 
+  // --- column render cap --------------------------------------------------
+  // The vault carries several hundred active tasks, most of them in one column.
+  // Rendering the lot buries the work that needs attention and costs a full
+  // VaultCard per row; the cap keeps each column to its most relevant slice.
+  protected readonly columnLimit = createKanbanColumnLimit();
+  readonly limitOptions = COLUMN_LIMIT_OPTIONS;
+  readonly activeLimit  = this.columnLimit.limit;
+
   // Free-text search — matches title or seq, case-insensitive substring.
   private readonly _searchTerm = signal<string>('');
 
@@ -126,6 +158,59 @@ export class GroomingBoard {
   readonly sortOptions = SORT_OPTIONS;
   readonly searchTerm = this._searchTerm.asReadonly();
 
+  // --- item indexes -------------------------------------------------------
+  // Every per-card lookup here used to be a linear scan of the whole item list.
+  // Run once per card, per render pass, over a ~550-item vault, that's an O(n²)
+  // sweep to draw one board — and `applyFilters` runs five times per render
+  // (once for the board, once per facet's counts), so it was five of them.
+  //
+  // These indexes are rebuilt only when the item list itself changes, and every
+  // card reads them in constant time.
+
+  // Identity index lives on the service — every consumer shares the one map.
+  private readonly itemsById = this.vaultItemsService.itemsById;
+
+  private readonly childrenByParent = computed(() => {
+    const map = new Map<VaultItemId, VaultItem[]>();
+    for (const item of this.vaultItemsService.items()) {
+      if (!item.parent_id) continue;
+      const siblings = map.get(item.parent_id);
+      if (siblings) siblings.push(item);
+      else map.set(item.parent_id, [item]);
+    }
+    return map;
+  });
+
+  // Project membership per item, resolved once. `projectsFor` allocates a fresh
+  // computed on every call, so calling it per card per facet pass was churning
+  // hundreds of throwaway reactive nodes per render.
+  private readonly projectLinksByItem = computed(() => {
+    const map = new Map<VaultItemId, { project_id: string }[]>();
+    for (const item of this.vaultItemsService.items()) {
+      const ids = new Set(
+        this.vaultItemProjectsService.projectsFor(item.id)().map(l => l.project_id as string),
+      );
+      if (item.primary_project_id) ids.add(item.primary_project_id as string);
+      map.set(item.id, [...ids].map(project_id => ({ project_id })));
+    }
+    return map;
+  });
+
+  // Epic options for the per-card backfill picker, bucketed by project. An epic
+  // belongs to exactly one project, so this is a clean partition.
+  private readonly epicsByProject = computed(() => {
+    const map = new Map<string, VaultItem[]>();
+    for (const epic of this.vaultItemsService.items()) {
+      if (!epic.is_epic || !isActive(epic)) continue;
+      const pid = this.epicProjectId(epic);
+      if (!pid) continue;
+      const bucket = map.get(pid);
+      if (bucket) bucket.push(epic);
+      else map.set(pid, [epic]);
+    }
+    return map;
+  });
+
   // --- visible items + columns -------------------------------------------
 
   readonly visibleItems = computed(() => this.applyFilters());
@@ -133,14 +218,24 @@ export class GroomingBoard {
   readonly columns = computed<ColumnView[]>(() => {
     const items = this.visibleItems();
     const comparator = compareCardsBy(this._sortMode());
-    return GROOMING_STATUS_ORDER.map(status => ({
-      status,
-      label:      GROOMING_STATUS_LABELS[status],
-      emptyLabel: GROOMING_EMPTY_LABELS[status],
-      cards: items
+    return GROOMING_STATUS_ORDER.map(status => {
+      // Cap AFTER the sort, so the cap means "the top N by the active sort".
+      const all = items
         .filter(i => i.grooming_status === status)
-        .sort(comparator),
-    }));
+        .sort(comparator);
+      return {
+        status,
+        label:      GROOMING_STATUS_LABELS[status],
+        emptyLabel: GROOMING_EMPTY_LABELS[status],
+        // Resolve contexts AFTER the cap — 25 context builds per column, not 389.
+        cards: this.columnLimit.take(status, all).map(item => ({
+          item,
+          context:     this.cardContextFor(item),
+          epicOptions: this.epicOptionsFor(item),
+        })),
+        total: all.length,
+      };
+    });
   });
 
   // Surfaces VaultItemsService.isLoading to the template so each column can
@@ -187,6 +282,8 @@ export class GroomingBoard {
       if (sort && SORT_OPTIONS.some(o => o.value === sort)) {
         this._sortMode.set(sort as SortMode);
       }
+      const limit = parseColumnLimit(params.get('limit'));
+      if (limit !== undefined) this.columnLimit.setLimit(limit);
     });
 
     // Sync filter state back to URL whenever it changes. `replaceUrl: true` so
@@ -197,8 +294,9 @@ export class GroomingBoard {
       const owners     = Array.from(this.ownerFilter());
       const priorities = Array.from(this.priorityFilter());
       const epics      = Array.from(this.epicFilter());
-      const q    = this._searchTerm();
-      const sort = this._sortMode();
+      const q     = this._searchTerm();
+      const sort  = this._sortMode();
+      const limit = this.columnLimit.limit();
 
       this.router.navigate([], {
         relativeTo: this.route,
@@ -209,6 +307,7 @@ export class GroomingBoard {
           [EPIC]:     epics.length      ? epics.join(',')      : null,
           q:          q || null,
           sort:       sort !== 'priority' ? sort : null,
+          limit:      serializeColumnLimit(limit),
         },
         queryParamsHandling: 'merge',
         replaceUrl: true,
@@ -256,12 +355,13 @@ export class GroomingBoard {
 
   childrenCount(item: VaultItem): number {
     return item.children_count
-        ?? this.vaultItemsService.items().filter(i => i.parent_id === item.id).length;
+        ?? this.childrenByParent().get(item.id)?.length
+        ?? 0;
   }
 
   parentRef(item: VaultItem): { seq: number; title: string } | null {
     if (!item.parent_id) return null;
-    const parent = this.vaultItemsService.getById(item.parent_id);
+    const parent = this.itemsById().get(item.parent_id);
     return parent ? { seq: parent.seq, title: parent.title } : null;
   }
 
@@ -304,7 +404,7 @@ export class GroomingBoard {
   // Returns null when the item isn't an epic.
   childRollup(item: VaultItem): readonly ChildStatus[] | null {
     if (!item.is_epic) return null;
-    const children = this.vaultItemsService.items().filter(i => i.parent_id === item.id);
+    const children = this.childrenByParent().get(item.id) ?? [];
     return children.map((c): ChildStatus => ({
       seq:   c.seq,
       state: groomingToRollup(c),
@@ -331,22 +431,6 @@ export class GroomingBoard {
       sourceKind: item.source?.kind ?? null,
       sourceUrl: item.source?.url ?? null,
     };
-  }
-
-  // Rolled-up priority for epic cards: the most-urgent (lowest integer) priority
-  // among unfinished children. Returns null if the item isn't an epic OR no
-  // unfinished child has a priority set. Per Agile orthodoxy: an epic's urgency
-  // is derived from its children, not declared on the container itself.
-  rolledUpPriorityForEpic(item: VaultItem): Priority | null {
-    const children = this.vaultItemsService.items().filter(i => i.parent_id === item.id && !isDone(i));
-    if (children.length === 0) return null;
-    let min: Priority | null = null;
-    for (const child of children) {
-      const p = effectivePriority(child);
-      if (p === null) continue;
-      if (min === null || p < min) min = p;
-    }
-    return min;
   }
 
   // --- drag & drop --------------------------------------------------------
@@ -441,15 +525,15 @@ export class GroomingBoard {
     this.projectsService.activeProjects(),
   );
 
-  epicPickerOptionsFor(item: VaultItem): readonly VaultItem[] {
+  private epicOptionsFor(item: VaultItem): readonly VaultItem[] {
     const proj = this.primaryProject(item);
-    if (!proj) return [];
-    return this.vaultItemsService.items().filter(epic =>
-      epic.is_epic
-      && isActive(epic)
-      && epic.id !== item.id
-      && this.epicProjectId(epic) === proj.id,
-    );
+    if (!proj) return EMPTY_EPICS;
+    const epics = this.epicsByProject().get(proj.id);
+    if (!epics) return EMPTY_EPICS;
+    // An epic can't be its own parent; skip the copy when it isn't in the bucket.
+    return epics.some(e => e.id === item.id)
+      ? epics.filter(e => e.id !== item.id)
+      : epics;
   }
 
   private epicProjectId(epic: VaultItem): string | null {
@@ -463,9 +547,7 @@ export class GroomingBoard {
   // walked the parent chain), so an inherited subtask matches a project filter
   // and counts toward that facet — the same project the card bar shows.
   private projectLinksFor(item: VaultItem): { project_id: string }[] {
-    const ids = new Set(this.vaultItemProjectsService.projectsFor(item.id)().map(l => l.project_id as string));
-    if (item.primary_project_id) ids.add(item.primary_project_id as string);
-    return [...ids].map(project_id => ({ project_id }));
+    return this.projectLinksByItem().get(item.id) ?? EMPTY_LINKS;
   }
 
   onAssignProject(item: VaultItem, id: string): void {
@@ -481,13 +563,27 @@ export class GroomingBoard {
   // to the composable, which knows nothing about the dimensions. The epic
   // facet's dependence on the project selection is handled by derivation
   // (effectiveEpicFilter), not by pruning here.
+  // Every handler that changes what a column contains also collapses the
+  // per-column expansions — "show 25 more" was granted against the old visible
+  // set, and carrying it into a new one silently re-inflates the board.
   onFilterToggle(event: { groupId: string; value: string | number }): void {
     this.filter.toggle(event.groupId, event.value);
+    this.columnLimit.collapseAll();
   }
 
-  onSearchChange(term: string): void { this._searchTerm.set(term); }
+  onSearchChange(term: string): void {
+    this._searchTerm.set(term);
+    this.columnLimit.collapseAll();
+  }
 
-  onSortChange(mode: string): void { this._sortMode.set(mode as SortMode); }
+  onSortChange(mode: string): void {
+    this._sortMode.set(mode as SortMode);
+    this.columnLimit.collapseAll();
+  }
+
+  onLimitChange(limit: number | null): void { this.columnLimit.setLimit(limit); }
+
+  onShowMore(status: GroomingStatus): void { this.columnLimit.showMore(status); }
 
   onPriorityChange(item: VaultItem, priority: Priority | null): void {
     this.vaultItemsService.update(item.id, { manual_priority: priority });
@@ -534,6 +630,9 @@ export class GroomingBoard {
   resetFilters(): void {
     this.filter.reset();
     this._searchTerm.set('');
+    // Cap survives a filter reset on purpose — it's a view-density preference,
+    // not a filter, and clearing filters is exactly when the board is largest.
+    this.columnLimit.collapseAll();
   }
 
   // --- internal: apply all filters with optional skip --------------------
@@ -546,13 +645,17 @@ export class GroomingBoard {
     const priF   = this.priorityFilter();
     const epicF  = this.effectiveEpicFilter();
     const search = this._searchTerm().trim().toLowerCase();
+    const parents = this.childrenByParent();
+    // Hoisted: `epicKeyOf` needs it, and re-reading the computed per item costs
+    // a signal read on every row of the sweep.
+    const epicIds = epicF.size > 0 ? this.selectableEpicIds() : null;
 
     return this.vaultItemsService.items().filter(item => {
       if (item.type !== 'task') return false;
       if (!isActive(item)) return false;
       // Epics (items with children) are containers, not dispatchable work.
       // Their subitems appear on the board instead; the epic itself lives in a hierarchy view.
-      if (this.vaultItemsService.items().some(i => i.parent_id === item.id)) return false;
+      if (parents.has(item.id)) return false;
 
       // Search applies across all dimensions — never skipped because it isn't
       // a dimension whose chip-counts could mislead.
@@ -575,8 +678,8 @@ export class GroomingBoard {
         const matches = links.some(l => projF.has(l.project_id as string));
         if (!matches) return false;
       }
-      if (!opts.skipEpic && epicF.size > 0) {
-        if (!epicF.has(epicKeyOf(item, this.selectableEpicIds()))) return false;
+      if (!opts.skipEpic && epicIds !== null) {
+        if (!epicF.has(epicKeyOf(item, epicIds))) return false;
       }
 
       return true;

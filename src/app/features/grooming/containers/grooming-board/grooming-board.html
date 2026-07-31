@@ -27,10 +27,13 @@
     [searchTerm]="searchTerm()"
     [sortOptions]="sortOptions"
     [activeSort]="sortMode()"
+    [limitOptions]="limitOptions"
+    [activeLimit]="activeLimit()"
     searchPlaceholder="Search title or #seq…"
     (toggle)="onFilterToggle($event)"
     (searchChange)="onSearchChange($event)"
     (sortChange)="onSortChange($event)"
+    (limitChange)="onLimitChange($event)"
     (reset)="resetFilters()"
   />
 
@@ -46,7 +49,8 @@
         (click)="setMobileColumn(col.status)"
       >
         {{ col.label }}
-        <span class="board__col-count">{{ col.cards.length }}</span>
+        <!-- Mobile chip reports the column's true size, never the capped one. -->
+        <span class="board__col-count">{{ col.total }}</span>
       </button>
     }
   </div>
@@ -62,6 +66,7 @@
       <app-kanban-column
         [label]="col.label"
         [count]="col.cards.length"
+        [total]="col.total"
         [emptyLabel]="col.emptyLabel"
         [loading]="isLoading()"
         [dropEligible]="drag.isEligibleDropTarget(col.status)"
@@ -69,24 +74,28 @@
         (dragover)="onColumnDragOver($event, col.status)"
         (dragleave)="onColumnDragLeave(col.status)"
         (drop)="onColumnDrop($event, col.status)"
+        (showMore)="onShowMore(col.status)"
       >
-        @for (item of col.cards; track item.id) {
+        <!-- Every binding here reads an already-resolved value off the CardView.
+             Calling a method in a card binding re-runs it on every change-detection
+             pass, for every card on the board — see CardView in the component. -->
+        @for (card of col.cards; track card.item.id) {
           <div
             class="board__card-wrap"
-            [class.board__card-wrap--dragging]="drag.dragging() === item.id"
+            [class.board__card-wrap--dragging]="drag.dragging() === card.item.id"
             draggable="true"
-            (dragstart)="onDragStart($event, item)"
+            (dragstart)="onDragStart($event, card.item)"
             (dragend)="onDragEnd()">
             <app-vault-card
-              [context]="cardContextFor(item)"
+              [context]="card.context"
               [projectOptions]="projectPickerOptions()"
-              [epicOptions]="epicPickerOptionsFor(item)"
+              [epicOptions]="card.epicOptions"
               [actorOptions]="activeActors()"
-              (priorityChange)="onPriorityChange(item, $event)"
-              (assign)="onAssignItem(item, $event)"
-              (actionTriggered)="onCardAction(item, $event)"
-              (projectAssigned)="onAssignProject(item, $event)"
-              (epicAssigned)="onAssignEpic(item, $event)" />
+              (priorityChange)="onPriorityChange(card.item, $event)"
+              (assign)="onAssignItem(card.item, $event)"
+              (actionTriggered)="onCardAction(card.item, $event)"
+              (projectAssigned)="onAssignProject(card.item, $event)"
+              (epicAssigned)="onAssignEpic(card.item, $event)" />
           </div>
         }
       </app-kanban-column>

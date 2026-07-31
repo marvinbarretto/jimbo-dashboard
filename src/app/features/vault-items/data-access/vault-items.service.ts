@@ -47,6 +47,22 @@ export class VaultItemsService {
   readonly activeItems = computed(() => this._items().filter(isActive));
   readonly isLoading = this._loading.asReadonly();
 
+  // Identity indexes. The board holds the whole vault (several hundred items)
+  // and callers look items up per card, per render — a linear `find` per lookup
+  // turns a single board paint into an O(n²) sweep. Rebuilt only when the item
+  // list changes; exposed so consumers can index without duplicating the map.
+  readonly itemsById = computed(() => {
+    const map = new Map<VaultItemId, VaultItem>();
+    for (const item of this._items()) map.set(item.id, item);
+    return map;
+  });
+
+  private readonly itemsBySeq = computed(() => {
+    const map = new Map<number, VaultItem>();
+    for (const item of this._items()) map.set(item.seq, item);
+    return map;
+  });
+
   private readonly currentActorId: ActorId = CURRENT_ACTOR_ID;
 
   constructor() { this.load(); }
@@ -77,11 +93,11 @@ export class VaultItemsService {
   }
 
   getById(id: VaultItemId): VaultItem | undefined {
-    return this._items().find(i => i.id === id);
+    return this.itemsById().get(id);
   }
 
   getBySeq(seq: number): VaultItem | undefined {
-    return this._items().find(i => i.seq === seq);
+    return this.itemsBySeq().get(seq);
   }
 
   // Lightweight create for board-level "+ new" inputs. Posts the small slice the

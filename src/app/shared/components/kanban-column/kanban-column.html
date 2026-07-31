@@ -10,7 +10,11 @@
 >
   <header class="col__header">
     <span class="col__label">{{ label() }}</span>
-    <span class="col__count">{{ count() }}</span>
+    <!-- Under a render cap the header reports shown-of-total. The total is the
+         honest number; hiding it would make a capped column read as a short one. -->
+    <span class="col__count">
+      {{ count() }}@if (hidden() > 0) {<span class="col__count-total">/{{ total() }}</span>}
+    </span>
     <!-- Optional projected control (e.g. "dismiss all" sweep). Default
          empty for boards that don't supply one. Selector-based projection
          keeps it isolated from the card body's default ng-content slot. -->
@@ -28,6 +32,16 @@
       <ng-content />
       @if (count() === 0) {
         <p class="col__empty">{{ emptyLabel() }}</p>
+      }
+      @if (hidden() > 0) {
+        <button
+          type="button"
+          class="col__more"
+          data-testid="column-show-more"
+          (click)="showMore.emit()"
+        >
+          Show more<span class="col__more-hint">{{ hidden() }} hidden</span>
+        </button>
       }
     }
   </div>

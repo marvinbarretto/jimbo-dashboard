@@ -33,9 +33,12 @@
     [class.board__filters--collapsed]="!showMobileFilters()"
     [groups]="filterGroups()"
     [searchTerm]="searchTerm()"
+    [limitOptions]="limitOptions"
+    [activeLimit]="activeLimit()"
     searchPlaceholder="Search task / executor…"
     (toggle)="onFilterToggle($event)"
     (searchChange)="onSearchChange($event)"
+    (limitChange)="onLimitChange($event)"
     (reset)="resetFilters()"
   />
 
@@ -50,7 +53,8 @@
         (click)="setMobileLane(lane.lane)"
       >
         {{ lane.label }}
-        <span class="board__col-count">{{ lane.cards.length }}</span>
+        <!-- Mobile chip reports the lane's true size, never the capped one. -->
+        <span class="board__col-count">{{ lane.total }}</span>
       </button>
     }
   </div>
@@ -66,6 +70,7 @@
         <app-kanban-column
           [label]="lane.label"
           [count]="lane.cards.length"
+          [total]="lane.total"
           [emptyLabel]="lane.emptyLabel"
           [loading]="isLoading()"
           [dropEligible]="drag.isEligibleDropTarget(lane.lane)"
@@ -73,6 +78,7 @@
           (dragover)="onLaneDragOver($event, lane.lane)"
           (dragleave)="onLaneDragLeave(lane.lane)"
           (drop)="onLaneDrop($event, lane.lane)"
+          (showMore)="onShowMore(lane.lane)"
         >
           @for (card of lane.cards; track cardKey(card)) {
             @if (card.kind === 'commission') {

@@ -18,6 +18,10 @@ import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
 import { BoardCreateBar } from '@shared/components/board-create-bar/board-create-bar';
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
+import {
+  createKanbanColumnLimit, parseColumnLimit, serializeColumnLimit,
+  COLUMN_LIMIT_OPTIONS,
+} from '@shared/kanban/column-limit';
 import { createKanbanDragState } from '@shared/kanban/drag-state';
 import {
   projectFilterGroup, ownerFilterGroup, priorityFilterGroup, epicFilterGroup,
@@ -95,7 +99,10 @@ interface LaneView {
   lane:       BoardLane;
   label:      string;
   emptyLabel: string;
-  cards:      BoardCard[];
+  /** Cards actually rendered — the head of the sorted lane, capped. */
+  cards:      readonly BoardCard[];
+  /** Cards the lane holds before the cap. Drives the header ratio + show-more. */
+  total:      number;
 }
 
 // Which facets a count should ignore (so a facet's own selection doesn't collapse
@@ -150,6 +157,12 @@ export class ExecutionBoard {
 
   private readonly _searchTerm = signal<string>('');
   readonly searchTerm = this._searchTerm.asReadonly();
+
+  // Per-lane render cap — same composable the grooming board uses. Done lanes
+  // in particular accumulate without bound between auto-clear thresholds.
+  protected readonly columnLimit = createKanbanColumnLimit();
+  readonly limitOptions = COLUMN_LIMIT_OPTIONS;
+  readonly activeLimit  = this.columnLimit.limit;
 
   readonly showMobileFilters = signal(false);
   private readonly _mobileLane = signal<BoardLane>('ready');
@@ -231,6 +244,8 @@ export class ExecutionBoard {
       }
       const q = params.get('q');
       if (q) this._searchTerm.set(q);
+      const limit = parseColumnLimit(params.get('limit'));
+      if (limit !== undefined) this.columnLimit.setLimit(limit);
     });
 
     effect(() => {
@@ -239,6 +254,7 @@ export class ExecutionBoard {
       const priorities = Array.from(this.priorityFilter());
       const epics      = Array.from(this.epicFilter());
       const q = this._searchTerm();
+      const limit = this.columnLimit.limit();
       this.router.navigate([], {
         relativeTo: this.route,
         queryParams: {
@@ -247,6 +263,7 @@ export class ExecutionBoard {
           [PRIORITY]: priorities.length ? priorities.join(',') : null,
           [EPIC]:     epics.length      ? epics.join(',')      : null,
           q:          q || null,
+          limit:      serializeColumnLimit(limit),
         },
         queryParamsHandling: 'merge',
         replaceUrl: true,
@@ -298,11 +315,8 @@ export class ExecutionBoard {
     const autoClearDays = this.doneLaneAutoClearDays();
     const doneCutoffMs = autoClearDays !== null ? Date.now() - autoClearDays * 24 * 60 * 60 * 1000 : null;
 
-    return LANE_ORDER.map(lane => ({
-      lane,
-      label:      LANE_LABELS[lane],
-      emptyLabel: LANE_EMPTY[lane],
-      cards: cards
+    return LANE_ORDER.map(lane => {
+      const all = cards
         .filter(card => card.lane === lane)
         // Auto-clear: hide (not delete) Done cards older than the configured
         // threshold. `doneCutoffMs === null` means the setting is unset —
@@ -312,8 +326,16 @@ export class ExecutionBoard {
           if (!card.doneAt) return true;
           return new Date(card.doneAt).getTime() >= doneCutoffMs;
         })
-        .sort((a, b) => a.priority - b.priority || b.createdAt.localeCompare(a.createdAt)),
-    }));
+        .sort((a, b) => a.priority - b.priority || b.createdAt.localeCompare(a.createdAt));
+      return {
+        lane,
+        label:      LANE_LABELS[lane],
+        emptyLabel: LANE_EMPTY[lane],
+        // Cap AFTER the sort — the cap keeps the most urgent N, not an arbitrary N.
+        cards:      this.columnLimit.take(lane, all),
+        total:      all.length,
+      };
+    });
   });
 
   protected readonly isLoading = this.dispatchService.isLoading;
@@ -508,15 +530,28 @@ export class ExecutionBoard {
     () => effectiveEpicSelection(this.epicFilter(), this.selectableEpics()),
   );
 
+  // Anything that changes a lane's contents also collapses the per-lane
+  // expansions — a "show more" granted against the old visible set shouldn't
+  // silently carry into a new one.
   onFilterToggle(event: { groupId: string; value: string | number }): void {
     this.filter.toggle(event.groupId, event.value);
+    this.columnLimit.collapseAll();
   }
 
-  onSearchChange(term: string): void { this._searchTerm.set(term); }
+  onSearchChange(term: string): void {
+    this._searchTerm.set(term);
+    this.columnLimit.collapseAll();
+  }
+
+  onLimitChange(limit: number | null): void { this.columnLimit.setLimit(limit); }
+
+  onShowMore(lane: BoardLane): void { this.columnLimit.showMore(lane); }
 
   resetFilters(): void {
     this.filter.reset();
     this._searchTerm.set('');
+    // Cap itself survives — it's a view-density preference, not a filter.
+    this.columnLimit.collapseAll();
   }
 
   // --- internal: filtering -----------------------------------------------

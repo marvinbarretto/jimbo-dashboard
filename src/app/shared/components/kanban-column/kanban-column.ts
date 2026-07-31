@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
 // Generic kanban column — used by any board (grooming, execution, future).
 // Header + drop-zone + projected card list. Drop / dragover / dragleave are
@@ -12,7 +12,12 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 })
 export class KanbanColumn {
   readonly label        = input.required<string>();
+  // Cards actually projected into this column — i.e. post-cap.
   readonly count        = input.required<number>();
+  // Cards the column holds before the render cap. Leave null on an uncapped
+  // board. When it exceeds `count` the header reports the ratio and a
+  // "show more" footer appears, so a cap can never misrepresent the backlog.
+  readonly total        = input<number | null>(null);
   // True when a card is being dragged AND this column is a valid target
   // (dragged card isn't already in this column). Drives a subtle border tint.
   readonly dropEligible = input<boolean>(false);
@@ -32,6 +37,10 @@ export class KanbanColumn {
   readonly dragover  = output<DragEvent>();
   readonly dragleave = output<void>();
   readonly drop      = output<DragEvent>();
+  readonly showMore  = output<void>();
+
+  // Cards held back by the render cap. 0 when the board is uncapped.
+  readonly hidden = computed(() => Math.max(0, (this.total() ?? this.count()) - this.count()));
 
   onDragOver(event: DragEvent): void {
     if (this.dropDisabled()) return;

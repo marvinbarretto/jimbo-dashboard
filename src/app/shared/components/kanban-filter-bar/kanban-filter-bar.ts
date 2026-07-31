@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { Chip } from '@shared/components/chip/chip';
 import { EntityChip, type EntityType } from '@shared/components/entity-chip/entity-chip';
+import { columnLimitLabel } from '@shared/kanban/column-limit';
 
 export interface FilterOption<TValue extends string | number> {
   value: TValue;
@@ -131,11 +132,19 @@ export class KanbanFilterBar {
   // currently selected sort value; sortChange emits the new value on click.
   readonly sortOptions = input<readonly SortOption[]>([]);
   readonly activeSort  = input<string>('');
+  // Optional per-column render cap. Empty array = no cap row rendered. `null`
+  // inside the array is the "All" (uncapped) option — the parent owns the value
+  // and the actual slicing; the bar only picks a number.
+  readonly limitOptions = input<readonly (number | null)[]>([]);
+  readonly activeLimit  = input<number | null>(null);
 
   readonly toggle       = output<{ groupId: string; value: string | number }>();
   readonly searchChange = output<string>();
   readonly sortChange   = output<string>();
+  readonly limitChange  = output<number | null>();
   readonly reset        = output<void>();
+
+  readonly limitLabel = columnLimitLabel;
 
   // Compact groups flow on the controls row next to the search box; wide groups
   // (project, epic) each take a full-width wrapping row below it.

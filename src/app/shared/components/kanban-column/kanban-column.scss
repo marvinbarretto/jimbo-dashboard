@@ -72,6 +72,15 @@ $accent-hot: #d96520;
     border-radius: var(--radius);
   }
 
+  &__count {
+    // The capped/total ratio sits inside the count pill; the total is quieter
+    // than the shown figure but still legible.
+    &-total {
+      opacity: 0.6;
+      margin-left: 0.1rem;
+    }
+  }
+
   &__cards {
     flex: 1;
     overflow-y: auto;
@@ -79,6 +88,40 @@ $accent-hot: #d96520;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  // Footer under a capped column. Full-width so it reads as the end of the
+  // list rather than another card.
+  &__more {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.5rem;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius);
+    background: none;
+    color: var(--color-text-muted);
+    font: inherit;
+    font-size: 0.72rem;
+    cursor: pointer;
+
+    &:hover {
+      border-style: solid;
+      color: var(--color-text);
+      background: var(--color-bg);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+  }
+
+  &__more-hint {
+    opacity: 0.65;
+    font-variant-numeric: tabular-nums;
   }
 
   &__empty {
