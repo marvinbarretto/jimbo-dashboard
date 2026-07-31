@@ -64,6 +64,11 @@ import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
       border-left: 2px solid var(--color-border);
       padding: 0.5rem 0.75rem;
       margin: 0;
+      // The work column is wider than a comfortable line, so cap at the shared
+      // reading measure (_typography.scss) plus this box's own horizontal
+      // padding — box-sizing is border-box, so without the padding back it is
+      // the TEXT that would undershoot the measure, not just the box.
+      max-width: calc(var(--prose-measure) + 1.5rem);
     }
 
     .vault-item-intake-block__body--editable {
@@ -78,12 +83,17 @@ import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 
     .vault-item-intake-block__edit {
       width: 100%;
+      max-width: calc(var(--prose-measure) + 1.5rem);
       box-sizing: border-box;
       padding: 0.4rem 0.6rem;
       margin: 0;
-      font: inherit;
-      font-size: 0.8rem;
-      line-height: 1.45;
+      // Same register as the rendered body it replaces, so entering edit mode
+      // reflows nothing — a form control does not inherit font, so it has to
+      // opt into the reading tokens explicitly.
+      font-family: var(--prose-family);
+      font-size: var(--prose-size);
+      line-height: var(--prose-line);
+      letter-spacing: var(--prose-tracking);
       border: 1px solid var(--color-accent);
       border-radius: var(--radius);
       background: var(--color-bg-elevated, var(--color-bg));
@@ -95,13 +105,15 @@ import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 
     .vault-item-intake-block__placeholder {
       width: 100%;
+      max-width: calc(var(--prose-measure) + 1.5rem);
       padding: 0.6rem 0.75rem;
       border: 1px dashed var(--color-border);
       border-radius: var(--radius);
       background: transparent;
       color: var(--color-text-muted);
-      font: inherit;
-      font-size: 0.8rem;
+      // Empty-state chrome, not prose — the scanning register.
+      font-family: var(--scan-family);
+      font-size: var(--scan-size);
       text-align: left;
       cursor: pointer;
 

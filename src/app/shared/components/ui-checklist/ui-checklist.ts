@@ -140,10 +140,11 @@ export interface UiChecklistItem {
   `,
   styles: [`
     /* List-item text reads like anywhere else in the app (briefings, prose
-       fields) — the shared serif reading register, not a dense UI-chrome
-       font. See src/styles/_report.scss .prose-read for the same values;
-       hardcoded here rather than applied as a class since component-style
-       vs global-stylesheet load order isn't guaranteed. */
+       fields) — the shared reading register, not a dense UI-chrome font.
+       Declared locally from the --prose-* tokens (src/styles/_typography.scss)
+       rather than by applying .prose-read: custom properties resolve at use
+       time, so this needs no guarantee about component-style vs global
+       stylesheet load order, and the values still live in exactly one place. */
     .ui-checklist {
       display: flex;
       flex-direction: column;
@@ -158,9 +159,9 @@ export interface UiChecklistItem {
       align-items: center;
       gap: 0.5rem;
       padding: 0.3rem 0;
-      font-family: var(--font-serif);
-      font-size: 1.02rem;
-      line-height: 1.65;
+      font-family: var(--prose-family);
+      font-size: var(--prose-size);
+      line-height: var(--prose-line);
     }
 
     .ui-checklist__item--done {
@@ -200,10 +201,10 @@ export interface UiChecklistItem {
       flex: 1;
       padding: 0.1rem 0.3rem;
       border-radius: var(--radius);
-      letter-spacing: 0.005em;
-      font-family: var(--font-serif);
-      font-size: 1.02rem;
-      line-height: 1.65;
+      letter-spacing: var(--prose-tracking);
+      font-family: var(--prose-family);
+      font-size: var(--prose-size);
+      line-height: var(--prose-line);
     }
 
     .ui-checklist__meter {
@@ -283,9 +284,9 @@ export interface UiChecklistItem {
       width: 100%;
       box-sizing: border-box;
       padding: 0.4rem 0.3rem;
-      font-family: var(--font-serif);
-      font-size: 1.02rem;
-      letter-spacing: 0.005em;
+      font-family: var(--prose-family);
+      font-size: var(--prose-size);
+      letter-spacing: var(--prose-tracking);
       background: transparent;
       border: none;
       border-bottom: 1px dashed var(--color-border);

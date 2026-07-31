@@ -1,28 +1,10 @@
-// The reading surface — generic newspaper-register vocabulary for ANY
-// rendered report (briefings, fleet dailies, reviews, journals).
+// The reading surface — newspaper-register composition for ANY rendered
+// report (briefings, fleet dailies, reviews, journals). This file owns the
+// LAYOUT vocabulary only; every font, size and measure comes from the tokens
+// in _typography.scss. Do not redeclare a register here.
 //
-// Two registers, deliberately mixed:
-//   serif  = prose meant to be READ  (.report base, headlines, quotes, prose)
-//   mono   = metadata meant to be SCANNED (kickers, labels, data rows, tags)
-// The switch between them is the design system: serif says "read me",
-// mono says "scan me". Keep colour for state only.
-
-:root {
-  --font-serif: 'Iowan Old Style', Palatino, 'Palatino Linotype', Georgia, 'Times New Roman', serif;
-}
-
-// ── Reading register — standalone, droppable anywhere ──────────────
-// .report-prose (below) relies on inheriting font-family/line-height from
-// the .report container. This is the same treatment self-contained, for
-// body text outside a report surface — vault item bodies, question text,
-// anywhere prose deserves to be read rather than scanned.
-.prose-read {
-  font-family: var(--font-serif);
-  font-size: 1.02rem;
-  line-height: 1.65;
-  letter-spacing: 0.005em;
-  color: var(--color-text);
-}
+// The mix is the design system: the reading register (serif) says "read me",
+// mono metadata says "scan me". Keep colour for state only.
 
 // ── Container ─────────────────────────────────────────────────────
 
@@ -30,10 +12,12 @@
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
-  max-width: 42rem;
-  font-family: var(--font-serif);
+  max-width: var(--prose-measure);
+  font-family: var(--prose-family);
+  // A shade above --prose-size: a full report is a sustained read, unlike the
+  // single prose fields that sit at the base.
   font-size: 1.06rem;
-  line-height: 1.65;
+  line-height: var(--prose-line);
 
   // Edition rule: the heavy double rule that opens the paper.
   border-top: 3px double var(--color-text);
@@ -212,7 +196,7 @@
 // Lead variant: when the note IS the row's main sentence (no separate lead).
 .report-flag__note--lead {
   margin: 0;
-  font-size: 1.02rem;
+  font-size: var(--prose-size);
   font-weight: 600;
   color: var(--color-text);
 }
@@ -238,7 +222,7 @@
 
 .report-prose {
   margin: 0.2rem 0 0;
-  font-size: 1.02rem;
+  font-size: var(--prose-size);
 }
 
 // ── Data rows — the mono register ─────────────────────────────────

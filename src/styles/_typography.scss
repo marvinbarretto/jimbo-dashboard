@@ -1,0 +1,163 @@
+// The single source of truth for text typography.
+//
+// Every register, size and measure in the app is declared here as a custom
+// property. Nothing else may hardcode a serif stack, a prose size, a heading
+// ratio or a line length — consume the token instead. Custom properties are
+// deliberate over SCSS variables or mixins: they resolve at use time, so a
+// component stylesheet can adopt a register without depending on stylesheet
+// load order (the reason the values were previously hand-copied into
+// ui-checklist) and without duplicating declarations into every component.
+//
+// Two registers, deliberately opposed — the switch between them IS the design
+// system:
+//   READ — serif, roomy. Prose meant to be read: briefings, item bodies,
+//          questions, acceptance criteria.
+//   SCAN — sans, compact. Text meant to be scanned: list rows, triage cards,
+//          dense tabular chrome.
+
+:root {
+  --font-serif: 'Iowan Old Style', Palatino, 'Palatino Linotype', Georgia, 'Times New Roman', serif;
+
+  // ── Reading register ──
+  --prose-family: var(--font-serif);
+  --prose-size: 1.02rem;
+  --prose-line: 1.65;
+  --prose-tracking: 0.005em;
+  // ~75 characters at --prose-size. Cap any reading surface at this.
+  --prose-measure: 42rem;
+
+  // ── Scanning register ──
+  --scan-family: var(--font-sans);
+  --scan-size: 0.8rem;
+  --scan-line: 1.55;
+
+  // ── Heading scale ──
+  // Ratios, not sizes: em keeps the scale intact whichever register is in
+  // force. A fixed rem here once rendered headings SMALLER than the serif
+  // body they introduce. The floor (--h5/--h6) sits just above the body so a
+  // heading can never sit below its own prose.
+  --h1: 1.5em;
+  --h2: 1.3em;
+  --h3: 1.15em;
+  --h4: 1.06em;
+  --h5: 1.02em;
+  --h6: 1.02em;
+}
+
+// ── Registers as classes ──────────────────────────────────────────────
+// Droppable on anything, including form controls (which do not inherit font
+// and must opt in explicitly — see the vault item body's edit textarea).
+
+.prose-read {
+  font-family: var(--prose-family);
+  font-size: var(--prose-size);
+  line-height: var(--prose-line);
+  letter-spacing: var(--prose-tracking);
+  color: var(--color-text);
+}
+
+.prose-scan {
+  font-family: var(--scan-family);
+  font-size: var(--scan-size);
+  line-height: var(--scan-line);
+  color: var(--color-text);
+}
+
+// Cap the line length of a reading surface. Separate from .prose-read: plenty
+// of prose is already inside a narrow column and needs the register without
+// the cap.
+.prose-measure {
+  max-width: var(--prose-measure);
+}
+
+// ── Rendered markdown ─────────────────────────────────────────────────
+// Styles the HTML produced by [innerHTML]="... | markdown". Must be global —
+// Angular's emulated encapsulation does not scope attribute selectors onto
+// innerHTML-injected nodes.
+//
+// Structure (spacing, code, lists, links) plus a default register. The default
+// is SCAN so a bare .markdown-body never falls back to the app's monospace
+// root font; adding .prose-read on the same element switches it to READ. That
+// override works by source order — .prose-read is declared above, so it must
+// stay above, and both now live in this one file rather than relying on which
+// partial styles.scss happens to @use first.
+.markdown-body {
+  font-family: var(--scan-family);
+  font-size: var(--scan-size);
+  line-height: var(--scan-line);
+  word-break: break-word;
+  color: var(--color-text);
+
+  :is(h1, h2, h3, h4, h5, h6) {
+    margin: 1.15em 0 0.35em;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--color-text);
+    &:first-child { margin-top: 0; }
+  }
+
+  h1 { font-size: var(--h1); letter-spacing: -0.012em; }
+  h2 { font-size: var(--h2); letter-spacing: -0.008em; }
+  h3 { font-size: var(--h3); }
+  h4 { font-size: var(--h4); }
+  h5 { font-size: var(--h5); }
+  h6 { font-size: var(--h6); color: var(--color-text-soft); }
+
+  // A heading after prose needs the gap; after another heading it is a
+  // sub-head and stays bound to its parent.
+  :is(h1, h2, h3, h4, h5, h6) + :is(h1, h2, h3, h4, h5, h6) {
+    margin-top: 0.5em;
+  }
+
+  p { margin: 0 0 0.5em; &:last-child { margin-bottom: 0; } }
+
+  ul, ol {
+    margin: 0 0 0.5em;
+    padding-left: 1.25em;
+    &:last-child { margin-bottom: 0; }
+  }
+
+  li { margin-bottom: 0.15em; }
+
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.78em;
+    background: color-mix(in srgb, var(--color-border) 40%, transparent);
+    padding: 0.1em 0.3em;
+    border-radius: 2px;
+    // Override global code reset — global adds a border we don't want inline
+    border: none;
+  }
+
+  pre {
+    background: color-mix(in srgb, var(--color-border) 30%, transparent);
+    padding: 0.5em 0.6em;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 0 0 0.5em;
+    &:last-child { margin-bottom: 0; }
+    code { background: none; padding: 0; }
+  }
+
+  blockquote {
+    border-left: 2px solid var(--color-accent);
+    margin: 0 0 0.5em;
+    padding: 0.1em 0.6em;
+    color: var(--color-text-muted);
+    &:last-child { margin-bottom: 0; }
+  }
+
+  a {
+    color: var(--color-accent);
+    &:hover { text-decoration: underline; }
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 0.75em 0;
+  }
+}
