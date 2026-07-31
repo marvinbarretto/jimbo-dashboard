@@ -103,11 +103,12 @@
           <span class="v3__band-label">{{ proj.display_name }}</span>
         </a>
       } @else {
-        <button type="button" class="v3__band v3__band--project v3__band--unfiled"
-          (click)="store.setEpic(false)"
-          title="Not filed under a project">
-          <span class="v3__band-label"><u>unfiled</u> — not under a project</span>
-        </button>
+        <!-- Not a control: an item's project comes from its lineage, so the fix
+             for "unfiled" is to give it a parent, not to file it from here. -->
+        <div class="v3__band v3__band--project v3__band--unfiled"
+          title="Not filed under a project, and no parent to inherit one from">
+          <span class="v3__band-label">unfiled — not under a project</span>
+        </div>
       }
 
       @if (epicParent(); as epic) {
@@ -278,28 +279,21 @@
           />
         }
 
+        <!-- Parent and project are shown (and only shown) by the hierarchy
+             bands at the top — Links carries what the bands don't. -->
         <app-vault-item-links-block
           [subtasks]="store.children()"
           [parentIsEpic]="item.is_epic"
-          [projects]="store.projects()"
-          [activeProjects]="store.activeProjects()"
           [openBlockers]="store.openBlockers()"
           [tags]="item.tags"
           [addBlockerSeqInput]="store.addBlockerSeqInput()"
-          [availableEpics]="store.availableEpics()"
-          [parent]="store.parentRef()"
           [editable]="true"
           (subtaskClicked)="swapToSeq($event)"
-          (projectClicked)="onProjectClicked($event)"
-          (projectAdded)="store.addProject($event)"
-          (projectRemoved)="store.removeProject($event)"
           (blockerClicked)="swapToSeq($event)"
           (blockerRemoved)="store.removeBlocker($event)"
           (blockerAddBySeq)="store.addBlockerBySeq()"
           (blockerSeqInputChange)="store.addBlockerSeqInput.set($event)"
           (tagsChange)="store.updateTags($event)"
-          (parentClicked)="swapToSeq($event)"
-          (parentChange)="store.updateParent($event)"
         />
       </aside>
     </div>

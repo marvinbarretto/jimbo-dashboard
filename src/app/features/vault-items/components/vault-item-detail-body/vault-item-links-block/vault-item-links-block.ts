@@ -1,13 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
-import { EntityChip } from '@shared/components/entity-chip/entity-chip';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { UiButton } from '@shared/components/ui-button/ui-button';
-import { UiChipList, type UiChipListItem, type UiChipListPickerOption } from '@shared/components/ui-chip-list/ui-chip-list';
-import { UiDropdown } from '@shared/components/ui-dropdown/ui-dropdown';
-import { UiInlinePicker, type UiInlinePickerOption } from '@shared/components/ui-inline-picker/ui-inline-picker';
+import { UiChipList, type UiChipListItem } from '@shared/components/ui-chip-list/ui-chip-list';
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
 import { VaultItemTagList } from '../vault-item-tag-list/vault-item-tag-list';
-import type { Project } from '@domain/projects/project';
 import type { OpenBlocker } from '@domain/vault/readiness';
 
 export interface VaultItemSubtask {
@@ -17,20 +13,16 @@ export interface VaultItemSubtask {
   readonly grooming_status: string;
 }
 
-export interface VaultItemParentRef {
-  readonly seq: number;
-  readonly title: string;
-}
-
-export interface VaultItemEpicOption {
-  readonly id: string;
-  readonly seq: number;
-  readonly title: string;
-}
-
+/**
+ * The detail sidebar's Links panel: children, blockers, tags.
+ *
+ * Parent and project deliberately live only in the hierarchy bands at the top
+ * of the detail view — repeating them here was the same fact twice, and an item
+ * inherits its project from its parent rather than being filed by hand.
+ */
 @Component({
   selector: 'app-vault-item-links-block',
-  imports: [EntityChip, UiButton, UiChipList, UiDropdown, UiInlinePicker, UiSubhead, UiSubsection, VaultItemTagList],
+  imports: [UiButton, UiChipList, UiSubhead, UiSubsection, VaultItemTagList],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-ui-subsection label="Links">
@@ -46,68 +38,6 @@ export interface VaultItemEpicOption {
           (itemClicked)="onSubtaskClicked($event)"
         />
       }
-
-      @if (parent() || editable()) {
-        <app-ui-subhead label="Parent" [count]="parent() ? 1 : 0" />
-        @if (parent(); as p) {
-          <div class="vault-item-links-block__parent-row">
-            <app-entity-chip
-              type="vault-item"
-              [id]="p.seq.toString()"
-              [label]="p.title"
-              [seq]="p.seq"
-              [clickable]="true"
-              (clicked)="parentClicked.emit(p.seq)"
-            />
-            @if (editable()) {
-              <app-ui-button
-                variant="ghost"
-                size="sm"
-                ariaLabel="Remove parent"
-                (pressed)="parentChange.emit(null)">× clear</app-ui-button>
-            }
-          </div>
-        } @else {
-          <div class="vault-item-links-block__parent-add">
-            @if (availableEpics().length > 0) {
-              <app-ui-dropdown #epicDrop ariaHaspopup="listbox" ariaLabel="Pick an epic">
-                <span trigger>+ set epic</span>
-                <app-ui-inline-picker
-                  panel
-                  ariaLabel="Pick an epic"
-                  [options]="epicPickerOptions()"
-                  (selected)="onEpicPicked($event); epicDrop.close()"
-                />
-              </app-ui-dropdown>
-            }
-            <label for="parent-seq-input" class="visually-hidden">Set parent by seq number</label>
-            <input id="parent-seq-input"
-              type="number" min="1"
-              placeholder="or seq #"
-              class="vault-item-links-block__blocker-input"
-              [value]="parentSeqDraft()"
-              (input)="onParentSeqInput($event)"
-              (keydown.enter)="commitParent()" />
-            <app-ui-button
-              variant="ghost"
-              size="sm"
-              ariaLabel="Set parent"
-              [disabled]="!parentSeqDraft()"
-              (pressed)="commitParent()">↵</app-ui-button>
-          </div>
-        }
-      }
-
-      <app-ui-subhead label="Projects" [count]="projects().length" />
-      <app-ui-chip-list
-        [items]="projectChips()"
-        [pickerOptions]="projectPickerOptions()"
-        addLabel="+ add project"
-        emptyLabel="no linked projects"
-        (itemClicked)="projectClicked.emit($event)"
-        (removed)="projectRemoved.emit($event)"
-        (added)="projectAdded.emit($event)"
-      />
 
       <app-ui-subhead label="Blocked by" [count]="openBlockers().length" />
       <app-ui-chip-list
@@ -147,21 +77,12 @@ export interface VaultItemEpicOption {
       min-width: 0;
     }
 
-    .vault-item-links-block__blocker-add,
-    .vault-item-links-block__parent-add {
+    .vault-item-links-block__blocker-add {
       display: flex;
       gap: 0.5rem;
       align-items: center;
       margin-top: 0.5rem;
       min-width: 0;
-    }
-
-    .vault-item-links-block__parent-row {
-      display: flex;
-      gap: 0.4rem;
-      align-items: center;
-      flex-wrap: wrap;
-      margin-bottom: 0.4rem;
     }
 
     .vault-item-links-block__blocker-input {
@@ -183,43 +104,20 @@ export interface VaultItemEpicOption {
 })
 export class VaultItemLinksBlock {
   readonly subtasks = input.required<readonly VaultItemSubtask[]>();
-  readonly projects = input.required<readonly Project[]>();
-  readonly activeProjects = input.required<readonly Project[]>();
   readonly openBlockers = input.required<readonly OpenBlocker[]>();
   readonly tags = input.required<readonly string[]>();
   readonly addBlockerSeqInput = input.required<string>();
-  readonly availableEpics = input<readonly VaultItemEpicOption[]>([]);
-  readonly parent = input<VaultItemParentRef | null>(null);
   readonly editable = input<boolean>(false);
   /** When the current item is an epic, its children are labelled "Tasks" rather
    *  than "Subtasks" — see template. */
   readonly parentIsEpic = input<boolean>(false);
 
   readonly subtaskClicked = output<number>();
-  readonly projectClicked = output<string>();
-  readonly projectAdded = output<string>();
-  readonly projectRemoved = output<string>();
   readonly blockerClicked = output<number>();
   readonly blockerRemoved = output<string>();
   readonly blockerAddBySeq = output<void>();
   readonly blockerSeqInputChange = output<string>();
   readonly tagsChange = output<readonly string[]>();
-  readonly parentClicked = output<number>();
-  // null clears the parent. number is the seq the operator typed in; the parent
-  // (detail-body) translates seq → vault-item id and persists.
-  readonly parentChange = output<number | null>();
-
-  readonly parentSeqDraft = signal('');
-
-  readonly projectChips = computed<readonly UiChipListItem[]>(() =>
-    this.projects().map(p => ({ id: p.id, label: p.display_name, entityType: 'project' as const }))
-  );
-
-  readonly projectPickerOptions = computed<readonly UiChipListPickerOption[]>(() =>
-    this.activeProjects()
-      .filter(p => !this.projects().some(linked => linked.id === p.id))
-      .map(p => ({ id: p.id, label: p.display_name, entityType: 'project' as const }))
-  );
 
   readonly subtaskChips = computed<readonly UiChipListItem[]>(() =>
     this.subtasks().map(c => ({
@@ -239,16 +137,6 @@ export class VaultItemLinksBlock {
     }))
   );
 
-  // Option id carries the seq so the picker's `selected` emit gives us the
-  // value parentChange wants (detail-body translates seq → vault-item id).
-  readonly epicPickerOptions = computed<readonly UiInlinePickerOption[]>(() =>
-    this.availableEpics().map(e => ({ id: e.seq.toString(), label: `#${e.seq} ${e.title}` }))
-  );
-
-  onEpicPicked(seq: string): void {
-    this.parentChange.emit(Number(seq));
-  }
-
   onSubtaskClicked(subtaskId: string): void {
     const child = this.subtasks().find(c => c.id === subtaskId);
     if (child) this.subtaskClicked.emit(child.seq);
@@ -263,18 +151,5 @@ export class VaultItemLinksBlock {
 
   onBlockerSeqInput(event: Event): void {
     this.blockerSeqInputChange.emit((event.target as HTMLInputElement).value);
-  }
-
-  onParentSeqInput(event: Event): void {
-    this.parentSeqDraft.set((event.target as HTMLInputElement).value);
-  }
-
-  commitParent(): void {
-    const raw = this.parentSeqDraft().trim();
-    if (!raw) return;
-    const seq = Number(raw);
-    if (!Number.isFinite(seq) || seq <= 0) return;
-    this.parentChange.emit(seq);
-    this.parentSeqDraft.set('');
   }
 }

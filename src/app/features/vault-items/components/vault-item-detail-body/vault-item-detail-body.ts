@@ -161,10 +161,6 @@ export class VaultItemDetailBody {
     this.router.navigate(['/vault-items', seq]);
   }
 
-  onProjectClicked(id: string): void {
-    this.router.navigate(['/projects', id]);
-  }
-
   onDeleted(): void {
     this.store.remove();
     this.router.navigate(['/vault-items']);
