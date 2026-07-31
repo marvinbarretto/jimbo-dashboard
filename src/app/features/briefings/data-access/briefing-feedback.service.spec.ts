@@ -113,4 +113,64 @@ describe('BriefingFeedbackService', () => {
     httpMock.expectOne('/api/briefing/1/feedback').flush({});
     await pending;
   });
+
+  describe('clear — the third press of the toggle', () => {
+    it('DELETEs with the section and item index, and drops the verdict and note', async () => {
+      await recordMiss();
+
+      const pending = service.clear(1, 'priorities', 0);
+      const req = httpMock.expectOne(
+        (r) => r.method === 'DELETE' && r.url === '/api/briefing/1/feedback',
+      );
+      expect(req.request.params.get('section')).toBe('priorities');
+      expect(req.request.params.get('item_index')).toBe('0');
+      req.flush(null, { status: 204, statusText: 'No Content' });
+      await pending;
+
+      expect(service.verdictFor(1, 'priorities', 0)).toBeNull();
+      expect(service.noteFor(1, 'priorities', 0)).toBeNull();
+    });
+
+    it('omits item_index for a whole-section verdict', async () => {
+      // Absent, not the string "null" — the API reads an absent index as the
+      // section, and `null` would coerce to a NaN item index.
+      const set = service.rate(1, 'health_status', null, 'hit');
+      httpMock.expectOne('/api/briefing/1/feedback').flush({});
+      await set;
+
+      const pending = service.clear(1, 'health_status', null);
+      const req = httpMock.expectOne((r) => r.method === 'DELETE');
+      expect(req.request.params.has('item_index')).toBe(false);
+      req.flush(null, { status: 204, statusText: 'No Content' });
+      await pending;
+    });
+
+    it('restores the verdict and its note when the DELETE fails', async () => {
+      await recordMiss();
+
+      const pending = service.clear(1, 'priorities', 0);
+      httpMock.expectOne((r) => r.method === 'DELETE').error(new ProgressEvent('network'));
+      await pending;
+
+      expect(service.verdictFor(1, 'priorities', 0)).toBe('miss');
+      expect(service.noteFor(1, 'priorities', 0)).toBe('[stale] already handled');
+    });
+
+    it('sends nothing when there is no verdict to clear', async () => {
+      // Guards against a stray press firing a DELETE for a row that was never
+      // set — httpMock.verify() in afterEach fails on any unexpected request.
+      await service.clear(1, 'priorities', 5);
+      expect(service.verdictFor(1, 'priorities', 5)).toBeNull();
+    });
+
+    it('unpaints before the DELETE settles', async () => {
+      await recordMiss();
+
+      const pending = service.clear(1, 'priorities', 0);
+      expect(service.verdictFor(1, 'priorities', 0)).toBeNull();
+
+      httpMock.expectOne((r) => r.method === 'DELETE').flush(null, { status: 204, statusText: 'No Content' });
+      await pending;
+    });
+  });
 });

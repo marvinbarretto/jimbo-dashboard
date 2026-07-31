@@ -1,5 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -112,6 +112,34 @@ export class BriefingFeedbackService {
         if (previous) next[k] = previous; else delete next[k];
         return next;
       });
+    }
+  }
+
+  // Third press of the toggle: un-say it. Optimistic like rate(), and rolls
+  // the whole entry (verdict and note) back on failure so the UI can't show a
+  // cleared verdict the server still holds.
+  async clear(briefingId: number, section: string, itemIndex: number | null): Promise<void> {
+    const k = this.key(briefingId, section, itemIndex);
+    const previous = this._entries()[k] ?? null;
+    if (!previous) return;
+
+    this._entries.update((m) => {
+      const next = { ...m };
+      delete next[k];
+      return next;
+    });
+    try {
+      // item_index omitted (not null) for a whole-section verdict — the API
+      // reads an absent index as "the section", matching the PUT.
+      const params = itemIndex === null
+        ? new HttpParams().set('section', section)
+        : new HttpParams().set('section', section).set('item_index', itemIndex);
+      await firstValueFrom(this.http.delete(
+        `${this.base}/api/briefing/${briefingId}/feedback`,
+        { params },
+      ));
+    } catch {
+      this._entries.update((m) => ({ ...m, [k]: previous }));
     }
   }
 }
