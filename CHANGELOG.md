@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.155](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.154...v0.0.155) (2026-07-31)
+
+
+### Bug Fixes
+
+* **vault:** refresh activity and header after a thread post ([506f1f2](https://github.com/marvinbarretto/jimbo-dashboard/commit/506f1f2702710f4db052e0c9d0bf366428adf8ce))
+
+
+### Code Refactoring
+
+* **styles:** single source of truth for typography ([d16b486](https://github.com/marvinbarretto/jimbo-dashboard/commit/d16b486285c5259a9b46d15608be218d3aa81eb7))
+
 ### [0.0.154](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.153...v0.0.154) (2026-07-31)
 
 
