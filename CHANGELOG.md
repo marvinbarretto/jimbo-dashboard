@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.154](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.153...v0.0.154) (2026-07-31)
+
+
+### Features
+
+* **briefing:** third press of ▲/▼ clears the verdict ([c6fce42](https://github.com/marvinbarretto/jimbo-dashboard/commit/c6fce423c2139c09d86b6368720218d5dc96e13c))
+* **fleet:** right-now and needs-attention sections on the fleet board ([b9ba149](https://github.com/marvinbarretto/jimbo-dashboard/commit/b9ba149eedeb0cc3cb1625f985df9923fb00a804))
+
+
+### Bug Fixes
+
+* **briefing:** don't let a hit inherit the miss's reason note ([9678c18](https://github.com/marvinbarretto/jimbo-dashboard/commit/9678c18fd7461e6abf13f7066275c079f2c68f48))
+* **briefing:** stop the miss dialog full-page-reloading and losing the miss ([0ba8a8a](https://github.com/marvinbarretto/jimbo-dashboard/commit/0ba8a8ab2c8329d8e8551595ee9cc7007f7f0531))
+
+
+### Code Refactoring
+
+* **vault-items:** drop parent and projects from the Links panel ([21e922c](https://github.com/marvinbarretto/jimbo-dashboard/commit/21e922c8aa26494f2808b998de57404e726ba633))
+
 ### [0.0.153](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.152...v0.0.153) (2026-07-31)
 
 
