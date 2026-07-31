@@ -119,7 +119,10 @@ export class FleetBoard {
     return {
       turns: rows.reduce((s, r) => s + r.turns, 0),
       output_tokens: rows.reduce((s, r) => s + r.output_tokens, 0),
-      estimated_cost: rows.reduce((s, r) => s + r.estimated_cost, 0),
+      // Unpriced rows (null) contribute nothing rather than NaN-ing the total.
+      // The total is already documented as a floor, and this makes it a
+      // slightly lower one — see unpricedBurnRows for the honest caveat.
+      estimated_cost: rows.reduce((s, r) => s + (r.estimated_cost ?? 0), 0),
     };
   });
 
@@ -140,9 +143,17 @@ export class FleetBoard {
     return Date.now() - Date.parse(lastEnqueuedAt) > FOLD_STALE_MS;
   }
 
-  formatCost(v: number): string {
+  // null = the model has no pricing row, so the cost is genuinely unknown.
+  // Render an em-dash rather than $0.00, which would read as "this was free".
+  formatCost(v: number | null): string {
+    if (v === null) return '—';
     return v >= 0.005 ? `$${v.toFixed(2)}` : v > 0 ? '<$0.01' : '$0.00';
   }
+
+  /** Models in the 5h window we could not price — makes the burn total's
+      incompleteness visible instead of silently understating it. */
+  readonly unpricedBurnModels = computed(() =>
+    [...new Set(this.service.burn().filter(r => r.estimated_cost === null).map(r => r.model))]);
 
   formatTokens(v: number): string {
     if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;

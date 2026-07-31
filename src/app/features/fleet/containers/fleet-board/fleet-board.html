@@ -100,6 +100,14 @@
       <app-ui-stat-card label="est. cost equiv." [value]="formatCost(burnTotals().estimated_cost)"
         detail="runs on subscription — $ shown as pressure proxy" />
     </div>
+    @if (unpricedBurnModels().length > 0) {
+      <!-- The total silently excludes these, so say so rather than let it read
+           as complete. Usually means turns were recorded under a tier alias
+           ('haiku') instead of a resolved model id. -->
+      <p class="fleet__section-hint">
+        excludes {{ unpricedBurnModels().join(', ') }} — no pricing row, cost unknown
+      </p>
+    }
     @if (burnRows().length > 0) {
       <div class="fleet__table-wrap">
         <table class="fleet__table">

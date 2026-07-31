@@ -37,7 +37,9 @@ export const ApiFleetCompletionSchema = z.object({
   input_tokens:      z.number().int(),
   output_tokens:     z.number().int(),
   cache_read_tokens: z.number().int(),
-  estimated_cost:    z.number(),
+  // Nullable for the same reason as ApiFleetBurnRowSchema.estimated_cost:
+  // an unpriced model must not be able to take the whole page down.
+  estimated_cost:    z.number().nullable(),
 });
 
 export const ApiFleetBurnRowSchema = z.object({
@@ -46,7 +48,13 @@ export const ApiFleetBurnRowSchema = z.object({
   turns:          z.number().int(),
   input_tokens:   z.number().int(),
   output_tokens:  z.number().int(),
-  estimated_cost: z.number(),
+  // Nullable: the API returns null when the model has no pricing row, which
+  // happens whenever a turn is recorded under a tier alias ('haiku'/'sonnet')
+  // rather than a resolved model id ('claude-haiku-4-5-20251001'). Declaring
+  // this non-nullable took the WHOLE fleet page down with "Fleet stats
+  // malformed" the moment one unpriced turn entered the 5h window — a cost
+  // we cannot price should blank one cell, not the page.
+  estimated_cost: z.number().nullable(),
 });
 
 export const ApiFleetFoldSchema = z.object({
