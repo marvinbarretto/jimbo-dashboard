@@ -72,7 +72,7 @@ export function projectActorTrigger(
           id: `actor:${a.id}`,
           label: a.display_name,
           group: 'Actors',
-          color: `var(--actor-color-${a.id})`,
+          color: `var(--actor-color-${a.id}, var(--actor-color-default))`,
           payload: { kind: 'actor' as const, actor: a },
         }));
       const projectItems: MentionItem[] = projects()

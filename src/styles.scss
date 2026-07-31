@@ -85,7 +85,15 @@ router-outlet + * {
   --actor-color-marvin: #e08850;   // warm orange (human)
   --actor-color-kipper:  #5fb3a1;   // teal (local agent)
   --actor-color-boris:  #6b95d6;   // mid blue (hosted agent)
+  --actor-color-jeffrey: #7fc4e8;  // pale blue (groomer — boris's sibling on the
+                                   // same M2, so a lighter shade of the same hue
+                                   // rather than a new colour family)
   --actor-color-jimbo:  #a878d6;   // purple (orchestrator)
+  // Fallback for any actor added after this list. Consumers that build the
+  // variable name dynamically — var(--actor-color-#{id}) — otherwise resolve to
+  // nothing and the property is dropped silently, which is how jeffrey shipped
+  // with no colour at all. Always pass this as the second arg.
+  --actor-color-default: #8b93a7;  // neutral grey
 
 }
 

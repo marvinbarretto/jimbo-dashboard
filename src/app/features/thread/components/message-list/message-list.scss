@@ -68,10 +68,13 @@ $human:         #f08a4b;
     &--human { color: $human; }
 
     // Per-actor identity colours — override the generic kind tints.
-    &--marvin { color: var(--actor-color-marvin); }
-    &--kipper { color: var(--actor-color-kipper);  }
-    &--boris  { color: var(--actor-color-boris);  }
-    &--jimbo  { color: var(--actor-color-jimbo);  }
+    // Per-actor author colours. New actors need a line here AND a token in
+    // styles.scss — jeffrey was added 2026-07-31 after shipping with neither.
+    &--marvin  { color: var(--actor-color-marvin,  var(--actor-color-default)); }
+    &--kipper  { color: var(--actor-color-kipper,  var(--actor-color-default)); }
+    &--boris   { color: var(--actor-color-boris,   var(--actor-color-default)); }
+    &--jeffrey { color: var(--actor-color-jeffrey, var(--actor-color-default)); }
+    &--jimbo   { color: var(--actor-color-jimbo,   var(--actor-color-default)); }
   }
 
   &__kind-tag {
