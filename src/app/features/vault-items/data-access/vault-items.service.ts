@@ -3,7 +3,7 @@
 // for offline UI work.
 
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import type { VaultItem, CreateVaultItemPayload, UpdateVaultItemPayload, GroomingStatus, VaultItemType, VaultItemCategory, Priority, Actionability } from '@domain/vault/vault-item';
 import { isActive } from '@domain/vault/vault-item';
 import type { Source, ManualSource, GitHubSource } from '@domain/vault/source';
@@ -89,6 +89,37 @@ export class VaultItemsService {
         this.toast.error('Failed to load vault items — network or server error');
         this._loading.set(false);
       },
+    });
+  }
+
+  /**
+   * Re-pull one item in the board shape and swap it into `_items`.
+   *
+   * `_items` is loaded once in the constructor, so anything the server changes
+   * as a side-effect of a *different* call — a thread answer reassigning the
+   * item, a grooming transition — stays invisible until a full page reload.
+   * This is the targeted top-up for that: same enriched shape as the bulk
+   * load, one row.
+   *
+   * Silent on failure. It's a freshness top-up rather than a user action, and
+   * a stale row beats a toast the operator can't do anything about.
+   */
+  refreshOne(id: VaultItemId): void {
+    if (isSeedMode()) return;
+    const params = new HttpParams().set('id', id).set('limit', 1);
+    this.http.get<unknown>(`${environment.dashboardApiUrl}/api/vault/board`, { params }).subscribe({
+      next: (raw) => {
+        const result = ApiVaultItemsResponseSchema.safeParse(raw);
+        if (!result.success) {
+          console.error('[vault-items] refreshOne response failed schema:', result.error.issues);
+          return;
+        }
+        const fresh = result.data.items[0];
+        if (!fresh) return;
+        const item = toVaultItem(fresh);
+        this._items.update(items => items.map(i => i.id === item.id ? item : i));
+      },
+      error: () => { /* freshness top-up — keep the stale row */ },
     });
   }
 

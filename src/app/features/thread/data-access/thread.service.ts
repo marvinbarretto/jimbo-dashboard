@@ -20,6 +20,26 @@ export class ThreadService {
 
   private readonly _messagesByItem = signal<Record<string, ThreadMessage[]>>({});
 
+  // Bumped once the server has accepted a post. Posting has server-side
+  // side-effects beyond the thread — a note_activity row, and possibly a
+  // reassignment when an answer clears the last open question — so the
+  // Activity panel and the item header both go stale on every post. Consumers
+  // watch this to know when to re-pull. A counter rather than a flag so two
+  // posts in a row each trigger.
+  private readonly _postedByItem = signal<Record<string, number>>({});
+
+  /**
+   * How many posts for `vaultItemId` the server has accepted this session.
+   * Reads the backing signal, so calling it inside an `effect` subscribes to it.
+   */
+  postedCount(vaultItemId: VaultItemId): number {
+    return this._postedByItem()[vaultItemId] ?? 0;
+  }
+
+  private bumpPosted(id: VaultItemId): void {
+    this._postedByItem.update(map => ({ ...map, [id]: (map[id] ?? 0) + 1 }));
+  }
+
   messagesFor(vaultItemId: VaultItemId) {
     return computed(() => this._messagesByItem()[vaultItemId] ?? []);
   }
@@ -69,6 +89,7 @@ export class ThreadService {
           ...map,
           [id]: (map[id] ?? []).map(m => m.id === payload.id ? created : m),
         }));
+        this.bumpPosted(id);
       },
       error: () => {
         this._messagesByItem.update(map => ({
@@ -95,10 +116,15 @@ export class ThreadService {
     const patch: MarkAnsweredPayload = { answered_by: answerId };
     this.http.patch<ThreadMessage>(`${this.url}/${encodeURIComponent(questionId)}`, patch)
       .subscribe({
-        next: updated => this._messagesByItem.update(map => ({
-          ...map,
-          [vaultItemId]: map[vaultItemId].map(m => m.id === questionId ? updated : m),
-        })),
+        next: updated => {
+          this._messagesByItem.update(map => ({
+            ...map,
+            [vaultItemId]: map[vaultItemId].map(m => m.id === questionId ? updated : m),
+          }));
+          // Same server-side side-effects as a posted answer — resolving the
+          // last open question can reassign the item.
+          this.bumpPosted(vaultItemId as VaultItemId);
+        },
         error: () => this.toast.error('Failed to mark question answered'),
       });
   }

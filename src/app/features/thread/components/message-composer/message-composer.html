@@ -109,6 +109,9 @@
           + {{ stagedFiles().length }} attachment{{ stagedFiles().length === 1 ? '' : 's' }}
         }
         + 1 activity event (<code>thread_message_posted</code>)
+        @if (form.controls.kind.value === 'answer') {
+          · resolves the question, and hands the item back to whoever asked once nothing else is open
+        }
       </span>
     </div>
 

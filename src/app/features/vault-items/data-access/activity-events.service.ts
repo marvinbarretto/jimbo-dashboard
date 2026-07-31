@@ -12,8 +12,9 @@ import type { VaultActivityEvent } from '@domain/activity/activity-event';
 import { isVaultEvent } from '@domain/activity/activity-event';
 import type { ActivityEvent } from '@domain/activity/activity-event';
 import type { GroomingStatus } from '@domain/vault/vault-item';
+import type { ThreadMessageKind } from '@domain/thread/thread-message';
 import type { VaultItemId } from '@domain/ids';
-import { activityId, actorId, vaultItemId, skillId, dispatchId } from '@domain/ids';
+import { activityId, actorId, vaultItemId, skillId, dispatchId, threadMessageId } from '@domain/ids';
 import { environment } from '../../../../environments/environment';
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
@@ -132,12 +133,32 @@ function toVaultEvent(row: ApiNoteActivity): VaultActivityEvent | null {
       if (!to) return null; // grooming_status changes always have a to-value
       return { ...base, type: 'grooming_status_changed', from: from as GroomingStatus, to, note: row.reason };
     }
-    // thread_message_posted requires message_id + message_kind which the
-    // audit row doesn't store directly. Skip until the table grows fields
-    // or we read from thread_messages instead.
+    case 'thread_message_posted': {
+      // message_id + message_kind ride in `context` — the API writes them on
+      // every thread post specifically so the timeline can reconstruct this
+      // without a second read of thread_messages. Older rows predate that.
+      const ctx = parseContext(row.context);
+      const mid = ctx['message_id'];
+      const kind = ctx['message_kind'];
+      if (typeof mid !== 'string' || !isThreadMessageKind(kind)) return null;
+      return {
+        ...base, type: 'thread_message_posted',
+        message_id: threadMessageId(mid),
+        message_kind: kind,
+      };
+    }
+    // question_answered is deliberately unmapped: the answer that resolved the
+    // question already emits its own thread_message_posted, so surfacing both
+    // would double every answer in the timeline.
     default:
       return null;
   }
+}
+
+const THREAD_MESSAGE_KINDS: readonly ThreadMessageKind[] = ['comment', 'question', 'answer', 'rejection'];
+
+function isThreadMessageKind(v: unknown): v is ThreadMessageKind {
+  return typeof v === 'string' && (THREAD_MESSAGE_KINDS as readonly string[]).includes(v);
 }
 
 // Base shape shared by every mapped event — derived from the id constructors so

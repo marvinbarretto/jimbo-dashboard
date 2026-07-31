@@ -111,6 +111,7 @@ function buildStore(opts: {
     reassign: vi.fn(),
     rejectItem: vi.fn(),
     remove: vi.fn(),
+    refreshOne: vi.fn(),
     createWithRelations: (draft: unknown) => {
       createCalls.push(draft);
       const r = opts.createResponse;
@@ -144,11 +145,15 @@ function buildStore(opts: {
     activeProjects: signal<Project[]>([fakeProject('hermes')]).asReadonly(),
     getById: (id: string) => (id === 'hermes' ? fakeProject('hermes') : undefined),
   };
+  // Drives the store's post-refresh effect. Bumping it stands in for the
+  // server accepting a thread post.
+  const postedSig = signal(0);
   const mockThread = {
     messagesFor: () => messagesSig.asReadonly(),
     openQuestionsFor: () => signal([]).asReadonly(),
     loadFor: vi.fn(),
     post: vi.fn(),
+    postedCount: () => postedSig(),
   };
   const toasts: { kind: string; msg: string }[] = [];
   const mockToast = {
@@ -175,7 +180,10 @@ function buildStore(opts: {
   });
 
   const store = TestBed.inject(VaultItemDialogStore);
-  return { store, itemsSig, messagesSig, eventsSig, updates, projectAdds, archivedIds, createCalls, toasts };
+  return {
+    store, itemsSig, messagesSig, eventsSig, updates, projectAdds, archivedIds, createCalls, toasts,
+    postedSig, mockActivity, mockItems,
+  };
 }
 
 describe('VaultItemDialogStore', () => {
@@ -358,6 +366,68 @@ describe('VaultItemDialogStore', () => {
       messagesSig.set([{}]);
       TestBed.tick();
       expect(store.sectionBody()).toBe(true);
+    });
+  });
+
+  describe('refresh after a thread post', () => {
+    // A posted message has server-side consequences the client can't predict —
+    // a note_activity row, and a reassignment when an answer clears the last
+    // open question. Without these re-pulls the Activity panel and the header
+    // ("assigned @…", "last activity …") sit frozen until a page reload.
+    it('re-pulls activity and the item when a post lands', () => {
+      const item = fakeItem({ seq: 42 });
+      const { store, postedSig, mockActivity, mockItems } = buildStore({ initialItems: [item] });
+      store.setMode({ kind: 'item', seq: 42, stage: 'fresh' });
+      TestBed.tick();
+      mockActivity.loadFor.mockClear();
+
+      postedSig.set(1);
+      TestBed.tick();
+
+      expect(mockActivity.loadFor).toHaveBeenCalledWith(item.id);
+      expect(mockItems.refreshOne).toHaveBeenCalledWith(item.id);
+    });
+
+    it('does not refresh on open, before anything is posted', () => {
+      const item = fakeItem({ seq: 42 });
+      const { store, mockItems } = buildStore({ initialItems: [item] });
+      store.setMode({ kind: 'item', seq: 42, stage: 'fresh' });
+      TestBed.tick();
+
+      expect(mockItems.refreshOne).not.toHaveBeenCalled();
+    });
+
+    // refreshOne swaps a new object into the items list, which changes item(),
+    // which re-runs this very effect. The handled-count guard is what stops
+    // that being an infinite refresh loop.
+    it('does not re-refresh when the item identity changes without a new post', () => {
+      const item = fakeItem({ seq: 42 });
+      const { store, postedSig, itemsSig, mockItems } = buildStore({ initialItems: [item] });
+      store.setMode({ kind: 'item', seq: 42, stage: 'fresh' });
+      TestBed.tick();
+
+      postedSig.set(1);
+      TestBed.tick();
+      expect(mockItems.refreshOne).toHaveBeenCalledTimes(1);
+
+      // Stand in for refreshOne's write-back: same item, fresh identity.
+      itemsSig.set([{ ...item }]);
+      TestBed.tick();
+      expect(mockItems.refreshOne).toHaveBeenCalledTimes(1);
+    });
+
+    it('refreshes again on a second post', () => {
+      const item = fakeItem({ seq: 42 });
+      const { store, postedSig, mockItems } = buildStore({ initialItems: [item] });
+      store.setMode({ kind: 'item', seq: 42, stage: 'fresh' });
+      TestBed.tick();
+
+      postedSig.set(1);
+      TestBed.tick();
+      postedSig.set(2);
+      TestBed.tick();
+
+      expect(mockItems.refreshOne).toHaveBeenCalledTimes(2);
     });
   });
 

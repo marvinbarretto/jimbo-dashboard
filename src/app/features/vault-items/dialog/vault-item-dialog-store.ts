@@ -80,6 +80,11 @@ export class VaultItemDialogStore {
   private readonly actorsService = inject(ActorsService);
   private readonly projectsService = inject(ProjectsService);
   private readonly threadService = inject(ThreadService);
+
+  // Post count this store has already reacted to — see the refresh effect in
+  // the constructor. The store is component-scoped (one per open dialog), so
+  // this never has to be keyed by item.
+  private _handledPostCount = 0;
   private readonly threadCommands = inject(ThreadCommands);
   private readonly toast = inject(ToastService);
 
@@ -624,6 +629,28 @@ export class VaultItemDialogStore {
       this.projectsJunction.loadFor(i.id);
       this.depsService.loadFor(i.id);
       this.threadService.loadFor(i.id);
+    });
+
+    // Posting to the thread has server-side consequences the client can't
+    // predict: the API writes a note_activity row for every message, and an
+    // answer that clears the last open question hands the item back to whoever
+    // asked. Neither shows up in `_items` or the activity cache on its own, so
+    // the Activity panel and the header ("assigned @…", "last activity …")
+    // would sit frozen until a reload. Re-pull both when a post lands.
+    //
+    // `_handledPostCount` is load-bearing, not bookkeeping: `refreshOne` swaps
+    // a new object into `_items`, which changes `item()`, which re-runs this
+    // effect. Without the guard that's an infinite refresh loop. Acting only
+    // on a genuine increase makes the re-entry a no-op.
+    effect(() => {
+      const i = this.item();
+      if (!i) return;
+      const posted = this.threadService.postedCount(i.id);
+      if (posted === this._handledPostCount) return;
+      this._handledPostCount = posted;
+      if (posted === 0) return;
+      this.activityService.loadFor(i.id);
+      this.vaultItemsService.refreshOne(i.id);
     });
 
     // Fresh-stage collapse — when an Item resolves with zero thread + activity,
