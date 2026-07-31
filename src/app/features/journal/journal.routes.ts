@@ -21,15 +21,10 @@ export const journalRoutes: Routes = [
     children: [
       {
         path: 'overview',
-        children: [
-          {
-            path: 'day/:date',
-            title: 'Journal — Overview',
-            loadComponent: () =>
-              import('./containers/overview-page/overview-page').then(m => m.JournalOverviewPage),
-          },
-          { path: '', pathMatch: 'full', redirectTo: () => `day/${todayKey()}` },
-        ],
+        children: granularityChildren(
+          () => import('./containers/overview-page/overview-page').then(m => m.JournalOverviewPage),
+          'Journal — Overview',
+        ),
       },
       {
         path: 'work',

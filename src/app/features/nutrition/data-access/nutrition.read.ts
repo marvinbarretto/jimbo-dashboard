@@ -28,7 +28,9 @@ import {
 export interface NutritionRead {
   list(opts?: { date?: string; days?: number; limit?: number }): Observable<{ items: FoodLogEntry[] }>;
   daily(opts?: { days?: number; from?: string; to?: string }): Observable<{ days: FoodDailyRow[] }>;
-  supplementLog(opts?: { date?: string; days?: number; limit?: number }): Observable<{ items: SupplementLogEntry[] }>;
+  supplementLog(
+    opts?: { date?: string; from?: string; to?: string; days?: number; limit?: number },
+  ): Observable<{ items: SupplementLogEntry[] }>;
 }
 
 /**

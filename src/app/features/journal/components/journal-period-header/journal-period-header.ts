@@ -64,7 +64,7 @@ export class JournalPeriodHeader {
   readonly domain = input.required<string>();
   readonly granularity = input.required<JournalGranularity>();
   readonly key = input.required<string>();
-  /** Granularities this domain supports (Overview is day-only). */
+  /** Granularities this domain supports; all three unless a domain narrows it. */
   readonly granularities = input<readonly JournalGranularity[]>(['day', 'week', 'month']);
 
   protected readonly grainOptions = computed<UiSegmentedOption[]>(() =>

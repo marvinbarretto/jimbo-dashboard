@@ -14,8 +14,9 @@ const DOMAINS = [
   { key: 'phone', label: 'Phone' },
 ] as const;
 
-// Overview is day-only; every other domain supports all three granularities.
-const DAY_ONLY_DOMAINS: ReadonlySet<string> = new Set(['overview']);
+// Every domain supports all three granularities. Kept as a set so a future
+// day-only domain is one entry, not a re-plumb.
+const DAY_ONLY_DOMAINS: ReadonlySet<string> = new Set<string>();
 
 const GRANULARITIES: ReadonlySet<string> = new Set(['day', 'week', 'month']);
 

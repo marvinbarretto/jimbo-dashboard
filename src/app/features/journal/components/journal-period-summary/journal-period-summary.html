@@ -1,0 +1,156 @@
+<section class="period-summary">
+  <div class="period-summary__routine">
+    <header class="period-summary__head">
+      <span class="period-summary__label">Routine — days hit</span>
+      <span class="period-summary__progress">{{ elapsedCount() }} of {{ days().length }} days</span>
+    </header>
+    <app-ui-checklist [items]="routineItems()" />
+  </div>
+
+  <div class="period-summary__stats">
+    <app-ui-stat-card label="Desk time" [value]="formatMinutes(deskMinutes())" [detail]="pomos() + ' pomos'" />
+    <app-ui-stat-card label="Commits" [value]="commits().toString()" />
+    <app-ui-stat-card label="Projects" [value]="projectCount().toString()" detail="worked" />
+    <app-ui-stat-card label="Active days" [value]="activeDays().toString()" [detail]="'of ' + days().length" />
+    <app-ui-stat-card label="Jimbo" [value]="jimboCostLabel()" [detail]="jimboDetail()" />
+    <app-ui-stat-card label="YouTube" [value]="formatMinutes(youtubeMinutes())" [detail]="youtubeDetail()" />
+  </div>
+
+  <div class="period-summary__fuel">
+    <header class="period-summary__head">
+      <span class="period-summary__label">Fuel &amp; training</span>
+    </header>
+
+    <div class="period-summary__fuel-grid">
+      <div class="period-summary__fuel-block">
+        <app-ui-progress-meter
+          label="Protein"
+          [current]="proteinG()"
+          [target]="proteinTarget()"
+          unit="g"
+          [pace]="proteinPace()"
+          [compareLabel]="compareLabel()"
+          [compareValue]="proteinPreviousG()"
+        />
+      </div>
+
+      <div class="period-summary__fuel-block">
+        @if (hasTraining()) {
+          <div class="period-summary__training">
+            <span class="period-summary__training-stat"><b>{{ gymTotals().sessions }}</b> sessions</span>
+            <span class="period-summary__training-stat"><b>{{ gymTotals().sets }}</b> sets</span>
+            <span class="period-summary__training-stat"><b>{{ gymTotals().volumeKg }}</b> kg</span>
+            <span class="period-summary__training-stat"><b>{{ formatMinutes(gymTotals().cardioMin) }}</b> cardio</span>
+          </div>
+        } @else {
+          <p class="period-summary__fuel-quiet">No training logged this period</p>
+        }
+        <p class="period-summary__fuel-week">
+          Trained on {{ gymTotals().trainedDays }} of {{ elapsedCount() }} days
+        </p>
+      </div>
+
+      <div class="period-summary__chart">
+        <span class="period-summary__chart-label">Macros</span>
+        @if (macros().kcal > 0) {
+          <app-ui-donut-chart [labels]="macroLabels" [values]="macroValues()" suffix=" g" [height]="160" />
+        } @else {
+          <p class="period-summary__chart-empty">Nothing logged</p>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- The one thing a day view can't answer: is this going up or down. -->
+  <div class="period-summary__trends">
+    <header class="period-summary__head">
+      <span class="period-summary__label">Trends</span>
+    </header>
+
+    <div class="period-summary__trend-grid">
+      <div class="period-summary__chart">
+        <span class="period-summary__chart-label">Desk time per day</span>
+        @if (deskMinutes() > 0) {
+          <app-ui-bar-chart
+            [labels]="dayLabels()"
+            [values]="deskPerDay()"
+            label="Minutes"
+            suffix=" min"
+            accent="rgba(251, 146, 60, 0.7)"
+            [showTrend]="true"
+          />
+        } @else {
+          <p class="period-summary__chart-empty">No desk evidence this period</p>
+        }
+      </div>
+
+      <div class="period-summary__chart">
+        <span class="period-summary__chart-label">Protein per day</span>
+        @if (hasProtein()) {
+          <app-ui-bar-chart
+            [labels]="dayLabels()"
+            [values]="proteinPerDay()"
+            label="Protein"
+            suffix=" g"
+            accent="rgba(52, 211, 153, 0.7)"
+            [showTrend]="true"
+          />
+        } @else {
+          <p class="period-summary__chart-empty">Nothing logged</p>
+        }
+      </div>
+
+      <div class="period-summary__chart">
+        <span class="period-summary__chart-label">Training volume per day</span>
+        @if (hasVolume()) {
+          <app-ui-bar-chart
+            [labels]="dayLabels()"
+            [values]="volumePerDay()"
+            label="Volume"
+            suffix=" kg"
+            accent="rgba(99, 179, 237, 0.7)"
+          />
+        } @else {
+          <p class="period-summary__chart-empty">No lifting logged</p>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Drill-in: every cell links to that day's overview. -->
+  <div class="period-summary__breakdown">
+    <header class="period-summary__head">
+      <span class="period-summary__label">
+        {{ granularity() === 'week' ? 'Day breakdown' : 'Calendar — darker = more desk time' }}
+      </span>
+    </header>
+
+    @if (granularity() === 'week') {
+      <ul class="journal-week__days">
+        @for (d of dayCells(); track d.key) {
+          <li class="journal-week__day">
+            <a class="journal-week__day-link" [routerLink]="['/journal/overview/day', d.key]">
+              <span class="journal-week__day-label">{{ d.label }}{{ d.trained ? ' ·' : '' }}</span>
+              <span class="journal-week__day-date">{{ d.key }}</span>
+              <span class="journal-week__day-meta">{{ formatMinutes(d.minutes) }} · {{ d.protein }}g protein</span>
+            </a>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="journal-month__heatmap">
+        @for (cell of dayCells(); track cell.key) {
+          <a class="journal-month__cell"
+             [routerLink]="['/journal/overview/day', cell.key]"
+             [style.--cell-intensity]="cell.intensity"
+             [attr.title]="cell.key + ' — ' + formatMinutes(cell.minutes) + ', ' + cell.protein + 'g protein'">
+            <span class="journal-month__cell-day">{{ cell.day }}</span>
+            @if (cell.minutes > 0) {
+              <span class="journal-month__cell-meta">{{ cell.minutes }}m</span>
+            }
+          </a>
+        }
+      </div>
+    }
+  </div>
+</section>
