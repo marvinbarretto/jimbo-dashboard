@@ -1,0 +1,85 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>v2 — Afternoon diff</title>
+<style>
+  :root {
+    --bg: #0b0e14; --panel: #11151d; --panel2: #0e1219; --line: #1f2430;
+    --ink: #c9d1d9; --muted: #5c6470; --faint: #3a4150;
+    --amber: #e3b341; --cyan: #4dd0e5; --green: #4ec97a; --red: #e5534b; --violet: #a78bfa;
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
+    --serif: Charter, Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--mono); font-size: 13px; line-height: 1.5; padding: 2.5rem 1rem 5rem; }
+  .frame { max-width: 680px; margin: 0 auto; }
+  a { color: var(--cyan); text-decoration: none; }
+  .masthead { display: flex; align-items: baseline; gap: 0.75rem; }
+  .masthead h1 { font-size: 20px; font-weight: 700; }
+  .masthead .meta { color: var(--muted); font-size: 12px; }
+
+  .sentence { font-family: var(--serif); font-style: italic; font-size: 18px; color: #e8edf3; margin: 1rem 0 1.4rem; }
+
+  .kicker { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 1.4rem 0 0.5rem; }
+
+  .delta { border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+  .drow { display: flex; gap: 0.7rem; align-items: baseline; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--line); }
+  .drow:last-child { border-bottom: none; }
+  .sig { width: 1.1em; text-align: center; font-weight: 700; }
+  .sig.plus { color: var(--green); } .sig.minus { color: var(--red); } .sig.chg { color: var(--amber); }
+  .drow .go { margin-left: auto; }
+
+  details.same { margin-top: 0.75rem; border: 1px dashed var(--line); border-radius: 6px; }
+  details.same > summary { list-style: none; cursor: pointer; color: var(--faint); font-size: 12px; padding: 0.5rem 0.8rem; }
+  details.same > summary::-webkit-details-marker { display: none; }
+  details.same .srow { padding: 0.35rem 0.8rem; color: var(--muted); font-size: 12px; border-top: 1px dashed var(--line); }
+  details.same .srow b { color: var(--ink); font-weight: 400; }
+
+  .ticker { margin-top: 1.4rem; color: var(--faint); font-size: 11px; line-height: 1.8; }
+  .ticker b { color: var(--muted); font-weight: 400; }
+
+  .ack { margin-top: 1.4rem; border: 1px solid var(--line); border-left: 3px solid var(--green); border-radius: 6px; background: var(--panel); padding: 0.6rem 0.8rem; font-size: 12px; color: var(--muted); }
+  .ack b { color: var(--green); font-weight: 400; }
+
+  .note { max-width: 680px; margin: 1.5rem auto 0; border: 1px dashed #4a4530; background: #16140c; color: #b3a86b; border-radius: 6px; padding: 0.7rem 0.9rem; font-size: 12px; }
+</style>
+
+<div class="frame">
+  <div class="masthead">
+    <h1>◀️ Afternoon</h1>
+    <span class="meta">Sun 2 Aug · 14:14 · vs 06:15</span>
+  </div>
+
+  <p class="sentence">Quiet day so far — two of your own captures are the only news.</p>
+
+  <div class="kicker">Changed · 3</div>
+  <div class="delta">
+    <div class="drow"><span class="sig plus">+</span><span>2 captures from you (05:00), still unrouted — <b>week plan</b> + <b>DateinaDash</b></span><a class="go" href="#">route →</a></div>
+    <div class="drow"><span class="sig minus">−</span><span>LocalShout session reaped — started 18:48, died 00:30, no session since</span><a class="go" href="#">view →</a></div>
+    <div class="drow"><span class="sig chg">Δ</span><span>Fringe: 13 days out — the dorm price is the only thing on the desk moving on its own</span><a class="go" href="#">ledger →</a></div>
+  </div>
+
+  <details class="same">
+    <summary>= unchanged · 4 · mirror, fleet, health, questions ▸</summary>
+    <div class="srow">mirror — <b>38 / 62</b> LocalShout/Jimbo, identical to morning (no Claude time today; on a Sunday that's rest, not drift)</div>
+    <div class="srow">fleet — Boris 11 · Jeffrey 144 · Kipper 0, same as the 06:15 report</div>
+    <div class="srow">health — <b>686 steps @ 15:13</b> ≈ yesterday's shape at this hour (finished 13,656)</div>
+    <div class="srow">questions — 2 carried, not re-asked; same cards still take your answer</div>
+  </details>
+
+  <div class="ack">
+    <b>✓ heard this morning:</b> you snoozed the NZ passport to next week — it's off the board until Mon 10.
+    Nothing else needs you today.
+  </div>
+
+  <div class="ticker">
+    still open · <b>Fringe 24d</b> ⌛ · RLS 12d · cron 17d · scan-verdict 17d — <a href="#">ledger →</a>
+  </div>
+</div>
+
+<div class="note">
+  <b>The afternoon rule:</b> diff against the morning, or say almost nothing. This entire edition is ~60 visible
+  words; a louder day earns more rows, never more prose. The green <b>✓ heard</b> strip is the acknowledgement
+  loop — every ledger action you take reflects back within one edition, flat, no commentary. Unchanged facts
+  fold into one collapsed line instead of being re-narrated (#206 spent ~120 words re-explaining the unmoved
+  mirror; here it costs five).
+</div>

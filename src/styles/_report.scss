@@ -291,3 +291,52 @@
 .report-tag--inline {
   margin-left: 0;
 }
+
+// ── v3 butler sections (briefing) ───────────────────────────────────
+// Collapsed "why I'm asking" under an open question. Native details so the
+// closed state costs one line; mono because evidence is instrument, not voice.
+.report-evidence {
+  margin: -0.25rem 0 0.75rem;
+
+  > summary {
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+
+    &::-webkit-details-marker { display: none; }
+    &::before { content: '▸ '; }
+  }
+
+  &[open] > summary::before { content: '▾ '; }
+}
+
+.report-evidence__row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.25rem 0;
+  border-top: 1px dashed var(--color-border-subtle, rgba(128, 128, 128, 0.25));
+  font-size: 0.8rem;
+  color: var(--color-text-soft);
+}
+
+.report-evidence__source {
+  flex: none;
+  min-width: 4.5em;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+// Still-open ledger row: title · silent day count. Motive-free by contract.
+.report-ledger__days {
+  margin-left: auto;
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}

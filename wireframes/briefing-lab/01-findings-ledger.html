@@ -1,0 +1,83 @@
+<link rel="stylesheet" href="wire-kit.css">
+<title>01 — Findings Ledger</title>
+
+<div class="w-frame">
+  <div class="w-intent">GOAL:     The briefing leads with findings — numbered, persistent claims that survive until resolved or refuted. Everything else is appendix.
+PERSONA:  Marvin, who said the "surprise" insights were the part he wanted MORE of, and that everything else is a bit wordy.
+PRIMARY:  Judge each finding: confirm / refute / act. A finding you refute teaches the pipeline; one you confirm compounds.
+SUCCESS:  Two minutes in, he knows something about his own situation he didn't know before coffee.</div>
+
+  <div class="w-bar">
+    <span class="w-h1">☀️ Morning briefing</span>
+    <span class="w-muted">Mon 3 Aug · 06:15 · opus · 3 findings, 1 carried over</span>
+  </div>
+
+  <div style="padding:1rem; max-width:56rem;">
+
+    <div class="w-block" style="border-width:2px;">
+      <div class="w-list-item" style="border:none;">
+        <span class="w-chip">F-041</span>
+        <span class="w-chip">NEW</span>
+        <span class="w-chip">contradiction</span>
+        <span class="w-muted" style="margin-left:auto;">confidence: high</span>
+      </div>
+      <div class="w-h2" style="margin:0.4rem 0;">Your two runway figures are a year apart, and every money decision quietly picks one.</div>
+      <div class="w-body">The standing priorities file says <b>"runway ~2 years, finances not urgent"</b> (written 28 Apr). Your answered clarification on 31 Jul says <b>"runway is ~1 year"</b>. Positioning &amp; income has logged <b>0h for three straight weeks</b> — which is a fine call on a 2-year runway and a bad one on a 1-year runway. The zero isn't the finding; the unresolved fork is.</div>
+      <div class="w-list-item" style="margin-top:0.4rem;">
+        <span class="w-muted">evidence:</span>
+        <span><a href="#">context item #11</a> · <a href="#">clar_abcc92d5</a> · <a href="#">buckets: positioning 0h × 3wk</a></span>
+      </div>
+      <div style="margin-top:0.4rem;">
+        <span class="w-btn-ghost">Confirmed — real</span>
+        <span class="w-btn-ghost">Refute — you've missed something</span>
+        <span class="w-btn-primary">Act: fix the priorities file →</span>
+        <span class="w-muted" style="margin-left:0.5rem;">▸ show working</span>
+      </div>
+    </div>
+
+    <div class="w-block" style="border-width:2px;">
+      <div class="w-list-item" style="border:none;">
+        <span class="w-chip">F-042</span>
+        <span class="w-chip">NEW</span>
+        <span class="w-chip">pattern</span>
+        <span class="w-muted" style="margin-left:auto;">confidence: medium</span>
+      </div>
+      <div class="w-h2" style="margin:0.4rem 0;">seq 3177 has led three briefings and never caught. The task isn't the problem — the slot is.</div>
+      <div class="w-body">Every appearance offered it as an evening block; your last 14 days show <b>zero evening code sessions that started after 19:00 and shipped</b>. The one session that ran late (1 Aug, 18:48→00:30) was reaped as abandoned. Either 3177 moves to a morning slot or it stops being suggested — repeating it a fourth time is me ignoring my own data.</div>
+      <div class="w-list-item" style="margin-top:0.4rem;">
+        <span class="w-muted">evidence:</span>
+        <span><a href="#">briefings 203–205</a> · <a href="#">code-sessions 14d</a> · <a href="#">vault 3177</a></span>
+      </div>
+      <div style="margin-top:0.4rem;">
+        <span class="w-btn-ghost">Confirmed</span>
+        <span class="w-btn-ghost">Refute</span>
+        <span class="w-btn-primary">Act: pencil 3177 at 10:00 →</span>
+      </div>
+    </div>
+
+    <div class="w-block" style="border-width:2px; background:#fafafa;">
+      <div class="w-list-item" style="border:none;">
+        <span class="w-chip">F-038</span>
+        <span class="w-chip">CARRIED · day 3</span>
+        <span class="w-chip">drift</span>
+        <span class="w-muted" style="margin-left:auto;">confidence: high · you confirmed 31 Jul</span>
+      </div>
+      <div class="w-h2" style="margin:0.4rem 0;">The post-World-Cup slot is being absorbed by the work — the exact outcome you pre-committed against.</div>
+      <div class="w-body">Confirmed by you two days ago; still true: the coming week holds nothing but daily triage. The DateinaDash capture (2 Aug, 05:00, unprompted) is the wanting showing up on its own. <b>Carried until: one weekday evening this week holds a committed non-work thing.</b></div>
+      <div class="w-list-item" style="margin-top:0.4rem;">
+        <span class="w-muted">resolves when:</span>
+        <span>calendar gains a non-work commitment Mon–Fri · <a href="#">watching: calendar, vault 3817</a></span>
+      </div>
+    </div>
+
+    <div class="w-placeholder">Appendix (collapsed): schedule · buckets mirror · health line · suggested blocks — all one click, none of it prose</div>
+
+    <div class="w-notes">MECHANISM
+— A finding is a first-class row (like a clarification), not a paragraph: id, claim, evidence refs[], confidence,
+  status: new/carried/confirmed/refuted/resolved, resolves_when. POST /api/findings; the briefing READS the ledger
+  and adds at most 1-2 new ones per day. Refuted findings feed the generator like [wrong-facts] tags do now.
+— This is the "assertion-scan" experiment (ix_5e241187, verdict: inconclusive) given a front door instead of Discord.
+— Carried findings kill sameyness honestly: repetition becomes explicit ("day 3") instead of re-worded.</div>
+  </div>
+</div>
+<script src="wire-nav.js"></script>

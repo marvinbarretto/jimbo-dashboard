@@ -1,0 +1,72 @@
+<link rel="stylesheet" href="wire-kit.css">
+<title>10 — Editor's Verdict</title>
+
+<div class="w-frame">
+  <div class="w-intent">GOAL:     The briefing grades itself and shows its plumbing. Yesterday's calls vs outcomes, calibration over time, what your feedback changed, and a provenance footer for every hop — trust through glass, not through tone.
+PERSONA:  Marvin: "I've built mechanisms hoping the learning compounds… I want to monitor how everything is hooked up."
+PRIMARY:  Skim the scorecard. When something reads wrong, the provenance footer says exactly which fetch or inference to blame.
+SUCCESS:  "Is the briefing getting better?" becomes a chart he can open, not a feeling. Bad runs become diagnosable in one click.</div>
+
+  <div class="w-bar">
+    <span class="w-h1">Yesterday's edition — the editor reviews itself</span>
+    <span class="w-muted">appears as the last section of every briefing, collapsed</span>
+  </div>
+
+  <div style="padding:1rem; max-width:56rem;">
+
+    <div class="w-block" style="border-width:2px;">
+      <div class="w-h3">SCORECARD — what I claimed Sun 2 Aug, and what happened</div>
+      <div class="w-list-item">
+        <span style="font-family:monospace; color:#060;">✓</span>
+        <span>"686 steps at 15:13 is your normal shape, not a flat day" → closed at 11,204. <b>Right, and worth having said</b> — the raw number looked alarming.</span>
+      </div>
+      <div class="w-list-item">
+        <span style="font-family:monospace; color:#a00;">✗</span>
+        <span>Pencilled 4 blocks including 3177 for the evening → none caught. <b>Third consecutive miss on evening blocks.</b> Editorial change: evening work suggestions suspended; mornings only until one lands. (F-042 filed.)</span>
+      </div>
+      <div class="w-list-item">
+        <span style="font-family:monospace; color:#c80;">?</span>
+        <span>"Plan the week is only worth anything today" → unfalsifiable as written. It was rhetoric, not analysis. Flagged to stop doing that.</span>
+      </div>
+    </div>
+
+    <div class="w-cols" style="margin-top:0.75rem;">
+      <div class="w-col w-block">
+        <div class="w-h3">CALIBRATION — 30 days</div>
+        <div style="font-family:monospace; margin-top:0.3rem;">suggested blocks kept&nbsp; 31%<br>morning slots kept&nbsp;&nbsp;&nbsp; 52%<br>evening slots kept&nbsp;&nbsp;&nbsp; &nbsp;8% ←<br>questions answered&nbsp;&nbsp;&nbsp; 64%<br>q's dismissed unread&nbsp; 11%<br>insights ▲-rated&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 71%</div>
+        <div class="w-muted" style="margin-top:0.3rem;"><a href="#">full chart →</a></div>
+      </div>
+      <div class="w-col w-block">
+        <div class="w-h3">WHAT YOUR FEEDBACK CHANGED <span class="w-chip">receipts</span></div>
+        <div class="w-list-item"><span class="w-body">2× [dont-care] on LinkedIn items → topic parked (28 Jul)</span></div>
+        <div class="w-list-item"><span class="w-body">[too-much] on yesterday_review → capped at 2 lines since (30 Jul)</span></div>
+        <div class="w-list-item"><span class="w-body">[wrong-facts] on a calendar claim → events now quoted with source id, never paraphrased (25 Jul)</span></div>
+        <div class="w-muted">nothing you've flagged twice is still happening — <a href="#">open ledger →</a></div>
+      </div>
+    </div>
+
+    <div class="w-block" style="margin-top:0.75rem; background:#fafafa;">
+      <div class="w-h3">PROVENANCE — how this edition was made <span class="w-chip">every hop clickable</span></div>
+      <div style="font-family:monospace; font-size:12px; line-height:1.7;">
+        06:10:02 <a href="#">cron</a> → enqueue briefing-morning (dispatch <a href="#">#4407</a>)<br>
+        06:11:14 boris claimed · model claude-opus-5 · <a href="#">skill briefing/daily-v2 @ e3dc72e</a><br>
+        06:11–06:13 fetched 21 sources — <a href="#">snapshot</a> <a href="#">buckets</a> <a href="#">calendar(10)</a> <a href="#">feedback×4</a> … <span style="color:#a00;">1 failed: gym/detailed (500, retried ✓)</span><br>
+        06:14:31 hydrated 3 vault notes: <a href="#">3817</a> <a href="#">3132</a> <a href="#">3177</a> · filed 2 clarifications ✓<br>
+        06:15:07 <a href="#">analysis #207</a> POSTed · telegram ✓ msg <a href="#">8812</a> · 41.2k tok in / 3.1k out · 4m 52s · <a href="#">turns →</a>
+      </div>
+    </div>
+
+    <div class="w-notes">MECHANISM
+— Provenance is nearly free: dispatch turns, costs, mcp_calls and fetch logs all exist — this footer is a
+  render of rows already in Postgres, keyed by dispatch_id. Zero LLM tokens.
+— The scorecard needs one new habit: each briefing emits claims[] {text, check, falsifier}; next morning a
+  CHEAP deterministic pass (or Haiku) scores them against code-sessions/calendar/vault. That score is what
+  makes "is it getting better?" a chart — and it's the strongest anti-assumption pressure available, because
+  unfalsifiable prose gets named as such the next day.
+— "What your feedback changed" closes the loop you built but can't currently SEE working — tags already
+  steer the generator; this makes the steering visible, which is what makes leaving feedback feel worth it.
+— Composes with everything: this is a FOOTER, not a format. If only one concept ships, the case for this one
+  is that it makes all future iterations measurable.</div>
+  </div>
+</div>
+<script src="wire-nav.js"></script>

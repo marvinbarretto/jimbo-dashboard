@@ -1,5 +1,26 @@
 <div class="report">
 
+  @if (hasReceipts()) {
+    <section class="report__section">
+      <h2 class="report__kicker">Done for you<app-briefing-feedback [briefingId]="briefingId()" section="receipts" /></h2>
+      <div class="report-data">
+        @for (r of analysis().receipts; track $index) {
+          <div>
+            <span class="report-data__title">{{ r.job }}</span>
+            <p class="report-data__note">{{ r.outcome }}</p>
+            @if (r.links?.length) {
+              <p class="report-data__aside">
+                @for (link of r.links; track link) {
+                  <a [href]="link" target="_blank" rel="noopener">{{ link }}</a>{{ !$last ? ' · ' : '' }}
+                }
+              </p>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
+
   @if (hasQuestions()) {
     <section class="report__section">
       <h2 class="report__kicker report__kicker--warn">Needs your answer</h2>
@@ -10,7 +31,48 @@
           [clarificationId]="q.clarification_id"
           [sourceRef]="q.source_ref"
           [options]="q.options" />
+        @if (q.evidence?.length) {
+          <details class="report-evidence">
+            <summary>why I'm asking · {{ q.evidence!.length }} signal{{ q.evidence!.length === 1 ? '' : 's' }}</summary>
+            @for (ev of q.evidence; track $index) {
+              <div class="report-evidence__row">
+                <span class="report-evidence__source">{{ ev.source }}</span>
+                <span>{{ ev.claim }}</span>
+                @if (ev.ref; as ref) {
+                  @if (isUrl(ref)) {
+                    <a class="report-ledger__days" [href]="ref" target="_blank" rel="noopener">source →</a>
+                  } @else {
+                    <a class="report-ledger__days" [routerLink]="[]" [queryParams]="{ detail: ref }" queryParamsHandling="merge">{{ ref }} →</a>
+                  }
+                }
+              </div>
+            }
+          </details>
+        }
       }
+    </section>
+  }
+
+  @if (hasStillOpen()) {
+    <section class="report__section">
+      <h2 class="report__kicker">Still open — no reply needed<app-briefing-feedback [briefingId]="briefingId()" section="still_open" /></h2>
+      <div class="report-data">
+        @for (row of analysis().still_open; track $index) {
+          <div class="report-data__row">
+            <div class="report-data__body">
+              <span class="report-data__title">{{ row.title }}@if (row.degrading) { <span title="gets worse on its own — the only kind that may become a question">⌛</span>}</span>
+            </div>
+            @if (row.ref; as ref) {
+              @if (isUrl(ref)) {
+                <a class="report-ledger__days" [href]="ref" target="_blank" rel="noopener">→</a>
+              } @else {
+                <a class="report-ledger__days" [routerLink]="[]" [queryParams]="{ detail: ref }" queryParamsHandling="merge">{{ ref }} →</a>
+              }
+            }
+            <span class="report-ledger__days">day {{ row.days_open }}</span>
+          </div>
+        }
+      </div>
     </section>
   }
 

@@ -1,0 +1,71 @@
+<link rel="stylesheet" href="wire-kit.css">
+<title>08 — Companion Thread</title>
+
+<div class="w-frame">
+  <div class="w-intent">GOAL:     The briefing is the opening message of a persistent conversation, not a document. Every section is replyable; "why?" is a first-class move; tomorrow's opener provably remembers today's exchange.
+PERSONA:  Marvin, who answers questions in plain language on Telegram already, and wants to interrogate the AI's rationale rather than read a defensive report.
+PRIMARY:  Reply to what provokes you, ignore the rest. Zero replies is fine — silence is also signal.
+SUCCESS:  The morning message gets shorter over weeks BECAUSE the thread accumulates shared context — the compounding is visible in the prose itself.</div>
+
+  <div class="w-bar">
+    <span class="w-h1">Jimbo — daily thread</span>
+    <span class="w-muted">continues from Sun 2 Aug · full history retained</span>
+  </div>
+
+  <div style="padding:1rem; max-width:52rem;">
+
+    <div class="w-block" style="background:#fafafa; max-width:44rem;">
+      <div class="w-muted">Jimbo · Mon 06:15</div>
+      <div class="w-body" style="margin-top:0.3rem;">Morning. Quiet fleet night — Jeffrey 144 clean, nothing needs you there.<br><br>
+      Three things, shortest first:<br>
+      1. Pool day (you've had 4 days off lifting; Sun/Mon/Tue are your pool days).<br>
+      2. The week-plan capture from yesterday is still unrouted — 25 minutes, doc's attached, and this week is the emptiest on record.<br>
+      3. Fringe group: 24 days unconfirmed, 12 days to opening week. I think the group IS the decision now.<br><br>
+      <span class="w-muted">Also — you never said whether yesterday was a deliberate day off. Not chasing, just noting I still can't tell rest from drift without you occasionally telling me.</span></div>
+      <div style="margin-top:0.4rem;"><span class="w-chip">reply</span> <span class="w-chip">why #3?</span> <span class="w-chip">▲</span> <span class="w-chip">▼</span></div>
+    </div>
+
+    <div class="w-block" style="margin-left:8rem; max-width:36rem;">
+      <div class="w-muted">Marvin · 08:02</div>
+      <div class="w-body" style="margin-top:0.3rem;">why are you so sure the group is the blocker and not money or the dates</div>
+    </div>
+
+    <div class="w-block" style="background:#fafafa; max-width:44rem;">
+      <div class="w-muted">Jimbo · 08:02</div>
+      <div class="w-body" style="margin-top:0.3rem;">Three eliminations:<br>
+      — Dates: you settled them on 27 Jul — "first week, from the 15th onwards" (<a href="#">your answer</a>).<br>
+      — Money: your own ceiling is £35/night dorm (<a href="#">constraints</a>); beds in that range exist today — I checked availability, not prices in the abstract.<br>
+      — Remaining: FR26-P2, "lock the group, 4–6 people", due 10 July, untouched (<a href="#">vault</a>).<br><br>
+      Confidence 0.8 — the 0.2 is that the group may have confirmed on WhatsApp where I can't see it. Have they?</div>
+      <div style="margin-top:0.4rem;"><span class="w-chip">they confirmed</span> <span class="w-chip">no — going solo</span> <span class="w-chip">still chasing</span></div>
+    </div>
+
+    <div class="w-block" style="margin-left:8rem; max-width:36rem;">
+      <div class="w-muted">Marvin · 08:04</div>
+      <div class="w-body" style="margin-top:0.3rem;">no reply from 2 of them since the 10th. going solo, dorm.</div>
+    </div>
+
+    <div class="w-block" style="background:#fafafa; max-width:44rem;">
+      <div class="w-muted">Jimbo · 08:04</div>
+      <div class="w-body" style="margin-top:0.3rem;">Logged: FR26-P2 → solo · booking block pencilled tonight 18:30 (25 min) · Fringe questions stop.<br>
+      <span class="w-muted">Also logged as evidence on the solo-viability tension — you chose solo over waiting. That's the second time this month the "solo in the small" side won. (<a href="#">tension →</a>)</span></div>
+    </div>
+
+    <div class="w-state-sep" style="width:auto; margin:1.25rem 0 0.75rem;">tomorrow, provably remembering</div>
+
+    <div class="w-block" style="background:#fafafa; max-width:44rem;">
+      <div class="w-muted">Jimbo · Tue 06:15</div>
+      <div class="w-body" style="margin-top:0.3rem;">Morning. Dorm booked? If yes, Fringe drops off the desk entirely and the only carried item is the week's one non-work evening. <span class="w-muted">(Shorter today because yesterday settled two threads — this is what the compounding looks like.)</span></div>
+    </div>
+
+    <div class="w-notes">MECHANISM
+— The plumbing 80% exists: clarifications already take free-text answers, an LLM interpreter already routes them,
+  entity capture already learns from them, thread_messages already exists on vault items. Missing: ONE persistent
+  briefing thread + a reply loop (Telegram in-reply or dashboard thread UI).
+— "why #3?" is the evidence card (03) delivered conversationally instead of pre-rendered — cheaper per-briefing,
+  costs one round-trip when curiosity strikes. Each rationale-on-demand is a small dispatch (Boris, flat-rate).
+— Tension-evidence side-writes (the 08:04 message) are how ordinary chat compounds the self-model without ceremony.
+— Risk to name: threads demand presence. Needs a "3 unanswered days = drop to digest mode" valve so it never nags.</div>
+  </div>
+</div>
+<script src="wire-nav.js"></script>

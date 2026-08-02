@@ -1,0 +1,179 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>v4 — Four mini briefings from unexplored data</title>
+<style>
+  :root {
+    --bg: #0b0e14; --panel: #11151d; --panel2: #0e1219; --line: #1f2430;
+    --ink: #c9d1d9; --muted: #5c6470; --faint: #3a4150;
+    --amber: #e3b341; --cyan: #4dd0e5; --green: #4ec97a; --red: #e5534b; --violet: #a78bfa;
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
+    --serif: Charter, Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--mono); font-size: 13px; line-height: 1.5; padding: 2.5rem 1rem 5rem; }
+  .frame { max-width: 820px; margin: 0 auto; }
+  a { color: var(--cyan); text-decoration: none; }
+  h1 { font-size: 19px; }
+  .sub { color: var(--muted); font-size: 12px; margin-bottom: 2rem; }
+
+  .brief { margin-bottom: 2.6rem; }
+  .bhead { display: flex; align-items: baseline; gap: 0.7rem; border-bottom: 1px solid var(--line); padding-bottom: 0.35rem; margin-bottom: 0.9rem; }
+  .bhead .no { color: var(--faint); font-size: 11px; }
+  .bhead h2 { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 400; }
+  .bhead .src { margin-left: auto; font-size: 10px; color: var(--faint); }
+
+  .sentence { font-family: var(--serif); font-style: italic; font-size: 18px; color: #e8edf3; margin-bottom: 0.9rem; line-height: 1.45; }
+
+  details.card { border: 1px solid var(--line); border-left: 3px solid var(--amber); border-radius: 6px; background: var(--panel); margin-bottom: 8px; }
+  details.card.quiet { border-left-color: var(--faint); }
+  details.card.hot { border-left-color: var(--red); }
+  details.card > summary { list-style: none; cursor: pointer; padding: 0.6rem 0.8rem; display: flex; align-items: baseline; gap: 0.6rem; }
+  details.card > summary::-webkit-details-marker { display: none; }
+  details.card > summary .claim { font-size: 13.5px; color: #dde3ea; }
+  details.card > summary .more { margin-left: auto; color: var(--faint); font-size: 11px; white-space: nowrap; padding-left: 0.8rem; }
+  details.card[open] > summary .more { visibility: hidden; }
+  .body { padding: 0 0.8rem 0.7rem; }
+  .ev { display: flex; gap: 0.6rem; align-items: baseline; padding: 0.32rem 0; border-top: 1px dashed var(--line); font-size: 12px; color: var(--muted); }
+  .ev .src { color: var(--violet); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; min-width: 5.5em; }
+  .ev b { color: var(--ink); font-weight: 400; }
+  .ev .link { margin-left: auto; white-space: nowrap; }
+  .caveat { font-size: 11px; color: var(--faint); padding-top: 0.45rem; border-top: 1px dashed var(--line); }
+  .btnrow { display: flex; gap: 6px; margin-top: 0.55rem; flex-wrap: wrap; }
+  .btn { border: 1px solid var(--line); background: var(--panel2); color: var(--ink); border-radius: 5px; padding: 0.28rem 0.75rem; font: inherit; font-size: 12px; cursor: pointer; }
+  .btn:hover { border-color: var(--cyan); }
+  .spark { font-size: 11px; color: var(--faint); letter-spacing: 0.05em; }
+  .spark b { color: var(--cyan); font-weight: 400; }
+
+  .note { max-width: 820px; margin: 1rem auto 0; border: 1px dashed #4a4530; background: #16140c; color: #b3a86b; border-radius: 6px; padding: 0.7rem 0.9rem; font-size: 12px; }
+</style>
+
+<div class="frame">
+  <h1>Four mini briefings — unexplored data, nothing invented</h1>
+  <div class="sub">Every number below was pulled from the live API on 2 Aug. None of these sources is read by the current briefing. Click any claim for its evidence.</div>
+
+  <!-- ============ A · ATTENTION ============ -->
+  <div class="brief">
+    <div class="bhead"><span class="no">A</span><h2>Attention</h2><span class="src">device_events (youtube · usage) · journal/phone — never read by any briefing</span></div>
+    <p class="sentence">You do have time for long-form — 27 hours of it in the last fortnight. It's just going to rolling news.</p>
+
+    <details class="card">
+      <summary><span class="claim">Your watch history and your interests file describe two different people.</span><span class="more">▸ evidence · 4</span></summary>
+      <div class="body">
+        <div class="ev"><span class="src">youtube 14d</span><span>Top channels: <b>ITV News 235m · Telegraph 198m · Middle East Eye 148m · GBNews 69m · CGTN 61m · C4 52m · Sky 38m</b> — mainstream rolling news ≈ 13h of ~27.6h total</span></div>
+        <div class="ev"><span class="src">interests</span><span>Your file: <b>"less interested in mainstream news takes"</b>; UnHerd/Frisby/Ed West listed as the actual pull</span><a class="link" href="#">file →</a></div>
+        <div class="ev"><span class="src">deferred</span><span>"Long-form reading — want to but <b>rarely have time</b>" has sat in Deferred since March</span><a class="link" href="#">item #24 →</a></div>
+        <div class="ev"><span class="src">true crime</span><span>EWU/bodycam cluster ≈ <b>6.4h</b> — completely absent from the self-model; either it belongs there, or it's the tiredness channel</span></div>
+        <div class="caveat">Chrome extension = desktop only; phone YouTube not counted, so these are floors, not totals. No verdict here — the mirror just notes the interests file is the stated self, and this is the revealed one.</div>
+        <div class="btnrow"><button class="btn">True — update interests</button><button class="btn">That's decompression, not interest</button><button class="btn">Stop watching this feed</button></div>
+      </div>
+    </details>
+
+    <details class="card quiet">
+      <summary><span class="claim">The 29–31 Jul spike: 13.5h of YouTube in three days, and the instruments saw it coming.</span><span class="more">▸ evidence · 3</span></summary>
+      <div class="body">
+        <div class="ev"><span class="src">youtube</span><span class="spark">daily: 19 Jul <b>181</b> · 89 · 78 · 220 · 10 · — · 27 · 37 · <b>326 · 245 · 237</b> · 53 · 155 min</span></div>
+        <div class="ev"><span class="src">phone</span><span>28 Jul: <b>106 unlocks</b> (14-day high, avg 47) · screen 312m, then 318m, 289m — the churn started a day before the binge</span></div>
+        <div class="ev"><span class="src">checkins</span><span>30 Jul: <b>6 mood check-ins in one day</b> (usual: 1–3), avg 3.7, energy 2.2 — you were self-monitoring more than any other day this fortnight</span></div>
+        <div class="caveat">Correlation shown flat. If those three days were a slump, the useful part isn't the label — it's that unlock-churn led the binge by a day. That's a leading indicator, if you want one.</div>
+      </div>
+    </details>
+
+    <details class="card quiet">
+      <summary><span class="claim">~730 notifications a day reach your phone.</span><span class="more">▸ evidence · 1</span></summary>
+      <div class="body">
+        <div class="ev"><span class="src">phone 14d</span><span><b>10,221 notifications</b> · 656 unlocks · 46.6h screen. Which apps? The collector doesn't label them yet — one payload field away from naming the top offender.</span><a class="link" href="#">wire it →</a></div>
+      </div>
+    </details>
+  </div>
+
+  <!-- ============ B · BODY ============ -->
+  <div class="brief">
+    <div class="bhead"><span class="no">B</span><h2>Body — beneath the streak</h2><span class="src">coach/food-log · gym · checkins — briefing reads only the streak counts</span></div>
+    <p class="sentence">"Food logged 7/7" is true and hides everything: your protein swung 31g to 144g and averaged half of any training target.</p>
+
+    <details class="card">
+      <summary><span class="claim">The streak is perfect; the macros underneath are chaos.</span><span class="more">▸ evidence · 3</span></summary>
+      <div class="body">
+        <div class="ev"><span class="src">food 7d</span><span class="spark">protein g/day: 91 · 144 · 131 · <b style="color:var(--red)">31</b> · 78 · 81 · (today 4) — 3 of 6 complete days under 85g</span></div>
+        <div class="ev"><span class="src">food 7d</span><span class="spark">kcal/day: 3070 · 3595 · 1736 · 1590 · 2619 · 2080 — a <b>2,000 kcal</b> day-to-day swing, no pattern vs gym days</span></div>
+        <div class="ev"><span class="src">gym</span><span>Last lift <b>29 Jul</b> · target 2-3×/wk · the "gym 7d" tile currently counts Health-Connect activity days, not training</span></div>
+        <div class="caveat">The current briefing renders "7 gym · 7 food logged" chips — technically true, informationally empty. One line of variance beats two streak chips.</div>
+        <div class="btnrow"><button class="btn">Show protein variance daily</button><button class="btn">Don't coach macros</button></div>
+      </div>
+    </details>
+
+    <details class="card quiet">
+      <summary><span class="claim">Weight tracking exists and is empty — 0 entries in 30 days.</span><span class="more">▸ evidence · 1</span></summary>
+      <div class="body">
+        <div class="ev"><span class="src">body-metrics</span><span><b>/api/gym/body-metrics/daily returns []</b> — the instrument is wired, nothing feeds it. Either kill the panel or it's one Telegram message a week ("weight?") from being real.</span></div>
+        <div class="btnrow"><button class="btn">Weekly weigh-in nudge</button><button class="btn">Kill the metric</button></div>
+      </div>
+    </details>
+  </div>
+
+  <!-- ============ C · THE MACHINE ============ -->
+  <div class="brief">
+    <div class="bhead"><span class="no">C</span><h2>The machine, audited by itself</h2><span class="src">costs · grooming/lessons · note-activity · thread-messages — none read by the briefing</span></div>
+    <p class="sentence">You built four learning loops. The data says one is connected, and it isn't the one you'd guess.</p>
+
+    <details class="card hot">
+      <summary><span class="claim">Three question channels exist; two are write-only graveyards.</span><span class="more">▸ evidence · 3</span></summary>
+      <div class="body">
+        <div class="ev"><span class="src">handoffs</span><span><b>200 items</b> in pending-for-marvin, oldest <b>April</b> — agents have been "handing off" into a queue no surface renders</span></div>
+        <div class="ev"><span class="src">threads</span><span><b>100 open unanswered questions</b> on vault-item threads — same story</span></div>
+        <div class="ev"><span class="src">clarifications</span><span>The one channel with a UI (briefing questions) is also the one that annoys you — because it's carrying the asking load for all three</span></div>
+        <div class="caveat">This reframes the question fatigue: the system over-asks partly because nothing ever comes back from the other two channels. Consolidate to one desk + the ledger, and declare bankruptcy on the 300.</div>
+        <div class="btnrow"><button class="btn">Archive all 300, start clean</button><button class="btn">Show me the 10 newest first</button></div>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="claim">The grooming self-tuning loop has 11 lessons and zero recorded applications.</span><span class="more">▸ evidence · 2</span></summary>
+      <div class="body">
+        <div class="ev"><span class="src">lessons</span><span>All 11 grooming lessons: <b>hit_count 0 · miss_count 0</b> — written, stored, never once scored as applied or ignored</span></div>
+        <div class="ev"><span class="src">contrast</span><span>Meanwhile briefing ▲/▼ tags <b>do</b> steer (LinkedIn items stopped after 2× [dont-care]) — the one loop that closes is the one with a human thumb in it</span></div>
+        <div class="caveat">"Mechanisms built in hope the learning compounds" — this is the audit of that hope, per loop, from its own counters. Worth a monthly line in any format you pick.</div>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="claim">Recorded LLM spend: $152 in 30 days — and the ledger can't tell real money from flat-rate.</span><span class="more">▸ evidence · 2</span></summary>
+      <div class="body">
+        <div class="ev"><span class="src">costs 30d</span><span><b>$152.03 · 812 calls</b> — Haiku $57 (670 calls, 5.4M tokens), Opus-4.8 $37, Sonnet $46 · 25 calls unpriced due to model-id drift ("haiku", "anthropic/claude-haiku-4.5"…)</span></div>
+        <div class="ev"><span class="src">policy</span><span>Your stated budget: <b>~£5/month metered</b>. Most of the $152 is presumably Max-covered Boris turns — but the costs table has no <b>billed vs flat</b> flag, so the £5 discipline is currently unverifiable from data</span></div>
+        <div class="btnrow"><button class="btn">Add billed/flat flag</button><button class="btn">Normalise model ids</button></div>
+      </div>
+    </details>
+  </div>
+
+  <!-- ============ D · FOCUS QUALITY ============ -->
+  <div class="brief">
+    <div class="bhead"><span class="no">D</span><h2>Focus, measured against itself</h2><span class="src">focus_sessions.activity (chrome ext) · code_sessions — briefing counts pomos, never reads inside them</span></div>
+    <p class="sentence">Friday's LocalShout pomodoro completed on schedule — and spent 15 of its 25 minutes on YouTube.</p>
+
+    <details class="card">
+      <summary><span class="claim">The pomo counter and the focus tracker disagree, and only the counter gets reported.</span><span class="more">▸ evidence · 2</span></summary>
+      <div class="body">
+        <div class="ev"><span class="src">fs_5a61a401</span><span>1 Aug 13:37, project <b>localshout</b>, status completed, mood 0 — activity: <b>youtube.com 923s of 1516s</b>, focus_ratio 0.62, 5 tab switches</span><a class="link" href="#">session →</a></div>
+        <div class="ev"><span class="src">fs_d0c71640</span><span>The session before it (12:35, "Vision meta document") ran clean — same day, same project, so it's not a bad day, it's a per-block signal</span></div>
+        <div class="caveat">Nothing coaching here either: a "completed 62%-YouTube pomo" might be a break you took on purpose. The point is the instrument exists, is precise, and no surface has ever read it.</div>
+        <div class="btnrow"><button class="btn">Show focus_ratio on pomo history</button><button class="btn">Leave my pomos alone</button></div>
+      </div>
+    </details>
+
+    <details class="card quiet">
+      <summary><span class="claim">The session-digest pipeline has quietly stopped writing.</span><span class="more">▸ evidence · 1</span></summary>
+      <div class="body">
+        <div class="ev"><span class="src">code_sessions</span><span>Recent rows: headline <b>null</b>, bullets [], narrative null, prompting null, summary_model "reaped" — the yesterday_review section is reading from a well that's gone dry, which is partly why it reads thin</span></div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<div class="note">
+  <b>What this file is:</b> the "does it land?" test. Four mini briefings, each from a source the real briefing has
+  never read. The pattern behind all four: the system's most interesting material is where <b>two of its own
+  instruments disagree</b> — stated interests vs watch history, streak vs macros, completed-pomo vs focus-ratio,
+  lessons-written vs lessons-applied. That comparison is cheap to compute and impossible to be samey about,
+  because it only speaks when a disagreement exists.
+</div>

@@ -38,7 +38,20 @@ export interface OpenQuestion {
   // stays display-only.
   source_ref?: string;
   options?: string[];
+  // v3: the 1-3 signals that triggered this question — rendered as a
+  // collapsed "why I'm asking" so answering never requires trusting a vibe.
+  evidence?: QuestionEvidence[];
 }
+
+// One signal behind a question. `ref` is a vault seq (numeric string) or URL.
+export interface QuestionEvidence { source: string; claim: string; ref?: string; }
+
+// v3 butler sections (jimbo-api/briefing-session-notes.md).
+// A completed check with its one-line outcome and receipt links.
+export interface Receipt { job: string; outcome: string; links?: string[]; }
+// A "still a thing" ledger row — deliberately motive-free by contract.
+export interface StillOpenEntry { title: string; days_open: number; degrading?: boolean; ref?: string; }
+
 export interface Insight { fact: string; strategy?: string; }
 export interface OpportunityThreat { kind: 'opportunity' | 'threat'; note: string; action?: string; }
 
@@ -70,6 +83,9 @@ export interface BriefingAnalysisData {
   opportunities_threats?: OpportunityThreat[];
   suggested_blocks?: SuggestedBlock[];
   health_status?: string;
+  // v3 (schema_version 3):
+  receipts?: Receipt[];
+  still_open?: StillOpenEntry[];
 }
 
 export interface BriefingAnalysis {

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { ClarificationPrompt } from '@shared/components/clarification-prompt/clarification-prompt';
 import { BriefingFeedback } from '../briefing-feedback/briefing-feedback';
@@ -14,7 +15,7 @@ import type {
 // the overall briefing rating is derived.
 @Component({
   selector: 'app-briefing-report',
-  imports: [UiBadge, ClarificationPrompt, BriefingFeedback],
+  imports: [UiBadge, ClarificationPrompt, BriefingFeedback, RouterLink],
   templateUrl: './briefing-report.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -33,6 +34,14 @@ export class BriefingReport {
   protected readonly hasBlocks = computed(() =>
     !this.hideSuggestedBlocks() && (this.analysis().suggested_blocks?.length ?? 0) > 0);
   protected readonly hasTasks = computed(() => this.analysis().vault_tasks.length > 0);
+  protected readonly hasReceipts = computed(() => (this.analysis().receipts?.length ?? 0) > 0);
+  protected readonly hasStillOpen = computed(() => (this.analysis().still_open?.length ?? 0) > 0);
+
+  // Evidence / ledger refs are either a URL or a vault seq. Seqs deep-link via
+  // the ?detail= modal the briefing page already supports; URLs open as-is.
+  protected isUrl(ref: string): boolean {
+    return ref.startsWith('http://') || ref.startsWith('https://');
+  }
 
   protected weekTone(status: WeekTrackingStatus): 'success' | 'warning' | 'danger' | 'neutral' {
     switch (status) {

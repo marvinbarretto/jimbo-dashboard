@@ -1,0 +1,67 @@
+<link rel="stylesheet" href="wire-kit.css">
+<title>02 — Decision Desk</title>
+
+<div class="w-frame">
+  <div class="w-intent">GOAL:     The briefing is a work queue of decisions only YOU can make — ordered by cost-of-delay, each with a clear "done" state.
+PERSONA:  Marvin, who has 18 handoffs waiting on him, 3 experiments due a verdict, and questions scattered across five surfaces.
+PRIMARY:  Clear decisions top-down. The briefing succeeds when the queue shrinks, not when it reads well.
+SUCCESS:  He clears 3+ items before opening anything else; nothing time-degrading (Fringe dorms) dies silently in a side channel.</div>
+
+  <div class="w-bar">
+    <span class="w-h1">☀️ Decision Desk</span>
+    <span class="w-muted">Mon 3 Aug · 06:15</span>
+    <span style="margin-left:auto;" class="w-chip">queue: 7 · cleared this week: 4</span>
+  </div>
+
+  <div style="padding:1rem; max-width:56rem;">
+
+    <div class="w-block" style="border-width:2px;">
+      <div class="w-list-item" style="border:none;">
+        <span class="w-chip">DECIDES TODAY</span>
+        <span class="w-h3">Fringe: solo dorm or hold for the group?</span>
+        <span class="w-muted" style="margin-left:auto;">degrading · 12 days out</span>
+      </div>
+      <div class="w-body">Party size (FR26-P2, due 10 Jul) is the real blocker, not the football dates. Dorm availability for opening week shrinks daily — this is the only item on the desk that gets worse while you think.</div>
+      <div class="w-muted" style="margin:0.3rem 0;">cost of delay: ~£8–15/night dorm drift + group option quietly expires &nbsp;·&nbsp; <a href="#">why am I asking? ▸</a></div>
+      <div><span class="w-btn-primary">Solo dorm — book tonight</span> <span class="w-btn-ghost">Hold for group (I'll chase them)</span> <span class="w-btn-ghost">Group's off — solo, later</span></div>
+    </div>
+
+    <div class="w-block">
+      <div class="w-list-item" style="border:none;">
+        <span class="w-chip">VERDICT DUE</span>
+        <span class="w-h3">2 experiments hit review date this week (8 Aug)</span>
+      </div>
+      <div class="w-list-item"><span class="w-body">stall-postmortem (Mondays) — last cycle found the NZ-passport fragmentation. Keep / adjust / kill?</span><span style="margin-left:auto;"><span class="w-btn-ghost">Keep</span> <span class="w-btn-ghost">Kill</span></span></div>
+      <div class="w-list-item"><span class="w-body">priority-drift-alert (Sundays) — you rated it useful 9 Jul, but its findings had no review cadence. Keep?</span><span style="margin-left:auto;"><span class="w-btn-ghost">Keep</span> <span class="w-btn-ghost">Kill</span></span></div>
+      <div class="w-muted">assertion-scan sits at "inconclusive" since 16 Jul — a verdict 17 days overdue is itself a decision being avoided. <a href="#">open verdict-day ▸</a></div>
+    </div>
+
+    <div class="w-block">
+      <div class="w-list-item" style="border:none;">
+        <span class="w-chip">UNBLOCK</span>
+        <span class="w-h3">2 overdue items block nothing but carry risk</span>
+      </div>
+      <div class="w-list-item"><span class="w-body">LocalShout RLS vulnerability — <b>12 days overdue, marked URGENT, security</b>. One decision: this week or explicitly parked?</span><span style="margin-left:auto;"><span class="w-btn-ghost">This week</span> <span class="w-btn-ghost">Park + own it</span></span></div>
+      <div class="w-list-item"><span class="w-body">LocalShout dispatch cron failure — 17 days overdue. Same question.</span><span style="margin-left:auto;"><span class="w-btn-ghost">This week</span> <span class="w-btn-ghost">Park</span></span></div>
+    </div>
+
+    <div class="w-block" style="background:#fafafa;">
+      <div class="w-list-item" style="border:none;">
+        <span class="w-chip">WAITING ON YOU</span>
+        <span class="w-h3">18 agent handoffs · 15 inbox items</span>
+        <span class="w-muted" style="margin-left:auto;">not today's job</span>
+      </div>
+      <div class="w-body w-muted">Oldest handoff is 9 days. The desk only ever surfaces the top 1–2; the rest live on the <a href="#">handoffs board →</a>. Velocity note, stated flat: 0.29 tasks/day closed this week vs 5.57/day over 30 days.</div>
+    </div>
+
+    <div class="w-placeholder">Context strip (collapsed): calendar today · buckets mirror · health one-liner</div>
+
+    <div class="w-notes">MECHANISM
+— Sources already exist: clarifications (open), interrogate_experiments_due, note-activity/pending-for-marvin,
+  vault overdue. The briefing's job becomes RANKING them by cost-of-delay and writing the one-line stake for each.
+— Every item has an explicit resolution action; "Park + own it" is a legitimate clear (records a decision,
+  kills the nag). Decisions cleared/week becomes the briefing's own success metric — measurable, unlike "good".
+— Tone guard: the desk never says "you should". It prices delay and hands you the buttons.</div>
+  </div>
+</div>
+<script src="wire-nav.js"></script>

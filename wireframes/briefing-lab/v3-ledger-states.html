@@ -1,0 +1,132 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>v3 — The ledger: acknowledge, don't interrogate</title>
+<style>
+  :root {
+    --bg: #0b0e14; --panel: #11151d; --panel2: #0e1219; --line: #1f2430;
+    --ink: #c9d1d9; --muted: #5c6470; --faint: #3a4150;
+    --amber: #e3b341; --cyan: #4dd0e5; --green: #4ec97a; --red: #e5534b; --violet: #a78bfa;
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
+    --serif: Charter, Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--mono); font-size: 13px; line-height: 1.5; padding: 2.5rem 1rem 5rem; }
+  .frame { max-width: 760px; margin: 0 auto; }
+  a { color: var(--cyan); text-decoration: none; }
+  h1 { font-size: 18px; margin-bottom: 0.2rem; }
+  .sub { color: var(--muted); font-size: 12px; margin-bottom: 1.6rem; }
+
+  .kicker { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 1.6rem 0 0.5rem; }
+  .kicker.warn { color: var(--amber); }
+
+  .ledger { border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+  .row { display: flex; align-items: center; gap: 0.7rem; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: none; }
+  .row .title { min-width: 0; }
+  .row .days { margin-left: auto; color: var(--faint); font-size: 11px; white-space: nowrap; }
+  .row .days b { color: var(--muted); font-weight: 400; }
+  .row .days.hot b { color: var(--amber); }
+  .tag { font-size: 10px; color: var(--faint); border: 1px solid var(--line); border-radius: 999px; padding: 0 0.45rem; white-space: nowrap; }
+  .acts { display: inline-flex; gap: 4px; margin-left: auto; }
+  .act { border: 1px solid var(--line); background: var(--panel2); color: var(--muted); border-radius: 4px; padding: 0.1rem 0.55rem; font: inherit; font-size: 11px; cursor: pointer; }
+  .act.hover { color: var(--ink); border-color: var(--muted); }
+  .row.done .title { color: var(--faint); text-decoration: line-through; }
+  .row.done .stamp { color: var(--green); font-size: 11px; margin-left: auto; white-space: nowrap; }
+  .row.snoozed .title { color: var(--muted); }
+  .row.snoozed .stamp { color: var(--faint); font-size: 11px; margin-left: auto; white-space: nowrap; }
+  .annot { color: var(--faint); font-size: 11px; padding: 0.25rem 0.8rem 0.6rem; border-bottom: 1px solid var(--line); margin-top: -1px; }
+  .annot:last-child { border-bottom: none; }
+
+  /* chat drawer */
+  .drawer { border-top: 1px dashed var(--line); background: var(--panel2); padding: 0.6rem 0.8rem; }
+  .msg { font-size: 12px; margin-bottom: 0.4rem; }
+  .msg .who { color: var(--faint); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; margin-right: 0.5rem; }
+  .msg.jimbo .txt { color: var(--muted); }
+  .input { display: flex; gap: 6px; margin-top: 0.5rem; }
+  .input input { flex: 1; background: var(--bg); border: 1px solid var(--line); border-radius: 5px; color: var(--ink); font: inherit; font-size: 12px; padding: 0.35rem 0.6rem; }
+  .input .send { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 5px; padding: 0.35rem 0.8rem; font: inherit; font-size: 12px; }
+
+  /* the rare real question */
+  .card { border: 1px solid var(--line); border-left: 3px solid var(--amber); border-radius: 6px; background: var(--panel); padding: 0.65rem 0.8rem; }
+  .card .claim { font-family: var(--serif); font-style: italic; font-size: 15px; color: #e8edf3; }
+  .card .why { color: var(--faint); font-size: 11px; margin: 0.25rem 0 0.5rem; }
+  .btn { border: 1px solid var(--line); background: var(--panel2); color: var(--ink); border-radius: 5px; padding: 0.3rem 0.8rem; font: inherit; font-size: 12px; cursor: pointer; margin-right: 4px; }
+  .btn.primary { border-color: var(--amber); color: var(--amber); }
+
+  .note { max-width: 760px; margin: 1.5rem auto 0; border: 1px dashed #4a4530; background: #16140c; color: #b3a86b; border-radius: 6px; padding: 0.7rem 0.9rem; font-size: 12px; }
+  .rule { color: var(--muted); font-size: 12px; line-height: 1.7; border-left: 2px solid var(--line); padding-left: 0.8rem; margin-top: 0.5rem; }
+</style>
+
+<div class="frame">
+  <h1>The ledger — item lifecycle</h1>
+  <div class="sub">One surface for "it's still a thing". You never explain yourself; time accrues as dots; the LLM is not allowed to guess your motives here.</div>
+
+  <div class="kicker">1 · Resting state — a row, not a question</div>
+  <div class="ledger">
+    <div class="row degrading">
+      <span class="title">Fringe bed — solo dorm or group, 15–24 Aug ⌛</span>
+      <span class="tag">shape of trip: undecided — fine</span>
+      <span class="days hot">·····&nbsp; day <b>24</b></span>
+    </div>
+    <div class="annot">The tag is yours, set once via 💬 ("not sure how many days Edinburgh vs the rest"). It sticks. Jimbo stops
+    theorising; the ⌛ only means "this one's price moves on its own" — a fact, not a verdict.</div>
+  </div>
+
+  <div class="kicker">2 · Hover — four verbs, no essays</div>
+  <div class="ledger">
+    <div class="row">
+      <span class="title">Fringe bed — solo dorm or group, 15–24 Aug</span>
+      <span class="acts"><button class="act hover">✓ done</button><button class="act">→ next wk</button><button class="act">✕ drop</button><button class="act">💬</button></span>
+    </div>
+    <div class="annot">✓ closes it · → snoozes it (a snooze is an answer, silently honoured, no follow-up "why") ·
+    ✕ drops it with zero ceremony · 💬 opens a drawer only if <i>you</i> feel like talking.</div>
+  </div>
+
+  <div class="kicker">3 · The 💬 drawer — optional, yours, one line is plenty</div>
+  <div class="ledger">
+    <div class="row">
+      <span class="title">Fringe bed — solo dorm or group, 15–24 Aug</span>
+      <span class="days hot">day <b>24</b></span>
+    </div>
+    <div class="drawer">
+      <div class="msg"><span class="who">you</span>still not sure edinburgh days vs rest of country. leave it with me</div>
+      <div class="msg jimbo"><span class="who">jimbo</span><span class="txt">Noted as the shape question. I'll only resurface if dorm prices jump or the group answers. Nothing owed.</span></div>
+      <div class="input"><input placeholder="say more, or don't"><button class="send">send</button></div>
+    </div>
+  </div>
+
+  <div class="kicker warn">4 · Escalation — the ONLY way a row becomes a question again</div>
+  <div class="card">
+    <div class="claim">Dorms for 15–24 Aug just crossed your £35 ceiling at three of five hostels.</div>
+    <div class="why">escalated because: external price change · your ceiling (constraints file) · not because time passed</div>
+    <button class="btn primary">Book the cheapest now</button>
+    <button class="btn">Let it ride</button>
+    <button class="btn" style="border-style:dashed; color:var(--muted);">stop watching prices</button>
+  </div>
+  <div class="rule">
+    The escalation rule, stated once and enforced in code, not prose:<br>
+    — time passing → dots, never words<br>
+    — <b>the world changing</b> (price, availability, someone replied, a deadline external to you) → one question, citing the change<br>
+    — you acting → ✓ green acknowledgement next edition, then silence
+  </div>
+
+  <div class="kicker">5 · After you act — acknowledged, then gone</div>
+  <div class="ledger">
+    <div class="row done">
+      <span class="title">Fringe bed — solo dorm booked</span>
+      <span class="stamp">✓ Mon · closed FR26-P2 · questions stop</span>
+    </div>
+    <div class="row snoozed">
+      <span class="title">NZ passport — 2h of admin</span>
+      <span class="stamp">→ resurfaces Mon 10 · dots pause</span>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <b>Token honesty:</b> this whole surface is deterministic — rows come from vault/clarifications/experiments with
+  day arithmetic, rendered server-side. Today, re-deriving the Fringe situation costs ~2-4k input tokens of
+  re-read context + ~300 output tokens of motive-guessing <i>per edition</i>, and the output is what annoys you.
+  Here the LLM's only entry points are the 💬 drawer (on demand) and rule-4 escalations (event-gated) — the
+  places where it actually has something to add.
+</div>

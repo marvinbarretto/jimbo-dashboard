@@ -1,0 +1,207 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>v1 — Morning glance</title>
+<style>
+  :root {
+    --bg: #0b0e14; --panel: #11151d; --panel2: #0e1219; --line: #1f2430;
+    --ink: #c9d1d9; --muted: #5c6470; --faint: #3a4150;
+    --amber: #e3b341; --cyan: #4dd0e5; --green: #4ec97a; --red: #e5534b; --violet: #a78bfa;
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
+    --serif: Charter, Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--mono); font-size: 13px; line-height: 1.5; padding: 2.5rem 1rem 5rem; }
+  .frame { max-width: 880px; margin: 0 auto; }
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .masthead { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 0.25rem; }
+  .masthead h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .masthead .meta { color: var(--muted); font-size: 12px; }
+  .masthead .quiet-badge { margin-left: auto; color: var(--muted); font-size: 11px; border: 1px solid var(--line); border-radius: 999px; padding: 0.1rem 0.6rem; }
+
+  /* Jimbo's one sentence — the only serif on first paint */
+  .sentence { font-family: var(--serif); font-style: italic; font-size: 19px; color: #e8edf3; margin: 1.1rem 0 1.6rem; line-height: 1.45; }
+  .sentence a { color: inherit; border-bottom: 1px dotted var(--faint); }
+
+  .kicker { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 1.6rem 0 0.5rem; }
+  .kicker.warn { color: var(--amber); }
+
+  /* Instruments */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .tile { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 0.6rem 0.7rem; min-height: 86px; }
+  .tile .label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
+  .tile .label .clock { letter-spacing: 0; text-transform: none; color: var(--faint); }
+  .tile .big { font-size: 24px; font-weight: 700; margin: 0.25rem 0 0.1rem; }
+  .tile .sub { font-size: 11px; color: var(--muted); }
+  .bar { height: 4px; background: var(--panel2); border-radius: 2px; margin-top: 0.45rem; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--cyan); }
+  .tile.alert .big { color: var(--amber); }
+  .dotrow { letter-spacing: 0.2em; font-size: 12px; margin-top: 0.35rem; }
+  .dotrow .on { color: var(--green); } .dotrow .off { color: var(--faint); }
+
+  /* Still open — the ledger. One line per item, day-dots accrue silently. */
+  .ledger { border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+  .row { display: flex; align-items: center; gap: 0.7rem; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: none; }
+  .row .title { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .days { margin-left: auto; color: var(--faint); font-size: 11px; white-space: nowrap; }
+  .row .days b { color: var(--muted); font-weight: 400; }
+  .row .days.hot b { color: var(--amber); }
+  .acts { display: none; gap: 4px; }
+  .row:hover .acts { display: inline-flex; }
+  .row:hover .days { display: none; }
+  .act { border: 1px solid var(--line); background: var(--panel2); color: var(--muted); border-radius: 4px; padding: 0.1rem 0.55rem; font: inherit; font-size: 11px; cursor: pointer; }
+  .act:hover { color: var(--ink); border-color: var(--muted); }
+  .act.done:hover { color: var(--green); border-color: var(--green); }
+  .row.degrading .title::after { content: " ⌛"; color: var(--red); }
+  .row .tag { font-size: 10px; color: var(--faint); border: 1px solid var(--line); border-radius: 999px; padding: 0 0.45rem; }
+
+  /* Finding + question cards — collapsed to a single line each */
+  details.card { border: 1px solid var(--line); border-left: 3px solid var(--amber); border-radius: 6px; background: var(--panel); margin-bottom: 8px; }
+  details.card > summary { list-style: none; cursor: pointer; padding: 0.65rem 0.8rem; display: flex; align-items: baseline; gap: 0.6rem; }
+  details.card > summary::-webkit-details-marker { display: none; }
+  details.card > summary .id { color: var(--faint); font-size: 11px; }
+  details.card > summary .claim { font-family: var(--serif); font-style: italic; font-size: 15px; color: #e8edf3; }
+  details.card > summary .more { margin-left: auto; color: var(--faint); font-size: 11px; white-space: nowrap; }
+  details.card[open] > summary .more { visibility: hidden; }
+  .card .body { padding: 0 0.8rem 0.75rem; }
+  .ev { display: flex; gap: 0.6rem; align-items: baseline; padding: 0.35rem 0; border-top: 1px dashed var(--line); font-size: 12px; }
+  .ev .src { color: var(--violet); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; min-width: 4.5em; }
+  .ev .flag { margin-left: auto; color: var(--faint); cursor: pointer; }
+  .ev .flag:hover { color: var(--red); }
+  .btnrow { display: flex; gap: 6px; margin-top: 0.6rem; flex-wrap: wrap; }
+  .btn { border: 1px solid var(--line); background: var(--panel2); color: var(--ink); border-radius: 5px; padding: 0.3rem 0.8rem; font: inherit; font-size: 12px; cursor: pointer; }
+  .btn:hover { border-color: var(--cyan); }
+  .btn.primary { border-color: var(--amber); color: var(--amber); }
+
+  /* Week strip */
+  .week { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+  .day { border: 1px dashed var(--line); border-radius: 5px; min-height: 52px; padding: 0.3rem 0.45rem; font-size: 10px; color: var(--muted); }
+  .day .d { color: var(--faint); text-transform: uppercase; letter-spacing: 0.1em; }
+  .day.has { border-style: solid; background: var(--panel); }
+  .day .ev-line { margin-top: 0.2rem; color: var(--ink); font-size: 11px; }
+  .day .ev-line.tex { color: var(--amber); }
+
+  .foot { margin-top: 2rem; padding-top: 0.6rem; border-top: 1px solid var(--line); color: var(--faint); font-size: 11px; display: flex; gap: 1rem; flex-wrap: wrap; }
+  .foot .ok { color: var(--green); }
+
+  .note { max-width: 880px; margin: 1.5rem auto 0; border: 1px dashed #4a4530; background: #16140c; color: #b3a86b; border-radius: 6px; padding: 0.7rem 0.9rem; font-size: 12px; }
+  @media (max-width: 720px) { .tiles { grid-template-columns: repeat(2, 1fr); } .week { grid-template-columns: repeat(4, 1fr); } }
+</style>
+
+<div class="frame">
+  <div class="masthead">
+    <h1>☀️ Monday</h1>
+    <span class="meta">3 Aug · 06:15 · opus</span>
+    <span class="quiet-badge">quiet night · fleet clean</span>
+  </div>
+
+  <p class="sentence">The only number on this board that gets worse by Friday on its own is the <a href="#">Fringe one</a>.</p>
+
+  <div class="kicker">Instruments</div>
+  <div class="tiles">
+    <div class="tile">
+      <div class="label">LocalShout <span class="clock">ship</span></div>
+      <div class="big">5 wks</div>
+      <div class="sub">9.9h · 38% of week</div>
+      <div class="bar"><i style="width:38%"></i></div>
+    </div>
+    <div class="tile">
+      <div class="label">Jimbo <span class="clock">compound</span></div>
+      <div class="big">16h</div>
+      <div class="sub">62% — the ceiling bucket</div>
+      <div class="bar"><i style="width:62%"></i></div>
+    </div>
+    <div class="tile alert">
+      <div class="label">Positioning <span class="clock">runway</span></div>
+      <div class="big">0h · wk 3</div>
+      <div class="sub">runway figure in dispute ↓</div>
+      <div class="bar"><i style="width:0%"></i></div>
+    </div>
+    <div class="tile">
+      <div class="label">Body <span class="clock">cadence</span></div>
+      <div class="dotrow">food <span class="on">●●●●●●●</span><br>gym&nbsp; <span class="on">●●●●</span><span class="off">○○○</span></div>
+      <div class="sub">pool day today</div>
+    </div>
+  </div>
+
+  <div class="kicker warn">Worth your attention · 1</div>
+  <details class="card">
+    <summary>
+      <span class="id">F-041</span>
+      <span class="claim">Your two runway figures are a year apart — and every money decision quietly picks one.</span>
+      <span class="more">▸ evidence · 3</span>
+    </summary>
+    <div class="body">
+      <div class="ev"><span class="src">context</span><span>Priorities file (28 Apr): “runway ~2 years, finances not urgent”</span><a href="#" style="margin-left:auto">item #11</a><span class="flag" title="this signal is wrong">▼</span></div>
+      <div class="ev"><span class="src">answer</span><span>You, 31 Jul: “runway is ~1 year”</span><a href="#" style="margin-left:auto">clar_abcc92d5</a><span class="flag">▼</span></div>
+      <div class="ev"><span class="src">buckets</span><span>Positioning &amp; income: 0h for three straight weeks</span><a href="#" style="margin-left:auto">mirror</a><span class="flag">▼</span></div>
+      <div class="btnrow">
+        <button class="btn primary">~1 year is right — update the file</button>
+        <button class="btn">~2 years is right</button>
+        <button class="btn">Neither — I'll look at real numbers</button>
+        <button class="btn" style="border-style:dashed; color:var(--muted);">not now</button>
+      </div>
+    </div>
+  </details>
+
+  <div class="kicker">Still open · no explanations owed</div>
+  <div class="ledger">
+    <div class="row degrading">
+      <span class="title">Fringe bed — solo dorm or group, 15–24 Aug</span>
+      <span class="tag">shape of trip: undecided — fine</span>
+      <span class="days hot">·····&nbsp; day <b>24</b></span>
+      <span class="acts"><button class="act done">✓ done</button><button class="act">→ next wk</button><button class="act">✕ drop</button><button class="act">💬</button></span>
+    </div>
+    <div class="row">
+      <span class="title">RLS vulnerability — LocalShout</span>
+      <span class="days hot">···&nbsp; day <b>12</b> · urgent</span>
+      <span class="acts"><button class="act done">✓ done</button><button class="act">→ next wk</button><button class="act">✕ drop</button><button class="act">💬</button></span>
+    </div>
+    <div class="row">
+      <span class="title">Dispatch cron failure — LocalShout</span>
+      <span class="days">····&nbsp; day <b>17</b></span>
+      <span class="acts"><button class="act done">✓ done</button><button class="act">→ next wk</button><button class="act">✕ drop</button><button class="act">💬</button></span>
+    </div>
+    <div class="row">
+      <span class="title">assertion-scan — verdict overdue</span>
+      <span class="days">····&nbsp; day <b>17</b></span>
+      <span class="acts"><button class="act done">✓ keep</button><button class="act">✕ kill</button><button class="act">💬</button></span>
+    </div>
+    <div class="row">
+      <span class="title">NZ passport — 2h of admin</span>
+      <span class="days">····································&nbsp; day <b>146</b></span>
+      <span class="acts"><button class="act done">✓ done</button><button class="act">→ next wk</button><button class="act">✕ drop</button><button class="act">💬</button></span>
+    </div>
+  </div>
+
+  <div class="kicker">The week · 8 days, 1 commitment</div>
+  <div class="week">
+    <div class="day has"><div class="d">Mon 3</div><div class="ev-line">3177 am · pool</div></div>
+    <div class="day"><div class="d">Tue 4</div><div class="ev-line tex">texture slot?</div></div>
+    <div class="day"><div class="d">Wed 5</div></div>
+    <div class="day"><div class="d">Thu 6</div></div>
+    <div class="day"><div class="d">Fri 7</div></div>
+    <div class="day has"><div class="d">Sat 8</div><div class="ev-line">⚽ Watford (H)</div></div>
+    <div class="day"><div class="d">Sun 9</div></div>
+    <div class="day has"><div class="d">→ Sat 15</div><div class="ev-line">Edinburgh</div></div>
+  </div>
+
+  <div class="foot">
+    <span class="ok">✓ 21 sources</span>
+    <span>1 retried (gym/detailed)</span>
+    <span>41.2k in / 3.1k out</span>
+    <span>4m 52s</span>
+    <a href="#">provenance →</a>
+    <a href="#">yesterday's scorecard →</a>
+  </div>
+</div>
+
+<div class="note">
+  <b>What changed vs today's briefing:</b> ~1,900 words → ~90 visible. The serif voice appears exactly twice (the
+  sentence, the finding). The Fringe item stopped being a question — it's a ledger row with day-dots, hover
+  actions, and an optional one-time tag ("shape of trip: undecided — fine") instead of a fresh 120-word
+  re-derivation each run. Ledger + tiles + week render <b>deterministically, zero LLM tokens</b>; Opus writes
+  the sentence and the finding only. Click F-041 — expansion is the read tier, ▼ flags a specific signal.
+</div>

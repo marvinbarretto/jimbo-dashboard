@@ -1,0 +1,59 @@
+<link rel="stylesheet" href="wire-kit.css">
+<title>05 — Diff Briefing</title>
+
+<div class="w-frame">
+  <div class="w-intent">GOAL:     Render ONLY what changed since the last briefing. Steady state collapses to a single line. Wordiness is solved structurally: no delta, no words.
+PERSONA:  Marvin, whose #206 afternoon briefing honestly admitted "the mirror reads identically to 06:15" — in 80 words. The diff version says it in zero.
+PRIMARY:  Scan the deltas in under 60 seconds. Expand anything that surprises.
+SUCCESS:  A quiet day produces a 6-line briefing and that feels correct, not lazy. A loud day earns its length.</div>
+
+  <div class="w-bar">
+    <span class="w-h1">◀️ Afternoon briefing — the diff</span>
+    <span class="w-muted">Sun 2 Aug · 14:14 · vs this morning 06:15</span>
+  </div>
+
+  <div style="padding:1rem; max-width:56rem;">
+
+    <div class="w-block" style="border-width:2px;">
+      <div class="w-h3" style="margin-bottom:0.4rem;">Changed since 06:15 <span class="w-chip">3</span></div>
+
+      <div class="w-list-item">
+        <span style="font-family:monospace; color:#060;">+</span>
+        <span><b>2 captures landed 05:00, still unrouted at 14:14</b> — "Plan the week" (seq 3817) + DateinaDash search. Both yours, both about claiming the empty week.</span>
+        <span style="margin-left:auto;"><a href="#">route them →</a></span>
+      </div>
+      <div class="w-list-item">
+        <span style="font-family:monospace; color:#a00;">−</span>
+        <span><b>LocalShout session reaped</b> — started 18:48 yesterday, last heartbeat 00:30, marked abandoned at 09:00. No Claude session since.</span>
+        <span style="margin-left:auto;"><a href="#">session →</a></span>
+      </div>
+      <div class="w-list-item">
+        <span style="font-family:monospace; color:#c80;">Δ</span>
+        <span><b>Fringe cost-of-delay ticked</b> — now 13 days to opening week. Party-size question (below) unchanged, but its price isn't.</span>
+        <span style="margin-left:auto;"><a href="#">question →</a></span>
+      </div>
+    </div>
+
+    <div class="w-block">
+      <div class="w-h3" style="margin-bottom:0.4rem;">Unchanged <span class="w-chip">collapsed</span></div>
+      <div class="w-list-item"><span class="w-muted" style="font-family:monospace;">=</span><span class="w-muted">Mirror: LocalShout 9.9h / Jimbo 15.8h (38/62) — identical to 06:15; no Claude time today, expected on a Sunday off</span><span style="margin-left:auto;" class="w-muted">▸</span></div>
+      <div class="w-list-item"><span class="w-muted" style="font-family:monospace;">=</span><span class="w-muted">Fleet: Boris 11 · Jeffrey 144 · Kipper 0 — same as morning report</span><span style="margin-left:auto;" class="w-muted">▸</span></div>
+      <div class="w-list-item"><span class="w-muted" style="font-family:monospace;">=</span><span class="w-muted">Health: on track for a normal day (686 steps @15:13 ≈ yesterday's 94 @15:00 → 13,656 close)</span><span style="margin-left:auto;" class="w-muted">▸</span></div>
+      <div class="w-list-item"><span class="w-muted" style="font-family:monospace;">=</span><span class="w-muted">Open questions: 2 carried (day-off?, Fringe) — no re-ask, answers still land on the same cards</span><span style="margin-left:auto;" class="w-muted">▸</span></div>
+    </div>
+
+    <div class="w-block" style="background:#fafafa;">
+      <div class="w-h3" style="margin-bottom:0.4rem;">Still true, still waiting <span class="w-chip">the honest nag line</span></div>
+      <div class="w-body w-muted">RLS vulnerability day 12 · dispatch cron day 17 · assertion-scan verdict day 17 · post-World-Cup slot week 3. One line, every briefing, until cleared or parked. No paragraphs.</div>
+    </div>
+
+    <div class="w-notes">MECHANISM
+— Needs briefing state to be DATA, not prose: each section emits {key, value_hash, summary}. The next run
+  diffs against the previous row (it already fetches history?limit=4) and writes prose ONLY for changed keys.
+— The "still true, still waiting" ticker replaces re-written nag paragraphs with day-counters — repetition
+  becomes a number, which is honest AND shorter. (#206 wrote ~120 words re-explaining the unchanged mirror.)
+— Morning edition = diff vs yesterday morning (24h); afternoon = diff vs morning (8h). Composable with every
+  other concept here — 01's findings and 03's evidence cards slot straight into "Changed".</div>
+  </div>
+</div>
+<script src="wire-nav.js"></script>

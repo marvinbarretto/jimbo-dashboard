@@ -1,0 +1,77 @@
+<link rel="stylesheet" href="wire-kit.css">
+<title>07 — Scoreboard</title>
+
+<div class="w-frame">
+  <div class="w-intent">GOAL:     Mirror, sharpened to numbers. Every bucket rendered on ITS OWN clock — ship gets a countdown, runway gets a cost meter, cadence gets a streak. One sentence of prose allowed per day.
+PERSONA:  Marvin: "observability over instruction", "I am in charge". Wants to see where he is against goals HE set, at a glance.
+PRIMARY:  Glance. 15 seconds to whole-life state. Click any tile to drill into the dashboard surface behind it.
+SUCCESS:  Zero words he has to read twice, zero judgement, and the clocks stop him comparing incomparable things (ship vs runway vs cadence).</div>
+
+  <div class="w-bar">
+    <span class="w-h1">☀️ Scoreboard</span>
+    <span class="w-muted">Mon 3 Aug · 06:15</span>
+    <span style="margin-left:auto;" class="w-chip">1 sentence today, spent below ↓</span>
+  </div>
+
+  <div style="padding:1rem;">
+
+    <div class="w-cols">
+      <div class="w-col w-block" style="border-width:2px;">
+        <div class="w-h3">LOCALSHOUT <span class="w-chip">ship clock</span></div>
+        <div style="font-size:28px; font-weight:700; margin:0.3rem 0;">5 wks</div>
+        <div class="w-muted">to early-Sep window (rev 2)</div>
+        <div style="font-family:monospace; margin-top:0.4rem;">wk: 9.9h ▰▰▰▰▱▱▱▱ 38%</div>
+        <div class="w-muted">7 [Submit] items open · 2 urgent overdue (RLS 12d, cron 17d)</div>
+      </div>
+      <div class="w-col w-block" style="border-width:2px;">
+        <div class="w-h3">JIMBO <span class="w-chip">compound clock</span></div>
+        <div style="font-size:28px; font-weight:700; margin:0.3rem 0;">16h</div>
+        <div class="w-muted">62% of Claude week — the ceiling bucket</div>
+        <div style="font-family:monospace; margin-top:0.4rem;">wk: ▰▰▰▰▰▰▰▰ (cap?)</div>
+        <div class="w-muted">expands to fill time by design — no target, just visibility</div>
+      </div>
+      <div class="w-col w-block" style="border-width:2px;">
+        <div class="w-h3">POSITIONING <span class="w-chip">runway clock</span></div>
+        <div style="font-size:28px; font-weight:700; margin:0.3rem 0;">0h · wk 3</div>
+        <div class="w-muted">runway figure in dispute: ~1yr vs ~2yr <a href="#">resolve →</a></div>
+        <div style="font-family:monospace; margin-top:0.4rem;">cost of delay: accruing, silent</div>
+        <div class="w-muted">never feels urgent — that's what this clock is FOR</div>
+      </div>
+    </div>
+
+    <div class="w-cols" style="margin-top:0.75rem;">
+      <div class="w-col w-block">
+        <div class="w-h3">BODY <span class="w-chip">cadence</span></div>
+        <div style="font-family:monospace; margin-top:0.3rem;">food &nbsp;●●●●●●● 7/7<br>gym&nbsp;&nbsp; ●●●●○○○ lift gap 4d<br>pool&nbsp; today is a pool day</div>
+      </div>
+      <div class="w-col w-block">
+        <div class="w-h3">TEXTURE <span class="w-chip">shown, not scored</span></div>
+        <div style="font-family:monospace; margin-top:0.3rem;">week ahead: ▢▢▢▢▢▢▢▢<br>8 days, 0 commitments</div>
+        <div class="w-muted">calendar is the record; no tally invented</div>
+      </div>
+      <div class="w-col w-block">
+        <div class="w-h3">DESK</div>
+        <div style="font-family:monospace; margin-top:0.3rem;">questions&nbsp; 2 open<br>verdicts&nbsp;&nbsp; 2 due Fri<br>handoffs&nbsp;&nbsp; 18 waiting<br>inbox&nbsp;&nbsp;&nbsp;&nbsp; 15 (2 yours)</div>
+      </div>
+      <div class="w-col w-block">
+        <div class="w-h3">TRAVEL <span class="w-chip">opportunistic</span></div>
+        <div style="font-family:monospace; margin-top:0.3rem;">Fringe: 12 days out<br>group: unconfirmed 24d<br>⚠ degrading daily</div>
+      </div>
+    </div>
+
+    <div class="w-block" style="margin-top:0.75rem; border-width:2px; background:#fafafa;">
+      <div class="w-h3">TODAY'S SENTENCE</div>
+      <div class="w-h2" style="font-weight:400;">The only number on this board that gets worse by Friday on its own is the Fringe one.</div>
+    </div>
+
+    <div class="w-notes">MECHANISM
+— 90% of this board is DETERMINISTIC — buckets/weekly, live-status, gym/food dailies, clarifications count.
+  It could render server-side with zero LLM (your live_status endpoint is most of it already).
+— The LLM's entire job shrinks to: the sentence, the tile annotations, and choosing the ⚠. Opus writing one
+  sentence beats Opus writing nine sections — concentration of quality, and structurally immune to wordiness.
+— The clock framing comes from your bucket config (ship/compound/runway/cadence/opportunistic) — already coded,
+  never yet rendered as the organising principle.
+— Pairs naturally: this is the spine; 01-findings or 03-questions mount above it on days they exist.</div>
+  </div>
+</div>
+<script src="wire-nav.js"></script>

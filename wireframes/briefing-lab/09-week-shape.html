@@ -1,0 +1,77 @@
+<link rel="stylesheet" href="wire-kit.css">
+<title>09 — Week Shape</title>
+
+<div class="w-frame">
+  <div class="w-intent">GOAL:     The unit of the briefing is the WEEK, not the day. The daily edition is just a cursor moving across a shape you agreed on Sunday/Monday.
+PERSONA:  Marvin, whose own goals file says "weekly planning looks at days 8–14, not 1–7 — London slots fill on a 2-3 week horizon" — a rule no current surface enforces.
+PRIMARY:  Monday: agree the shape (or amend it). Tue–Sun: glance at the cursor. Texture commitments are placed FIRST, work flows around them.
+SUCCESS:  By Wednesday there's ≥1 committed evening; the 8–14 day lane stops being permanently empty; "plan the week" stops arriving as an inbox capture because it IS the briefing.</div>
+
+  <div class="w-bar">
+    <span class="w-h1">☀️ Week 32 — the shape</span>
+    <span class="w-muted">Mon 3 Aug · agreed: not yet · this IS seq 3817</span>
+  </div>
+
+  <div style="padding:1rem;">
+
+    <div class="w-block" style="border-width:2px; background:#fffbe6;">
+      <div class="w-body"><b>This week arrives empty — 8 days, one recurring triage, nothing else.</b> Per your own rule, texture goes in first (it's the material, not the reward). Proposed shape below: amend anything, then "agree" — after that, daily briefings only track the diff against it.</div>
+    </div>
+
+    <div class="w-cols" style="margin-top:0.75rem;">
+      <div class="w-col w-day-col">
+        <div class="w-day-head">Mon 3</div>
+        <div class="w-event"><span class="w-event__time">am</span><span>LocalShout: seq 3177 <span class="w-chip">2 blk</span> <span class="w-muted">(morning slot — evenings don't catch, see F-042)</span></span></div>
+        <div class="w-event"><span class="w-event__time">pm</span><span>pool 🏊 (your day)</span></div>
+        <div class="w-event w-event--pencilled"><span class="w-event__time">eve</span><span>Fringe: book solo dorm <span class="w-chip">1 blk</span></span></div>
+      </div>
+      <div class="w-col w-day-col">
+        <div class="w-day-head">Tue 4</div>
+        <div class="w-event"><span class="w-event__time">am</span><span>LocalShout: [Submit] run <span class="w-chip">3 blk</span></span></div>
+        <div class="w-event w-event--pencilled" style="border:2px dashed #c80;"><span class="w-event__time">eve</span><span><b>TEXTURE SLOT — pick tonight:</b> DateinaDash (your capture) · Peach Koko recon · pool social</span></div>
+      </div>
+      <div class="w-col w-day-col">
+        <div class="w-day-head">Wed 5</div>
+        <div class="w-event"><span class="w-event__time">am</span><span>RLS vulnerability <span class="w-chip">2 blk</span> <span class="w-muted">day 13 → 0</span></span></div>
+        <div class="w-event"><span class="w-event__time">pm</span><span>positioning: LinkedIn hour <span class="w-chip">2 blk</span> <span class="w-muted">first non-zero in 3 wks</span></span></div>
+      </div>
+      <div class="w-col w-day-col">
+        <div class="w-day-head">Thu 6</div>
+        <div class="w-event"><span class="w-event__time">am</span><span>LocalShout: [Submit] <span class="w-chip">3 blk</span></span></div>
+        <div class="w-event"><span class="w-event__time">eve</span><span class="w-muted">held free — recovery valve</span></div>
+      </div>
+      <div class="w-col w-day-col">
+        <div class="w-day-head">Fri 7</div>
+        <div class="w-event"><span class="w-event__time">am</span><span>verdict day: 2 experiments <span class="w-chip">1 blk</span></span></div>
+        <div class="w-event"><span class="w-event__time">pm</span><span>week close + next-week 8–14 look</span></div>
+      </div>
+      <div class="w-col w-day-col">
+        <div class="w-day-head">Sat 8 / Sun 9</div>
+        <div class="w-event"><span class="w-event__time">Sat</span><span>⚽ Watford opener (H)</span></div>
+        <div class="w-event"><span class="w-event__time">Sun</span><span class="w-muted">unplanned by design</span></div>
+      </div>
+    </div>
+
+    <div class="w-block" style="margin-top:0.75rem;">
+      <div class="w-h3">THE 8–14 DAY LANE <span class="w-chip">the one that's always empty</span></div>
+      <div class="w-list-item"><span class="w-body">Mon 10 – Fri 14: Fringe prep tail + <b>zero London bookings</b>. Your rule says this is the window that matters — gigs/comedy for w/c 10th sell out THIS week. Two candidates from the wires: <a href="#">fabric anniversary 14 Aug</a> · <a href="#">Lexi programme →</a></span></div>
+      <div class="w-list-item"><span class="w-body">Sat 15: → Edinburgh (first week, from the 15th — settled)</span></div>
+    </div>
+
+    <div style="margin-top:0.5rem;">
+      <span class="w-btn-primary">Agree shape</span>
+      <span class="w-btn-ghost">Amend…</span>
+      <span class="w-btn-ghost">Too much — halve the work blocks</span>
+    </div>
+
+    <div class="w-notes">MECHANISM
+— Weekly negotiation (Mon morning) + daily cursor. Daily briefings shrink to: diff vs shape + today's column.
+  week_tracking already exists in the schema; this makes it the SPINE instead of a section.
+— "Agree" writes the shape as pencilled blocks via the existing PlannerSyncService rails; amendments are
+  clarification answers. The orange TEXTURE slot is the deferral-pattern mirror made spatial — an empty box
+  you can see, not a paragraph that nags.
+— The 8–14 lane is pure enforcement of goals item #109, fed by calendar + (with 06) the newsletter wires
+  for candidate events. This is also where "knowing early is everything — events sell out" finally gets teeth.</div>
+  </div>
+</div>
+<script src="wire-nav.js"></script>

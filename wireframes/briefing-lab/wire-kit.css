@@ -1,0 +1,136 @@
+/* Wireframe kit — structure only. Greyscale, one mono font, desktop frame. */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "SF Mono", ui-monospace, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #222;
+  background: #e8e8e8;
+  padding: 2rem 1rem 4rem;
+}
+
+.w-frame {
+  width: 1280px;
+  margin: 0 auto;
+  background: #fff;
+  border: 2px solid #222;
+  min-height: 720px;
+}
+
+/* Intent block — the contract, always first. */
+.w-intent {
+  background: #f4f4f4;
+  border-bottom: 2px dashed #999;
+  padding: 0.75rem 1rem;
+  white-space: pre-wrap;
+  font-size: 12px;
+  color: #444;
+}
+
+.w-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #222;
+  background: #fafafa;
+}
+
+.w-h1 { font-size: 18px; font-weight: 700; }
+.w-h2 { font-size: 15px; font-weight: 700; }
+.w-h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.w-body { color: #333; }
+.w-muted { color: #888; }
+
+.w-block {
+  border: 1px solid #666;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.5rem;
+  background: #fff;
+}
+
+.w-placeholder {
+  border: 1px dashed #999;
+  color: #999;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.w-btn-primary, .w-btn-ghost {
+  display: inline-block;
+  padding: 0.35rem 0.9rem;
+  border: 2px solid #222;
+  cursor: pointer;
+  font: inherit;
+}
+.w-btn-primary { background: #222; color: #fff; font-weight: 700; }
+.w-btn-ghost { background: #fff; color: #222; }
+
+.w-chip {
+  display: inline-block;
+  border: 1px solid #888;
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+  font-size: 11px;
+  color: #555;
+  background: #f4f4f4;
+}
+
+.w-list-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px dashed #ccc;
+}
+
+/* Layout helpers */
+.w-cols { display: flex; gap: 1rem; align-items: flex-start; }
+.w-col { flex: 1; min-width: 0; }
+
+/* Day-board specifics (structural, not visual) */
+.w-day-col { border: 1px solid #222; }
+.w-day-head { padding: 0.4rem 0.6rem; border-bottom: 1px solid #222; background: #f0f0f0; font-weight: 700; }
+.w-lane-head {
+  padding: 0.2rem 0.6rem;
+  background: #fafafa;
+  border-bottom: 1px dashed #bbb;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #777;
+}
+.w-event { padding: 0.35rem 0.6rem; border-bottom: 1px dashed #ddd; display: flex; gap: 0.5rem; align-items: baseline; }
+.w-event--pencilled { background: repeating-linear-gradient(45deg, #fff, #fff 6px, #f6f6f6 6px, #f6f6f6 12px); }
+.w-event__time { color: #888; min-width: 3.2em; }
+.w-drag { color: #aaa; cursor: grab; }
+
+/* Annotations — reviewer-facing thinking. */
+.w-notes {
+  background: #fffbe6;
+  border: 1px dashed #c9b458;
+  padding: 0.6rem 0.8rem;
+  margin: 0.75rem 0;
+  font-size: 12px;
+  color: #665c1e;
+  white-space: pre-wrap;
+}
+
+/* State separator */
+.w-state-sep {
+  margin: 2rem auto 1rem;
+  width: 1280px;
+  border-top: 3px double #999;
+  padding-top: 0.5rem;
+  color: #777;
+  font-weight: 700;
+}
+
+/* Toast */
+.w-toast {
+  border: 2px solid #222;
+  background: #222;
+  color: #fff;
+  padding: 0.5rem 0.9rem;
+  display: inline-block;
+}

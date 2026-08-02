@@ -1,0 +1,75 @@
+<link rel="stylesheet" href="wire-kit.css">
+<title>03 — Evidence Card (the question mechanic)</title>
+
+<div class="w-frame">
+  <div class="w-intent">GOAL:     Not a page — a COMPONENT. Every question the briefing asks carries an inspectable "why", with each signal hyperlinked to the dashboard surface it came from.
+PERSONA:  Marvin: "I'd answer more questions if I knew the rationale… and I want to monitor how everything is being hooked up."
+PRIMARY:  Answer the question — but the reveal is the point: signals → inference → what each answer changes.
+SUCCESS:  Zero questions that feel arbitrary. When one IS badly grounded, the evidence card exposes it and ▼[wrong-facts] lands on the exact signal, not the vibe.</div>
+
+  <div class="w-bar">
+    <span class="w-h1">Question, closed state → open state</span>
+    <span class="w-muted">real question from briefing #206, re-rendered</span>
+  </div>
+
+  <div style="padding:1rem; max-width:56rem;">
+
+    <div class="w-h3" style="margin-bottom:0.5rem;">A · Closed (default) — same size as today, one new affordance</div>
+    <div class="w-block" style="border-width:2px;">
+      <div class="w-h2">Book the Fringe bed: solo dorm now, or hold for the group?</div>
+      <div class="w-muted" style="margin:0.3rem 0;">gates: which accommodation gets booked, and whether it can happen tonight</div>
+      <div>
+        <span class="w-btn-ghost">Solo dorm — book it now</span>
+        <span class="w-btn-ghost">Hold for the group</span>
+        <span class="w-btn-ghost">Group's off — solo, but not tonight</span>
+      </div>
+      <div style="margin-top:0.4rem;"><span class="w-chip">▸ why I'm asking · 4 signals</span> <span class="w-muted">← the whole concept is this chip</span></div>
+    </div>
+
+    <div class="w-state-sep" style="width:auto; margin:1.5rem 0 1rem;">▾ expanded</div>
+
+    <div class="w-h3" style="margin-bottom:0.5rem;">B · Open — the working, every signal a link</div>
+    <div class="w-block" style="border-width:2px;">
+      <div class="w-h2">Book the Fringe bed: solo dorm now, or hold for the group?</div>
+
+      <div class="w-block" style="margin-top:0.5rem; background:#fafafa;">
+        <div class="w-h3">Signals (4)</div>
+        <div class="w-list-item"><span class="w-chip">vault</span><span>FR26-P2 "lock the group (4–6)" — due <b>10 Jul</b>, still open, <b>24 days late</b></span><span style="margin-left:auto;"><a href="#">seq 3133 →</a></span></div>
+        <div class="w-list-item"><span class="w-chip">answer</span><span>You settled dates 27 Jul: "first week, from the 15th onwards" — so dates are NOT the blocker</span><span style="margin-left:auto;"><a href="#">clar_f8edc2d7 →</a></span></div>
+        <div class="w-list-item"><span class="w-chip">constraint</span><span>Your travel constraints: dorm ceiling £35/night; solo-viable by default, group is upside</span><span style="margin-left:auto;"><a href="#">constraints file →</a></span></div>
+        <div class="w-list-item"><span class="w-chip">world</span><span>Opening week, 12 days out — availability degrades daily (the only time-degrading item on today's desk)</span><span style="margin-left:auto;"><a href="#">calendar →</a></span></div>
+      </div>
+
+      <div class="w-block" style="background:#fafafa;">
+        <div class="w-h3">Inference</div>
+        <div class="w-body">Dates settled + party size not → the group is the real hold, not the football. Your own constraints say solo is first-class, so waiting on others is a choice, not a default. I've asked about the <i>booking</i> three times; this reframes to the actual blocker. Confidence the group is the true gate: <b>0.8</b> (would drop if FR26-P2 was answered somewhere I don't watch — e.g. WhatsApp).</div>
+      </div>
+
+      <div class="w-block" style="background:#fafafa;">
+        <div class="w-h3">What each answer changes</div>
+        <div class="w-list-item"><span class="w-body"><b>Solo dorm now</b> → pencils a 25-min booking block tonight · closes FR26-P2 as "solo" · stops all Fringe questions</span></div>
+        <div class="w-list-item"><span class="w-body"><b>Hold for group</b> → files a chase task with a 5 Aug deadline · I stop asking until then · dorm-price drift logged daily</span></div>
+        <div class="w-list-item"><span class="w-body"><b>Group's off, solo later</b> → same as A but the block lands on your next free evening, not tonight</span></div>
+      </div>
+
+      <div>
+        <span class="w-btn-primary">Solo dorm — book it now</span>
+        <span class="w-btn-ghost">Hold for the group</span>
+        <span class="w-btn-ghost">Group's off — solo, but not tonight</span>
+        <span class="w-muted" style="margin-left:0.75rem;">▼ this question is badly grounded — tell me which signal is wrong</span>
+      </div>
+    </div>
+
+    <div class="w-notes">MECHANISM + WHERE THE DATA COMES FROM
+— The generator ALREADY derives all of this internally, then throws it away. Change: open_questions[] gains
+  evidence[] {source_kind, ref, claim, url}, inference (2 sentences, confidence), and per-option consequences[].
+  Schema change in briefing.ts + ~15 lines of prompt; the dashboard turns refs into deep links it already has
+  routes for (vault ?detail=seq, clarifications, context files, buckets).
+— "▼ on a SIGNAL, not the question" is the feedback upgrade: [wrong-facts] lands on the exact source, so the
+  generator learns "distrust FR26-P2 staleness", not "Marvin didn't like the Fringe question".
+— Same card attaches to priorities and findings — anything with a "because".
+COST: ~300–500 extra output tokens per question. Boris is flat-rate; the cost is Marvin-attention, which the
+  closed-by-default chip protects.</div>
+  </div>
+</div>
+<script src="wire-nav.js"></script>
