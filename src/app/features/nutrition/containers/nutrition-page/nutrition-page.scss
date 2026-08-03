@@ -1,5 +1,15 @@
 // Layout is owned entirely by the composed primitives (UiPeriodTotals,
-// UiTrackerDayGroup, UiBarChart). The page itself adds no bespoke chrome.
+// UiTrackerDayGroup, UiBarChart). The page itself adds no bespoke chrome
+// beyond the link out to the scanner.
 :host {
   display: block;
+}
+
+.nutrition__scan-link {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+
+  a {
+    color: var(--color-text-muted);
+  }
 }

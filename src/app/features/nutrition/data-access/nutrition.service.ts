@@ -26,6 +26,8 @@ export interface FoodLogEntry {
   est_carbs_g: number | null;
   est_fat_g: number | null;
   source: string;
+  /** EAN/UPC when the entry was captured by scanning; null otherwise. */
+  barcode?: string | null;
 }
 
 export interface FoodDailyRow {
@@ -45,6 +47,38 @@ export interface FrequentFood {
   est_carbs_g: number | null;
   est_fat_g: number | null;
   count: number;
+}
+
+// ── Barcode capture ───────────────────────────────────────────────
+// Decoding happens on the device; the API takes the digits and resolves them
+// against Open Food Facts. Portion is grams, or servings of the manufacturer
+// serving size — 1 serving by default, falling back to 100 g when the product
+// doesn't state one.
+
+export interface BarcodeProduct {
+  barcode: string;
+  label: string;
+  brand: string | null;
+  /** null when the product exists but Open Food Facts has no nutrition data. */
+  per100g: { kcal: number; protein_g: number; carbs_g: number; fat_g: number } | null;
+  serving_g: number | null;
+  kind: 'food' | 'drink';
+  alcoholic: boolean;
+}
+
+export interface BarcodeResolution {
+  barcode: string;
+  product: BarcodeProduct;
+  items: FoodItem[];
+  totals: { kcal: number; protein_g: number; carbs_g: number; fat_g: number };
+  /** 'llm_estimate' means the product was found but carried no macros. */
+  macro_source: 'openfoodfacts' | 'llm_estimate';
+}
+
+/** How much of the scanned product was consumed. `grams` wins over `servings`. */
+export interface BarcodePortion {
+  servings?: number;
+  grams?: number;
 }
 
 export interface SupplementLogEntry {
@@ -163,6 +197,35 @@ export class NutritionService {
 
   createFood(body: FoodManualInput): Observable<FoodLogEntry> {
     return this.http.post<FoodLogEntry>(`${this.base}/api/coach/food-log/manual`, body);
+  }
+
+  // Preview a scanned code without persisting, so the confirm step can show the
+  // product and its macros before anything lands in the log. 404 = unknown
+  // product, which the caller offers as a free-text fallback rather than an error.
+  resolveBarcode(code: string, portion: BarcodePortion = {}): Observable<BarcodeResolution> {
+    const params = new URLSearchParams();
+    if (portion.grams != null) params.set('grams', String(portion.grams));
+    else if (portion.servings != null) params.set('servings', String(portion.servings));
+    const qs = params.toString();
+    return this.http.get<BarcodeResolution>(
+      `${this.base}/api/coach/food-log/barcode/${encodeURIComponent(code)}${qs ? `?${qs}` : ''}`,
+    );
+  }
+
+  // Resolve + persist in one call. Re-resolves server-side rather than trusting
+  // the previewed macros, so the entry can't be forged from the client.
+  logBarcode(
+    code: string,
+    portion: BarcodePortion = {},
+    opts: { logged_at?: string; notes?: string | null } = {},
+  ): Observable<FoodLogEntry> {
+    return this.http.post<FoodLogEntry>(`${this.base}/api/coach/food-log/barcode`, {
+      barcode: code,
+      ...(portion.grams != null ? { grams: portion.grams } : {}),
+      ...(portion.grams == null && portion.servings != null ? { servings: portion.servings } : {}),
+      ...(opts.logged_at ? { logged_at: opts.logged_at } : {}),
+      ...(opts.notes != null ? { notes: opts.notes } : {}),
+    });
   }
 
   patchFood(id: string, changes: FoodPatch): Observable<FoodLogEntry> {

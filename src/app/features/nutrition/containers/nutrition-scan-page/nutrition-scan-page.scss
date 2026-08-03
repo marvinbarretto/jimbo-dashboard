@@ -1,0 +1,224 @@
+// Mobile-first: this page is meant to be used one-handed in a kitchen or a
+// supermarket aisle, so every target is finger-sized and the layout is a single
+// column that never needs a horizontal glance.
+:host {
+  display: block;
+}
+
+.scan__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.scan__title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.scan__link {
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.scan__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+// Buttons are 44px+ tall — the WCAG target-size floor, and the difference
+// between a scan that works while holding a jar and one that doesn't.
+.scan__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+
+  &:disabled,
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.scan__btn--primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-black, #000);
+  font-weight: 600;
+}
+
+// The photo control is a <label> wrapping a hidden <input type=file> — that is
+// what makes a phone offer the camera directly rather than a file browser.
+.scan__file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.scan__viewfinder {
+  position: relative;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 4 / 3;
+}
+
+.scan__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+// A guide box, not a crop — decoding always reads the whole frame, so this only
+// tells the user roughly where to aim.
+.scan__reticle {
+  position: absolute;
+  inset: 25% 10%;
+  border: 2px solid var(--color-accent);
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 35%);
+}
+
+.scan__status,
+.scan__hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.scan__error {
+  margin: 0;
+  color: var(--color-error, var(--color-danger));
+  font-size: 0.875rem;
+}
+
+.scan__body {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.scan__manual {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.5rem;
+}
+
+.scan__label {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.25rem;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+// 16px minimum: anything smaller and iOS Safari zooms the page on focus, which
+// on a scan page means the viewfinder jumps off screen.
+.scan__input {
+  flex: 1 1 10rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.scan__product-name {
+  margin: 0 0 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.scan__product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.scan__tag {
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
+.scan__tag--warn {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+.scan__modes {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.scan__mode {
+  min-height: 2.5rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.scan__mode--on {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+}
+
+// Dimmed while a portion edit is in flight, so the numbers never look
+// authoritative when they're a portion behind.
+.scan__macros--stale {
+  opacity: 0.45;
+}
+
+.scan__macros {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin: 0;
+
+  div {
+    padding: 0.5rem;
+    border: 1px solid var(--color-border-subtle, var(--color-border));
+    border-radius: 0.5rem;
+    text-align: center;
+  }
+
+  dt {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+  }
+
+  dd {
+    margin: 0.125rem 0 0;
+    font-size: 1.0625rem;
+    font-weight: 600;
+  }
+}

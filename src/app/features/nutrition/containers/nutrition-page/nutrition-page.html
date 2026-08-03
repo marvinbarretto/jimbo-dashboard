@@ -11,6 +11,12 @@
   (dateChange)="onDateChange($event)"
 />
 
+<!-- The scanner is a phone-first flow, so it gets a plain link rather than a
+     slot in the pager: on desktop it's a curiosity, on mobile it's the point. -->
+<p class="nutrition__scan-link">
+  <a routerLink="/nutrition/scan">Scan a barcode →</a>
+</p>
+
 @if (loading()) {
   <app-ui-loading-state message="Loading nutrition…" />
 } @else {

@@ -1,0 +1,190 @@
+<app-ui-page>
+  <app-ui-stack gap="lg">
+    <header class="scan__head">
+      <h1 class="scan__title">Scan a barcode</h1>
+      <button type="button" class="scan__link" (click)="goToLog()">Back to the log</button>
+    </header>
+
+    <!-- Capture -->
+    <app-ui-section title="Capture">
+      <app-ui-stack gap="md">
+        <div class="scan__actions">
+          <label class="scan__btn scan__btn--primary" [class.scan__btn--disabled]="busy()">
+            Take a photo
+            <input
+              class="scan__file"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              [disabled]="busy()"
+              (change)="onPhoto($event)" />
+          </label>
+
+          <button
+            type="button"
+            class="scan__btn"
+            [disabled]="busy() && !cameraOn()"
+            (click)="toggleCamera()">
+            {{ cameraOn() ? 'Stop camera' : 'Use live camera' }}
+          </button>
+        </div>
+
+        @if (cameraOn()) {
+          <div class="scan__viewfinder">
+            <!-- muted + playsinline: iOS refuses to autoplay otherwise -->
+            <video #video class="scan__video" muted playsinline></video>
+            <div class="scan__reticle" aria-hidden="true"></div>
+          </div>
+          <p class="scan__hint">Hold the barcode flat and fill the box. Good light helps.</p>
+        }
+
+        <p class="scan__status" role="status" aria-live="polite">
+          @switch (phase()) {
+            @case ('decoding') { Reading the image… }
+            @case ('resolving') { Looking up the product… }
+            @case ('logging') { Logging… }
+            @default {
+              @if (backend === 'native') {
+                Using this browser's built-in scanner.
+              } @else {
+                No built-in scanner here — a decoder (~200 KB) loads on first scan.
+              }
+            }
+          }
+        </p>
+
+        @if (error(); as message) {
+          <p class="scan__error" role="alert">{{ message }}</p>
+        }
+      </app-ui-stack>
+    </app-ui-section>
+
+    <!-- Manual entry: always available, and the fastest way to test the API -->
+    <app-ui-section title="Or type the digits">
+      <div class="scan__manual">
+        <label class="scan__label" for="scan-manual">Barcode</label>
+        <input
+          id="scan-manual"
+          class="scan__input"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="5449000000996"
+          [value]="manualCode()"
+          [disabled]="busy()"
+          (input)="onManualInput($event)" />
+        <button
+          type="button"
+          class="scan__btn scan__btn--primary"
+          [disabled]="busy() || manualCode().length < 6"
+          (click)="submitManual()">
+          Look up
+        </button>
+      </div>
+    </app-ui-section>
+
+    <!-- Unknown product -->
+    @if (unknownCode(); as missing) {
+      <app-ui-section title="Not found">
+        <app-ui-stack gap="sm">
+          <p class="scan__body">
+            Open Food Facts has no product for <code>{{ missing }}</code>. Its UK own-brand
+            coverage is patchy — log it as free text instead and the estimator will handle it.
+          </p>
+          <button type="button" class="scan__btn" (click)="goToLog()">Log it as text</button>
+        </app-ui-stack>
+      </app-ui-section>
+    }
+
+    <!-- Confirm before anything is written -->
+    @if (product(); as p) {
+      <app-ui-section title="Confirm">
+        <app-ui-stack gap="md">
+          <div class="scan__product">
+            <p class="scan__product-name">{{ displayName() }}</p>
+            <p class="scan__product-meta">
+              <code>{{ p.barcode }}</code>
+              <span>{{ p.kind }}</span>
+              @if (p.alcoholic) { <span class="scan__tag">alcoholic</span> }
+              @if (resolution()?.macro_source === 'llm_estimate') {
+                <span class="scan__tag scan__tag--warn">macros estimated</span>
+              } @else {
+                <span class="scan__tag">Open Food Facts</span>
+              }
+            </p>
+          </div>
+
+          <div class="scan__portion">
+            <div class="scan__modes" role="group" aria-label="Portion unit">
+              <button
+                type="button"
+                class="scan__mode"
+                [class.scan__mode--on]="portionMode() === 'servings'"
+                (click)="setMode('servings')">
+                Servings
+              </button>
+              <button
+                type="button"
+                class="scan__mode"
+                [class.scan__mode--on]="portionMode() === 'grams'"
+                (click)="setMode('grams')">
+                Grams
+              </button>
+            </div>
+
+            @if (portionMode() === 'servings') {
+              <label class="scan__label" for="scan-servings">
+                Servings{{ p.serving_g ? ' (' + p.serving_g + ' g each)' : ' (100 g assumed)' }}
+              </label>
+              <input
+                id="scan-servings"
+                class="scan__input"
+                type="number"
+                inputmode="decimal"
+                min="0.1"
+                step="any"
+                [value]="servings()"
+                (input)="onServings($event)" />
+            } @else {
+              <label class="scan__label" for="scan-grams">Grams</label>
+              <input
+                id="scan-grams"
+                class="scan__input"
+                type="number"
+                inputmode="numeric"
+                min="1"
+                step="any"
+                [value]="grams()"
+                (input)="onGrams($event)" />
+            }
+            <p class="scan__hint">Works out to {{ effectiveGrams() }} g.</p>
+          </div>
+
+          @if (resolution(); as res) {
+            <dl class="scan__macros" [class.scan__macros--stale]="portionDirty()">
+              <div><dt>kcal</dt><dd>{{ res.totals.kcal }}</dd></div>
+              <div><dt>protein</dt><dd>{{ res.totals.protein_g }} g</dd></div>
+              <div><dt>carbs</dt><dd>{{ res.totals.carbs_g }} g</dd></div>
+              <div><dt>fat</dt><dd>{{ res.totals.fat_g }} g</dd></div>
+            </dl>
+          }
+
+          <div class="scan__actions">
+            <!-- Blocked while the portion is dirty: logging here would write a
+                 different number than the one on screen. -->
+            <button
+              type="button"
+              class="scan__btn scan__btn--primary"
+              [disabled]="busy() || portionDirty()"
+              (click)="confirm()">
+              {{ phase() === 'logging' ? 'Logging…' : 'Log it' }}
+            </button>
+            <button type="button" class="scan__btn" [disabled]="busy()" (click)="cancel()">
+              Cancel
+            </button>
+          </div>
+        </app-ui-stack>
+      </app-ui-section>
+    }
+  </app-ui-stack>
+</app-ui-page>
