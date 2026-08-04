@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
@@ -30,6 +30,7 @@ import {
   type TelemetryEventLite,
 } from '../../data-access/journal-data.service';
 import { type JournalGranularity, currentKeyFor } from '../../utils/period-links';
+import { pollWhileVisible } from '../../utils/live-poll';
 
 interface ApiTelemetryEvents {
   events: Array<{
@@ -181,7 +182,7 @@ export class JournalOverviewPage {
 
     // Keep a live period fresh; past periods load once (the service skips
     // cached immutable windows).
-    const id = setInterval(() => {
+    pollWhileVisible(() => {
       const g = this.granularity();
       const k = this.safeKey();
       if (g === 'day') {
@@ -189,8 +190,7 @@ export class JournalOverviewPage {
       } else {
         void this.journal.loadWork(g, k);
       }
-    }, 60_000);
-    inject(DestroyRef).onDestroy(() => clearInterval(id));
+    });
   }
 
   private readonly pageTitle = computed(() => {

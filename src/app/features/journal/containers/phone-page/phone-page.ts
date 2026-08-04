@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
@@ -33,6 +33,7 @@ import {
   type TelemetryEventLite,
 } from '../../data-access/journal-data.service';
 import { type JournalGranularity, currentKeyFor } from '../../utils/period-links';
+import { pollWhileVisible } from '../../utils/live-poll';
 
 interface ApiTelemetryEvents {
   events: Array<{
@@ -238,9 +239,8 @@ export class JournalPhonePage {
     effect(() => {
       if (this.isDay()) void this.journal.loadDay(this.safeKey());
     });
-    const id = setInterval(() => {
+    pollWhileVisible(() => {
       if (this.isDay() && this.safeKey() === todayKey()) void this.journal.loadDay(this.safeKey());
-    }, 60_000);
-    inject(DestroyRef).onDestroy(() => clearInterval(id));
+    });
   }
 }

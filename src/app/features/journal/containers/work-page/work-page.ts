@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, linkedSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, linkedSignal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
@@ -42,6 +42,7 @@ import { ProjectsService } from '../../../projects/data-access/projects.service'
 import { heartbeatBursts } from '../../utils/retro-timeline';
 import type { JournalGranularity } from '../../utils/period-links';
 import { currentKeyFor } from '../../utils/period-links';
+import { pollWhileVisible } from '../../utils/live-poll';
 import {
   codeEvidenceSpans,
   dailyUnionMinutes,
@@ -135,7 +136,7 @@ export class JournalWorkPage {
 
     // Keep a live period fresh; past periods load once (the service skips
     // cached immutable windows).
-    const id = setInterval(() => {
+    pollWhileVisible(() => {
       const g = this.granularity();
       const k = this.safeKey();
       if (g === 'day') {
@@ -143,8 +144,7 @@ export class JournalWorkPage {
       } else {
         void this.journal.loadWork(g, k);
       }
-    }, 60_000);
-    inject(DestroyRef).onDestroy(() => clearInterval(id));
+    });
   }
 
   protected readonly bundle = this.journal.day;

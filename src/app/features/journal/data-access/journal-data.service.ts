@@ -14,7 +14,7 @@
 // heart_rate_summary (no device records sleep — zero rows ever).
 
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, untracked } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import type { CodeSession, CodeSessionHeartbeat } from './code-sessions.service';
@@ -187,7 +187,14 @@ export class JournalDataService {
   async loadDay(key: DayKey): Promise<void> {
     // Domain pages share the day bundle — switching Overview → Work on the
     // same past day shouldn't refetch. Today always refetches (it's live).
-    if (this.day()?.date === key && key !== todayKey()) return;
+    //
+    // untracked() is load-bearing: pages call this from an effect(), so a plain
+    // `this.day()` read here registers `day` as a dependency of that effect —
+    // and the commit below writes `day`. On a past key the early return breaks
+    // the cycle, but on TODAY it never returns, so write → re-run → fetch →
+    // write span an unbounded loop (~4 req/s, observed 6.6k calls in one hour,
+    // each fanning out to one Google Calendar request per configured calendar).
+    if (untracked(this.day)?.date === key && key !== todayKey()) return;
     return this.guardedLoad('day', async () => {
       const { since, until } = localWindow(dateFromDayKey(key), dateFromDayKey(shiftDay(key, 1)));
       const res = await firstValueFrom(
@@ -200,9 +207,11 @@ export class JournalDataService {
   }
 
   async loadWork(granularity: 'week' | 'month', key: WeekKey | MonthKey): Promise<void> {
-    const current = this.work();
+    const current = untracked(this.work);
     // Same skip rule as loadDay: a cached past window is immutable; a window
-    // containing today stays live and always refetches.
+    // containing today stays live and always refetches. Same untracked()
+    // reasoning as loadDay — a tracked read here loops on any window
+    // containing today.
     if (
       current?.granularity === granularity && current.key === key &&
       !windowForPeriod(granularity, key).containsToday
