@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.157](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.156...v0.0.157) (2026-08-04)
+
+
+### Features
+
+* **briefing:** render v3 butler sections — receipts, still-open ledger, question evidence ([4963c74](https://github.com/marvinbarretto/jimbo-dashboard/commit/4963c747f2b5f69ed6fe52b9e043ae50e4f55787))
+* **nutrition:** barcode scan page for phone-first food logging ([#13](https://github.com/marvinbarretto/jimbo-dashboard/issues/13)) ([75cbb00](https://github.com/marvinbarretto/jimbo-dashboard/commit/75cbb00c021fe7748c8de819a72887975fd9ec43))
+
+
+### Bug Fixes
+
+* **journal:** stop the day-bundle refetch loop ([e6654ea](https://github.com/marvinbarretto/jimbo-dashboard/commit/e6654ea2601740409c1a2bf50f4cc6bad9d95cf3))
+
 ### [0.0.156](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.155...v0.0.156) (2026-07-31)
 
 
