@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.158](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.157...v0.0.158) (2026-08-04)
+
+
+### Features
+
+* **nutrition:** rebuild the scan confirm screen around what a portion costs ([#14](https://github.com/marvinbarretto/jimbo-dashboard/issues/14)) ([6beaf7b](https://github.com/marvinbarretto/jimbo-dashboard/commit/6beaf7b053ea19a9fd67d5806258f361cdfacf8d)), closes [jimbo-api#22](https://github.com/marvinbarretto/jimbo-api/issues/22)
+
+
+### Code Refactoring
+
+* **tracker:** consolidate page controllers and route/shell plumbing ([401cd04](https://github.com/marvinbarretto/jimbo-dashboard/commit/401cd04f49a9cbbd1d5cad65e81aab0f0b390968)), closes [#12](https://github.com/marvinbarretto/jimbo-dashboard/issues/12)
+
 ### [0.0.157](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.156...v0.0.157) (2026-08-04)
 
 
