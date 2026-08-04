@@ -13,7 +13,21 @@ import { Router } from '@angular/router';
 import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
+import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
+import { UiButton } from '@shared/components/ui-button/ui-button';
+import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
+import { UiProgressMeter } from '@shared/components/ui-progress-meter/ui-progress-meter';
+import { UiSegmented, type UiSegmentedOption } from '@shared/components/ui-segmented/ui-segmented';
+import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { ToastService } from '@shared/components/toast/toast.service';
+import {
+  REFERENCE_INTAKES,
+  intakeStatus,
+  percentOfDaily,
+  percentOfDailyLabel,
+  portionBasisLabel,
+} from '../../utils/reference-intake';
 import {
   NutritionService,
   type BarcodePortion,
@@ -50,10 +64,29 @@ type Phase = 'idle' | 'decoding' | 'resolving' | 'preview' | 'logging';
 
 @Component({
   selector: 'app-nutrition-scan-page',
-  imports: [UiPage, UiSection, UiStack],
+  imports: [
+    UiPage,
+    UiSection,
+    UiStack,
+    UiCluster,
+    UiButton,
+    UiBadge,
+    UiStatCard,
+    UiProgressMeter,
+    UiSegmented,
+    UiEmptyState,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './nutrition-scan-page.html',
-  styleUrl: './nutrition-scan-page.scss',
+  // The photo control has to be a <label> wrapping a file input — that is what
+  // makes a phone open the camera rather than a file browser — so it can't be
+  // <app-ui-button>. Pulling in the button family's shared visual contract lets
+  // it wear the same classes and stay pixel-identical to the real buttons next
+  // to it, the same way UiButtonLink does for anchors.
+  styleUrls: [
+    './nutrition-scan-page.scss',
+    '../../../../shared/components/ui-button/ui-button.shared.scss',
+  ],
 })
 export class NutritionScanPage {
   private readonly service = inject(NutritionService);
@@ -73,6 +106,11 @@ export class NutritionScanPage {
 
   // Portion. Servings is the friendly default; grams is the escape hatch for
   // "half the packet", and wins server-side when both are present.
+  protected readonly portionModeOptions: readonly UiSegmentedOption[] = [
+    { value: 'servings', label: 'Servings' },
+    { value: 'grams', label: 'Amount' },
+  ];
+
   protected readonly portionMode = signal<'servings' | 'grams'>('servings');
   protected readonly servings = signal(1);
   protected readonly grams = signal(100);
@@ -93,6 +131,108 @@ export class NutritionScanPage {
   });
 
   protected readonly product = computed(() => this.resolution()?.product ?? null);
+
+  /** The unit this product is measured in — ml for drinks, g for food. */
+  protected readonly unit = computed(() => (this.product()?.kind === 'drink' ? 'ml' : 'g'));
+
+  /** Plain-English basis for the amount, e.g. "the whole 330ml pack". */
+  protected readonly portionBasis = computed(() => {
+    const res = this.resolution();
+    if (!res) return '';
+    return portionBasisLabel(res.portion_source, this.unit(), res.product.pack_g);
+  });
+
+  /**
+   * True when nobody actually knows the portion — no manufacturer serving and
+   * no usable pack size. The headline number is then a per-100g figure wearing
+   * a serving's clothes, which is the one case worth interrupting the user for.
+   */
+  protected readonly portionAssumed = computed(
+    () => this.resolution()?.portion_source === 'default_100g',
+  );
+
+  /** Macros that always exist — the KPI row under the calorie figure. */
+  protected readonly macroTiles = computed(() => {
+    const t = this.resolution()?.totals;
+    if (!t) return [];
+    return [
+      { label: 'Protein', value: `${Math.round(t.protein_g)}g` },
+      { label: 'Carbs', value: `${Math.round(t.carbs_g)}g` },
+      { label: 'Fat', value: `${Math.round(t.fat_g)}g` },
+    ];
+  });
+
+  /**
+   * Nutrients split by what they mean, because the two halves want opposite
+   * renders and mixing them lies.
+   *
+   * A LIMIT (saturates, salt, sugars) is something a portion spends. More is
+   * worse, so these carry a severity and never a progress bar — the shared
+   * meter turns green on reaching its target, which for salt would congratulate
+   * you for using a whole day's allowance on one pasty.
+   *
+   * A TARGET (fibre) is something a portion builds toward. There the meter's
+   * goal semantics are exactly right, so it keeps the bar.
+   *
+   * Unmeasured nutrients stay in the list and say so. Dropping the row would
+   * imply the product contains none of it.
+   */
+  private readonly intakeRow = (key: string) => {
+    const t = this.resolution()?.totals as Record<string, number | null | undefined> | undefined;
+    const grams = (t?.[key] ?? null) as number | null;
+    const ref = REFERENCE_INTAKES[key];
+    return {
+      key,
+      label: ref.label,
+      grams,
+      unit: ref.unit,
+      daily: ref.daily,
+      percent: percentOfDaily(key, grams),
+      percentLabel: percentOfDailyLabel(key, grams),
+      status: intakeStatus(key, grams),
+      measured: grams != null,
+    };
+  };
+
+  /** What this portion spends against a day's allowance. */
+  protected readonly spends = computed(() =>
+    ['sat_fat_g', 'salt_g', 'sugars_g'].map(this.intakeRow),
+  );
+
+  /** What this portion builds toward. */
+  protected readonly builds = computed(() => ['fiber_g'].map(this.intakeRow));
+
+  /** True when any reference nutrient came back measured. */
+  protected readonly hasIntakeData = computed(
+    () => [...this.spends(), ...this.builds()].some((r) => r.measured),
+  );
+
+  /**
+   * Calories from ethanol alone, at 7 kcal/g — the "empty calories" figure.
+   * Null for anything without a measured alcohol content, which includes every
+   * soft drink and all food, so the block simply doesn't render.
+   */
+  protected readonly alcoholKcal = computed(() => {
+    const g = this.resolution()?.totals.alcohol_g;
+    return g == null ? null : Math.round(g * 7);
+  });
+
+  /** Share of this item's calories that are alcohol, 0–100. */
+  protected readonly alcoholShare = computed(() => {
+    const kcal = this.resolution()?.totals.kcal ?? 0;
+    const alc = this.alcoholKcal();
+    if (alc == null || kcal <= 0) return null;
+    return Math.min(100, Math.round((alc / kcal) * 100));
+  });
+
+  /** Badge wording for how much the macros can be trusted. */
+  protected readonly provenance = computed(() => {
+    const res = this.resolution();
+    if (!res) return null;
+    return res.macro_source === 'openfoodfacts'
+      ? { tone: 'info' as const, text: 'Manufacturer figures' }
+      : { tone: 'warning' as const, text: 'Estimated from the name' };
+  });
 
   protected readonly displayName = computed(() => {
     const p = this.product();

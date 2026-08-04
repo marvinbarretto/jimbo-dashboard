@@ -1,6 +1,10 @@
-// Mobile-first: this page is meant to be used one-handed in a kitchen or a
-// supermarket aisle, so every target is finger-sized and the layout is a single
-// column that never needs a horizontal glance.
+// Mobile-first: used one-handed in a kitchen or a supermarket aisle, so every
+// target is finger-sized and the layout is a single column that never needs a
+// horizontal glance.
+//
+// Most chrome now comes from the shared primitives (button, badge, stat card,
+// progress meter, segmented). What is left here is the page's own vocabulary:
+// the calorie figure, the portion basis line, and the photo control.
 :host {
   display: block;
 }
@@ -17,53 +21,105 @@
   font-size: 1.5rem;
 }
 
-.scan__link {
-  background: none;
-  border: none;
-  padding: 0.25rem;
+// ── The headline figure ──────────────────────────────────────────
+// The one number the page exists to deliver, so it gets the size. Tabular
+// figures stop the width jumping as the portion changes, which otherwise makes
+// the whole block twitch while you type.
+.scan__headline {
+  transition: opacity 120ms ease-out;
+}
+
+// Dimmed while a portion edit is in flight, so a number that is one portion
+// behind never looks authoritative.
+.scan__headline--stale {
+  opacity: 0.4;
+}
+
+.scan__kcal {
+  margin: 0;
+  font-size: clamp(2.75rem, 12vw, 3.75rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.scan__kcal-unit {
+  margin-left: 0.3rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0;
   color: var(--color-text-muted);
-  text-decoration: underline;
-  cursor: pointer;
-  font: inherit;
 }
 
-.scan__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+// Where the number came from, in the words a person would use. Sits directly
+// under the figure because it qualifies it — read together or not at all.
+.scan__basis {
+  margin: 0.4rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
 }
 
-// Buttons are 44px+ tall — the WCAG target-size floor, and the difference
-// between a scan that works while holding a jar and one that doesn't.
-.scan__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.75rem;
-  padding: 0.5rem 1.1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  background: var(--color-surface-raised);
-  color: var(--color-text);
-  font: inherit;
-  cursor: pointer;
-
-  &:disabled,
-  &--disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
-.scan__btn--primary {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: var(--color-black, #000);
+.scan__product {
+  margin: 0 0 0.4rem;
+  font-size: 1.125rem;
   font-weight: 600;
 }
 
-// The photo control is a <label> wrapping a hidden <input type=file> — that is
-// what makes a phone offer the camera directly rather than a file browser.
+.scan__subhead {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+
+// The only cautionary line on the page — earned, because it is the one case
+// where nobody knows the portion and the figure above is a per-100 unit.
+.scan__caution {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border-left: 2px solid var(--color-warning);
+  background: var(--color-surface-raised);
+  border-radius: 0 0.375rem 0.375rem 0;
+  color: var(--color-text);
+  font-size: 0.8125rem;
+}
+
+.scan__unmeasured {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  font-style: italic;
+}
+
+// Auto-fit rather than a fixed column count: three macros on a phone, and the
+// alcohol pair, both want to fill the row without a second breakpoint rule.
+.scan__macros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+// ── Capture ──────────────────────────────────────────────────────
+// A <label> wrapping a hidden file input is what makes a phone offer the camera
+// directly rather than a file browser, so this can't be a <button>. It borrows
+// the button family's own classes (see styleUrls) so it stays pixel-identical
+// to the real buttons beside it instead of drifting into a lookalike.
+.scan__photo {
+  display: inline-flex;
+}
+
+.scan__photo-face--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.scan__photo:focus-within .ui-button {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 .scan__file {
   position: absolute;
   width: 1px;
@@ -86,14 +142,46 @@
   object-fit: cover;
 }
 
-// A guide box, not a crop — decoding always reads the whole frame, so this only
-// tells the user roughly where to aim.
+// A guide, not a crop — decoding always reads the whole frame, so this only
+// says roughly where to aim.
 .scan__reticle {
   position: absolute;
   inset: 25% 10%;
   border: 2px solid var(--color-accent);
   border-radius: 0.5rem;
   box-shadow: 0 0 0 100vmax rgb(0 0 0 / 35%);
+}
+
+// ── Form bits ────────────────────────────────────────────────────
+
+.scan__field {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.scan__label {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+// 16px minimum: anything smaller and iOS Safari zooms the page on focus, which
+// on this page throws the viewfinder off screen.
+.scan__input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.scan__input--narrow {
+  max-width: 9rem;
 }
 
 .scan__status,
@@ -109,116 +197,8 @@
   font-size: 0.875rem;
 }
 
-.scan__body {
-  margin: 0;
-  color: var(--color-text);
-}
-
-.scan__manual {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: 0.5rem;
-}
-
-.scan__label {
-  display: block;
-  width: 100%;
-  margin-bottom: 0.25rem;
-  color: var(--color-text-muted);
-  font-size: 0.8125rem;
-}
-
-// 16px minimum: anything smaller and iOS Safari zooms the page on focus, which
-// on a scan page means the viewfinder jumps off screen.
-.scan__input {
-  flex: 1 1 10rem;
-  min-height: 2.75rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-size: 1rem;
-}
-
-.scan__product-name {
-  margin: 0 0 0.25rem;
-  font-size: 1.125rem;
-  font-weight: 600;
-}
-
-.scan__product-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: 0.8125rem;
-}
-
-.scan__tag {
-  padding: 0.125rem 0.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-}
-
-.scan__tag--warn {
-  border-color: var(--color-warning);
-  color: var(--color-warning);
-}
-
-.scan__modes {
-  display: flex;
-  gap: 0.25rem;
-  margin-bottom: 0.5rem;
-}
-
-.scan__mode {
-  min-height: 2.5rem;
-  padding: 0.4rem 0.9rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  background: transparent;
-  color: var(--color-text-muted);
-  font: inherit;
-  cursor: pointer;
-}
-
-.scan__mode--on {
-  border-color: var(--color-accent);
-  color: var(--color-text);
-  background: var(--color-surface-raised);
-}
-
-// Dimmed while a portion edit is in flight, so the numbers never look
-// authoritative when they're a portion behind.
-.scan__macros--stale {
-  opacity: 0.45;
-}
-
-.scan__macros {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.5rem;
-  margin: 0;
-
-  div {
-    padding: 0.5rem;
-    border: 1px solid var(--color-border-subtle, var(--color-border));
-    border-radius: 0.5rem;
-    text-align: center;
-  }
-
-  dt {
-    color: var(--color-text-muted);
-    font-size: 0.75rem;
-  }
-
-  dd {
-    margin: 0.125rem 0 0;
-    font-size: 1.0625rem;
-    font-weight: 600;
+@media (prefers-reduced-motion: reduce) {
+  .scan__headline {
+    transition: none;
   }
 }
