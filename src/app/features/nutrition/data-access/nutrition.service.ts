@@ -14,7 +14,21 @@ export interface FoodItem {
   fat_g: number;
   /** Set by the LLM for alcoholic drinks; absent on entries logged before the field. */
   alcoholic?: boolean;
+  // Depth. Null means "not measured" — a different claim from a measured zero,
+  // and the UI must render the two differently or it invents data.
+  sugars_g?: number | null;
+  fiber_g?: number | null;
+  sat_fat_g?: number | null;
+  salt_g?: number | null;
+  /** Grams of ethanol, not % ABV. */
+  alcohol_g?: number | null;
 }
+
+/** How much to trust an entry's macros. */
+export type MacroSource = 'openfoodfacts' | 'llm_estimate' | 'manual';
+
+/** Where a scanned portion's size came from. */
+export type PortionSource = 'grams' | 'servings' | 'serving_size' | 'pack' | 'default_100g';
 
 export interface FoodLogEntry {
   id: string;
@@ -28,6 +42,12 @@ export interface FoodLogEntry {
   source: string;
   /** EAN/UPC when the entry was captured by scanning; null otherwise. */
   barcode?: string | null;
+  macro_source?: MacroSource | null;
+  est_sugars_g?: number | null;
+  est_fiber_g?: number | null;
+  est_sat_fat_g?: number | null;
+  est_salt_g?: number | null;
+  est_alcohol_g?: number | null;
 }
 
 export interface FoodDailyRow {
@@ -60,8 +80,21 @@ export interface BarcodeProduct {
   label: string;
   brand: string | null;
   /** null when the product exists but Open Food Facts has no nutrition data. */
-  per100g: { kcal: number; protein_g: number; carbs_g: number; fat_g: number } | null;
+  per100g: {
+    kcal: number;
+    protein_g: number;
+    carbs_g: number;
+    fat_g: number;
+    sugars_g: number | null;
+    fiber_g: number | null;
+    sat_fat_g: number | null;
+    salt_g: number | null;
+  } | null;
   serving_g: number | null;
+  /** Grams/ml in the whole pack, when stated. */
+  pack_g: number | null;
+  /** % alcohol by volume, as Open Food Facts reports it. */
+  abv: number | null;
   kind: 'food' | 'drink';
   alcoholic: boolean;
 }
@@ -70,9 +103,23 @@ export interface BarcodeResolution {
   barcode: string;
   product: BarcodeProduct;
   items: FoodItem[];
-  totals: { kcal: number; protein_g: number; carbs_g: number; fat_g: number };
+  totals: {
+    kcal: number;
+    protein_g: number;
+    carbs_g: number;
+    fat_g: number;
+    sugars_g?: number | null;
+    fiber_g?: number | null;
+    sat_fat_g?: number | null;
+    salt_g?: number | null;
+    alcohol_g?: number | null;
+  };
   /** 'llm_estimate' means the product was found but carried no macros. */
   macro_source: 'openfoodfacts' | 'llm_estimate';
+  /** Where the portion size came from — 'default_100g' is the one to flag. */
+  portion_source: PortionSource;
+  /** Grams (or ml) the portion resolved to. */
+  portion_g: number;
 }
 
 /** How much of the scanned product was consumed. `grams` wins over `servings`. */
