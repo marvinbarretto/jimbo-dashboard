@@ -2,6 +2,14 @@ import { Routes } from '@angular/router';
 import { thisMonthKey, thisWeekKey, todayKey } from '@shared/utils/date-keys';
 
 export const nutritionRoutes: Routes = [
+  // Outside the period shell on purpose: scanning isn't scoped to a day/week/
+  // month, so the pager chrome would be dead weight on a one-handed phone page.
+  {
+    path: 'scan',
+    title: 'Nutrition — Scan',
+    loadComponent: () =>
+      import('./containers/nutrition-scan-page/nutrition-scan-page').then(m => m.NutritionScanPage),
+  },
   {
     path: '',
     loadComponent: () =>
