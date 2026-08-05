@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.159](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.158...v0.0.159) (2026-08-05)
+
+
+### Features
+
+* **journal:** tick-off checks on the day page ([21eb5c8](https://github.com/marvinbarretto/jimbo-dashboard/commit/21eb5c8296e89d44fefc02a5279061744c88cba2))
+* **vault:** drive item types from the API vocabulary ([21dcce5](https://github.com/marvinbarretto/jimbo-dashboard/commit/21dcce5e8bdd046c6ccc7dd84f471b2f5fa5e563))
+
+
+### Performance Improvements
+
+* **vault:** two-phase board load + single-item fast path for detail deep links ([6d44fc6](https://github.com/marvinbarretto/jimbo-dashboard/commit/6d44fc6a03ff214397d96848ac05650cf0e74e80))
+
 ### [0.0.158](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.157...v0.0.158) (2026-08-04)
 
 
