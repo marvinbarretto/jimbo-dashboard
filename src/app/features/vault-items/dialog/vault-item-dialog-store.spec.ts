@@ -88,6 +88,7 @@ function buildStore(opts: {
   initialItems?: VaultItem[];
   messages?: unknown[];
   events?: unknown[];
+  pendingReplies?: unknown[];
   createResponse?: VaultItem | Error;
 } = {}) {
   TestBed.resetTestingModule();
@@ -98,6 +99,7 @@ function buildStore(opts: {
   const updates: { id: string; patch: unknown }[] = [];
   const projectAdds: { vid: string; pid: string }[] = [];
   const archivedIds: string[] = [];
+  const archiveCalls: { id: string; note: string | null }[] = [];
   const createCalls: unknown[] = [];
 
   const mockItems = {
@@ -105,7 +107,7 @@ function buildStore(opts: {
     getBySeq: (seq: number) => itemsSig().find(i => i.seq === seq),
     getById: (id: string) => itemsSig().find(i => i.id === id),
     update: (id: string, patch: unknown) => updates.push({ id, patch }),
-    archive: (id: string) => archivedIds.push(id),
+    archive: (id: string, note: string | null = null) => { archivedIds.push(id); archiveCalls.push({ id, note }); },
     setCompleted: vi.fn(),
     setEpic: vi.fn(),
     reassign: vi.fn(),
@@ -151,6 +153,7 @@ function buildStore(opts: {
   const mockThread = {
     messagesFor: () => messagesSig.asReadonly(),
     openQuestionsFor: () => signal([]).asReadonly(),
+    pendingRepliesFor: () => signal(opts.pendingReplies ?? []).asReadonly(),
     loadFor: vi.fn(),
     post: vi.fn(),
     postedCount: () => postedSig(),
@@ -181,8 +184,8 @@ function buildStore(opts: {
 
   const store = TestBed.inject(VaultItemDialogStore);
   return {
-    store, itemsSig, messagesSig, eventsSig, updates, projectAdds, archivedIds, createCalls, toasts,
-    postedSig, mockActivity, mockItems,
+    store, itemsSig, messagesSig, eventsSig, updates, projectAdds, archivedIds, archiveCalls, createCalls, toasts,
+    postedSig, mockActivity, mockItems, mockThread,
   };
 }
 
@@ -464,5 +467,145 @@ describe('VaultItemDialogStore', () => {
       expect(updates).toEqual([]);
       expect(archivedIds).toEqual([]);
     });
+  });
+});
+
+// ── Closing an item out, and handing it back ─────────────────────────────────
+//
+// Two behaviours added 2026-08-05 for the detail page's primary actions.
+//
+// resolveWithMessage exists because a bare archive can't distinguish "done"
+// from "abandoned" — the reason is only ever in the closer's head, so the
+// message is required and lands in both the thread and the archive record.
+//
+// The hand-back is the subtle one. Replying must NOT reassign in general (you
+// often comment on your own item), but when someone else's message is sitting
+// on you, answering it is exactly when ownership should return. The ask has to
+// be read *before* the post, or the new message becomes the newest and the
+// author resolves to null.
+
+const marvin = wellKnownActorId('marvin');
+const boris = wellKnownActorId('boris');
+
+const askFrom = (author: ReturnType<typeof wellKnownActorId>) => ({
+  id: 'msg-1',
+  vault_item_id: vaultItemId('item-1'),
+  author_actor_id: author,
+  kind: 'comment' as const,
+  body: 'what do you want me to do here?',
+  in_reply_to: null,
+  answered_by: null,
+  created_at: '2026-08-05T10:00:00Z',
+});
+
+const reply = () => ({
+  id: 'msg-2',
+  vault_item_id: vaultItemId('item-1'),
+  author_actor_id: marvin,
+  kind: 'comment' as const,
+  body: 'go ahead with option B',
+  in_reply_to: null,
+  answered_by: null,
+});
+
+describe('resolveWithMessage', () => {
+  beforeEach(() => TestBed.resetTestingModule());
+
+  it('posts the message to the thread and archives with it as the reason', () => {
+    const item = fakeItem({ seq: 42 });
+    const { store, archiveCalls, mockThread } = buildStore({ initialItems: [item] });
+    store.setMode({ kind: 'item', seq: 42, stage: 'mature' });
+
+    store.resolveWithMessage('  sorted — the card was updated on their portal  ');
+
+    expect(mockThread.post).toHaveBeenCalledTimes(1);
+    expect((mockThread.post as unknown as { mock: { calls: [{ body: string }][] } }).mock.calls[0][0].body)
+      .toBe('sorted — the card was updated on their portal');
+    expect(archiveCalls).toEqual([
+      { id: 'item-1', note: 'sorted — the card was updated on their portal' },
+    ]);
+  });
+
+  it('does nothing when the message is blank', () => {
+    const item = fakeItem({ seq: 42 });
+    const { store, archiveCalls, mockThread } = buildStore({ initialItems: [item] });
+    store.setMode({ kind: 'item', seq: 42, stage: 'mature' });
+
+    store.resolveWithMessage('   ');
+
+    expect(mockThread.post).not.toHaveBeenCalled();
+    expect(archiveCalls).toEqual([]);
+  });
+});
+
+describe('handing back on reply', () => {
+  beforeEach(() => TestBed.resetTestingModule());
+
+  it('reassigns to the asker when their message is sitting on me', () => {
+    const item = fakeItem({ seq: 42, assigned_to: marvin });
+    const { store, mockItems } = buildStore({
+      initialItems: [item],
+      pendingReplies: [askFrom(boris)],
+    });
+    store.setMode({ kind: 'item', seq: 42, stage: 'mature' });
+
+    store.postThreadReply(reply() as never);
+
+    expect(mockItems.reassign).toHaveBeenCalledWith(
+      vaultItemId('item-1'), boris, 'answered in thread',
+    );
+  });
+
+  it('does not reassign when the hand-back is switched off', () => {
+    const item = fakeItem({ seq: 42, assigned_to: marvin });
+    const { store, mockItems } = buildStore({
+      initialItems: [item],
+      pendingReplies: [askFrom(boris)],
+    });
+    store.setMode({ kind: 'item', seq: 42, stage: 'mature' });
+    store.toggleHandBack();
+
+    store.postThreadReply(reply() as never);
+
+    expect(mockItems.reassign).not.toHaveBeenCalled();
+  });
+
+  // Commenting on someone else's item shouldn't move it around.
+  it('does not reassign an item that is not mine', () => {
+    const item = fakeItem({ seq: 42, assigned_to: boris });
+    const { store, mockItems } = buildStore({
+      initialItems: [item],
+      pendingReplies: [askFrom(boris)],
+    });
+    store.setMode({ kind: 'item', seq: 42, stage: 'mature' });
+
+    store.postThreadReply(reply() as never);
+
+    expect(mockItems.reassign).not.toHaveBeenCalled();
+  });
+
+  it('does not reassign when nothing was waiting on me', () => {
+    const item = fakeItem({ seq: 42, assigned_to: marvin });
+    const { store, mockItems } = buildStore({ initialItems: [item], pendingReplies: [] });
+    store.setMode({ kind: 'item', seq: 42, stage: 'mature' });
+
+    store.postThreadReply(reply() as never);
+
+    expect(mockItems.reassign).not.toHaveBeenCalled();
+  });
+
+  // My own trailing message is not an ask — otherwise replying to yourself
+  // would hand the item to yourself and log a pointless reassign.
+  it('does not reassign when the last message is my own', () => {
+    const item = fakeItem({ seq: 42, assigned_to: marvin });
+    const { store, mockItems } = buildStore({
+      initialItems: [item],
+      pendingReplies: [askFrom(marvin)],
+    });
+    store.setMode({ kind: 'item', seq: 42, stage: 'mature' });
+
+    store.postThreadReply(reply() as never);
+
+    expect(mockItems.reassign).not.toHaveBeenCalled();
   });
 });

@@ -181,7 +181,43 @@
       </app-ui-dropdown>
     </div>
 
+    <!-- ══ ZONE 2b · PRIMARY ACTIONS ════════════════════════════════════════
+         The two things done most often, at full size. Everything rarer or
+         destructive stays behind "Actions ▾" above. -->
+    @if (!isItemArchived(item)) {
+      <div class="v3__actions">
+        <button type="button" class="v3__action v3__action--resolve" (click)="store.openResolve()">
+          Resolve / archive with message…
+          <small>say why it's fine now — goes on the thread and the record</small>
+        </button>
+
+        <app-ui-dropdown ariaHaspopup="menu" ariaLabel="Reassign to" #reassign>
+          <button trigger type="button" class="v3__action v3__action--reassign">
+            Reassign ▾
+            <small>@if (store.owner(); as o) { currently @{{ o.display_name }} } @else { currently unassigned }</small>
+          </button>
+          <div panel class="v3__menu v3__menu--actors" role="menu">
+            @for (a of store.availableActors(); track a.id) {
+              <button type="button" role="menuitem" class="v3__menu-item"
+                [disabled]="a.id === item.assigned_to"
+                (click)="store.reassign(a.id); reassign.close()">
+                {{ a.label }}<small>{{ a.kind }}</small>
+              </button>
+            }
+          </div>
+        </app-ui-dropdown>
+      </div>
+    }
+
     <!-- ══ ZONE 3 · NOTICE STACK (why is this on me) — only when outstanding ══ -->
+    @if (store.showResolveForm()) {
+      <app-resolve-form
+        class="v3__notice"
+        (cancelled)="store.closeResolve()"
+        (submitted)="onResolveSubmitted($event)"
+      />
+    }
+
     @if (store.showRejectForm()) {
       <app-reject-form
         class="v3__notice"
@@ -222,7 +258,18 @@
           <b>{{ store.actorDisplay(ask.author_actor_id) }}</b> is waiting on you
         </span>
         <p class="v3__ask-quote">{{ ask.body }}</p>
-        <a class="v3__ask-jump" href="#v3-thread">Reply in thread ↓</a>
+        <!-- Was an <a href="#v3-thread">, which the router swallowed as a route
+             and bounced to the homepage. Scrolls directly instead, and opens
+             the thread section if it's collapsed. -->
+        <button type="button" class="v3__ask-jump" (click)="jumpToThread()">Reply in thread ↓</button>
+        <label class="v3__ask-handback">
+          <input
+            type="checkbox"
+            [checked]="store.handBackOnReply()"
+            (change)="store.toggleHandBack()"
+          />
+          hand back to {{ store.actorDisplay(ask.author_actor_id) }} when I reply
+        </label>
       </div>
     }
 

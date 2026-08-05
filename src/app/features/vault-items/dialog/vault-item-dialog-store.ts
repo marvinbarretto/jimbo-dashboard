@@ -22,7 +22,7 @@ import { ThreadCommands } from '../../thread/commands/thread-commands';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { computeReadiness, effectivePriority as computeEffectivePriority } from '@domain/vault/readiness';
 import { computeNextAction } from '@domain/vault/next-action';
-import { actorId, projectId, vaultItemId } from '@domain/ids';
+import { actorId, projectId, vaultItemId, threadMessageId } from '@domain/ids';
 import { formatDatetime } from '@shared/utils/datetime.utils';
 import {
   tagTrigger,
@@ -291,6 +291,10 @@ export class VaultItemDialogStore {
   openReject(): void  { this.showRejectForm.set(true); }
   closeReject(): void { this.showRejectForm.set(false); }
 
+  readonly showResolveForm = signal(false);
+  openResolve(): void  { this.showResolveForm.set(true); this.showRejectForm.set(false); }
+  closeResolve(): void { this.showResolveForm.set(false); }
+
   // ── Draft state ───────────────────────────────────────────────────────────
 
   private readonly _draftPayload = signal<DraftPayload>(emptyDraft);
@@ -508,6 +512,52 @@ export class VaultItemDialogStore {
     this.commands.archive(i.id);
   }
 
+  /**
+   * Close an item with a note explaining why it's fine now.
+   *
+   * The message goes to two places on purpose. The thread gets it so the
+   * closing note reads in sequence with whatever conversation led here; the
+   * archive activity event gets it so the reason survives even if the thread
+   * is collapsed or the item is later reopened. A bare archive leaves the next
+   * reader asking "was this done, or abandoned?" — which is the whole point of
+   * the message.
+   */
+  resolveWithMessage(message: string): void {
+    const i = this.item(); if (!i) return;
+    const text = message.trim();
+    if (!text) return;
+    this.threadCommands.post({
+      id: threadMessageId(`${Date.now()}-${Math.random().toString(36).slice(2)}`),
+      vault_item_id: i.id,
+      author_actor_id: this.currentActor,
+      kind: 'comment',
+      body: text,
+      in_reply_to: null,
+      answered_by: null,
+    });
+    this.commands.archive(i.id, text);
+    this.toast.success('Resolved and archived');
+  }
+
+  // ── Handing back after a reply ────────────────────────────────────────────
+  //
+  // Replying does NOT reassign on its own — you often add a note to your own
+  // item and would not expect it to leave your board. But when someone else's
+  // message is sitting on you (pendingAsk), answering it is exactly the moment
+  // ownership should go back, so the default is on and visible rather than
+  // silent. Untick and the reply is just a reply.
+  readonly handBackOnReply = signal(true);
+  toggleHandBack(): void { this.handBackOnReply.update(v => !v); }
+
+  /** The actor whose unanswered message is currently sitting on the viewer. */
+  readonly pendingAskAuthor = computed<ActorId | null>(() => {
+    if (this.openQuestions().length > 0) return null;
+    const pending = this.pendingReplies();
+    const last = pending.length ? pending[pending.length - 1] : null;
+    if (!last || last.author_actor_id === this.currentActor) return null;
+    return last.author_actor_id;
+  });
+
   remove(): void {
     const i = this.item(); if (!i) return;
     this.vaultItemsService.remove(i.id);
@@ -570,7 +620,21 @@ export class VaultItemDialogStore {
   }
 
   postThreadReply(payload: CreateThreadMessagePayload): void {
+    // Read the ask BEFORE posting — once this reply lands it becomes the newest
+    // message, so pendingAskAuthor would resolve to null and the hand-back
+    // would never fire.
+    const handBackTo = this.pendingAskAuthor();
     this.threadCommands.post(payload);
+
+    const i = this.item();
+    if (!i || !handBackTo || !this.handBackOnReply()) return;
+    // Only hand back what is currently ours; reassigning someone else's item
+    // because we commented on it would be a surprise.
+    if (i.assigned_to !== this.currentActor) return;
+    if (payload.author_actor_id !== this.currentActor) return;
+
+    this.vaultItemsService.reassign(i.id, handBackTo, 'answered in thread');
+    this.toast.success(`Replied — handed back to ${this.actorDisplay(handBackTo)}`);
   }
 
   /** Returns true if the reject submission was applied. Host decides whether

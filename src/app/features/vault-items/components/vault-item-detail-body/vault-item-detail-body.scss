@@ -215,10 +215,79 @@
   font-size: 0.8rem;
   line-height: 1.5;
 }
+// A <button>, not an <a href="#…"> — the router treated the bare fragment as a
+// route and bounced to the homepage. Styled as a link so nothing looks different.
 .v3__ask-jump {
+  font: inherit;
   font-size: 0.75rem;
   color: var(--color-accent);
   text-decoration: underline;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.v3__ask-handback {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--color-text-soft);
+  cursor: pointer;
+
+  input { cursor: pointer; }
+}
+
+// ══ ZONE 2b · PRIMARY ACTIONS ════════════════════════════════════════════════
+// Full-size targets for the two most common closing moves. Deliberately louder
+// than the "Actions ▾" menu, which keeps the rare and the destructive.
+.v3__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0.75rem 0 0.25rem;
+}
+
+.v3__action {
+  display: grid;
+  gap: 0.15rem;
+  flex: 1 1 14rem;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  small {
+    font-weight: 400;
+    font-size: 0.72rem;
+    color: var(--color-text-soft);
+  }
+
+  &:hover { border-color: color-mix(in oklab, var(--color-accent) 60%, transparent); }
+}
+
+.v3__action--resolve {
+  border-color: color-mix(in oklab, var(--color-success, #22c55e) 45%, transparent);
+  background: color-mix(in oklab, var(--color-success, #22c55e) 8%, transparent);
+}
+
+.v3__action--reassign {
+  width: 100%;
+  border-color: color-mix(in oklab, var(--color-accent) 35%, transparent);
+}
+
+// The reassign menu lists every active actor — cap it and scroll.
+.v3__menu--actors {
+  max-height: 18rem;
+  overflow-y: auto;
 }
 
 // ══ ZONE 4 · WORK | ACs ══════════════════════════════════════════════════════

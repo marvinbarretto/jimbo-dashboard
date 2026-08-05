@@ -7,6 +7,7 @@ import {
   input,
   output,
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { swapDetailSeq, closeDetail } from '@shared/kanban/detail-nav';
 import { lifecycleState, isArchived } from '@domain/vault/vault-item';
@@ -25,6 +26,7 @@ import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { ThreadView } from '../../../thread/components/thread-view/thread-view';
 import { ActivityLogComponent } from './activity-log/activity-log';
 import { RejectFormComponent, type RejectSubmission } from './reject-form/reject-form';
+import { ResolveFormComponent } from './resolve-form/resolve-form';
 import { VaultItemDeliveryBlock } from './vault-item-delivery-block/vault-item-delivery-block';
 import { VaultItemIntakeBlock } from './vault-item-intake-block/vault-item-intake-block';
 import { VaultItemLinksBlock } from './vault-item-links-block/vault-item-links-block';
@@ -66,6 +68,7 @@ import type { CreateThreadMessagePayload } from '@domain/thread';
     ThreadView,
     ActivityLogComponent,
     RejectFormComponent,
+    ResolveFormComponent,
     VaultItemDeliveryBlock,
     VaultItemIntakeBlock,
     VaultItemLinksBlock,
@@ -90,6 +93,7 @@ export class VaultItemDetailBody {
 
   protected readonly store = inject(VaultItemDialogStore);
   private readonly router = inject(Router);
+  private readonly doc = inject(DOCUMENT);
 
   protected readonly lifecycleOf = lifecycleState;
   protected readonly isItemArchived = isArchived;
@@ -170,6 +174,24 @@ export class VaultItemDetailBody {
     const ok = this.store.submitReject(submission);
     if (!ok) return;
     if (this.surface() === 'modal') closeDetail(this.router);
+  }
+
+  onResolveSubmitted(message: string): void {
+    this.store.resolveWithMessage(message);
+    this.store.closeResolve();
+    // Same convention as reject: a modal has served its purpose once the item
+    // is closed out, a page stays put so the archived state is visible.
+    if (this.surface() === 'modal') closeDetail(this.router);
+  }
+
+  /** The thread lives in a section that may be collapsed, so opening it has to
+   *  happen before the scroll — otherwise we scroll to a zero-height element.
+   *  Deferred a frame so the section has rendered by the time we measure. */
+  jumpToThread(): void {
+    this.store.sectionThread.set(true);
+    requestAnimationFrame(() => {
+      this.doc.getElementById('v3-thread')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   postThreadReply(payload: CreateThreadMessagePayload): void {
