@@ -24,7 +24,7 @@ import {
 import { isSeedMode } from '@shared/seed-mode';
 import { SEED } from '@domain/seed';
 import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { map, switchMap, tap } from 'rxjs/operators';
 import type { DraftPayload } from '../dialog/vault-item-dialog-mode';
 
 // Convenience alias — the union parameter type for post(). Vault-side only.
@@ -42,10 +42,17 @@ export class VaultItemsService {
 
   private readonly _items = signal<VaultItem[]>([]);
   private readonly _loading = signal(true);
+  private readonly _archiveLoading = signal(false);
+
+  // Seqs with a single-item fast-path fetch in flight (see ensureBySeq) —
+  // lets the detail page distinguish "still loading" from "not found".
+  private readonly _fetchingSeqs = signal<Set<number>>(new Set());
 
   readonly items = this._items.asReadonly();
   readonly activeItems = computed(() => this._items().filter(isActive));
   readonly isLoading = this._loading.asReadonly();
+  readonly isArchiveLoading = this._archiveLoading.asReadonly();
+  readonly fetchingSeqs = this._fetchingSeqs.asReadonly();
 
   // Identity indexes. The board holds the whole vault (several hundred items)
   // and callers look items up per card, per render — a linear `find` per lookup
@@ -67,28 +74,100 @@ export class VaultItemsService {
 
   constructor() { this.load(); }
 
+  // Two-phase load. Archived rows are over half the vault by count and no
+  // surface renders them at first paint — deferring them roughly halves both
+  // the board query time and the payload the UI blocks on. Phase 1 pulls
+  // everything the boards show (active/inbox/done); phase 2 streams the
+  // archive in behind it and merges by id.
   private load(): void {
     if (isSeedMode()) {
       this._items.set([...SEED.vault_items]);
       this._loading.set(false);
       return;
     }
-    this.http.get<unknown>(`${environment.dashboardApiUrl}/api/vault/board?limit=5000`).subscribe({
+    this.http.get<unknown>(
+      `${environment.dashboardApiUrl}/api/vault/board?status=active&status=inbox&status=done&limit=5000`,
+    ).subscribe({
       next: (raw) => {
-        const result = ApiVaultItemsResponseSchema.safeParse(raw);
-        if (!result.success) {
-          console.error('[vault-items] /api/vault/board response failed schema:', result.error.issues);
-          this.toast.error('Failed to load vault items — API response did not match expected shape');
-          this._loading.set(false);
-          return;
-        }
-        this._items.set(result.data.items.map(toVaultItem));
+        const fresh = this.parseBoardResponse(raw, 'initial');
+        if (fresh) this.mergeItems(fresh);
         this._loading.set(false);
+        if (fresh) this.loadArchived();
       },
       error: () => {
         this.toast.error('Failed to load vault items — network or server error');
         this._loading.set(false);
       },
+    });
+  }
+
+  private loadArchived(): void {
+    this._archiveLoading.set(true);
+    this.http.get<unknown>(
+      `${environment.dashboardApiUrl}/api/vault/board?status=archived&limit=5000`,
+    ).subscribe({
+      next: (raw) => {
+        const fresh = this.parseBoardResponse(raw, 'archive');
+        if (fresh) this.mergeItems(fresh);
+        this._archiveLoading.set(false);
+      },
+      error: () => {
+        this.toast.error('Failed to load archived vault items');
+        this._archiveLoading.set(false);
+      },
+    });
+  }
+
+  private parseBoardResponse(raw: unknown, phase: string): VaultItem[] | null {
+    const result = ApiVaultItemsResponseSchema.safeParse(raw);
+    if (!result.success) {
+      console.error(`[vault-items] /api/vault/board (${phase}) response failed schema:`, result.error.issues);
+      this.toast.error('Failed to load vault items — API response did not match expected shape');
+      return null;
+    }
+    return result.data.items.map(toVaultItem);
+  }
+
+  // Fresh rows win; rows already in the store but absent from this batch are
+  // kept (they came from the other phase, ensureBySeq, or an optimistic create
+  // that raced the load).
+  private mergeItems(fresh: VaultItem[]): void {
+    this._items.update(cur => {
+      const freshIds = new Set(fresh.map(i => i.id));
+      return [...fresh, ...cur.filter(i => !freshIds.has(i.id))];
+    });
+  }
+
+  /**
+   * Fast path for deep links (/vault-items/:seq): fetch one item without
+   * waiting for the bulk board load (~70ms server-side vs seconds). Resolves
+   * the seq via the by-handle notes endpoint, then re-pulls that id in the
+   * enriched board shape so the row is indistinguishable from bulk-loaded
+   * ones. No-op when the item is already present or a fetch is in flight;
+   * silent on failure — the detail page falls back to the bulk load.
+   */
+  ensureBySeq(seq: number): void {
+    if (isSeedMode()) return;
+    if (this.getBySeq(seq) || this._fetchingSeqs().has(seq)) return;
+    this._fetchingSeqs.update(s => new Set(s).add(seq));
+    const settle = () => this._fetchingSeqs.update(s => {
+      const next = new Set(s);
+      next.delete(seq);
+      return next;
+    });
+    this.http.get<ApiVaultNoteResponse>(`${this.url}/${seq}`).pipe(
+      switchMap(note => this.http.get<unknown>(
+        `${environment.dashboardApiUrl}/api/vault/board`,
+        { params: new HttpParams().set('id', note.id).set('limit', 1) },
+      )),
+    ).subscribe({
+      next: (raw) => {
+        settle();
+        const result = ApiVaultItemsResponseSchema.safeParse(raw);
+        const row = result.success ? result.data.items[0] : undefined;
+        if (row) this.mergeItems([toVaultItem(row)]);
+      },
+      error: settle,
     });
   }
 

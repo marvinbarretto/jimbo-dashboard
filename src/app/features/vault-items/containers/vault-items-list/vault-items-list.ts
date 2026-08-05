@@ -53,6 +53,7 @@ export class VaultItemsList {
   constructor() { withVaultDetailModal(); }
 
   readonly isLoading = this.vaultItemsService.isLoading;
+  readonly archiveLoading = this.vaultItemsService.isArchiveLoading;
 
   // ── Filter state ────────────────────────────────────────────────────────
   // Each Set holds the active values for that dimension. Empty = no filter
@@ -72,8 +73,12 @@ export class VaultItemsList {
   readonly showAll = this._showAll.asReadonly();
   private readonly DEFAULT_LIMIT = 500;
 
-  // ── Visible items: apply filters in order, sort by seq desc ─────────────
-  readonly visibleItems = computed(() => this.applyFilters());
+  // ── Visible items: apply filters in order, sorted by most-recent touch ──
+  // Sorting lives here, not in applyFilters — the five option-count computeds
+  // below only need counts, and each sort pays Date.parse per comparison.
+  readonly visibleItems = computed(() =>
+    this.applyFilters().sort((a, b) => modifiedTs(b) - modifiedTs(a)),
+  );
 
   // Capped list for the table; the count below uses the uncapped length so the
   // operator knows when their filter still has more.
@@ -278,7 +283,7 @@ export class VaultItemsList {
     const projF = this._projectFilter();
 
     const all = this.vaultItemsService.items();
-    const filtered = all.filter(item => {
+    return all.filter(item => {
       if (search) {
         const haystack = `${item.seq} ${item.title} ${item.body ?? ''} ${item.tags.join(' ')}`.toLowerCase();
         if (!haystack.includes(search)) return false;
@@ -301,10 +306,6 @@ export class VaultItemsList {
       }
       return true;
     });
-    // Cleanup is the primary use case: surface items by most-recent touch
-    // (latest_activity_at, falling back to created_at). Stale captures sink
-    // to the bottom and can be reached by reverse-sorting in a follow-up.
-    return filtered.sort((a, b) => modifiedTs(b) - modifiedTs(a));
   }
 
   // ── Selection + bulk actions ───────────────────────────────────────────

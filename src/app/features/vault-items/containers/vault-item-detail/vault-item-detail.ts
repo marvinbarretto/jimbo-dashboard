@@ -25,7 +25,16 @@ import { VaultItemDialogStore } from '../../dialog/vault-item-dialog-store';
   template: `
     <app-ui-page width="standard">
     @if (mode(); as m) {
-      <app-vault-item-detail-body [mode]="m" surface="page" />
+      @if (resolvedItem()) {
+        <app-vault-item-detail-body [mode]="m" surface="page" />
+      } @else if (isResolving()) {
+        <p class="loading">Loading…</p>
+      } @else {
+        <div class="vault-item-not-found">
+          <a routerLink="/vault-items" class="back-link">← Vault</a>
+          <p>Item not found.</p>
+        </div>
+      }
     } @else {
       <div class="vault-item-not-found">
         <a routerLink="/vault-items" class="back-link">← Vault</a>
@@ -58,9 +67,17 @@ export class VaultItemDetail {
 
   // Title management lives on the page route only — opening a modal does not
   // mutate <title> because the page underneath is still the kanban.
-  private readonly resolvedItem = computed(() => {
+  readonly resolvedItem = computed(() => {
     const s = this.seq();
     return s !== null && s !== undefined ? this.vaultItemsService.getBySeq(s) : undefined;
+  });
+
+  // Deep links must not block on the bulk board load — the single-item fast
+  // path fills the store while it's still in flight. "Loading" covers both.
+  readonly isResolving = computed(() => {
+    const s = this.seq();
+    return this.vaultItemsService.isLoading()
+      || (s != null && this.vaultItemsService.fetchingSeqs().has(s));
   });
 
   constructor() {
@@ -68,6 +85,10 @@ export class VaultItemDetail {
       const i = this.resolvedItem();
       if (!i) return;
       this.titleService.setTitle(formatPageTitle(`#${i.seq} ${i.title}`));
+    });
+    effect(() => {
+      const s = this.seq();
+      if (s != null && !this.resolvedItem()) this.vaultItemsService.ensureBySeq(s);
     });
   }
 }

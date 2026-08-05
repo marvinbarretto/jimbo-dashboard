@@ -164,9 +164,12 @@ describe('VaultItemsService.createWithRelations (HTTP mode)', () => {
     service = TestBed.inject(VaultItemsService);
     http = TestBed.inject(HttpTestingController);
 
-    // Constructor fires GET /api/vault/board?limit=2000 — flush an empty list.
+    // Constructor fires the phase-1 board GET (active/inbox/done); flushing a
+    // valid response triggers the phase-2 archive GET — flush both empty.
     const boardReq = http.expectOne(req => req.url.includes('/api/vault/board'));
-    boardReq.flush({ items: [] });
+    boardReq.flush({ items: [], total: 0, limit: 5000 });
+    const archiveReq = http.expectOne(req => req.url.includes('/api/vault/board'));
+    archiveReq.flush({ items: [], total: 0, limit: 5000 });
   });
 
   afterEach(() => {
@@ -390,7 +393,9 @@ describe('VaultItemsService mutations (HTTP mode, withOptimistic-backed)', () =>
     toast = TestBed.inject(ToastService);
 
     const boardReq = http.expectOne(r => r.url.includes('/api/vault/board'));
-    boardReq.flush({ items, total: items.length, limit: 2000 });
+    boardReq.flush({ items, total: items.length, limit: 5000 });
+    const archiveReq = http.expectOne(r => r.url.includes('/api/vault/board'));
+    archiveReq.flush({ items: [], total: 0, limit: 5000 });
   }
 
   function lastErrorToast(): string | undefined {

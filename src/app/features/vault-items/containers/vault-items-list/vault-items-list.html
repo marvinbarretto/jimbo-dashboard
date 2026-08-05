@@ -5,6 +5,7 @@
     <span class="vault-items-list__count">
       {{ visibleCount() }} of {{ totalItems() }}
       @if (hasActiveFilters()) { · filtered }
+      @if (archiveLoading()) { · loading archive… }
     </span>
     <a routerLink="/vault-items/new" class="btn-new" aria-label="Create new vault item">+ New</a>
   </header>
