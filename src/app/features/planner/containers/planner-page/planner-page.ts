@@ -28,6 +28,7 @@ import { withVaultDetailModal } from '@shared/kanban/detail-modal';
 import { JimboSuggestionsService, type SuggestionEvent } from '../../data-access/jimbo-suggestions.service';
 import { PlannerSyncService } from '../../data-access/planner-sync.service';
 import { WatchQueuePanel } from '../../components/watch-queue-panel/watch-queue-panel';
+import { VaultTypesService } from '@features/vault-items/data-access/vault-types.service';
 
 // Queue candidates: my top-N active tasks by priority (P0 first, unscored
 // items sink to the bottom rather than jump the queue), plus anything
@@ -134,6 +135,7 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
   private readonly suggestions = inject(JimboSuggestionsService);
   private readonly sync = inject(PlannerSyncService);
   private readonly vaultItems = inject(VAULT_ITEMS_READ);
+  private readonly vaultTypes = inject(VaultTypesService);
   private readonly projects = inject(ProjectsService);
   private readonly toasts = inject(ToastService);
   private readonly queueEl = viewChild<ElementRef<HTMLElement>>('queueList');
@@ -171,7 +173,7 @@ export class PlannerPage implements OnInit, AfterViewInit, OnDestroy {
   // source of truth for what exists; `placements` (local-only) tracks where
   // something currently sits, so a placed item simply isn't in queue.
   private readonly candidateItems = computed<VaultItem[]>(() => {
-    const tasks = this.vaultItems.activeItems().filter(i => i.type === 'task');
+    const tasks = this.vaultItems.activeItems().filter(i => this.vaultTypes.isActionable(i.type));
     const tagged = tasks.filter(i => i.tags.includes(PLANNER_TAG));
     const taggedIds = new Set(tagged.map(i => i.id));
     const ranked = tasks

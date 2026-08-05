@@ -26,10 +26,13 @@
     <div class="field">
       <label for="type">Type</label>
       <select id="type" formControlName="type">
-        @for (t of types; track t) {
-          <option [value]="t">{{ t }}</option>
+        @for (t of types(); track t.type) {
+          <option [value]="t.type" [title]="t.hint">{{ t.label }}</option>
         }
       </select>
+      @if (selectedTypeHint(); as hint) {
+        <p class="field-hint">{{ hint }}</p>
+      }
     </div>
 
     <!-- Status is derived from completed_at + archived_at, not editable here.

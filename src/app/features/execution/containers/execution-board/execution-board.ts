@@ -33,6 +33,7 @@ import { CommandShortcutsService } from '@shared/services/command-shortcuts.serv
 import { effectivePriority, isActive, isDone, type VaultItem } from '@domain/vault';
 import { ExecutionConfigService } from '@features/execution/data-access/execution-config.service';
 import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
+import { VaultTypesService } from '@features/vault-items/data-access/vault-types.service';
 
 // The board collapsed from "Ready + 8 commission-stage columns" into three
 // workflow lanes that BOTH manual (human-owned) and automated (agent-commission)
@@ -120,6 +121,7 @@ interface FacetSkip { skipOwner?: boolean; skipProject?: boolean; skipPriority?:
 export class ExecutionBoard {
   private readonly dispatchService = inject(DispatchService);
   private readonly vaultItemsService = inject(VaultItemsService);
+  private readonly vaultTypes = inject(VaultTypesService);
   private readonly commands = inject(VaultItemCommands);
   private readonly dispatchCommands = inject(DispatchCommands);
   private readonly vaultItemProjectsService = inject(VaultItemProjectsService);
@@ -202,7 +204,7 @@ export class ExecutionBoard {
       items.map(i => i.parent_id).filter((id): id is NonNullable<typeof id> => !!id),
     );
     return items.filter(item =>
-      item.type === 'task' &&
+      this.vaultTypes.isActionable(item.type) &&
       !isContainer.has(item.id) &&
       !commissioned.has(item.id as string) &&
       (

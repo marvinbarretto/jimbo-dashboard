@@ -55,6 +55,7 @@ import { withVaultDetailModal, swapDetailSeq } from '@shared/kanban/detail-modal
 import { CommandShortcutsService } from '@shared/services/command-shortcuts.service';
 import { isSeedMode } from '@shared/seed-mode';
 import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
+import { VaultTypesService } from '@features/vault-items/data-access/vault-types.service';
 
 // Filter dimension ids + sentinels (UNASSIGNED / NO_PRIORITY) come from the shared
 // kanban facet module, so the grooming and execution boards stay in lockstep.
@@ -98,6 +99,7 @@ interface ColumnView {
 })
 export class GroomingBoard {
   private readonly vaultItemsService = inject(VaultItemsService);
+  private readonly vaultTypes = inject(VaultTypesService);
   private readonly commands = inject(VaultItemCommands);
   private readonly groomingCommands = inject(GroomingCommands);
   private readonly actorsService = inject(ActorsService);
@@ -254,7 +256,7 @@ export class GroomingBoard {
     effect(() => {
       if (!isSeedMode()) return;
       for (const item of this.vaultItemsService.items()) {
-        if (item.type !== 'task' || !isActive(item)) continue;
+        if (!this.vaultTypes.isActionable(item.type) || !isActive(item)) continue;
         this.threadService.loadFor(item.id);
         this.activityEventsService.loadFor(item.id);
       }
@@ -651,7 +653,8 @@ export class GroomingBoard {
     const epicIds = epicF.size > 0 ? this.selectableEpicIds() : null;
 
     return this.vaultItemsService.items().filter(item => {
-      if (item.type !== 'task') return false;
+      // Workable types only — reference material never enters grooming.
+      if (!this.vaultTypes.isActionable(item.type)) return false;
       if (!isActive(item)) return false;
       // Epics (items with children) are containers, not dispatchable work.
       // Their subitems appear on the board instead; the epic itself lives in a hierarchy view.

@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { VaultItemsService } from '../../data-access/vault-items.service';
+import { VaultTypesService } from '../../data-access/vault-types.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
 import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiTypeahead, type TypeaheadOption } from '@shared/components/ui-typeahead/ui-typeahead';
@@ -22,6 +23,7 @@ const PRIORITY_OPTIONS: Array<Priority | null> = [null, 0, 1, 2, 3];
 })
 export class VaultItemForm {
   private readonly service = inject(VaultItemsService);
+  private readonly vaultTypes = inject(VaultTypesService);
   private readonly actorsService = inject(ActorsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -44,8 +46,13 @@ export class VaultItemForm {
     this.actors().map(a => ({ id: a.id, label: a.display_name, hint: a.id })),
   );
 
+  // The type vocabulary comes from the API, which also owns the rules attached
+  // to each type (which of them need acceptance criteria, which can be worked).
+  // Restating it here is what kept spike/decision/errand unreachable — the
+  // dropdown only ever offered three of the eleven types that exist.
+  readonly types = this.vaultTypes.specs;
+
   // Static option lists
-  readonly types: VaultItemType[] = ['task', 'bookmark', 'note'];
   // Lifecycle is derived from completed_at + archived_at, not editable on this form.
   // Mark-done lives on the detail view; archive is its own action.
   // All six grooming statuses shown; intake_rejected is system-managed but shown as an operator escape hatch.
@@ -74,6 +81,13 @@ export class VaultItemForm {
     source_ref:          ['' as string],
     source_url:          ['' as string],
   });
+
+  // Declared after `form` — a field initializer reading this.form before it
+  // exists would blow up at construction.
+  private readonly typeValue = toSignal(this.form.controls.type.valueChanges, {
+    initialValue: this.form.controls.type.value,
+  });
+  readonly selectedTypeHint = computed(() => this.vaultTypes.spec(this.typeValue())?.hint ?? '');
 
   constructor() {
     const seq = this.seq();

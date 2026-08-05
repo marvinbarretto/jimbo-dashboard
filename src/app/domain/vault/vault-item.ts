@@ -9,7 +9,20 @@ export type { Source, SourceKind } from './source';
 // for readiness. Derived signals (readiness, effective_priority, is_epic) are NOT here
 // — see `readiness.ts` and the README for the separation of concerns.
 
-export type VaultItemType = 'task' | 'bookmark' | 'note';
+// "What can be done with it". The API owns this vocabulary — it is served from
+// GET /api/vault/types (jimbo-api services/vault-types.ts), which is also the
+// table the ready gate reads to decide which types demand acceptance criteria.
+// Hardcoding the list here is what kept spike/decision/errand at zero rows: the
+// create form and filter bar only ever offered task/note/bookmark, so
+// everything became a task whether it was one or not. Same escape-hatch shape
+// as VaultItemCategory below — autocomplete on the known values, no compile
+// error when the server grows a new one. Anything that needs the real list, or
+// the per-type rules, injects VaultTypesService instead of restating them.
+export type KnownVaultItemType =
+  | 'task' | 'story' | 'spike' | 'decision' | 'errand' | 'habit'
+  | 'note' | 'reference' | 'bookmark' | 'idea' | 'research';
+
+export type VaultItemType = KnownVaultItemType | (string & {});
 
 // Subject categories — "what the item is ABOUT". Distinct from VaultItemType
 // (which is "what can be done with it"). Captured from the 2026-04-25 production

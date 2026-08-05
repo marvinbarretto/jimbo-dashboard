@@ -45,6 +45,7 @@ import {
   stageFor,
 } from './vault-item-dialog-mode';
 import type { RejectSubmission } from '../components/vault-item-detail-body/reject-form/reject-form';
+import { VaultTypesService } from '../data-access/vault-types.service';
 
 /**
  * Component-scoped state owner for the unified vault-item dialog (and the
@@ -73,6 +74,7 @@ import type { RejectSubmission } from '../components/vault-item-detail-body/reje
 export class VaultItemDialogStore {
   private readonly http = inject(HttpClient);
   private readonly vaultItemsService = inject(VaultItemsService);
+  private readonly vaultTypes = inject(VaultTypesService);
   private readonly commands = inject(VaultItemCommands);
   private readonly activityService = inject(ActivityEventsService);
   private readonly projectsJunction = inject(VaultItemProjectsService);
@@ -193,7 +195,7 @@ export class VaultItemDialogStore {
     // "Waiting on …" banner that those task-only checks would produce.
     // Same reasoning extends to non-task types: a note/bookmark never enters
     // the grooming→dispatch pipeline, so "Waiting on intake review" is noise.
-    if (i.is_epic || i.type !== 'task') return undefined;
+    if (i.is_epic || !this.vaultTypes.isActionable(i.type)) return undefined;
     return computeNextAction(i, r);
   });
 
@@ -262,7 +264,9 @@ export class VaultItemDialogStore {
     return i.grooming_status !== 'ungroomed' && i.grooming_status !== 'needs_rework';
   });
 
-  readonly canDemote = computed(() => this.item()?.type === 'task');
+  // Demoting means "this isn't work after all" — offered for anything
+  // currently workable, not just the literal 'task' type.
+  readonly canDemote = computed(() => this.vaultTypes.isActionable(this.item()?.type));
 
 
   // ── UI state ──────────────────────────────────────────────────────────────

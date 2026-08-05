@@ -7,6 +7,7 @@ import { UiPage } from '@shared/components/ui-page/ui-page';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { VaultItemsService } from '../../data-access/vault-items.service';
+import { VaultTypesService } from '../../data-access/vault-types.service';
 import { VaultItemCommands } from '../../commands/vault-item-commands';
 import { ActorsService } from '../../../actors/data-access/actors.service';
 import { ProjectsService } from '../../../projects/data-access/projects.service';
@@ -41,6 +42,7 @@ interface CountedOption<T> {
 })
 export class VaultItemsList {
   private readonly vaultItemsService = inject(VaultItemsService);
+  private readonly vaultTypes = inject(VaultTypesService);
   private readonly vaultCommands = inject(VaultItemCommands);
   private readonly actorsService = inject(ActorsService);
   private readonly projectsService = inject(ProjectsService);
@@ -90,12 +92,26 @@ export class VaultItemsList {
   // (the "skip self" pattern), so toggling a chip doesn't make it look like
   // its own count went to zero.
 
+  // Types come from the API's vocabulary, not a local list. A hardcoded
+  // ['task','note','bookmark'] meant a spike or errand had no pill to filter
+  // by, so those types looked unused when they were only unreachable. Anything
+  // present in the data but absent from the vocabulary is appended —
+  // vault_notes.type is free text, and a row you can't filter for is a row you
+  // can't find.
   readonly typeOptions = computed<CountedOption<VaultItemType>[]>(() => {
     const items = this.applyFilters({ skipType: true });
     const counts = new Map<VaultItemType, number>();
     for (const item of items) counts.set(item.type, (counts.get(item.type) ?? 0) + 1);
-    const types: VaultItemType[] = ['task', 'note', 'bookmark'];
-    return types.map(t => ({ value: t, label: t, count: counts.get(t) ?? 0 }));
+
+    const known = this.vaultTypes.specs();
+    const options: CountedOption<VaultItemType>[] = known.map(
+      s => ({ value: s.type, label: s.label, count: counts.get(s.type) ?? 0 }),
+    );
+    const seen = new Set(known.map(s => s.type));
+    for (const [type, count] of counts) {
+      if (!seen.has(type)) options.push({ value: type, label: type, count });
+    }
+    return options;
   });
 
   readonly lifecycleOptions = computed<CountedOption<Lifecycle>[]>(() => {

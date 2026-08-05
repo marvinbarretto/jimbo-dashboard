@@ -138,7 +138,10 @@ export class VaultItemsService {
   // Use this from board UIs; reserve `create()` for the full vault-item-form.
   createOnBoard(input: {
     title: string;
-    type?: 'task' | 'note' | 'bookmark';
+    // Any type the API's vocabulary knows (GET /api/vault/types), not a fixed
+    // trio. The 'task' default below is the common case for a board quick-add,
+    // not a statement about which types exist.
+    type?: VaultItemType;
     grooming_status?: GroomingStatus;
     manual_priority?: Priority;
     // Optional hierarchy/project placement — used by the guided pomo flow to

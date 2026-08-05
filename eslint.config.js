@@ -99,9 +99,14 @@ module.exports = tseslint.config(
                 // narrower than exempting whole consumer files, which is why
                 // it's preferred over the known-violations list below.
                 //
-                // journal-data / watch-queue: read-only, GETs only.
+                // journal-data / watch-queue / vault-types: read-only, GETs only.
+                // vault-types serves the API's type vocabulary so components
+                // stop restating which vault types exist; funnelling a single
+                // GET through the command layer would reintroduce exactly the
+                // indirection it was written to remove.
                 '!**/data-access/journal-data.service',
                 '!**/data-access/watch-queue.service',
+                '!**/data-access/vault-types.service',
                 // agent-runs / briefings: reads plus one single-field
                 // preference write (a job rating, a briefing rating). Both
                 // writes are self-contained — no cross-store composition,
