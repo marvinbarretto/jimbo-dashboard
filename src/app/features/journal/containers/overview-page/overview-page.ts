@@ -21,6 +21,7 @@ import {
   todayKey,
   weekStartFromKey,
 } from '@shared/utils/date-keys';
+import { JournalChecksSection } from '../../components/journal-checks-section/journal-checks-section';
 import { JournalDaySummary } from '../../components/journal-day-summary/journal-day-summary';
 import { JournalPeriodHeader } from '../../components/journal-period-header/journal-period-header';
 import { JournalPeriodSummary } from '../../components/journal-period-summary/journal-period-summary';
@@ -53,6 +54,7 @@ interface ApiTelemetryEvents {
     UiLoadingState,
     UiPage,
     UiStack,
+    JournalChecksSection,
     JournalDaySummary,
     JournalPeriodHeader,
     JournalPeriodSummary,
@@ -71,6 +73,7 @@ interface ApiTelemetryEvents {
       <app-journal-day-summary [date]="safeKey()" />
 
       <app-ui-stack gap="lg">
+        <app-journal-checks-section [date]="safeKey()" />
         @if (loading()) {
           <app-ui-loading-state message="Pulling the day's data…" />
         } @else if (bundle(); as b) {

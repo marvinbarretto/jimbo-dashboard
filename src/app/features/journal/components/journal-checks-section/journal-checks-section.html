@@ -1,0 +1,95 @@
+<app-ui-section
+  title="Checks"
+  [meta]="meta()"
+  [expanded]="open()"
+  (toggled)="open.set(!open())">
+
+  <app-ui-stack gap="sm">
+    @if (loading()) {
+      <p class="checks__status">Loading…</p>
+    } @else if (error(); as message) {
+      <p class="checks__status checks__status--error">{{ message }}</p>
+    } @else if (items().length === 0) {
+      <app-ui-empty-state
+        title="Nothing to check"
+        message="Add a one-off below, or define a standing check to see it here every day." />
+    } @else {
+      <ul class="checks__list">
+        @for (item of items(); track item.id) {
+          <li
+            class="checks__item"
+            [class.checks__item--done]="item.entry !== null"
+            [class.checks__item--pending]="isPending(item.id)">
+
+            @switch (item.response_type) {
+              @case ('scale') {
+                <div class="checks__row">
+                  <span class="checks__label">{{ item.label }}</span>
+                  <div class="checks__scale" role="group" [attr.aria-label]="item.label">
+                    @for (value of scaleValues(item); track value) {
+                      <button
+                        type="button"
+                        class="checks__scale-btn"
+                        [class.checks__scale-btn--on]="item.entry?.value_int === value"
+                        [disabled]="isPending(item.id)"
+                        [attr.aria-pressed]="item.entry?.value_int === value"
+                        (click)="setScale(item, value)">{{ value }}</button>
+                    }
+                  </div>
+                </div>
+              }
+              @case ('text') {
+                <div class="checks__row checks__row--stacked">
+                  <label class="checks__label" [attr.for]="'chk-' + item.id">
+                    {{ item.prompt ?? item.label }}
+                  </label>
+                  <input
+                    class="checks__text"
+                    type="text"
+                    [id]="'chk-' + item.id"
+                    [disabled]="isPending(item.id)"
+                    [value]="item.entry?.value_text ?? ''"
+                    (blur)="setText(item, $any($event.target).value)"
+                    (keydown.enter)="$any($event.target).blur()"
+                    placeholder="…" />
+                </div>
+              }
+              @default {
+                <label class="checks__check">
+                  <input
+                    type="checkbox"
+                    [checked]="item.entry !== null"
+                    [disabled]="isPending(item.id)"
+                    (change)="toggle(item)" />
+                  <span class="checks__label">{{ item.label }}</span>
+                  @if (item.cadence === 'once') {
+                    <span class="checks__tag" title="One-off — drops off the list once answered">one-off</span>
+                  }
+                </label>
+              }
+            }
+
+            @if (item.watchdog_ref; as ref) {
+              <span class="checks__ref" title="Watchdog reference">{{ ref }}</span>
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    <form class="checks__add" (submit)="$event.preventDefault(); addAdhoc()">
+      <input
+        class="checks__text"
+        type="text"
+        name="newCheck"
+        placeholder="Add a one-off — did I call X?"
+        [disabled]="adding()"
+        [ngModel]="newLabel()"
+        (ngModelChange)="newLabel.set($event)" />
+      <button
+        type="submit"
+        class="checks__add-btn"
+        [disabled]="adding() || newLabel().trim().length === 0">Add</button>
+    </form>
+  </app-ui-stack>
+</app-ui-section>
