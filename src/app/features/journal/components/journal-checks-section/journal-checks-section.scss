@@ -1,0 +1,155 @@
+// Day checks — the journal's one authoring surface. Kept visually quiet: it
+// sits above a page of reconstructed telemetry and shouldn't read as a
+// productivity scoreboard. A ticked row recedes rather than celebrating.
+
+.checks__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.checks__item {
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  &:hover {
+    background: var(--color-surface-hover, rgba(127, 127, 127, 0.08));
+  }
+
+  // Done recedes. Deliberately not a strikethrough — these are observations,
+  // not chores, and "done" here often just means "recorded".
+  &--done .checks__label {
+    color: var(--color-text-muted);
+  }
+
+  &--pending {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+}
+
+.checks__check {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+
+  input[type='checkbox'] {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+    accent-color: var(--color-accent, #7b4fcc);
+  }
+}
+
+.checks__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+
+  &--stacked {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.3rem;
+  }
+}
+
+.checks__label {
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.checks__tag,
+.checks__ref {
+  flex: none;
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border, rgba(127, 127, 127, 0.3));
+  border-radius: 0.3rem;
+  padding: 0.05rem 0.3rem;
+}
+
+.checks__scale {
+  display: flex;
+  gap: 0.25rem;
+  flex: none;
+}
+
+.checks__scale-btn {
+  min-width: 1.9rem;
+  padding: 0.2rem 0;
+  font-size: 0.8rem;
+  border-radius: 0.3rem;
+  border: 1px solid var(--color-border, rgba(127, 127, 127, 0.3));
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &--on {
+    background: var(--color-accent, #7b4fcc);
+    border-color: var(--color-accent, #7b4fcc);
+    color: #fff;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.checks__text {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: inherit;
+  background: var(--color-surface, transparent);
+  border: 1px solid var(--color-border, rgba(127, 127, 127, 0.3));
+  border-radius: 0.35rem;
+}
+
+.checks__add {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.checks__add-btn {
+  flex: none;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  border-radius: 0.35rem;
+  border: 1px solid var(--color-border, rgba(127, 127, 127, 0.3));
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.checks__status {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+
+  &--error {
+    color: var(--color-danger, #d66);
+  }
+}
