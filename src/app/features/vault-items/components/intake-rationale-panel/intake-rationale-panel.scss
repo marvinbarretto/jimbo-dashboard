@@ -1,0 +1,69 @@
+.intake {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  font-size: 0.8125rem;
+}
+
+.intake__what {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.intake__why {
+  margin: 0;
+  color: var(--color-text-soft);
+  max-width: 68ch;
+}
+
+// The claim the operator is actually marking, so it gets a box rather than
+// sitting in the run of prose.
+.intake__claim {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.intake__claim-label {
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.intake__claim-value {
+  font-family: var(--font-mono);
+  color: var(--color-text);
+}
+
+.intake__rows {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+
+  dt {
+    color: var(--color-text-muted);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--color-text-soft);
+  }
+}
+
+.intake__confidence {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+}

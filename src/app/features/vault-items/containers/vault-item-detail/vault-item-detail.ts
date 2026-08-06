@@ -88,7 +88,23 @@ export class VaultItemDetail {
     });
     effect(() => {
       const s = this.seq();
-      if (s != null && !this.resolvedItem()) this.vaultItemsService.ensureBySeq(s);
+      if (s == null) return;
+      const item = this.resolvedItem();
+
+      // Not loaded at all — fetch it.
+      if (!item) {
+        this.vaultItemsService.ensureBySeq(s);
+        return;
+      }
+
+      // Loaded, but from the BULK board, which no longer carries the heavy
+      // per-item fields (rule 1 in jimbo-api docs/conventions/api-contracts.md).
+      // `undefined` means "this response didn't carry it"; `null` means the
+      // note genuinely has none — only the former needs a top-up, so this
+      // fires once per item rather than on every render.
+      if (item.intake_rationale === undefined) {
+        this.vaultItemsService.refreshOne(item.id);
+      }
     });
   }
 }

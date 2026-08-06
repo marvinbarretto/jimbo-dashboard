@@ -1134,7 +1134,12 @@ function toVaultItem(a: ApiVaultItem): VaultItem {
     // The API ships intake_rationale as JSONB; postgres.js delivers it as a
     // parsed object. We pass it through unchanged — the UI component narrows
     // to the IntakeRationale shape and guards on truthiness before rendering.
-    intake_rationale: (a.intake_rationale as VaultItem['intake_rationale']) ?? null,
+    // Preserve the absent/null distinction: `undefined` means the bulk board
+    // didn't send it and the detail should top up; `null` means the note has
+    // none and topping up would loop forever. `?? null` collapsed both.
+    intake_rationale: 'intake_rationale' in a
+      ? (a.intake_rationale as VaultItem['intake_rationale']) ?? null
+      : undefined,
     priority_confidence: a.priority_confidence,
     actionability: narrowActionability(a.actionability),
     parent_id: a.parent_id ? vaultItemId(a.parent_id) : null,

@@ -30,6 +30,7 @@ import { ResolveFormComponent } from './resolve-form/resolve-form';
 import { VaultItemDeliveryBlock } from './vault-item-delivery-block/vault-item-delivery-block';
 import { VaultItemIntakeBlock } from './vault-item-intake-block/vault-item-intake-block';
 import { VaultItemLinksBlock } from './vault-item-links-block/vault-item-links-block';
+import { IntakeRationalePanel } from '../intake-rationale-panel/intake-rationale-panel';
 import { VaultItemQuestions } from './vault-item-questions/vault-item-questions';
 import type { DialogMode } from '../../dialog/vault-item-dialog-mode';
 import { VaultItemDialogStore } from '../../dialog/vault-item-dialog-store';
@@ -56,7 +57,7 @@ import type { CreateThreadMessagePayload } from '@domain/thread';
  */
 @Component({
   selector: 'app-vault-item-detail-body',
-  imports: [
+  imports: [IntakeRationalePanel, 
     RouterLink,
     UiInlineEdit,
     UiDropdown,

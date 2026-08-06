@@ -1,0 +1,42 @@
+<app-ui-subsection label="Intake exam" hint="What the intake agent concluded when this note arrived">
+  <div class="intake">
+    <p class="intake__what">{{ rationale().what_is_this }}</p>
+    <p class="intake__why">{{ rationale().why_verdict }}</p>
+
+    <!-- The inference the pipeline already makes and mostly gets right, shown
+         against what the note is actually filed under so it can be marked. -->
+    @if (rationale().inferred_project; as inferred) {
+      <div class="intake__claim">
+        <span class="intake__claim-label">Inferred project</span>
+        <code class="intake__claim-value">{{ inferred }}</code>
+        @switch (projectVerdict()) {
+          @case ('agreed') {
+            <app-ui-badge tone="success" [subtle]="true">matches filing</app-ui-badge>
+          }
+          @case ('differs') {
+            <app-ui-badge tone="warning" [subtle]="true">filed under {{ actualProject() }}</app-ui-badge>
+          }
+          @case ('unlinked') {
+            <app-ui-badge tone="info" [subtle]="true">never acted on</app-ui-badge>
+          }
+        }
+      </div>
+    }
+
+    @if (rows().length > 0) {
+      <dl class="intake__rows">
+        @for (row of rows(); track row.label) {
+          <dt>{{ row.label }}</dt>
+          <dd>{{ row.value }}</dd>
+        }
+      </dl>
+    }
+
+    @if (confidence(); as c) {
+      <p class="intake__confidence">
+        self-rated
+        <app-ui-badge [tone]="confidenceTone()" [subtle]="true">{{ c }}</app-ui-badge>
+      </p>
+    }
+  </div>
+</app-ui-subsection>

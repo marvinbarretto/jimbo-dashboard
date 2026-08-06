@@ -326,6 +326,15 @@
           />
         }
 
+        <!-- The intake agent's exam. Surfaced 2026-08-06: it had been produced
+             on every groomed note since February and rendered nowhere. -->
+        @if (item.intake_rationale; as ir) {
+          <app-intake-rationale-panel
+            [rationale]="ir"
+            [actualProject]="item.primary_project_id ?? null"
+          />
+        }
+
         <!-- Parent and project are shown (and only shown) by the hierarchy
              bands at the top — Links carries what the bands don't. -->
         <app-vault-item-links-block
