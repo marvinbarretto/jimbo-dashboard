@@ -816,8 +816,9 @@
   flex-direction: column;
   min-width: 18rem;
   max-width: 28rem;
-  max-height: 20rem;
-  overflow-y: auto;
+  // No max-height here — the floating panel computes one from the space left
+  // below (or above) the trigger. A fixed cap would fight that and could still
+  // overflow the viewport on a short window.
 }
 
 .adopt__item {

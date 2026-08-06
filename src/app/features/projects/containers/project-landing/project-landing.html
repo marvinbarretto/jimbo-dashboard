@@ -299,7 +299,9 @@
 
           <ng-template #adoptCell let-context>
             @if (projectEpics().length > 0) {
-              <app-ui-dropdown ariaHaspopup="menu" ariaLabel="File under an epic" #adopt>
+              <!-- floating: the table scrolls on x and the page clips on x, so
+                   a normally-positioned panel is cropped inside the cell. -->
+              <app-ui-dropdown [floating]="true" ariaHaspopup="menu" ariaLabel="File under an epic" #adopt>
                 <span trigger class="adopt__trigger">
                   @if (adoptionCandidates().get(context.row.original.id); as ranked) {
                     {{ ranked.length > 0 ? 'Suggested (' + ranked.length + ')' : 'Choose…' }}
