@@ -24,6 +24,11 @@ export const routes: Routes = [
   // Registered BEFORE the :gmailId route below, or the param route swallows
   // it and this renders an email-not-found instead of the page.
   {
+    path: 'mail-activity/runs',
+    title: 'Gate runs',
+    loadComponent: () => import('./features/mail-activity/containers/gate-runs-page/gate-runs-page').then(m => m.GateRunsPage),
+  },
+  {
     path: 'mail-activity/senders',
     title: 'Junk senders',
     loadComponent: () => import('./features/mail-activity/containers/junk-senders-page/junk-senders-page').then(m => m.JunkSendersPage),

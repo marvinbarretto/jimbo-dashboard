@@ -1,0 +1,136 @@
+<app-ui-page width="standard" class="gate-runs">
+<app-ui-stack gap="lg">
+  <app-mail-tabs active="runs" />
+
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Gate runs</h1>
+    <p uiPageHeaderHint>
+      Every pass the gate has made over the inbox, and inside each one every decision
+      with the reason it was made. Runs aren't stored — they're reconstructed by clustering
+      when each verdict was written, so a run is "the emails decided together".
+    </p>
+  </app-ui-page-header>
+
+  @if (lastError(); as err) {
+    <p class="error">Failed to load: {{ err }}</p>
+  }
+
+  <app-ui-cluster gap="sm" class="stats">
+    <app-ui-stat-card label="Runs" [value]="runs().length.toString()" detail="most recent first" />
+    <app-ui-stat-card label="Mails gated" [value]="totalGated().toString()" detail="across these runs" />
+    <app-ui-stat-card label="Kept" [value]="totalKept().toString()" [detail]="keepRate() + ' of everything read'" />
+    <!-- kept minus filed. The gate said keep and then never created the note,
+         so the decision exists and the record doesn't. -->
+    <app-ui-stat-card
+      label="Kept but never filed"
+      [value]="silentLoss().toString()"
+      detail="decided, then lost"
+      [status]="silentLoss() > 0 ? 'alert' : 'neutral'"
+    />
+  </app-ui-cluster>
+
+  @if (runs().length === 0 && loading()) {
+    <p class="muted">Loading runs…</p>
+  }
+
+  <app-table-shell>
+    <table class="runs-table">
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Actor</th>
+          <th class="num">Read</th>
+          <th class="num">Kept</th>
+          <th>Verdicts</th>
+          <th>Model</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (run of runs(); track run.run_id) {
+          <tr
+            class="run-row"
+            [class.run-row--active]="expandedRunId() === run.run_id"
+            tabindex="0"
+            role="button"
+            [attr.aria-expanded]="expandedRunId() === run.run_id"
+            (click)="toggle(run)"
+            (keydown.enter)="toggle(run)"
+            (keydown.space)="toggle(run); $event.preventDefault()">
+            <td>
+              <span class="when">{{ when(run.started_at) }}</span>
+              <span class="sub">{{ duration(run) }}</span>
+            </td>
+            <td>
+              @if (run.actor_id) {
+                <app-ui-badge tone="info" [subtle]="true">{{ run.actor_id }}</app-ui-badge>
+              } @else {
+                <span class="sub">—</span>
+              }
+            </td>
+            <td class="num">{{ run.total }}</td>
+            <td class="num">
+              {{ run.kept }}
+              @if (lostWork(run) > 0) {
+                <span class="lost" [title]="lostWork(run) + ' kept but never filed as a vault note'">
+                  −{{ lostWork(run) }}
+                </span>
+              }
+            </td>
+            <td>
+              <app-ui-cluster gap="sm">
+                @for (c of verdictChips(run); track c.verdict) {
+                  <app-ui-badge [tone]="verdictTone(c.verdict)" [subtle]="true">
+                    {{ c.verdict }} {{ c.count }}
+                  </app-ui-badge>
+                }
+              </app-ui-cluster>
+            </td>
+            <td class="model">{{ run.models.join(', ') || '—' }}</td>
+          </tr>
+
+          @if (expandedRunId() === run.run_id) {
+            <tr class="decisions-row">
+              <td colspan="6">
+                @if (decisionsLoading()) {
+                  <p class="muted">Loading decisions…</p>
+                } @else {
+                  <ul class="decisions">
+                    @for (d of decisions(); track trackDecision($index, d)) {
+                      <li class="decision" [class.decision--kept]="isKept(d)">
+                        <div class="decision-head">
+                          <app-ui-badge [tone]="verdictTone(d.verdict)" [subtle]="true">
+                            {{ d.verdict }}
+                          </app-ui-badge>
+                          <span class="decision-from">{{ d.from_name || d.from_email }}</span>
+                          <span class="decision-subject">{{ d.subject }}</span>
+                          @if (d.vault_note_id) {
+                            <a
+                              class="decision-note"
+                              [routerLink]="['/mail-activity', d.gmail_id]"
+                              (click)="$event.stopPropagation()"
+                            >filed →</a>
+                          } @else if (isKept(d)) {
+                            <!-- Kept but never filed: the decision exists, the
+                                 record doesn't. Worth seeing at the row level. -->
+                            <span class="decision-unfiled" title="Kept but no vault note was created">not filed</span>
+                          }
+                        </div>
+                        <!-- The reason is the audit. Everything else is metadata. -->
+                        @if (d.verdict_reason) {
+                          <p class="decision-reason">{{ d.verdict_reason }}</p>
+                        } @else {
+                          <p class="decision-reason decision-reason--missing">no reason recorded</p>
+                        }
+                      </li>
+                    }
+                  </ul>
+                }
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </app-table-shell>
+</app-ui-stack>
+</app-ui-page>

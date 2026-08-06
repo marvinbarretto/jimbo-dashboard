@@ -27,7 +27,11 @@ export interface EmailReport {
   from_name: string | null;
   from_email: string;
   subject: string | null;
-  body_text: string | null;
+  // ABSENT on the list response, present on the single-row detail fetch —
+  // see jimbo-api docs/conventions/list-projections.md. The list carries
+  // body_preview instead; body_text was 55% of a 313KB payload nothing rendered.
+  body_text?: string | null;
+  body_preview?: string | null;
   label_ids: string[] | null;
   discovered_at: string;
   body_fetched_at: string | null;

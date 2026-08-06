@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { Router } from '@angular/router';
 import { UiInlineTabs, type UiInlineTabOption } from '@shared/components/ui-inline-tabs/ui-inline-tabs';
 
-export type MailTab = 'activity' | 'senders';
+export type MailTab = 'activity' | 'runs' | 'senders';
 
 /**
  * Sub-navigation for the mail area.
@@ -33,11 +33,13 @@ export class MailTabs {
 
   protected readonly options = computed<readonly UiInlineTabOption[]>(() => [
     { value: 'activity', label: 'Activity' },
+    { value: 'runs', label: 'Runs' },
     { value: 'senders', label: 'Senders' },
   ]);
 
   private readonly routes: Record<MailTab, string> = {
     activity: '/mail-activity',
+    runs: '/mail-activity/runs',
     senders: '/mail-activity/senders',
   };
 

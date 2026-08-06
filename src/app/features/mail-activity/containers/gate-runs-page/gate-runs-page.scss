@@ -1,0 +1,126 @@
+.error { margin: 0; color: var(--color-warning, #c08b00); font-size: 0.8125rem; }
+.muted { margin: 0; color: var(--color-text-muted); font-size: 0.8125rem; }
+.stats { flex-wrap: wrap; }
+
+.runs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+
+  th {
+    text-align: left;
+    padding: 0.4rem 0.6rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.6875rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  td {
+    padding: 0.5rem 0.6rem;
+    vertical-align: middle;
+    border-bottom: 1px dashed var(--color-border);
+  }
+
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+}
+
+.run-row {
+  cursor: pointer;
+
+  &:hover { background: color-mix(in srgb, var(--color-accent) 4%, transparent); }
+  &:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+  &--active { background: color-mix(in srgb, var(--color-accent) 6%, transparent); }
+}
+
+.when { display: block; }
+
+.sub {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+}
+
+.model {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+}
+
+// A run that kept more than it filed lost work — flagged inline rather than
+// left for someone to subtract two columns in their head.
+.lost {
+  margin-left: 0.25rem;
+  color: var(--color-danger, #ef4444);
+  font-size: 0.6875rem;
+}
+
+.decisions-row td {
+  padding: 0;
+  background: var(--color-surface-soft, transparent);
+}
+
+.decisions {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0.6rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.decision {
+  padding: 0.4rem 0 0.4rem 0.6rem;
+  border-left: 2px solid transparent;
+
+  // Keepers get the emphasis; tosses are the bulk and should recede.
+  &--kept { border-left-color: color-mix(in srgb, var(--color-success, #22c55e) 60%, transparent); }
+}
+
+.decision-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.decision-from {
+  color: var(--color-text-soft);
+  min-width: 9rem;
+}
+
+.decision-subject {
+  flex: 1 1 18rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.decision-note {
+  color: var(--color-accent);
+  text-decoration: none;
+  font-size: 0.6875rem;
+
+  &:hover { text-decoration: underline; }
+}
+
+.decision-unfiled {
+  color: var(--color-danger, #ef4444);
+  font-size: 0.6875rem;
+}
+
+// The reason is the whole point of this view, so it gets its own line at full
+// width rather than being truncated into a table cell.
+.decision-reason {
+  margin: 0.15rem 0 0;
+  color: var(--color-text-soft);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.decision-reason--missing {
+  color: var(--color-text-muted);
+  font-style: italic;
+}

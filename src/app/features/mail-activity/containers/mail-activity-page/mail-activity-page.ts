@@ -123,8 +123,10 @@ export class MailActivityPage implements OnInit, OnDestroy {
 
   protected fmtRelative = relativeTime;
 
+  /** The API truncates to 320 chars in SQL now; fall back to body_text for the
+   *  detail fetch, which still carries the whole thing. */
   protected bodyPreview(item: EmailReport): string | null {
-    const text = item.body_text?.trim();
+    const text = (item.body_preview ?? item.body_text)?.trim();
     if (!text) return null;
     if (text.length <= 320) return text;
     return `${text.slice(0, 317)}…`;
