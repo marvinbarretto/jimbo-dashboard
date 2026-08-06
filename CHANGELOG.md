@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.160](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.159...v0.0.160) (2026-08-06)
+
+
+### Features
+
+* **mail:** audit card on the expanded row — who, when, why, where it landed ([5301cd4](https://github.com/marvinbarretto/jimbo-dashboard/commit/5301cd483b1bdae7460edfb386afa3ae87922297)), closes [#4220](https://github.com/marvinbarretto/jimbo-dashboard/issues/4220)
+* **mail:** gate runs page — audit every decision with its reason ([a9f8edb](https://github.com/marvinbarretto/jimbo-dashboard/commit/a9f8edbfab8381dbfceff7beff26df19bbebe7e8))
+* **mail:** junk senders page, actor column, correct verdict rendering ([c03a13d](https://github.com/marvinbarretto/jimbo-dashboard/commit/c03a13dd68a8d3669fdf55a2af8fe9781a4ab02d))
+* **runs:** let the expanded decisions breathe ([0b7ff6c](https://github.com/marvinbarretto/jimbo-dashboard/commit/0b7ff6c1dc8a8bb0cd2009c15ce226fb384b55bf)), closes [#c47ac4](https://github.com/marvinbarretto/jimbo-dashboard/issues/c47ac4)
+* **runs:** spell out what "filed" actually produced ([991082b](https://github.com/marvinbarretto/jimbo-dashboard/commit/991082bef0f64a1ee1df0dfe0c69549afdb0278e)), closes [#4211](https://github.com/marvinbarretto/jimbo-dashboard/issues/4211) [#4210](https://github.com/marvinbarretto/jimbo-dashboard/issues/4210)
+* **vault:** primary resolve + reassign actions on the detail page ([e583a72](https://github.com/marvinbarretto/jimbo-dashboard/commit/e583a72d7d0a31d4680d9726d638556f7e181de8)), closes [#v3](https://github.com/marvinbarretto/jimbo-dashboard/issues/v3)
+
+
+### Code Refactoring
+
+* **mail:** rebuild senders on ui-lab primitives, add mail sub-tabs ([86b2fa4](https://github.com/marvinbarretto/jimbo-dashboard/commit/86b2fa48078b8f96be9b5a39cb51fbc8a4555fae))
+
 ### [0.0.159](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.158...v0.0.159) (2026-08-05)
 
 
