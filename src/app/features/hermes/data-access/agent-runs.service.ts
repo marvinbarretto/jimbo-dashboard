@@ -48,6 +48,28 @@ export interface AgentRunTailRow {
   tokens_total: number | null;
 }
 
+/**
+ * The value axis: did the job's asking achieve anything.
+ *
+ * `response_rate` is null — not 0 — when the job asked nothing in the window.
+ * A poller that never interrupts Marvin is not a job with a 0% answer rate,
+ * and the UI must render that as "—".
+ */
+export interface JobEffectivenessRow {
+  job_name: string;
+  fires: number;
+  silent: number;
+  errors: number;
+  tokens: number | null;
+  last_run_at: string;
+  asked: number;
+  answered: number;
+  last_response_at: string | null;
+  response_rate: number | null;
+  rating: JobRatingValue | null;
+  rating_note: string | null;
+}
+
 export type JobRatingValue = 'keep' | 'watch' | 'cut';
 
 export interface JobRating {
@@ -80,6 +102,12 @@ export class AgentRunsService {
     if (!opts.since) params.set('days', String(opts.days ?? 7));
     return this.http.get<{ items: AgentRunRollupRow[] }>(
       `${this.base}/api/agent-runs/rollup?${params.toString()}`,
+    );
+  }
+
+  effectiveness(days = 30): Observable<{ items: JobEffectivenessRow[] }> {
+    return this.http.get<{ items: JobEffectivenessRow[] }>(
+      `${this.base}/api/agent-runs/effectiveness?days=${days}`,
     );
   }
 

@@ -12,6 +12,12 @@
       consumes. Sort by tokens to see what to do less of; the <em>metered</em> badge marks the jobs
       still spending real money. Mark a verdict to record the call.
     </p>
+    <p class="runs__lede">
+      <strong>Answered</strong> is the axis that actually decides keep or cut — a job can be
+      healthy, cheap and completely ignored. It counts only deliveries that asked for something,
+      so a blog post or a status pulse shows <code>—</code> rather than a rate it was never on.
+      That blank is deliberate: no data is not the same fact as nobody answered.
+    </p>
     <div class="runs__controls">
       <div class="runs__window">
         <span class="runs__window-label">Window</span>
@@ -35,6 +41,11 @@
           class="runs__window-btn"
           [class.runs__window-btn--active]="sortMode() === 'tokens'"
           (click)="setSort('tokens')">tokens</button>
+        <button
+          type="button"
+          class="runs__window-btn"
+          [class.runs__window-btn--active]="sortMode() === 'answered'"
+          (click)="setSort('answered')">answered</button>
       </div>
     </div>
 
@@ -73,6 +84,7 @@
               <th class="runs__th runs__th--tokens">Tokens</th>
               <th class="runs__th runs__th--billing">Billing</th>
               <th class="runs__th runs__th--cost">Cost</th>
+              <th class="runs__th runs__th--answered" title="Answered / asked. Blank means the job never asks — not that nobody answered.">Answered</th>
               <th class="runs__th runs__th--rating">Verdict</th>
               @for (o of outcomeOrder; track o) {
                 <th class="runs__th runs__th--outcome">
@@ -100,6 +112,13 @@
                   <app-ui-badge [tone]="billingTone(j.billing)" [title]="billingTitle(j.billing)">{{ billingLabel(j.billing) }}</app-ui-badge>
                 </td>
                 <td class="runs__td runs__td--cost">{{ formatCost(j) }}</td>
+                <td class="runs__td runs__td--answered" [title]="answeredTitle(j)">
+                  @if (j.asked > 0) {
+                    <app-ui-badge [tone]="answeredTone(j)">{{ answeredLabel(j) }}</app-ui-badge>
+                  } @else {
+                    <span class="runs__count runs__count--empty">—</span>
+                  }
+                </td>
                 <td class="runs__td runs__td--rating">
                   <div class="runs__rating" role="group" [attr.aria-label]="'Verdict for ' + j.job_name">
                     @for (r of ratingOptions; track r) {

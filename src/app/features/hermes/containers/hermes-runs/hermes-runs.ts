@@ -12,6 +12,7 @@ import {
   type AgentRunRollupRow,
   type AgentRunTailRow,
   type BillingMode,
+  type JobEffectivenessRow,
   type JobRating,
   type JobRatingValue,
 } from '../../data-access/agent-runs.service';
@@ -49,10 +50,18 @@ interface JobSummary {
   cost: number;
   billing: BillingMode;
   rating: JobRatingValue | null;
+  /** How many times this job asked Marvin for something in the window. */
+  asked: number;
+  answered: number;
+  /** null when it asked nothing — "no data", never 0%. */
+  response_rate: number | null;
 }
 
-/** Health answers "is it broken", tokens answers "is it worth it". */
-type SortMode = 'health' | 'tokens';
+/**
+ * Health answers "is it broken", tokens answers "what did it burn", answered
+ * answers the only question that decides keep/cut — did he ever act on it.
+ */
+type SortMode = 'health' | 'tokens' | 'answered';
 
 @Component({
   selector: 'app-hermes-runs',
@@ -76,9 +85,19 @@ export class HermesRuns {
     switchMap(() => this.service.tail(this.tailLimit()).pipe(catchError(() => of(null)))),
     shareReplay(1),
   );
+  // Tolerates a 404: the endpoint ships ahead of the deploy, and a missing
+  // value axis must degrade to "—" rather than empty the whole page.
+  private readonly effectiveness$: Observable<{ items: JobEffectivenessRow[] } | null> =
+    timer(0, 30_000).pipe(
+      switchMap(() =>
+        this.service.effectiveness(this.windowDays()).pipe(catchError(() => of(null))),
+      ),
+      shareReplay(1),
+    );
 
   readonly rollup = toSignal(this.rollup$.pipe(map((r) => r?.items ?? [])), { initialValue: [] });
   readonly tail   = toSignal(this.tail$.pipe(map((r) => r?.items ?? [])), { initialValue: [] });
+  readonly effectiveness = toSignal(this.effectiveness$.pipe(map((r) => r?.items ?? [])), { initialValue: [] });
 
   readonly sortMode = signal<SortMode>('health');
 
@@ -135,6 +154,9 @@ export class HermesRuns {
           cost: 0,
           billing: r.billing,
           rating: null,
+          asked: 0,
+          answered: 0,
+          response_rate: null,
         };
         map.set(r.job_name, s);
       }
@@ -178,11 +200,51 @@ export class HermesRuns {
     const ratings = this.ratingsMap();
     for (const s of map.values()) s.rating = ratings.get(s.job_name) ?? null;
 
+    // The value axis rides on the same job_name key. Jobs whose only trace is a
+    // bespoke ledger (mood-checkin-tick, coach-nudge) have no rollup rows at
+    // all, so they are added rather than merged — otherwise the jobs that ask
+    // the most would be the ones missing from the table.
+    for (const e of this.effectiveness()) {
+      let s = map.get(e.job_name);
+      if (!s) {
+        s = {
+          job_name: e.job_name,
+          models: [],
+          total: e.fires,
+          by_outcome: new Map(),
+          last_ts: e.last_run_at,
+          health: 'amber',
+          health_reason: 'no agent.end runs — ledger-only job',
+          tokens: e.tokens ?? 0,
+          cost: 0,
+          billing: 'unknown',
+          rating: ratings.get(e.job_name) ?? null,
+          asked: 0,
+          answered: 0,
+          response_rate: null,
+        };
+        map.set(e.job_name, s);
+      }
+      s.asked = e.asked;
+      s.answered = e.answered;
+      s.response_rate = e.response_rate;
+    }
+
     const bySort = this.sortMode();
     return [...map.values()].sort((a, b) => {
       if (bySort === 'tokens') {
         const cmp = b.tokens - a.tokens;
         return cmp !== 0 ? cmp : a.job_name.localeCompare(b.job_name);
+      }
+      if (bySort === 'answered') {
+        // Worst answer rate first, and jobs that never ask sort last rather
+        // than to the bottom of a scale they were never on.
+        const ar = a.response_rate, br = b.response_rate;
+        if (ar === null && br === null) return a.job_name.localeCompare(b.job_name);
+        if (ar === null) return 1;
+        if (br === null) return -1;
+        const cmp = ar - br;
+        return cmp !== 0 ? cmp : b.asked - a.asked;
       }
       const rank = { red: 0, amber: 1, green: 2 } as const;
       const cmp = rank[a.health] - rank[b.health];
@@ -216,6 +278,28 @@ export class HermesRuns {
 
   jobCount(s: JobSummary, outcome: AgentRunOutcome): number {
     return s.by_outcome.get(outcome) ?? 0;
+  }
+
+  /**
+   * A job that asked nothing renders as an em dash, never as 0%.
+   *
+   * @param s The job row.
+   * @returns "3/11 · 27%", or "—" when there is nothing to report.
+   */
+  answeredLabel(s: JobSummary): string {
+    if (s.asked === 0) return '—';
+    return `${s.answered}/${s.asked} · ${Math.round((s.response_rate ?? 0) * 100)}%`;
+  }
+
+  answeredTone(s: JobSummary): Tone {
+    if (s.asked === 0 || s.response_rate === null) return 'neutral';
+    if (s.response_rate === 0) return 'danger';
+    return s.response_rate < 0.25 ? 'warning' : 'success';
+  }
+
+  answeredTitle(s: JobSummary): string {
+    if (s.asked === 0) return 'This job never asks for anything — it has no answer rate, which is different from a rate of zero.';
+    return `Asked ${s.asked} times, answered ${s.answered}`;
   }
 
   setWindow(days: number): void { this.windowDays.set(days); }
