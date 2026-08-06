@@ -104,68 +104,68 @@
                   <ul class="decisions">
                     @for (d of decisions(); track trackDecision($index, d)) {
                       <li class="decision" [class.decision--kept]="isKept(d)">
-                        <div class="decision-head">
-                          <app-ui-badge [tone]="verdictTone(d.verdict)" [subtle]="true">
-                            {{ d.verdict }}
-                          </app-ui-badge>
-                          <span class="decision-from">{{ d.from_name || d.from_email }}</span>
-                          <span class="decision-subject">{{ d.subject }}</span>
-                        </div>
+                        <app-ui-stack gap="sm">
+                          <div class="decision-head">
+                            <app-ui-badge [tone]="verdictTone(d.verdict)" [subtle]="true">
+                              {{ d.verdict }}
+                            </app-ui-badge>
+                            <span class="decision-from">{{ d.from_name || d.from_email }}</span>
+                            <span class="decision-time">{{ decidedIn(d) }}</span>
+                          </div>
 
-                        <!-- The reason is the audit. Everything else is metadata. -->
-                        @if (d.verdict_reason) {
-                          <p class="decision-reason">{{ d.verdict_reason }}</p>
-                        } @else {
-                          <p class="decision-reason decision-reason--missing">no reason recorded</p>
-                        }
+                          <p class="decision-subject">{{ d.subject }}</p>
 
-                        <!-- "Filed" on its own said nothing. Spell out what was
-                             actually created and where it landed: a note in the
-                             inbox with no project is not the same outcome as a
-                             task under an epic, and only one of them will ever
-                             be looked at again. -->
-                        @if (isKept(d)) {
-                          <p class="decision-landed">
-                            @if (d.vault_note_seq) {
-                              <span class="muted">→ created</span>
-                              <a
-                                class="landed-note"
-                                [routerLink]="['/vault-items', d.vault_note_seq]"
-                                (click)="$event.stopPropagation()"
-                              >#{{ d.vault_note_seq }}</a>
-                              <span class="landed-kind">{{ d.vault_note_type }}</span>
-                              @if (d.vault_note_status) {
-                                <span class="landed-status">{{ d.vault_note_status }}</span>
-                              }
+                          <!-- The rationale is the audit. Prose, at reading
+                               width — not squeezed onto a metadata line. -->
+                          @if (d.verdict_reason) {
+                            <app-ui-prose class="decision-reason" [text]="d.verdict_reason" />
+                          } @else {
+                            <p class="decision-reason--missing">no rationale recorded</p>
+                          }
 
-                              @if (d.project_name) {
-                                <span class="muted">·</span>
+                          @if (isKept(d)) {
+                            <div class="landed">
+                              @if (d.vault_note_seq) {
                                 <a
-                                  class="landed-project"
-                                  [routerLink]="['/projects', d.project_id]"
+                                  class="landed-note"
+                                  [routerLink]="['/vault-items', d.vault_note_seq]"
                                   (click)="$event.stopPropagation()"
-                                >{{ d.project_name }}</a>
-                              } @else {
-                                <span class="muted">·</span>
-                                <span class="landed-gap">no project</span>
-                              }
+                                >#{{ d.vault_note_seq }}</a>
+                                <span class="landed-kind">{{ d.vault_note_type }}</span>
+                                <span class="landed-kind">{{ d.vault_note_status }}</span>
 
-                              @if (d.epic_seq) {
-                                <span class="muted">·</span>
-                                <a
-                                  class="landed-epic"
-                                  [routerLink]="['/vault-items', d.epic_seq]"
-                                  (click)="$event.stopPropagation()"
-                                >epic #{{ d.epic_seq }}</a>
+                                @if (d.project_name) {
+                                  <a
+                                    class="landed-project"
+                                    [routerLink]="['/projects', d.project_id]"
+                                    (click)="$event.stopPropagation()"
+                                  >
+                                    <app-project-avatar
+                                      [name]="d.project_name"
+                                      [color]="d.project_color ?? null"
+                                      size="sm"
+                                    />
+                                    {{ d.project_name }}
+                                  </a>
+                                } @else {
+                                  <span class="landed-gap">no project</span>
+                                }
+
+                                @if (d.epic_seq) {
+                                  <a
+                                    class="landed-epic"
+                                    [routerLink]="['/vault-items', d.epic_seq]"
+                                    (click)="$event.stopPropagation()"
+                                  >epic #{{ d.epic_seq }}</a>
+                                } @else {
+                                  <span class="landed-gap">no epic</span>
+                                }
                               } @else {
-                                <span class="muted">·</span>
-                                <span class="landed-gap">no epic</span>
+                                <span class="landed-lost">kept, but no vault item was ever created</span>
                               }
-                            } @else {
-                              <span class="landed-lost">kept, but no vault item was ever created</span>
-                            }
-                          </p>
-                        }
+                            </div>
+                          }
+                        </app-ui-stack>
                       </li>
                     }
                   </ul>

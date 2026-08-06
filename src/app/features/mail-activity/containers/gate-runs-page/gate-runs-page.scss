@@ -62,68 +62,25 @@
   background: var(--color-surface-soft, transparent);
 }
 
-.decisions {
-  list-style: none;
-  margin: 0;
-  padding: 0.25rem 0.6rem 0.6rem;
-  display: flex;
-  flex-direction: column;
-}
 
-.decision {
-  padding: 0.4rem 0 0.4rem 0.6rem;
-  border-left: 2px solid transparent;
 
-  // Keepers get the emphasis; tosses are the bulk and should recede.
-  &--kept { border-left-color: color-mix(in srgb, var(--color-success, #22c55e) 60%, transparent); }
-}
 
-.decision-head {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
 
-.decision-from {
-  color: var(--color-text-soft);
-  min-width: 9rem;
-}
 
-.decision-subject {
-  flex: 1 1 18rem;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
-.decision-note {
-  color: var(--color-accent);
-  text-decoration: none;
-  font-size: 0.6875rem;
 
-  &:hover { text-decoration: underline; }
-}
 
-.decision-unfiled {
-  color: var(--color-danger, #ef4444);
-  font-size: 0.6875rem;
-}
+
+
+
+
+
 
 // The reason is the whole point of this view, so it gets its own line at full
 // width rather than being truncated into a table cell.
-.decision-reason {
-  margin: 0.15rem 0 0;
-  color: var(--color-text-soft);
-  font-size: 0.75rem;
-  line-height: 1.45;
-}
 
-.decision-reason--missing {
-  color: var(--color-text-muted);
-  font-style: italic;
-}
+
+
 
 // Explains a whole run of blank rationales, so a known data loss doesn't read
 // as the page being broken.
@@ -138,32 +95,122 @@
 
 // What the decision actually produced. "filed" alone hid the difference
 // between a task under an epic and a note rotting in the inbox.
-.decision-landed {
+
+
+
+
+
+
+
+
+
+
+// The pipeline stopping one step short. Muted rather than alarming — it is the
+// common case (13 of 14 filed events have neither), and shouting on every row
+// would just become noise.
+
+
+// ── decisions inside an expanded run ──────────────────────────────
+// Each decision is a small record to read, not a table row to scan: verdict
+// and sender, the subject, the rationale as prose, then where it landed.
+// Generous vertical rhythm so a run of twenty doesn't read as a wall.
+
+.decisions {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0.75rem 1rem;
   display: flex;
-  align-items: baseline;
-  gap: 0.35rem;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.decision {
+  padding: 0.85rem 1rem;
+  border-left: 3px solid transparent;
+  border-radius: var(--radius);
+
+  // Keepers carry the emphasis; tosses are the bulk and should recede so the
+  // eye lands on the six things that mattered, not the fourteen that didn't.
+  &--kept {
+    border-left-color: color-mix(in srgb, var(--color-success, #22c55e) 65%, transparent);
+    background: color-mix(in srgb, var(--color-success, #22c55e) 4%, transparent);
+  }
+
+  &:not(&--kept) { opacity: 0.72; }
+}
+
+.decision-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   flex-wrap: wrap;
-  margin: 0.2rem 0 0;
+}
+
+.decision-from {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.decision-time {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+
+.decision-subject {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: 0.875rem;
+}
+
+// Reading width. The rationale is the one thing on this page written for a
+// human, so it should not run the full width of a 1500px table.
+.decision-reason {
+  max-width: 68ch;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.decision-reason--missing {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-size: 0.8125rem;
+}
+
+.landed {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--color-border);
   font-size: 0.75rem;
 }
 
 .landed-note {
+  font-family: var(--font-mono);
   color: var(--color-accent);
   text-decoration: none;
   &:hover { text-decoration: underline; }
 }
 
-.landed-kind,
-.landed-status {
-  padding: 0 0.3rem;
+.landed-kind {
+  padding: 0.05rem 0.35rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-text-muted);
   font-size: 0.6875rem;
 }
 
+// Project gets its own colour via project-avatar, so a run's spread across
+// projects is visible at a glance rather than read word by word.
 .landed-project {
-  color: var(--color-success, #22c55e);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-text);
   text-decoration: none;
   font-weight: 500;
   &:hover { text-decoration: underline; }
@@ -175,10 +222,13 @@
   &:hover { text-decoration: underline; }
 }
 
-// The pipeline stopping one step short. Muted rather than alarming — it is the
-// common case (13 of 14 filed events have neither), and shouting on every row
-// would just become noise.
+// The pipeline stopping short. Muted, because it is the common case and
+// shouting it on every row would just become noise.
 .landed-gap {
   color: var(--color-text-muted);
   font-style: italic;
+}
+
+.landed-lost {
+  color: var(--color-danger, #ef4444);
 }

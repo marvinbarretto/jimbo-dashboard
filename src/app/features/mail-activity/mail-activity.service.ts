@@ -51,6 +51,7 @@ export interface EmailReport {
   epic_title?: string | null;
   project_id?: string | null;
   project_name?: string | null;
+  project_color?: string | null;
   created_at: string;
   updated_at: string;
 }

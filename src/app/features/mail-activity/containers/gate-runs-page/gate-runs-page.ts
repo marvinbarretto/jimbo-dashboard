@@ -5,6 +5,8 @@ import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
+import { ProjectAvatar } from '@shared/components/project-avatar/project-avatar';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { relativeTime } from '@shared/utils/datetime.utils';
@@ -36,8 +38,8 @@ const REASON_FIX_AT = Date.parse('2026-08-06T12:45:00Z');
 @Component({
   selector: 'app-gate-runs-page',
   imports: [
-    MailTabs, RouterLink, TableShell, UiBadge, UiCluster,
-    UiPage, UiPageHeader, UiStack, UiStatCard,
+    MailTabs, ProjectAvatar, RouterLink, TableShell, UiBadge, UiCluster,
+    UiPage, UiPageHeader, UiProse, UiStack, UiStatCard,
   ],
   templateUrl: './gate-runs-page.html',
   styleUrl: './gate-runs-page.scss',
@@ -112,10 +114,26 @@ export class GateRunsPage implements OnInit {
     return ms < 60_000 ? `${Math.round(ms / 1000)}s` : `${Math.round(ms / 60_000)}m`;
   }
 
-  /** True when this run predates the reason fix and its keepers are blank —
-   *  so the page can say why rather than looking broken. */
+  /**
+   * Show the explanation only when this run's keepers are ACTUALLY missing
+   * rationales. Keying it on the run timestamp alone was a false positive —
+   * it fired on pre-fix runs whose keepers had kept their reasons anyway.
+   * Read from the decisions we loaded, not from a date.
+   */
   protected reasonsLost(run: GateRun): boolean {
-    return Date.parse(run.started_at) < REASON_FIX_AT && run.kept > 0;
+    if (Date.parse(run.started_at) >= REASON_FIX_AT) return false;
+    const kept = this.decisions().filter(d => this.isKept(d));
+    return kept.length > 0 && kept.every(d => !d.verdict_reason);
+  }
+
+  /** Discovery → verdict, so each row says how long it waited to be judged. */
+  protected decidedIn(d: EmailReport): string {
+    if (!d.gated_at) return '';
+    const ms = new Date(d.gated_at).getTime() - new Date(d.discovered_at).getTime();
+    if (!Number.isFinite(ms) || ms < 0) return '';
+    if (ms < 60_000) return `decided in ${Math.round(ms / 1000)}s`;
+    if (ms < 3_600_000) return `decided in ${Math.round(ms / 60_000)}m`;
+    return `decided in ${Math.round(ms / 3_600_000)}h`;
   }
 
   protected isKept(d: EmailReport): boolean {
