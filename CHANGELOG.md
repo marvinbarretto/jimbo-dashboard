@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.161](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.160...v0.0.161) (2026-08-06)
+
+
+### Features
+
+* **hermes:** show the answer rate on the runs table ([639f243](https://github.com/marvinbarretto/jimbo-dashboard/commit/639f243e4d07e99bdaba56f0c1913001319eabe1))
+* **vault:** make the item detail answer "why" at a glance ([b241cd2](https://github.com/marvinbarretto/jimbo-dashboard/commit/b241cd2036eaa2d1ff12b2310fbca9e7ce4cdc65))
+* **vault:** surface the intake exam on the item detail ([b2ccee9](https://github.com/marvinbarretto/jimbo-dashboard/commit/b2ccee9d143c0a94a931cd04696364af254534eb))
+
 ### [0.0.160](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.159...v0.0.160) (2026-08-06)
 
 
