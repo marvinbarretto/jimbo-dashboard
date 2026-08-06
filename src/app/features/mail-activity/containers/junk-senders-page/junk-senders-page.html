@@ -1,6 +1,6 @@
 <app-ui-page width="standard" class="junk-senders">
 <app-ui-stack gap="lg">
-  <app-ui-back-link to="/mail-activity">Mail activity</app-ui-back-link>
+  <app-mail-tabs active="senders" />
 
   <app-ui-page-header>
     <h1 uiPageHeaderTitle>Junk senders</h1>
@@ -12,13 +12,9 @@
     <div uiPageHeaderActions>
       <app-ui-cluster gap="sm" align="center">
         <label class="min-total">
-          seen at least
+          seen ≥
           <input type="number" min="1" max="1000" [value]="minTotal()" (change)="onMinTotal($event)" />
-          times
         </label>
-        <app-ui-button variant="ghost" size="sm" (pressed)="toggleHideBlocked()">
-          {{ hideBlocked() ? 'Show blocked' : 'Hide blocked' }}
-        </app-ui-button>
         <app-ui-button variant="ghost" size="sm" [disabled]="loading()" (pressed)="refresh()">
           {{ loading() ? 'Loading…' : 'Refresh' }}
         </app-ui-button>
@@ -30,73 +26,98 @@
     <p class="error">Failed to load: {{ err }}</p>
   }
 
-  @if (candidateCount() > 0) {
-    <p class="summary">
-      <strong>{{ candidateCount() }}</strong> senders have never once produced a keeper,
-      accounting for <strong>{{ reclaimable() }}</strong> emails the gate has had to read.
-      Silencing them takes that load off the queue permanently.
-    </p>
-  }
-
-  @if (rows().length === 0 && !loading()) {
-    <app-ui-empty-state
-      title="Nothing to review"
-      message="No sender meets the threshold. Lower the minimum, or show blocked senders to review past decisions."
+  <app-ui-cluster gap="sm" class="stats">
+    <app-ui-stat-card
+      label="Candidates"
+      [value]="candidateCount().toString()"
+      detail="never produced a keeper"
+      [status]="candidateCount() > 0 ? 'warn' : 'neutral'"
     />
-  }
+    <app-ui-stat-card
+      label="Emails behind them"
+      [value]="reclaimable().toString()"
+      detail="load the gate could stop carrying"
+    />
+    <app-ui-stat-card
+      label="Can unsubscribe"
+      [value]="unsubscribable().toString()"
+      detail="stoppable at source, not just gated"
+    />
+    <app-ui-stat-card
+      label="Already blocked"
+      [value]="blockedCount().toString()"
+      detail="on the gate's blocklist"
+    />
+  </app-ui-cluster>
 
-  @if (rows().length > 0) {
-    <ul class="senders">
-      @for (s of rows(); track s.from_email) {
-        <li class="sender" [class.sender--candidate]="isCandidate(s)" [class.sender--blocked]="s.blocked">
-          <div class="sender-main">
-            <span class="sender-name">{{ s.from_name || s.from_email }}</span>
-            <span class="sender-email">{{ s.from_email }}</span>
-          </div>
+  <app-ui-segmented
+    [options]="scopeOptions"
+    [value]="scope()"
+    ariaLabel="Which senders to show"
+    (changed)="onScope($event)"
+  />
 
-          <div class="sender-stats">
-            <app-ui-badge [tone]="tone(s)" [subtle]="true">{{ pct(s.toss_rate) }} tossed</app-ui-badge>
-            <span class="stat">{{ s.total }} total</span>
-            @if (s.kept > 0) {
-              <span class="stat stat--kept">{{ s.kept }} kept</span>
-            }
-            @if (s.pending > 0) {
-              <span class="stat stat--pending">{{ s.pending }} queued</span>
-            }
-            <span class="stat stat--seen">last {{ lastSeen(s) }}</span>
-          </div>
+  <app-ui-data-table
+    [columns]="columns"
+    [data]="rows()"
+    [rowClass]="rowClass"
+    ariaLabel="Senders by toss rate"
+    emptyTitle="Nothing to review"
+    emptyMessage="No sender meets the threshold here. Lower the minimum, or switch scope to see everything."
+  />
 
-          <div class="sender-actions">
-            @if (s.trusted) {
-              <app-ui-badge tone="success" [subtle]="true">trusted</app-ui-badge>
-            } @else if (s.blocked) {
-              <app-ui-badge tone="neutral" [subtle]="true">blocked</app-ui-badge>
-              <app-ui-button
-                variant="ghost"
-                size="sm"
-                [disabled]="busy() === s.from_email"
-                (pressed)="unblock(s)"
-              >Unblock</app-ui-button>
-            } @else {
-              @if (s.has_unsubscribe) {
-                <!-- Blocking silences it locally forever; unsubscribing stops it
-                     at source. Where the header exists, say so — it is the
-                     better fix and costs the gate nothing afterwards. -->
-                <app-ui-badge tone="neutral" [subtle]="true" title="This sender supports List-Unsubscribe — you can stop it at source">
-                  unsub available
-                </app-ui-badge>
-              }
-              <app-ui-button
-                variant="secondary"
-                size="sm"
-                [disabled]="busy() === s.from_email"
-                (pressed)="block(s)"
-              >{{ busy() === s.from_email ? 'Blocking…' : 'Block' }}</app-ui-button>
-            }
-          </div>
-        </li>
-      }
-    </ul>
-  }
+  <ng-template #senderCell let-context>
+    <span class="sender-name">{{ context.getValue() }}</span>
+    <span class="sender-email">{{ context.row.original.from_email }}</span>
+  </ng-template>
+
+  <ng-template #rateCell let-context>
+    <app-ui-badge [tone]="rateTone(context.row.original)" [subtle]="true">
+      {{ pct(context.getValue()) }}
+    </app-ui-badge>
+  </ng-template>
+
+  <!-- A single keeper is the whole reason a sender is not a candidate, so it
+       earns emphasis rather than sitting as another grey number. -->
+  <ng-template #keptCell let-context>
+    @if (context.getValue() > 0) {
+      <span class="kept">{{ context.getValue() }}</span>
+    } @else {
+      <span class="kept-none">0</span>
+    }
+  </ng-template>
+
+  <!-- Blocking silences a sender locally forever; unsubscribing stops it at
+       source. Where the header exists, say so — it is the better fix and costs
+       the gate nothing afterwards. -->
+  <ng-template #unsubCell let-context>
+    @if (context.getValue()) {
+      <app-ui-badge tone="neutral" [subtle]="true" title="Supports List-Unsubscribe — can be stopped at source">
+        yes
+      </app-ui-badge>
+    } @else {
+      <span class="kept-none">—</span>
+    }
+  </ng-template>
+
+  <ng-template #actionCell let-context>
+    @if (context.row.original.trusted) {
+      <app-ui-badge tone="success" [subtle]="true">trusted</app-ui-badge>
+    } @else if (context.row.original.blocked) {
+      <app-ui-button
+        variant="ghost"
+        size="sm"
+        [disabled]="busy() === context.getValue()"
+        (pressed)="unblock(context.row.original)"
+      >Unblock</app-ui-button>
+    } @else {
+      <app-ui-button
+        variant="secondary"
+        size="sm"
+        [disabled]="busy() === context.getValue()"
+        (pressed)="block(context.row.original)"
+      >{{ busy() === context.getValue() ? '…' : 'Block' }}</app-ui-button>
+    }
+  </ng-template>
 </app-ui-stack>
 </app-ui-page>

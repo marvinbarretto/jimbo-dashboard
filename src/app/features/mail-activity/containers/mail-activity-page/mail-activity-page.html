@@ -1,5 +1,6 @@
 <app-ui-page width="standard" class="mail-activity">
 <app-ui-stack gap="lg">
+  <app-mail-tabs active="activity" />
   <app-ui-page-header>
     <h1 uiPageHeaderTitle>Mail activity</h1>
     <p uiPageHeaderHint>
@@ -9,7 +10,6 @@
     </p>
     <div uiPageHeaderActions>
       <app-ui-cluster gap="sm" align="center">
-        <a class="senders-link" routerLink="/mail-activity/senders">Junk senders →</a>
         <app-ui-badge tone="neutral">{{ items().length }} of {{ total() }}</app-ui-badge>
         <app-ui-refresh-control
           [loading]="loading()"

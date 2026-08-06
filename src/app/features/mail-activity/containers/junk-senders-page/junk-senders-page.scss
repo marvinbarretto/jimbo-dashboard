@@ -1,3 +1,7 @@
+// Layout only. Rows, cells, empty state and the stat tiles all come from the
+// ui-lab primitives (ui-data-table, ui-stat-card, ui-segmented) — the point of
+// this page living on them is that it inherits their table styling for free.
+
 .min-total {
   display: inline-flex;
   align-items: center;
@@ -22,94 +26,41 @@
   font-size: 0.8125rem;
 }
 
-.summary {
-  margin: 0;
-  color: var(--color-text-soft);
+.stats {
+  flex-wrap: wrap;
 }
 
-.senders {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.sender {
-  display: grid;
-  // identity takes the slack; stats and actions size to content so the Block
-  // buttons form one scannable column down the right.
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.45rem 0.5rem;
-  border-bottom: 1px dashed var(--color-border);
-  border-left: 3px solid transparent;
-}
-
-// The proposal marker: never kept anything, so it is safe to offer.
-.sender--candidate {
-  border-left-color: color-mix(in srgb, var(--color-warning, #c08b00) 55%, transparent);
-}
-
-.sender--blocked {
-  opacity: 0.5;
-}
-
-.sender-main {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
+// Two lines inside one table cell: display name over the raw address, so the
+// address stays visible (it is what actually goes on the blocklist) without
+// spending a column on it.
 .sender-name {
+  display: block;
   font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .sender-email {
+  display: block;
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--color-text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.sender-stats {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.75rem;
-  color: var(--color-text-soft);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+.kept {
+  color: var(--color-success, #22c55e);
+  font-weight: 500;
 }
 
-.stat--kept { color: var(--color-success, #22c55e); }
-.stat--pending { color: var(--color-info); }
-.stat--seen { color: var(--color-text-muted); }
-
-.sender-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-content: flex-end;
+.kept-none {
+  color: var(--color-text-muted);
 }
 
-// Stack rather than let the address column collapse — the sender identity is
-// the thing being judged, so it must never be the part that gets truncated.
-@media (max-width: 40rem) {
-  .sender {
-    grid-template-columns: minmax(0, 1fr);
-    row-gap: 0.35rem;
+// Row emphasis, applied via ui-data-table's rowClass hook.
+:host ::ng-deep {
+  .row--candidate td:first-child {
+    box-shadow: inset 3px 0 0 color-mix(in srgb, var(--color-warning, #c08b00) 55%, transparent);
   }
 
-  .sender-stats,
-  .sender-actions {
-    justify-content: flex-start;
-    flex-wrap: wrap;
+  .row--blocked {
+    opacity: 0.5;
   }
 }

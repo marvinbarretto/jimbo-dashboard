@@ -11,6 +11,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { relativeTime } from '@shared/utils/datetime.utils';
 import { vaultItemId } from '@domain/ids';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
+import { MailTabs } from '../../components/mail-tabs/mail-tabs';
 import { MailActivityService, type EmailReport, isRetained } from '../../mail-activity.service';
 
 interface PipelineStage {
@@ -22,7 +23,7 @@ interface PipelineStage {
 
 @Component({
   selector: 'app-mail-activity-page',
-  imports: [RouterLink, UiBadge, UiCluster, UiEmptyState, UiPage, UiPageHeader, UiProse, UiRefreshControl, UiStack],
+  imports: [MailTabs, RouterLink, UiBadge, UiCluster, UiEmptyState, UiPage, UiPageHeader, UiProse, UiRefreshControl, UiStack],
   templateUrl: './mail-activity-page.html',
   styleUrl: './mail-activity-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
