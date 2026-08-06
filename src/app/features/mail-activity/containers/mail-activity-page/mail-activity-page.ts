@@ -9,8 +9,6 @@ import { UiRefreshControl } from '@shared/components/ui-refresh-control/ui-refre
 import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { relativeTime } from '@shared/utils/datetime.utils';
-import { vaultItemId } from '@domain/ids';
-import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
 import { MailTabs } from '../../components/mail-tabs/mail-tabs';
 import { MailActivityService, type EmailReport, isRetained } from '../../mail-activity.service';
 
@@ -30,7 +28,6 @@ interface PipelineStage {
 })
 export class MailActivityPage implements OnInit, OnDestroy {
   private readonly service = inject(MailActivityService);
-  private readonly vaultItems = inject(VaultItemsService);
 
   readonly items = this.service.items;
   readonly loading = this.service.loading;
@@ -111,17 +108,31 @@ export class MailActivityPage implements OnInit, OnDestroy {
     ];
   }
 
-  // Resolves vault_note_id (UUID) → seq for the detail-page link. The
-  // VaultItemsService loads board items on construction, so this is
-  // typically populated by the time mail rows render. Returns null if
-  // the note isn't in the loaded list (deleted, archived, or still loading).
+  /** Resolved server-side since 2026-08-06. This used to call into
+   *  VaultItemsService, which meant the mail page loaded the entire vault board
+   *  just to turn a UUID into a seq — and its own comment conceded the link
+   *  vanished when the note wasn't in the loaded set. */
   protected vaultNoteSeq(item: EmailReport): number | null {
-    if (!item.vault_note_id) return null;
-    const note = this.vaultItems.getById(vaultItemId(item.vault_note_id));
-    return note?.seq ?? null;
+    return item.vault_note_seq ?? null;
   }
 
   protected fmtRelative = relativeTime;
+
+  /** When the verdict was written — distinct from when the mail arrived. */
+  protected gatedAt(item: EmailReport): string | null {
+    return item.gated_at ? relativeTime(item.gated_at) : null;
+  }
+
+  /** Discovery → verdict. Shows how long mail actually waits for the gate,
+   *  which is the number that tells you whether the backlog is moving. */
+  protected timeToVerdict(item: EmailReport): string | null {
+    if (!item.gated_at) return null;
+    const ms = new Date(item.gated_at).getTime() - new Date(item.discovered_at).getTime();
+    if (!Number.isFinite(ms) || ms < 0) return null;
+    if (ms < 60_000) return `${Math.round(ms / 1000)}s`;
+    if (ms < 3_600_000) return `${Math.round(ms / 60_000)}m`;
+    return `${Math.round(ms / 3_600_000)}h`;
+  }
 
   /** The API truncates to 320 chars in SQL now; fall back to body_text for the
    *  detail fetch, which still carries the whole thing. */

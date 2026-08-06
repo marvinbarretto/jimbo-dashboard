@@ -92,15 +92,60 @@
 
           @if (isExpanded(item)) {
             <div class="detail">
-              @if (item.verdict_reason) {
-                <div class="detail-section">
-                  <h3 class="detail-heading">Verdict reason</h3>
-                  <app-ui-prose class="rationale" [text]="item.verdict_reason" />
+              <!-- The audit, in the order the questions get asked: who looked
+                   at it and when, what they concluded, why, and where it went. -->
+              <div class="verdict-card">
+                <div class="verdict-line">
+                  @if (item.actor_id) {
+                    <app-ui-badge tone="info" [subtle]="true">{{ item.actor_id }}</app-ui-badge>
+                  } @else {
+                    <span class="muted">no actor recorded</span>
+                  }
+                  <span class="muted">judged it</span>
+                  <app-ui-badge [tone]="verdictTone(item)" [subtle]="true">{{ verdictLabel(item) }}</app-ui-badge>
+                  @if (gatedAt(item); as g) {
+                    <span class="muted">{{ g }}</span>
+                  }
+                  @if (timeToVerdict(item); as ttv) {
+                    <span class="muted" title="Time from discovery to verdict">· decided in {{ ttv }}</span>
+                  }
                   @if (item.verdict_model) {
-                    <p class="muted detail-meta">model: <code>{{ item.verdict_model }}</code></p>
+                    <code class="model-tag">{{ item.verdict_model }}</code>
                   }
                 </div>
-              }
+
+                @if (item.verdict_reason) {
+                  <app-ui-prose class="rationale" [text]="item.verdict_reason" />
+                } @else {
+                  <p class="muted rationale-missing">
+                    No rationale recorded — this email was gated before the reason was preserved.
+                  </p>
+                }
+
+                <!-- Where it landed. "A fact is evidence a project moved", so
+                     the project is the payoff of the whole pipeline, not a
+                     footnote — and an unlinked keeper is a visible gap. -->
+                <div class="landed">
+                  @if (item.vault_note_seq) {
+                    <span class="muted">became</span>
+                    <a class="landed-note" [routerLink]="['/vault-items', item.vault_note_seq]" (click)="$event.stopPropagation()">
+                      #{{ item.vault_note_seq }} {{ item.vault_note_title }}
+                    </a>
+                    @if (item.project_name) {
+                      <span class="muted">in</span>
+                      <a class="landed-project" [routerLink]="['/projects', item.project_id]" (click)="$event.stopPropagation()">
+                        {{ item.project_name }}
+                      </a>
+                    } @else {
+                      <span class="landed-noproject" title="Filed, but not attached to any project">no project</span>
+                    }
+                  } @else if (isRetained(item.verdict)) {
+                    <span class="landed-lost">Kept, but never filed as a vault note</span>
+                  } @else {
+                    <span class="muted">Tossed — nothing filed</span>
+                  }
+                </div>
+              </div>
 
               @if (bodyPreview(item); as preview) {
                 <div class="detail-section">

@@ -41,6 +41,13 @@ export interface EmailReport {
   verdict_model: string | null;
   actor_id: ActorId | null;
   vault_note_id: string | null;
+  // What the email became, resolved server-side — the page no longer loads the
+  // whole vault board to answer this.
+  vault_note_seq?: number | null;
+  vault_note_title?: string | null;
+  vault_note_type?: string | null;
+  project_id?: string | null;
+  project_name?: string | null;
   created_at: string;
   updated_at: string;
 }

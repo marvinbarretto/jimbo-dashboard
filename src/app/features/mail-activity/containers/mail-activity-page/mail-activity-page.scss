@@ -228,3 +228,69 @@
 .actor-unknown {
   color: var(--color-text-muted);
 }
+
+// ── audit card in the expanded row ────────────────────────────────
+// Who judged it, what they concluded, why, and where it landed — the four
+// questions in the order they get asked.
+.verdict-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem 0.7rem;
+  border-left: 3px solid color-mix(in srgb, var(--color-accent) 50%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 3%, transparent);
+}
+
+.verdict-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+}
+
+.model-tag {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+}
+
+.rationale-missing {
+  margin: 0;
+  font-style: italic;
+  font-size: 0.8125rem;
+}
+
+.landed {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  font-size: 0.8125rem;
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--color-border);
+}
+
+.landed-note {
+  color: var(--color-accent);
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
+
+.landed-project {
+  color: var(--color-success, #22c55e);
+  text-decoration: none;
+  font-weight: 500;
+  &:hover { text-decoration: underline; }
+}
+
+// A keeper with no project is the pipeline stopping one step short — 88 of 136
+// filed emails are in this state, so it needs to read as unfinished.
+.landed-noproject {
+  color: var(--color-warning, #c08b00);
+  font-size: 0.75rem;
+}
+
+.landed-lost {
+  color: var(--color-danger, #ef4444);
+}
