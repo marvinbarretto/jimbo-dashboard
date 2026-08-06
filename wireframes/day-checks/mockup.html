@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day checks — intentions layer</title>
+<style>
+:root {
+  --color-bg: #060b12;
+  --color-surface: #0d1520;
+  --color-surface-raised: #101b28;
+  --color-surface-soft: #091119;
+  --color-border: #1f394c;
+  --color-border-strong: #3dd6ff;
+  --color-text: #e6f7ff;
+  --color-text-muted: #83a6b8;
+  --color-text-soft: #aac8d6;
+  --color-accent: #3dd6ff;
+  --color-danger: #ff5d7a;
+  --color-success: #6dffb3;
+  --color-warning: #ffd86b;
+  --font-sans: system-ui, -apple-system, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
+  --radius: 2px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 2rem 1.5rem 5rem;
+}
+.page { max-width: 1420px; margin: 0 auto; }
+
+/* ── page furniture ─────────────────────────────────────────────────── */
+.page__head { border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+.page__head h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em; }
+.page__head p { color: var(--color-text-muted); font-size: 0.85rem; margin-top: 0.35rem; max-width: 76ch; }
+
+.variants { display: grid; grid-template-columns: repeat(auto-fit, minmax(560px, 1fr)); gap: 1.5rem; align-items: start; }
+
+.variant__head { display: flex; align-items: baseline; gap: 0.6rem; margin-bottom: 0.5rem; }
+.variant__key {
+  font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700;
+  color: var(--color-bg); background: var(--color-accent);
+  padding: 0.1rem 0.4rem; border-radius: var(--radius);
+}
+.variant__name { font-size: 0.95rem; font-weight: 600; }
+.variant__pitch { color: var(--color-text-muted); font-size: 0.8rem; }
+
+/* ── the section shell (mirrors UiSection) ──────────────────────────── */
+.sec { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); }
+.sec__bar {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 0.85rem; border-bottom: 1px solid var(--color-border);
+}
+.sec__title { font-size: 0.9rem; font-weight: 600; }
+.sec__meta { color: var(--color-text-muted); font-size: 0.78rem; font-family: var(--font-mono); margin-left: auto; }
+.sec__body { padding: 0.6rem 0.85rem 0.85rem; }
+
+.grouphead {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.09em;
+  color: var(--color-text-muted); margin: 0.5rem 0 0.35rem;
+}
+.grouphead::after { content: ''; flex: 1; height: 1px; background: var(--color-border); }
+.grouphead__act {
+  font-size: 0.68rem; letter-spacing: 0.04em; text-transform: none;
+  color: var(--color-text-muted); border: 1px solid var(--color-border);
+  border-radius: var(--radius); padding: 0.05rem 0.35rem; cursor: pointer; background: none;
+  font-family: inherit;
+}
+.grouphead__act:hover { color: var(--color-accent); border-color: var(--color-accent); }
+
+/* ── a tick row ─────────────────────────────────────────────────────── */
+.row { display: flex; align-items: center; gap: 0.6rem; padding: 0.35rem 0.4rem; border-radius: var(--radius); }
+.row:hover { background: rgba(127,127,127,0.08); }
+.row__box {
+  flex: none; width: 15px; height: 15px; border-radius: var(--radius);
+  border: 1px solid var(--color-text-muted); display: grid; place-items: center;
+  font-size: 10px; line-height: 1; color: transparent;
+}
+.row--on .row__box { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-bg); }
+.row--on .row__label { color: var(--color-text-muted); }
+.row__label { font-size: 0.88rem; min-width: 0; }
+.row__prog { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; flex: none; }
+.row__count { font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-text-muted); }
+.row__count b { color: var(--color-text-soft); font-weight: 600; }
+
+/* weekly target pips — the payoff that isn't a streak */
+.pips { display: flex; gap: 3px; }
+.pip { width: 13px; height: 5px; border-radius: 1px; background: none; border: 1px solid var(--color-border); }
+.pip--on { background: var(--color-accent); border-color: var(--color-accent); }
+.pip--over { background: var(--color-text-muted); border-color: var(--color-text-muted); }
+
+/* target already met — goes quiet instead of nagging with an empty box */
+.row--met { opacity: 0.72; }
+.row--met .row__box { border-style: dashed; border-color: var(--color-border); }
+.row--met .row__count b { color: var(--color-success); }
+
+/* derived from telemetry — ticked by the machine, overridable */
+.auto {
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.05em;
+  color: var(--color-text-muted); border: 1px dashed var(--color-border);
+  border-radius: var(--radius); padding: 0 0.25rem; flex: none;
+}
+.row--auto .row__box { background: color-mix(in srgb, var(--color-accent) 45%, transparent); border-color: var(--color-accent); border-style: dashed; color: var(--color-bg); }
+
+.tag {
+  font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--color-text-muted); border: 1px solid var(--color-border);
+  border-radius: var(--radius); padding: 0 0.25rem; flex: none;
+}
+
+/* ── reflection controls ────────────────────────────────────────────── */
+.q { padding: 0.4rem 0.4rem; }
+.q__row { display: flex; align-items: center; gap: 0.75rem; }
+.q__label { font-size: 0.88rem; }
+.q__scale { margin-left: auto; display: flex; gap: 0.25rem; }
+.q__btn {
+  min-width: 1.8rem; padding: 0.15rem 0; font-size: 0.78rem; font-family: inherit;
+  border: 1px solid var(--color-border); border-radius: var(--radius);
+  background: none; color: inherit; cursor: pointer;
+}
+.q__btn--on { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-bg); }
+.q__prompt { font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: 0.25rem; }
+.q__text {
+  width: 100%; padding: 0.35rem 0.5rem; font: inherit; font-size: 0.83rem; color: inherit;
+  background: var(--color-surface-soft); border: 1px solid var(--color-border); border-radius: var(--radius);
+}
+.q__text--filled { color: var(--color-text-soft); }
+
+.add { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
+.add input {
+  flex: 1; padding: 0.3rem 0.5rem; font: inherit; font-size: 0.8rem; color: inherit;
+  background: var(--color-surface-soft); border: 1px solid var(--color-border); border-radius: var(--radius);
+}
+.add button {
+  padding: 0.3rem 0.7rem; font: inherit; font-size: 0.8rem; cursor: pointer;
+  background: none; color: var(--color-text-muted);
+  border: 1px solid var(--color-border); border-radius: var(--radius);
+}
+
+/* ── variant C: chip strip ──────────────────────────────────────────── */
+.strip { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.chip {
+  display: flex; align-items: center; gap: 0.35rem;
+  padding: 0.2rem 0.5rem; font-size: 0.8rem; cursor: pointer;
+  border: 1px solid var(--color-border); border-radius: var(--radius);
+  background: none; color: var(--color-text-muted); font-family: inherit;
+}
+.chip__dot { width: 6px; height: 6px; border-radius: 50%; border: 1px solid currentColor; flex: none; }
+.chip--on { color: var(--color-text); border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 12%, transparent); }
+.chip--on .chip__dot { background: var(--color-accent); border-color: var(--color-accent); }
+.chip__n { font-family: var(--font-mono); font-size: 0.66rem; opacity: 0.75; }
+.disclose {
+  margin-top: 0.5rem; font-size: 0.75rem; color: var(--color-text-muted);
+  border-top: 1px dashed var(--color-border); padding-top: 0.4rem; cursor: pointer;
+}
+
+/* ── the 30-day grid ────────────────────────────────────────────────── */
+.grid-wrap { margin-top: 2.5rem; }
+.gridsec { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); }
+.gtable { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.gtable th { text-align: left; font-weight: 500; color: var(--color-text-muted); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--color-border); }
+.gtable td { padding: 0.3rem 0.6rem; border-bottom: 1px solid rgba(31,57,76,0.5); vertical-align: middle; }
+.gtable tr:last-child td { border-bottom: none; }
+.gname { white-space: nowrap; }
+.gcells { display: flex; gap: 2px; }
+.cell { width: 11px; height: 15px; border-radius: 1px; border: 1px solid var(--color-border); background: none; }
+.cell--on { background: var(--color-accent); border-color: var(--color-accent); }
+.cell--auto { background: color-mix(in srgb, var(--color-accent) 45%, transparent); border-color: var(--color-accent); border-style: dashed; }
+.cell--wk { margin-right: 5px; }
+.gnum { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-text-soft); white-space: nowrap; }
+.gtarget { font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-text-muted); white-space: nowrap; }
+.gtarget--hit { color: var(--color-success); }
+.legend { display: flex; gap: 1.1rem; flex-wrap: wrap; padding: 0.6rem 0.85rem; border-top: 1px solid var(--color-border); font-size: 0.72rem; color: var(--color-text-muted); }
+.legend span { display: flex; align-items: center; gap: 0.35rem; }
+
+/* ── correlation payoff ─────────────────────────────────────────────── */
+.corr { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.85rem; margin-top: 0.85rem; }
+.corr__card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0.7rem 0.85rem; }
+.corr__q { font-size: 0.78rem; color: var(--color-text-muted); }
+.corr__a { font-size: 1.35rem; font-family: var(--font-mono); margin: 0.3rem 0 0.15rem; }
+.corr__a b { color: var(--color-success); font-weight: 600; }
+.corr__n { font-size: 0.7rem; color: var(--color-text-muted); font-family: var(--font-mono); }
+
+/* ── annotations ────────────────────────────────────────────────────── */
+.note {
+  border-left: 2px solid var(--color-warning); background: rgba(255,216,107,0.05);
+  padding: 0.5rem 0.7rem; margin-top: 0.6rem; font-size: 0.78rem; color: var(--color-text-soft);
+}
+.note b { color: var(--color-warning); font-weight: 600; }
+.note ul { margin: 0.3rem 0 0 1rem; }
+.note li { margin-bottom: 0.15rem; }
+h2.sub { font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem; }
+p.subp { color: var(--color-text-muted); font-size: 0.83rem; margin-bottom: 0.85rem; max-width: 80ch; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page__head">
+    <h1>Journal → Checks, extended into an intentions layer</h1>
+    <p>Three treatments of the same content. Existing constraint from the current SCSS, kept in all three:
+    “sits above a page of reconstructed telemetry and shouldn’t read as a productivity scoreboard — a ticked
+    row recedes rather than celebrating.” New content: weekly targets, derived auto-ticks, per-row progress.</p>
+  </div>
+
+  <div class="variants">
+
+    <!-- ══ A ══════════════════════════════════════════════════════════ -->
+    <div class="variant">
+      <div class="variant__head">
+        <span class="variant__key">A</span>
+        <span class="variant__name">Split blocks</span>
+        <span class="variant__pitch">intentions above, reflection below</span>
+      </div>
+
+      <div class="sec">
+        <div class="sec__bar">
+          <span class="sec__title">Checks</span>
+          <span class="sec__meta">3 of 5 · 2 of 4</span>
+        </div>
+        <div class="sec__body">
+
+          <div class="grouphead">Intentions <button class="grouphead__act">manage</button></div>
+
+          <div class="row row--on row--auto">
+            <span class="row__box">✓</span>
+            <span class="row__label">Gym</span>
+            <span class="auto">auto</span>
+            <span class="row__prog">
+              <span class="row__count"><b>2</b> of 3</span>
+              <span class="pips"><i class="pip pip--on"></i><i class="pip pip--on"></i><i class="pip"></i></span>
+            </span>
+          </div>
+
+          <div class="row row--on row--auto row--met">
+            <span class="row__box">✓</span>
+            <span class="row__label">Cooked, not just convenient</span>
+            <span class="auto">auto</span>
+            <span class="row__prog">
+              <span class="row__count"><b>4</b> of 4</span>
+              <span class="pips"><i class="pip pip--on"></i><i class="pip pip--on"></i><i class="pip pip--on"></i><i class="pip pip--on"></i></span>
+            </span>
+          </div>
+
+          <div class="row">
+            <span class="row__box">✓</span>
+            <span class="row__label">Read my book</span>
+            <span class="row__prog">
+              <span class="row__count"><b>5</b> of 7 last wk</span>
+              <span class="pips"><i class="pip pip--on"></i><i class="pip pip--on"></i><i class="pip pip--on"></i><i class="pip pip--on"></i><i class="pip pip--on"></i><i class="pip"></i><i class="pip"></i></span>
+            </span>
+          </div>
+
+          <div class="row row--on">
+            <span class="row__box">✓</span>
+            <span class="row__label">Left the house</span>
+            <span class="row__prog"><span class="row__count"><b>21</b> of 30</span></span>
+          </div>
+
+          <div class="row">
+            <span class="row__box">✓</span>
+            <span class="row__label">Ring Mum back</span>
+            <span class="tag">one-off</span>
+          </div>
+
+          <div class="add">
+            <input placeholder="Add a one-off — did I call X?">
+            <button>Add</button>
+          </div>
+
+          <div class="grouphead">Reflection</div>
+
+          <div class="q"><div class="q__row">
+            <span class="q__label">Energy</span>
+            <span class="q__scale"><button class="q__btn">1</button><button class="q__btn">2</button><button class="q__btn q__btn--on">3</button></span>
+          </div></div>
+
+          <div class="q"><div class="q__row">
+            <span class="q__label">Mood</span>
+            <span class="q__scale"><button class="q__btn">1</button><button class="q__btn">2</button><button class="q__btn">3</button><button class="q__btn q__btn--on">4</button><button class="q__btn">5</button></span>
+          </div></div>
+
+          <div class="q">
+            <div class="q__prompt">One behaviour worth investigating — what and when?</div>
+            <input class="q__text q__text--filled" value="Walked to the next town to take a phone call…">
+          </div>
+
+          <div class="q">
+            <div class="q__prompt">What made today feel worthwhile?</div>
+            <input class="q__text" placeholder="…">
+          </div>
+
+        </div>
+      </div>
+
+      <div class="note">
+        <b>A — what it buys.</b>
+        <ul>
+          <li>The two classes are honestly different, and the label says so. No guessing why Gym sits next to Mood.</li>
+          <li>Costs vertical space — the section roughly doubles, and reflection gets pushed below the fold.</li>
+          <li>Ticked rows still recede (label greys), so it doesn’t become a scoreboard.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ══ B ══════════════════════════════════════════════════════════ -->
+    <div class="variant">
+      <div class="variant__head">
+        <span class="variant__key">B</span>
+        <span class="variant__name">One list, weight-sorted</span>
+        <span class="variant__pitch">open things first, answered sink</span>
+      </div>
+
+      <div class="sec">
+        <div class="sec__bar">
+          <span class="sec__title">Checks</span>
+          <span class="sec__meta">4 open</span>
+        </div>
+        <div class="sec__body">
+
+          <div class="row">
+            <span class="row__box">✓</span>
+            <span class="row__label">Read my book</span>
+            <span class="row__prog">
+              <span class="row__count"><b>5</b> of 7 last wk</span>
+              <span class="pips"><i class="pip pip--on"></i><i class="pip pip--on"></i><i class="pip pip--on"></i><i class="pip pip--on"></i><i class="pip pip--on"></i><i class="pip"></i><i class="pip"></i></span>
+            </span>
+          </div>
+
+          <div class="row">
+            <span class="row__box">✓</span>
+            <span class="row__label">Ring Mum back</span>
+            <span class="tag">one-off</span>
+          </div>
+
+          <div class="q">
+            <div class="q__prompt">What made today feel worthwhile?</div>
+            <input class="q__text" placeholder="…">
+          </div>
+
+          <div class="q"><div class="q__row">
+            <span class="q__label">Started the day on purpose</span>
+            <span class="q__scale"><button class="q__btn">no</button><button class="q__btn">yes</button></span>
+          </div></div>
+
+          <div class="grouphead">Answered</div>
+
+          <div class="row row--on row--auto">
+            <span class="row__box">✓</span>
+            <span class="row__label">Gym</span>
+            <span class="auto">auto</span>
+            <span class="row__prog">
+              <span class="row__count"><b>2</b> of 3</span>
+              <span class="pips"><i class="pip pip--on"></i><i class="pip pip--on"></i><i class="pip"></i></span>
+            </span>
+          </div>
+
+          <div class="row row--on row--auto row--met">
+            <span class="row__box">✓</span>
+            <span class="row__label">Cooked, not just convenient</span>
+            <span class="auto">auto</span>
+            <span class="row__prog">
+              <span class="row__count"><b>4</b> of 4</span>
+              <span class="pips"><i class="pip pip--on"></i><i class="pip pip--on"></i><i class="pip pip--on"></i><i class="pip pip--on"></i></span>
+            </span>
+          </div>
+
+          <div class="row row--on">
+            <span class="row__box">✓</span>
+            <span class="row__label">Left the house</span>
+            <span class="row__prog"><span class="row__count"><b>21</b> of 30</span></span>
+          </div>
+
+          <div class="q"><div class="q__row">
+            <span class="q__label">Energy</span>
+            <span class="q__scale"><button class="q__btn">1</button><button class="q__btn">2</button><button class="q__btn q__btn--on">3</button></span>
+          </div></div>
+
+          <div class="q"><div class="q__row">
+            <span class="q__label">Mood</span>
+            <span class="q__scale"><button class="q__btn">1</button><button class="q__btn">2</button><button class="q__btn">3</button><button class="q__btn q__btn--on">4</button><button class="q__btn">5</button></span>
+          </div></div>
+
+          <div class="add">
+            <input placeholder="Add a one-off — did I call X?">
+            <button>Add</button>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="note">
+        <b>B — what it buys.</b>
+        <ul>
+          <li>The list shrinks as you work it. “4 open” is the only number you need; finished work leaves the eyeline.</li>
+          <li>Derived ticks land pre-answered, so the auto rows never demand attention — they just appear below the fold.</li>
+          <li>Costs: rows move under the cursor as you answer, and habit/diagnostic never get named as different things.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ══ C ══════════════════════════════════════════════════════════ -->
+    <div class="variant">
+      <div class="variant__head">
+        <span class="variant__key">C</span>
+        <span class="variant__name">Chip strip + drawer</span>
+        <span class="variant__pitch">intentions compress to one line</span>
+      </div>
+
+      <div class="sec">
+        <div class="sec__bar">
+          <span class="sec__title">Checks</span>
+          <span class="sec__meta">3 of 5 · 2 of 4</span>
+        </div>
+        <div class="sec__body">
+
+          <div class="strip">
+            <button class="chip chip--on"><i class="chip__dot"></i>Gym <span class="chip__n">2/3</span></button>
+            <button class="chip chip--on"><i class="chip__dot"></i>Cooked <span class="chip__n">4/4</span></button>
+            <button class="chip"><i class="chip__dot"></i>Read <span class="chip__n">5/7</span></button>
+            <button class="chip chip--on"><i class="chip__dot"></i>Left house</button>
+            <button class="chip"><i class="chip__dot"></i>Ring Mum</button>
+            <button class="chip" style="border-style:dashed">+ one-off</button>
+          </div>
+
+          <div class="disclose">▸ week so far — 3 of 4 targets on track</div>
+
+          <div class="grouphead">Reflection</div>
+
+          <div class="q"><div class="q__row">
+            <span class="q__label">Energy</span>
+            <span class="q__scale"><button class="q__btn">1</button><button class="q__btn">2</button><button class="q__btn q__btn--on">3</button></span>
+          </div></div>
+
+          <div class="q"><div class="q__row">
+            <span class="q__label">Mood</span>
+            <span class="q__scale"><button class="q__btn">1</button><button class="q__btn">2</button><button class="q__btn">3</button><button class="q__btn q__btn--on">4</button><button class="q__btn">5</button></span>
+          </div></div>
+
+          <div class="q">
+            <div class="q__prompt">One behaviour worth investigating — what and when?</div>
+            <input class="q__text q__text--filled" value="Walked to the next town to take a phone call…">
+          </div>
+
+          <div class="q">
+            <div class="q__prompt">What made today feel worthwhile?</div>
+            <input class="q__text" placeholder="…">
+          </div>
+
+        </div>
+      </div>
+
+      <div class="note">
+        <b>C — what it buys.</b>
+        <ul>
+          <li>Cheapest in vertical space by a mile — ten habits still cost two lines, so reflection stays visible.</li>
+          <li>Ticking is one click with no row-scanning; the strip reads at a glance as “what’s left”.</li>
+          <li>Costs: no room for prompts or a watchdog ref, and the progress numbers are cramped. Scales worst for long labels.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ 30-day grid ═════════════════════════════════════════════════ -->
+  <div class="grid-wrap">
+    <h2 class="sub">Week / month page — consistency</h2>
+    <p class="subp">Lives on <code>/journal/overview/week/:week</code>, which today renders nothing check-related.
+    Fed by <code>GET /api/day-checks/{id}/history</code> — already built, currently unused by the dashboard.
+    Deliberately not a streak counter: one miss shouldn’t zero anything, and a gap is missing data rather than a “no”.</p>
+
+    <div class="gridsec">
+      <table class="gtable">
+        <thead>
+          <tr><th class="gname">Check</th><th>Last 30 days</th><th>Kept</th><th>Target</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="gname">Gym</td>
+            <td><div class="gcells">
+              <i class="cell--auto cell"></i><i class="cell"></i><i class="cell cell--auto"></i><i class="cell"></i><i class="cell"></i><i class="cell cell--auto"></i><i class="cell cell--wk"></i>
+              <i class="cell cell--auto"></i><i class="cell"></i><i class="cell"></i><i class="cell cell--auto"></i><i class="cell"></i><i class="cell cell--auto"></i><i class="cell cell--wk"></i>
+              <i class="cell cell--auto"></i><i class="cell"></i><i class="cell cell--auto"></i><i class="cell"></i><i class="cell"></i><i class="cell cell--auto"></i><i class="cell cell--wk"></i>
+              <i class="cell"></i><i class="cell cell--auto"></i><i class="cell"></i><i class="cell cell--auto"></i><i class="cell"></i><i class="cell"></i><i class="cell cell--wk"></i>
+              <i class="cell cell--auto"></i><i class="cell"></i>
+            </div></td>
+            <td class="gnum">13 / 30</td>
+            <td class="gtarget gtarget--hit">3/wk · hit 4 of 4</td>
+          </tr>
+          <tr>
+            <td class="gname">Read my book</td>
+            <td><div class="gcells">
+              <i class="cell"></i><i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell"></i><i class="cell"></i><i class="cell cell--on"></i><i class="cell cell--wk cell--on"></i>
+              <i class="cell cell--on"></i><i class="cell"></i><i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell"></i><i class="cell"></i><i class="cell cell--wk"></i>
+              <i class="cell"></i><i class="cell cell--on"></i><i class="cell"></i><i class="cell"></i><i class="cell cell--on"></i><i class="cell"></i><i class="cell cell--wk"></i>
+              <i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell"></i><i class="cell"></i><i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell cell--wk cell--on"></i>
+              <i class="cell cell--on"></i><i class="cell"></i>
+            </div></td>
+            <td class="gnum">16 / 30</td>
+            <td class="gtarget">5/wk · hit 1 of 4</td>
+          </tr>
+          <tr>
+            <td class="gname">Cooked, not just convenient</td>
+            <td><div class="gcells">
+              <i class="cell cell--auto"></i><i class="cell cell--auto"></i><i class="cell cell--auto"></i><i class="cell"></i><i class="cell cell--auto"></i><i class="cell cell--auto"></i><i class="cell cell--wk cell--auto"></i>
+              <i class="cell cell--auto"></i><i class="cell cell--auto"></i><i class="cell"></i><i class="cell cell--auto"></i><i class="cell cell--auto"></i><i class="cell cell--auto"></i><i class="cell cell--wk cell--auto"></i>
+              <i class="cell cell--auto"></i><i class="cell"></i><i class="cell cell--auto"></i><i class="cell cell--auto"></i><i class="cell cell--auto"></i><i class="cell"></i><i class="cell cell--wk cell--auto"></i>
+              <i class="cell cell--auto"></i><i class="cell cell--auto"></i><i class="cell cell--auto"></i><i class="cell"></i><i class="cell cell--auto"></i><i class="cell cell--auto"></i><i class="cell cell--wk cell--auto"></i>
+              <i class="cell cell--auto"></i><i class="cell cell--auto"></i>
+            </div></td>
+            <td class="gnum">24 / 30</td>
+            <td class="gtarget gtarget--hit">4/wk · hit 4 of 4</td>
+          </tr>
+          <tr>
+            <td class="gname">Left the house</td>
+            <td><div class="gcells">
+              <i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell"></i><i class="cell cell--on"></i><i class="cell cell--wk cell--on"></i>
+              <i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell"></i><i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell cell--wk cell--on"></i>
+              <i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell"></i><i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell cell--wk cell--on"></i>
+              <i class="cell"></i><i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell cell--on"></i><i class="cell"></i><i class="cell cell--wk cell--on"></i>
+              <i class="cell cell--on"></i><i class="cell cell--on"></i>
+            </div></td>
+            <td class="gnum">25 / 30</td>
+            <td class="gtarget">daily</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="legend">
+        <span><i class="cell cell--on"></i> ticked</span>
+        <span><i class="cell cell--auto"></i> derived from telemetry</span>
+        <span><i class="cell"></i> no data — <em>not</em> a “no”</span>
+        <span>│ week boundary</span>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>Grid decisions.</b>
+      <ul>
+        <li>“Kept 13 / 30” instead of a streak. A streak counter punishes one miss and you stop opening the page.</li>
+        <li>Empty cells are outlined, not red. The schema already treats absence as unanswered — the visual has to agree.</li>
+        <li>“hit 4 of 4” weeks is the honest scoreboard for a 3/wk target — 13/30 looks like failure until you know the target.</li>
+      </ul>
+    </div>
+
+    <h2 class="sub" style="margin-top:2rem">The payoff panel</h2>
+    <p class="subp">The reason to keep ticking, and the only thing here a habit app can’t do — you already log mood and
+    energy on scales every single day, so the correlation comes free once habits have history.</p>
+
+    <div class="corr">
+      <div class="corr__card">
+        <div class="corr__q">Mood on gym days</div>
+        <div class="corr__a"><b>4.1</b> <span style="color:var(--color-text-muted);font-size:0.9rem">vs 3.2</span></div>
+        <div class="corr__n">n=13 · 30d</div>
+      </div>
+      <div class="corr__card">
+        <div class="corr__q">Energy on days you left the house</div>
+        <div class="corr__a"><b>2.6</b> <span style="color:var(--color-text-muted);font-size:0.9rem">vs 1.9</span></div>
+        <div class="corr__n">n=25 · 30d</div>
+      </div>
+      <div class="corr__card">
+        <div class="corr__q">Reading — best run this month</div>
+        <div class="corr__a">4 <span style="color:var(--color-text-muted);font-size:0.9rem">days</span></div>
+        <div class="corr__n">wk of 27 Jul</div>
+      </div>
+      <div class="corr__card">
+        <div class="corr__q">Cooked vs takeaway</div>
+        <div class="corr__a">24 <span style="color:var(--color-text-muted);font-size:0.9rem">/ 30</span></div>
+        <div class="corr__n">from coach_food_log</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

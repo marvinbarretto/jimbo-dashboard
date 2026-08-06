@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelling intent — five visions</title>
+<style>
+:root {
+  --color-bg: #060b12;
+  --color-surface: #0d1520;
+  --color-surface-raised: #101b28;
+  --color-surface-soft: #091119;
+  --color-border: #1f394c;
+  --color-text: #e6f7ff;
+  --color-text-muted: #83a6b8;
+  --color-text-soft: #aac8d6;
+  --color-accent: #3dd6ff;
+  --color-danger: #ff5d7a;
+  --color-success: #6dffb3;
+  --color-warning: #ffd86b;
+  --color-purple: #a878d6;
+  --font-sans: system-ui, -apple-system, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
+  --radius: 2px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 14px; line-height: 1.5;
+  padding: 2rem 1.5rem 6rem;
+}
+.page { max-width: 1180px; margin: 0 auto; }
+
+h1 { font-size: 1.3rem; font-weight: 600; letter-spacing: -0.01em; }
+.lede { color: var(--color-text-muted); font-size: 0.88rem; margin-top: 0.5rem; max-width: 78ch; }
+.lede + .lede { margin-top: 0.6rem; }
+.lede b { color: var(--color-text-soft); font-weight: 600; }
+
+/* ── the axis strip ─────────────────────────────────────────────────── */
+.axis {
+  margin: 1.5rem 0 2.5rem; padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border); border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.axis__title { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--color-text-muted); margin-bottom: 0.6rem; }
+.axis__bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; }
+.axis__seg {
+  padding: 0.4rem 0.5rem; font-size: 0.72rem; text-align: center;
+  background: var(--color-surface-soft); border-top: 2px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+.axis__seg b { display: block; color: var(--color-text); font-family: var(--font-mono); font-size: 0.7rem; margin-bottom: 0.15rem; }
+.axis__seg:nth-child(1) { border-top-color: #3a5a6b; }
+.axis__seg:nth-child(2) { border-top-color: #2f8fae; }
+.axis__seg:nth-child(3) { border-top-color: var(--color-accent); }
+.axis__seg:nth-child(4) { border-top-color: var(--color-purple); }
+.axis__seg:nth-child(5) { border-top-color: #4a6172; }
+.axis__ends { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--color-text-muted); margin-top: 0.4rem; font-family: var(--font-mono); }
+
+/* ── vision block ───────────────────────────────────────────────────── */
+.v { margin-bottom: 3.5rem; }
+.v__head { display: flex; align-items: baseline; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.15rem; }
+.v__n {
+  font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700;
+  background: var(--color-accent); color: var(--color-bg);
+  padding: 0.1rem 0.45rem; border-radius: var(--radius);
+}
+.v--2 .v__n { background: #2f8fae; }
+.v--3 .v__n { background: var(--color-accent); }
+.v--4 .v__n { background: var(--color-purple); color: #fff; }
+.v--5 .v__n { background: #4a6172; color: #fff; }
+.v--1 .v__n { background: #3a5a6b; color: #fff; }
+.v__name { font-size: 1.05rem; font-weight: 600; }
+.v__thesis { color: var(--color-text-muted); font-size: 0.85rem; }
+.v__cols { display: grid; grid-template-columns: 1fr 330px; gap: 1.25rem; align-items: start; margin-top: 0.9rem; }
+@media (max-width: 900px) { .v__cols { grid-template-columns: 1fr; } }
+
+/* ── the mock frame ─────────────────────────────────────────────────── */
+.mock { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); }
+.mock__bar { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.85rem; border-bottom: 1px solid var(--color-border); }
+.mock__title { font-size: 0.88rem; font-weight: 600; }
+.mock__meta { margin-left: auto; font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-text-muted); }
+.mock__body { padding: 0.7rem 0.85rem 0.85rem; }
+
+/* rows */
+.r { display: flex; align-items: center; gap: 0.55rem; padding: 0.32rem 0.3rem; border-radius: var(--radius); }
+.r:hover { background: rgba(127,127,127,0.07); }
+.box {
+  flex: none; width: 15px; height: 15px; border-radius: var(--radius);
+  border: 1px solid var(--color-text-muted); display: grid; place-items: center;
+  font-size: 10px; line-height: 1; color: transparent;
+}
+.r--on .box { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-bg); }
+.r--on .lbl { color: var(--color-text-muted); }
+.lbl { font-size: 0.88rem; }
+.serves {
+  margin-left: auto; font-size: 0.72rem; color: var(--color-text-muted);
+  display: flex; align-items: center; gap: 0.3rem; flex: none;
+}
+.serves i { width: 3px; height: 12px; border-radius: 1px; background: var(--color-purple); display: block; }
+.serves--proj i { background: #e08850; }
+.serves--none { color: #4a6172; font-style: italic; }
+.n { font-family: var(--font-mono); font-size: 0.7rem; color: var(--color-text-muted); }
+
+.add {
+  display: flex; align-items: center; gap: 0.4rem; margin-top: 0.5rem;
+  padding: 0.35rem 0.5rem; border: 1px dashed var(--color-border); border-radius: var(--radius);
+  color: var(--color-text-muted); font-size: 0.82rem;
+}
+.add--live { border-style: solid; border-color: var(--color-accent); color: var(--color-text); }
+
+/* typeahead dropdown */
+.ta { position: relative; margin-top: 0.5rem; }
+.ta__in {
+  display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.5rem;
+  border: 1px solid var(--color-accent); border-radius: var(--radius); font-size: 0.85rem;
+}
+.ta__cursor { color: var(--color-accent); animation: none; }
+.ta__list { border: 1px solid var(--color-border); border-top: none; background: var(--color-surface-raised); }
+.ta__opt { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.6rem; font-size: 0.82rem; }
+.ta__opt--sel { background: color-mix(in srgb, var(--color-accent) 14%, transparent); }
+.ta__opt--new { color: var(--color-accent); font-style: italic; }
+.ta__opt .n { margin-left: auto; }
+
+/* library pane */
+.split { display: grid; grid-template-columns: 1fr 1fr; }
+.split > * + * { border-left: 1px solid var(--color-border); }
+.pane__head {
+  font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.09em;
+  color: var(--color-text-muted); padding: 0.45rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.pane__body { padding: 0.5rem 0.6rem 0.7rem; }
+
+/* dots */
+.dots { display: flex; gap: 2px; flex: none; }
+.dot { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--color-border); }
+.dot--on { background: var(--color-accent); border-color: var(--color-accent); }
+.spark { display: flex; gap: 1.5px; align-items: flex-end; height: 14px; flex: none; }
+.spark i { width: 4px; background: var(--color-accent); opacity: 0.75; display: block; border-radius: 1px; }
+
+/* ladder */
+.lad { font-size: 0.85rem; }
+.lad__v { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0; font-weight: 600; }
+.lad__p { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0 0.25rem 1.2rem; color: var(--color-text-soft); }
+.lad__g { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0 0.25rem 2.4rem; color: var(--color-text-muted); font-size: 0.82rem; }
+.lad__t { padding-left: 3.6rem; }
+.kind {
+  font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em;
+  border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0 0.25rem;
+  color: var(--color-text-muted); flex: none;
+}
+.kind--value { border-color: var(--color-purple); color: var(--color-purple); }
+.kind--pri { border-color: #7fc4e8; color: #7fc4e8; }
+.kind--goal { border-color: var(--color-accent); color: var(--color-accent); }
+.rail { width: 3px; align-self: stretch; background: var(--color-purple); border-radius: 1px; flex: none; }
+
+/* experiment */
+.exp__hyp {
+  font-size: 0.95rem; line-height: 1.45; padding: 0.5rem 0.7rem; margin-bottom: 0.6rem;
+  border-left: 3px solid var(--color-accent); background: var(--color-surface-soft);
+}
+.exp__row { display: flex; align-items: center; gap: 0.7rem; padding: 0.3rem 0.2rem; font-size: 0.84rem; }
+.exp__row .n { margin-left: auto; }
+.exp__foot {
+  display: flex; align-items: center; gap: 0.6rem; margin-top: 0.7rem; padding-top: 0.6rem;
+  border-top: 1px dashed var(--color-border); font-size: 0.78rem; color: var(--color-text-muted);
+}
+.btn {
+  padding: 0.25rem 0.6rem; font-size: 0.78rem; font-family: inherit; cursor: pointer;
+  border: 1px solid var(--color-border); border-radius: var(--radius);
+  background: none; color: var(--color-text-soft);
+}
+.btn--pri { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-bg); font-weight: 600; }
+
+/* tray */
+.tray {
+  margin-top: 0.7rem; padding-top: 0.6rem; border-top: 1px dashed var(--color-border);
+}
+.tray__head { font-size: 0.7rem; color: var(--color-warning); margin-bottom: 0.4rem; }
+.tray__row { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.2rem; font-size: 0.82rem; }
+.tray__row .btn { margin-left: auto; }
+
+/* ── side column: schema + verdict ──────────────────────────────────── */
+.side { display: flex; flex-direction: column; gap: 0.8rem; }
+.schema {
+  border: 1px solid var(--color-border); border-radius: var(--radius);
+  background: var(--color-surface-soft); padding: 0.6rem 0.75rem;
+  font-family: var(--font-mono); font-size: 0.71rem; line-height: 1.6; color: var(--color-text-soft);
+  overflow-x: auto;
+}
+.schema__h { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--color-text-muted); margin-bottom: 0.4rem; font-family: var(--font-sans); }
+.schema b { color: var(--color-accent); font-weight: 400; }
+.schema em { color: var(--color-success); font-style: normal; }
+.schema s { color: var(--color-danger); }
+.tradeoff { font-size: 0.78rem; line-height: 1.55; }
+.tradeoff dt { color: var(--color-success); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.15rem; }
+.tradeoff dd { color: var(--color-text-soft); margin-bottom: 0.5rem; }
+.tradeoff dt.bad { color: var(--color-danger); }
+.tradeoff dt.note { color: var(--color-warning); }
+
+/* ── closing table ──────────────────────────────────────────────────── */
+.cmp { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.8rem; }
+.cmp th, .cmp td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+.cmp thead th { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted); font-weight: 500; }
+.cmp td:first-child { white-space: nowrap; font-weight: 600; }
+.cmp .yes { color: var(--color-success); }
+.cmp .no { color: var(--color-danger); }
+.cmp .part { color: var(--color-warning); }
+hr.sep { border: none; border-top: 1px solid var(--color-border); margin: 2.5rem 0; }
+h2.sub { font-size: 1.05rem; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Modelling intent — five visions</h1>
+  <p class="lede">Jimbo already holds a self-model nobody's days are connected to: <b>values → priorities → goals → experiments</b>,
+  each with confidence and a review date. It also holds what you actually did, in <b>day_check_entries</b>. Nothing joins them.
+  An <b>intent</b> is the candidate edge.</p>
+  <p class="lede">These five differ on one question: <b>how much of a thing is an intent?</b> A field on a row, a first-class
+  entity with its own library, or a hypothesis you're testing. Each mock shows the day surface it produces, the schema it
+  needs, and what it costs. All five fix the identity bug — an occurrence attaches to a stable id, never to a string.</p>
+
+  <div class="axis">
+    <div class="axis__title">How first-class is an intent?</div>
+    <div class="axis__bar">
+      <div class="axis__seg"><b>1 · Threaded</b>a field on a check</div>
+      <div class="axis__seg"><b>2 · Library</b>its own entity</div>
+      <div class="axis__seg"><b>3 · Experiment</b>a hypothesis</div>
+      <div class="axis__seg"><b>4 · Ladder</b>a goal's daily face</div>
+      <div class="axis__seg"><b>5 · Sediment</b>meaning added later</div>
+    </div>
+    <div class="axis__ends"><span>← least new structure</span><span>meaning attached after the fact →</span></div>
+  </div>
+
+  <!-- ══════════════════ 1 ══════════════════ -->
+  <div class="v v--1">
+    <div class="v__head">
+      <span class="v__n">1</span><span class="v__name">Threaded</span>
+      <span class="v__thesis">an intent isn't a thing — it's a typed link the check already almost has</span>
+    </div>
+    <div class="v__cols">
+      <div class="mock">
+        <div class="mock__bar"><span class="mock__title">Today</span><span class="mock__meta">3 of 5</span></div>
+        <div class="mock__body">
+          <div class="r r--on"><span class="box">✓</span><span class="lbl">Gym</span>
+            <span class="serves"><i></i>Stay physically capable</span></div>
+          <div class="r"><span class="box">✓</span><span class="lbl">Read my book</span>
+            <span class="serves"><i></i>Read 12 books this year</span></div>
+          <div class="r r--on"><span class="box">✓</span><span class="lbl">Cook properly</span>
+            <span class="serves"><i></i>Stop eating like a student</span></div>
+          <div class="r r--on"><span class="box">✓</span><span class="lbl">Ship the board fix</span>
+            <span class="serves serves--proj"><i></i>LocalShout</span></div>
+          <div class="r"><span class="box">✓</span><span class="lbl">Ring the hostel</span>
+            <span class="serves serves--none">unattached</span></div>
+          <div class="ta">
+            <div class="ta__in"><span>rea</span><span class="ta__cursor">▍</span></div>
+            <div class="ta__list">
+              <div class="ta__opt ta__opt--sel">Read my book <span class="n">19× · serves a goal</span></div>
+              <div class="ta__opt">Reading notes up <span class="n">3×</span></div>
+              <div class="ta__opt ta__opt--new">+ create “rea”</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="side">
+        <div class="schema">
+          <div class="schema__h">schema delta</div>
+day_check_defs<br>
+&nbsp;&nbsp;<em>+ serves_type</em>  value|priority|<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;goal|project<br>
+&nbsp;&nbsp;<em>+ serves_id</em><br>
+&nbsp;&nbsp;<s>− cadence 'once'</s> → placement<br>
+<br>
+<b>no new tables</b>
+        </div>
+        <dl class="tradeoff">
+          <dt>Buys</dt>
+          <dd>Smallest possible change. Two nullable columns and the day list can say <em>why</em>. The typeahead alone kills the identity bug.</dd>
+          <dt class="bad">Costs</dt>
+          <dd>Intents have no home of their own — you can only see one by finding a check that points at it. No way to ask “what am I trying to live by?” except by reading the list.</dd>
+          <dt class="note">Watch</dt>
+          <dd>A polymorphic <code>serves_type/id</code> pair can't be a real FK. Four nullable columns instead is uglier but enforceable.</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ 2 ══════════════════ -->
+  <div class="v v--2">
+    <div class="v__head">
+      <span class="v__n">2</span><span class="v__name">Library</span>
+      <span class="v__thesis">intents are a small curated set you own; today is a slice of it</span>
+    </div>
+    <div class="v__cols">
+      <div class="mock">
+        <div class="mock__bar"><span class="mock__title">Intentions</span><span class="mock__meta">12 kept · 4 today</span></div>
+        <div class="split">
+          <div>
+            <div class="pane__head">The library</div>
+            <div class="pane__body">
+              <div class="r"><span class="lbl">Gym</span><span class="serves"><span class="spark"><i style="height:9px"></i><i style="height:4px"></i><i style="height:12px"></i><i style="height:7px"></i><i style="height:11px"></i><i style="height:5px"></i></span><span class="n">34×</span></span></div>
+              <div class="r"><span class="lbl">Read my book</span><span class="serves"><span class="spark"><i style="height:3px"></i><i style="height:8px"></i><i style="height:2px"></i><i style="height:10px"></i><i style="height:3px"></i><i style="height:6px"></i></span><span class="n">19×</span></span></div>
+              <div class="r"><span class="lbl">Cook properly</span><span class="serves"><span class="spark"><i style="height:12px"></i><i style="height:11px"></i><i style="height:13px"></i><i style="height:9px"></i><i style="height:12px"></i><i style="height:10px"></i></span><span class="n">41×</span></span></div>
+              <div class="r"><span class="lbl">Call someone</span><span class="serves"><span class="spark"><i style="height:2px"></i><i style="height:0px"></i><i style="height:4px"></i><i style="height:2px"></i><i style="height:0px"></i><i style="height:3px"></i></span><span class="n">6×</span></span></div>
+              <div class="r"><span class="lbl">Get out before noon</span><span class="serves"><span class="n">new</span></span></div>
+              <div class="add">+ new intention…</div>
+            </div>
+          </div>
+          <div>
+            <div class="pane__head">Wed 6 Aug</div>
+            <div class="pane__body">
+              <div class="r r--on"><span class="box">✓</span><span class="lbl">Gym</span></div>
+              <div class="r"><span class="box">✓</span><span class="lbl">Read my book</span></div>
+              <div class="r r--on"><span class="box">✓</span><span class="lbl">Cook properly</span></div>
+              <div class="r"><span class="box">✓</span><span class="lbl">Ring the hostel</span><span class="serves serves--none">one-off</span></div>
+              <div class="add add--live">+ pull from library, or type new</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="side">
+        <div class="schema">
+          <div class="schema__h">schema delta</div>
+<em>+ intents</em><br>
+&nbsp;&nbsp;id, name, note<br>
+&nbsp;&nbsp;serves_type, serves_id<br>
+&nbsp;&nbsp;status, created_at<br>
+<br>
+day_check_entries<br>
+&nbsp;&nbsp;<em>+ intent_id</em> → intents<br>
+<br>
+<b>1 new table</b>
+        </div>
+        <dl class="tradeoff">
+          <dt>Buys</dt>
+          <dd>An intent is a thing you can look at, rename, merge and retire. Recurrence is a column, not a question. The library <em>is</em> the pattern view — no promotion step needed to see it.</dd>
+          <dt class="bad">Costs</dt>
+          <dd>Two surfaces to keep coherent, and a curation chore: the library rots if nothing prunes it. Also the most screen for the least poetry — it's an admin view of your soul.</dd>
+          <dt class="note">Watch</dt>
+          <dd>Does an unattached one-off go in the library or not? If yes it fills with noise; if no you've got two kinds of row again.</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ 3 ══════════════════ -->
+  <div class="v v--3">
+    <div class="v__head">
+      <span class="v__n">3</span><span class="v__name">Experiment</span>
+      <span class="v__thesis">an intent is a hypothesis about who you are, with a window and a verdict</span>
+    </div>
+    <div class="v__cols">
+      <div class="mock">
+        <div class="mock__bar"><span class="mock__title">Living deliberately</span><span class="mock__meta">week 3 of 6</span></div>
+        <div class="mock__body">
+          <div class="exp__hyp">“If I train three times a week, the evenings stop feeling agitated.”</div>
+          <div class="exp__row"><span class="box r--on" style="background:var(--color-accent);border-color:var(--color-accent);color:var(--color-bg)">✓</span>
+            <span>Gym</span><span class="dots"><i class="dot dot--on"></i><i class="dot dot--on"></i><i class="dot"></i></span>
+            <span class="n">14 of 21 days</span></div>
+          <div class="exp__row"><span style="width:15px"></span>
+            <span style="color:var(--color-text-muted)">Evening mood, tracked alongside</span>
+            <span class="n" style="color:var(--color-success)">3.8 &nbsp;<span style="color:var(--color-text-muted)">was 3.1</span></span></div>
+          <div class="exp__foot">
+            <span>Review in 18 days</span>
+            <span style="margin-left:auto"><button class="btn">End early</button> <button class="btn btn--pri">Log today</button></span>
+          </div>
+
+          <div style="margin-top:1rem;padding-top:0.7rem;border-top:1px solid var(--color-border)">
+            <div class="pane__head" style="padding:0 0 0.35rem;border:none">Also today</div>
+            <div class="r"><span class="box">✓</span><span class="lbl">Read my book</span><span class="serves serves--none">no hypothesis</span></div>
+            <div class="r"><span class="box">✓</span><span class="lbl">Ring the hostel</span><span class="serves serves--none">one-off</span></div>
+            <div class="add">+ add something</div>
+          </div>
+        </div>
+      </div>
+      <div class="side">
+        <div class="schema">
+          <div class="schema__h">schema delta</div>
+<b>interrogate_experiments</b><br>
+&nbsp;&nbsp;hypothesis, window_start,<br>
+&nbsp;&nbsp;window_end, review_at,<br>
+&nbsp;&nbsp;verdict, spawned_from_*<br>
+&nbsp;&nbsp;<em>← already exists</em><br>
+<br>
+day_check_defs<br>
+&nbsp;&nbsp;<em>+ experiment_id</em><br>
+<br>
+<b>1 column</b>
+        </div>
+        <dl class="tradeoff">
+          <dt>Buys</dt>
+          <dd>The only vision where the system can be <em>wrong</em> and say so. A verdict at review turns behaviour into knowledge, and it reuses a table that already exists with the right shape.</dd>
+          <dt class="bad">Costs</dt>
+          <dd>Ceremony per intent — a hypothesis and a window are real thinking. Most days you just want to tick “gym”, not test a theory about yourself.</dd>
+          <dt class="note">Watch</dt>
+          <dd>Needs a plain lane for intents with no hypothesis, or it collapses into vision 1 with extra steps.</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ 4 ══════════════════ -->
+  <div class="v v--4">
+    <div class="v__head">
+      <span class="v__n">4</span><span class="v__name">Ladder</span>
+      <span class="v__thesis">no new entity — today is the bottom rung of the self-model you already have</span>
+    </div>
+    <div class="v__cols">
+      <div class="mock">
+        <div class="mock__bar"><span class="mock__title">Today, from the top</span><span class="mock__meta">Wed 6 Aug</span></div>
+        <div class="mock__body lad">
+          <div class="lad__v"><span class="rail"></span><span>Stay physically capable</span><span class="kind kind--value">value</span></div>
+          <div class="lad__p">└ Train consistently through the summer <span class="kind kind--pri">priority</span></div>
+          <div class="lad__g">└ Three sessions a week <span class="kind kind--goal">goal</span></div>
+          <div class="lad__t"><div class="r r--on"><span class="box">✓</span><span class="lbl">Gym</span><span class="serves"><span class="dots"><i class="dot dot--on"></i><i class="dot dot--on"></i><i class="dot"></i></span></span></div></div>
+
+          <div class="lad__v" style="margin-top:0.5rem"><span class="rail" style="background:#7fc4e8"></span><span>Live deliberately, not by default</span><span class="kind kind--value">value</span></div>
+          <div class="lad__p">└ Read more, scroll less <span class="kind kind--pri">priority</span></div>
+          <div class="lad__t" style="padding-left:2.4rem"><div class="r"><span class="box">✓</span><span class="lbl">Read my book</span><span class="serves"><span class="n">19× · 2 this week</span></span></div></div>
+
+          <div class="lad__v" style="margin-top:0.5rem"><span class="rail" style="background:#4a6172"></span><span style="color:var(--color-text-muted)">Not serving anything yet</span></div>
+          <div class="lad__t" style="padding-left:1.2rem">
+            <div class="r"><span class="box">✓</span><span class="lbl">Ring the hostel</span><span class="serves"><button class="btn">attach…</button></span></div>
+            <div class="add">+ add something</div>
+          </div>
+        </div>
+      </div>
+      <div class="side">
+        <div class="schema">
+          <div class="schema__h">schema delta</div>
+<b>interrogate_values</b><br>
+<b>interrogate_priorities</b> serves_value_id<br>
+<b>interrogate_goals</b> priority_id<br>
+&nbsp;&nbsp;<em>← chain already exists</em><br>
+<br>
+day_check_defs<br>
+&nbsp;&nbsp;<em>+ serves_goal_id</em><br>
+&nbsp;&nbsp;<em>+ serves_priority_id</em><br>
+<br>
+<b>2 columns, 0 tables</b>
+        </div>
+        <dl class="tradeoff">
+          <dt>Buys</dt>
+          <dd>Answers “am I living how I said I wanted to?” — the actual question. Lights up an <code>interrogate_*</code> chain that's built, populated and currently inert. Nothing new to model.</dd>
+          <dt class="bad">Costs</dt>
+          <dd>Heavy for a Tuesday. Three levels of chrome above one checkbox, and it demands your self-model be current — stale values make every day read wrong.</dd>
+          <dt class="note">Watch</dt>
+          <dd>Most things you do serve nothing, and that's fine. The “not serving anything” bucket must not read as failure.</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ 5 ══════════════════ -->
+  <div class="v v--5">
+    <div class="v__head">
+      <span class="v__n">5</span><span class="v__name">Sediment</span>
+      <span class="v__thesis">capture stays dumb and fast; meaning is attached afterwards, in conversation</span>
+    </div>
+    <div class="v__cols">
+      <div class="mock">
+        <div class="mock__bar"><span class="mock__title">Today</span><span class="mock__meta">4 of 6</span></div>
+        <div class="mock__body">
+          <div class="r r--on"><span class="box">✓</span><span class="lbl">gym</span></div>
+          <div class="r r--on"><span class="box">✓</span><span class="lbl">cooked properly</span></div>
+          <div class="r"><span class="box">✓</span><span class="lbl">read my book</span></div>
+          <div class="r r--on"><span class="box">✓</span><span class="lbl">walked into town</span></div>
+          <div class="r"><span class="box">✓</span><span class="lbl">ring the hostel</span></div>
+          <div class="ta">
+            <div class="ta__in"><span>coo</span><span class="ta__cursor">▍</span></div>
+            <div class="ta__list">
+              <div class="ta__opt ta__opt--sel">cooked properly <span class="n">41×</span></div>
+              <div class="ta__opt ta__opt--new">+ create “coo”</div>
+            </div>
+          </div>
+
+          <div class="tray">
+            <div class="tray__head">▲ 3 recurring things aren't attached to anything</div>
+            <div class="tray__row"><span>walked into town</span><span class="n">11× in 30d</span><button class="btn">what's this for?</button></div>
+            <div class="tray__row"><span>cooked properly</span><span class="n">41× in 60d</span><button class="btn">what's this for?</button></div>
+            <div class="tray__row" style="opacity:0.6"><span>ring the hostel</span><span class="n">1×</span><span class="n" style="margin-left:auto">left alone</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="side">
+        <div class="schema">
+          <div class="schema__h">schema delta</div>
+<em>+ intents</em> (thin)<br>
+&nbsp;&nbsp;id, name<br>
+&nbsp;&nbsp;serves_* <b>nullable</b><br>
+<br>
+day_check_entries<br>
+&nbsp;&nbsp;<em>+ intent_id</em><br>
+<br>
+attachment happens in<br>
+<b>/day-debrief</b>, not the UI
+        </div>
+        <dl class="tradeoff">
+          <dt>Buys</dt>
+          <dd>Zero friction at the moment that matters. Meaning gets fished out in conversation — which is the one mechanism your own data shows actually works — and the tray only nags about things that have earned it.</dd>
+          <dt class="bad">Costs</dt>
+          <dd>Nothing is intentional <em>at the time</em>. You wanted the UI to register intent as you live it; this registers it in hindsight.</dd>
+          <dt class="note">Watch</dt>
+          <dd>The tray is a queue, and queues grow. Needs a cheap “leave it alone” that sticks.</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep">
+
+  <h2 class="sub">Side by side</h2>
+  <table class="cmp">
+    <thead>
+      <tr><th>Vision</th><th>New tables</th><th>Intent has a home</th><th>Can be wrong</th><th>Friction to add</th><th>Answers “am I living how I meant to?”</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1 Threaded</td><td class="yes">0</td><td class="no">no</td><td class="no">no</td><td class="yes">one keystroke</td><td class="part">per row only</td></tr>
+      <tr><td>2 Library</td><td class="part">1</td><td class="yes">yes — its own pane</td><td class="no">no</td><td class="yes">one keystroke</td><td class="part">shows shape, not meaning</td></tr>
+      <tr><td>3 Experiment</td><td class="yes">0 <span class="n">(reuses one)</span></td><td class="part">as a hypothesis</td><td class="yes">yes — verdict</td><td class="no">a hypothesis + window</td><td class="yes">directly, and testably</td></tr>
+      <tr><td>4 Ladder</td><td class="yes">0</td><td class="part">as a goal's rung</td><td class="no">no</td><td class="part">must pick a parent</td><td class="yes">that's the whole view</td></tr>
+      <tr><td>5 Sediment</td><td class="part">1 thin</td><td class="part">emerges</td><td class="no">no</td><td class="yes">one keystroke</td><td class="part">later, in conversation</td></tr>
+    </tbody>
+  </table>
+
+  <p class="lede" style="margin-top:1.5rem">These aren't exclusive. <b>1 is a subset of 2</b>; <b>3 and 4 both sit on top of either</b>;
+  <b>5 is a capture policy</b> that can be bolted to any of them. The real fork is whether an intent gets its own table now
+  (2/5) or stays a pointer on a check (1/3/4) — everything else can follow later without a rewrite.</p>
+
+</div>
+</body>
+</html>
