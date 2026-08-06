@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.162](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.161...v0.0.162) (2026-08-06)
+
+
+### Features
+
+* **projects:** make loose items adoptable from the project page ([97836a2](https://github.com/marvinbarretto/jimbo-dashboard/commit/97836a216e5215418fdca65c86430368e58ec8fd)), closes [#3613](https://github.com/marvinbarretto/jimbo-dashboard/issues/3613) [#3586](https://github.com/marvinbarretto/jimbo-dashboard/issues/3586)
+
 ### [0.0.161](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.160...v0.0.161) (2026-08-06)
 
 
