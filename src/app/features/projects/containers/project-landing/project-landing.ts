@@ -27,6 +27,8 @@ import { KanbanFilterBar, type FilterGroup } from '@shared/components/kanban-fil
 import { createKanbanFilterState } from '@shared/kanban/filter-state';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
+import { UiDropdown } from '@shared/components/ui-dropdown/ui-dropdown';
+import { rankEpicCandidates, type EpicCandidate } from '@domain/vault/epic-candidates';
 import { ProjectsService } from '../../data-access/projects.service';
 import { ProjectActivityEventsService } from '../../data-access/project-activity-events.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
@@ -142,6 +144,7 @@ interface ProjectActivityItem {
     ProjectOperatingContextSection,
     ActorChip,
     UiDataTable,
+    UiDropdown,
     PriorityBadge,
     UiButton,
     KanbanFilterBar,
@@ -361,6 +364,46 @@ export class ProjectLanding {
     });
   });
 
+  readonly projectEpics = computed(() => this.items().filter(i => i.is_epic && isActive(i)));
+
+  /**
+   * Ranked adoption candidates per loose item, precomputed as a Map.
+   *
+   * Deliberately NOT a `candidatesFor(item)` method called from the template:
+   * that re-ranks every row on every change-detection pass. One computed, one
+   * Map lookup per cell.
+   */
+  readonly adoptionCandidates = computed<ReadonlyMap<string, readonly EpicCandidate[]>>(() => {
+    const epics = this.projectEpics();
+    const out = new Map<string, readonly EpicCandidate[]>();
+    if (epics.length === 0) return out;
+    for (const item of this.unassignedActive()) {
+      out.set(item.id, rankEpicCandidates(item, epics));
+    }
+    return out;
+  });
+
+  /** Epics with no scoring signal for this item — still offered, just below the
+   *  ranked ones, because "no shared tag" is not the same as "wrong parent". */
+  readonly otherEpicsFor = computed<ReadonlyMap<string, readonly VaultItem[]>>(() => {
+    const epics = this.projectEpics();
+    const out = new Map<string, readonly VaultItem[]>();
+    for (const [itemId, ranked] of this.adoptionCandidates()) {
+      const rankedIds = new Set(ranked.map(c => c.epic.id));
+      out.set(itemId, epics.filter(e => !rankedIds.has(e.id)));
+    }
+    return out;
+  });
+
+  /**
+   * Files a loose item under an epic. The item list is a signal off
+   * VaultItemsService, so the row leaves the unassigned table on its own.
+   */
+  fileUnder(item: VaultItem, epic: VaultItem): void {
+    this.vault.update(item.id, { parent_id: epic.id });
+    this.toast.success(`#${item.seq} filed under #${epic.seq} ${epic.title}`);
+  }
+
   // Items that aren't under an epic this project owns. Either parent_id is
   // null, or it points to an epic outside this project (cross-project edge).
   readonly unassignedActive = computed<readonly VaultItem[]>(() => {
@@ -447,6 +490,8 @@ export class ProjectLanding {
     viewChild.required<TemplateRef<{ $implicit: CellContext<VaultItem, Priority | null> }>>('priorityCell');
   private readonly relativeCell =
     viewChild.required<TemplateRef<{ $implicit: CellContext<VaultItem, string> }>>('relativeCell');
+  private readonly adoptCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<VaultItem, string> }>>('adoptCell');
 
   // TanStack defaults every column to a fixed 150px unless `size` is set —
   // fine for "Type"/"Priority"/dates, but it starved the one column holding a
@@ -495,6 +540,20 @@ export class ProjectLanding {
       cell: () => this.relativeCell(),
       sortingFn: 'alphanumeric',
       size: 110,
+    }),
+  ];
+
+  // Unassigned rows get one extra column the epic-grouped tables must not have:
+  // those items already have a parent, so offering to re-file them here would
+  // be a different (and riskier) action than adopting a loose one.
+  readonly unassignedColumns: ColumnDef<VaultItem, any>[] = [
+    ...this.itemColumns,
+    this.columnHelper.accessor(row => row.id, {
+      id: 'adopt',
+      header: 'File under',
+      cell: () => this.adoptCell(),
+      enableSorting: false,
+      size: 210,
     }),
   ];
 

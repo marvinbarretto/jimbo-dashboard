@@ -200,6 +200,24 @@
                     </span>
                   </header>
 
+                  <!-- What makes this a theme rather than a bucket. Ungrounded
+                       is stated, not hidden — every child inherits this as its
+                       answer to "why", so a blank here blanks the whole subtree. -->
+                  <p class="epic-group__trace">
+                    @if (group.epic.serves_persona || group.epic.moves_criterion) {
+                      @if (group.epic.serves_persona) {
+                        <span><i>serves</i>{{ group.epic.serves_persona }}</span>
+                      }
+                      @if (group.epic.moves_criterion) {
+                        <span><i>moves</i>{{ group.epic.moves_criterion }}</span>
+                      }
+                    } @else {
+                      <span class="epic-group__trace--none">
+                        not grounded — no persona or success criterion named
+                      </span>
+                    }
+                  </p>
+
                   @if (group.outstanding.length > 0) {
                     <div class="epic-group__table">
                       <app-ui-data-table
@@ -260,15 +278,51 @@
         </app-ui-section>
 
         <!-- Items not under any epic this project owns -->
-        <app-ui-section title="Unassigned items" [collapsible]="false">
+        <app-ui-section [title]="'Unassigned items (' + unassignedActive().length + ')'" [collapsible]="false">
+          <!-- Adoption used to be impossible from any screen — the only parent
+               control in the app was a raw UUID text box — which is most of why
+               these pile up. Candidates are ranked, but "leave unparented" is a
+               real answer: a lot of work is a finding with no genuine parent. -->
+          @if (unassignedActive().length > 0 && projectEpics().length === 0) {
+            <p class="unassigned-hint">
+              No epics in this project yet, so there is nothing to file these under.
+            </p>
+          }
           <div class="unassigned-table">
             <app-ui-data-table
               ariaLabel="Unassigned items"
-              [columns]="itemColumns"
+              [columns]="unassignedColumns"
               [data]="unassignedActive()"
               emptyTitle="No unassigned items"
               emptyMessage="Every active item is grouped under an epic." />
           </div>
+
+          <ng-template #adoptCell let-context>
+            @if (projectEpics().length > 0) {
+              <app-ui-dropdown ariaHaspopup="menu" ariaLabel="File under an epic" #adopt>
+                <span trigger class="adopt__trigger">
+                  @if (adoptionCandidates().get(context.row.original.id); as ranked) {
+                    {{ ranked.length > 0 ? 'Suggested (' + ranked.length + ')' : 'Choose…' }}
+                  } @else { Choose… }
+                </span>
+                <div panel class="adopt__menu" role="menu">
+                  @for (c of adoptionCandidates().get(context.row.original.id) ?? []; track c.epic.id) {
+                    <button type="button" role="menuitem" class="adopt__item adopt__item--ranked"
+                      (click)="fileUnder(context.row.original, c.epic); adopt.close()">
+                      #{{ c.epic.seq }} {{ c.epic.title }}
+                      <small>{{ c.reasons.join(' · ') }}</small>
+                    </button>
+                  }
+                  @for (e of otherEpicsFor().get(context.row.original.id) ?? []; track e.id) {
+                    <button type="button" role="menuitem" class="adopt__item"
+                      (click)="fileUnder(context.row.original, e); adopt.close()">
+                      #{{ e.seq }} {{ e.title }}
+                    </button>
+                  }
+                </div>
+              </app-ui-dropdown>
+            }
+          </ng-template>
 
           <ng-template #chipCell let-context>
             <span class="chip-cell">

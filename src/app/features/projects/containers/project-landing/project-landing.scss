@@ -515,6 +515,35 @@
     letter-spacing: 0.04em;
   }
 
+  // Grounding trace. Shares the table's indent so it reads as a property of
+  // the epic rather than a row of its own.
+  &__trace {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem 1.1rem;
+    margin: 0;
+    margin-left: 0.45rem;
+    padding-left: 1.25rem;
+    font-family: var(--scan-family);
+    font-size: 0.68rem;
+    color: var(--color-text-muted);
+
+    i {
+      font-style: normal;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-size: 0.6rem;
+      opacity: 0.7;
+      margin-right: 0.4rem;
+    }
+
+    // Stated, not hidden — a blank trace blanks every child's "why".
+    &--none {
+      color: color-mix(in srgb, var(--color-warning) 80%, var(--color-text-muted));
+      font-style: italic;
+    }
+  }
+
   &__table {
     // Indent under the epic header + nesting guide line to match the chip
     // layout it replaces. Indents stay bespoke — they're tuned to line up
@@ -765,4 +794,56 @@
     font-size: 0.85rem;
     color: var(--color-text-muted);
   }
+}
+
+// ── Adoption control (Unassigned items → file under an epic) ─────────────────
+.unassigned-hint {
+  margin: 0 0 var(--s-2);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.adopt__trigger {
+  font-size: 0.72rem;
+  color: var(--color-accent);
+  white-space: nowrap;
+}
+
+.adopt__menu {
+  // Epic titles run long; cap the panel and let it scroll rather than letting
+  // one 100-char title set the width of every row's dropdown.
+  display: flex;
+  flex-direction: column;
+  min-width: 18rem;
+  max-width: 28rem;
+  max-height: 20rem;
+  overflow-y: auto;
+}
+
+.adopt__item {
+  font: inherit;
+  font-size: 0.75rem;
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+  color: var(--color-text-soft);
+  cursor: pointer;
+
+  small {
+    display: block;
+    font-size: 0.62rem;
+    color: var(--color-text-muted);
+    margin-top: 0.1rem;
+  }
+
+  &:last-child { border-bottom: 0; }
+  &:hover { background: var(--color-surface); color: var(--color-text); }
+}
+
+// Scored candidates lead the list; the accent bar is the only thing separating
+// them from the full epic list below, which is deliberately still offered.
+.adopt__item--ranked {
+  border-left: 2px solid var(--color-accent);
 }

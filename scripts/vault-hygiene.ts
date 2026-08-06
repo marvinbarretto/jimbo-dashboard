@@ -22,6 +22,7 @@
  *   npx tsx scripts/vault-hygiene.ts --defect=orphan   one section only
  */
 import { parseBodySections } from '../src/app/domain/vault/body-sections';
+import { rankEpicCandidates, type ScorableEpic } from '../src/app/domain/vault/epic-candidates';
 
 const API = process.env['JIMBO_API_URL'];
 const KEY = process.env['JIMBO_API_KEY'];
@@ -95,29 +96,14 @@ function tagsOf(n: Note): string[] {
   }
 }
 
-const STOP = new Set([
-  'the', 'a', 'an', 'and', 'or', 'for', 'to', 'of', 'in', 'on', 'is', 'it', 'as',
-  'with', 'add', 'fix', 'make', 'use', 'when', 'that', 'this', 'from', 'into',
-]);
-
-function titleTokens(title: string): Set<string> {
-  return new Set(
-    title.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/[\s-]+/)
-      .filter(t => t.length > 2 && !STOP.has(t)),
-  );
-}
-
-function overlap(a: Set<string>, b: Set<string>): number {
-  let n = 0;
-  for (const t of a) if (b.has(t)) n++;
-  return n;
-}
-
-/** Shared tags weigh double — they're curated, title words are incidental. */
-function scoreEpic(item: Note, epic: Note): number {
-  const sharedTags = overlap(new Set(tagsOf(item)), new Set(tagsOf(epic)));
-  const sharedWords = overlap(titleTokens(item.title), titleTokens(epic.title));
-  return sharedTags * 2 + sharedWords;
+/**
+ * Adapts a raw API note to the scorer's input shape. The wire format carries
+ * `tags` as a JSON string where VaultItem carries a parsed array — normalising
+ * here means the report and the project-landing picker rank identically off one
+ * implementation (`@domain/vault/epic-candidates`) instead of two that drift.
+ */
+function forScoring(n: Note): ScorableEpic {
+  return { title: n.title, tags: tagsOf(n), seq: n.seq };
 }
 
 const AC_LABELS = /^acceptance criteria$/i;
@@ -143,11 +129,8 @@ async function main(): Promise<void> {
       // Only ever suggest an epic from the item's own project — a cross-project
       // parent is a worse answer to "why" than no parent at all.
       const pool = project ? (epicsByProject.get(project) ?? []) : [];
-      const candidates = pool
-        .map(e => ({ seq: e.seq, title: e.title, score: scoreEpic(t, e) }))
-        .filter(c => c.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3);
+      const candidates = rankEpicCandidates(forScoring(t), pool.map(forScoring))
+        .map(c => ({ seq: c.epic.seq, title: c.epic.title, score: c.score, why: c.reasons.join(' · ') }));
       return { seq: t.seq, title: t.title, project, hasProject: Boolean(project), candidates };
     });
 
@@ -177,7 +160,7 @@ async function main(): Promise<void> {
     for (const o of orphans.slice(0, 60)) {
       console.log(`  #${o.seq} ${o.title.slice(0, 78)}`);
       console.log(`      project: ${o.project ?? '— UNFILED —'}`);
-      for (const c of o.candidates) console.log(`      ? #${c.seq} ${c.title.slice(0, 66)}  (${c.score})`);
+      for (const c of o.candidates) console.log(`      ? #${c.seq} ${c.title.slice(0, 52)}  (${c.score}: ${c.why})`);
       if (!o.candidates.length) console.log(`      ? no candidate — pick or create an epic`);
     }
     if (orphans.length > 60) console.log(`  … and ${orphans.length - 60} more (use --json)`);
