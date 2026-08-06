@@ -10,9 +10,10 @@ import {
 import { DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { swapDetailSeq, closeDetail } from '@shared/kanban/detail-nav';
-import { lifecycleState, isArchived } from '@domain/vault/vault-item';
+import { lifecycleState, isArchived, type Priority } from '@domain/vault/vault-item';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { UiInlineEdit } from '@shared/components/ui-inline-edit/ui-inline-edit';
+import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
 import { UiDropdown } from '@shared/components/ui-dropdown/ui-dropdown';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiMentionChipStrip } from '@shared/components/ui-mention-chip-strip/ui-mention-chip-strip';
@@ -60,6 +61,7 @@ import type { CreateThreadMessagePayload } from '@domain/thread';
   imports: [IntakeRationalePanel, 
     RouterLink,
     UiInlineEdit,
+    UiSubsection,
     UiDropdown,
     UiButton,
     UiMentionChipStrip,
@@ -114,6 +116,33 @@ export class VaultItemDetailBody {
 
   /** Effort estimate in 25-minute pomodoro blocks; defaults to 1. */
   protected readonly estimateBlocks = computed(() => this.store.item()?.estimated_blocks ?? 1);
+
+  protected readonly PRIORITIES = [
+    { value: 0, label: 'P0', hint: 'drop everything' },
+    { value: 1, label: 'P1', hint: 'this week' },
+    { value: 2, label: 'P2', hint: 'queued' },
+    { value: 3, label: 'P3', hint: 'someday' },
+  ] as const satisfies readonly { value: Priority; label: string; hint: string }[];
+
+  /** '0'|'1'|'2'|'3' for the pill modifier, or 'none' when nothing is set.
+   *  Deliberately a string: P0 is falsy, and the previous `@if (…; as p)` gate
+   *  meant the highest-priority items were the ones rendering no pill at all. */
+  protected readonly prioritySlug = computed(() => {
+    const p = this.store.effectivePriority();
+    return p == null ? 'none' : String(p);
+  });
+
+  protected readonly priorityLabel = computed(() => {
+    const p = this.store.effectivePriority();
+    return p == null ? 'P—' : `P${p}`;
+  });
+
+  /** An epic is grounded once it names BOTH who it serves and what it moves —
+   *  half a trace still leaves a child unable to answer "why". */
+  protected readonly isGrounded = computed(() => {
+    const i = this.store.item();
+    return Boolean(i?.serves_persona && i?.moves_criterion);
+  });
 
   /** The most recent message waiting on the viewer — kind-agnostic, so a
    *  question filed as a plain `comment` still answers "why is this on me?".

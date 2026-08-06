@@ -56,6 +56,10 @@ export const ApiVaultItemSchema = z.object({
   tags:                 z.array(z.string()),
   ready:                z.boolean(),
   is_epic:              z.boolean(),
+  // Optional as well as nullable: the board endpoint trims columns for payload
+  // size, so these are absent (not null) on list reads until it carries them.
+  serves_persona:       z.string().nullable().optional(),
+  moves_criterion:      z.string().nullable().optional(),
   parent_id:            z.string().nullable(),
   acceptance_criteria:  z.string().nullable(),
   blocked_by:           z.string().nullable(),

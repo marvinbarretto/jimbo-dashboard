@@ -606,6 +606,31 @@ describe('VaultItemsService mutations (HTTP mode, withOptimistic-backed)', () =>
       expect(service.getById(id)?.title).toBe('fixture');
       expect(lastErrorToast()).toMatch(/update failed/i);
     });
+
+    // The serializer has two guard styles in it — `!= null` (create, drops
+    // null) and `!== undefined` (update, keeps it). Any nullable field wired
+    // through the wrong one silently no-ops its clear path while the optimistic
+    // UI shows it cleared. These pin the three that can be unset.
+    it.each([
+      ['manual_priority', { manual_priority: null }],
+      ['serves_persona', { serves_persona: null }],
+      ['moves_criterion', { moves_criterion: null }],
+    ])('sends an explicit null when clearing %s', (field, patch) => {
+      service.update(vaultItemId('item-1'), patch);
+
+      const req = http.expectOne(r => r.method === 'PATCH');
+      expect(req.request.body).toHaveProperty(field, null);
+      req.flush({ id: 'item-1', seq: '100' });
+    });
+
+    it('omits grounding entirely when the patch does not mention it', () => {
+      service.update(vaultItemId('item-1'), { title: 'renamed' });
+
+      const req = http.expectOne(r => r.method === 'PATCH');
+      expect(req.request.body).not.toHaveProperty('serves_persona');
+      expect(req.request.body).not.toHaveProperty('moves_criterion');
+      req.flush({ id: 'item-1', seq: '100' });
+    });
   });
 
   // ── remove ────────────────────────────────────────────────────────────

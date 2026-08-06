@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, input
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
+import { parseBodySections } from '@domain/vault/body-sections';
 
 // Operator-created (source.kind='manual') items get an editable scratchpad
 // because the "body" doubles as live working notes. Ingested items keep the
@@ -29,15 +30,30 @@ import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
         ></textarea>
       } @else if (body()) {
         <div
-          class="vault-item-intake-block__body markdown-body prose-read"
+          class="vault-item-intake-block__body"
           [class.vault-item-intake-block__body--editable]="editable()"
           [attr.role]="editable() ? 'button' : null"
           [attr.tabindex]="editable() ? 0 : null"
           [attr.aria-label]="editable() ? 'Edit body' : null"
-          [innerHTML]="body() | markdown"
           (click)="editable() && startEdit()"
           (keydown.enter)="editable() && startEdit()"
-        ></div>
+        >
+          @if (structured()) {
+            @for (s of sections(); track $index) {
+              <div class="sect" [class.sect--bare]="!s.label">
+                @if (s.label) {
+                  <div class="sect__label">
+                    {{ s.label }}
+                    @if (s.hint) { <span class="sect__hint">{{ s.hint }}</span> }
+                  </div>
+                }
+                <div class="sect__content markdown-body prose-read" [innerHTML]="s.content | markdown"></div>
+              </div>
+            }
+          } @else {
+            <div class="markdown-body prose-read" [innerHTML]="body() | markdown"></div>
+          }
+        </div>
       } @else if (editable()) {
         <button
           type="button"
@@ -69,6 +85,59 @@ import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
       // padding — box-sizing is border-box, so without the padding back it is
       // the TEXT that would undershoot the measure, not just the box.
       max-width: calc(var(--prose-measure) + 1.5rem);
+    }
+
+    // Structured mode: label in a left gutter so the eye can jump to a section
+    // instead of reading the wall. Grid rather than float so a long label wraps
+    // in its own column without reflowing the prose.
+    .sect {
+      display: grid;
+      grid-template-columns: 6.5rem minmax(0, 1fr);
+      gap: 0 0.9rem;
+      padding: 0.5rem 0;
+
+      & + & { border-top: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent); }
+      &:first-child { padding-top: 0; }
+      &:last-child  { padding-bottom: 0; }
+    }
+
+    // Prose that arrived before any heading spans both columns — indenting it
+    // under an empty gutter would imply a label that isn't there.
+    .sect--bare {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .sect__label {
+      font-family: var(--scan-family);
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      // Optically aligns the label with the first line of prose beside it,
+      // which sits on a taller line-height.
+      padding-top: 0.2rem;
+      overflow-wrap: break-word;
+    }
+
+    .sect__hint {
+      display: block;
+      text-transform: none;
+      letter-spacing: 0;
+      opacity: 0.75;
+      margin-top: 0.15rem;
+    }
+
+    // The first block inside a section already has the row's padding above it.
+    .sect__content :first-child { margin-top: 0; }
+    .sect__content :last-child  { margin-bottom: 0; }
+
+    @media (max-width: 720px) {
+      .sect {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.2rem;
+      }
+      .sect__label { padding-top: 0; }
+      .sect__hint  { display: inline; margin-left: 0.35rem; }
     }
 
     .vault-item-intake-block__body--editable {
@@ -148,6 +217,12 @@ export class VaultItemIntakeBlock {
   readonly label = input('Intake');
   readonly hint = input<string | null | undefined>(undefined);
   readonly showNote = input(true);
+
+  /** Render `**Label**` / `## Label` blocks as label-gutter rows instead of one
+   *  markdown blob. Opt-in: only the bands layout wants the scanning treatment. */
+  readonly structured = input(false);
+
+  protected readonly sections = computed(() => parseBodySections(this.body()));
 
   protected readonly resolvedHint = computed(() => {
     const override = this.hint();

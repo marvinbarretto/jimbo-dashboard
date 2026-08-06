@@ -214,6 +214,13 @@ export interface VaultItem {
   // an epic; is_epic must be set deliberately.
   is_epic:             boolean;
 
+  // Epic grounding — which persona this serves and which project success
+  // criterion it moves. Both null on every epic created before 2026-08-06;
+  // null means "nobody has said", which is the signal the audit reports on,
+  // not a value to paper over with a default.
+  serves_persona:      string | null;
+  moves_criterion:     string | null;
+
   // Soft-archive timestamp. When set, the item is hidden from default views.
   // Items can be archived whether or not they're complete — archive is orthogonal.
   archived_at:         string | null;
@@ -304,8 +311,11 @@ export interface LiveMessageEmbed {
   body_excerpt: string;
 }
 
+// Grounding is epic-only and optional at creation — a plain task never carries
+// it, so requiring it here would force every caller to write two nulls.
 export type CreateVaultItemPayload =
-  Omit<VaultItem, 'id' | 'seq' | 'archived_at' | 'created_at'>;
+  Omit<VaultItem, 'id' | 'seq' | 'archived_at' | 'created_at' | 'serves_persona' | 'moves_criterion'>
+  & Partial<Pick<VaultItem, 'serves_persona' | 'moves_criterion'>>;
 
 export type UpdateVaultItemPayload =
   Partial<Omit<VaultItem, 'id' | 'seq' | 'created_at'>>;

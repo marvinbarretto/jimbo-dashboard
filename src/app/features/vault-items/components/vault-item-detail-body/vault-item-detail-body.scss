@@ -41,7 +41,41 @@
 .v3__band--epic {
   background: color-mix(in srgb, var(--proj, var(--color-accent)) 32%, var(--color-surface));
   color: var(--color-text);
+  // The grounding trace wraps onto its own line beneath the epic title rather
+  // than competing with it for the row.
+  flex-wrap: wrap;
   &:hover { filter: brightness(1.12); }
+}
+
+// This epic's answer to "who does this serve / what does it move" — read by
+// every child as its own why, which is why it sits on the band and not in prose.
+.v3__trace {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin: 0.25rem 0 0;
+  // The seq column above is `#NNNN` + the band gap; align under the title.
+  padding-left: 3.1rem;
+  font-family: var(--scan-family);
+  font-size: 0.68rem;
+  color: color-mix(in srgb, var(--color-text) 72%, transparent);
+}
+
+.v3__trace-row {
+  display: flex;
+  gap: 0.4rem;
+  min-width: 0;
+
+  i {
+    flex-shrink: 0;
+    width: 3.2rem;
+    font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-size: 0.6rem;
+    opacity: 0.65;
+  }
 }
 
 .v3__band--title {
@@ -106,6 +140,24 @@
 .v3__pill--p1 { background: var(--color-danger); }
 .v3__pill--p2 { background: var(--color-warning); }
 .v3__pill--p3 { background: var(--color-text-muted); }
+// Unset priority still needs a target to click — an absent pill offered no way
+// to set one, which was the whole reason priority could only change elsewhere.
+.v3__pill--pnone {
+  background: transparent;
+  color: #fff;
+  border: 1px dashed color-mix(in srgb, #fff 45%, transparent);
+}
+
+.v3__prio {
+  flex-shrink: 0;
+  align-self: center;
+  // The band paints itself #fff-on-hue; the chevron inherits currentColor.
+  color: #fff;
+}
+
+.v3__menu--prio {
+  min-width: 12rem;
+}
 
 // ══ ZONE 2 · META + CTA ══════════════════════════════════════════════════════
 .v3__meta-row {
@@ -517,4 +569,39 @@
 .draft-form__error {
   font-size: .8rem;
   color: var(--color-danger, #ef4444);
+}
+
+// ══ EPIC GROUNDING PANEL ═════════════════════════════════════════════════════
+// Definition list, not a form: "Serves"/"Moves" are the questions and the
+// inline-edits are the answers, so the semantics match what's on screen.
+.v3__ground {
+  display: grid;
+  grid-template-columns: 3.6rem minmax(0, 1fr);
+  gap: 0.35rem 0.6rem;
+  margin: 0;
+
+  dt {
+    font-family: var(--scan-family);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    padding-top: 0.15rem;
+  }
+
+  dd {
+    margin: 0;
+    min-width: 0;
+    font-size: 0.8rem;
+  }
+}
+
+.v3__ground-link {
+  display: inline-block;
+  margin-top: 0.6rem;
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
+
+  &:hover { color: var(--color-accent); text-decoration: underline; }
 }

@@ -115,6 +115,19 @@
         <button type="button" class="v3__band v3__band--epic" (click)="swapToSeq(epic.seq)">
           <span class="v3__band-seq">#{{ epic.seq }}</span>
           <span class="v3__band-label">{{ epic.title }}</span>
+          <!-- The epic's grounding IS this task's "why" — it's the reason the
+               body no longer carries a Why section. Absent on every epic
+               created before 2026-08-06, so it renders only when filled. -->
+          @if (epic.serves_persona || epic.moves_criterion) {
+            <span class="v3__trace">
+              @if (epic.serves_persona) {
+                <span class="v3__trace-row"><i>serves</i>{{ epic.serves_persona }}</span>
+              }
+              @if (epic.moves_criterion) {
+                <span class="v3__trace-row"><i>moves</i>{{ epic.moves_criterion }}</span>
+              }
+            </span>
+          }
         </button>
       } @else if (store.parentRef(); as parent) {
         <button type="button" class="v3__band v3__band--epic" (click)="swapToSeq(parent.seq)">
@@ -124,9 +137,24 @@
       }
 
       <div class="v3__band v3__band--title">
-        @if (store.effectivePriority(); as p) {
-          <span class="v3__pill v3__pill--p{{ p }}">P{{ p }}</span>
-        }
+        <app-ui-dropdown class="v3__prio" ariaHaspopup="menu" ariaLabel="Set priority" #prio>
+          <span trigger class="v3__pill v3__pill--p{{ prioritySlug() }}">{{ priorityLabel() }}</span>
+          <div panel class="v3__menu v3__menu--prio" role="menu">
+            @for (p of PRIORITIES; track p.value) {
+              <button type="button" role="menuitem" class="v3__menu-item"
+                [disabled]="item.manual_priority === p.value"
+                (click)="store.updateManualPriority(p.value); prio.close()">
+                {{ p.label }}<small>{{ p.hint }}</small>
+              </button>
+            }
+            @if (item.manual_priority !== null) {
+              <button type="button" role="menuitem" class="v3__menu-item"
+                (click)="store.updateManualPriority(null); prio.close()">
+                Clear override<small>fall back to the AI ranking</small>
+              </button>
+            }
+          </div>
+        </app-ui-dropdown>
         <span class="v3__band-seq v3__band-seq--title">#{{ item.seq }}</span>
         <app-ui-inline-edit
           class="v3__title"
@@ -280,6 +308,7 @@
           label="The work"
           [hint]="null"
           [showNote]="false"
+          [structured]="true"
           [body]="item.body"
           [createdAt]="item.created_at"
           [editable]="store.isManual()"
@@ -304,6 +333,44 @@
       </section>
 
       <aside class="v3__side">
+        <!-- ══ EPIC GROUNDING ══════════════════════════════════════════════
+             Every child of this epic reads its trace as the answer to "why are
+             we doing this", so an ungrounded epic silently un-grounds its whole
+             subtree. Shown unfilled rather than hidden — a missing trace is the
+             finding, and hiding it is how 64 epics got here. -->
+        @if (item.is_epic) {
+          <app-ui-subsection
+            label="Grounding"
+            [hint]="isGrounded() ? null : 'nobody has said what this serves'"
+          >
+            <dl class="v3__ground">
+              <dt>Serves</dt>
+              <dd>
+                <app-ui-inline-edit
+                  [value]="item.serves_persona ?? ''"
+                  placeholder="which persona? — see the project's personas"
+                  ariaLabel="Persona this epic serves"
+                  (saved)="store.updateServesPersona($event)"
+                />
+              </dd>
+              <dt>Moves</dt>
+              <dd>
+                <app-ui-inline-edit
+                  [value]="item.moves_criterion ?? ''"
+                  placeholder="which success criterion?"
+                  ariaLabel="Success criterion this epic moves"
+                  (saved)="store.updateMovesCriterion($event)"
+                />
+              </dd>
+            </dl>
+            @if (firstProject(); as proj) {
+              <a class="v3__ground-link" [routerLink]="['/projects', proj.id]">
+                {{ proj.display_name }} brief — personas &amp; success criteria ↗
+              </a>
+            }
+          </app-ui-subsection>
+        }
+
         @if (item.type === 'task' && !item.is_epic) {
           <div class="v3__estimate">
             <span class="v3__estimate-label">Estimate</span>

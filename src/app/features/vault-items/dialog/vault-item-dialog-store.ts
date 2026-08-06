@@ -453,6 +453,19 @@ export class VaultItemDialogStore {
     this.vaultItemsService.update(i.id, { manual_priority: p });
   }
 
+  /** Epic grounding — which persona this serves. Empty string clears it, so a
+   *  wrong trace can be removed rather than only overwritten. */
+  updateServesPersona(next: string): void {
+    const i = this.item(); if (!i) return;
+    this.vaultItemsService.update(i.id, { serves_persona: next.trim() || null });
+  }
+
+  /** Epic grounding — which project success criterion this moves. */
+  updateMovesCriterion(next: string): void {
+    const i = this.item(); if (!i) return;
+    this.vaultItemsService.update(i.id, { moves_criterion: next.trim() || null });
+  }
+
   setGroomingOverride(next: boolean): void {
     const i = this.item(); if (!i) return;
     this.vaultItemsService.update(i.id, { grooming_override: next });

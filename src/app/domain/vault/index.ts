@@ -40,3 +40,5 @@ export type {
 } from './readiness';
 
 export { computeReadiness, effectivePriority, isEpic } from './readiness';
+
+export { parseBodySections, hasBodySections, type VaultBodySection } from './body-sections';
