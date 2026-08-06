@@ -94,6 +94,13 @@
                 @if (decisionsLoading()) {
                   <p class="muted">Loading decisions…</p>
                 } @else {
+                  @if (reasonsLost(run)) {
+                    <p class="reason-notice">
+                      Keepers in this run have no rationale: until 12:45 on 6 Aug, attaching the
+                      vault note overwrote the reason with null. Tosses kept theirs because they
+                      were only written once. Runs after that hold both.
+                    </p>
+                  }
                   <ul class="decisions">
                     @for (d of decisions(); track trackDecision($index, d)) {
                       <li class="decision" [class.decision--kept]="isKept(d)">
@@ -103,23 +110,61 @@
                           </app-ui-badge>
                           <span class="decision-from">{{ d.from_name || d.from_email }}</span>
                           <span class="decision-subject">{{ d.subject }}</span>
-                          @if (d.vault_note_id) {
-                            <a
-                              class="decision-note"
-                              [routerLink]="['/mail-activity', d.gmail_id]"
-                              (click)="$event.stopPropagation()"
-                            >filed →</a>
-                          } @else if (isKept(d)) {
-                            <!-- Kept but never filed: the decision exists, the
-                                 record doesn't. Worth seeing at the row level. -->
-                            <span class="decision-unfiled" title="Kept but no vault note was created">not filed</span>
-                          }
                         </div>
+
                         <!-- The reason is the audit. Everything else is metadata. -->
                         @if (d.verdict_reason) {
                           <p class="decision-reason">{{ d.verdict_reason }}</p>
                         } @else {
                           <p class="decision-reason decision-reason--missing">no reason recorded</p>
+                        }
+
+                        <!-- "Filed" on its own said nothing. Spell out what was
+                             actually created and where it landed: a note in the
+                             inbox with no project is not the same outcome as a
+                             task under an epic, and only one of them will ever
+                             be looked at again. -->
+                        @if (isKept(d)) {
+                          <p class="decision-landed">
+                            @if (d.vault_note_seq) {
+                              <span class="muted">→ created</span>
+                              <a
+                                class="landed-note"
+                                [routerLink]="['/vault-items', d.vault_note_seq]"
+                                (click)="$event.stopPropagation()"
+                              >#{{ d.vault_note_seq }}</a>
+                              <span class="landed-kind">{{ d.vault_note_type }}</span>
+                              @if (d.vault_note_status) {
+                                <span class="landed-status">{{ d.vault_note_status }}</span>
+                              }
+
+                              @if (d.project_name) {
+                                <span class="muted">·</span>
+                                <a
+                                  class="landed-project"
+                                  [routerLink]="['/projects', d.project_id]"
+                                  (click)="$event.stopPropagation()"
+                                >{{ d.project_name }}</a>
+                              } @else {
+                                <span class="muted">·</span>
+                                <span class="landed-gap">no project</span>
+                              }
+
+                              @if (d.epic_seq) {
+                                <span class="muted">·</span>
+                                <a
+                                  class="landed-epic"
+                                  [routerLink]="['/vault-items', d.epic_seq]"
+                                  (click)="$event.stopPropagation()"
+                                >epic #{{ d.epic_seq }}</a>
+                              } @else {
+                                <span class="muted">·</span>
+                                <span class="landed-gap">no epic</span>
+                              }
+                            } @else {
+                              <span class="landed-lost">kept, but no vault item was ever created</span>
+                            }
+                          </p>
                         }
                       </li>
                     }

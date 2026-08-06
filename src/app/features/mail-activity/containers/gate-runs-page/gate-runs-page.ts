@@ -15,6 +15,17 @@ import { type EmailReport, type EmailVerdict, isRetained } from '../../mail-acti
 const VERDICT_ORDER: EmailVerdict[] = ['alert', 'fact', 'event', 'reference', 'keep', 'toss'];
 
 /**
+ * When the API stopped blanking verdict_reason on the follow-up PATCH.
+ *
+ * gate-emails writes the verdict, then PATCHes again to attach the vault note;
+ * the second call omitted reason and model, and they were written as NULL. So
+ * the emails that were KEPT — the ones that got a second write — are exactly
+ * the ones missing their rationale. Runs before this instant show "no reason
+ * recorded" on their keepers and nothing can recover it.
+ */
+const REASON_FIX_AT = Date.parse('2026-08-06T12:45:00Z');
+
+/**
  * Every gate run, and inside each one every decision with the reason it was
  * made — the audit surface.
  *
@@ -99,6 +110,12 @@ export class GateRunsPage implements OnInit {
     const ms = new Date(run.ended_at).getTime() - new Date(run.started_at).getTime();
     if (!Number.isFinite(ms) || ms < 1000) return '<1s';
     return ms < 60_000 ? `${Math.round(ms / 1000)}s` : `${Math.round(ms / 60_000)}m`;
+  }
+
+  /** True when this run predates the reason fix and its keepers are blank —
+   *  so the page can say why rather than looking broken. */
+  protected reasonsLost(run: GateRun): boolean {
+    return Date.parse(run.started_at) < REASON_FIX_AT && run.kept > 0;
   }
 
   protected isKept(d: EmailReport): boolean {

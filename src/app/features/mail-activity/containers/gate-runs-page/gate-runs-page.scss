@@ -124,3 +124,61 @@
   color: var(--color-text-muted);
   font-style: italic;
 }
+
+// Explains a whole run of blank rationales, so a known data loss doesn't read
+// as the page being broken.
+.reason-notice {
+  margin: 0.25rem 0.6rem 0.5rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.75rem;
+  color: var(--color-text-soft);
+  border-left: 2px solid color-mix(in srgb, var(--color-warning, #c08b00) 60%, transparent);
+  background: color-mix(in srgb, var(--color-warning, #c08b00) 5%, transparent);
+}
+
+// What the decision actually produced. "filed" alone hid the difference
+// between a task under an epic and a note rotting in the inbox.
+.decision-landed {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+}
+
+.landed-note {
+  color: var(--color-accent);
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
+
+.landed-kind,
+.landed-status {
+  padding: 0 0.3rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+}
+
+.landed-project {
+  color: var(--color-success, #22c55e);
+  text-decoration: none;
+  font-weight: 500;
+  &:hover { text-decoration: underline; }
+}
+
+.landed-epic {
+  color: var(--color-info);
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
+
+// The pipeline stopping one step short. Muted rather than alarming — it is the
+// common case (13 of 14 filed events have neither), and shouting on every row
+// would just become noise.
+.landed-gap {
+  color: var(--color-text-muted);
+  font-style: italic;
+}

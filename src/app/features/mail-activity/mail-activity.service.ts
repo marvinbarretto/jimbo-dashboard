@@ -46,6 +46,9 @@ export interface EmailReport {
   vault_note_seq?: number | null;
   vault_note_title?: string | null;
   vault_note_type?: string | null;
+  vault_note_status?: string | null;
+  epic_seq?: number | null;
+  epic_title?: string | null;
   project_id?: string | null;
   project_name?: string | null;
   created_at: string;
