@@ -21,6 +21,13 @@ export const routes: Routes = [
     title: 'Mail activity',
     loadComponent: () => import('./features/mail-activity/containers/mail-activity-page/mail-activity-page').then(m => m.MailActivityPage),
   },
+  // Registered BEFORE the :gmailId route below, or the param route swallows
+  // it and this renders an email-not-found instead of the page.
+  {
+    path: 'mail-activity/senders',
+    title: 'Junk senders',
+    loadComponent: () => import('./features/mail-activity/containers/junk-senders-page/junk-senders-page').then(m => m.JunkSendersPage),
+  },
   // Deep-link target for email search results (keyed by gmail_id — see
   // jimbo-api search resolveDeepLinkKey). Sibling of the list above.
   {

@@ -9,6 +9,7 @@
     </p>
     <div uiPageHeaderActions>
       <app-ui-cluster gap="sm" align="center">
+        <a class="senders-link" routerLink="/mail-activity/senders">Junk senders →</a>
         <app-ui-badge tone="neutral">{{ items().length }} of {{ total() }}</app-ui-badge>
         <app-ui-refresh-control
           [loading]="loading()"
@@ -35,7 +36,7 @@
       @for (item of items(); track item.gmail_id) {
         <li
           class="row"
-          [class.row--keep]="item.verdict === 'keep'"
+          [class.row--keep]="isRetained(item.verdict)"
           [class.row--toss]="item.verdict === 'toss'"
           [class.row--pending]="!item.verdict"
           [class.row--expanded]="isExpanded(item)"
@@ -55,6 +56,18 @@
 
             <span class="cell cell-verdict">
               <app-ui-badge [tone]="verdictTone(item)" [subtle]="true">{{ verdictLabel(item) }}</app-ui-badge>
+            </span>
+
+            <!-- Which member of the fleet made the call. Null on rows gated
+                 before 2026-08-06, where the old verdict_model column mixed
+                 model ids, skill names and script names together and could
+                 not be resolved to an actor honestly. -->
+            <span class="cell cell-actor" [title]="actorTitle(item)">
+              @if (item.actor_id) {
+                <app-ui-badge tone="info" [subtle]="true">{{ item.actor_id }}</app-ui-badge>
+              } @else {
+                <span class="actor-unknown">—</span>
+              }
             </span>
 
             <span class="cell cell-vault">

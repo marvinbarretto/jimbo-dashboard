@@ -27,8 +27,8 @@
 
 .row-head {
   display: grid;
-  // time | from | subject | stages | verdict | vault | chevron
-  grid-template-columns: 5.5rem 10rem minmax(0, 1fr) 5.5rem 5rem 5rem 1rem;
+  // time | from | subject | stages | verdict | actor | vault | chevron
+  grid-template-columns: 5.5rem 10rem minmax(0, 1fr) 5.5rem 5rem 4.5rem 5rem 1rem;
   align-items: center;
   gap: 0.6rem;
   width: 100%;
@@ -215,4 +215,16 @@
     align-items: center;
     word-break: break-all;
   }
+}
+
+.senders-link {
+  font-size: 0.8125rem;
+  color: var(--color-accent);
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}
+
+.actor-unknown {
+  color: var(--color-text-muted);
 }

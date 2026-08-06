@@ -1,0 +1,115 @@
+.min-total {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-soft);
+
+  input {
+    width: 4rem;
+    padding: 0.2rem 0.35rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+  }
+}
+
+.error {
+  margin: 0;
+  color: var(--color-warning, #c08b00);
+  font-size: 0.8125rem;
+}
+
+.summary {
+  margin: 0;
+  color: var(--color-text-soft);
+}
+
+.senders {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sender {
+  display: grid;
+  // identity takes the slack; stats and actions size to content so the Block
+  // buttons form one scannable column down the right.
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px dashed var(--color-border);
+  border-left: 3px solid transparent;
+}
+
+// The proposal marker: never kept anything, so it is safe to offer.
+.sender--candidate {
+  border-left-color: color-mix(in srgb, var(--color-warning, #c08b00) 55%, transparent);
+}
+
+.sender--blocked {
+  opacity: 0.5;
+}
+
+.sender-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sender-name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sender-email {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sender-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--color-text-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.stat--kept { color: var(--color-success, #22c55e); }
+.stat--pending { color: var(--color-info); }
+.stat--seen { color: var(--color-text-muted); }
+
+.sender-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+// Stack rather than let the address column collapse — the sender identity is
+// the thing being judged, so it must never be the part that gets truncated.
+@media (max-width: 40rem) {
+  .sender {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.35rem;
+  }
+
+  .sender-stats,
+  .sender-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}

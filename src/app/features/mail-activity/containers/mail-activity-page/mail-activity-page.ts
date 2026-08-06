@@ -11,7 +11,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { relativeTime } from '@shared/utils/datetime.utils';
 import { vaultItemId } from '@domain/ids';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
-import { MailActivityService, type EmailReport } from '../../mail-activity.service';
+import { MailActivityService, type EmailReport, isRetained } from '../../mail-activity.service';
 
 interface PipelineStage {
   readonly key: 'discovered' | 'body' | 'gated' | 'verdict';
@@ -73,14 +73,32 @@ export class MailActivityPage implements OnInit, OnDestroy {
     return item.subject?.trim() || '(no subject)';
   }
 
+  // An alert is the one verdict that genuinely warrants the warning tone —
+  // it means something has gone wrong (a declined payment, a cancelled
+  // booking). Every other retained class is a success. Before 2026-08-06 this
+  // tested `=== 'keep'`, so fact/alert/event/reference all fell through to
+  // 'warning' and every kept email rendered as though something were wrong.
   protected verdictTone(item: EmailReport): 'success' | 'neutral' | 'warning' {
-    if (item.verdict === 'keep') return 'success';
+    if (item.verdict === 'alert') return 'warning';
+    if (isRetained(item.verdict)) return 'success';
     if (item.verdict === 'toss') return 'neutral';
     return 'warning';
   }
 
+  /** Exposed for the row stripe binding — same rule as verdictTone. */
+  protected readonly isRetained = isRetained;
+
   protected verdictLabel(item: EmailReport): string {
     return item.verdict ?? 'pending';
+  }
+
+  /** Spell out the actor/model split on hover — they were one field until
+   *  2026-08-06 and the distinction is not obvious from two badges. */
+  protected actorTitle(item: EmailReport): string {
+    if (!item.actor_id) return 'No actor recorded — gated before actor attribution existed';
+    return item.verdict_model
+      ? `Gated by ${item.actor_id} using ${item.verdict_model}`
+      : `Gated by ${item.actor_id}`;
   }
 
   protected stages(item: EmailReport): PipelineStage[] {

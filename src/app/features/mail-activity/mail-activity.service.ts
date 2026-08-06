@@ -7,7 +7,19 @@ import { environment } from '../../../environments/environment';
 // double as audit log and queue marker — null = stage not yet done. The
 // pipeline progresses: discovered_at → body_fetched_at → gated_at → verdict
 // → vault_note_id (for keeps).
-export type EmailVerdict = 'keep' | 'toss';
+// Mirrors VerdictSchema in jimbo-api/schemas/emails.ts. This was still
+// 'keep' | 'toss' until 2026-08-06 — long after the gate started writing
+// fact/alert/event/reference — so every genuinely-kept email fell through the
+// tone switch and rendered in the error colour.
+export type EmailVerdict = 'fact' | 'alert' | 'event' | 'reference' | 'keep' | 'toss';
+
+/** Everything except an explicit toss earned a vault note. */
+export function isRetained(v: EmailVerdict | null): boolean {
+  return v !== null && v !== 'toss';
+}
+
+/** Fleet member that gated the email — distinct from the model it used. */
+export type ActorId = 'jimbo' | 'marvin' | 'kipper' | 'boris' | 'jeffrey';
 
 export interface EmailReport {
   gmail_id: string;
@@ -23,6 +35,7 @@ export interface EmailReport {
   verdict: EmailVerdict | null;
   verdict_reason: string | null;
   verdict_model: string | null;
+  actor_id: ActorId | null;
   vault_note_id: string | null;
   created_at: string;
   updated_at: string;

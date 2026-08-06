@@ -1,0 +1,102 @@
+<app-ui-page width="standard" class="junk-senders">
+<app-ui-stack gap="lg">
+  <app-ui-back-link to="/mail-activity">Mail activity</app-ui-back-link>
+
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Junk senders</h1>
+    <p uiPageHeaderHint>
+      Senders ranked by how much they send and how little of it survives the gate.
+      Nothing is blocked until you say so — a sender that has produced even one keeper
+      is never proposed, because one booking confirmation a year is the whole point.
+    </p>
+    <div uiPageHeaderActions>
+      <app-ui-cluster gap="sm" align="center">
+        <label class="min-total">
+          seen at least
+          <input type="number" min="1" max="1000" [value]="minTotal()" (change)="onMinTotal($event)" />
+          times
+        </label>
+        <app-ui-button variant="ghost" size="sm" (pressed)="toggleHideBlocked()">
+          {{ hideBlocked() ? 'Show blocked' : 'Hide blocked' }}
+        </app-ui-button>
+        <app-ui-button variant="ghost" size="sm" [disabled]="loading()" (pressed)="refresh()">
+          {{ loading() ? 'Loading…' : 'Refresh' }}
+        </app-ui-button>
+      </app-ui-cluster>
+    </div>
+  </app-ui-page-header>
+
+  @if (lastError(); as err) {
+    <p class="error">Failed to load: {{ err }}</p>
+  }
+
+  @if (candidateCount() > 0) {
+    <p class="summary">
+      <strong>{{ candidateCount() }}</strong> senders have never once produced a keeper,
+      accounting for <strong>{{ reclaimable() }}</strong> emails the gate has had to read.
+      Silencing them takes that load off the queue permanently.
+    </p>
+  }
+
+  @if (rows().length === 0 && !loading()) {
+    <app-ui-empty-state
+      title="Nothing to review"
+      message="No sender meets the threshold. Lower the minimum, or show blocked senders to review past decisions."
+    />
+  }
+
+  @if (rows().length > 0) {
+    <ul class="senders">
+      @for (s of rows(); track s.from_email) {
+        <li class="sender" [class.sender--candidate]="isCandidate(s)" [class.sender--blocked]="s.blocked">
+          <div class="sender-main">
+            <span class="sender-name">{{ s.from_name || s.from_email }}</span>
+            <span class="sender-email">{{ s.from_email }}</span>
+          </div>
+
+          <div class="sender-stats">
+            <app-ui-badge [tone]="tone(s)" [subtle]="true">{{ pct(s.toss_rate) }} tossed</app-ui-badge>
+            <span class="stat">{{ s.total }} total</span>
+            @if (s.kept > 0) {
+              <span class="stat stat--kept">{{ s.kept }} kept</span>
+            }
+            @if (s.pending > 0) {
+              <span class="stat stat--pending">{{ s.pending }} queued</span>
+            }
+            <span class="stat stat--seen">last {{ lastSeen(s) }}</span>
+          </div>
+
+          <div class="sender-actions">
+            @if (s.trusted) {
+              <app-ui-badge tone="success" [subtle]="true">trusted</app-ui-badge>
+            } @else if (s.blocked) {
+              <app-ui-badge tone="neutral" [subtle]="true">blocked</app-ui-badge>
+              <app-ui-button
+                variant="ghost"
+                size="sm"
+                [disabled]="busy() === s.from_email"
+                (pressed)="unblock(s)"
+              >Unblock</app-ui-button>
+            } @else {
+              @if (s.has_unsubscribe) {
+                <!-- Blocking silences it locally forever; unsubscribing stops it
+                     at source. Where the header exists, say so — it is the
+                     better fix and costs the gate nothing afterwards. -->
+                <app-ui-badge tone="neutral" [subtle]="true" title="This sender supports List-Unsubscribe — you can stop it at source">
+                  unsub available
+                </app-ui-badge>
+              }
+              <app-ui-button
+                variant="secondary"
+                size="sm"
+                [disabled]="busy() === s.from_email"
+                (pressed)="block(s)"
+              >{{ busy() === s.from_email ? 'Blocking…' : 'Block' }}</app-ui-button>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</app-ui-stack>
+</app-ui-page>
