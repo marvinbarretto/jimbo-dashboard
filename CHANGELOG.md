@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.163](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.162...v0.0.163) (2026-08-07)
+
+
+### Features
+
+* **picture:** catalogue the 20 interrogate modes ([4cedbcf](https://github.com/marvinbarretto/jimbo-dashboard/commit/4cedbcf8aec97f20207ecf94209fce588fc2ff68))
+
+
+### Bug Fixes
+
+* **ui-dropdown:** stop the panel being clipped inside a scrolling ancestor ([451881d](https://github.com/marvinbarretto/jimbo-dashboard/commit/451881d7f313406a2e527d529b4b07986106603d))
+* **vault:** don't require a success criterion where a project has none ([1d3830c](https://github.com/marvinbarretto/jimbo-dashboard/commit/1d3830c4479faa0fc6e830144f235c3091d1a092))
+
 ### [0.0.162](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.161...v0.0.162) (2026-08-06)
 
 
