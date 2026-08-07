@@ -54,7 +54,6 @@ function baseItem(over: Partial<VaultItem>): VaultItem {
     ai_priority: null, manual_priority: null, ai_rationale: null,
     priority_confidence: null, actionability: null,
     parent_id: null, is_epic: false, grooming_override: false,
-    serves_persona: null, moves_criterion: null,
     archived_at: null, due_at: null, completed_at: null,
     source: null,
     created_at: ago(72),

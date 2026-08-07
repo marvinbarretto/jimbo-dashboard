@@ -251,7 +251,6 @@ export class VaultItemsService {
       ai_priority: null, manual_priority: input.manual_priority ?? null,
       ai_rationale: null, priority_confidence: null,
       actionability: null, parent_id: input.parent_id ? vaultItemId(input.parent_id) : null, is_epic: input.is_epic ?? false,
-      serves_persona: null, moves_criterion: null,
       grooming_override: false,
       archived_at: null, due_at: null, completed_at: null,
       source: { kind: 'manual', ref: 'board', url: null },
@@ -351,14 +350,7 @@ export class VaultItemsService {
   create(payload: CreateVaultItemPayload): void {
     const now = new Date().toISOString();
     const tempId = vaultItemId(crypto.randomUUID());
-    // Grounding is optional on the payload but concrete on the row — an absent
-    // trace is null (ungrounded), never undefined.
-    const optimistic: VaultItem = {
-      ...payload,
-      serves_persona: payload.serves_persona ?? null,
-      moves_criterion: payload.moves_criterion ?? null,
-      id: tempId, seq: -1, archived_at: null, created_at: now,
-    };
+    const optimistic: VaultItem = { ...payload, id: tempId, seq: -1, archived_at: null, created_at: now };
 
     if (isSeedMode()) {
       // No server to assign a real seq — keep the temp row, emit the event.
@@ -795,8 +787,6 @@ export class VaultItemsService {
       is_epic: draft.is_epic,
       // The quick-create draft has no grounding step — an epic made this way is
       // ungrounded until someone fills the trace on the detail view.
-      serves_persona: null,
-      moves_criterion: null,
       grooming_override: false,
       archived_at: null,
       due_at: null,
@@ -1089,8 +1079,6 @@ function toApiUpdateBody(p: UpdateVaultItemPayload): Record<string, unknown> {
   if (p.manual_priority !== undefined) body['manual_priority'] = p.manual_priority;
   // `!== undefined`, not `!= null` — clearing a wrong grounding trace has to
   // reach the API as an explicit null.
-  if (p.serves_persona !== undefined) body['serves_persona'] = p.serves_persona;
-  if (p.moves_criterion !== undefined) body['moves_criterion'] = p.moves_criterion;
   if (p.ai_priority !== undefined) body['ai_priority'] = p.ai_priority;
   if (p.ai_rationale !== undefined) body['ai_rationale'] = p.ai_rationale;
   if (p.priority_confidence !== undefined) body['priority_confidence'] = p.priority_confidence;
@@ -1163,8 +1151,6 @@ function toVaultItem(a: ApiVaultItem): VaultItem {
     // Absent (board endpoint trims columns) and null (ungrounded) both land on
     // null — the detail read is the only place the distinction could matter,
     // and it fetches the full row.
-    serves_persona: a.serves_persona ?? null,
-    moves_criterion: a.moves_criterion ?? null,
     // Dashboard's archived_at is derived; production uses status='archived'.
     // Reconstruct an archived_at from updated_at when archived.
     archived_at: a.status === 'archived' ? a.updated_at : null,

@@ -11,10 +11,8 @@ import { DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { swapDetailSeq, closeDetail } from '@shared/kanban/detail-nav';
 import { lifecycleState, isArchived, type Priority } from '@domain/vault/vault-item';
-import { criterionExpected, isEpicGrounded } from '@domain/vault/epic-grounding';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { UiInlineEdit } from '@shared/components/ui-inline-edit/ui-inline-edit';
-import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
 import { UiDropdown } from '@shared/components/ui-dropdown/ui-dropdown';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiMentionChipStrip } from '@shared/components/ui-mention-chip-strip/ui-mention-chip-strip';
@@ -62,7 +60,6 @@ import type { CreateThreadMessagePayload } from '@domain/thread';
   imports: [IntakeRationalePanel, 
     RouterLink,
     UiInlineEdit,
-    UiSubsection,
     UiDropdown,
     UiButton,
     UiMentionChipStrip,
@@ -137,24 +134,6 @@ export class VaultItemDetailBody {
     const p = this.store.effectivePriority();
     return p == null ? 'P—' : `P${p}`;
   });
-
-  /**
-   * Whether this epic is expected to cite a success criterion at all.
-   *
-   * Enabling infrastructure (jimbo) deliberately has no `success_criteria` — it
-   * exists to serve other projects and its real targets live in theirs.
-   * Inventing criteria so an epic has something to cite is worse than leaving
-   * them empty, so where a project states none, none are asked for.
-   */
-  protected readonly criterionExpected = computed(() => criterionExpected(this.firstProject()));
-
-  /** Naming who it serves is always required; naming what it moves only where
-   *  the project has criteria to name. */
-  protected readonly isGrounded = computed(() => {
-    const i = this.store.item();
-    return i ? isEpicGrounded(i, this.firstProject()) : false;
-  });
-
   /** The most recent message waiting on the viewer — kind-agnostic, so a
    *  question filed as a plain `comment` still answers "why is this on me?".
    *  Suppressed when a typed open-question already renders its own card. */

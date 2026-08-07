@@ -115,19 +115,6 @@
         <button type="button" class="v3__band v3__band--epic" (click)="swapToSeq(epic.seq)">
           <span class="v3__band-seq">#{{ epic.seq }}</span>
           <span class="v3__band-label">{{ epic.title }}</span>
-          <!-- The epic's grounding IS this task's "why" — it's the reason the
-               body no longer carries a Why section. Absent on every epic
-               created before 2026-08-06, so it renders only when filled. -->
-          @if (epic.serves_persona || epic.moves_criterion) {
-            <span class="v3__trace">
-              @if (epic.serves_persona) {
-                <span class="v3__trace-row"><i>serves</i>{{ epic.serves_persona }}</span>
-              }
-              @if (epic.moves_criterion) {
-                <span class="v3__trace-row"><i>moves</i>{{ epic.moves_criterion }}</span>
-              }
-            </span>
-          }
         </button>
       } @else if (store.parentRef(); as parent) {
         <button type="button" class="v3__band v3__band--epic" (click)="swapToSeq(parent.seq)">
@@ -333,50 +320,6 @@
       </section>
 
       <aside class="v3__side">
-        <!-- ══ EPIC GROUNDING ══════════════════════════════════════════════
-             Every child of this epic reads its trace as the answer to "why are
-             we doing this", so an ungrounded epic silently un-grounds its whole
-             subtree. Shown unfilled rather than hidden — a missing trace is the
-             finding, and hiding it is how 64 epics got here. -->
-        @if (item.is_epic) {
-          <app-ui-subsection
-            label="Grounding"
-            [hint]="isGrounded() ? null : 'nobody has said who this serves'"
-          >
-            <dl class="v3__ground">
-              <dt>Serves</dt>
-              <dd>
-                <app-ui-inline-edit
-                  [value]="item.serves_persona ?? ''"
-                  placeholder="which persona? — see the project's personas"
-                  ariaLabel="Persona this epic serves"
-                  (saved)="store.updateServesPersona($event)"
-                />
-              </dd>
-              <!-- Only asked for where the project states criteria. An enabling
-                   project's targets live in the projects it serves, so an empty
-                   row here would invite an invented answer. -->
-              @if (criterionExpected()) {
-                <dt>Moves</dt>
-                <dd>
-                  <app-ui-inline-edit
-                    [value]="item.moves_criterion ?? ''"
-                    placeholder="which success criterion?"
-                    ariaLabel="Success criterion this epic moves"
-                    (saved)="store.updateMovesCriterion($event)"
-                  />
-                </dd>
-              }
-            </dl>
-            @if (firstProject(); as proj) {
-              <a class="v3__ground-link" [routerLink]="['/projects', proj.id]">
-                {{ proj.display_name }} brief —
-                {{ criterionExpected() ? 'personas &amp; success criteria' : 'personas' }} ↗
-              </a>
-            }
-          </app-ui-subsection>
-        }
-
         @if (item.type === 'task' && !item.is_epic) {
           <div class="v3__estimate">
             <span class="v3__estimate-label">Estimate</span>

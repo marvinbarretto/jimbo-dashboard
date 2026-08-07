@@ -29,7 +29,6 @@ import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { UiDropdown } from '@shared/components/ui-dropdown/ui-dropdown';
 import { rankEpicCandidates, type EpicCandidate } from '@domain/vault/epic-candidates';
-import { criterionExpected } from '@domain/vault/epic-grounding';
 import { ProjectsService } from '../../data-access/projects.service';
 import { ProjectActivityEventsService } from '../../data-access/project-activity-events.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
@@ -367,15 +366,6 @@ export class ProjectLanding {
 
   readonly projectEpics = computed(() => this.items().filter(i => i.is_epic && isActive(i)));
 
-  /**
-   * Whether epics here are expected to cite a success criterion.
-   *
-   * Enabling infrastructure (jimbo) deliberately states none — it exists to
-   * serve other projects and its real targets live in theirs. Nagging its 22
-   * epics for a criterion would only produce invented ones, so where a project
-   * has no `success_criteria`, naming a persona is the whole of grounding.
-   */
-  readonly criterionExpected = computed(() => criterionExpected(this.project()));
 
   /**
    * Ranked adoption candidates per loose item, precomputed as a Map.
