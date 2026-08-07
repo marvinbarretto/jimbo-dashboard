@@ -14,6 +14,8 @@
  *   npx tsx scripts/epic-grounding.ts          human-readable report
  *   npx tsx scripts/epic-grounding.ts --json   machine-readable output
  */
+import { criterionExpected, isEpicGrounded } from '../src/app/domain/vault/epic-grounding';
+
 const API = process.env['JIMBO_API_URL'];
 const KEY = process.env['JIMBO_API_KEY'];
 if (!API || !KEY) {
@@ -105,6 +107,9 @@ async function main(): Promise<void> {
         personas: bulletCount(proj?.personas ?? null),
         criteria: bulletCount(proj?.success_criteria ?? null),
         measurable: measurableLines(proj?.success_criteria ?? null),
+        // The one rule, shared with the detail view and the project page. A
+        // report that disagreed with the UI would be worse than no report.
+        criterionExpected: criterionExpected(proj ?? null),
         epics: es
           .map(e => ({
             seq: e.seq,
@@ -112,6 +117,10 @@ async function main(): Promise<void> {
             children: childCount.get(e.id) ?? 0,
             serves: e.serves_persona ?? null,
             moves: e.moves_criterion ?? null,
+            grounded: isEpicGrounded(
+              { serves_persona: e.serves_persona ?? null, moves_criterion: e.moves_criterion ?? null },
+              proj ?? null,
+            ),
           }))
           .sort((a, b) => b.children - a.children),
       };
@@ -123,24 +132,31 @@ async function main(): Promise<void> {
     return;
   }
 
-  const grounded = epics.filter(e => e.serves_persona && e.moves_criterion).length;
+  const grounded = rows.flatMap(r => r.epics).filter(e => e.grounded).length;
   console.log(`\n${epics.length} active epics · ${grounded} grounded · ${epics.length - grounded} with no trace\n`);
-  console.log('A project with 0 personas or 0 criteria cannot ground its epics at all —');
-  console.log('fill the brief there first, or the trace is invented.\n');
+  console.log('Personas are what ground an epic. A criterion is only chased where the');
+  console.log('project states any — enabling projects (jimbo) have none by design, and');
+  console.log('their real targets live in the projects they serve.\n');
 
   for (const r of rows) {
-    const blocked = r.personas === 0 || r.criteria === 0;
-    const brief = `personas:${r.personas} criteria:${r.criteria}${r.criteria ? ` (${r.measurable} measurable)` : ''}`;
-    console.log(`── ${r.projectId}  ${r.epics.length} epics · ${brief}${blocked ? '   ⚠ BRIEF BLOCKS GROUNDING' : ''}`);
+    // Only missing personas actually block grounding now. Missing criteria is a
+    // legitimate resting state, not a gap to nag about.
+    const blocked = r.personas === 0;
+    const criteria = r.criteria === 0
+      ? 'criteria:none (not required)'
+      : `criteria:${r.criteria} (${r.measurable} measurable)`;
+    console.log(`── ${r.projectId}  ${r.epics.length} epics · personas:${r.personas} ${criteria}${blocked ? '   ⚠ NO PERSONAS — CANNOT GROUND' : ''}`);
     for (const e of r.epics) {
-      const state = e.serves && e.moves ? 'grounded' : e.serves || e.moves ? 'half' : '—';
+      const state = e.grounded ? 'grounded' : e.serves || e.moves ? 'half' : '—';
       console.log(`   ${state.padEnd(9)} #${e.seq} ${e.title.slice(0, 62).padEnd(62)} ${e.children} children`);
     }
     console.log();
   }
 
-  const blockedProjects = rows.filter(r => r.personas === 0 || r.criteria === 0);
-  console.log(`Fill these briefs first (${blockedProjects.length}): ${blockedProjects.map(r => r.projectId).join(', ')}`);
+  const blockedProjects = rows.filter(r => r.personas === 0);
+  console.log(blockedProjects.length
+    ? `Needs personas before its epics can be grounded (${blockedProjects.length}): ${blockedProjects.map(r => r.projectId).join(', ')}`
+    : 'Every project with epics has personas.');
 }
 
 main().catch(err => {

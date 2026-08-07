@@ -341,7 +341,7 @@
         @if (item.is_epic) {
           <app-ui-subsection
             label="Grounding"
-            [hint]="isGrounded() ? null : 'nobody has said what this serves'"
+            [hint]="isGrounded() ? null : 'nobody has said who this serves'"
           >
             <dl class="v3__ground">
               <dt>Serves</dt>
@@ -353,19 +353,25 @@
                   (saved)="store.updateServesPersona($event)"
                 />
               </dd>
-              <dt>Moves</dt>
-              <dd>
-                <app-ui-inline-edit
-                  [value]="item.moves_criterion ?? ''"
-                  placeholder="which success criterion?"
-                  ariaLabel="Success criterion this epic moves"
-                  (saved)="store.updateMovesCriterion($event)"
-                />
-              </dd>
+              <!-- Only asked for where the project states criteria. An enabling
+                   project's targets live in the projects it serves, so an empty
+                   row here would invite an invented answer. -->
+              @if (criterionExpected()) {
+                <dt>Moves</dt>
+                <dd>
+                  <app-ui-inline-edit
+                    [value]="item.moves_criterion ?? ''"
+                    placeholder="which success criterion?"
+                    ariaLabel="Success criterion this epic moves"
+                    (saved)="store.updateMovesCriterion($event)"
+                  />
+                </dd>
+              }
             </dl>
             @if (firstProject(); as proj) {
               <a class="v3__ground-link" [routerLink]="['/projects', proj.id]">
-                {{ proj.display_name }} brief — personas &amp; success criteria ↗
+                {{ proj.display_name }} brief —
+                {{ criterionExpected() ? 'personas &amp; success criteria' : 'personas' }} ↗
               </a>
             }
           </app-ui-subsection>

@@ -11,6 +11,7 @@ import { DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { swapDetailSeq, closeDetail } from '@shared/kanban/detail-nav';
 import { lifecycleState, isArchived, type Priority } from '@domain/vault/vault-item';
+import { criterionExpected, isEpicGrounded } from '@domain/vault/epic-grounding';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { UiInlineEdit } from '@shared/components/ui-inline-edit/ui-inline-edit';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
@@ -137,11 +138,21 @@ export class VaultItemDetailBody {
     return p == null ? 'P—' : `P${p}`;
   });
 
-  /** An epic is grounded once it names BOTH who it serves and what it moves —
-   *  half a trace still leaves a child unable to answer "why". */
+  /**
+   * Whether this epic is expected to cite a success criterion at all.
+   *
+   * Enabling infrastructure (jimbo) deliberately has no `success_criteria` — it
+   * exists to serve other projects and its real targets live in theirs.
+   * Inventing criteria so an epic has something to cite is worse than leaving
+   * them empty, so where a project states none, none are asked for.
+   */
+  protected readonly criterionExpected = computed(() => criterionExpected(this.firstProject()));
+
+  /** Naming who it serves is always required; naming what it moves only where
+   *  the project has criteria to name. */
   protected readonly isGrounded = computed(() => {
     const i = this.store.item();
-    return Boolean(i?.serves_persona && i?.moves_criterion);
+    return i ? isEpicGrounded(i, this.firstProject()) : false;
   });
 
   /** The most recent message waiting on the viewer — kind-agnostic, so a

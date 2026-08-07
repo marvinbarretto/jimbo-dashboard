@@ -202,19 +202,22 @@
 
                   <!-- What makes this a theme rather than a bucket. Ungrounded
                        is stated, not hidden — every child inherits this as its
-                       answer to "why", so a blank here blanks the whole subtree. -->
+                       answer to "why", so a blank here blanks the whole subtree.
+                       "Moves" is only chased where the project states criteria:
+                       an enabling project's targets live in the projects it
+                       serves, and a nag here would only invite an invented one. -->
                   <p class="epic-group__trace">
-                    @if (group.epic.serves_persona || group.epic.moves_criterion) {
-                      @if (group.epic.serves_persona) {
-                        <span><i>serves</i>{{ group.epic.serves_persona }}</span>
-                      }
-                      @if (group.epic.moves_criterion) {
-                        <span><i>moves</i>{{ group.epic.moves_criterion }}</span>
-                      }
+                    @if (group.epic.serves_persona) {
+                      <span><i>serves</i>{{ group.epic.serves_persona }}</span>
                     } @else {
                       <span class="epic-group__trace--none">
-                        not grounded — no persona or success criterion named
+                        not grounded — no persona named
                       </span>
+                    }
+                    @if (group.epic.moves_criterion) {
+                      <span><i>moves</i>{{ group.epic.moves_criterion }}</span>
+                    } @else if (criterionExpected() && group.epic.serves_persona) {
+                      <span class="epic-group__trace--none">no criterion named</span>
                     }
                   </p>
 
