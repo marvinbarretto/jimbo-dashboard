@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.165](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.164...v0.0.165) (2026-08-07)
+
+
+### Bug Fixes
+
+* **manifest-sync:** resolve node under launchd, and fail out loud ([f606677](https://github.com/marvinbarretto/jimbo-dashboard/commit/f6066771cc8f367f8a4c38e28c9d866da9e05ccd))
+
 ### [0.0.164](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.163...v0.0.164) (2026-08-07)
 
 
