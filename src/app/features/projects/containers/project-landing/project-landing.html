@@ -500,11 +500,16 @@
               [readonly]="isRepoSynced()"
               (saved)="patch(p.id, { intent: $event })"
             />
-            <app-project-brief-field
+            <!-- One bullet = one persona, so each is independently editable and
+                 removable. Was a raw textarea while its siblings were already
+                 checklists, which made a persona the only brief entry you had to
+                 edit by retyping a block. Tasks cite these by wording, so
+                 editing one must not disturb the others. -->
+            <app-project-brief-bullet-field
               label="Personas"
               [value]="p.personas"
-              placeholder="Who this project serves"
-              [rows]="3"
+              placeholder="+ add a persona (Enter)"
+              hint="A named person with enough context to argue with — not a role or a segment."
               [triggers]="briefTriggers"
               (saved)="patch(p.id, { personas: $event })"
             />
