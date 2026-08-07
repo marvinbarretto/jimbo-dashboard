@@ -1,0 +1,62 @@
+<div class="modes">
+  <p class="modes__lede">
+    The 20 ways Jimbo can interrogate you. Auto-pick chooses by staleness and skips the
+    <em>meta</em> ones — so anything you actually want, name it:
+    <code>/interrogate &lt;slug&gt;</code>.
+  </p>
+
+  @if (loading()) {
+    <app-ui-loading-state message="Loading modes…" />
+  } @else if (error()) {
+    <app-ui-empty-state message="Couldn't load the mode registry." />
+  } @else {
+    <div class="modes__stats">
+      <app-ui-stat-card label="Modes" [value]="all().length.toString()" />
+      <app-ui-stat-card label="Never run" [value]="neverRun().toString()" />
+      <app-ui-stat-card label="Produce goals" [value]="goalProducing().length.toString()" />
+    </div>
+
+    <app-ui-filter-pills
+      [options]="filterOptions()"
+      [active]="[filter()]"
+      ariaLabel="Filter modes by depth"
+      (toggled)="onFilter($event)"
+    />
+
+    <ul class="modes__list">
+      @for (m of visible(); track m.slug) {
+        <li class="modes__item" [class.modes__item--unrun]="!m.last_run_at">
+          <div class="modes__head">
+            <span class="modes__name">{{ m.name }}</span>
+            <span [class]="'modes__depth modes__depth--' + m.depth">
+              {{ m.meta ? 'meta' : m.depth }}
+            </span>
+            <span class="modes__mins">{{ m.length_minutes }} min</span>
+            <span class="modes__last" [title]="m.last_run_at ?? 'never run'">
+              {{ lastRunLabel(m) }}
+            </span>
+          </div>
+
+          <p class="modes__frame">{{ m.frame }}</p>
+
+          <div class="modes__foot">
+            <code class="modes__cmd">{{ command(m) }}</code>
+            @if (m.entities.length) {
+              <span class="modes__produces">
+                →
+                @for (e of m.entities; track e) {
+                  <span class="modes__entity" [class.modes__entity--goal]="e === 'goal'">{{ e }}</span>
+                }
+              </span>
+            }
+            @if (m.requires_data === 'required') {
+              <span class="modes__requires" title="Needs existing entities to run meaningfully">
+                needs data
+              </span>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>

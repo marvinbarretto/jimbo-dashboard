@@ -9,22 +9,24 @@ import { InterrogateSnapshotService } from '../../data-access/interrogate-snapsh
 import { BeliefsTab } from '../beliefs-tab/beliefs-tab';
 import { ClarificationsTab } from '../clarifications-tab/clarifications-tab';
 import { ContextTab } from '../context-tab/context-tab';
+import { ModesTab } from '../modes-tab/modes-tab';
 
-type PictureTab = 'beliefs' | 'clarifications' | 'context';
+type PictureTab = 'beliefs' | 'clarifications' | 'context' | 'modes';
 
 const TAB_OPTIONS: readonly UiInlineTabOption[] = [
   { value: 'beliefs', label: 'Beliefs' },
   { value: 'clarifications', label: 'Clarifications' },
   { value: 'context', label: 'Context' },
+  { value: 'modes', label: 'Modes' },
 ];
 
 function isPictureTab(value: string | null): value is PictureTab {
-  return value === 'beliefs' || value === 'clarifications' || value === 'context';
+  return value === 'beliefs' || value === 'clarifications' || value === 'context' || value === 'modes';
 }
 
 @Component({
   selector: 'app-picture-page',
-  imports: [UiPage, UiStack, UiPageHeader, UiInlineTabs, BeliefsTab, ClarificationsTab, ContextTab],
+  imports: [UiPage, UiStack, UiPageHeader, UiInlineTabs, BeliefsTab, ClarificationsTab, ContextTab, ModesTab],
   templateUrl: './picture-page.html',
   styleUrl: './picture-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
