@@ -610,11 +610,15 @@ CREATE INDEX IF NOT EXISTS commitments_open_idx
   Asks are **derived server-side** from `agent.end` PROSE_RESPONSE runs on a 10-minute
   tick — hermes needed no changes, so the openapi regen is off this critical path.
 - `commitments` + full CRUD at `/api/commitments` (§3 of this doc). Zero rows so far.
+- `reflection_sessions`, `reflection_gratitude`, `reflection_prep` + `/api/reflection`
+  (day bundle, session upsert, complete/reopen, gratitude add/reword/discard, prep
+  get/put).
+- The page, at `/evening` — panels ①, ② and ④. Nav: Life → Evening.
 
 **Not built:**
-- `reflection_sessions`, `reflection_gratitude`, `reflection_prep` — no tables, no endpoints.
-- The page itself. No route exists for reflection, evening or commitments.
-- The `evening-prep` cron.
+- Panel ③ (drift against goals) — blocked on goals having rows.
+- The `evening-prep` cron. Until it runs, `reflection_prep` stays empty and the Today
+  panel says so; the gratitude-candidate path is built and untested against real data.
 - Goals: `interrogate_goals` has **0 rows**; `deadline_date` and `interrogate_goal_links`
   are unbuilt. Six drafts await Marvin's corrections in `jimbo/docs/runbook.md`.
 - The briefing hand-off, and the cron retirements in §4.
@@ -640,6 +644,14 @@ page and let drift appear once goals exist.
   written to delete. Check this rule first when touching any rate.
 - **Marvin edits these repos concurrently.** Check `git status` before staging; stage
   specific paths, never `-A` at the root.
+- **`tsc --noEmit` does not check Angular templates.** A `subtle`/`compact` boolean input
+  written as a bare attribute passes tsc and fails the compiler. One `ng build` into a
+  scratch `--output-path` catches it without touching the running watcher's `dist/`.
+- **`logicalToday` was not logical.** `commitments` called `localDate()`, so between
+  midnight and 04:00 it filed under the calendar day while `day_check_entries` filed under
+  the previous one — the two would not have joined for exactly the hours a night owl uses
+  this. `logicalDay()` now lives in `coach-tz.ts`. `mood-log` and `costs` have call sites
+  worth the same look.
 
 ### Original order
 
