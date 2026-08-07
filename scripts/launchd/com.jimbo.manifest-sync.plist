@@ -1,42 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  launchd agent: sweep project manifests → jimbo_pg every 72 hours.
-
-  Install:
-    cp scripts/launchd/com.jimbo.manifest-sync.plist ~/Library/LaunchAgents/
-    launchctl load ~/Library/LaunchAgents/com.jimbo.manifest-sync.plist
-
-  Run once now (to test):
-    launchctl start com.jimbo.manifest-sync
-
-  Disable:
-    launchctl unload ~/Library/LaunchAgents/com.jimbo.manifest-sync.plist
-
-  StartInterval 259200 = 72h. On a laptop, if the interval elapses while asleep,
-  launchd coalesces the missed runs into one on wake. Runs via a login zsh so
-  node/npm are on PATH. Logs to ~/Library/Logs/jimbo-manifest-sync.log.
--->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>Label</key>
-  <string>com.jimbo.manifest-sync</string>
-
-  <key>ProgramArguments</key>
-  <array>
-    <string>/bin/zsh</string>
-    <string>-lc</string>
-    <string>/Users/marvinbarretto/development/jimbo/dashboard/scripts/manifest-sync-cron.sh</string>
-  </array>
-
-  <key>StartInterval</key>
-  <integer>259200</integer>
-
-  <key>RunAtLoad</key>
-  <false/>
-
-  <key>StandardOutPath</key>
-  <string>/Users/marvinbarretto/Library/Logs/jimbo-manifest-sync.launchd.log</string>
-  <key>StandardErrorPath</key>
-  <string>/Users/marvinbarretto/Library/Logs/jimbo-manifest-sync.launchd.log</string>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>HC_ENV_FILE</key>
+		<string>/Users/marvinbarretto/.config/healthchecks.env</string>
+	</dict>
+	<key>Label</key>
+	<string>com.jimbo.manifest-sync</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/zsh</string>
+		<string>-lc</string>
+		<string>/Users/marvinbarretto/development/jimbo/jimbo-api/scripts/hc-run.sh manifest-sync -- /Users/marvinbarretto/development/jimbo/dashboard/scripts/manifest-sync-cron.sh</string>
+	</array>
+	<key>RunAtLoad</key>
+	<false/>
+	<key>StandardErrorPath</key>
+	<string>/Users/marvinbarretto/Library/Logs/jimbo-manifest-sync.launchd.log</string>
+	<key>StandardOutPath</key>
+	<string>/Users/marvinbarretto/Library/Logs/jimbo-manifest-sync.launchd.log</string>
+	<key>StartInterval</key>
+	<integer>259200</integer>
 </dict>
 </plist>

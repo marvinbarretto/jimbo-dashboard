@@ -28,23 +28,10 @@ FNM_DEFAULT_BIN="${FNM_DEFAULT_BIN:-$HOME/.local/share/fnm/aliases/default/bin}"
 [ -d "$FNM_DEFAULT_BIN" ] && PATH="$FNM_DEFAULT_BIN:$PATH"
 export PATH
 
-# ── healthchecks.io ─────────────────────────────────────────────────────────
-# Dead man's switch. Chosen over a self-reported heartbeat because it also
-# catches "the job never ran at all" — the failure mode a heartbeat written BY
-# the job can never report. No-ops when unset, so this is safe before the check
-# exists. Set MANIFEST_SYNC_HC_URL to the ping URL (no trailing slash).
-HC="${MANIFEST_SYNC_HC_URL:-}"
-hc_ping() {  # $1 = "" | /start | /fail ; $2 = optional exit code
-  [ -n "$HC" ] || return 0
-  curl -fsS -m 10 --retry 3 -o /dev/null "${HC}${1}${2:+/}${2:-}" || true
-}
-
-finish() {
-  local code=$?
-  if [ "$code" -eq 0 ]; then hc_ping; else hc_ping /fail; fi
-  exit "$code"
-}
-trap finish EXIT
+# Monitoring is NOT here. This script is invoked through
+# jimbo-api/scripts/hc-run.sh, which owns the healthchecks.io pings for every
+# scheduled job in the estate — see the launchd plist. Inlining a second copy
+# here is how six jobs end up with six subtly different implementations.
 
 {
   echo "──────── $(date '+%Y-%m-%d %H:%M:%S %Z') ────────"
