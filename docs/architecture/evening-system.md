@@ -600,6 +600,50 @@ CREATE INDEX IF NOT EXISTS commitments_open_idx
 
 ## 5. Build order
 
+### Status as of 2026-08-07 (verified against prod)
+
+**Shipped and live:**
+- `telegram_inbound` + the webhook INSERT. Logging began 2026-08-06 21:25 BST; nothing
+  before that exists, and derivation is epoch-gated to that moment.
+- `job_deliveries`, `job_profiles`, the `job_ask_events` view,
+  `GET /api/agent-runs/effectiveness`, and an Answered column on `/hermes/runs`.
+  Asks are **derived server-side** from `agent.end` PROSE_RESPONSE runs on a 10-minute
+  tick — hermes needed no changes, so the openapi regen is off this critical path.
+- `commitments` + full CRUD at `/api/commitments` (§3 of this doc). Zero rows so far.
+
+**Not built:**
+- `reflection_sessions`, `reflection_gratitude`, `reflection_prep` — no tables, no endpoints.
+- The page itself. No route exists for reflection, evening or commitments.
+- The `evening-prep` cron.
+- Goals: `interrogate_goals` has **0 rows**; `deadline_date` and `interrogate_goal_links`
+  are unbuilt. Six drafts await Marvin's corrections in `jimbo/docs/runbook.md`.
+- The briefing hand-off, and the cron retirements in §4.
+
+**Only §3 (drift) blocks on goals.** Sections 1, 2 and 4 can be built now — ship a usable
+page and let drift appear once goals exist.
+
+### Gotchas learned building the first half
+
+- **`db/schema.sql` is not generated.** Tests replay it, not the migrations, so every new
+  table must be appended to it by hand with a comment naming its source migration. A
+  migration alone will pass in prod and fail every test.
+- **Adding a route breaks `test/route-publication.test.ts`.** It asserts the exact mounted
+  path list. Add the new mount there in the same commit.
+- **`./scripts/deploy.sh` runs the migrations itself** — rsyncs `db/migrations/` and applies
+  them before restarting. There is no separate migration step.
+- **`openapi.json` is stale by ~32 endpoints** and regenerating sweeps in unrelated work.
+  Leave it unless doing a dedicated `chore:` commit.
+- **`NULL = ANY (array)` is NULL, and a Postgres CHECK passes on NULL.** Write pairing
+  constraints as `(x IS NULL) = (y IS NULL)`. This silently defeated a constraint here once.
+- **Unmeasurable is never zero.** It bit twice in one session — a backfill that manufactured
+  a denominator with no possible numerator, and a prune guard that protected the rows it was
+  written to delete. Check this rule first when touching any rate.
+- **Marvin edits these repos concurrently.** Check `git status` before staging; stage
+  specific paths, never `-A` at the root.
+
+### Original order
+
+
 1. `telegram_inbound` + the webhook INSERT. One table, one line, unblocks all attribution
    later. Do this first because every day without it is a day of unrecoverable data.
 2. `commitments` + endpoints + the briefing hand-off. Highest value, smallest surface.
