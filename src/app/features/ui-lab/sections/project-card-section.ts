@@ -61,7 +61,7 @@ export class ProjectCardSection {
       color_token: '#c47a8f',
       short_code: 'LOC',
       created_at: '2026-01-10T09:00:00.000Z',
-      synced_at: null, repos: null, ...EMPTY_PROJECT_BRIEF,
+      synced_at: null, synced_commit: null, repos: null, ...EMPTY_PROJECT_BRIEF,
     },
     {
       id: 'hermes' as any,
@@ -75,7 +75,7 @@ export class ProjectCardSection {
       color_token: '#7a8fc4',
       short_code: 'HRM',
       created_at: '2026-02-01T09:00:00.000Z',
-      synced_at: null, repos: null, ...EMPTY_PROJECT_BRIEF,
+      synced_at: null, synced_commit: null, repos: null, ...EMPTY_PROJECT_BRIEF,
     },
     {
       id: 'personal' as any,
@@ -89,7 +89,7 @@ export class ProjectCardSection {
       color_token: '#c4a47a',
       short_code: 'PSN',
       created_at: '2025-11-15T09:00:00.000Z',
-      synced_at: null, repos: null, ...EMPTY_PROJECT_BRIEF,
+      synced_at: null, synced_commit: null, repos: null, ...EMPTY_PROJECT_BRIEF,
     },
   ];
   protected labRemovedId = signal<string | null>(null);

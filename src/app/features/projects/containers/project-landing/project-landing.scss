@@ -820,3 +820,18 @@
 .adopt__item--ranked {
   border-left: 2px solid var(--color-accent);
 }
+
+// Sweep-overdue state on the repo-sync notice. Amber, not red: the copy is
+// probably still correct — what's broken is the mechanism that keeps it so.
+.project-landing__synced--overdue {
+  color: color-mix(in srgb, var(--color-warning) 85%, var(--color-text));
+
+  strong { font-weight: 700; }
+}
+
+.project-landing__sha {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  padding: 0.02rem 0.25rem;
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+}

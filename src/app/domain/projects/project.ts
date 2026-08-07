@@ -94,6 +94,11 @@ export interface Project extends ProjectBrief {
   // are mirrored from an in-repo docs/project.md and are read-only in the UI.
   synced_at:      string | null;
 
+  // Sha of the commit that last touched docs/project.md when the sweep ran.
+  // Provenance, not drift detection: nothing observes the repo between sweeps,
+  // so this answers "where did this value come from", not "is it current".
+  synced_commit:  string | null;
+
   // Member repos for multi-repo projects (e.g. jimbo = dashboard + jimbo-api +
   // hermes). Null/empty for single-repo projects.
   repos:          ProjectRepo[] | null;
@@ -105,7 +110,7 @@ export interface Project extends ProjectBrief {
 // building the optimistic Project record.
 // synced_at / repos are sync-managed (like created_at) — never set on create.
 export type CreateProjectPayload =
-  & Omit<Project, 'created_at' | 'synced_at' | 'repos' | keyof ProjectBrief>
+  & Omit<Project, 'created_at' | 'synced_at' | 'synced_commit' | 'repos' | keyof ProjectBrief>
   & Partial<ProjectBrief>;
 
 export type UpdateProjectPayload = Partial<Omit<Project, 'id' | 'created_at'>>;

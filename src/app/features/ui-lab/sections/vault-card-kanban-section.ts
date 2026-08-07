@@ -387,10 +387,10 @@ export class VaultCardKanbanSection {
   // ── Fixture options for inline backfill pickers ───────────────────────────
 
   readonly projectOptions: readonly Project[] = [
-    { id: projectId('localshout'), display_name: 'LocalShout', description: '', status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#6b95d6', short_code: 'LOC', created_at: '2026-01-01T00:00:00Z', synced_at: null, repos: null, ...EMPTY_PROJECT_BRIEF },
-    { id: projectId('hermes'),     display_name: 'Hermes',     description: '', status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#a878d6', short_code: 'HRM', created_at: '2026-01-01T00:00:00Z', synced_at: null, repos: null, ...EMPTY_PROJECT_BRIEF },
-    { id: projectId('dashboard'),  display_name: 'Dashboard',  description: '', status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#7ac4a4', short_code: 'DSH', created_at: '2026-01-01T00:00:00Z', synced_at: null, repos: null, ...EMPTY_PROJECT_BRIEF },
-    { id: projectId('personal'),   display_name: 'Personal',   description: '', status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#c4a47a', short_code: 'PSN', created_at: '2026-01-01T00:00:00Z', synced_at: null, repos: null, ...EMPTY_PROJECT_BRIEF },
+    { id: projectId('localshout'), display_name: 'LocalShout', description: '', status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#6b95d6', short_code: 'LOC', created_at: '2026-01-01T00:00:00Z', synced_at: null, synced_commit: null, repos: null, ...EMPTY_PROJECT_BRIEF },
+    { id: projectId('hermes'),     display_name: 'Hermes',     description: '', status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#a878d6', short_code: 'HRM', created_at: '2026-01-01T00:00:00Z', synced_at: null, synced_commit: null, repos: null, ...EMPTY_PROJECT_BRIEF },
+    { id: projectId('dashboard'),  display_name: 'Dashboard',  description: '', status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#7ac4a4', short_code: 'DSH', created_at: '2026-01-01T00:00:00Z', synced_at: null, synced_commit: null, repos: null, ...EMPTY_PROJECT_BRIEF },
+    { id: projectId('personal'),   display_name: 'Personal',   description: '', status: 'active', kind: 'major', owner_actor_id: actorId('marvin'), criteria: null, repo_url: null, color_token: '#c4a47a', short_code: 'PSN', created_at: '2026-01-01T00:00:00Z', synced_at: null, synced_commit: null, repos: null, ...EMPTY_PROJECT_BRIEF },
   ];
 
   readonly epicOptions: readonly VaultItemType[] = [

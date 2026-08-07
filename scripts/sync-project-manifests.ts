@@ -17,6 +17,7 @@
 //                     umbrella's declared `repos:` paths and folded into repos[].
 
 import { readFileSync, existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 
 const DEV = process.env.MANIFEST_DEV_ROOT || '/Users/marvinbarretto/development';
@@ -41,6 +42,27 @@ const LIVE = process.argv.includes('--live');
 
 // repo_url → local checkout path by basename convention (…/localshout-next →
 // <dev>/localshout-next). Null repo_url ⇒ no local repo ⇒ caller skips.
+/**
+ * Sha of the last commit that touched a manifest — provenance for every field
+ * this sweep copies, so an odd-looking `intent` can be traced to the commit
+ * that set it rather than guessed at.
+ *
+ * @returns The full sha, or null when git can't answer (not a repo, file never
+ *   committed, git absent). Null is honest; a placeholder would not be.
+ */
+function manifestCommit(repoPath: string, manifestPath: string): string | null {
+  try {
+    const sha = execFileSync(
+      'git',
+      ['log', '-1', '--format=%H', '--', manifestPath],
+      { cwd: repoPath, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
+    ).trim();
+    return sha || null;
+  } catch {
+    return null;
+  }
+}
+
 function repoUrlToLocalPath(repoUrl: unknown): string | null {
   if (typeof repoUrl !== 'string' || !repoUrl) return null;
   const name = repoUrl.replace(/\.git$/, '').replace(/\/+$/, '').split('/').pop();
@@ -210,14 +232,17 @@ async function main(): Promise<void> {
     const repos = buildRepos(raw);
     if (repos) payload.repos = repos;
 
+    const commit = manifestCommit(localPath, manifestPath);
+
     const diff = Object.entries(payload).filter(([col, val]) => norm(current[col]) !== norm(val));
     // A manifested project whose content already matches still needs synced_at
     // stamped once, or it never flips to repo-owned (read-only) in the UI.
-    const needsStamp = !current.synced_at;
+    // Projects synced before provenance existed need the same one-off stamp.
+    const needsStamp = !current.synced_at || (commit !== null && current['synced_commit'] !== commit);
 
-    console.log(`● ${id}`);
+    console.log(`● ${id}${commit ? `  @${commit.slice(0, 7)}` : '  (no commit — uncommitted or not a repo)'}`);
     if (diff.length === 0 && !needsStamp) { console.log('  up to date\n'); continue; }
-    if (diff.length === 0) console.log('  (content already matches — stamping synced_at)');
+    if (diff.length === 0) console.log('  (content already matches — stamping provenance)');
     for (const [col, val] of diff) {
       const after = col === 'repos'
         ? `${(val as ProjectRepo[]).length} repo(s): ${(val as ProjectRepo[]).map((r) => r.repo).join(', ')}`
@@ -226,8 +251,12 @@ async function main(): Promise<void> {
     }
 
     if (LIVE) {
-      await patchProject(id, { ...Object.fromEntries(diff), synced_at: new Date().toISOString() });
-      console.log('  ✓ patched (synced_at stamped)');
+      await patchProject(id, {
+        ...Object.fromEntries(diff),
+        synced_at: new Date().toISOString(),
+        ...(commit ? { synced_commit: commit } : {}),
+      });
+      console.log('  ✓ patched (provenance stamped)');
     }
     changedCount++;
     console.log('');

@@ -29,6 +29,7 @@ import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { UiDropdown } from '@shared/components/ui-dropdown/ui-dropdown';
 import { rankEpicCandidates, type EpicCandidate } from '@domain/vault/epic-candidates';
+import { isSyncOverdue } from '@domain/projects/manifest-sync';
 import { ProjectsService } from '../../data-access/projects.service';
 import { ProjectActivityEventsService } from '../../data-access/project-activity-events.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
@@ -180,6 +181,23 @@ export class ProjectLanding {
   // out_of_scope, autonomy) then render read-only — the repo is the source of
   // truth. Manifest-less projects keep full inline-edit.
   readonly isRepoSynced = computed(() => !!this.project()?.synced_at);
+
+  /**
+   * True when the manifest sweep hasn't run within its schedule.
+   *
+   * Deliberately NOT "synced_at is old". A six-week-old copy of a manifest
+   * nobody has edited in six months is perfectly current; elapsed time is not
+   * staleness. What this catches is the failure that actually occurred — the
+   * launchd agent died on a PATH fault and failed silently ten times while the
+   * page cheerfully reported "6 weeks ago" as though that were fine.
+   *
+   * Drift (the repo moved but we haven't re-synced) is deliberately NOT claimed
+   * here: nothing observes the repo between sweeps — the GitHub webhook handles
+   * issues and pull_request, not push — so asserting freshness we cannot see
+   * would be worse than admitting the bound. Within the window, "up to 72h
+   * behind" is the honest guarantee; healthchecks.io alerts independently.
+   */
+  readonly syncOverdue = computed(() => isSyncOverdue(this.project()?.synced_at, Date.now()));
 
   // httpResource — signal-based; re-fetches whenever the route id changes.
   // experimental API (Angular 19.2+) — no stability concern at Angular 21.

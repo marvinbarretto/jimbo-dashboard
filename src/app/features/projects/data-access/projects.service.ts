@@ -81,7 +81,7 @@ export class ProjectsService {
     // Fill brief slots the caller didn't provide so the optimistic row is a
     // complete Project (brief fields are required on the domain type).
     // short_code rides in via the payload (spread through withColor).
-    const optimistic: Project = { ...EMPTY_PROJECT_BRIEF, ...withColor, created_at: now, synced_at: null, repos: null };
+    const optimistic: Project = { ...EMPTY_PROJECT_BRIEF, ...withColor, created_at: now, synced_at: null, synced_commit: null, repos: null };
     this._projects.update(ps => [...ps, optimistic]);
 
     if (isSeedMode()) {
@@ -249,6 +249,7 @@ function toProject(p: ApiProject): Project {
     short_code: p.short_code,
     created_at: p.created_at,
     synced_at: p.synced_at,
+    synced_commit: p.synced_commit,
     repos: p.repos,
     intent: p.intent,
     personas: p.personas,

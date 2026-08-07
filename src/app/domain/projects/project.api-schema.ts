@@ -42,6 +42,7 @@ export const ApiProjectSchema = z.object({
   updated_at:     z.string().optional(),
   // Manifest-sync provenance; absent on older API builds → null.
   synced_at:      z.string().nullish().transform(v => v ?? null),
+  synced_commit:  z.string().nullish().transform(v => v ?? null),
   repos:          z.array(ApiProjectRepoSchema).nullish().transform(v => v ?? null),
 
   // Brief fields — `.nullish()` so older API builds that don't yet emit the

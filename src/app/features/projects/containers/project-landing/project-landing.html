@@ -443,9 +443,23 @@
              so they render read-only here. Edit happens in the repo. -->
         @if (isRepoSynced()) {
           <app-ui-card tone="soft" [compact]="true">
-            <p class="project-landing__synced">
-              <span aria-hidden="true">🔒</span>
-              Operating fields synced from repo · {{ p.synced_at | relativeTime }}
+            <p class="project-landing__synced" [class.project-landing__synced--overdue]="syncOverdue()">
+              <span aria-hidden="true">{{ syncOverdue() ? '⚠️' : '🔒' }}</span>
+              Operating fields synced from repo
+              @if (p.synced_commit) {
+                <!-- Provenance, not freshness: nothing watches the repo between
+                     sweeps, so this says where a value came from, not whether
+                     it is current. An odd `intent` is traceable to a commit. -->
+                · <code class="project-landing__sha">{{ p.synced_commit.slice(0, 7) }}</code>
+              }
+              · {{ p.synced_at | relativeTime }}
+              @if (syncOverdue()) {
+                <!-- The failure that actually happened: the launchd sweep died
+                     on a PATH fault and failed silently for five weeks while
+                     this line just read "6 weeks ago" and looked normal. Age
+                     alone is not staleness — an overdue SWEEP is. -->
+                <strong> — sweep overdue, these may be behind the repo</strong>
+              }
               @if (p.conventions_url) {
                 · <a [href]="p.conventions_url" target="_blank" rel="noopener">edit in repo</a>
               } @else if (p.repo_url) {

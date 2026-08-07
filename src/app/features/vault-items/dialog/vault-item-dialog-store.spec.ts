@@ -34,6 +34,7 @@ const fakeProject = (id: string): Project => ({
   short_code: null,
   created_at: '2026-01-01T00:00:00Z',
   synced_at: null,
+  synced_commit: null,
   repos: null,
   ...EMPTY_PROJECT_BRIEF,
 });
