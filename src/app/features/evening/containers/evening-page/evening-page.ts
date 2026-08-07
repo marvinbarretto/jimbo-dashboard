@@ -104,8 +104,19 @@ export class EveningPage {
   protected readonly closedReadback = computed(() => this.dueToday().filter(c => c.status !== 'open'));
 
   protected readonly saving = signal(false);
-  /** Which text field last saved, so the page can say so without a toast per keystroke. */
+  /**
+   * Set briefly after a text field saves, so the page can confirm without a
+   * toast per blur. Transient on purpose — a "saved" that never clears stops
+   * meaning "just now" and starts meaning nothing.
+   */
   protected readonly savedField = signal<string | null>(null);
+  private savedTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private flashSaved(field: string): void {
+    if (this.savedTimer) clearTimeout(this.savedTimer);
+    this.savedField.set(field);
+    this.savedTimer = setTimeout(() => this.savedField.set(null), 2000);
+  }
 
   protected readonly newGratitude = signal('');
   protected readonly newCommitment = signal('');
@@ -140,7 +151,7 @@ export class EveningPage {
     this.service.saveSession(this.day(), { [field]: value || null }).subscribe({
       next: () => {
         this.saving.set(false);
-        this.savedField.set(field);
+        this.flashSaved(field);
         // The resource holds a stale session object now. Patching it locally
         // keeps `current` above honest without a refetch that would clobber
         // whatever he is typing next.
