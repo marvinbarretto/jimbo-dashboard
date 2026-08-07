@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.166](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.165...v0.0.166) (2026-08-07)
+
+
+### Features
+
+* **projects:** show sync provenance, and flag an overdue sweep ([47f32fa](https://github.com/marvinbarretto/jimbo-dashboard/commit/47f32fa1984f3874ab33de5560ac630d67897c26))
+
+
+### Code Refactoring
+
+* **manifest-sync:** move monitoring into the shared hc-run wrapper ([0ea0ad1](https://github.com/marvinbarretto/jimbo-dashboard/commit/0ea0ad164c5ff158ddac70ca8411503cf887939e))
+
 ### [0.0.165](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.164...v0.0.165) (2026-08-07)
 
 
