@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.164](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.163...v0.0.164) (2026-08-07)
+
+
+### Features
+
+* **evening:** a reflection page that never asks ([623380b](https://github.com/marvinbarretto/jimbo-dashboard/commit/623380b52cd43dbd600b1a76ad92e132e5d69c7b))
+* **projects:** make personas individually editable ([299cdd5](https://github.com/marvinbarretto/jimbo-dashboard/commit/299cdd5649d6f9b029afb3a62dff2aa961af94c9))
+
+
+### Bug Fixes
+
+* **evening:** let the saved indicator expire ([ad3a9c9](https://github.com/marvinbarretto/jimbo-dashboard/commit/ad3a9c9b300cce94ce6e6c282bb6d3e8f208e651))
+
 ### [0.0.163](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.162...v0.0.163) (2026-08-07)
 
 
