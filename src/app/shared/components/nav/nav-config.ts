@@ -34,6 +34,7 @@ export const navSections: readonly NavSection[] = [
     accent: '#fde68a',
     tabs: [
       { href: '/journal', label: 'Journal' },
+      { href: '/evening', label: 'Evening' },
       { href: '/nutrition', label: 'Nutrition' },
       { href: '/exercise', label: 'Exercise' },
       { href: '/checkins', label: 'Check-ins' },

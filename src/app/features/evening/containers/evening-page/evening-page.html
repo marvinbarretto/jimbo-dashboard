@@ -1,0 +1,274 @@
+<app-ui-page width="standard" class="evening">
+<app-ui-stack gap="lg">
+
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Evening · {{ dayLabel() }}</h1>
+    <p uiPageHeaderHint class="evening__hint">
+      Nothing here chases you. Skipping a night leaves a gap, not a mark.
+    </p>
+    <div uiPageHeaderActions>
+      <app-ui-cluster gap="xs">
+        <app-ui-button variant="ghost" size="sm" ariaLabel="Previous day" (pressed)="shiftDay(-1)">←</app-ui-button>
+        @if (!isToday()) {
+          <app-ui-button variant="ghost" size="sm" (pressed)="toToday()">Tonight</app-ui-button>
+          <app-ui-button variant="ghost" size="sm" ariaLabel="Next day" (pressed)="shiftDay(1)">→</app-ui-button>
+        }
+        @if (completedAt()) {
+          <app-ui-badge tone="success" [subtle]="true">closed {{ completedAt() }}</app-ui-badge>
+        }
+      </app-ui-cluster>
+    </div>
+  </app-ui-page-header>
+
+  @if (loading()) {
+    <app-ui-loading-state message="Pulling the day together…" />
+  } @else if (failed()) {
+    <app-ui-empty-state
+      title="Could not load this evening"
+      message="The reflection endpoints may not be deployed yet. Nothing you wrote is lost — it lives on the API, not here." />
+  } @else {
+
+    <!-- ── Today ────────────────────────────────────────────────── -->
+    <app-ui-section title="Today" [meta]="preparedAt() ? 'prepared ' + preparedAt() : null">
+      <app-ui-stack gap="md">
+
+        @if (prep(); as p) {
+          @if (p.payload.summary) {
+            <p class="evening__digest">{{ p.payload.summary }}</p>
+          }
+          @if (p.payload.timeline?.length) {
+            <ul class="evening__timeline">
+              @for (moment of p.payload.timeline; track moment.at + moment.label) {
+                <li class="evening__moment">
+                  <span class="evening__moment-time">{{ time(moment.at) }}</span>
+                  <span class="evening__moment-label">{{ moment.label }}</span>
+                </li>
+              }
+            </ul>
+          }
+          @if (p.payload.unaccounted?.length) {
+            <ul class="evening__timeline">
+              @for (span of p.payload.unaccounted; track span.from) {
+                <li class="evening__moment evening__moment--gap">
+                  <span class="evening__moment-time">{{ time(span.from) }}–{{ time(span.to) }}</span>
+                  <span class="evening__moment-label">unaccounted</span>
+                </li>
+              }
+            </ul>
+          }
+        } @else {
+          <!-- The evening-prep job is not built yet. Saying so is better than an
+               empty box that reads as "nothing happened today". -->
+          <app-ui-empty-state
+            message="No reconstruction yet — the evening-prep job isn't running. Write from memory." />
+        }
+
+        <label class="evening__field">
+          <span class="evening__label">Highs</span>
+          <textarea
+            class="evening__textarea"
+            rows="2"
+            placeholder="What went well?"
+            [value]="session()?.highs ?? ''"
+            (blur)="saveText('highs', $event)"></textarea>
+        </label>
+
+        <label class="evening__field">
+          <span class="evening__label">Lows</span>
+          <textarea
+            class="evening__textarea"
+            rows="2"
+            placeholder="What didn't?"
+            [value]="session()?.lows ?? ''"
+            (blur)="saveText('lows', $event)"></textarea>
+        </label>
+
+      </app-ui-stack>
+    </app-ui-section>
+
+    <!-- ── Grateful for ─────────────────────────────────────────── -->
+    <app-ui-section title="Grateful for">
+      <app-ui-stack gap="md">
+
+        @for (g of gratitude(); track g.id) {
+          <app-ui-cluster gap="sm" class="evening__row">
+            <input
+              class="evening__inline-input"
+              [value]="g.content"
+              (blur)="editGratitude(g.id, $event)" />
+            @if (g.origin === 'seeded') {
+              <app-ui-badge tone="info" [subtle]="true" [title]="'from ' + g.seed_ref">
+                {{ g.edited ? 'seeded · reworded' : 'seeded' }}
+              </app-ui-badge>
+            }
+            <app-ui-button variant="ghost" size="sm" ariaLabel="Remove" (pressed)="removeGratitude(g.id)">×</app-ui-button>
+          </app-ui-cluster>
+        }
+
+        <app-ui-cluster gap="sm" class="evening__row">
+          <input
+            class="evening__inline-input"
+            placeholder="Add something"
+            [value]="newGratitude()"
+            (input)="onInput($event.target, newGratitude)"
+            (keydown.enter)="addGratitude()" />
+          <app-ui-button variant="secondary" size="sm" [disabled]="!newGratitude().trim()" (pressed)="addGratitude()">
+            Add
+          </app-ui-button>
+        </app-ui-cluster>
+
+        @if (candidates().length) {
+          <app-ui-card tone="soft" [compact]="true">
+            <app-ui-stack gap="sm">
+              <span class="evening__label">The fleet noticed</span>
+              @for (c of candidates(); track c.ref) {
+                <app-ui-cluster gap="sm" justify="between" class="evening__row">
+                  <span class="evening__candidate">{{ c.content }}</span>
+                  <app-ui-button variant="ghost" size="sm" (pressed)="accept(c.ref)">Take it</app-ui-button>
+                </app-ui-cluster>
+              }
+              <!-- Declining is not a call anyone makes: an untaken suggestion
+                   never becomes a row, so there is nothing to decline. -->
+              <p class="evening__aside">Ignore anything that isn't true. Nothing is recorded until you take it.</p>
+            </app-ui-stack>
+          </app-ui-card>
+        }
+
+      </app-ui-stack>
+    </app-ui-section>
+
+    <!-- ── Tomorrow ─────────────────────────────────────────────── -->
+    <app-ui-section title="Tomorrow" [meta]="tomorrowLabel()">
+      <app-ui-stack gap="md">
+
+        @for (c of madeTonight(); track c.id) {
+          <app-ui-cluster gap="sm" class="evening__row">
+            <span class="evening__commitment">{{ c.content }}</span>
+            @if (c.kind !== 'do') {
+              <app-ui-badge tone="neutral" [subtle]="true">{{ c.kind }}</app-ui-badge>
+            }
+            @if (c.carry_count > 0) {
+              <app-ui-badge tone="warning" [subtle]="true" [title]="'deferred ' + c.carry_count + ' times before'">
+                carried {{ c.carry_count }}×
+              </app-ui-badge>
+            }
+            <app-ui-button
+              variant="ghost"
+              size="sm"
+              [title]="c.delegable ? 'Marked for the fleet' : 'Mark as fleet-shaped work'"
+              (pressed)="toggleDelegable(c)">
+              {{ c.delegable ? '⚑ delegable' : 'delegate?' }}
+            </app-ui-button>
+            <app-ui-button variant="ghost" size="sm" ariaLabel="Remove" (pressed)="removeCommitment(c.id)">×</app-ui-button>
+          </app-ui-cluster>
+        } @empty {
+          <app-ui-empty-state message="Nothing yet. One or two is plenty." />
+        }
+
+        <app-ui-cluster gap="sm" class="evening__row">
+          <input
+            class="evening__inline-input"
+            placeholder="What will you do tomorrow?"
+            [value]="newCommitment()"
+            (input)="onInput($event.target, newCommitment)"
+            (keydown.enter)="addCommitment()" />
+          <select
+            class="evening__select"
+            aria-label="Kind"
+            [value]="newKind()"
+            (change)="newKind.set($any($event.target).value)">
+            @for (k of kinds; track k.value) {
+              <option [value]="k.value">{{ k.label }}</option>
+            }
+          </select>
+          <app-ui-button
+            variant="ghost"
+            size="sm"
+            [title]="newDelegable() ? 'Marked for the fleet' : 'Mark as fleet-shaped work'"
+            (pressed)="newDelegable.set(!newDelegable())">
+            {{ newDelegable() ? '⚑' : '⚐' }}
+          </app-ui-button>
+          <app-ui-button variant="primary" size="sm" [disabled]="!newCommitment().trim()" (pressed)="addCommitment()">
+            Commit
+          </app-ui-button>
+        </app-ui-cluster>
+
+        <label class="evening__field">
+          <span class="evening__label">Shape of the day</span>
+          <textarea
+            class="evening__textarea"
+            rows="2"
+            placeholder="morning deep work, admin after 4"
+            [value]="session()?.tomorrow_shape ?? ''"
+            (blur)="saveText('tomorrow_shape', $event)"></textarea>
+        </label>
+
+        <!-- The readback. Resolution is always his: nothing on this page infers
+             'kept' from a commit landing. -->
+        @if (openReadback().length || closedReadback().length || overdue().length) {
+          <app-ui-card tone="soft" [compact]="true">
+            <app-ui-stack gap="sm">
+              <span class="evening__label">You said you would</span>
+
+              @for (c of openReadback(); track c.id) {
+                <app-ui-cluster gap="xs" class="evening__row">
+                  <span class="evening__commitment">{{ c.content }}</span>
+                  @if (c.carry_count > 0) {
+                    <app-ui-badge tone="warning" [subtle]="true">carried {{ c.carry_count }}×</app-ui-badge>
+                  }
+                  <app-ui-button variant="ghost" size="sm" (pressed)="resolve(c.id, 'kept')">kept</app-ui-button>
+                  <app-ui-button variant="ghost" size="sm" (pressed)="resolve(c.id, 'missed')">missed</app-ui-button>
+                  <app-ui-button variant="ghost" size="sm" (pressed)="resolve(c.id, 'dropped')">dropped</app-ui-button>
+                  <app-ui-button variant="ghost" size="sm" (pressed)="carry(c.id)">carry →</app-ui-button>
+                </app-ui-cluster>
+              }
+
+              @for (c of closedReadback(); track c.id) {
+                <app-ui-cluster gap="xs" class="evening__row evening__row--done">
+                  <span class="evening__commitment">{{ c.content }}</span>
+                  <app-ui-badge [tone]="c.status === 'kept' ? 'success' : 'neutral'" [subtle]="true">{{ c.status }}</app-ui-badge>
+                </app-ui-cluster>
+              }
+
+              @if (overdue().length) {
+                <!-- Deliberately not hidden. An unkept promise must not vanish
+                     simply by not being looked at. -->
+                <span class="evening__label">Still open from before</span>
+                @for (c of overdue(); track c.id) {
+                  <app-ui-cluster gap="xs" class="evening__row">
+                    <span class="evening__commitment">{{ c.content }}</span>
+                    <span class="evening__aside">for {{ c.for_day }}</span>
+                    @if (c.carry_count > 0) {
+                      <app-ui-badge tone="warning" [subtle]="true">carried {{ c.carry_count }}×</app-ui-badge>
+                    }
+                    <app-ui-button variant="ghost" size="sm" (pressed)="resolve(c.id, 'kept')">kept</app-ui-button>
+                    <app-ui-button variant="ghost" size="sm" (pressed)="resolve(c.id, 'missed')">missed</app-ui-button>
+                    <app-ui-button variant="ghost" size="sm" (pressed)="resolve(c.id, 'dropped')">dropped</app-ui-button>
+                    <app-ui-button variant="ghost" size="sm" (pressed)="carry(c.id)">carry →</app-ui-button>
+                  </app-ui-cluster>
+                }
+              }
+            </app-ui-stack>
+          </app-ui-card>
+        }
+
+      </app-ui-stack>
+    </app-ui-section>
+
+    <app-ui-cluster gap="sm" justify="end">
+      @if (saving()) {
+        <span class="evening__aside">saving…</span>
+      } @else if (savedField()) {
+        <span class="evening__aside">saved</span>
+      }
+      @if (completedAt()) {
+        <app-ui-button variant="ghost" (pressed)="reopen()">Re-open</app-ui-button>
+      } @else {
+        <app-ui-button variant="primary" (pressed)="complete()">Done for tonight</app-ui-button>
+      }
+    </app-ui-cluster>
+
+  }
+
+</app-ui-stack>
+</app-ui-page>

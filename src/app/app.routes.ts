@@ -245,6 +245,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/checkins/checkins.routes').then(m => m.checkinsRoutes),
   },
   {
+    path: 'evening',
+    loadChildren: () => import('./features/evening/evening.routes').then(m => m.eveningRoutes),
+  },
+  {
     path: 'exercise',
     loadChildren: () => import('./features/exercise/exercise.routes').then(m => m.exerciseRoutes),
   },

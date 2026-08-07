@@ -1,0 +1,103 @@
+// Deliberately quiet. This is the one page where the words on screen are
+// Marvin's, and chrome competing with them would be the wrong emphasis.
+
+.evening__hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.evening__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.evening__label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.evening__textarea,
+.evening__inline-input,
+.evening__select {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.evening__textarea {
+  resize: vertical;
+  min-height: 3.2rem;
+  line-height: 1.5;
+}
+
+.evening__select {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.evening__row {
+  width: 100%;
+}
+
+// The text is the point; the affordances beside it are not.
+.evening__inline-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.evening__commitment,
+.evening__candidate {
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.evening__row--done .evening__commitment {
+  color: var(--text-muted);
+}
+
+.evening__digest {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.evening__timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.evening__moment {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.evening__moment-time {
+  flex: 0 0 6.5rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+// A gap in the reconstruction is a question, not a fault.
+.evening__moment--gap .evening__moment-label {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.evening__aside {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
