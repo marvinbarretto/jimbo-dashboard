@@ -3,6 +3,7 @@ import {
   Check,
   ChevronsDown,
   Clock,
+  Dumbbell,
   ExternalLink,
   Github,
   GitBranch,
@@ -13,7 +14,9 @@ import {
   Plus,
   RotateCcw,
   Search,
+  Sunrise,
   Trash2,
+  UtensilsCrossed,
   X,
   type LucideIconData,
 } from 'lucide-angular';
@@ -38,6 +41,9 @@ export const ICONS = {
   github:         Github,
   search:         Search,
   'sign-out':     LogOut,
+  today:          Sunrise,
+  food:           UtensilsCrossed,
+  gym:            Dumbbell,
 } as const satisfies Record<string, LucideIconData>;
 
 export type IconName = keyof typeof ICONS;

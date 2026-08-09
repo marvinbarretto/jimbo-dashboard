@@ -17,6 +17,18 @@
   --app-gutter: 1.5rem;
 }
 
+// Phone shell (/m): no desktop header, and the gutter drops to zero because
+// the shell's own pages own their insets edge to edge. --app-header-height
+// goes to 0 so sticky descendants don't offset below a header that isn't there.
+//
+// Doubled selector for specificity — the max-width:768px block below re-declares
+// both tokens on .app-shell, and being later in the file it would otherwise win
+// on exactly the viewport this shell is built for.
+.app-shell.app-shell--bare {
+  --app-gutter: 0rem;
+  --app-header-height: 0px;
+}
+
 .app-header {
   position: sticky;
   top: 0;

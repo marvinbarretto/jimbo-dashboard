@@ -1,0 +1,23 @@
+<div class="m-shell">
+  <main class="m-shell__body">
+    <router-outlet />
+  </main>
+
+  <!-- Shell chrome, not a shared primitive: <app-ui-tab-bar> is a sticky *top*
+       sub-nav that scrolls horizontally past its width, which is the wrong
+       mechanic for a fixed bottom bar of equal-width thumb targets. Promote to
+       shared/ if a second surface ever needs one. -->
+  <nav class="m-shell__tabs" aria-label="Sections">
+    @for (tab of tabs; track tab.path) {
+      <a
+        class="m-shell__tab"
+        [routerLink]="tab.path"
+        routerLinkActive="m-shell__tab--active"
+        ariaCurrentWhenActive="page"
+      >
+        <app-icon [name]="tab.icon" [size]="20" />
+        <span class="m-shell__tab-label">{{ tab.label }}</span>
+      </a>
+    }
+  </nav>
+</div>

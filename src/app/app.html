@@ -1,4 +1,9 @@
-<div class="app-shell" [style.--section-accent]="nav.accent()">
+<div
+  class="app-shell"
+  [class.app-shell--bare]="nav.isBareShell()"
+  [style.--section-accent]="nav.accent()"
+>
+  @if (!nav.isBareShell()) {
   <header class="app-header">
     <div class="app-header__inner">
       <app-nav />
@@ -45,10 +50,15 @@
       </div>
     </div>
   </header>
+  }
 
   <main class="app-main">
     <div class="app-main__inner">
-      <app-section-tabs />
+      @if (!nav.isBareShell()) {
+        <app-section-tabs />
+      }
+      <!-- Single outlet on purpose: branching the outlet itself would tear down
+           and re-create the routed component every time the shell mode flips. -->
       <router-outlet />
     </div>
   </main>

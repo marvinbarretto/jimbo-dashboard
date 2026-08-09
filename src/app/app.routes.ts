@@ -252,6 +252,12 @@ export const routes: Routes = [
     path: 'exercise',
     loadChildren: () => import('./features/exercise/exercise.routes').then(m => m.exerciseRoutes),
   },
+  // The phone shell. Short path because it's typed on a phone and hardcoded as
+  // a deep-link target in jimbo-app's native home screen.
+  {
+    path: 'm',
+    loadChildren: () => import('./features/mobile/mobile.routes').then(m => m.mobileRoutes),
+  },
   // Journal's Overview is the glance layer (day summary + timeline, live-
   // refreshing on today), so it's the landing. /today is a raw endpoint
   // inspector and lives under System → API.

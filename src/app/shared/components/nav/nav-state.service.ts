@@ -25,6 +25,18 @@ export class NavState {
 
   readonly activeSection = computed<NavSection | null>(() => sectionForUrl(this.url() ?? ''));
 
+  /**
+   * True on the phone shell (`/m`), which brings its own bottom tab bar and
+   * suppresses the desktop header + section tabs.
+   *
+   * Matched exactly rather than by prefix — a bare `startsWith('/m')` also
+   * swallows `/mail-activity`, `/models`, `/model-stacks` and `/modules`.
+   */
+  readonly isBareShell = computed(() => {
+    const url = this.url() ?? '';
+    return url === '/m' || url.startsWith('/m/') || url.startsWith('/m?');
+  });
+
   readonly accent = computed(() => this.activeSection()?.accent ?? null);
 
   readonly sections = navSections;
