@@ -106,7 +106,10 @@ export class MobileLog {
       (d) => d.kcal,
     ),
   );
-  protected readonly hasWeek = computed(() => this.week().values.some((v) => v > 0));
+  // Gate on data-loaded, not non-zero: an all-zero week is an honest chart,
+  // and a some()>0 gate would hide the strip until an app restart after the
+  // first-ever entry.
+  protected readonly hasWeek = computed(() => this.dailyRes.hasValue());
 
   protected readonly suggestions = computed<string[]>(() =>
     (this.frequentRes.hasValue() ? this.frequentRes.value().items : []).map(f => f.label),
@@ -133,6 +136,7 @@ export class MobileLog {
     onFoodChanged: () => {
       this.foodRes.reload();
       this.frequentRes.reload(); // a new/edited food may change the suggestions
+      this.dailyRes.reload(); // today's bar in the week strip
     },
     onSupplementsChanged: () => this.suppRes.reload(),
   });

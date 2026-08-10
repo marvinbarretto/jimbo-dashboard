@@ -97,7 +97,9 @@ export class MobileTrain {
       (d) => d.volume_kg,
     ),
   );
-  protected readonly hasWeek = computed(() => this.week().values.some((v) => v > 0));
+  // Gate on data-loaded, not non-zero: a cardio-only or bodyweight week sums
+  // to volume 0 and is still a week the user trained.
+  protected readonly hasWeek = computed(() => this.dailyRes.hasValue());
 
   private readonly sessions = computed<SessionDetailed[]>(() =>
     this.sessionsRes.hasValue() ? this.sessionsRes.value().items : [],
@@ -298,6 +300,7 @@ export class MobileTrain {
   private reloadSessions(): void {
     this.sessionsRes.reload();
     this.activeRes.reload();
+    this.dailyRes.reload(); // today's bar in the volume strip
   }
 
   private reloadAll(): void {
