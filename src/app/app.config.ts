@@ -1,6 +1,7 @@
-import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationConfig, inject, isDevMode, provideAppInitializer, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { TitleStrategy, provideRouter, withInMemoryScrolling } from '@angular/router';
+import { provideServiceWorker } from '@angular/service-worker';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 import { AppTitleStrategy } from './app-title-strategy';
@@ -28,5 +29,12 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'top' })),
     { provide: TitleStrategy, useClass: AppTitleStrategy },
     provideCharts(withDefaultRegisterables()),
+    // Offline shell + instant cold launch, phone-first. Registration waits for
+    // stability so it never competes with first paint; SwUpdateService owns
+    // the check-on-resume / apply-while-hidden update cycle.
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
   ],
 };
