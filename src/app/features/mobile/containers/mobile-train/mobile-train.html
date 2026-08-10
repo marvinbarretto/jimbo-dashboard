@@ -1,0 +1,66 @@
+@if (loading()) {
+  <app-ui-loading-state message="Loading workouts…" />
+} @else {
+  @if (active(); as session) {
+    <section class="train__live" aria-label="Live session">
+      <header class="train__live-header">
+        <span class="train__live-badge">Live</span>
+        <span class="train__live-meta">
+          started {{ startedTime() }} · {{ elapsedMin() }} min
+          @if (activeStats(); as stats) {
+            @if (stats.sets > 0) {
+              · {{ stats.sets }} sets · {{ stats.volumeKg }} kg
+            }
+          }
+        </span>
+      </header>
+
+      <app-exercise-session-row
+        [session]="session"
+        [exerciseOptions]="exerciseOptions()"
+        [history]="history()"
+        [catalog]="exerciseIndex()"
+        (sessionPatch)="onSessionPatch($event)"
+        (sessionRemove)="onSessionRemove($event)"
+        (childPatch)="children.patch($event)"
+        (childRemove)="children.remove($event)"
+        (addSet)="onAddSet($event)"
+        (addCardio)="children.addCardio($event)"
+      />
+
+      <div class="train__actions">
+        @if (lastSet()) {
+          <!-- The between-sets tap: repeats the last set by bumping its
+               aggregated count. Optimistic — see repeatLastSet. -->
+          <button type="button" class="train__repeat" (click)="repeatLastSet()">
+            <span class="train__repeat-label">Same again</span>
+            <span class="train__repeat-detail">{{ lastSetLabel() }}</span>
+          </button>
+        }
+        <app-ui-button variant="secondary" (pressed)="finish()">Finish session</app-ui-button>
+      </div>
+    </section>
+  } @else {
+    <!-- Full-width primary: at the gym this is the only tap that matters. -->
+    <button type="button" class="train__start" (click)="start()">Start session</button>
+  }
+
+  @for (session of finishedToday(); track session.id) {
+    <app-exercise-session-row
+      [session]="session"
+      [exerciseOptions]="exerciseOptions()"
+      [history]="history()"
+      [catalog]="exerciseIndex()"
+      (sessionPatch)="onSessionPatch($event)"
+      (sessionRemove)="onSessionRemove($event)"
+      (childPatch)="children.patch($event)"
+      (childRemove)="children.remove($event)"
+      (addSet)="children.addSet($event)"
+      (addCardio)="children.addCardio($event)"
+    />
+  } @empty {
+    @if (!active()) {
+      <app-ui-empty-state message="No workouts today." />
+    }
+  }
+}

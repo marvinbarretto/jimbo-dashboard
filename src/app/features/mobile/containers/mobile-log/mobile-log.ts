@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, DOCUMENT, DestroyRef, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiTrackerDayGroup } from '@shared/components/ui-tracker-day-group/ui-tracker-day-group';
 import {
@@ -7,7 +7,8 @@ import {
   type TrackerMeasure,
 } from '@shared/components/tracker/tracker.types';
 import { ToastService } from '@shared/components/toast/toast.service';
-import { logicalDay, logicalToday } from '@shared/utils/datetime.utils';
+import { logicalDay } from '@shared/utils/datetime.utils';
+import { injectLogicalToday } from '../../utils/logical-today';
 import {
   NutritionService,
   type FoodLogEntry,
@@ -52,28 +53,9 @@ export class MobileLog {
   protected readonly ledgerMeasures = LEDGER_MEASURES;
   protected readonly quickAdd = QUICK_ADD;
 
-  /**
-   * logicalToday (04:00 Europe/London cutover), matching logicalDay() below
-   * and the desktop tracker pages — browser-local todayKey() disagrees with
-   * both every night from midnight to cutover, which made a 1am add vanish
-   * from its own ledger on reload.
-   *
-   * A signal, not a constant: the /m shell lives in a persistent WebView that
-   * gets backgrounded for days. Re-checked whenever the page becomes visible
-   * again, so a resumed app queries the actual today; the httpResource URLs
-   * below re-fetch off the signal change.
-   */
-  protected readonly today = signal(logicalToday());
-
-  constructor() {
-    const doc = inject(DOCUMENT);
-    const destroyRef = inject(DestroyRef);
-    const onVisible = () => {
-      if (doc.visibilityState === 'visible') this.today.set(logicalToday());
-    };
-    doc.addEventListener('visibilitychange', onVisible);
-    destroyRef.onDestroy(() => doc.removeEventListener('visibilitychange', onVisible));
-  }
+  // Logical day (04:00 London cutover, matching logicalDay below), resume-safe
+  // — see injectLogicalToday for why a plain constant lies in the WebView.
+  protected readonly today = injectLogicalToday();
 
   private readonly foodRes = httpResource<{ items: FoodLogEntry[] }>(
     () => `/api/coach/food-log?from=${this.today()}&to=${this.today()}&limit=200`,

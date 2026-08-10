@@ -31,12 +31,7 @@ export const mobileRoutes: Routes = [
       {
         path: 'train',
         title: 'Train',
-        loadComponent: () =>
-          import('./containers/mobile-tab-stub/mobile-tab-stub').then(m => m.MobileTabStub),
-        data: {
-          heading: 'Train',
-          note: 'Gym day ledger and the live session flow, on big thumb targets.',
-        },
+        loadComponent: () => import('./containers/mobile-train/mobile-train').then(m => m.MobileTrain),
       },
       { path: '', pathMatch: 'full', redirectTo: 'today' },
     ],

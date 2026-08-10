@@ -69,10 +69,10 @@
               [catalog]="exerciseIndex()"
               (sessionPatch)="onSessionPatch($event)"
               (sessionRemove)="onSessionRemove($event)"
-              (childPatch)="onChildPatch($event)"
-              (childRemove)="onChildRemove($event)"
-              (addSet)="onAddSet($event)"
-              (addCardio)="onAddCardio($event)"
+              (childPatch)="children.patch($event)"
+              (childRemove)="children.remove($event)"
+              (addSet)="children.addSet($event)"
+              (addCardio)="children.addCardio($event)"
             />
           } @empty {
             <p class="exercise-ledger__empty">No workout logged this day.</p>
