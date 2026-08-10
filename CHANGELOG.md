@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.167](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.166...v0.0.167) (2026-08-10)
+
+
+### Features
+
+* **auth:** accept an X-API-Key from the native shell ([c80bcc7](https://github.com/marvinbarretto/jimbo-dashboard/commit/c80bcc7f028188d0c56880f2e89edabb17fd9e19))
+* **mobile:** nutrition day ledger in the Log tab ([542dac1](https://github.com/marvinbarretto/jimbo-dashboard/commit/542dac12c90eba17a7055b565dea78e8522fb419))
+* **mobile:** phone shell skeleton at /m ([e9559e8](https://github.com/marvinbarretto/jimbo-dashboard/commit/e9559e868979b594e0dff4de7deb2c406b293a09))
+* **mobile:** train tab — live gym session with optimistic set repeat ([393913a](https://github.com/marvinbarretto/jimbo-dashboard/commit/393913af3997124fc9f465884bd9d4d91e6e74eb))
+
+
+### Bug Fixes
+
+* **mobile:** review findings — day-key semantics, bootstrap guard, shared writers ([f7a77db](https://github.com/marvinbarretto/jimbo-dashboard/commit/f7a77db3c0f84e037125860bf7fb4b4e30bcc67f))
+* **mobile:** safe-area insets and first-paint shell mode ([c1f8fa5](https://github.com/marvinbarretto/jimbo-dashboard/commit/c1f8fa5a776777dc872b705cd26c313a31a0d0fc))
+
+
+### Code Refactoring
+
+* **shell:** layout routes — router picks the chrome, root goes bare ([53af9d7](https://github.com/marvinbarretto/jimbo-dashboard/commit/53af9d7517cd263ecca171d5e4fd23d51324417b))
+
 ### [0.0.166](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.165...v0.0.166) (2026-08-07)
 
 
