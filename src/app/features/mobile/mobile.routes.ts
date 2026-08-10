@@ -16,12 +16,7 @@ export const mobileRoutes: Routes = [
       {
         path: 'today',
         title: 'Today',
-        loadComponent: () =>
-          import('./containers/mobile-tab-stub/mobile-tab-stub').then(m => m.MobileTabStub),
-        data: {
-          heading: 'Today',
-          note: 'Briefing and day checks land here. Until then, the desktop routes still hold them.',
-        },
+        loadComponent: () => import('./containers/mobile-today/mobile-today').then(m => m.MobileToday),
       },
       {
         path: 'log',

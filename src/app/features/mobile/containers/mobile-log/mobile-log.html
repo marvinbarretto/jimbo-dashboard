@@ -26,4 +26,11 @@
     (patch)="ledger.patch($event)"
     (remove)="ledger.remove($event)"
   />
+
+  @if (hasWeek()) {
+    <section class="log__week" aria-label="Calories, last 7 days">
+      <h2 class="log__week-title">Last 7 days</h2>
+      <app-ui-bar-chart [labels]="week().labels" [values]="week().values" suffix=" kcal" [height]="130" />
+    </section>
+  }
 }

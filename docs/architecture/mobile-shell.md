@@ -113,25 +113,22 @@ Status as of Aug 2026:
    "same again" on the aggregated `sets` count, history prefills via the
    shared `ExerciseSessionRow`, vibration feedback.
 
-Remaining, in order:
+3. ✅ **Cutover** — Caddy serves `/m` + hashed assets uncookied (`@mShell`
+   block; the WebView never sees a login page, data stays behind `/api`
+   auth); APK rebuilt with `AuthPlugin`, verified on-device.
+4. ✅ **Service worker + manifest** — ngsw, lazy chunk caching, no /api
+   dataGroup; `SwUpdateService` checks on resume and applies while hidden.
+5. ✅ **Today tab** — briefing day-plan + mood/energy check-in (day checks
+   have no REST surface yet — MCP-only, so deferred).
+6. ✅ **Infographics** — 7-day kcal strip on Log, volume strip on Train
+   (`weekAxis` + UiBarChart at phone height).
+7. ✅ **Demote `gym`** — parity verified (gym's client posts a subset of the
+   dashboard's fields to identical endpoints), `capacitor.config.ts` default
+   now `https://jimbo.fourfoldmedia.uk/m`; gym keeps coach chat, voice and
+   history in the browser.
 
-3. **Cutover** — dashboard deployed and the Caddy edge gate now serves `/m` +
-   hashed assets uncookied (the WebView must never see a login page; data
-   stays behind `/api` auth — see the `@mShell` block in jimbo-api/Caddyfile).
-   Remaining: rebuild the APK (`AuthPlugin` is in it), point `CAP_SERVER_URL`
-   at `https://<host>/m`, verify on-device that `X-API-Key` lands and writes
-   attribute correctly.
-4. **Service worker + manifest** — `@angular/pwa` (ngsw), icons, offline shell.
-   Do after the cutover, not before: a service worker in front of a broken
-   deploy is sticky, so prove the loop first. Keep a force-refresh escape
-   hatch reachable from native.
-5. **Today tab** — briefing render + day checks. The native home's
-   notification taps deep-link here.
-6. **Infographics** — day/week rollups sized for a phone, not shrunk desktop
-   charts. Log and Train both grow a compact week strip.
-7. **Demote `gym`** — write-parity check on `gym_session_sets` first, then
-   the WebView drops it; gym keeps coach chat, voice and history in the
-   browser. Update `jimbo-app` docs when this lands (phase 5 of its arc).
+Next horizon (not yet scheduled): offline write queue, day-checks REST +
+Today integration, native home deep-links into tabs, real icons.
 
 ## API readiness
 

@@ -1,0 +1,58 @@
+@if (loading()) {
+  <app-ui-loading-state message="Loading today…" />
+} @else {
+  <!-- Check-in first: it's the only thing here that wants input, and by the
+       time you're reading the plan you've already answered it. -->
+  <section class="today__checkin" aria-label="Mood and energy check-in">
+    <header class="today__section-title">
+      How's it going?
+      @if (answeredToday() > 0) {
+        <span class="today__checkin-count">{{ answeredToday() }} logged today</span>
+      }
+    </header>
+    <app-ui-score-picker label="Mood" [options]="moodLabels" [value]="mood()" (picked)="mood.set($event)" />
+    <app-ui-score-picker label="Energy" [options]="energyLabels" [value]="energy()" (picked)="energy.set($event)" />
+    @if (mood() !== null || energy() !== null) {
+      <app-ui-button variant="primary" (pressed)="save()">Log it</app-ui-button>
+    }
+  </section>
+
+  @if (briefing(); as b) {
+    <section class="today__plan" aria-label="Day plan">
+      <header class="today__section-title">
+        The plan
+        @if (briefingIsStale()) {
+          <span class="today__stale">from an earlier day — no briefing yet today</span>
+        }
+      </header>
+      @for (item of dayPlan(); track $index) {
+        <div class="today__plan-item">
+          <span class="today__plan-time">{{ item.time }}</span>
+          <span class="today__plan-suggestion">{{ item.suggestion }}</span>
+        </div>
+      } @empty {
+        <app-ui-empty-state message="No day plan in this briefing." />
+      }
+    </section>
+
+    @if (surprise(); as s) {
+      <section class="today__surprise">
+        <p class="today__surprise-fact">{{ s.fact }}</p>
+      </section>
+    }
+
+    @if (highlights().length) {
+      <section class="today__highlights" aria-label="Highlights">
+        <header class="today__section-title">Worth a look</header>
+        @for (h of highlights(); track $index) {
+          <div class="today__highlight">
+            <span class="today__highlight-source">{{ h.source }}</span>
+            <span class="today__highlight-headline">{{ h.headline }}</span>
+          </div>
+        }
+      </section>
+    }
+  } @else {
+    <app-ui-empty-state message="No briefing available." />
+  }
+}

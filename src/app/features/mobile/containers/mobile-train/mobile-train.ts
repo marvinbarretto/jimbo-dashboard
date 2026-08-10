@@ -1,5 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
@@ -12,6 +13,7 @@ import { ExerciseSessionRow } from '@features/exercise/components/exercise-sessi
 import {
   ExerciseService,
   type ExerciseCatalogItem,
+  type GymDailyRow,
   type SessionDetailed,
   type SessionPatch,
 } from '@features/exercise/data-access/exercise.service';
@@ -21,6 +23,7 @@ import { buildExerciseHistory } from '@features/exercise/utils/exercise-history'
 import { buildExerciseOptions, resolveExerciseByLabel } from '@features/exercise/utils/exercise-options';
 import { injectHaptics } from '../../utils/haptics';
 import { injectLogicalToday } from '../../utils/logical-today';
+import { weekAxis } from '../../utils/week-axis';
 
 /** The bare session row /api/gym/sessions/active returns (no sets/cardio). */
 type ActiveSessionInfo = {
@@ -40,7 +43,7 @@ type ActiveSessionInfo = {
  */
 @Component({
   selector: 'app-mobile-train',
-  imports: [UiButton, UiEmptyState, UiLoadingState, ExerciseSessionRow],
+  imports: [UiBarChart, UiButton, UiEmptyState, UiLoadingState, ExerciseSessionRow],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mobile-train.html',
   styleUrl: './mobile-train.scss',
@@ -67,6 +70,10 @@ export class MobileTrain {
   private readonly historyRes = httpResource<{ items: SessionDetailed[] }>(
     () => `/api/gym/sessions/detailed?days=180&limit=200`,
   );
+  // Trailing week for the volume strip — the "seeing data back" ask.
+  private readonly dailyRes = httpResource<{ days: GymDailyRow[] }>(
+    () => `/api/gym/sessions/daily?from=${shiftIsoDay(this.today(), -6)}&to=${this.today()}`,
+  );
 
   protected readonly loading = computed(() => this.sessionsRes.isLoading() && !this.sessionsRes.hasValue());
 
@@ -79,7 +86,18 @@ export class MobileTrain {
     this.activeRes.reload();
     this.catalogRes.reload();
     this.historyRes.reload();
+    this.dailyRes.reload();
   }
+
+  protected readonly week = computed(() =>
+    weekAxis(
+      this.today(),
+      this.dailyRes.hasValue() ? this.dailyRes.value().days : [],
+      (d) => d.date,
+      (d) => d.volume_kg,
+    ),
+  );
+  protected readonly hasWeek = computed(() => this.week().values.some((v) => v > 0));
 
   private readonly sessions = computed<SessionDetailed[]>(() =>
     this.sessionsRes.hasValue() ? this.sessionsRes.value().items : [],

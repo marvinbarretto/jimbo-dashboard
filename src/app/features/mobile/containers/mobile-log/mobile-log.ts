@@ -7,11 +7,14 @@ import {
   type TrackerEntry,
   type TrackerMeasure,
 } from '@shared/components/tracker/tracker.types';
+import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { ToastService } from '@shared/components/toast/toast.service';
-import { logicalDay } from '@shared/utils/datetime.utils';
+import { logicalDay, shiftIsoDay } from '@shared/utils/datetime.utils';
 import { injectLogicalToday } from '../../utils/logical-today';
+import { weekAxis } from '../../utils/week-axis';
 import {
   NutritionService,
+  type FoodDailyRow,
   type FoodLogEntry,
   type FrequentFood,
   type SupplementLogEntry,
@@ -42,7 +45,7 @@ const QUICK_ADD: readonly TrackerMeasure[] = [{ key: 'kcal', label: 'kcal', unit
  */
 @Component({
   selector: 'app-mobile-log',
-  imports: [UiButton, UiLoadingState, UiTrackerDayGroup],
+  imports: [UiBarChart, UiButton, UiLoadingState, UiTrackerDayGroup],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mobile-log.html',
   styleUrl: './mobile-log.scss',
@@ -67,6 +70,10 @@ export class MobileLog {
   private readonly frequentRes = httpResource<{ items: FrequentFood[] }>(
     () => `/api/coach/food-log/frequent?limit=40`,
   );
+  // Trailing week for the strip below the ledger — the "seeing data back" ask.
+  private readonly dailyRes = httpResource<{ days: FoodDailyRow[] }>(
+    () => `/api/coach/food-log/daily?from=${shiftIsoDay(this.today(), -6)}&to=${this.today()}`,
+  );
 
   // Spinner only on the FIRST load — reload-after-write keeps hasValue() true
   // so the ledger isn't torn down under the user's thumb after every edit.
@@ -88,7 +95,18 @@ export class MobileLog {
     this.foodRes.reload();
     this.suppRes.reload();
     this.frequentRes.reload();
+    this.dailyRes.reload();
   }
+
+  protected readonly week = computed(() =>
+    weekAxis(
+      this.today(),
+      this.dailyRes.hasValue() ? this.dailyRes.value().days : [],
+      (d) => d.date,
+      (d) => d.kcal,
+    ),
+  );
+  protected readonly hasWeek = computed(() => this.week().values.some((v) => v > 0));
 
   protected readonly suggestions = computed<string[]>(() =>
     (this.frequentRes.hasValue() ? this.frequentRes.value().items : []).map(f => f.label),
