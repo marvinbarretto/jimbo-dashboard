@@ -9,16 +9,6 @@
 @use 'report';
 @use 'answer-rail';
 
-.app-shell {
-  display: flex;
-  min-height: 100vh;
-  flex-direction: column;
-}
-
-.app-main {
-  flex: 1;
-}
-
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -136,7 +126,9 @@ html {
 }
 
 body {
-  min-height: 100vh;
+  // dvh, not vh — see app.scss :host. vh + viewport-fit=cover makes short
+  // pages scroll by the mobile URL-bar height under fixed chrome.
+  min-height: 100dvh;
 }
 
 a {

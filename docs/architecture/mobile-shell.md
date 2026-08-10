@@ -45,9 +45,14 @@ Performance was the open question. It doesn't favour Vercel:
 
 ## Shape
 
-A `/m` route group with its own layout — bottom tab bar, no side nav, no
-breadcrumbs, no desktop chrome. Lazy-loaded, sharing only the tracker
-primitives and data-access services with the desktop routes.
+Layout routes: `app.routes.ts` has two `path`-level parents, and the root
+component is a bare `<router-outlet>` + toast stack. `/m` loads `MobileShell`
+(bottom tab bar); everything else nests under `DesktopLayout` (header, section
+tabs, gutter) with paths unchanged. The router picks the shell, so neither
+surface renders — or even loads — the other's chrome, and the desktop-only
+eager services (auth check, actors/projects lookups) don't fire in the
+WebView. Tabs share only the tracker primitives and data-access services with
+the desktop routes.
 
 Three tabs plus a FAB:
 
