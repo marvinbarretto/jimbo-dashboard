@@ -14,10 +14,8 @@ import { UiTrackerDayGroup } from '@shared/components/ui-tracker-day-group/ui-tr
 import { UiQuickAddRow, type QuickAddOption } from '@shared/components/ui-quick-add-row/ui-quick-add-row';
 import {
   type TrackerDailyTotal,
-  type TrackerDraft,
   type TrackerEntry,
   type TrackerMeasure,
-  type TrackerPatch,
 } from '@shared/components/tracker/tracker.types';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { logicalDay } from '@shared/utils/datetime.utils';
@@ -30,11 +28,9 @@ import {
   type SupplementLogEntry,
 } from '../../data-access/nutrition.service';
 import {
-  foodChanges,
+  createLedgerWriters,
   foodToEntry,
   isAlcoholicDrink,
-  splitId,
-  suppChanges,
   suppToEntry,
 } from '../../data-access/nutrition-ledger';
 
@@ -224,70 +220,17 @@ export class NutritionPage {
       .map(([date, entries]) => ({ date, entries }));
   });
 
-  // ── Write handlers (reload-on-write) ─────────────────────────────
-  protected onAddFood(draft: TrackerDraft): void {
-    const kcal = draft.values['kcal'];
-    const estimating = kcal == null;
-    // The LLM estimate adds ~1–2s before the entry appears — acknowledge the add.
-    if (estimating) this.toast.info(`Estimating “${draft.label}”…`);
-    this.service
-      .createFood({
-        raw_text: draft.label,
-        logged_at: draft.at,
-        est_kcal: kcal ?? null,
-        estimate: estimating,
-      })
-      .subscribe({
-        next: () => this.reloadFood(),
-        error: () => this.toast.error('Could not add entry'),
-      });
-  }
-
-  protected onAddSupplement(draft: TrackerDraft): void {
-    if (!draft.ref) return;
-    this.service
-      .createSupplement({ supplement_id: draft.ref, dosage: draft.values['dose'] || 1, taken_at: draft.at })
-      .subscribe({
-        next: () => this.suppRes.reload(),
-        error: () => this.toast.error('Could not log supplement'),
-      });
-  }
-
-  protected onPatch(p: TrackerPatch): void {
-    const { kind, id } = splitId(p.id);
-    if (kind === 'food') {
-      this.service.patchFood(id, foodChanges(p.changes)).subscribe({
-        next: () => this.reloadFood(),
-        error: () => this.toast.error('Could not save edit'),
-      });
-    } else {
-      this.service.patchSupplement(Number(id), suppChanges(p.changes)).subscribe({
-        next: () => this.suppRes.reload(),
-        error: () => this.toast.error('Could not save edit'),
-      });
-    }
-  }
-
-  protected onRemove(entryId: string): void {
-    const { kind, id } = splitId(entryId);
-    if (kind === 'food') {
-      this.service.deleteFood(id).subscribe({
-        next: () => this.reloadFood(),
-        error: () => this.toast.error('Could not delete entry'),
-      });
-    } else {
-      this.service.deleteSupplement(Number(id)).subscribe({
-        next: () => this.suppRes.reload(),
-        error: () => this.toast.error('Could not delete entry'),
-      });
-    }
-  }
-
-  // Food writes change macros → re-roll the daily totals + trend too.
-  private reloadFood(): void {
-    this.foodRes.reload();
-    this.dailyRes.reload();
-    this.frequentRes.reload(); // a new/edited food may change the suggestions
-  }
+  // Write side is shared with the phone shell's Log tab — see createLedgerWriters.
+  protected readonly ledger = createLedgerWriters({
+    service: this.service,
+    toast: this.toast,
+    // Food writes change macros → re-roll the daily totals + trend too.
+    onFoodChanged: () => {
+      this.foodRes.reload();
+      this.dailyRes.reload();
+      this.frequentRes.reload(); // a new/edited food may change the suggestions
+    },
+    onSupplementsChanged: () => this.suppRes.reload(),
+  });
 }
 

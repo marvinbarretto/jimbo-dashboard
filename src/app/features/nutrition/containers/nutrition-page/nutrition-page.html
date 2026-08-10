@@ -62,7 +62,7 @@
           labelAria="Supplement"
           addLabel="Log"
           kind="supplement"
-          (add)="onAddSupplement($event)"
+          (add)="ledger.addSupplement($event)"
         />
       </app-ui-section>
     }
@@ -83,9 +83,9 @@
         quickAddLabel="Add"
         quickAddKind="food"
         emptyMessage="Nothing logged this day yet."
-        (add)="onAddFood($event)"
-        (patch)="onPatch($event)"
-        (remove)="onRemove($event)"
+        (add)="ledger.addFood($event)"
+        (patch)="ledger.patch($event)"
+        (remove)="ledger.remove($event)"
       />
     }
   </app-ui-stack>

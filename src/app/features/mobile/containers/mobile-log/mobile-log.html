@@ -5,7 +5,7 @@
        own "Today · n entries · 1,840 kcal" line. A second title would just cost
        a thumb-scroll. Sheet-vs-inline editing is the group's own call. -->
   <app-ui-tracker-day-group
-    [date]="today"
+    [date]="today()"
     [entries]="entries()"
     [measures]="ledgerMeasures"
     [editable]="true"
@@ -17,8 +17,8 @@
     quickAddLabel="Add"
     quickAddKind="food"
     emptyMessage="Nothing logged yet today."
-    (add)="onAdd($event)"
-    (patch)="onPatch($event)"
-    (remove)="onRemove($event)"
+    (add)="ledger.addFood($event)"
+    (patch)="ledger.patch($event)"
+    (remove)="ledger.remove($event)"
   />
 }

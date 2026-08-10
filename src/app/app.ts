@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ToastStack } from './shared/components/toast/toast-stack';
 import { ThemeService } from './shared/services/theme.service';
@@ -13,6 +13,7 @@ import { ThemeService } from './shared/services/theme.service';
   imports: [RouterOutlet, ToastStack],
   templateUrl: './app.html',
   styleUrl: './app.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
   // Instantiated here, not in a layout: the constructor effect applies the

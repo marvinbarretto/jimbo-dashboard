@@ -63,14 +63,25 @@ export class ApiCredentials {
     if (!plugin) return;
 
     try {
-      const creds = await plugin.getApiCredentials();
+      // Raced against a timeout: this runs in an app initializer, so a bridge
+      // call that never settles (plugin bug, deadlock on resume) would
+      // otherwise hold Angular bootstrap on a blank screen forever. try/catch
+      // only covers rejection, not a promise that never resolves.
+      const creds = await Promise.race([
+        plugin.getApiCredentials(),
+        new Promise<null>(resolve => setTimeout(() => resolve(null), 3000)),
+      ]);
+      if (!creds) return;
       // Empty key = APK built without one. Treat as absent so we fall through
       // to cookie auth rather than sending a header that can only 401.
       if (creds.apiKey) this.key.set(creds.apiKey);
       if (creds.deviceId) this.deviceId.set(creds.deviceId);
     } catch {
-      // Any bridge failure degrades to exactly today's behaviour: cookie auth.
-      // Deliberately not logged — the payload is a credential.
+      // Bridge failure → cookie auth. In a browser that's today's behaviour;
+      // in the WebView there's no session, so the first /api call 401s and
+      // authRedirectInterceptor lands on /auth/login with a return URL — a
+      // one-time manual login, not a dead end. Deliberately not logged — the
+      // payload is a credential.
     }
   }
 }

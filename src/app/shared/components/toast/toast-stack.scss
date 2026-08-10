@@ -1,6 +1,8 @@
 .toast-stack {
   position: fixed;
-  top: 1.5rem;
+  // max() against the safe area: viewport-fit=cover lets the page draw under
+  // the status bar, and toasts are the phone shell's only error feedback.
+  top: max(1.5rem, env(safe-area-inset-top, 0px));
   right: 1.5rem;
   z-index: 9999;
   display: flex;

@@ -1,16 +1,13 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, DestroyRef, computed, inject, signal } from '@angular/core';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiTrackerDayGroup } from '@shared/components/ui-tracker-day-group/ui-tracker-day-group';
 import {
-  type TrackerDraft,
   type TrackerEntry,
   type TrackerMeasure,
-  type TrackerPatch,
 } from '@shared/components/tracker/tracker.types';
 import { ToastService } from '@shared/components/toast/toast.service';
-import { logicalDay } from '@shared/utils/datetime.utils';
-import { todayKey } from '@shared/utils/date-keys';
+import { logicalDay, logicalToday } from '@shared/utils/datetime.utils';
 import {
   NutritionService,
   type FoodLogEntry,
@@ -18,10 +15,8 @@ import {
   type SupplementLogEntry,
 } from '@features/nutrition/data-access/nutrition.service';
 import {
-  foodChanges,
+  createLedgerWriters,
   foodToEntry,
-  splitId,
-  suppChanges,
   suppToEntry,
 } from '@features/nutrition/data-access/nutrition-ledger';
 
@@ -56,13 +51,35 @@ export class MobileLog {
 
   protected readonly ledgerMeasures = LEDGER_MEASURES;
   protected readonly quickAdd = QUICK_ADD;
-  protected readonly today = todayKey();
+
+  /**
+   * logicalToday (04:00 Europe/London cutover), matching logicalDay() below
+   * and the desktop tracker pages — browser-local todayKey() disagrees with
+   * both every night from midnight to cutover, which made a 1am add vanish
+   * from its own ledger on reload.
+   *
+   * A signal, not a constant: the /m shell lives in a persistent WebView that
+   * gets backgrounded for days. Re-checked whenever the page becomes visible
+   * again, so a resumed app queries the actual today; the httpResource URLs
+   * below re-fetch off the signal change.
+   */
+  protected readonly today = signal(logicalToday());
+
+  constructor() {
+    const doc = inject(DOCUMENT);
+    const destroyRef = inject(DestroyRef);
+    const onVisible = () => {
+      if (doc.visibilityState === 'visible') this.today.set(logicalToday());
+    };
+    doc.addEventListener('visibilitychange', onVisible);
+    destroyRef.onDestroy(() => doc.removeEventListener('visibilitychange', onVisible));
+  }
 
   private readonly foodRes = httpResource<{ items: FoodLogEntry[] }>(
-    () => `/api/coach/food-log?from=${this.today}&to=${this.today}&limit=200`,
+    () => `/api/coach/food-log?from=${this.today()}&to=${this.today()}&limit=200`,
   );
   private readonly suppRes = httpResource<{ items: SupplementLogEntry[] }>(
-    () => `/api/coach/supplement-log?from=${this.today}&to=${this.today}&limit=200`,
+    () => `/api/coach/supplement-log?from=${this.today()}&to=${this.today()}&limit=200`,
   );
   private readonly frequentRes = httpResource<{ items: FrequentFood[] }>(
     () => `/api/coach/food-log/frequent?limit=40`,
@@ -77,66 +94,25 @@ export class MobileLog {
   );
 
   protected readonly entries = computed<TrackerEntry[]>(() => {
+    const today = this.today();
     const out: TrackerEntry[] = [];
     for (const f of this.foodRes.value()?.items ?? []) {
-      if (logicalDay(f.logged_at) === this.today) out.push(foodToEntry(f));
+      if (logicalDay(f.logged_at) === today) out.push(foodToEntry(f));
     }
     for (const s of this.suppRes.value()?.items ?? []) {
-      if (logicalDay(s.taken_at) === this.today) out.push(suppToEntry(s));
+      if (logicalDay(s.taken_at) === today) out.push(suppToEntry(s));
     }
     return out.sort((a, b) => b.at.localeCompare(a.at));
   });
 
-  protected onAdd(draft: TrackerDraft): void {
-    const kcal = draft.values['kcal'];
-    const estimating = kcal == null;
-    // The LLM estimate adds ~1–2s before the entry appears — acknowledge the add.
-    if (estimating) this.toast.info(`Estimating “${draft.label}”…`);
-    this.service
-      .createFood({
-        raw_text: draft.label,
-        logged_at: draft.at,
-        est_kcal: kcal ?? null,
-        estimate: estimating,
-      })
-      .subscribe({
-        next: () => this.reloadFood(),
-        error: () => this.toast.error('Could not add entry'),
-      });
-  }
-
-  protected onPatch(p: TrackerPatch): void {
-    const { kind, id } = splitId(p.id);
-    if (kind === 'food') {
-      this.service.patchFood(id, foodChanges(p.changes)).subscribe({
-        next: () => this.reloadFood(),
-        error: () => this.toast.error('Could not save edit'),
-      });
-    } else {
-      this.service.patchSupplement(Number(id), suppChanges(p.changes)).subscribe({
-        next: () => this.suppRes.reload(),
-        error: () => this.toast.error('Could not save edit'),
-      });
-    }
-  }
-
-  protected onRemove(entryId: string): void {
-    const { kind, id } = splitId(entryId);
-    if (kind === 'food') {
-      this.service.deleteFood(id).subscribe({
-        next: () => this.reloadFood(),
-        error: () => this.toast.error('Could not delete entry'),
-      });
-    } else {
-      this.service.deleteSupplement(Number(id)).subscribe({
-        next: () => this.suppRes.reload(),
-        error: () => this.toast.error('Could not delete entry'),
-      });
-    }
-  }
-
-  private reloadFood(): void {
-    this.foodRes.reload();
-    this.frequentRes.reload(); // a new/edited food may change the suggestions
-  }
+  // Write side is shared with the desktop page — see createLedgerWriters.
+  protected readonly ledger = createLedgerWriters({
+    service: this.service,
+    toast: this.toast,
+    onFoodChanged: () => {
+      this.foodRes.reload();
+      this.frequentRes.reload(); // a new/edited food may change the suggestions
+    },
+    onSupplementsChanged: () => this.suppRes.reload(),
+  });
 }

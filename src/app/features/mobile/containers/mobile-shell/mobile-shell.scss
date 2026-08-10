@@ -2,7 +2,11 @@
   // Tab bar height, shared between the bar itself and the body's bottom clearance
   // so content can never be trapped underneath it.
   --m-tab-height: 3.25rem;
-  // The shell owns its own inset; the app shell zeroes --app-gutter under /m.
+  // The shell owns its own inset via --m-gutter. Since the layout-routes split
+  // no desktop ancestor defines --app-gutter here, so pin it to 0: gutter-aware
+  // shared components fall back per-property otherwise (ui-tab-bar pads by
+  // 1.5rem but unmargins by 0px — a double inset).
+  --app-gutter: 0px;
   --m-gutter: 1rem;
 
   display: flex;

@@ -1,8 +1,11 @@
 import {
+  type TrackerDraft,
   type TrackerEntry,
   type TrackerPatch,
 } from '@shared/components/tracker/tracker.types';
+import { type ToastService } from '@shared/components/toast/toast.service';
 import {
+  type NutritionService,
   type FoodItem,
   type FoodLogEntry,
   type FoodPatch,
@@ -82,4 +85,80 @@ export function suppChanges(c: TrackerPatch['changes']): SupplementPatch {
 export function splitId(id: string): { kind: 'food' | 'supp'; id: string } {
   const [kind, ...rest] = id.split(':');
   return { kind: kind === 'supp' ? 'supp' : 'food', id: rest.join(':') };
+}
+
+/**
+ * The write side of the ledger — add/patch/remove with toast feedback —
+ * shared by both surfaces so the dispatch-by-id-prefix logic and error copy
+ * can't drift between them. Callers supply only what differs: which resources
+ * to reload after each kind of write.
+ */
+export function createLedgerWriters(deps: {
+  service: NutritionService;
+  toast: ToastService;
+  /** Food writes change macros — desktop also re-rolls daily totals here. */
+  onFoodChanged: () => void;
+  onSupplementsChanged: () => void;
+}) {
+  const { service, toast, onFoodChanged, onSupplementsChanged } = deps;
+
+  return {
+    addFood(draft: TrackerDraft): void {
+      const kcal = draft.values['kcal'];
+      const estimating = kcal == null;
+      // The LLM estimate adds ~1–2s before the entry appears — acknowledge the add.
+      if (estimating) toast.info(`Estimating “${draft.label}”…`);
+      service
+        .createFood({
+          raw_text: draft.label,
+          logged_at: draft.at,
+          est_kcal: kcal ?? null,
+          estimate: estimating,
+        })
+        .subscribe({
+          next: () => onFoodChanged(),
+          error: () => toast.error('Could not add entry'),
+        });
+    },
+
+    addSupplement(draft: TrackerDraft): void {
+      if (!draft.ref) return;
+      service
+        .createSupplement({ supplement_id: draft.ref, dosage: draft.values['dose'] || 1, taken_at: draft.at })
+        .subscribe({
+          next: () => onSupplementsChanged(),
+          error: () => toast.error('Could not log supplement'),
+        });
+    },
+
+    patch(p: TrackerPatch): void {
+      const { kind, id } = splitId(p.id);
+      if (kind === 'food') {
+        service.patchFood(id, foodChanges(p.changes)).subscribe({
+          next: () => onFoodChanged(),
+          error: () => toast.error('Could not save edit'),
+        });
+      } else {
+        service.patchSupplement(Number(id), suppChanges(p.changes)).subscribe({
+          next: () => onSupplementsChanged(),
+          error: () => toast.error('Could not save edit'),
+        });
+      }
+    },
+
+    remove(entryId: string): void {
+      const { kind, id } = splitId(entryId);
+      if (kind === 'food') {
+        service.deleteFood(id).subscribe({
+          next: () => onFoodChanged(),
+          error: () => toast.error('Could not delete entry'),
+        });
+      } else {
+        service.deleteSupplement(Number(id)).subscribe({
+          next: () => onSupplementsChanged(),
+          error: () => toast.error('Could not delete entry'),
+        });
+      }
+    },
+  };
 }

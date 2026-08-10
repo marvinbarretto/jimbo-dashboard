@@ -89,9 +89,12 @@ WebView, reuses the existing plugin pattern. The key ships in the APK either
 way, so this doesn't widen the blast radius meaningfully.
 
 Angular side: an `HttpInterceptor` resolving credentials once at bootstrap,
-attaching `X-API-Key` **only** to same-origin `/api` and `/stream` requests,
-never logging it, and falling back to cookie auth when `bridge.has('auth')` is
-false — so the same build still works in a desktop browser.
+attaching `X-API-Key` **only** to same-origin `/api` requests, never logging
+it, and falling back to cookie auth when `bridge.has('auth')` is false — so
+the same build still works in a desktop browser. `/stream/*` stays cookie-only:
+SSE rides `EventSource`, which cannot set request headers. Any future `/m` tab
+that wants the live stream must solve that first (cookie bootstrap or a
+query-token endpoint), not assume the key is attached.
 
 Build order: the plugin is the one hard dependency for the WebView cutover, so
 it lands in Phase 0 alongside the shell skeleton.
