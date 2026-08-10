@@ -115,10 +115,12 @@ Status as of Aug 2026:
 
 Remaining, in order:
 
-3. **Cutover** — deploy the dashboard, rebuild the APK (`AuthPlugin` is in it),
-   point `CAP_SERVER_URL` at `https://<host>/m`, verify on-device that
-   `X-API-Key` lands and writes attribute correctly. First moment the phone
-   runs this for real; everything after iterates on a working loop.
+3. **Cutover** — dashboard deployed and the Caddy edge gate now serves `/m` +
+   hashed assets uncookied (the WebView must never see a login page; data
+   stays behind `/api` auth — see the `@mShell` block in jimbo-api/Caddyfile).
+   Remaining: rebuild the APK (`AuthPlugin` is in it), point `CAP_SERVER_URL`
+   at `https://<host>/m`, verify on-device that `X-API-Key` lands and writes
+   attribute correctly.
 4. **Service worker + manifest** — `@angular/pwa` (ngsw), icons, offline shell.
    Do after the cutover, not before: a service worker in front of a broken
    deploy is sticky, so prove the loop first. Keep a force-refresh escape
