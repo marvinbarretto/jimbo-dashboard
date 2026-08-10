@@ -102,18 +102,34 @@ it lands in Phase 0 alongside the shell skeleton.
 ## Sequencing
 
 Ordered by stated pain — correcting entries, seeing data back, live sets.
+Status as of Aug 2026:
 
-0. **Shell skeleton** — `/m` route group, bottom-nav layout, service worker,
-   Capacitor repoint, auth decision. Nothing user-visible; unblocks everything.
-1. **Nutrition ledger** — read-only rows + bottom-sheet edit. The pattern
-   already won in the `/ui-lab` nutrition-mobile wireframe; extract it.
-2. **Live gym session** — the one genuinely new component. Big tap targets, set
-   repeat, haptics via the bridge. `/api/gym/sessions/active` exists for this.
-3. **Infographics** — day/week rollups sized for a phone, not shrunk desktop
-   charts.
-4. **Today / briefing tab.**
-5. **Demote `gym`** — pull it out of the WebView; it keeps coach chat, voice
-   logging and session history as a browser surface.
+0. ✅ **Shell skeleton** — layout routes (`MobileShell` / `DesktopLayout`),
+   bottom tab bar, safe-area handling, `AuthPlugin` built on both sides.
+   Service worker deferred to phase 3 below.
+1. ✅ **Nutrition ledger** (`/m/log`) — today's food + supplements, sheet
+   editing via the tracker primitives, shared `createLedgerWriters`.
+2. ✅ **Live gym session** (`/m/train`) — start/finish, optimistic
+   "same again" on the aggregated `sets` count, history prefills via the
+   shared `ExerciseSessionRow`, vibration feedback.
+
+Remaining, in order:
+
+3. **Cutover** — deploy the dashboard, rebuild the APK (`AuthPlugin` is in it),
+   point `CAP_SERVER_URL` at `https://<host>/m`, verify on-device that
+   `X-API-Key` lands and writes attribute correctly. First moment the phone
+   runs this for real; everything after iterates on a working loop.
+4. **Service worker + manifest** — `@angular/pwa` (ngsw), icons, offline shell.
+   Do after the cutover, not before: a service worker in front of a broken
+   deploy is sticky, so prove the loop first. Keep a force-refresh escape
+   hatch reachable from native.
+5. **Today tab** — briefing render + day checks. The native home's
+   notification taps deep-link here.
+6. **Infographics** — day/week rollups sized for a phone, not shrunk desktop
+   charts. Log and Train both grow a compact week strip.
+7. **Demote `gym`** — write-parity check on `gym_session_sets` first, then
+   the WebView drops it; gym keeps coach chat, voice and history in the
+   browser. Update `jimbo-app` docs when this lands (phase 5 of its arc).
 
 ## API readiness
 
