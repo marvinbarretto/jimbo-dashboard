@@ -1,10 +1,12 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { TitleStrategy, provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 import { AppTitleStrategy } from './app-title-strategy';
 import { routes } from './app.routes';
+import { ApiCredentials } from './features/auth/data-access/api-credentials.service';
+import { apiKeyInterceptor } from './features/auth/data-access/api-key.interceptor';
 import { authRedirectInterceptor } from './features/auth/data-access/auth-redirect.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -14,7 +16,15 @@ export const appConfig: ApplicationConfig = {
     // Auth: jimbo-api validates the jimbo_session cookie (the browser sends it
     // automatically, same-origin). The interceptor bounces to /auth/login when
     // the session has expired and an /api/* call comes back 401.
-    provideHttpClient(withFetch(), withInterceptors([authRedirectInterceptor])),
+    //
+    // Inside the jimbo-app WebView there is no login flow, so the native shell
+    // hands over an X-API-Key instead. Resolved here — before the root
+    // component is constructed, and therefore before App's eagerly-injected
+    // services fire their HTTP loads.
+    provideAppInitializer(() => inject(ApiCredentials).resolve()),
+    // apiKey before authRedirect: the key has to be attached before a 401 can
+    // be interpreted as an expired session.
+    provideHttpClient(withFetch(), withInterceptors([apiKeyInterceptor, authRedirectInterceptor])),
     provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'top' })),
     { provide: TitleStrategy, useClass: AppTitleStrategy },
     provideCharts(withDefaultRegisterables()),
