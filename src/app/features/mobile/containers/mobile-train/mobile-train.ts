@@ -19,7 +19,7 @@ import {
 } from '@features/exercise/data-access/exercise.service';
 import { createSessionChildWriters } from '@features/exercise/data-access/exercise-ledger';
 import { sessionStats } from '@features/exercise/utils/exercise-format';
-import { buildExerciseHistory } from '@features/exercise/utils/exercise-history';
+import { buildExerciseHistory, type HistorySession } from '@features/exercise/utils/exercise-history';
 import { buildExerciseOptions, resolveExerciseByLabel } from '@features/exercise/utils/exercise-options';
 import { injectHaptics } from '../../utils/haptics';
 import { injectLogicalToday } from '../../utils/logical-today';
@@ -77,9 +77,10 @@ export class MobileTrain {
 
   // 180 days of history powers the "last time: 2×10×25kg" prefills — at the
   // gym, what you lifted last time IS the interface. Idle until a session row
-  // needs it (undefined request = no fetch).
-  private readonly historyRes = httpResource<{ items: SessionDetailed[] }>(() =>
-    this.historyWanted() ? `/api/gym/sessions/detailed?days=180&limit=200` : undefined,
+  // needs it (undefined request = no fetch), and served by the slim history
+  // endpoint: prefill fields only, ~75% smaller than /sessions/detailed.
+  private readonly historyRes = httpResource<{ items: HistorySession[] }>(() =>
+    this.historyWanted() ? `/api/gym/sessions/history?days=180&limit=200` : undefined,
   );
   // Trailing week for the volume strip — the "seeing data back" ask.
   private readonly dailyRes = httpResource<{ days: GymDailyRow[] }>(

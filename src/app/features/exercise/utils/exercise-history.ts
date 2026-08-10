@@ -1,9 +1,25 @@
-import type { SessionDetailed } from '../data-access/exercise.service';
-
 // "Last time" lookup for the quick-add: for each exercise, what did the most
 // recent previous session look like, and — via RPE — what should this one try?
 // Built client-side from a trailing history fetch so the hint works even on a
 // fresh day view whose window contains no prior sessions.
+
+// Structural minimum this builder reads — satisfied by both SessionDetailed
+// (desktop's window fetch) and the slim /api/gym/sessions/history payload the
+// mobile Train tab fetches (JIM-4646).
+export interface HistorySetRow {
+  readonly exercise_id: string;
+  /** How many identical sets the row represents ("2 × 10 × 25kg" = 2). */
+  readonly sets: number;
+  readonly reps: number | null;
+  readonly weight_kg: number | null;
+  readonly rpe: number | null;
+}
+
+export interface HistorySession {
+  readonly id: string;
+  readonly started_at: string;
+  readonly sets: readonly HistorySetRow[];
+}
 
 /** One exercise's showing within one session, condensed for the hint/prefill. */
 export interface ExercisePerf {
@@ -17,15 +33,13 @@ export interface ExercisePerf {
   readonly topRpe: number | null;
 }
 
-type SetRow = SessionDetailed['sets'][number];
-
-function rowSummary(row: SetRow): string {
+function rowSummary(row: HistorySetRow): string {
   const weight = row.weight_kg ?? 0;
   const base = `${row.sets ?? 1}×${row.reps ?? 0}`;
   return weight > 0 ? `${base}×${weight} kg` : base;
 }
 
-function perfFor(session: SessionDetailed, rows: readonly SetRow[]): ExercisePerf {
+function perfFor(session: HistorySession, rows: readonly HistorySetRow[]): ExercisePerf {
   // Heaviest row drives the prefill — the top set is what progression is
   // measured against; ties go to the later set (more recent judgement).
   let top = rows[0]!;
@@ -54,13 +68,13 @@ function perfFor(session: SessionDetailed, rows: readonly SetRow[]): ExercisePer
  * @returns Map keyed by exercise_id; exercises never logged are simply absent.
  */
 export function buildExerciseHistory(
-  sessions: readonly SessionDetailed[],
+  sessions: readonly HistorySession[],
 ): Map<string, ExercisePerf[]> {
   const out = new Map<string, ExercisePerf[]>();
   const ordered = [...sessions].sort((a, b) => b.started_at.localeCompare(a.started_at));
 
   for (const session of ordered) {
-    const byExercise = new Map<string, SetRow[]>();
+    const byExercise = new Map<string, HistorySetRow[]>();
     for (const row of session.sets) {
       (byExercise.get(row.exercise_id) ?? byExercise.set(row.exercise_id, []).get(row.exercise_id)!).push(row);
     }
