@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.171](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.170...v0.0.171) (2026-08-10)
+
+
+### Bug Fixes
+
+* **mobile:** today-tab review — render v2 briefings, independent gates, live strips ([ae26f28](https://github.com/marvinbarretto/jimbo-dashboard/commit/ae26f2878c4bcdc47b5c9b3cec142deb81b2c5f5))
+
 ### [0.0.170](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.169...v0.0.170) (2026-08-10)
 
 
