@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
@@ -65,10 +65,21 @@ export class MobileTrain {
   // surfaces (as a finishable banner, since its detail is outside the window).
   private readonly activeRes = httpResource<ActiveSessionInfo>(() => `/api/gym/sessions/active`);
   private readonly catalogRes = httpResource<ExerciseCatalogItem[]>(() => `/api/gym/exercises?limit=300`);
+  /**
+   * Deferred-history latch: the 180-day fetch is the tab's heaviest call, and
+   * on a visit with no session on screen nothing consumes it — prefills only
+   * matter once a session row exists. Flips true when one does (a session
+   * starts, or the window loads finished ones) and stays true, so finishing
+   * or deleting the day's last session doesn't idle the resource and drop the
+   * already-loaded history mid-render.
+   */
+  private readonly historyWanted = signal(false);
+
   // 180 days of history powers the "last time: 2×10×25kg" prefills — at the
-  // gym, what you lifted last time IS the interface.
-  private readonly historyRes = httpResource<{ items: SessionDetailed[] }>(
-    () => `/api/gym/sessions/detailed?days=180&limit=200`,
+  // gym, what you lifted last time IS the interface. Idle until a session row
+  // needs it (undefined request = no fetch).
+  private readonly historyRes = httpResource<{ items: SessionDetailed[] }>(() =>
+    this.historyWanted() ? `/api/gym/sessions/detailed?days=180&limit=200` : undefined,
   );
   // Trailing week for the volume strip — the "seeing data back" ask.
   private readonly dailyRes = httpResource<{ days: GymDailyRow[] }>(
@@ -85,7 +96,7 @@ export class MobileTrain {
     this.sessionsRes.reload();
     this.activeRes.reload();
     this.catalogRes.reload();
-    this.historyRes.reload();
+    if (this.historyWanted()) this.historyRes.reload();
     this.dailyRes.reload();
   }
 
@@ -165,6 +176,9 @@ export class MobileTrain {
 
   constructor() {
     pollWhileVisible(() => this.minuteTick.update((n) => n + 1));
+    effect(() => {
+      if (this.active() !== null || this.finishedToday().length > 0) this.historyWanted.set(true);
+    });
   }
 
   protected readonly elapsedMin = computed(() => {
@@ -305,6 +319,6 @@ export class MobileTrain {
 
   private reloadAll(): void {
     this.reloadSessions();
-    this.historyRes.reload();
+    if (this.historyWanted()) this.historyRes.reload();
   }
 }
