@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.170](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.169...v0.0.170) (2026-08-10)
+
+
+### Features
+
+* **mobile:** today tab, week strips, gym demoted — phases 5–7 ([f4b3e37](https://github.com/marvinbarretto/jimbo-dashboard/commit/f4b3e374a2c6d13901ddcdf400e7a8525bc6daae))
+
 ### [0.0.169](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.168...v0.0.169) (2026-08-10)
 
 
