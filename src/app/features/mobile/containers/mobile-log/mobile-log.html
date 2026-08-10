@@ -1,0 +1,24 @@
+@if (loading()) {
+  <app-ui-loading-state message="Loading today…" />
+} @else {
+  <!-- No page heading: the tab bar already says Log, and the group renders its
+       own "Today · n entries · 1,840 kcal" line. A second title would just cost
+       a thumb-scroll. Sheet-vs-inline editing is the group's own call. -->
+  <app-ui-tracker-day-group
+    [date]="today"
+    [entries]="entries()"
+    [measures]="ledgerMeasures"
+    [editable]="true"
+    [quickAddMeasures]="quickAdd"
+    [quickAddSuggestions]="suggestions()"
+    [quickAddAllowCreate]="true"
+    [quickAddInstantCommit]="true"
+    quickAddPlaceholder="what did you eat or drink?"
+    quickAddLabel="Add"
+    quickAddKind="food"
+    emptyMessage="Nothing logged yet today."
+    (add)="onAdd($event)"
+    (patch)="onPatch($event)"
+    (remove)="onRemove($event)"
+  />
+}

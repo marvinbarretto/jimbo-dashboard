@@ -26,12 +26,7 @@ export const mobileRoutes: Routes = [
       {
         path: 'log',
         title: 'Log',
-        loadComponent: () =>
-          import('./containers/mobile-tab-stub/mobile-tab-stub').then(m => m.MobileTabStub),
-        data: {
-          heading: 'Log',
-          note: 'Nutrition day ledger — read-only rows with bottom-sheet editing. Next up.',
-        },
+        loadComponent: () => import('./containers/mobile-log/mobile-log').then(m => m.MobileLog),
       },
       {
         path: 'train',
