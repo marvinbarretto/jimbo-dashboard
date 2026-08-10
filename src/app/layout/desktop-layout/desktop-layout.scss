@@ -29,6 +29,10 @@
   z-index: 100;
   background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
+  // viewport-fit=cover lets an edge-to-edge WebView draw under the status bar,
+  // and desktop routes are reachable there (e.g. the post-login return flow).
+  // Zero everywhere else.
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .app-header__inner {

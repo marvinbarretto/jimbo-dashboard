@@ -2,3 +2,16 @@
   display: block;
   padding-block: 1rem;
 }
+
+.log__error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding-block: 1rem;
+}
+
+.log__error-message {
+  margin: 0;
+  color: var(--color-text-muted);
+}

@@ -11,7 +11,7 @@ import {
   type TrackerMeasure,
   type TrackerPatch,
 } from '@shared/components/tracker/tracker.types';
-import { londonToday, relativeDayLabel } from '@shared/utils/datetime.utils';
+import { logicalToday, relativeDayLabel } from '@shared/utils/datetime.utils';
 
 /**
  * A single day's slice of a tracker: a collapsible section headed by the day +
@@ -162,8 +162,11 @@ export class UiTrackerDayGroup {
 
   // Quick-add backdates to the group day unless the day is today, where "now"
   // (an omitted timestamp → server now()) reads more naturally than midday.
+  // logicalToday (04:00 cutover), NOT calendar midnight: hosts bind [date] to
+  // the logical day, and a calendar comparison here made a 1am quick-add
+  // backdate itself to noon yesterday.
   protected readonly backdate = computed(() =>
-    this.date() === londonToday() ? undefined : this.date(),
+    this.date() === logicalToday() ? undefined : this.date(),
   );
 
   protected readonly totals = computed(() => sumMeasures([...this.entries()], this.measures()));

@@ -1,5 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiTrackerDayGroup } from '@shared/components/ui-tracker-day-group/ui-tracker-day-group';
 import {
@@ -41,7 +42,7 @@ const QUICK_ADD: readonly TrackerMeasure[] = [{ key: 'kcal', label: 'kcal', unit
  */
 @Component({
   selector: 'app-mobile-log',
-  imports: [UiLoadingState, UiTrackerDayGroup],
+  imports: [UiButton, UiLoadingState, UiTrackerDayGroup],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mobile-log.html',
   styleUrl: './mobile-log.scss',
@@ -67,21 +68,41 @@ export class MobileLog {
     () => `/api/coach/food-log/frequent?limit=40`,
   );
 
-  // Spinner only on the FIRST load — reload-after-write keeps hasValue() true so
-  // the ledger isn't torn down under the user's thumb after every edit.
-  protected readonly loading = computed(() => this.foodRes.isLoading() && !this.foodRes.hasValue());
+  // Spinner only on the FIRST load — reload-after-write keeps hasValue() true
+  // so the ledger isn't torn down under the user's thumb after every edit.
+  // Gated on BOTH resources: food resolving first would otherwise flash
+  // "nothing logged" over a supplements-only day still in flight.
+  protected readonly loading = computed(
+    () =>
+      (this.foodRes.isLoading() && !this.foodRes.hasValue()) ||
+      (this.suppRes.isLoading() && !this.suppRes.hasValue()),
+  );
+
+  // A resource in error state THROWS from value() — hasValue() is the guard,
+  // not ?. — so failures surface here instead of killing the render.
+  protected readonly loadFailed = computed(
+    () => this.foodRes.error() !== undefined || this.suppRes.error() !== undefined,
+  );
+
+  protected retry(): void {
+    this.foodRes.reload();
+    this.suppRes.reload();
+    this.frequentRes.reload();
+  }
 
   protected readonly suggestions = computed<string[]>(() =>
-    (this.frequentRes.value()?.items ?? []).map(f => f.label),
+    (this.frequentRes.hasValue() ? this.frequentRes.value().items : []).map(f => f.label),
   );
 
   protected readonly entries = computed<TrackerEntry[]>(() => {
     const today = this.today();
     const out: TrackerEntry[] = [];
-    for (const f of this.foodRes.value()?.items ?? []) {
+    const foods = this.foodRes.hasValue() ? this.foodRes.value().items : [];
+    const supps = this.suppRes.hasValue() ? this.suppRes.value().items : [];
+    for (const f of foods) {
       if (logicalDay(f.logged_at) === today) out.push(foodToEntry(f));
     }
-    for (const s of this.suppRes.value()?.items ?? []) {
+    for (const s of supps) {
       if (logicalDay(s.taken_at) === today) out.push(suppToEntry(s));
     }
     return out.sort((a, b) => b.at.localeCompare(a.at));

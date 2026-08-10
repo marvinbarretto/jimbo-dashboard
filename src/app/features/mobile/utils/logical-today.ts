@@ -1,5 +1,6 @@
-import { DOCUMENT, DestroyRef, type Signal, inject, signal } from '@angular/core';
+import { type Signal, signal } from '@angular/core';
 import { logicalToday } from '@shared/utils/datetime.utils';
+import { pollWhileVisible } from '@features/journal/utils/live-poll';
 
 /**
  * The logical day (04:00 Europe/London cutover) as a signal that survives the
@@ -7,21 +8,19 @@ import { logicalToday } from '@shared/utils/datetime.utils';
  *
  * /m components live in a persistent Capacitor WebView that gets backgrounded
  * and resumed across days — a day key captured at construction goes stale and
- * makes "Today" lie. Re-checked whenever the page becomes visible again;
- * anything derived (httpResource URLs included) reacts to the change.
+ * makes "Today" lie. Checked on a visibility-gated minute tick (which also
+ * fires on resume), so a screen kept awake across the 04:00 cutover rolls
+ * over too; anything derived (httpResource URLs included) reacts to the
+ * change. Signal only updates on an actual day change, so the tick itself
+ * never invalidates downstream computeds.
  *
  * Must be called in an injection context (field initializer / constructor).
  */
 export function injectLogicalToday(): Signal<string> {
-  const doc = inject(DOCUMENT);
-  const destroyRef = inject(DestroyRef);
-
   const today = signal(logicalToday());
-  const onVisible = () => {
-    if (doc.visibilityState === 'visible') today.set(logicalToday());
-  };
-  doc.addEventListener('visibilitychange', onVisible);
-  destroyRef.onDestroy(() => doc.removeEventListener('visibilitychange', onVisible));
-
+  pollWhileVisible(() => {
+    const now = logicalToday();
+    if (now !== today()) today.set(now);
+  });
   return today.asReadonly();
 }

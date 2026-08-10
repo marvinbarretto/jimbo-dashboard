@@ -47,6 +47,14 @@ export class ApiCredentials {
   /** Null in a browser, or whenever the bridge/plugin call fails. */
   readonly key = signal<string | null>(null);
 
+  /**
+   * API base the native side syncs to, trailing-slash-stripped. Null while the
+   * app is served same-origin with the API — but if delivery ever moves to a
+   * bundled Capacitor webDir, request URLs go absolute and the interceptor
+   * needs this to keep recognising API calls.
+   */
+  readonly apiUrl = signal<string | null>(null);
+
   /** Which phone we're running on, when native told us. Informational. */
   readonly deviceId = signal<string | null>(null);
 
@@ -75,6 +83,7 @@ export class ApiCredentials {
       // Empty key = APK built without one. Treat as absent so we fall through
       // to cookie auth rather than sending a header that can only 401.
       if (creds.apiKey) this.key.set(creds.apiKey);
+      if (creds.apiUrl) this.apiUrl.set(creds.apiUrl.replace(/\/+$/, ''));
       if (creds.deviceId) this.deviceId.set(creds.deviceId);
     } catch {
       // Bridge failure → cookie auth. In a browser that's today's behaviour;

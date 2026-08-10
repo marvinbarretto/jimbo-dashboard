@@ -1,6 +1,20 @@
 @if (loading()) {
   <app-ui-loading-state message="Loading workouts…" />
+} @else if (loadFailed()) {
+  <div class="train__error">
+    <p class="train__error-message">Couldn't load workouts.</p>
+    <app-ui-button variant="secondary" (pressed)="retry()">Try again</app-ui-button>
+  </div>
 } @else {
+  @if (staleActive(); as stale) {
+    <!-- An unfinished session outside the detail window — surfaced so it
+         can't rot with ended_at null while a new one gets opened next to it. -->
+    <div class="train__stale">
+      <span>Unfinished session from {{ stale.label }}.</span>
+      <app-ui-button variant="secondary" size="sm" (pressed)="finishStale(stale.id)">Close it</app-ui-button>
+    </div>
+  }
+
   @if (active(); as session) {
     <section class="train__live" aria-label="Live session">
       <header class="train__live-header">
@@ -32,7 +46,12 @@
         @if (lastSet()) {
           <!-- The between-sets tap: repeats the last set by bumping its
                aggregated count. Optimistic — see repeatLastSet. -->
-          <button type="button" class="train__repeat" (click)="repeatLastSet()">
+          <button
+            type="button"
+            class="train__repeat"
+            [class.train__repeat--pending]="repeatPending()"
+            (click)="repeatLastSet()"
+          >
             <span class="train__repeat-label">Same again</span>
             <span class="train__repeat-detail">{{ lastSetLabel() }}</span>
           </button>

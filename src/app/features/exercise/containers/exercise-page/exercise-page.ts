@@ -32,7 +32,7 @@ import {
 import { createSessionChildWriters } from '../../data-access/exercise-ledger';
 import { bodyPartBreakdown, lastTrainedByRegion } from '../../utils/muscle-region';
 import { buildExerciseHistory } from '../../utils/exercise-history';
-import { buildExerciseOptions } from '../../utils/exercise-options';
+import { buildExerciseOptions, resolveExerciseByLabel } from '../../utils/exercise-options';
 
 const TOTALS_MEASURES: readonly TrackerMeasure[] = [
   { key: 'volume_kg', label: 'Volume', unit: 'kg', primary: true },
@@ -186,10 +186,7 @@ export class ExercisePage {
     service: this.service,
     toast: this.toast,
     sessions: () => this.sessions(),
-    resolveExercise: (name) => {
-      const n = name.trim().toLowerCase();
-      return this.exerciseOptions().find((o) => o.label.trim().toLowerCase() === n)?.id;
-    },
+    resolveExercise: (name) => resolveExerciseByLabel(this.exerciseOptions(), name),
     reload: () => this.reload(),
   });
 

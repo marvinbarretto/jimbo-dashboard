@@ -17,7 +17,14 @@ import { ApiCredentials } from './api-credentials.service';
  * shell tab consumes it today.
  */
 export const apiKeyInterceptor: HttpInterceptorFn = (req, next) => {
-  const key = inject(ApiCredentials).key();
-  if (!key || !req.url.startsWith('/api')) return next(req);
+  const creds = inject(ApiCredentials);
+  const key = creds.key();
+  if (!key) return next(req);
+  // Same-origin relative URLs today; the plugin-supplied absolute base covers
+  // a future bundled-webDir build where requests stop being relative. Anything
+  // else (third-party hosts) never sees the key.
+  const base = creds.apiUrl();
+  const isApi = req.url.startsWith('/api') || (!!base && req.url.startsWith(`${base}/api`));
+  if (!isApi) return next(req);
   return next(req.clone({ setHeaders: { 'X-API-Key': key } }));
 };

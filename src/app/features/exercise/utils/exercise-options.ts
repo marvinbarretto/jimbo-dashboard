@@ -8,6 +8,19 @@ import { muscleSummary } from './muscle-region';
  * desktop period page and the phone Train tab so both pickers rank and hint
  * identically.
  */
+/**
+ * Resolve a typed exercise name to a catalogue id — trim + case-insensitive
+ * exact match. Shared so desktop and phone can't drift on what a typed name
+ * resolves to; a miss means "create it".
+ */
+export function resolveExerciseByLabel(
+  options: readonly QuickAddOption[],
+  name: string,
+): string | undefined {
+  const n = name.trim().toLowerCase();
+  return options.find((o) => o.label.trim().toLowerCase() === n)?.id;
+}
+
 export function buildExerciseOptions(
   sessions: readonly SessionDetailed[],
   catalog: readonly ExerciseCatalogItem[],

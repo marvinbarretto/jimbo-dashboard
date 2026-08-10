@@ -1,5 +1,10 @@
 @if (loading()) {
   <app-ui-loading-state message="Loading today…" />
+} @else if (loadFailed()) {
+  <div class="log__error">
+    <p class="log__error-message">Couldn't load today's log.</p>
+    <app-ui-button variant="secondary" (pressed)="retry()">Try again</app-ui-button>
+  </div>
 } @else {
   <!-- No page heading: the tab bar already says Log, and the group renders its
        own "Today · n entries · 1,840 kcal" line. A second title would just cost
