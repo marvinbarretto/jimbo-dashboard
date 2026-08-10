@@ -27,6 +27,9 @@
 .app-shell.app-shell--bare {
   --app-gutter: 0rem;
   --app-header-height: 0px;
+  // Matches .m-shell's own 100dvh — with the outer box still at 100vh a short
+  // /m page rubber-bands by the URL-bar height under the fixed tab bar.
+  min-height: 100dvh;
 }
 
 .app-header {
@@ -44,7 +47,11 @@
   // Pinned to --app-header-height so the sticky offset stays truthful even as
   // the nav links' own metrics drift.
   min-height: 3.25rem;
-  padding-inline: var(--app-gutter);
+  // max() not a plain gutter: index.html sets viewport-fit=cover so the page
+  // extends under a notch/rounded corners in landscape. The gutter wins on
+  // ordinary screens where the insets are 0.
+  padding-left: max(var(--app-gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--app-gutter), env(safe-area-inset-right, 0px));
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -111,7 +118,9 @@
   // The container owns the horizontal gutter for every routed page. Pages
   // declare vertical padding / max-width / centering themselves, but never the
   // side inset — that keeps left edges aligned with the header chrome.
-  padding-inline: var(--app-gutter);
+  // See .app-header__inner for why these are max()'d against the safe area.
+  padding-left: max(var(--app-gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--app-gutter), env(safe-area-inset-right, 0px));
 }
 
 @media (max-width: 768px) {
