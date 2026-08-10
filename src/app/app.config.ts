@@ -1,12 +1,13 @@
 import { ApplicationConfig, inject, isDevMode, provideAppInitializer, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { TitleStrategy, provideRouter, withInMemoryScrolling } from '@angular/router';
+import { RouteReuseStrategy, TitleStrategy, provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 import { AppTitleStrategy } from './app-title-strategy';
 import { routes } from './app.routes';
 import { ApiCredentials } from './features/auth/data-access/api-credentials.service';
+import { MobileTabReuseStrategy } from './features/mobile/mobile-tab-reuse-strategy';
 import { apiKeyInterceptor } from './features/auth/data-access/api-key.interceptor';
 import { authRedirectInterceptor } from './features/auth/data-access/auth-redirect.interceptor';
 
@@ -27,6 +28,9 @@ export const appConfig: ApplicationConfig = {
     // be interpreted as an expired session.
     provideHttpClient(withFetch(), withInterceptors([apiKeyInterceptor, authRedirectInterceptor])),
     provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'top' })),
+    // Detach/reattach reuse for the /m tabs only — routes without a reuseTab
+    // marker (all of desktop) keep the default destroy-on-navigate.
+    { provide: RouteReuseStrategy, useClass: MobileTabReuseStrategy },
     { provide: TitleStrategy, useClass: AppTitleStrategy },
     provideCharts(withDefaultRegisterables()),
     // Offline shell + instant cold launch, phone-first. Registration waits for
