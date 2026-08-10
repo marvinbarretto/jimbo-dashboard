@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.169](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.168...v0.0.169) (2026-08-10)
+
+
+### Features
+
+* **pwa:** service worker — offline shell, check-on-resume updates ([abf1f67](https://github.com/marvinbarretto/jimbo-dashboard/commit/abf1f674b5de0d444df520880435b9c84083d515))
+
 ### [0.0.168](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.167...v0.0.168) (2026-08-10)
 
 
