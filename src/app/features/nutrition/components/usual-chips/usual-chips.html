@@ -1,0 +1,22 @@
+<!-- The zeroth capture rung: known items skip typing and scanning. Chips
+     carry label + kcal so the tap is informed but decision-free; a tally
+     marks what's already gone down that day. -->
+<section class="usuals" aria-label="Usual foods and drinks — tap to log">
+  <h2 class="usuals__title">Usuals <span class="usuals__hint">tap to log</span></h2>
+  <div class="usuals__row">
+    @for (u of usuals(); track u.key) {
+      <button
+        type="button"
+        class="usuals__chip"
+        [class.usuals__chip--pending]="pending().has(u.key)"
+        [class.usuals__chip--tallied]="(tally().get(u.key) ?? 0) > 0"
+        (click)="tapped.emit(u)"
+      >
+        {{ u.key }} · {{ u.kcal }}
+        @if (tally().get(u.key); as n) {
+          <span class="usuals__count">×{{ n }}</span>
+        }
+      </button>
+    }
+  </div>
+</section>

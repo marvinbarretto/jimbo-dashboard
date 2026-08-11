@@ -11,7 +11,7 @@ import { CheckinsService } from '@features/checkins/data-access/checkins.service
 import { type BriefingAnalysis } from '@features/briefings/data-access/briefing.types';
 import { MOOD_LABELS, ENERGY_LABELS, type MoodLogEntry } from '@domain/checkins';
 import { injectLogicalToday } from '../../utils/logical-today';
-import { injectHaptics } from '../../utils/haptics';
+import { injectHaptics } from '@shared/utils/haptics';
 
 /** One rendered plan line — v2 priorities and v1 day_plan normalise to this. */
 type PlanLine = { lead: string; text: string };

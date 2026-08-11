@@ -67,6 +67,17 @@
       </app-ui-section>
     }
 
+    <!-- One-tap usuals, mirrored from the phone shell's Log tab. Day view only:
+         a tap logs to the VIEWED day (backdated when browsing the past). -->
+    @if (showUsuals && usuals().length) {
+      <app-usual-chips
+        [usuals]="usuals()"
+        [tally]="usualTally()"
+        [pending]="usualLogger.pending()"
+        (tapped)="usualLogger.log($event)"
+      />
+    }
+
     <!-- The unified day ledger: food + supplements, edit-in-place + quick-add -->
     @for (d of days(); track d.date) {
       <app-ui-tracker-day-group

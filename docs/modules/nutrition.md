@@ -43,6 +43,12 @@ chart so it's comparable day-to-day.
   drink's kcal counts as "alcohol" in the trend.
 - Owns the unified day ledger (food + supplements interleaved, quiet days
   included) built on the shared tracker types.
+- Owns the "usuals" quick-add: `data-access/usuals.ts` (quantity-stripped
+  dedupe key, frequency ranking with slots reserved for recently-logged
+  foods) plus the `UsualChips` one-tap chip row — both shared by the desktop
+  day view and the phone shell's Log tab so the two surfaces can't drift.
+  Chips log with last-known macros (no LLM round-trip) and backdate to the
+  viewed day on past-day pages.
 - Exports `NutritionDaySection` for the journal day page (self-fetching,
   60s poll, collapse-when-empty).
 - Does NOT own the supplement catalogue or protocol definition (server-side,
@@ -96,11 +102,16 @@ observable evidence only.
   legacy entries; documented, but untested — the alcohol split and
   `isAlcoholicDrink` have no spec despite carrying a headline metric.
 - `2026-07-07` — No test files anywhere in the feature (no `*.spec.ts` /
-  `*.test.ts` under `src/app/features/nutrition/`).
+  `*.test.ts` under `src/app/features/nutrition/`). *Update 2026-08-11:
+  `nutrition-ledger`, `product-label`, `reference-intake` and `usuals` now
+  have co-located tests; pages/components remain untested.*
 - `2026-07-07` — `NutritionRow` is not used by any nutrition page or section;
   its only consumer is `features/ui-lab/sections/nutrition-row-section.ts`
   (the ledger uses shared `UiTrackerDayGroup` instead) — candidate dead code
   or lab-only component living in the wrong folder.
 - `2026-07-07` — Same dual data path as exercise: page reads via
   `httpResource` URL strings while `NutritionService` defines the same
-  endpoints for other consumers.
+  endpoints for other consumers. *Update 2026-08-11: the frequents read is
+  unified behind `frequentFoodsResource()` (limit 100 — the endpoint max —
+  so the usuals recency blend isn't starved by count-ordered truncation);
+  the other reads still duplicate URLs.*

@@ -28,28 +28,14 @@
   />
 
   @if (usuals().length) {
-    <!-- The zeroth capture rung: known items skip typing and scanning. Chips
-         carry label + kcal so the tap is informed but decision-free; a tally
-         marks what's already gone down today. -->
-    <section class="log__usuals" aria-label="Usual foods and drinks — tap to log">
-      <h2 class="log__usuals-title">Usuals <span class="log__usuals-hint">tap to log</span></h2>
-      <div class="log__usuals-row">
-        @for (u of usuals(); track u.key) {
-          <button
-            type="button"
-            class="log__usual"
-            [class.log__usual--pending]="usualIsPending(u.key)"
-            [class.log__usual--tallied]="(usualTally().get(u.key) ?? 0) > 0"
-            (click)="logUsual(u)"
-          >
-            {{ u.key }} · {{ u.kcal }}
-            @if (usualTally().get(u.key); as n) {
-              <span class="log__usual-count">×{{ n }}</span>
-            }
-          </button>
-        }
-      </div>
-    </section>
+    <div class="log__usuals">
+      <app-usual-chips
+        [usuals]="usuals()"
+        [tally]="usualTally()"
+        [pending]="usualLogger.pending()"
+        (tapped)="usualLogger.log($event)"
+      />
+    </div>
   }
 
   @if (hasWeek()) {

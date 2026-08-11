@@ -21,7 +21,7 @@ import { createSessionChildWriters } from '@features/exercise/data-access/exerci
 import { sessionStats } from '@features/exercise/utils/exercise-format';
 import { buildExerciseHistory, type HistorySession } from '@features/exercise/utils/exercise-history';
 import { buildExerciseOptions, resolveExerciseByLabel } from '@features/exercise/utils/exercise-options';
-import { injectHaptics } from '../../utils/haptics';
+import { injectHaptics } from '@shared/utils/haptics';
 import { injectLogicalToday } from '../../utils/logical-today';
 import { weekAxis } from '../../utils/week-axis';
 

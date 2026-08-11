@@ -1,5 +1,5 @@
 import { httpResource } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiTrackerDayGroup } from '@shared/components/ui-tracker-day-group/ui-tracker-day-group';
@@ -10,21 +10,24 @@ import {
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { logicalDay, shiftIsoDay } from '@shared/utils/datetime.utils';
-import { injectHaptics } from '../../utils/haptics';
 import { injectLogicalToday } from '../../utils/logical-today';
 import { weekAxis } from '../../utils/week-axis';
 import {
   NutritionService,
+  frequentFoodsResource,
   type FoodDailyRow,
   type FoodLogEntry,
-  type FrequentFood,
   type SupplementLogEntry,
 } from '@features/nutrition/data-access/nutrition.service';
 import {
   createLedgerWriters,
+  createUsualLogger,
   foodToEntry,
   suppToEntry,
 } from '@features/nutrition/data-access/nutrition-ledger';
+import { injectHaptics } from '@shared/utils/haptics';
+import { buildUsuals, tallyUsuals, type Usual } from '@features/nutrition/data-access/usuals';
+import { UsualChips } from '@features/nutrition/components/usual-chips/usual-chips';
 
 // Fewer measures than the desktop ledger: on a phone the row has to stay
 // readable at a glance, and calories are what get corrected. The rest are
@@ -37,20 +40,6 @@ const LEDGER_MEASURES: readonly TrackerMeasure[] = [
 
 const QUICK_ADD: readonly TrackerMeasure[] = [{ key: 'kcal', label: 'kcal', unit: 'kcal' }];
 
-/** A frequent food surfaced as a one-tap log button. */
-export interface Usual {
-  /** Quantity-stripped, lowercased label — dedupe key and display text. */
-  readonly key: string;
-  readonly kcal: number;
-  readonly item: FrequentFood;
-}
-
-// "1 pale ale" / "3 pale ale" / "1 Guinness" collapse onto one chip each: the
-// frequents endpoint ranks raw labels, and leading quantities fragment them.
-function usualKey(label: string): string {
-  return label.replace(/^\d+\s+/, '').trim().toLowerCase();
-}
-
 /**
  * Log tab — today's food, drink and supplements as a single day ledger.
  *
@@ -60,7 +49,7 @@ function usualKey(label: string): string {
  */
 @Component({
   selector: 'app-mobile-log',
-  imports: [UiBarChart, UiButton, UiLoadingState, UiTrackerDayGroup],
+  imports: [UiBarChart, UiButton, UiLoadingState, UiTrackerDayGroup, UsualChips],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mobile-log.html',
   styleUrl: './mobile-log.scss',
@@ -68,7 +57,6 @@ function usualKey(label: string): string {
 export class MobileLog {
   private readonly service = inject(NutritionService);
   private readonly toast = inject(ToastService);
-  private readonly haptics = injectHaptics();
 
   protected readonly ledgerMeasures = LEDGER_MEASURES;
   protected readonly quickAdd = QUICK_ADD;
@@ -83,9 +71,7 @@ export class MobileLog {
   private readonly suppRes = httpResource<{ items: SupplementLogEntry[] }>(
     () => `/api/coach/supplement-log?from=${this.today()}&to=${this.today()}&limit=200`,
   );
-  private readonly frequentRes = httpResource<{ items: FrequentFood[] }>(
-    () => `/api/coach/food-log/frequent?limit=40`,
-  );
+  private readonly frequentRes = frequentFoodsResource();
   // Trailing week for the strip below the ledger — the "seeing data back" ask.
   private readonly dailyRes = httpResource<{ days: FoodDailyRow[] }>(
     () => `/api/coach/food-log/daily?from=${shiftIsoDay(this.today(), -6)}&to=${this.today()}`,
@@ -132,72 +118,26 @@ export class MobileLog {
   );
 
   // ── Usuals: the frequent cluster as one-tap buttons ─────────────
-  // Tap = instant POST with the entry's last-known macros — no typing, no LLM
-  // round-trip. The second pint is a second tap on the same chip.
-  protected readonly usuals = computed<Usual[]>(() => {
-    const items = this.frequentRes.hasValue() ? this.frequentRes.value().items : [];
-    const seen = new Set<string>();
-    const out: Usual[] = [];
-    for (const f of items) {
-      if (f.est_kcal === null) continue;
-      const key = usualKey(f.label);
-      if (!key || seen.has(key)) continue;
-      seen.add(key);
-      out.push({ key, kcal: Math.round(f.est_kcal), item: f });
-      if (out.length === 6) break;
-    }
-    return out;
-  });
+  // Derivation + write live in the shared usuals util / UsualChips component,
+  // so the phone shell and the desktop day view can't drift.
+  protected readonly usuals = computed<Usual[]>(() =>
+    buildUsuals(this.frequentRes.hasValue() ? this.frequentRes.value().items : []),
+  );
 
   /** Times each usual has been logged today — the ×n tally on its chip. */
-  protected readonly usualTally = computed<ReadonlyMap<string, number>>(() => {
-    const m = new Map<string, number>();
-    for (const e of this.entries()) {
-      const key = usualKey(e.label);
-      m.set(key, (m.get(key) ?? 0) + 1);
-    }
-    return m;
+  protected readonly usualTally = computed<ReadonlyMap<string, number>>(() =>
+    tallyUsuals(this.entries().map((e) => e.label)),
+  );
+
+  protected readonly usualLogger = createUsualLogger({
+    service: this.service,
+    toast: this.toast,
+    haptics: injectHaptics(),
+    onLogged: () => {
+      this.foodRes.reload();
+      this.dailyRes.reload();
+    },
   });
-
-  // Per-chip in-flight guard: a mid-flight re-tap is dropped (double-tap
-  // jitter), but once the POST lands the same chip logs another — by design.
-  private readonly usualPending = signal<ReadonlySet<string>>(new Set());
-
-  protected usualIsPending(key: string): boolean {
-    return this.usualPending().has(key);
-  }
-
-  protected logUsual(u: Usual): void {
-    if (this.usualIsPending(u.key)) return;
-    this.usualPending.update((s) => new Set(s).add(u.key));
-    this.haptics.tap();
-    this.service.createFood({
-      raw_text: u.item.label,
-      est_kcal: u.item.est_kcal,
-      est_protein_g: u.item.est_protein_g,
-      est_carbs_g: u.item.est_carbs_g,
-      est_fat_g: u.item.est_fat_g,
-    }).subscribe({
-      next: () => {
-        this.clearUsualPending(u.key);
-        this.toast.success(`${u.key} · ${u.kcal} kcal logged`);
-        this.foodRes.reload();
-        this.dailyRes.reload();
-      },
-      error: () => {
-        this.clearUsualPending(u.key);
-        this.toast.error(`Could not log ${u.key}`);
-      },
-    });
-  }
-
-  private clearUsualPending(key: string): void {
-    this.usualPending.update((s) => {
-      const next = new Set(s);
-      next.delete(key);
-      return next;
-    });
-  }
 
   protected readonly entries = computed<TrackerEntry[]>(() => {
     const today = this.today();

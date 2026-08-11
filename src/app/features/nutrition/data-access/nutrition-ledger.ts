@@ -1,9 +1,11 @@
+import { signal } from '@angular/core';
 import {
   type TrackerDraft,
   type TrackerEntry,
   type TrackerPatch,
 } from '@shared/components/tracker/tracker.types';
 import { type ToastService } from '@shared/components/toast/toast.service';
+import { type Usual } from './usuals';
 import {
   type NutritionService,
   type FoodItem,
@@ -93,6 +95,67 @@ export function splitId(id: string): { kind: 'food' | 'supp'; id: string } {
  * can't drift between them. Callers supply only what differs: which resources
  * to reload after each kind of write.
  */
+/**
+ * The write side of the "Usuals" chip row — shared by the phone shell's Log
+ * tab and the desktop day view, like createLedgerWriters, so the copy and
+ * double-tap policy can't drift. A tap POSTs the chip's last-known macros
+ * verbatim (no LLM round-trip); the second pint is a second tap.
+ */
+export function createUsualLogger(deps: {
+  service: NutritionService;
+  toast: ToastService;
+  /** Vibration feedback; no-ops off-phone. Omit where there's no thumb. */
+  haptics?: { tap(): void };
+  /** ISO timestamp to log at — the desktop day view backdates to the viewed
+   * day here. Return undefined for server-stamped "now". */
+  loggedAt?: () => string | undefined;
+  onLogged: () => void;
+}) {
+  const { service, toast, haptics, loggedAt, onLogged } = deps;
+
+  // Per-chip in-flight guard: a mid-flight re-tap is dropped (double-tap
+  // jitter), but once the POST lands the same chip logs another — by design.
+  const pending = signal<ReadonlySet<string>>(new Set());
+  const clearPending = (key: string): void => {
+    pending.update((s) => {
+      const next = new Set(s);
+      next.delete(key);
+      return next;
+    });
+  };
+
+  return {
+    pending: pending.asReadonly(),
+
+    log(u: Usual): void {
+      if (pending().has(u.key)) return;
+      pending.update((s) => new Set(s).add(u.key));
+      haptics?.tap();
+      const at = loggedAt?.();
+      service
+        .createFood({
+          raw_text: u.item.label,
+          est_kcal: u.item.est_kcal,
+          est_protein_g: u.item.est_protein_g,
+          est_carbs_g: u.item.est_carbs_g,
+          est_fat_g: u.item.est_fat_g,
+          ...(at ? { logged_at: at } : {}),
+        })
+        .subscribe({
+          next: () => {
+            clearPending(u.key);
+            toast.success(`${u.key} · ${u.kcal} kcal logged`);
+            onLogged();
+          },
+          error: () => {
+            clearPending(u.key);
+            toast.error(`Could not log ${u.key}`);
+          },
+        });
+    },
+  };
+}
+
 export function createLedgerWriters(deps: {
   service: NutritionService;
   toast: ToastService;

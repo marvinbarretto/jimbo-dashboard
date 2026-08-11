@@ -1,0 +1,52 @@
+.usuals__title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.usuals__hint {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 0.35rem;
+}
+
+.usuals__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+// Gym-glove metrics like the Train tab's controls: these are thumb targets.
+.usuals__chip {
+  font: inherit;
+  font-size: 0.9rem;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.85rem;
+  color: var(--color-text);
+  background: var(--color-surface-soft, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active { border-color: var(--color-accent); }
+}
+
+.usuals__chip--pending {
+  opacity: 0.55;
+}
+
+// Already had one that day: the chip wears its tally and the accent.
+.usuals__chip--tallied {
+  border-color: var(--color-accent);
+}
+
+.usuals__count {
+  margin-left: 0.3rem;
+  font-weight: 700;
+  color: var(--color-accent);
+}

@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, httpResource } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -67,6 +67,21 @@ export interface FrequentFood {
   est_carbs_g: number | null;
   est_fat_g: number | null;
   count: number;
+  /** ISO timestamp of the most recent log — feeds the usuals recency blend.
+   * Optional only for rollout: an API deployed before the field omits it. */
+  last_logged_at?: string;
+}
+
+/**
+ * The one frequents read both quick-add surfaces share (typeahead suggestions
+ * + usual chips). Limit is the endpoint max, not the default 40: the server
+ * truncates count-ordered, so a smaller window would starve the recency blend
+ * of anything logged recently but rarely.
+ */
+export function frequentFoodsResource() {
+  return httpResource<{ items: FrequentFood[] }>(
+    () => `${environment.dashboardApiUrl}/api/coach/food-log/frequent?limit=100`,
+  );
 }
 
 // ── Barcode capture ───────────────────────────────────────────────

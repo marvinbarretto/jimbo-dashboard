@@ -29,59 +29,7 @@
   color: var(--color-text-muted);
 }
 
+// Chip row internals live in the shared UsualChips component.
 .log__usuals {
   margin-top: 0.75rem;
-}
-
-.log__usuals-title {
-  margin: 0 0 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-muted);
-}
-
-.log__usuals-hint {
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: 0;
-  margin-left: 0.35rem;
-}
-
-.log__usuals-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-// Gym-glove metrics like the Train tab's controls: these are thumb targets.
-.log__usual {
-  font: inherit;
-  font-size: 0.9rem;
-  min-height: 2.5rem;
-  padding: 0.35rem 0.85rem;
-  color: var(--color-text);
-  background: var(--color-surface-soft, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
-  border-radius: 999px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-
-  &:active { border-color: var(--color-accent); }
-}
-
-.log__usual--pending {
-  opacity: 0.55;
-}
-
-// Already had one today: the chip wears its tally and the accent.
-.log__usual--tallied {
-  border-color: var(--color-accent);
-}
-
-.log__usual-count {
-  margin-left: 0.3rem;
-  font-weight: 700;
-  color: var(--color-accent);
 }

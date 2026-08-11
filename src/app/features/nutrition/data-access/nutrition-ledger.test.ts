@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  createUsualLogger,
   foodChanges,
   foodToEntry,
   isAlcoholicDrink,
@@ -7,7 +8,9 @@ import {
   suppChanges,
   suppToEntry,
 } from './nutrition-ledger';
-import type { FoodItem, FoodLogEntry, SupplementLogEntry } from './nutrition.service';
+import type { FoodItem, FoodLogEntry, NutritionService, SupplementLogEntry } from './nutrition.service';
+import type { ToastService } from '@shared/components/toast/toast.service';
+import type { Usual } from './usuals';
 
 // Builders over mocks, per testing conventions. Macro numbers in the alcohol
 // tests are real product values — the Atwater residual heuristic is calibrated
@@ -144,5 +147,86 @@ describe('suppChanges', () => {
 
   it('drops a cleared dose rather than sending NaN', () => {
     expect(suppChanges({ values: { dose: null } })).toEqual({});
+  });
+});
+
+describe('createUsualLogger', () => {
+  // Builders over mocks: a stub service capturing the body, a recording toast.
+  function build(opts: { fail?: boolean; loggedAt?: () => string | undefined } = {}) {
+    const created: unknown[] = [];
+    const toasts: string[] = [];
+    let settle: (() => void) | undefined;
+    const service = {
+      createFood(body: unknown) {
+        created.push(body);
+        return {
+          subscribe(observer: { next: (v: unknown) => void; error: (e: unknown) => void }) {
+            // Settlement is manual so tests can observe the in-flight state.
+            settle = () => (opts.fail ? observer.error(new Error('nope')) : observer.next({}));
+          },
+        };
+      },
+    } as unknown as NutritionService;
+    const toast = {
+      success: (m: string) => toasts.push(`ok:${m}`),
+      error: (m: string) => toasts.push(`err:${m}`),
+      info: () => {},
+    } as unknown as ToastService;
+    let loggedCount = 0;
+    const logger = createUsualLogger({
+      service,
+      toast,
+      loggedAt: opts.loggedAt,
+      onLogged: () => loggedCount++,
+    });
+    return { logger, created, toasts, settle: () => settle?.(), loggedCount: () => loggedCount };
+  }
+
+  const usual: Usual = {
+    key: 'pale ale',
+    kcal: 180,
+    item: {
+      label: '1 pale ale',
+      est_kcal: 180.4,
+      est_protein_g: 2,
+      est_carbs_g: 15,
+      est_fat_g: 0,
+      count: 12,
+      last_logged_at: '2026-08-10T18:00:00.000Z',
+    },
+  };
+
+  it('POSTs the last-known macros verbatim and reports on landing', () => {
+    const t = build();
+    t.logger.log(usual);
+    expect(t.created).toEqual([
+      { raw_text: '1 pale ale', est_kcal: 180.4, est_protein_g: 2, est_carbs_g: 15, est_fat_g: 0 },
+    ]);
+    expect(t.loggedCount()).toBe(0); // not before the POST lands
+    t.settle();
+    expect(t.loggedCount()).toBe(1);
+    expect(t.toasts).toEqual(['ok:pale ale · 180 kcal logged']);
+  });
+
+  it('drops a re-tap while in flight, allows one after landing', () => {
+    const t = build();
+    t.logger.log(usual);
+    expect(t.logger.pending().has('pale ale')).toBe(true);
+    t.logger.log(usual); // double-tap jitter
+    expect(t.created).toHaveLength(1);
+    t.settle();
+    expect(t.logger.pending().has('pale ale')).toBe(false);
+    t.logger.log(usual); // the second pint
+    expect(t.created).toHaveLength(2);
+  });
+
+  it('backdates via loggedAt and clears pending on error', () => {
+    const t = build({ fail: true, loggedAt: () => '2026-08-09T12:00:00.000Z' });
+    t.logger.log(usual);
+    expect(t.created[0]).toMatchObject({ logged_at: '2026-08-09T12:00:00.000Z' });
+    t.settle();
+    expect(t.logger.pending().has('pale ale')).toBe(false);
+    expect(t.toasts).toEqual(['err:Could not log pale ale']);
+    expect(t.loggedCount()).toBe(0);
   });
 });

@@ -13,6 +13,7 @@ import { UiPeriodPager } from '@shared/components/ui-period-pager/ui-period-page
 import { UiTrackerDayGroup } from '@shared/components/ui-tracker-day-group/ui-tracker-day-group';
 import { UiQuickAddRow, type QuickAddOption } from '@shared/components/ui-quick-add-row/ui-quick-add-row';
 import {
+  localInputToIso,
   type TrackerDailyTotal,
   type TrackerEntry,
   type TrackerMeasure,
@@ -22,17 +23,20 @@ import { logicalDay } from '@shared/utils/datetime.utils';
 import { createTrackerPageSignals } from '@shared/utils/tracker-page-signals';
 import {
   NutritionService,
+  frequentFoodsResource,
   type FoodDailyRow,
   type FoodLogEntry,
-  type FrequentFood,
   type SupplementLogEntry,
 } from '../../data-access/nutrition.service';
 import {
   createLedgerWriters,
+  createUsualLogger,
   foodToEntry,
   isAlcoholicDrink,
   suppToEntry,
 } from '../../data-access/nutrition-ledger';
+import { buildUsuals, tallyUsuals, type Usual } from '../../data-access/usuals';
+import { UsualChips } from '../../components/usual-chips/usual-chips';
 
 // Daily targets, used by the period meters. Tunable; could move to settings.
 const TARGETS: Readonly<Record<string, number>> = { kcal: 2200, protein_g: 150 };
@@ -75,6 +79,7 @@ const SUPP_QUICK_ADD: readonly TrackerMeasure[] = [{ key: 'dose', label: 'dose' 
     UiPeriodPager,
     UiTrackerDayGroup,
     UiQuickAddRow,
+    UsualChips,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './nutrition-page.html',
@@ -116,9 +121,7 @@ export class NutritionPage {
   private readonly catalogRes = httpResource<{ items: { id: string; name: string }[] }>(
     () => `/api/coach/protocol`,
   );
-  private readonly frequentRes = httpResource<{ items: FrequentFood[] }>(
-    () => `/api/coach/food-log/frequent?limit=40`,
-  );
+  private readonly frequentRes = frequentFoodsResource();
 
   // Spinner only on the FIRST load — reload-after-write keeps hasValue() true so
   // the ledger isn't torn down (otherwise every edit would collapse the day groups).
@@ -135,6 +138,41 @@ export class NutritionPage {
   protected readonly supplementOptions = computed<QuickAddOption[]>(() =>
     (this.catalogRes.value()?.items ?? []).map((s) => ({ id: s.id, label: s.name })),
   );
+
+  // ── Usuals: one-tap chips, day view only ─────────────────────────
+  // Week/month views have no single day to log against or tally, so the chip
+  // row stays off them. Derivation + write are shared with the phone shell
+  // (usuals util / UsualChips) so the two surfaces can't drift.
+  protected readonly showUsuals = this.granularity === 'day';
+
+  // hasValue() guard, not ?. — a resource in error state throws from value().
+  protected readonly usuals = computed<Usual[]>(() =>
+    buildUsuals(this.frequentRes.hasValue() ? this.frequentRes.value().items : []),
+  );
+
+  /** ×n per chip for the VIEWED day — not blindly today. */
+  protected readonly usualTally = computed<ReadonlyMap<string, number>>(() =>
+    tallyUsuals(
+      this.foodEntries()
+        .filter((f) => logicalDay(f.logged_at) === this.pager.key())
+        .map((f) => f.raw_text),
+    ),
+  );
+
+  protected readonly usualLogger = createUsualLogger({
+    service: this.service,
+    toast: this.toast,
+    // Same convention as supplementDefaultDate: browsing a past day backdates
+    // the tap to that day's noon; on today the server stamps now().
+    loggedAt: () =>
+      this.pager.key() !== this.todayIso
+        ? (localInputToIso(`${this.pager.key()}T12:00`) ?? undefined)
+        : undefined,
+    onLogged: () => {
+      this.foodRes.reload();
+      this.dailyRes.reload();
+    },
+  });
 
   // Whole-drink alcohol calories per London day, from the per-item food log.
   // A drink is "alcoholic" when its calories exceed what its macros explain (the
