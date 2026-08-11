@@ -133,6 +133,13 @@ export class MobileTrain {
   });
 
   /**
+   * The stale session id being closed. The banner hides the moment the tap
+   * lands — the PATCH round-trip plus two resource reloads take long enough
+   * on gym Wi-Fi that a working button reads as a dead one otherwise.
+   */
+  private readonly closingStale = signal<string | null>(null);
+
+  /**
    * An unfinished session too old for the detail window — offered as a
    * closable banner so it can't silently rot with ended_at null (the server
    * happily opens a second session alongside it).
@@ -140,6 +147,7 @@ export class MobileTrain {
   protected readonly staleActive = computed(() => {
     const info = this.activeInfo();
     if (!info || info.ended_at !== null) return null;
+    if (info.id === this.closingStale()) return null;
     if (this.sessions().some((s) => s.id === info.id)) return null;
     return { id: info.id, label: relativeDayLabel(logicalDay(info.started_at)) };
   });
@@ -228,9 +236,16 @@ export class MobileTrain {
 
   protected finishStale(id: string): void {
     this.haptics.success();
+    this.closingStale.set(id); // optimistic: banner gone before the network answers
     this.service.patchSession(id, { ended_at: new Date().toISOString() }).subscribe({
-      next: () => this.reloadAll(),
-      error: () => this.toast.error('Could not close session'),
+      next: () => {
+        this.toast.success('Session closed');
+        this.reloadAll();
+      },
+      error: () => {
+        this.closingStale.set(null); // banner returns — the session is still open
+        this.toast.error('Could not close session');
+      },
     });
   }
 
