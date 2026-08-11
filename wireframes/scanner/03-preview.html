@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>03 — Preview</title>
+<link rel="stylesheet" href="wire-kit.css">
+</head>
+<body>
+
+<div class="w-intent">
+  <b>GOAL:</b> confirm the resolved product and portion — nothing writes until this one tap.<br>
+  <b>PERSONA:</b> just scanned; wants to sanity-check "right product, right amount" in a glance.<br>
+  <b>PRIMARY:</b> Log it.<br>
+  <b>SUCCESS:</b> tap Log → entry in today's ledger, sheet collapses back to the live scanner (04).
+</div>
+
+<div class="w-frame">
+  <div class="w-viewfinder" style="min-height:210px; opacity:0.45;">
+    <div class="w-reticle" style="border-style:solid;">[ frozen frame — barcode locked ]</div>
+  </div>
+
+  <div class="w-sheet">
+    <div>
+      <div class="w-h1">Chorizo Ibérico</div>
+      <div class="w-muted">Aldi · 8410076401234 · resolved from OpenFoodFacts</div>
+    </div>
+
+    <div>
+      <span class="w-chip">per 100 g</span>
+      <span class="w-chip w-chip--on">1 portion (50 g)</span>
+      <span class="w-chip">whole pack (200 g)</span>
+    </div>
+
+    <div class="w-meter"><span style="width:52px;">415 kcal</span><div class="w-meter-track"><div class="w-meter-fill" style="width:21%;"></div></div><span class="w-muted">21% day</span></div>
+    <div class="w-meter"><span style="width:52px;">12g P</span><div class="w-meter-track"><div class="w-meter-fill" style="width:15%;"></div></div><span class="w-muted">15%</span></div>
+    <div class="w-meter"><span style="width:52px;">38g F</span><div class="w-meter-track"><div class="w-meter-fill" style="width:54%;"></div></div><span class="w-muted">54%</span></div>
+    <div class="w-meter"><span style="width:52px;">2.1g salt</span><div class="w-meter-track"><div class="w-meter-fill" style="width:35%;"></div></div><span class="w-muted">35%</span></div>
+
+    <a class="w-btn-primary" data-goto="04">Log it — 415 kcal</a>
+    <a class="w-btn-ghost" data-goto="02">not this product? scan again / type digits</a>
+  </div>
+</div>
+
+<div class="w-note">
+  <b>Notes:</b><br>
+  — Bottom sheet over the frozen frame: the scanner never feels "left", so scan-another (04) is a
+  collapse, not a navigation.<br>
+  — Portion chips are the one decision the user actually makes; default = the product's declared
+  portion. The Log CTA repeats the kcal so the tap is informed.<br>
+  — Meters reuse the existing reference-intake logic from the desktop scan page. "% day" reads
+  against what's already logged today — recognition, not arithmetic.
+</div>
+
+<div class="w-sep">Alternate — unknown barcode</div>
+
+<div class="w-frame w-frame--auto">
+  <div class="w-sheet">
+    <div class="w-h2">Nothing found for 2000123456789</div>
+    <div class="w-text w-muted">Own-brand and loose items often aren't in the product database.</div>
+    <a class="w-btn-primary" data-goto="01">describe it instead → Log capture, pre-filled</a>
+    <a class="w-btn-ghost" data-goto="02">re-scan / check the digits</a>
+  </div>
+</div>
+
+<div class="w-note">
+  <b>Open:</b> "describe it instead" hands the failure to the strongest existing path — the Log
+  tab's text capture (server-side LLM estimates macros) with the barcode kept as provenance. Is
+  that the right rescue, or should manual macro entry live here in the sheet?
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>

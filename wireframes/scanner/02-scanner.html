@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>02 — Scanner</title>
+<link rel="stylesheet" href="wire-kit.css">
+</head>
+<body>
+
+<div class="w-intent">
+  <b>GOAL:</b> decode a barcode with zero ceremony — camera already live when the screen appears.<br>
+  <b>PERSONA:</b> one hand holds the product; the other holds the phone. Eyes on the label, not the UI.<br>
+  <b>PRIMARY:</b> none to tap — pointing IS the action. (Everything visible is escape or fallback.)<br>
+  <b>SUCCESS:</b> reticle locks → preview sheet slides up (03) without the user touching anything.
+</div>
+
+<div class="w-frame">
+  <div class="w-viewfinder">
+    <div class="w-vf-top">
+      <a data-goto="01">✕ close</a>
+      <a href="#">⚡ torch</a>
+    </div>
+    <div class="w-reticle" data-goto="03">[ live camera — aim at barcode ]<br><br>tap = simulate: decoded</div>
+    <div class="w-muted">looking for a barcode…</div>
+  </div>
+
+  <div class="w-sheet">
+    <div class="w-text" style="display:flex; gap:18px; justify-content:center;">
+      <a href="#manual" style="color:#111;">type the digits</a>
+      <a href="#" style="color:#111;">from a photo</a>
+    </div>
+  </div>
+</div>
+
+<div class="w-note">
+  <b>Notes:</b><br>
+  — Full-bleed, no tab bar: the scanner is a pushed modal surface (/m/scan), not a sibling tab.
+  ✕ returns wherever you came from.<br>
+  — Live viewfinder is the phone default (the current desktop page's segmented photo/live/manual
+  picker inverts here). Photo & manual demote to quiet fallback links — same converging pipeline.<br>
+  — Decode feedback: reticle + "looking for…" line is the whole status system. On lock: haptic tick +
+  straight to 03. No intermediate tap.
+</div>
+
+<div class="w-sep">Alternate — permission denied</div>
+
+<div class="w-frame w-frame--auto">
+  <div class="w-viewfinder" style="min-height:260px;">
+    <div class="w-vf-top"><a data-goto="01">✕ close</a><span></span></div>
+    <div class="w-block" style="background:#fff; max-width:280px;">
+      <b>Camera is blocked.</b><br><br>
+      <span class="w-text">Scan needs the camera. Allow it in system settings, or use one of these instead:</span>
+    </div>
+    <a class="w-btn-primary w-btn-inline" href="#">take a photo of the barcode</a>
+    <a class="w-btn-ghost w-btn-inline" href="#manual">type the digits</a>
+  </div>
+</div>
+
+<div class="w-sep">Alternate — manual entry drawer</div>
+
+<div class="w-frame w-frame--auto" id="manual">
+  <div class="w-sheet">
+    <div class="w-h2">Type the barcode</div>
+    <div class="w-input">8 410 076 401 ...</div>
+    <a class="w-btn-primary" data-goto="03">Look it up</a>
+    <div class="w-muted">EAN-8 / EAN-13 / UPC. The honest fallback for a torn label.</div>
+  </div>
+</div>
+
+<div class="w-note">
+  <b>Plumbing note (not UX):</b> in the Capacitor WebView, getUserMedia prompts only if
+  MainActivity's WebChromeClient grants android.webkit camera permission — a small jimbo-app change,
+  needed before the live path works on-device. The photo path (&lt;input capture&gt;) works today and
+  is the safety net. A native ML Kit ScannerPlugin is the later upgrade: faster lock, low light,
+  bridge.has('scanner')-gated, this same UI on top.
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>

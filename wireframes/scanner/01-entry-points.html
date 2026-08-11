@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>01 — Entry points</title>
+<link rel="stylesheet" href="wire-kit.css">
+</head>
+<body>
+
+<div class="w-intent">
+  <b>GOAL:</b> scanning is one tap from anywhere in the shell — no navigation, no hunting.<br>
+  <b>PERSONA:</b> Marvin mid-anything (glancing at Today, correcting the ledger) with a product in hand.<br>
+  <b>PRIMARY:</b> the tab-bar SCAN button.<br>
+  <b>SUCCESS:</b> camera is open within one tap of any tab.
+</div>
+
+<div class="w-frame">
+  <div class="w-bar"><span>LOG</span><span class="w-muted">/m/log</span></div>
+  <div class="w-body">
+    <div class="w-h3">Today</div>
+    <div class="w-list-item"><span>Porridge + whey</span><span>410 kcal</span></div>
+    <div class="w-list-item"><span>Coffee, oat milk</span><span>45 kcal</span></div>
+    <div class="w-list-item"><span>Creatine 5g</span><span>—</span></div>
+
+    <!-- Contextual entry: capture row gains a scan affordance -->
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      <div class="w-input" style="flex:1;">what did you eat or drink?</div>
+      <a class="w-btn-primary w-btn-inline" data-goto="02" style="flex:0 0 auto;">[SCAN]</a>
+    </div>
+
+    <div class="w-h3" style="margin-top:10px;">Last 7 days</div>
+    <div class="w-placeholder" style="height:110px;">kcal week strip (unchanged)</div>
+  </div>
+
+  <!-- The shell change: docked centre action in the tab bar, on every tab -->
+  <div class="w-tabs">
+    <a class="w-tab" href="#">Today</a>
+    <a class="w-tab w-tab--active" href="#">Log</a>
+    <a class="w-fab" data-goto="02">SCAN</a>
+    <a class="w-tab" href="#">Train</a>
+    <span class="w-tab" style="flex:0 0 6px;"></span>
+  </div>
+</div>
+
+<div class="w-note">
+  <b>Notes:</b><br>
+  — The FAB is the mobile-shell doc's planned-but-never-built capture affordance, finally landing —
+  as a <u>scan</u> button, not a generic "+". One tap → camera, from any tab. Long-press reserved
+  for a future capture sheet.<br>
+  — The Log-tab scan button is the contextual twin: when you're already correcting food, scan sits
+  next to type. Same destination (02).<br>
+  — Alternative considered: floating FAB hovering over content. Rejected for now — it covers ledger
+  rows during editing, and the tab bar already reserves bottom-thumb space.<br>
+  — Outside the shell (native, later): Android app-shortcut "Scan" (long-press app icon) and a tile
+  on the Compose home, both deep-linking /m/scan. Zero web changes needed for those once /m/scan exists.
+</div>
+
+<div class="w-sep">Tab-bar geometry question</div>
+
+<div class="w-note">
+  <b>Open:</b> with the FAB docked, tabs sit Today · Log · ● · Train. If that feels lopsided the
+  fallback is 4 even slots (Scan as a plain 4th tab) — cheaper, but demotes scan to peer-of-tabs
+  instead of the shell's one action. Walk both on the phone before deciding.
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>

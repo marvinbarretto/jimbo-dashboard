@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>04 — Logged</title>
+<link rel="stylesheet" href="wire-kit.css">
+</head>
+<body>
+
+<div class="w-intent">
+  <b>GOAL:</b> close the loop — confirm the write landed, keep the camera hot for the next item.<br>
+  <b>PERSONA:</b> unpacking a shop or building a meal from several products; more barcodes coming.<br>
+  <b>PRIMARY:</b> keep scanning (implicit — the viewfinder is already live again).<br>
+  <b>SUCCESS:</b> N items logged in one camera session; Done lands on a ledger that shows them all.
+</div>
+
+<div class="w-frame">
+  <div class="w-viewfinder">
+    <div class="w-vf-top">
+      <a data-goto="01">done → Log</a>
+      <a href="#">⚡ torch</a>
+    </div>
+
+    <!-- Success chip rides on top of the live camera; no modal, no interruption -->
+    <div class="w-block" style="background:#fff; border:2px solid #111;">
+      ✓ Chorizo Ibérico · 415 kcal logged<br>
+      <span class="w-muted">today so far: 1,840 kcal · undo</span>
+    </div>
+
+    <div class="w-reticle" data-goto="03">[ camera live again — next item ]<br><br>tap = simulate: decoded</div>
+  </div>
+
+  <div class="w-sheet">
+    <div class="w-text" style="display:flex; gap:18px; justify-content:center;">
+      <a href="#" style="color:#111;">type the digits</a>
+      <a href="#" style="color:#111;">from a photo</a>
+    </div>
+  </div>
+</div>
+
+<div class="w-note">
+  <b>Notes:</b><br>
+  — The success state is a chip over the viewfinder, not a page: the loop stays unbroken and the
+  running day total turns a chore into a tally. Undo sits in the chip (delete the entry, stay in flow).<br>
+  — "done → Log" is the one exit, landing on the ledger where every scanned entry is editable via
+  the existing sheet — corrections stay in the ledger's domain, the scanner stays capture-only.<br>
+  — The chip auto-fades after ~4s; three rapid scans stack tallies, not modals.
+</div>
+
+<div class="w-sep">Exit — the ledger after a scan session</div>
+
+<div class="w-frame w-frame--auto">
+  <div class="w-bar"><span>LOG</span><span class="w-muted">/m/log</span></div>
+  <div class="w-body">
+    <div class="w-list-item"><span>Chorizo Ibérico <span class="w-muted">· scanned</span></span><span>415 kcal</span></div>
+    <div class="w-list-item"><span>Sourdough loaf <span class="w-muted">· scanned</span></span><span>210 kcal</span></div>
+    <div class="w-list-item"><span>Porridge + whey</span><span>410 kcal</span></div>
+    <div class="w-muted" style="padding-top:6px;">scanned entries edit like any other — portion tweaks happen here, not in the scanner</div>
+  </div>
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>

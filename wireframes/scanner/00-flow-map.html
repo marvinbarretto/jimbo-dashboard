@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Scanner flow — map</title>
+<link rel="stylesheet" href="wire-kit.css">
+</head>
+<body>
+
+<div class="w-intent">
+  <b>FLOW:</b> first-class barcode scanning in the /m phone shell<br>
+  <b>PERSONA:</b> Marvin, phone in one hand and a product in the other — kitchen counter or
+  supermarket aisle. Arrived wanting it logged without typing anything.<br>
+  <b>JOB:</b> barcode → confirmed product → today's food log, in under ~10 seconds.<br>
+  <b>ENTRY:</b> scan FAB in the /m tab bar (always one tap away); scan button in the Log tab
+  capture row; later: Android app shortcut + native home tile deep-linking /m/scan.<br>
+  <b>EXIT:</b> entry sits in today's ledger (editable there like any other entry). Either keep
+  scanning the next item or tap Done back to Log.<br>
+  <b>VIEWPORT:</b> mobile 390 — this flow is phone-only by nature. The desktop
+  /nutrition/scan page stays as-is for the desk case.
+</div>
+
+<div class="w-frame w-frame--auto">
+  <div class="w-bar"><span>JOURNEY</span><span class="w-muted">tap a step</span></div>
+  <div class="w-body">
+    <div class="w-block" data-goto="01"><b>01 — Entry points</b><br>Where scanning lives in the shell: tab-bar FAB + Log tab capture row.</div>
+    <div class="w-block" data-goto="02"><b>02 — Scanner</b><br>Full-bleed live viewfinder, torch, fallbacks (photo / type digits), permission-denied state.</div>
+    <div class="w-block" data-goto="03"><b>03 — Preview</b><br>Resolved product as a bottom sheet: portion, macros vs day, one Log action. Unknown-barcode state.</div>
+    <div class="w-block" data-goto="04"><b>04 — Logged</b><br>Stay-and-scan loop with running day total; Done exits to the ledger.</div>
+  </div>
+</div>
+
+<div class="w-note">
+  <b>Decisions taken (challenge any):</b><br>
+  — FAB goes <u>straight to the scanner</u>, not to a capture sheet. Text capture already has two
+  homes (Log input, Telegram → /food); scanning is the one capture only the phone can do, so the
+  phone's biggest affordance belongs to it. Long-press the FAB is reserved for a future capture
+  sheet (photo-of-meal, voice…).<br>
+  — After logging you <u>stay in the scanner</u> ("scan another"), because the multi-item moment
+  (unpacking a shop, meal from 3 products) is the power case. Done exits to Log.<br>
+  — The flow reuses the existing decode → resolve → confirm pipeline from /nutrition/scan;
+  wireframes change where it lives and what it leads with, not the plumbing.
+</div>
+
+<div class="w-note">
+  <b>Open questions:</b><br>
+  1. Tab bar becomes Today · Log · [SCAN] · Train — does a 3-tab + docked-FAB bar read better than
+  a floating FAB over content? (Drawn as docked; floating variant noted on 01.)<br>
+  2. WebView camera: getUserMedia needs the native WebChromeClient to grant camera permission —
+  small jimbo-app change. Alternative/later: a native ML Kit ScannerPlugin over the bridge
+  (faster decode, low-light), feature-detected via bridge.has('scanner'), web decoder as fallback.<br>
+  3. Supplements are barcoded too — does the preview sheet need a food/supplement kind toggle, or
+  does the resolver decide? (Drawn food-only for now.)<br>
+  4. Unknown barcode: hand off to describe-as-text (existing capture input pre-filled)? Drawn that
+  way on 03.
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>
