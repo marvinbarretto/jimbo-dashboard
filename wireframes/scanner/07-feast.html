@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>07 — Feast</title>
+<link rel="stylesheet" href="wire-kit.css">
+</head>
+<body>
+
+<div class="w-intent">
+  <b>GOAL:</b> log a meal you can't itemize — a restaurant feast becomes one honest estimate, not
+  a data-entry chore or a blank.<br>
+  <b>PERSONA:</b> Marvin after a shared-plates dinner. He knows roughly what happened, not grams.<br>
+  <b>PRIMARY:</b> Estimate it — one AI call turns prose into a single meal entry.<br>
+  <b>SUCCESS:</b> the feast is on the record with a stated ± range; nothing about the flow implies
+  he should have weighed the paella.
+</div>
+
+<div class="w-frame">
+  <div class="w-bar"><span>DESCRIBE A MEAL</span><span class="w-muted">→ Sat 8 Aug</span></div>
+  <div class="w-body">
+    <div class="w-input" style="min-height:110px;">
+      tapas with jess — shared paella, padron peppers, lots of bread + aioli,
+      calamari, 3 small beers, flan
+    </div>
+
+    <div class="w-h3">How big did it feel?</div>
+    <div>
+      <span class="w-chip">light</span>
+      <span class="w-chip">normal</span>
+      <span class="w-chip w-chip--on">big</span>
+      <span class="w-chip">blowout</span>
+    </div>
+
+    <a class="w-btn-primary" href="#result">Estimate it</a>
+    <div class="w-muted">Rough is fine — the estimate says how rough it is.</div>
+  </div>
+</div>
+
+<div class="w-sep">Result — the estimate, before it logs</div>
+
+<div class="w-frame w-frame--auto" id="result">
+  <div class="w-sheet">
+    <div class="w-h1">~2,100 kcal <span class="w-muted" style="font-size:13px;">± 450</span></div>
+    <div class="w-text w-muted">
+      shared paella ~650 · bread + aioli ~450 · calamari ~350<br>
+      padron peppers ~90 · 3 small beers ~420 · flan ~180
+    </div>
+    <div class="w-meter"><span style="width:52px;">~68g P</span><div class="w-meter-track"><div class="w-meter-fill" style="width:49%;"></div></div><span class="w-muted">vs day</span></div>
+    <a class="w-btn-primary" data-goto="06">Log it as one meal → Sat</a>
+    <a class="w-btn-ghost" href="#">that reads too big / too small</a>
+  </div>
+</div>
+
+<div class="w-note">
+  <b>Notes:</b><br>
+  — Logs as <u>one entry</u> ("tapas feast · ~2,100 kcal") with the item breakdown in the note.
+  Itemization is exactly the burden this flow removes; the ledger edit sheet reopens it if one
+  number ever needs correcting.<br>
+  — The ± range is the honesty feature: a feast estimate pretending to 4-digit precision would
+  poison trust in the whole log. Day totals can carry the midpoint.<br>
+  — "How big did it feel?" is the one lever a human can always pull, and it constrains the LLM
+  more than another sentence of prose would.<br>
+  — "too big / too small" re-estimates ±25% rather than opening a macro form — stay in
+  feel-space, not gram-space.
+</div>
+
+<div class="w-note">
+  <b>Open — offline capture:</b> the feast often happens exactly when there's no signal. The
+  describe box should accept the text offline and queue it, estimating when back online (the
+  mobile-shell "offline write queue" horizon item earns its keep here). Drawn as if online; the
+  queue is a plumbing decision.
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>

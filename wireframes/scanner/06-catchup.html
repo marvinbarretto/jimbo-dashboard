@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>06 — Catch-up</title>
+<link rel="stylesheet" href="wire-kit.css">
+</head>
+<body>
+
+<div class="w-intent">
+  <b>GOAL:</b> any missed day is one tap away and logs exactly like today — offline gaps get
+  back-filled, not abandoned.<br>
+  <b>PERSONA:</b> Marvin back online after a weekend away; two days of eating exist only in memory.<br>
+  <b>PRIMARY:</b> the same capture ladder (usual / describe / scan / type), backdated automatically.<br>
+  <b>SUCCESS:</b> the missed day's ledger reads like it was logged live; week strip has no holes.
+</div>
+
+<div class="w-frame">
+  <div class="w-bar">
+    <a href="#" style="text-decoration:none; color:#111;">‹</a>
+    <span>SAT 8 AUG <span class="w-muted">· 2 days ago</span></span>
+    <a href="#" style="text-decoration:none; color:#111;">›</a>
+  </div>
+  <div class="w-body">
+    <div class="w-placeholder" style="padding:18px;">Nothing logged for Saturday.<br>What do you remember?</div>
+
+    <div class="w-h3">Usuals <span class="w-muted" style="text-transform:none;">— will log to Sat</span></div>
+    <div>
+      <span class="w-chip">pale ale · 180</span>
+      <span class="w-chip">Guinness · 210</span>
+      <span class="w-chip">granola + yogurt · 450</span>
+    </div>
+
+    <a class="w-btn-ghost" data-goto="07">describe a meal roughly → AI estimates</a>
+
+    <div style="display:flex; gap:8px;">
+      <div class="w-input" style="flex:1;">or type one thing…</div>
+      <a class="w-btn-primary w-btn-inline" data-goto="02">[SCAN]</a>
+    </div>
+
+    <div class="w-muted">Everything on this screen stamps Saturday midday — fix exact times later
+    in the ledger if it ever matters.</div>
+
+    <div class="w-h3" style="margin-top:8px;">Last 7 days</div>
+    <div class="w-placeholder" style="height:80px;">week strip — Sat/Sun bars empty, tap a bar = jump to that day</div>
+  </div>
+  <div class="w-tabs">
+    <a class="w-tab" href="#">Today</a>
+    <a class="w-tab w-tab--active" href="#">Log</a>
+    <a class="w-fab" data-goto="02">SCAN</a>
+    <a class="w-tab" href="#">Train</a>
+    <span class="w-tab" style="flex:0 0 6px;"></span>
+  </div>
+</div>
+
+<div class="w-note">
+  <b>Notes:</b><br>
+  — This consciously reverses mobile-log's "deliberately one day and no pager" decision: that
+  reasoning covered *correcting* (Telegram captures live), not *absence*. Offline weekends are
+  absence.<br>
+  — ‹ › page one day at a time; the title is a tap target reserved for jump-to-today now and a
+  week/month period toggle later (parked — desktop period pages already exist for deep review).<br>
+  — The week strip doubles as navigation: an empty bar is both the guilt-free evidence of a gap and
+  the shortcut to fill it.<br>
+  — Backdating mechanics already exist (quick-add's defaultDate stamps midday); the pager mostly
+  *reveals* existing plumbing.
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>

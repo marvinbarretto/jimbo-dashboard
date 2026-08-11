@@ -28,6 +28,9 @@
     <div class="w-block" data-goto="03"><b>03 — Preview</b><br>Resolved product as a bottom sheet: portion, macros vs day, one Log action. Unknown-barcode state.</div>
     <div class="w-block" data-goto="04"><b>04 — Logged</b><br>Stay-and-scan loop with running day total; Done exits to the ledger.</div>
     <div class="w-block" data-goto="05"><b>05 — Usuals</b><br>The zeroth entry point: your frequent cluster as one-tap chips — no camera, no typing. Tally on repeat taps.</div>
+    <div class="w-block" data-goto="06"><b>06 — Catch-up</b><br>Day pager ‹ › on the Log tab: missed offline days back-fill with the same capture ladder, auto-backdated.</div>
+    <div class="w-block" data-goto="07"><b>07 — Feast</b><br>Describe a meal roughly → one AI-estimated entry with an honest ± range. No itemizing.</div>
+    <div class="w-block" data-goto="08"><b>08 — Fast + coach</b><br>Live "time since last food" counter, and a coach that cites numbers (protein vs target) — never guilt.</div>
   </div>
 </div>
 
@@ -57,7 +60,13 @@
   3. Supplements are barcoded too — does the preview sheet need a food/supplement kind toggle, or
   does the resolver decide? (Drawn food-only for now.)<br>
   4. Unknown barcode: hand off to describe-as-text (existing capture input pre-filled)? Drawn that
-  way on 03.
+  way on 03.<br>
+  5. Week/month toggle on the Log pager — parked; the pager title is the reserved tap target, and
+  desktop period pages already cover deep review.<br>
+  6. Offline: the feast describe-box should capture offline and estimate when back online — needs
+  the mobile-shell "offline write queue" horizon item.<br>
+  7. Coach nudge guardrails: how often may the nutrition coach speak? (Drawn: only when a rule
+  fires, one action, "not today" mutes. Tone contract on 08.)
 </div>
 
 <script src="wire-nav.js"></script>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>08 — Fast counter + coach</title>
+<link rel="stylesheet" href="wire-kit.css">
+</head>
+<body>
+
+<div class="w-intent">
+  <b>GOAL:</b> the fast is a visible, neutral fact — and the coach may connect it to goals with
+  data, never with guilt.<br>
+  <b>PERSONA:</b> Marvin breaking his fast late by choice. He doesn't want a lecture; he does want
+  to know if the pattern is costing him a goal (protein, training).<br>
+  <b>PRIMARY:</b> none at rest — the counter is a glance. When a nudge appears, its single
+  suggested action is the primary.<br>
+  <b>SUCCESS:</b> counter always true (spans midnight); nudges are rare, cite numbers, and offer
+  one tap that helps.
+</div>
+
+<div class="w-frame">
+  <div class="w-bar"><span>LOG</span><span class="w-muted">/m/log</span></div>
+  <div class="w-body">
+
+    <!-- The fact: always present, no judgement attached -->
+    <div class="w-block" style="display:flex; justify-content:space-between; align-items:center;">
+      <span><b>⏱ 16h 40m</b> since last food</span>
+      <span class="w-muted">last: Guinness · 22:10</span>
+    </div>
+
+    <!-- The coach: appears only when a rule fires; dismissible; cites its numbers -->
+    <div class="w-block" style="border:2px solid #111;">
+      <b>COACH</b><br>
+      <span class="w-text">Long fast today — fine by itself. This week you're averaging
+      <b>96g protein vs 140g target</b>, so the first meal matters more than usual.</span><br><br>
+      <a class="w-btn-primary w-btn-inline" href="#">log usual: granola + yogurt (28g P)</a>
+      <span class="w-muted" style="margin-left:10px;">why? · not today</span>
+    </div>
+
+    <div class="w-h3">Today</div>
+    <div class="w-placeholder" style="padding:16px;">nothing yet — ledger + usuals + capture as on 05</div>
+  </div>
+  <div class="w-tabs">
+    <a class="w-tab" href="#">Today</a>
+    <a class="w-tab w-tab--active" href="#">Log</a>
+    <a class="w-fab" data-goto="02">SCAN</a>
+    <a class="w-tab" href="#">Train</a>
+    <span class="w-tab" style="flex:0 0 6px;"></span>
+  </div>
+</div>
+
+<div class="w-note">
+  <b>Notes:</b><br>
+  — Counter is client-side arithmetic off the newest entry (one limit=1 fetch so it spans
+  midnight — the today-only window can't see last night's Guinness). Ticks by the minute,
+  visibility-gated like the Train timer.<br>
+  — Tone contract for the coach card, in order: <u>observation → context → one action</u>. Never an
+  adjective about the behaviour ("late", "bad"), never streaks/shame mechanics. "Fine by itself" is
+  load-bearing copy.<br>
+  — The suggested action reuses the usuals machinery (05): the coach doesn't just advise protein,
+  it offers your actual highest-protein usual as the one-tap fix.<br>
+  — "not today" mutes that rule until tomorrow; "why?" opens the goal linkage (protein target,
+  training load) — the coach shows its working or it doesn't speak.
+</div>
+
+<div class="w-sep">Grounding — what already exists server-side</div>
+
+<div class="w-note">
+  <b>Build note:</b> the nudge pipeline (drafts, skip/reschedule, Hermes cron evaluation, delivery)
+  already runs for supplements in coach-rules.ts. This extends generateDailyNudges with
+  nutrition-pattern rules that read existing aggregates: fast length (last entry timestamp), weekly
+  protein vs target (food-log/daily), training frequency vs goal (gym/sessions/daily). New rules,
+  existing rails. Targets live with the coach profile — where "140g" comes from must be inspectable.
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>
