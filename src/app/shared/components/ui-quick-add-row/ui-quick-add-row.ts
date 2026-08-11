@@ -69,6 +69,7 @@ const norm = (s: string): string => s.trim().toLowerCase();
       <app-ui-button
         variant="secondary"
         [size]="viewport.isMobile() ? 'md' : 'sm'"
+        [block]="viewport.isMobile()"
         ariaLabel="Add entry"
         [disabled]="!canAdd()"
         (pressed)="commit()"
@@ -83,6 +84,10 @@ const norm = (s: string): string => s.trim().toLowerCase();
     </div>
   `,
   styles: [`
+    /* Layout keys off the row's own width, not the viewport — the same
+       primitive sits in a wide desktop ledger and a phone-width card. */
+    .quick-add-block { container-type: inline-size; }
+
     .quick-add {
       display: flex;
       align-items: center;
@@ -104,7 +109,7 @@ const norm = (s: string): string => s.trim().toLowerCase();
     }
 
     .quick-add__num {
-      width: 4.4rem;
+      width: 4.9rem;
       font: inherit;
       font-variant-numeric: tabular-nums;
       color: var(--color-text);
@@ -119,10 +124,37 @@ const norm = (s: string): string => s.trim().toLowerCase();
 
     .quick-add__unit { font-size: 0.7rem; opacity: 0.7; color: var(--color-text-muted); }
 
+    /* "Last time: 2×10×25 kg @ RPE 6 — felt easy → try 27.5 kg". At the gym
+       what you lifted last time IS the interface, so when an entry resolves
+       this reads as the row's answer, not a caption. */
     .quick-add__hint {
-      margin: 0.1rem 0 0;
-      font-size: 0.74rem;
-      color: var(--color-text-muted);
+      margin: 0.35rem 0 0;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.82rem;
+      color: var(--color-text);
+      background: color-mix(in srgb, var(--color-accent) 9%, transparent);
+      border-left: 2px solid var(--color-accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+
+    /* Narrow row (phone card, squeezed panel): the single line becomes a
+       stack — label full width, measures as a 2-up grid of real touch
+       targets (no more truncated placeholders), Add on its own row. */
+    @container (max-width: 30rem) {
+      .quick-add {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .quick-add__label { grid-column: 1 / -1; }
+      .quick-add__measure { display: flex; align-items: center; gap: 0.3rem; }
+      .quick-add__num {
+        width: 100%;
+        min-width: 0;
+        padding-block: 0.6rem;
+      }
+      .quick-add > app-ui-button { grid-column: 1 / -1; }
     }
 
     @media (max-width: 768px) {

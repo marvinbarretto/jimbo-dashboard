@@ -25,7 +25,7 @@ const CARDIO_MEASURES: readonly TrackerMeasure[] = [
 const ADD_SET_MEASURES: readonly TrackerMeasure[] = [
   { key: 'sets', label: 'sets' },
   { key: 'reps', label: 'reps' },
-  { key: 'weight_kg', label: 'kg', unit: 'kg', kind: 'number' },
+  { key: 'weight_kg', label: 'weight', unit: 'kg', kind: 'number' },
   { key: 'rpe', label: 'RPE' },
 ];
 
@@ -176,16 +176,25 @@ const CARDIO_PRESETS: readonly CardioPreset[] = [
               [prefill]="setPrefills()" [hints]="setHints()"
               placeholder="search or add an exercise…" addLabel="Add"
               (add)="onAddSet($event)" />
-            <div class="session__presets">
-              @for (p of cardioPresets; track p.label) {
-                <button type="button" class="session__preset" (click)="addPreset(p)">{{ p.label }}</button>
-              }
-            </div>
-            <app-ui-quick-add-row class="session__add"
-              [options]="exerciseOptions()" [measures]="cardioMeasures"
-              [allowCreate]="true"
-              placeholder="or search / add another cardio activity…" addLabel="Add cardio"
-              (add)="onAddCardio($event)" />
+            <!-- Cardio capture folds away: mid-set the strength picker is the
+                 whole job, and most sessions log no cardio at all. Logged
+                 cardio entries above never hide — this gates only capture. -->
+            @if (cardioOpen()) {
+              <div class="session__presets">
+                @for (p of cardioPresets; track p.label) {
+                  <button type="button" class="session__preset" (click)="addPreset(p)">{{ p.label }}</button>
+                }
+              </div>
+              <app-ui-quick-add-row class="session__add session__add--cardio"
+                [options]="exerciseOptions()" [measures]="cardioMeasures"
+                [allowCreate]="true"
+                placeholder="or search / add another cardio activity…" addLabel="Add cardio"
+                (add)="onAddCardio($event)" />
+            } @else {
+              <button type="button" class="session__cardio-toggle" (click)="cardioOpen.set(true)">
+                + add cardio
+              </button>
+            }
           }
         </div>
       }
@@ -195,6 +204,9 @@ const CARDIO_PRESETS: readonly CardioPreset[] = [
     .session {
       border: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
       border-radius: var(--radius);
+      /* Row layout keys off the card's own width — the same component sits
+         in the desktop day ledger and the phone-width Train tab. */
+      container-type: inline-size;
     }
     .session--open { background: var(--color-surface-soft, transparent); }
 
@@ -342,6 +354,59 @@ const CARDIO_PRESETS: readonly CardioPreset[] = [
 
       &:hover { border-color: var(--color-accent); }
     }
+
+    .session__cardio-toggle {
+      align-self: flex-start;
+      font: inherit;
+      font-size: 0.78rem;
+      color: var(--color-text-muted);
+      background: none;
+      border: none;
+      padding: 0.35rem 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+
+      &:hover { color: var(--color-accent); }
+    }
+
+    /* Narrow card (the phone Train tab, or a squeezed desktop panel): the
+       one-line desktop grammar wraps into stacked rows with thumb-sized
+       targets. Same DOM, same behavior — layout only. */
+    @container (max-width: 34rem) {
+      .session__head {
+        gap: 0.5rem;
+        padding: 0.55rem 0.6rem;
+        font-size: 1rem;
+      }
+      .session__summary { font-size: 0.78rem; }
+
+      .session__body {
+        padding: 0.15rem 0.6rem 0.75rem;
+        gap: 0.55rem;
+      }
+      .session__list { gap: 0; }
+
+      /* Exercise name gets its own line; the numbers line up beneath it,
+         delete pushed to the far edge, faint rules between sets. */
+      .setrow {
+        flex-wrap: wrap;
+        row-gap: 0.1rem;
+        padding-block: 0.45rem;
+        font-size: 1rem;
+      }
+      .setrow + .setrow { border-top: 1px solid color-mix(in srgb, var(--color-border) 35%, transparent); }
+      .setrow__name { flex: 1 1 100%; }
+      .setrow__note { flex: 0 1 auto; }
+      .setrow > app-ui-button { margin-left: auto; }
+
+      .session__energy-dot {
+        width: 1.9rem;
+        height: 1.9rem;
+        font-size: 0.8rem;
+      }
+      .session__cardio-toggle,
+      .session__preset { font-size: 0.88rem; padding-block: 0.4rem; }
+    }
   `],
 })
 export class ExerciseSessionRow {
@@ -367,6 +432,8 @@ export class ExerciseSessionRow {
   // Expanded by default — the sets are the point; the toggle is just for tucking
   // away a workout you're not editing.
   protected readonly open = signal(true);
+  // Cardio capture starts folded (see template comment); logged cardio always shows.
+  protected readonly cardioOpen = signal(false);
 
   protected readonly time = computed(() => formatLondonTime(this.session().started_at));
   protected readonly timeInput = computed(() => isoToLocalInput(this.session().started_at));
