@@ -4,6 +4,7 @@ const screens = [
   { id: '02', file: '02-scanner.html',      label: 'Scanner' },
   { id: '03', file: '03-preview.html',      label: 'Preview' },
   { id: '04', file: '04-logged.html',       label: 'Logged' },
+  { id: '05', file: '05-usuals.html',       label: 'Usuals' },
 ];
 
 (function () {

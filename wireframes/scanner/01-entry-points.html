@@ -22,9 +22,17 @@
     <div class="w-list-item"><span>Coffee, oat milk</span><span>45 kcal</span></div>
     <div class="w-list-item"><span>Creatine 5g</span><span>—</span></div>
 
+    <!-- Zeroth entry point: the usuals — known items skip capture entirely (05) -->
+    <div class="w-h3" style="margin-top:8px;">Usuals</div>
+    <div data-goto="05">
+      <span class="w-chip w-chip--on">pale ale · 180</span>
+      <span class="w-chip">Guinness · 210</span>
+      <span class="w-chip">granola + yogurt · 450</span>
+    </div>
+
     <!-- Contextual entry: capture row gains a scan affordance -->
     <div style="display:flex; gap:8px; margin-top:8px;">
-      <div class="w-input" style="flex:1;">what did you eat or drink?</div>
+      <div class="w-input" style="flex:1;">something else? type it…</div>
       <a class="w-btn-primary w-btn-inline" data-goto="02" style="flex:0 0 auto;">[SCAN]</a>
     </div>
 

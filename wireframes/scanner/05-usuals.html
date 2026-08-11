@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>05 — Usuals</title>
+<link rel="stylesheet" href="wire-kit.css">
+</head>
+<body>
+
+<div class="w-intent">
+  <b>GOAL:</b> the foods/drinks you log constantly become one-tap buttons — no camera, no typing,
+  no confirm.<br>
+  <b>PERSONA:</b> Marvin with a pint in hand or a granola bowl poured — the entry is *known*,
+  friction is the only reason it sometimes goes unlogged.<br>
+  <b>PRIMARY:</b> tap a usual → logged instantly with its known macros.<br>
+  <b>SUCCESS:</b> the entry is in the ledger before the phone leaves the hand; a second pint is a
+  second tap on the same chip.
+</div>
+
+<div class="w-frame">
+  <div class="w-bar"><span>LOG</span><span class="w-muted">/m/log</span></div>
+  <div class="w-body">
+    <div class="w-list-item"><span>Granola + greek yogurt</span><span>450 kcal</span></div>
+    <div class="w-list-item"><span>Coffee, oat milk</span><span>45 kcal</span></div>
+
+    <!-- The usuals row: real labels from /food-log/frequent, ranked by count -->
+    <div class="w-h3" style="margin-top:8px;">Usuals <span class="w-muted" style="text-transform:none; letter-spacing:0;">— tap to log</span></div>
+    <div>
+      <span class="w-chip w-chip--on" data-goto="05">pale ale · 180</span>
+      <span class="w-chip">Guinness · 210</span>
+      <span class="w-chip">gin &amp; tonic can · 170</span>
+    </div>
+    <div>
+      <span class="w-chip">granola + yogurt · 450</span>
+      <span class="w-chip">banana · 105</span>
+      <span class="w-chip w-muted" style="border-style:dashed;">more…</span>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top:6px;">
+      <div class="w-input" style="flex:1;">something else? type it…</div>
+      <a class="w-btn-primary w-btn-inline" data-goto="02">[SCAN]</a>
+    </div>
+
+    <div class="w-h3" style="margin-top:10px;">Last 7 days</div>
+    <div class="w-placeholder" style="height:90px;">kcal week strip</div>
+  </div>
+  <div class="w-tabs">
+    <a class="w-tab" href="#">Today</a>
+    <a class="w-tab w-tab--active" href="#">Log</a>
+    <a class="w-fab" data-goto="02">SCAN</a>
+    <a class="w-tab" href="#">Train</a>
+    <span class="w-tab" style="flex:0 0 6px;"></span>
+  </div>
+</div>
+
+<div class="w-note">
+  <b>Notes:</b><br>
+  — Chips carry label + kcal so the tap is informed but decision-free. Tap = instant POST with the
+  entry's last-known macros (/food-log/manual — no LLM round-trip, values come from history).<br>
+  — Ranked by the existing /food-log/frequent endpoint (count DESC). Six visible + "more…";
+  the same data already feeds the typeahead, so this is promotion, not new plumbing.<br>
+  — Drinks and food split into two rows on purpose: your real top-15 is drink-dominated
+  (pale ale 48×, Guinness 32×), and evening-Marvin and morning-Marvin reach for different rows.
+</div>
+
+<div class="w-sep">State — just tapped (and the tally)</div>
+
+<div class="w-frame w-frame--auto">
+  <div class="w-body">
+    <div class="w-block" style="border:2px solid #111;">
+      ✓ pale ale · 180 kcal logged &nbsp; <span class="w-muted">today: 1,240 kcal · undo</span>
+    </div>
+    <div>
+      <span class="w-chip w-chip--on">pale ale ×2 · tap for another</span>
+      <span class="w-chip">Guinness · 210</span>
+      <span class="w-chip">gin &amp; tonic can · 170</span>
+    </div>
+    <div class="w-muted">The chip you just tapped shows today's tally and stays put — the second
+    pint is the same thumb landing in the same place. Undo removes the last entry only.</div>
+  </div>
+</div>
+
+<div class="w-sep">State — "more…" curation sheet</div>
+
+<div class="w-frame w-frame--auto">
+  <div class="w-sheet">
+    <div class="w-h2">All usuals</div>
+    <div class="w-list-item"><span>1 punk ipa <span class="w-muted">9×</span></span><span>pin · hide</span></div>
+    <div class="w-list-item"><span>1 glass white wine <span class="w-muted">6×</span></span><span>pin · hide</span></div>
+    <div class="w-list-item"><span>1 Burger King Hamburger <span class="w-muted">5×</span></span><span>pin · hide</span></div>
+    <div class="w-list-item"><span>1 small bowl granola <span class="w-muted">7×</span></span><span>pin · hide</span></div>
+    <div class="w-muted">Frequency proposes, you dispose: pin forces a chip onto the row, hide bans
+    one (the "3 pale ale" batch-entry duplicate, say). Everything here is still one tap to log.</div>
+  </div>
+</div>
+
+<div class="w-note">
+  <b>Data wrinkles this design must absorb:</b><br>
+  1. <u>Fragmentation</u> — "1 pale ale", "3 pale ale", "1 half pint IPA", "1 punk ipa" are separate
+  frequent rows for near-the-same thing; the granola family has three variants. v1: strip the
+  leading quantity for display and let hide/pin handle the rest. v2: light server-side stemming in
+  /frequent.<br>
+  2. <u>Time-of-day</u> — granola is a morning usual, beer an evening one. v2: rank by frequency
+  within ±3h of now (?at= param on /frequent) so the row reorders itself through the day. The two-row
+  drinks/food split covers most of this for free in v1.<br>
+  3. <u>Drift</u> — macros ride the *latest* log of that label, so correcting one entry's kcal in the
+  ledger silently updates the chip. That's a feature; note it in the sheet copy if it surprises.
+</div>
+
+<script src="wire-nav.js"></script>
+</body>
+</html>

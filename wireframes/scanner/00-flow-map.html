@@ -27,6 +27,7 @@
     <div class="w-block" data-goto="02"><b>02 — Scanner</b><br>Full-bleed live viewfinder, torch, fallbacks (photo / type digits), permission-denied state.</div>
     <div class="w-block" data-goto="03"><b>03 — Preview</b><br>Resolved product as a bottom sheet: portion, macros vs day, one Log action. Unknown-barcode state.</div>
     <div class="w-block" data-goto="04"><b>04 — Logged</b><br>Stay-and-scan loop with running day total; Done exits to the ledger.</div>
+    <div class="w-block" data-goto="05"><b>05 — Usuals</b><br>The zeroth entry point: your frequent cluster as one-tap chips — no camera, no typing. Tally on repeat taps.</div>
   </div>
 </div>
 
@@ -39,7 +40,11 @@
   — After logging you <u>stay in the scanner</u> ("scan another"), because the multi-item moment
   (unpacking a shop, meal from 3 products) is the power case. Done exits to Log.<br>
   — The flow reuses the existing decode → resolve → confirm pipeline from /nutrition/scan;
-  wireframes change where it lives and what it leads with, not the plumbing.
+  wireframes change where it lives and what it leads with, not the plumbing.<br>
+  — Capture is a ladder, cheapest rung first: <u>tap a usual</u> (known item, zero decisions) →
+  <u>scan</u> (packaged, unknown) → <u>type</u> (everything else, LLM estimates). The real
+  frequent-foods data justifies the top rung: pale ale 48×, Guinness 32×, a granola family, all
+  with known macros — logging those should cost one tap, not a camera.
 </div>
 
 <div class="w-note">
