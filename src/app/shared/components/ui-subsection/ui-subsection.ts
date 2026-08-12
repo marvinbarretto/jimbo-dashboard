@@ -30,8 +30,11 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     }
 
     .ui-subsection__label {
-      font-size: 0.65rem;
-      letter-spacing: 0.1em;
+      // Shared label register (src/styles/_typography.scss) — tokens, not the
+      // .label-caps class, so component styles need no global load-order.
+      font-family: var(--label-family);
+      font-size: var(--label-size);
+      letter-spacing: var(--label-tracking);
       text-transform: uppercase;
       color: var(--color-text-muted);
       margin-bottom: 0.6rem;

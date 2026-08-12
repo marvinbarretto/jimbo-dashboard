@@ -257,6 +257,20 @@ input, select, textarea {
   }
 }
 
+// Toggles render natively, so the text-input chrome above (padding, border,
+// background) is dead weight on them — reset it and instead give every
+// checkbox/radio in the app a real click target. 1.2rem ≈ 19px, up from the
+// ~13px browser default that made the AC checklist fiddly to hit.
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  padding: 0;
+  flex-shrink: 0;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
 h1 { font-size: 1.75rem; font-weight: 600; }
 h2 { font-size: 1.25rem; font-weight: 600; }
 
@@ -287,8 +301,6 @@ h2 { font-size: 1.25rem; font-weight: 600; }
     flex-direction: row;
     align-items: center;
     gap: 0.5rem;
-
-    input[type="checkbox"] { width: auto; }
 
     label {
       text-transform: none;

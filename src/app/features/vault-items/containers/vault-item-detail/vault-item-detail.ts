@@ -23,7 +23,10 @@ import { VaultItemDialogStore } from '../../dialog/vault-item-dialog-store';
   // the instance via hierarchical DI.
   providers: [VaultItemDialogStore],
   template: `
-    <app-ui-page width="standard">
+    <!-- 'full': proportional to the viewport, not a fixed cap. Reading
+         surfaces inside stay legible because prose is measure-capped
+         (--prose-measure); only the layout grid grows. -->
+    <app-ui-page width="full">
     @if (mode(); as m) {
       @if (resolvedItem()) {
         <app-vault-item-detail-body [mode]="m" surface="page" />

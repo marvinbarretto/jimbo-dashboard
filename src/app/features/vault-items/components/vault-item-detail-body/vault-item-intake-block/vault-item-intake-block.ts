@@ -108,9 +108,9 @@ import { parseBodySections } from '@domain/vault/body-sections';
     }
 
     .sect__label {
-      font-family: var(--scan-family);
-      font-size: 0.65rem;
-      letter-spacing: 0.08em;
+      font-family: var(--label-family);
+      font-size: var(--label-size);
+      letter-spacing: var(--label-tracking);
       text-transform: uppercase;
       color: var(--color-text-muted);
       // Optically aligns the label with the first line of prose beside it,

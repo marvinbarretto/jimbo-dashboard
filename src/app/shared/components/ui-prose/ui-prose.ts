@@ -35,11 +35,11 @@ import { parseStructuredProse } from '@shared/utils/prose.utils';
       padding: 0.4rem 0;
     }
 
-    /* markdown-body (global, src/styles/_markdown.scss) sets its own
+    /* markdown-body (global, src/styles/_typography.scss) sets its own
        font-family/size directly, so an ancestor .prose-read can't win by
-       inheritance — it has to sit on the same element and out-cascade it
-       (report.scss loads after markdown.scss in styles.scss). Default is
-       that serif reading register, shared with the report surface — most
+       inheritance — it has to sit on the same element, where the compound
+       .markdown-body.prose-read rule out-specifies it. Default is that
+       serif reading register, shared with the report surface — most
        prose deserves to be read, not scanned. [plain] opts out for
        dense/tabular contexts (list rows, triage cards), leaving
        markdown-body's own compact sans treatment in place. */

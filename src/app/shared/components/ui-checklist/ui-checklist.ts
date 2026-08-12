@@ -156,12 +156,21 @@ export interface UiChecklistItem {
 
     .ui-checklist__item {
       display: flex;
-      align-items: center;
+      // Top-aligned, not centered: acceptance criteria routinely run to
+      // several lines, and a vertically-centered checkbox floats mid-paragraph.
+      // The marker offset below optically centers it on the FIRST line instead.
+      align-items: flex-start;
       gap: 0.5rem;
       padding: 0.3rem 0;
       font-family: var(--prose-family);
       font-size: var(--prose-size);
       line-height: var(--prose-line);
+    }
+
+    // (line-height − marker height) / 2 — sits the marker on the first line.
+    .ui-checklist__check,
+    .ui-checklist__mark {
+      margin-top: calc((var(--prose-line) * var(--prose-size) - 1.2rem) / 2);
     }
 
     .ui-checklist__item--done {
@@ -184,7 +193,10 @@ export interface UiChecklistItem {
 
     .ui-checklist__mark {
       flex-shrink: 0;
-      width: 1rem;
+      // Matches the global input[type="checkbox"] width so read-only and
+      // editable rows keep their text aligned.
+      width: 1.2rem;
+      text-align: center;
     }
 
     .ui-checklist__bullet {
@@ -194,7 +206,7 @@ export interface UiChecklistItem {
 
     .ui-checklist__check {
       flex-shrink: 0;
-      margin: 0;
+      // No margin reset here — the first-line offset above must survive.
     }
 
     .ui-checklist__text {
@@ -260,12 +272,12 @@ export interface UiChecklistItem {
     }
 
     .ui-checklist__remove {
-      padding: 0 0.4rem;
+      padding: 0.2rem 0.5rem;
       background: transparent;
       border: none;
       cursor: pointer;
       color: var(--color-text-muted);
-      font-size: 0.85rem;
+      font-size: 1rem;
       line-height: 1;
 
       &:hover { color: var(--color-danger); }

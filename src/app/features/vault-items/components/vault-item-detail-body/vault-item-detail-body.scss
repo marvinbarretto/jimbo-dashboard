@@ -246,8 +246,13 @@
   padding-left: 0.75rem;
   border-left: 1px solid var(--color-border);
   color: var(--color-text-soft);
-  font-size: 0.8rem;
-  line-height: 1.5;
+  // The ask is prose to be read, like the work body and the ACs — the shared
+  // reading register, capped at the shared measure.
+  font-family: var(--prose-family);
+  font-size: var(--prose-size);
+  line-height: var(--prose-line);
+  letter-spacing: var(--prose-tracking);
+  max-width: var(--prose-measure);
 }
 // A <button>, not an <a href="#…"> — the router treated the bare fragment as a
 // route and bounced to the homepage. Styled as a link so nothing looks different.
@@ -375,8 +380,8 @@
   font-size: 0.75rem;
   font-family: var(--font-mono);
   button {
-    width: 20px;
-    height: 20px;
+    width: 26px;
+    height: 26px;
     padding: 0;
     display: inline-flex;
     align-items: center;
@@ -406,8 +411,9 @@
 }
 .v3__history-col { min-width: 0; }
 .v3__lab {
-  font-size: 0.6rem;
-  letter-spacing: 0.13em;
+  font-family: var(--label-family);
+  font-size: var(--label-size);
+  letter-spacing: var(--label-tracking);
   text-transform: uppercase;
   color: var(--color-text-muted);
   margin-bottom: 0.6rem;

@@ -20,16 +20,26 @@
 
   // ── Reading register ──
   --prose-family: var(--font-serif);
-  --prose-size: 1.02rem;
-  --prose-line: 1.65;
+  --prose-size: 1.1rem;
+  --prose-line: 1.7;
   --prose-tracking: 0.005em;
   // ~75 characters at --prose-size. Cap any reading surface at this.
-  --prose-measure: 42rem;
+  // Scales with --prose-size — bump them together or the measure silently
+  // drifts away from 75ch.
+  --prose-measure: 46rem;
 
   // ── Scanning register ──
   --scan-family: var(--font-sans);
   --scan-size: 0.8rem;
   --scan-line: 1.55;
+
+  // ── Label register ──
+  // Micro-caps section labels ("THE WORK", "ACTIVITY", column heads). One
+  // size and tracking everywhere — before this, four components each picked
+  // their own (0.6 / 0.65 / 0.72rem) and the seams showed.
+  --label-family: var(--scan-family);
+  --label-size: 0.68rem;
+  --label-tracking: 0.1em;
 
   // ── Heading scale ──
   // Ratios, not sizes: em keeps the scale intact whichever register is in
@@ -70,6 +80,17 @@
   max-width: var(--prose-measure);
 }
 
+// Micro-caps section label. Droppable on any element that titles a block of
+// content ("THE WORK", "ACTIVITY") — components may still add their own
+// margin/colour, but size, tracking and case come from here.
+.label-caps {
+  font-family: var(--label-family);
+  font-size: var(--label-size);
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
 // ── Rendered markdown ─────────────────────────────────────────────────
 // Styles the HTML produced by [innerHTML]="... | markdown". Must be global —
 // Angular's emulated encapsulation does not scope attribute selectors onto
@@ -77,16 +98,24 @@
 //
 // Structure (spacing, code, lists, links) plus a default register. The default
 // is SCAN so a bare .markdown-body never falls back to the app's monospace
-// root font; adding .prose-read on the same element switches it to READ. That
-// override works by source order — .prose-read is declared above, so it must
-// stay above, and both now live in this one file rather than relying on which
-// partial styles.scss happens to @use first.
+// root font; adding .prose-read on the same element switches it to READ via
+// the explicit .markdown-body.prose-read rule below — the compound selector
+// out-specifies both singles, so the switch no longer depends on source order
+// (the order-based version had it backwards: .markdown-body was declared
+// later and silently won, leaving every READ opt-in rendering as SCAN).
 .markdown-body {
   font-family: var(--scan-family);
   font-size: var(--scan-size);
   line-height: var(--scan-line);
   word-break: break-word;
   color: var(--color-text);
+
+  &.prose-read {
+    font-family: var(--prose-family);
+    font-size: var(--prose-size);
+    line-height: var(--prose-line);
+    letter-spacing: var(--prose-tracking);
+  }
 
   :is(h1, h2, h3, h4, h5, h6) {
     margin: 1.15em 0 0.35em;
