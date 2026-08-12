@@ -1,0 +1,93 @@
+@let j = store.journey();
+
+@if (!j || j.shape === 'none') {
+  <p class="soft">No link activity recorded — there is no analysis for this email.</p>
+} @else if (store.linksSkipped()) {
+  <p class="soft">
+    Kipper skipped link-following on purpose: the body was classified
+    <strong>{{ j.contentType }}</strong>, and promotional / notification /
+    transactional links (unsubscribe, tracking, product pages) burn browser
+    time without producing anything useful.
+  </p>
+} @else if (j.links.length === 0) {
+  <p class="soft">
+    @if (j.linksRecorded) {
+      The link step ran and found nothing followable in this email.
+    } @else {
+      No link step was recorded for this email.
+    }
+  </p>
+} @else {
+  <!-- Why the follows happened at all — stated once, not per card. -->
+  <p class="trace-why">
+    The body was classified <strong>{{ j.contentType ?? 'unknown' }}</strong>,
+    so kipper followed each link from the email with a headless browser,
+    snapshotted the page, and read it for events.
+  </p>
+
+  <div class="trace-list">
+    @for (t of store.linkTraces(); track $index) {
+      <article class="trace">
+        <div class="trace-body">
+          <div class="trace-head">
+            @if (t.link.url) {
+              <a [href]="t.link.url" target="_blank" rel="noopener noreferrer" class="trace-title">
+                {{ t.link.pageTitle || 'untitled page' }}
+              </a>
+            } @else {
+              <span class="trace-title">{{ t.link.pageTitle ?? 'unknown link' }}</span>
+            }
+            @if (t.times > 1) {
+              <!-- Repetition is a finding: the same wall hit N times. -->
+              <app-ui-badge tone="warning">followed ×{{ t.times }}</app-ui-badge>
+            }
+            <app-ui-badge [tone]="fetchTone(t.link.fetchStatus)">
+              {{ t.link.fetchStatus ?? 'unknown' }}
+            </app-ui-badge>
+          </div>
+
+          @if (t.link.url) {
+            <p class="trace-url" [title]="t.link.url">{{ t.link.url }}</p>
+          }
+
+          <dl class="trace-stages">
+            <dt>What happened</dt>
+            <dd>{{ fetchLine(t.link) }}</dd>
+
+            @if (t.link.pageSummary) {
+              <dt>What it read</dt>
+              <dd><app-ui-prose [text]="t.link.pageSummary" /></dd>
+            }
+
+            @if (t.link.events.length > 0) {
+              <dt>Events on the page</dt>
+              <dd>
+                <ul class="plain-list">
+                  @for (e of t.link.events; track $index) {
+                    <li>{{ e.what ?? '—' }} @if (e.when) {— {{ e.when }}}</li>
+                  }
+                </ul>
+              </dd>
+            }
+
+            @if (t.link.entities.length > 0) {
+              <dt>Entities</dt>
+              <dd>
+                <app-ui-chip-list [items]="entityChips(t.link.entities)" [allowRemove]="false" emptyLabel="none" />
+              </dd>
+            }
+
+            <dt>Conclusion</dt>
+            <dd class="trace-yield">{{ yieldLine(t.link) }}</dd>
+          </dl>
+        </div>
+
+        @if (t.link.screenshotUrl; as shot) {
+          <a [href]="shot" target="_blank" rel="noopener noreferrer" class="trace-shot-link" title="Open full snapshot">
+            <img [src]="shot" [alt]="'Snapshot of ' + (t.link.pageTitle ?? t.link.url ?? 'page')" loading="lazy" class="trace-shot" />
+          </a>
+        }
+      </article>
+    }
+  </div>
+}

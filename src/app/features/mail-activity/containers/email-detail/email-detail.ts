@@ -1,7 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { DatePipe, JsonPipe } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { ActivatedRoute, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { UiPage } from '@shared/components/ui-page/ui-page';
@@ -10,108 +9,58 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiMetaList } from '@shared/components/ui-meta-list/ui-meta-list';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
-import { UiCard } from '@shared/components/ui-card/ui-card';
-import { UiChipList, type UiChipListItem } from '@shared/components/ui-chip-list/ui-chip-list';
 import { UiStepper, type UiStepperStep } from '@shared/components/ui-stepper/ui-stepper';
+import { UiTabBar } from '@shared/components/ui-tab-bar/ui-tab-bar';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
-import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { VaultChip } from '@shared/components/vault-chip/vault-chip';
-import { loadOne } from '@shared/data-access/load-one';
-import type { EmailReport, EmailVerdict } from '../../mail-activity.service';
+import type { EmailVerdict } from '../../mail-activity.service';
 import { isRetained } from '../../mail-activity.service';
-import {
-  toJourney, linksSkippedByPolicy,
-  type EmailJourney, type JourneyLink,
-} from '../../email-journey';
-
-/** Section ids for the ?open= disclosure state. */
-type SectionId = 'analysis' | 'links' | 'body' | 'raw';
-
-const DEFAULT_OPEN: readonly SectionId[] = ['analysis', 'links'];
+import { EmailDetailStore } from '../../email-detail.store';
 
 /**
- * One email's complete journey through the pipeline: discovered → analysed →
- * links followed (with snapshots) → gated → filed. The reassurance surface —
- * every decision the machines made about this email is on this page or
- * explicitly stated as missing; absence is a finding, not a blank.
- *
- * Disclosure state lives in the `open` query param so a specific view of a
- * specific email is a shareable URL. `replaceUrl` keeps toggling out of
- * history — back should leave the email, not replay accordion clicks.
+ * Email-detail shell: the always-visible spine (journey stepper + overview,
+ * so the verdict stays on screen for cross-reference) above a tab bar whose
+ * tabs are CHILD ROUTES — analysis (default) / links / body / raw. Tabs, not
+ * accordions: collapsing multi-screen sections made the page jump under the
+ * pointer. Route-backed tabs are the repo idiom (tasks, hermes, api-data):
+ * global `.ui-tab` class, `routerLinkActive`, the URL is the tab state.
  */
 @Component({
   selector: 'app-email-detail',
   imports: [
-    DatePipe, JsonPipe,
+    DatePipe, RouterLink, RouterLinkActive, RouterOutlet,
     UiPage, UiPageHeader, UiSection, UiMetaList, UiStack, UiBadge,
-    UiChipList, UiStepper, UiLoadingState, UiEmptyState, UiProse, VaultChip,
+    UiStepper, UiTabBar, UiLoadingState, UiEmptyState, VaultChip,
   ],
   templateUrl: './email-detail.html',
   styleUrl: './email-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EmailDetail {
-  private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  protected readonly store = inject(EmailDetailStore);
 
   // Email is addressed by gmail_id across the mail feature (and the API:
   // GET /api/emails/reports/{gmail_id}), so the route param is the gmail_id.
   private readonly gmailId = toSignal(this.route.paramMap.pipe(map(p => p.get('gmailId'))));
-  private readonly url = computed(() => {
-    const id = this.gmailId();
-    return id ? `/api/emails/reports/${id}` : null;
-  });
 
-  readonly state = loadOne<EmailReport>(this.http, this.url);
-
-  protected readonly journey = computed<EmailJourney | null>(() => {
-    const s = this.state();
-    return s.data ? toJourney(s.data.ralph_analysis) : null;
-  });
-
-  protected readonly linksSkipped = computed(() => {
-    const j = this.journey();
-    return j !== null && linksSkippedByPolicy(j);
-  });
-
-  // --- Disclosure state (?open=analysis,links) ---------------------------
-
-  private readonly openParam = toSignal(
-    this.route.queryParamMap.pipe(map(p => p.get('open'))),
-  );
-
-  protected readonly openSections = computed<ReadonlySet<string>>(() => {
-    const raw = this.openParam();
-    if (raw === null || raw === undefined) return new Set(DEFAULT_OPEN);
-    return new Set(raw.split(',').filter(Boolean));
-  });
-
-  protected isOpen(id: SectionId): boolean {
-    return this.openSections().has(id);
+  constructor() {
+    effect(() => this.store.setGmailId(this.gmailId() ?? null));
   }
 
-  protected toggle(id: SectionId): void {
-    const next = new Set(this.openSections());
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
-    }
-    void this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { open: [...next].join(',') },
-      queryParamsHandling: 'merge',
-      replaceUrl: true,
-    });
-  }
+  protected readonly state = this.store.state;
 
-  // --- Journey stepper ----------------------------------------------------
+  protected linksTabLabel(): string {
+    const j = this.store.journey();
+    if (!j) return 'Links';
+    if (this.store.linksSkipped()) return 'Links · skipped';
+    return `Links (${this.store.linkTraces().length})`;
+  }
 
   protected readonly steps = computed<UiStepperStep[]>(() => {
-    const email = this.state().data;
-    const j = this.journey();
+    const email = this.store.email();
+    const j = this.store.journey();
     if (!email || !j) return [];
 
     const analysed: UiStepperStep =
@@ -120,7 +69,7 @@ export class EmailDetail {
         : { label: j.shape === 'deep' ? 'Analysed' : 'Analysed (triage only)', state: 'done' };
 
     let links: UiStepperStep;
-    if (this.linksSkipped()) {
+    if (this.store.linksSkipped()) {
       // A policy skip is a completed decision, not pending work.
       links = { label: `Links skipped (${j.contentType})`, state: 'done' };
     } else if (j.links.length > 0) {
@@ -152,91 +101,16 @@ export class EmailDetail {
   });
 
   protected readonly gateDelay = computed(() => {
-    const email = this.state().data;
+    const email = this.store.email();
     if (!email?.gated_at) return null;
     return this.delta(email.discovered_at, email.gated_at);
   });
-
-  // --- Link traces ---------------------------------------------------------
-
-  /**
-   * Links grouped for reading: the same page followed N times (Meetup's login
-   * wall appeared 5× on one digest) collapses to one trace with a ×N count —
-   * the repetition is itself a finding, so it's counted, not hidden.
-   */
-  protected readonly linkTraces = computed<{ link: JourneyLink; times: number }[]>(() => {
-    const j = this.journey();
-    if (!j) return [];
-    const byKey = new Map<string, { link: JourneyLink; times: number }>();
-    for (const link of j.links) {
-      const key = link.pageTitle ?? link.url ?? `#${byKey.size}`;
-      const existing = byKey.get(key);
-      if (existing) {
-        existing.times += 1;
-        // Prefer the follow that actually captured something.
-        if (!existing.link.screenshotUrl && link.screenshotUrl) existing.link = link;
-      } else {
-        byKey.set(key, { link, times: 1 });
-      }
-    }
-    return [...byKey.values()];
-  });
-
-  protected fetchLine(link: JourneyLink): string {
-    if (link.fetchStatus === 'ok') {
-      return link.screenshotUrl ? 'fetched ok, snapshot taken' : 'fetched ok, no snapshot stored';
-    }
-    return `fetch failed (${link.fetchStatus ?? 'unknown'}) — nothing was read, no snapshot`;
-  }
-
-  /** The per-link conclusion: what this follow contributed to the analysis. */
-  protected yieldLine(link: JourneyLink): string {
-    if (link.fetchStatus !== 'ok') return 'Contributed nothing — the fetch never returned a page.';
-    const parts: string[] = [];
-    if (link.events.length > 0) {
-      parts.push(`${link.events.length} event${link.events.length === 1 ? '' : 's'}`);
-    }
-    if (link.entities.length > 0) {
-      parts.push(`${link.entities.length} entit${link.entities.length === 1 ? 'y' : 'ies'}`);
-    }
-    return parts.length > 0
-      ? `Contributed ${parts.join(' and ')} to the analysis.`
-      : 'Read, but contributed nothing to the analysis.';
-  }
-
-  // --- Presentation helpers ----------------------------------------------
-
-  protected entityChips(entities: string[]): UiChipListItem[] {
-    return entities.map((e) => ({ id: e, label: e }));
-  }
 
   protected verdictTone(verdict: EmailVerdict | null): 'success' | 'neutral' | 'warning' | 'info' {
     if (verdict === 'alert') return 'warning';
     if (verdict === 'toss') return 'neutral';
     if (verdict && isRetained(verdict)) return 'success';
     return 'info';
-  }
-
-  protected fetchTone(status: string | null): 'success' | 'danger' | 'neutral' {
-    if (status === 'ok') return 'success';
-    if (status === null) return 'neutral';
-    return 'danger';
-  }
-
-  protected analysisMeta(j: EmailJourney): string {
-    if (j.shape === 'none') return 'nothing recorded';
-    const parts: string[] = [];
-    if (j.contentType) parts.push(j.contentType);
-    if (j.score !== null) parts.push(`score ${j.score}`);
-    if (j.shape === 'triage') parts.push('triage only');
-    return parts.join(' · ') || 'recorded';
-  }
-
-  protected linksMeta(j: EmailJourney): string {
-    if (this.linksSkipped()) return `skipped — body classified ${j.contentType}`;
-    if (j.links.length > 0) return `${j.links.length} followed`;
-    if (j.linksRecorded) return 'none followable';
-    return 'no link step recorded';
   }
 
   private delta(fromIso: string, toIso: string): string | null {

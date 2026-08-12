@@ -1,0 +1,78 @@
+@let j = store.journey();
+
+@if (!j || j.shape === 'none') {
+  <p class="soft">
+    No analysis recorded for this email — it either predates the analysis
+    pipeline, errored before extraction, or hasn't been read yet.
+  </p>
+} @else {
+  <app-ui-stack gap="md">
+    @if (j.shape === 'triage') {
+      <p class="notice">
+        Triage analysis only — a score/summary pass by an earlier writer.
+        No deep read (entities, events, links) has been recorded yet.
+      </p>
+    }
+
+    @if (j.summary) {
+      <app-ui-prose [text]="j.summary" />
+    }
+
+    @if (j.entities.length > 0) {
+      <div>
+        <h3 class="sub-heading">Entities</h3>
+        <app-ui-chip-list [items]="entityChips(j.entities)" [allowRemove]="false" emptyLabel="none" />
+      </div>
+    }
+
+    @if (j.events.length > 0) {
+      <div>
+        <h3 class="sub-heading">Events spotted</h3>
+        <table class="mini-table">
+          <thead>
+            <tr><th>What</th><th>When</th><th>Where</th><th>Cost</th></tr>
+          </thead>
+          <tbody>
+            @for (e of j.events; track $index) {
+              <tr>
+                <td>{{ e.what ?? '—' }}</td>
+                <td>{{ e.when ?? '—' }}</td>
+                <td>{{ e.where ?? '—' }}</td>
+                <td>{{ e.cost ?? '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (j.deadlines.length > 0) {
+      <div>
+        <h3 class="sub-heading">Deadlines</h3>
+        <ul class="plain-list">
+          @for (d of j.deadlines; track $index) {
+            <li><strong>{{ d.what ?? '—' }}</strong> — by {{ d.by ?? '?' }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (j.keyAsks.length > 0) {
+      <div>
+        <h3 class="sub-heading">What the sender wants</h3>
+        <ul class="plain-list">
+          @for (ask of j.keyAsks; track $index) {
+            <li>{{ ask }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (j.extraKeys.length > 0) {
+      <p class="soft">
+        Additional recorded fields not rendered here: {{ j.extraKeys.join(', ') }}
+        — see the Raw tab.
+      </p>
+    }
+  </app-ui-stack>
+}

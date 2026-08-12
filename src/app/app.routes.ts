@@ -47,6 +47,15 @@ const desktopRoutes: Routes = [
     path: 'mail-activity/:gmailId',
     title: 'Email',
     loadComponent: () => import('./features/mail-activity/containers/email-detail/email-detail').then(m => m.EmailDetail),
+    // Tabs are child routes (repo idiom: tasks, hermes, api-data) — the URL
+    // is the tab state, so a specific view of a specific email deep-links.
+    children: [
+      { path: '', redirectTo: 'analysis', pathMatch: 'full' },
+      { path: 'analysis', loadComponent: () => import('./features/mail-activity/containers/email-detail/panels/analysis-panel').then(m => m.EmailAnalysisPanel) },
+      { path: 'links', loadComponent: () => import('./features/mail-activity/containers/email-detail/panels/links-panel').then(m => m.EmailLinksPanel) },
+      { path: 'body', loadComponent: () => import('./features/mail-activity/containers/email-detail/panels/body-panel').then(m => m.EmailBodyPanel) },
+      { path: 'raw', loadComponent: () => import('./features/mail-activity/containers/email-detail/panels/raw-panel').then(m => m.EmailRawPanel) },
+    ],
   },
   {
     path: 'briefings',

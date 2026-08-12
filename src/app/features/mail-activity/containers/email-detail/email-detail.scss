@@ -50,6 +50,12 @@
   }
 }
 
+// Matches journal-shell's outlet wrapper: breathing room only, no page-local
+// sizing tricks — panel behaviour belongs to the primitives, not this page.
+.detail-body {
+  padding-top: 1rem;
+}
+
 .trace-why {
   margin: 0 0 1rem;
   font-size: 0.8125rem;
