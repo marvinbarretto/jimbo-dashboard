@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.175](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.174...v0.0.175) (2026-08-12)
+
+
+### Bug Fixes
+
+* **vault:** no priority control on an epic ([239fbd4](https://github.com/marvinbarretto/jimbo-dashboard/commit/239fbd4aa71e91161b4fb2648b1c65e37e9e58b4))
+
 ### [0.0.174](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.173...v0.0.174) (2026-08-12)
 
 
