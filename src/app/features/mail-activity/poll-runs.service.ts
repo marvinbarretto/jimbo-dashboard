@@ -8,8 +8,9 @@ import { firstValueFrom } from 'rxjs';
  *
  * Runs are not a stored entity of their own: the worker posts an `agent.end`
  * event to /api/events after each sweep, and this service reads those rows
- * back. The payload keys mirror ralph's run summary — see
- * ralph/lib/api_client.py post_run_result.
+ * back (payload keys per ralph/lib/api_client.py post_run_result). Rows are
+ * matched on `actor=kipper` — stable across the 2026-08-12 source/job_name
+ * rename — so pre-rename history and new rows read as one series.
  */
 export interface PollRun {
   id: number;
@@ -41,9 +42,9 @@ interface EventListResponse {
 
 const DAYS_BACK = 30;
 
-/** The job identity in event payloads. Kept as 'ralph-email' for history
- *  continuity even though the actor and launchd label are now kipper. */
-const JOB_ID = 'ralph-email';
+/** Both job identities: rows before the 2026-08-12 rename carry the old
+ *  name and are the same series — never filter them out. */
+const JOB_IDS = new Set(['kipper-email', 'ralph-email']);
 
 function num(v: unknown): number | null {
   return typeof v === 'number' && Number.isFinite(v) ? v : null;
@@ -64,7 +65,7 @@ export class PollRunsService {
       const since = new Date(Date.now() - DAYS_BACK * 24 * 60 * 60 * 1000).toISOString();
       const res = await firstValueFrom(
         this.http.get<EventListResponse>(
-          `/api/events?source=ralph&kind=agent.end&since=${encodeURIComponent(since)}&limit=1000`,
+          `/api/events?actor=kipper&kind=agent.end&since=${encodeURIComponent(since)}&limit=1000`,
         ),
       );
       this.runs.set(
@@ -81,7 +82,7 @@ export class PollRunsService {
 
   private toRun(e: SystemEvent): PollRun | null {
     const p = (e.payload ?? {}) as Record<string, unknown>;
-    if (p['job_id'] !== JOB_ID) return null;
+    if (!JOB_IDS.has(String(p['job_id']))) return null;
     return {
       id: e.id,
       ts: e.ts,
