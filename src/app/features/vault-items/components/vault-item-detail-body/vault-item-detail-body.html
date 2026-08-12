@@ -124,24 +124,30 @@
       }
 
       <div class="v3__band v3__band--title">
-        <app-ui-dropdown class="v3__prio" ariaHaspopup="menu" ariaLabel="Set priority" #prio>
-          <span trigger class="v3__pill v3__pill--p{{ prioritySlug() }}">{{ priorityLabel() }}</span>
-          <div panel class="v3__menu v3__menu--prio" role="menu">
-            @for (p of PRIORITIES; track p.value) {
-              <button type="button" role="menuitem" class="v3__menu-item"
-                [disabled]="item.manual_priority === p.value"
-                (click)="store.updateManualPriority(p.value); prio.close()">
-                {{ p.label }}<small>{{ p.hint }}</small>
-              </button>
-            }
-            @if (item.manual_priority !== null) {
-              <button type="button" role="menuitem" class="v3__menu-item"
-                (click)="store.updateManualPriority(null); prio.close()">
-                Clear override<small>fall back to the AI ranking</small>
-              </button>
-            }
-          </div>
-        </app-ui-dropdown>
+        <!-- No priority control on an epic. Priority schedules a unit of work and
+             an epic is a container — its children carry the schedule. The API
+             rejects the write (EpicPriorityForbiddenError) and a CHECK constraint
+             backs that, so offering the dropdown here would only produce errors. -->
+        @if (!item.is_epic) {
+          <app-ui-dropdown class="v3__prio" ariaHaspopup="menu" ariaLabel="Set priority" #prio>
+            <span trigger class="v3__pill v3__pill--p{{ prioritySlug() }}">{{ priorityLabel() }}</span>
+            <div panel class="v3__menu v3__menu--prio" role="menu">
+              @for (p of PRIORITIES; track p.value) {
+                <button type="button" role="menuitem" class="v3__menu-item"
+                  [disabled]="item.manual_priority === p.value"
+                  (click)="store.updateManualPriority(p.value); prio.close()">
+                  {{ p.label }}<small>{{ p.hint }}</small>
+                </button>
+              }
+              @if (item.manual_priority !== null) {
+                <button type="button" role="menuitem" class="v3__menu-item"
+                  (click)="store.updateManualPriority(null); prio.close()">
+                  Clear override<small>fall back to the AI ranking</small>
+                </button>
+              }
+            </div>
+          </app-ui-dropdown>
+        }
         <!-- An epic has no epic band of its own (that band shows its PARENT), so
              without this the only thing distinguishing an epic from a task is
              the title text — and epics aren't reliably titled "[Epic] …". -->
