@@ -73,6 +73,10 @@ const DEFAULT_LIMIT = 50;
 export class MailActivityService {
   private readonly http = inject(HttpClient);
   private readonly base = environment.dashboardApiUrl;
+  // Field-injected: start() runs from component ngOnInit, which is not an
+  // injection context — inject(DestroyRef) there threw NG0203 on every Mail
+  // visit and leaked the refresh timer.
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly _items = signal<EmailReport[]>([]);
   private readonly _total = signal(0);
@@ -96,7 +100,7 @@ export class MailActivityService {
     this.started = true;
     void this.refresh();
     this.timerHandle = setInterval(() => void this.refresh(), REFRESH_INTERVAL_MS);
-    inject(DestroyRef).onDestroy(() => this.stop());
+    this.destroyRef.onDestroy(() => this.stop());
   }
 
   stop(): void {

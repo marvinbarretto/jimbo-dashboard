@@ -13,7 +13,9 @@ import { UiStepper, type UiStepperStep } from '@shared/components/ui-stepper/ui-
 import { UiTabBar } from '@shared/components/ui-tab-bar/ui-tab-bar';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
+import { UiBreadcrumb, type Crumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
 import { VaultChip } from '@shared/components/vault-chip/vault-chip';
+import { TAB_NAVIGATION } from '@shared/utils/tab-navigation';
 import type { EmailVerdict } from '../../mail-activity.service';
 import { isRetained } from '../../mail-activity.service';
 import { EmailDetailStore } from '../../email-detail.store';
@@ -31,7 +33,7 @@ import { EmailDetailStore } from '../../email-detail.store';
   imports: [
     DatePipe, RouterLink, RouterLinkActive, RouterOutlet,
     UiPage, UiPageHeader, UiSection, UiMetaList, UiStack, UiBadge,
-    UiStepper, UiTabBar, UiLoadingState, UiEmptyState, VaultChip,
+    UiBreadcrumb, UiStepper, UiTabBar, UiLoadingState, UiEmptyState, VaultChip,
   ],
   templateUrl: './email-detail.html',
   styleUrl: './email-detail.scss',
@@ -50,6 +52,15 @@ export class EmailDetail {
   }
 
   protected readonly state = this.store.state;
+
+  /** Tab links carry this so tab-aware scrolling holds the viewport still. */
+  protected readonly tabNavigation = TAB_NAVIGATION;
+
+  protected readonly crumbs = computed<Crumb[]>(() => {
+    const subject = this.store.email()?.subject ?? this.gmailId() ?? 'Email';
+    const label = subject.length > 48 ? `${subject.slice(0, 48)}…` : subject;
+    return [{ label: 'Mail', link: '/mail-activity' }, { label }];
+  });
 
   protected linksTabLabel(): string {
     const j = this.store.journey();

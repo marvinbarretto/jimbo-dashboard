@@ -5,6 +5,7 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 import { AppTitleStrategy } from './app-title-strategy';
+import { provideTabAwareScrolling } from '@shared/utils/tab-navigation';
 import { routes } from './app.routes';
 import { ApiCredentials } from './features/auth/data-access/api-credentials.service';
 import { MobileTabReuseStrategy } from './features/mobile/mobile-tab-reuse-strategy';
@@ -27,7 +28,11 @@ export const appConfig: ApplicationConfig = {
     // apiKey before authRedirect: the key has to be attached before a 401 can
     // be interpreted as an expired session.
     provideHttpClient(withFetch(), withInterceptors([apiKeyInterceptor, authRedirectInterceptor])),
-    provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'top' })),
+    // Scroll-to-top on navigation lives in provideTabAwareScrolling, not
+    // scrollPositionRestoration — identical behaviour except navigations
+    // marked TAB_NAVIGATION (in-page tab switches) hold the viewport still.
+    provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'disabled' })),
+    provideTabAwareScrolling(),
     // Detach/reattach reuse for the /m tabs only — routes without a reuseTab
     // marker (all of desktop) keep the default destroy-on-navigate.
     { provide: RouteReuseStrategy, useClass: MobileTabReuseStrategy },

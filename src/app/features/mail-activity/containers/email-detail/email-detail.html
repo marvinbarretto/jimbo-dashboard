@@ -8,6 +8,8 @@
 } @else if (s.data; as email) {
   <app-ui-stack gap="lg">
     <app-ui-page-header>
+      <app-ui-breadcrumb uiPageHeaderLead [crumbs]="crumbs()" />
+
       <h1 uiPageHeaderTitle>{{ email.subject ?? '(no subject)' }}</h1>
       <p uiPageHeaderHint>
         From {{ email.from_name ?? email.from_email }} · {{ email.discovered_at | date: 'medium' }}
@@ -82,11 +84,14 @@
     </app-ui-section>
 
     <div>
-      <app-ui-tab-bar label="Email content" [sticky]="false">
-        <a routerLink="analysis" routerLinkActive="active" class="ui-tab">Analysis</a>
-        <a routerLink="links" routerLinkActive="active" class="ui-tab">{{ linksTabLabel() }}</a>
-        <a routerLink="body" routerLinkActive="active" class="ui-tab">Body</a>
-        <a routerLink="raw" routerLinkActive="active" class="ui-tab">Raw</a>
+      <!-- Sticky (default): no tier-2 sticky bar on detail pages, so the tab
+           strip pins below the app header on long link lists. [info] marks
+           these as in-page tab switches — tab-aware scrolling holds still. -->
+      <app-ui-tab-bar label="Email content">
+        <a routerLink="analysis" [info]="tabNavigation" routerLinkActive="active" class="ui-tab">Analysis</a>
+        <a routerLink="links" [info]="tabNavigation" routerLinkActive="active" class="ui-tab">{{ linksTabLabel() }}</a>
+        <a routerLink="body" [info]="tabNavigation" routerLinkActive="active" class="ui-tab">Body</a>
+        <a routerLink="raw" [info]="tabNavigation" routerLinkActive="active" class="ui-tab">Raw</a>
       </app-ui-tab-bar>
       <div class="detail-body">
         <router-outlet />
