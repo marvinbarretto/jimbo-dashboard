@@ -78,7 +78,9 @@ export class PollRunDetailStore {
       const [res] = await Promise.all([
         firstValueFrom(
           this.http.get<{ items: PollRunEmail[] }>(
-            `/api/emails/poll-runs/${encodeURIComponent(runId)}/emails`,
+            // The emails router is mounted at /api/emails/reports, so the
+            // poll-run path hangs off that — not off /api/emails.
+            `/api/emails/reports/poll-runs/${encodeURIComponent(runId)}/emails`,
           ),
         ),
         runsLoaded,
