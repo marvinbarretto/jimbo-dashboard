@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.174](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.173...v0.0.174) (2026-08-12)
+
+
+### Features
+
+* **vault:** label epics in the detail header ([7203d38](https://github.com/marvinbarretto/jimbo-dashboard/commit/7203d3845baea53e0a37ceb97834166da2cd9181))
+
 ### [0.0.173](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.172...v0.0.173) (2026-08-12)
 
 
