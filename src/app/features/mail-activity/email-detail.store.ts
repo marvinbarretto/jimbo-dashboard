@@ -27,7 +27,7 @@ export class EmailDetailStore {
 
   readonly journey = computed<EmailJourney | null>(() => {
     const email = this.email();
-    return email ? toJourney(email.ralph_analysis) : null;
+    return email ? toJourney(email.analysis) : null;
   });
 
   readonly linksSkipped = computed(() => {

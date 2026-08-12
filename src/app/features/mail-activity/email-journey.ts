@@ -1,12 +1,18 @@
 /**
- * Normalise `email_reports.ralph_analysis` into a renderable journey.
+ * Normalise `email_reports.analysis` into a renderable journey.
  *
- * The column is unvalidated jsonb with at least two writers and two shapes
- * observed in production (2026-08-12):
- *  - deep  — kipper's full read: summary, content_type, entities, events,
- *            deadlines, key_asks, plus followed links with screenshots;
- *  - triage — {score, summary, content_type} only, from an unattributed
- *            writer that runs before kipper reaches the email.
+ * The column is unvalidated jsonb with two writers and two shapes observed in
+ * production (2026-08-12):
+ *  - deep  — `kipper-email`, the M4's hourly sweep: summary, content_type,
+ *            entities, events, deadlines, key_asks, plus followed links with
+ *            screenshots;
+ *  - triage — `email-processor`, a 12-hourly Hermes cron on the VPS:
+ *            {score, summary, content_type} only.
+ *
+ * The shape inferred here is a rendering decision and stays a fallback. The
+ * authoritative answer is `analysis_writer`, recorded at ingest since
+ * 2026-08-12 — prefer it whenever the page needs to NAME the writer, and only
+ * fall back to shape for rows that predate attribution.
  * Older rows and error paths have nothing at all. Every field is optional
  * here so the page can state what's absent instead of rendering blanks —
  * absence is a finding, not a styling problem.

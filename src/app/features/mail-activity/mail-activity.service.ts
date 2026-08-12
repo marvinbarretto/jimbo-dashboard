@@ -21,6 +21,21 @@ export function isRetained(v: EmailVerdict | null): boolean {
 /** Fleet member that gated the email — distinct from the model it used. */
 export type ActorId = 'jimbo' | 'marvin' | 'kipper' | 'boris' | 'jeffrey';
 
+/**
+ * Which job wrote the analysis payload.
+ *  - kipper-email     the M4's hourly sweep; deep read with followed links.
+ *  - email-processor  a 12-hourly Hermes cron on the VPS; snippet triage only.
+ * Identified 2026-08-12 — before that the second writer was anonymous, and its
+ * cheap triage silently overwrote kipper's deep read on 132 rows.
+ */
+export type AnalysisWriter = 'kipper-email' | 'email-processor';
+
+/** Human label for a writer, and the honest fallback when none was recorded. */
+export const ANALYSIS_WRITER_LABEL: Record<AnalysisWriter, string> = {
+  'kipper-email': 'kipper (hourly deep read)',
+  'email-processor': 'email-processor (12h triage)',
+};
+
 export interface EmailReport {
   gmail_id: string;
   thread_id: string | null;
@@ -34,7 +49,20 @@ export interface EmailReport {
   body_preview?: string | null;
   // Detail-only, same projection rule as body_text. Unvalidated jsonb with
   // multiple writers/shapes — normalise via toJourney(), never index directly.
-  ralph_analysis?: unknown;
+  // (Was `ralph_analysis` until 2026-08-12; the API still emits that key as a
+  // deprecated alias for the gate-emails cron, but nothing here should read it.)
+  analysis?: unknown;
+  /**
+   * Which JOB wrote `analysis`, recorded at ingest rather than guessed from
+   * shape. Null = no analysis, or a row predating attribution. Distinct from
+   * actor_id, which is who GATED the email.
+   */
+  analysis_writer?: AnalysisWriter | null;
+  /**
+   * The kipper sweep that discovered this email. Null on every row predating
+   * run stamping — state that absence, never infer a run from timestamps.
+   */
+  poll_run_id?: string | null;
   directly_addressed?: boolean | null;
   list_unsubscribe?: string | null;
   label_ids: string[] | null;
