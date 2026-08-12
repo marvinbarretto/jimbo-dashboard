@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiChipList, type UiChipListItem } from '@shared/components/ui-chip-list/ui-chip-list';
 import { UiProse } from '@shared/components/ui-prose/ui-prose';
@@ -9,7 +10,7 @@ import { EmailDetailStore } from '../../../email-detail.store';
  *  what it read, what it contributed. Repeat follows collapse to ×N. */
 @Component({
   selector: 'app-email-links-panel',
-  imports: [UiBadge, UiChipList, UiProse],
+  imports: [NgTemplateOutlet, UiBadge, UiChipList, UiProse],
   templateUrl: './links-panel.html',
   styleUrl: '../email-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

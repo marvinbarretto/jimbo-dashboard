@@ -84,3 +84,78 @@ describe('linksSkippedByPolicy', () => {
     expect(linksSkippedByPolicy(toJourney(null))).toBe(false);
   });
 });
+
+// ── Skipped links: recorded fact vs inference ──────────────────────
+//
+// kipper started recording the links it declined to open on 2026-08-12.
+// Before that, an email showing two traces was indistinguishable from one
+// holding twenty links, and "we chose not to look" could only be deduced.
+
+describe('links_skipped', () => {
+  it('reads recorded skips with their reason', () => {
+    const j = toJourney({
+      body: { summary: 's', entities: ['x'] },
+      links: [],
+      links_skipped: [
+        { url: 'https://a.example', reason: 'over-max-links', limit: 10 },
+        { url: 'mailto:x@y.com', reason: 'not-followable' },
+      ],
+    });
+    expect(j.linksSkippedRecorded).toBe(true);
+    expect(j.linksSkipped.length).toBe(2);
+    expect(j.linksSkipped[0].reason).toBe('over-max-links');
+    expect(j.linksSkipped[0].limit).toBe(10);
+    expect(j.linksSkipped[1].reason).toBe('not-followable');
+  });
+
+  // Absence of the key is not a claim of "none" — those are different facts
+  // and the page must not render them the same.
+  it('distinguishes "no skips recorded" from "recorded, and there were none"', () => {
+    const older = toJourney({ body: { summary: 's', entities: [] }, links: [] });
+    expect(older.linksSkippedRecorded).toBe(false);
+    expect(older.linksSkipped).toEqual([]);
+
+    const recorded = toJourney({ body: { summary: 's', entities: [] }, links: [], links_skipped: [] });
+    expect(recorded.linksSkippedRecorded).toBe(true);
+    expect(recorded.linksSkipped).toEqual([]);
+  });
+
+  // A reason this build doesn't know must survive to the page rather than be
+  // dropped or relabelled as something we do recognise.
+  it('surfaces an unknown reason verbatim instead of guessing', () => {
+    const j = toJourney({
+      body: { summary: 's' },
+      links_skipped: [{ url: 'https://a.example', reason: 'robots-disallowed' }],
+    });
+    expect(j.linksSkipped[0].reason).toBeNull();
+    expect(j.linksSkipped[0].rawReason).toBe('robots-disallowed');
+  });
+
+  it('prefers the recorded policy skip over inferring it from content_type', () => {
+    // Recorded says the noise skip happened — trust it.
+    const recorded = toJourney({
+      body: { summary: 's', content_type: 'promotional' },
+      links: [],
+      links_skipped: [{ url: 'https://a.example', reason: 'noise-content-type', content_type: 'promotional' }],
+    });
+    expect(linksSkippedByPolicy(recorded)).toBe(true);
+
+    // Recorded, but the skips were for other reasons — so the noise-policy
+    // claim is false even though content_type would have implied it.
+    const other = toJourney({
+      body: { summary: 's', content_type: 'promotional', entities: [] },
+      links: [],
+      links_skipped: [{ url: 'https://a.example', reason: 'not-followable' }],
+    });
+    expect(linksSkippedByPolicy(other)).toBe(false);
+  });
+
+  it('still infers the policy skip on rows that predate skip recording', () => {
+    const legacy = toJourney({
+      body: { summary: 's', content_type: 'promotional', entities: [] },
+      links: [],
+    });
+    expect(legacy.linksSkippedRecorded).toBe(false);
+    expect(linksSkippedByPolicy(legacy)).toBe(true);
+  });
+});

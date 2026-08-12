@@ -9,6 +9,10 @@
     transactional links (unsubscribe, tracking, product pages) burn browser
     time without producing anything useful.
   </p>
+  <!-- Which links that decision cost. Named since 2026-08-12; before that the
+       count was all that survived, so this section is simply absent on older
+       rows rather than showing an empty list. -->
+  <ng-container [ngTemplateOutlet]="notFollowed" />
 } @else if (j.links.length === 0) {
   <p class="soft">
     @if (j.linksRecorded) {
@@ -90,4 +94,29 @@
       </article>
     }
   </div>
+
+  <ng-container [ngTemplateOutlet]="notFollowed" />
+
+  @if (store.everyLinkFollowed()) {
+    <p class="soft">Every link in this email was followed — nothing was skipped.</p>
+  }
 }
+
+<!-- The other half of the link story: what was deliberately left unread. Only
+     rendered when the writer actually recorded skips; an absent section means
+     the run predates skip recording, which is a different fact from "none". -->
+<ng-template #notFollowed>
+  @for (group of store.linksNotFollowed(); track group.reason) {
+    <section class="skip-group">
+      <h3 class="skip-head">
+        {{ group.label }}
+        <app-ui-badge tone="neutral">{{ group.urls.length }}</app-ui-badge>
+      </h3>
+      <ul class="plain-list skip-urls">
+        @for (url of group.urls; track url) {
+          <li [title]="url">{{ url }}</li>
+        }
+      </ul>
+    </section>
+  }
+</ng-template>

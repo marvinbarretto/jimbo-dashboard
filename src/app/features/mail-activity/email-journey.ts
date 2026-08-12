@@ -46,6 +46,31 @@ export interface JourneyLink {
 /** none = no analysis stored; triage = score/summary only; deep = full read. */
 export type AnalysisShape = 'none' | 'triage' | 'deep';
 
+/** Why a link the email carried was never opened. */
+export type LinkSkipReason =
+  /** The whole email was a noise content_type, so no link was followed. */
+  | 'noise-content-type'
+  /** Beyond kipper's per-email link cap. */
+  | 'over-max-links'
+  /** Not a followable URL (mailto:, unsubscribe, tracking pixel…). */
+  | 'not-followable';
+
+export interface JourneySkippedLink {
+  url: string | null;
+  /** Null when the payload carried a reason this build doesn't know — shown
+   *  verbatim rather than silently dropped or relabelled. */
+  reason: LinkSkipReason | null;
+  rawReason: string | null;
+  /** Set on 'over-max-links': the cap that truncated the list. */
+  limit: number | null;
+  /** Set on 'noise-content-type': the type that suppressed link-following. */
+  contentType: string | null;
+}
+
+const LINK_SKIP_REASONS: readonly string[] = [
+  'noise-content-type', 'over-max-links', 'not-followable',
+];
+
 export interface EmailJourney {
   shape: AnalysisShape;
   score: number | null;
@@ -59,6 +84,13 @@ export interface EmailJourney {
   /** Whether the writer recorded a links array at all — absent means the
    *  writer never got to the link step, empty means it did and found none. */
   linksRecorded: boolean;
+  /** Links the email carried that kipper chose NOT to open, each with the rule
+   *  that stopped it. */
+  linksSkipped: JourneySkippedLink[];
+  /** Whether the writer recorded skips at all. Absent (false) means the run
+   *  predates skip recording, so an empty `linksSkipped` proves nothing; true
+   *  with an empty array is the real claim "every link was followed". */
+  linksSkippedRecorded: boolean;
   /** Body-analysis keys this module doesn't know about, surfaced verbatim. */
   extraKeys: string[];
 }
@@ -122,10 +154,26 @@ function toLink(v: unknown): JourneyLink | null {
   };
 }
 
+function toSkippedLink(v: unknown): JourneySkippedLink | null {
+  const r = asRecord(v);
+  if (!r) return null;
+  const rawReason = str(r['reason']);
+  return {
+    url: str(r['url']),
+    reason: rawReason !== null && LINK_SKIP_REASONS.includes(rawReason)
+      ? (rawReason as LinkSkipReason)
+      : null,
+    rawReason,
+    limit: typeof r['limit'] === 'number' ? r['limit'] : null,
+    contentType: str(r['content_type']),
+  };
+}
+
 export function toJourney(raw: unknown): EmailJourney {
   const ra = asRecord(raw);
   const body = asRecord(ra?.['body']);
   const linksRaw = ra?.['links'];
+  const skippedRaw = ra?.['links_skipped'];
 
   const journey: EmailJourney = {
     shape: 'none',
@@ -144,6 +192,10 @@ export function toJourney(raw: unknown): EmailJourney {
       .map(toLink)
       .filter((l): l is JourneyLink => l !== null),
     linksRecorded: Array.isArray(linksRaw),
+    linksSkipped: (Array.isArray(skippedRaw) ? skippedRaw : [])
+      .map(toSkippedLink)
+      .filter((l): l is JourneySkippedLink => l !== null),
+    linksSkippedRecorded: Array.isArray(skippedRaw),
     extraKeys: body ? Object.keys(body).filter((k) => !KNOWN_BODY_KEYS.has(k)) : [],
   };
 
@@ -163,8 +215,19 @@ export function toJourney(raw: unknown): EmailJourney {
   return journey;
 }
 
-/** True when the empty links section is explained by kipper's noise skip. */
+/**
+ * True when the empty links section is explained by kipper's noise skip.
+ *
+ * Since 2026-08-12 kipper records the skip explicitly, so prefer that: it is
+ * the writer's own account rather than our deduction from an empty array plus
+ * a noise content_type. The inference stays as the fallback for rows written
+ * before skip recording — same rule as analysis_writer, where recorded fact
+ * beats shape-sniffing.
+ */
 export function linksSkippedByPolicy(j: EmailJourney): boolean {
+  if (j.linksSkippedRecorded) {
+    return j.linksSkipped.some((l) => l.reason === 'noise-content-type');
+  }
   return (
     j.shape !== 'none' &&
     j.links.length === 0 &&
