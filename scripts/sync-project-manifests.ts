@@ -16,7 +16,7 @@
 //   docs/repo.md    — one member codebase of a multi-repo project, located via the
 //                     umbrella's declared `repos:` paths and folded into repos[].
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 
@@ -61,6 +61,39 @@ function manifestCommit(repoPath: string, manifestPath: string): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Where a project's `docs/project.md` lives inside its checkout.
+ *
+ * Normally the checkout root. But a family of independent apps can share one
+ * repo (spoonscount and munro-bagger both point at collectr), and only one of
+ * them can own the root manifest. So when the root manifest declares someone
+ * else's id, look one level down under the monorepo's workspace dirs for the
+ * manifest that declares *this* id. Files stay the source of truth — the
+ * manifest still names its own project, we just widen where we look for it.
+ *
+ * @returns Absolute path to the matching manifest, or null when none declares
+ *   this id (the caller counts that as "not manifested yet").
+ */
+function resolveManifest(localPath: string, id: string): string | null {
+  const root = join(localPath, 'docs/project.md');
+  if (existsSync(root)) {
+    const { fm } = parseManifest(readFileSync(root, 'utf8'));
+    // No id at all ⇒ single-repo project, manifest is trivially its own.
+    if (!fm.id || fm.id === id) return root;
+  }
+  for (const workspace of ['apps', 'packages']) {
+    const dir = join(localPath, workspace);
+    if (!existsSync(dir)) continue;
+    for (const entry of readdirSync(dir)) {
+      const candidate = join(dir, entry, 'docs/project.md');
+      if (!existsSync(candidate)) continue;
+      const { fm } = parseManifest(readFileSync(candidate, 'utf8'));
+      if (fm.id === id) return candidate;
+    }
+  }
+  return null;
 }
 
 function repoUrlToLocalPath(repoUrl: unknown): string | null {
@@ -141,6 +174,7 @@ function buildProjectPayload(fm: Record<string, string>, body: Record<string, st
 
 interface ProjectRepo {
   repo: string;
+  path: string | null;
   role: string | null;
   entry_points: string | null;
   footguns: string | null;
@@ -148,9 +182,13 @@ interface ProjectRepo {
   autonomy_level: string | null;
 }
 
-function buildRepoCard(fm: Record<string, string>, body: Record<string, string>): ProjectRepo {
+// `path` comes from the umbrella's `repos:` list, not the member's own repo.md —
+// only the umbrella knows where it declared the member. It is what vault items
+// cite (`jimbo/jimbo-api/src/routes/…`), so the card has to carry it.
+function buildRepoCard(fm: Record<string, string>, body: Record<string, string>, path: string): ProjectRepo {
   return {
     repo: fm.repo,
+    path: path || null,
     role: fm.role ?? null,
     entry_points: fm.entry_points ?? null,
     footguns: body['Footguns'] ?? null,
@@ -193,7 +231,7 @@ function buildRepos(raw: string): ProjectRepo[] | null {
     if (!existsSync(repoMd)) { console.warn(`  ! member repo.md missing: ${repoMd}`); continue; }
     try {
       const { fm, body } = parseManifest(readFileSync(repoMd, 'utf8'));
-      if (fm.repo) cards.push(buildRepoCard(fm, body));
+      if (fm.repo) cards.push(buildRepoCard(fm, body, mp));
     } catch (e) { console.warn(`  ! ${repoMd}: ${(e as Error).message}`); }
   }
   // Stable order by slug so the stored array is idempotent across runs.
@@ -214,19 +252,15 @@ async function main(): Promise<void> {
     const localPath = repoUrlToLocalPath(current.repo_url);
     if (!localPath) { skippedNoRepo++; continue; }            // no repo → dashboard-owned
 
-    const manifestPath = join(localPath, 'docs/project.md');
-    if (!existsSync(manifestPath)) { skippedNoManifest++; continue; } // repo, but no manifest yet
+    // Shared-repo aware: a manifest belongs to exactly the project whose id it
+    // declares, so for a family sharing one repo_url (munro-bagger/spoonscount
+    // both point at collectr) this finds the member manifest, not the root one.
+    const manifestPath = resolveManifest(localPath, id);
+    if (!manifestPath) { skippedNoManifest++; continue; } // repo, but no manifest yet
 
     let raw: string;
     try { raw = readFileSync(manifestPath, 'utf8'); } catch { continue; }
     const { fm, body } = parseManifest(raw);
-
-    // Shared-repo guard: a manifest belongs to exactly the project whose id it
-    // declares. (munro-bagger/spoonscount share collectr's repo_url.)
-    if (fm.id && fm.id !== id) {
-      console.warn(`✗ ${id}: ${manifestPath} declares id="${fm.id}" (shared repo) — skipping`);
-      continue;
-    }
 
     const payload = buildProjectPayload(fm, body, current.repo_url);
     const repos = buildRepos(raw);
