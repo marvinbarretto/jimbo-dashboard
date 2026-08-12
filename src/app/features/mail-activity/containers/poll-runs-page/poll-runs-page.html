@@ -1,0 +1,116 @@
+<app-ui-page width="standard" class="poll-runs">
+<app-ui-stack gap="lg">
+  <app-mail-tabs active="poll" />
+
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Poll runs</h1>
+    <p uiPageHeaderHint>
+      Kipper's hourly Gmail sweeps on the M4 — the acquisition layer under every other
+      mail page. Each run analyses new mail locally and forwards the raw messages to
+      LocalShout. The job only runs while the machine is awake, so gaps here explain
+      quiet days everywhere else.
+    </p>
+  </app-ui-page-header>
+
+  @if (lastError(); as err) {
+    <p class="error">Failed to load: {{ err }}</p>
+  }
+
+  <app-ui-cluster gap="sm" class="stats">
+    <app-ui-stat-card
+      label="Last sweep"
+      [value]="lastRunAgo()"
+      detail="hourly while awake"
+      [status]="lastRunStale() ? 'alert' : 'neutral'"
+    />
+    <app-ui-stat-card label="Runs (30d)" [value]="runs().length.toString()" detail="most recent first" />
+    <app-ui-stat-card label="Mails swept" [value]="totalMsgs().toString()" [detail]="errorRate() + ' errored'" />
+    <app-ui-stat-card label="Compute" [value]="hoursPerDay()" detail="per active day" />
+    <!-- launchd enforces no per-run timeout, so a hang is only visible here. -->
+    <app-ui-stat-card
+      label="Hung runs"
+      [value]="hungRuns().toString()"
+      detail="over 45 minutes"
+      [status]="hungRuns() > 0 ? 'alert' : 'neutral'"
+    />
+  </app-ui-cluster>
+
+  @if (runs().length === 0 && loading()) {
+    <p class="muted">Loading runs…</p>
+  }
+
+  <section>
+    <h2 class="section-title">By day</h2>
+    <app-table-shell>
+      <table class="runs-table">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th class="num">Runs</th>
+            <th class="num">Mails</th>
+            <th class="num">OK</th>
+            <th class="num">Errors</th>
+            <th class="num">Links followed</th>
+            <th class="num">Compute</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (d of days(); track d.day) {
+            <tr>
+              <td>
+                {{ d.day }}
+                @if (d.hung > 0) {
+                  <app-ui-badge tone="warning">{{ d.hung }} hung</app-ui-badge>
+                }
+              </td>
+              <td class="num">{{ d.runs }}</td>
+              <td class="num">{{ d.msgs }}</td>
+              <td class="num">{{ d.ok }}</td>
+              <td class="num" [class.bad]="d.errors > 0">{{ d.errors }}</td>
+              <td class="num">{{ d.links }}</td>
+              <td class="num">{{ minutesLabel(d) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </app-table-shell>
+  </section>
+
+  <section>
+    <h2 class="section-title">Recent sweeps</h2>
+    <app-table-shell>
+      <table class="runs-table">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th class="num">Mails</th>
+            <th class="num">OK</th>
+            <th class="num">Errors</th>
+            <th class="num">Links</th>
+            <th class="num">Took</th>
+            <th>Model</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (run of runs(); track run.id) {
+            <tr>
+              <td>
+                <span class="when">{{ when(run) }}</span>
+                @if (isHung(run)) {
+                  <app-ui-badge tone="warning">hung</app-ui-badge>
+                }
+              </td>
+              <td class="num">{{ run.total }}</td>
+              <td class="num">{{ run.ok }}</td>
+              <td class="num" [class.bad]="run.errors > 0">{{ run.errors }}</td>
+              <td class="num">{{ run.linksFollowed }}</td>
+              <td class="num">{{ duration(run) }}</td>
+              <td><span class="model">{{ run.model ?? '—' }}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </app-table-shell>
+  </section>
+</app-ui-stack>
+</app-ui-page>

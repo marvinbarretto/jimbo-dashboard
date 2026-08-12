@@ -36,6 +36,11 @@ const desktopRoutes: Routes = [
     title: 'Junk senders',
     loadComponent: () => import('./features/mail-activity/containers/junk-senders-page/junk-senders-page').then(m => m.JunkSendersPage),
   },
+  {
+    path: 'mail-activity/poll-runs',
+    title: 'Poll runs',
+    loadComponent: () => import('./features/mail-activity/containers/poll-runs-page/poll-runs-page').then(m => m.PollRunsPage),
+  },
   // Deep-link target for email search results (keyed by gmail_id — see
   // jimbo-api search resolveDeepLinkKey). Sibling of the list above.
   {
