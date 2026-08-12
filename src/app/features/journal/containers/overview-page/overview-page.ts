@@ -25,6 +25,7 @@ import { JournalChecksSection } from '../../components/journal-checks-section/jo
 import { JournalDaySummary } from '../../components/journal-day-summary/journal-day-summary';
 import { JournalPeriodHeader } from '../../components/journal-period-header/journal-period-header';
 import { JournalPeriodSummary } from '../../components/journal-period-summary/journal-period-summary';
+import { JournalReportSection } from '../../components/journal-report-section/journal-report-section';
 import { JournalTimelineSection } from '../../components/journal-timeline-section/journal-timeline-section';
 import {
   JournalDataService,
@@ -58,6 +59,7 @@ interface ApiTelemetryEvents {
     JournalDaySummary,
     JournalPeriodHeader,
     JournalPeriodSummary,
+    JournalReportSection,
     JournalTimelineSection,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -73,6 +75,9 @@ interface ApiTelemetryEvents {
       <app-journal-day-summary [date]="safeKey()" />
 
       <app-ui-stack gap="lg">
+        <!-- Above the reconstruction, not inside it: the report has already done
+             the assembling the timeline below asks the reader to do. -->
+        <app-journal-report-section [date]="safeKey()" />
         <app-journal-checks-section [date]="safeKey()" />
         @if (loading()) {
           <app-ui-loading-state message="Pulling the day's data…" />

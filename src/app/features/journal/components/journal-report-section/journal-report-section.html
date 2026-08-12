@@ -1,0 +1,178 @@
+<app-ui-section title="The day" [meta]="provenance()">
+  @if (loading()) {
+    <app-ui-loading-state message="Reading the day's report…" />
+  } @else if (unpublished()) {
+    <app-ui-empty-state
+      title="No report for this day"
+      message="The writer hasn't published one. That's a job that didn't run — not a quiet day."
+    />
+  } @else if (failed()) {
+    <app-ui-empty-state title="Couldn't load the report" message="The report endpoint didn't answer." />
+  } @else if (!hasBody()) {
+    <app-ui-empty-state title="Report is empty" message="Published, but the writer produced no sections." />
+  } @else {
+    <app-ui-stack gap="lg">
+
+      @if (payload()?.headline; as headline) {
+        <p class="report__headline">{{ headline }}</p>
+      }
+
+      @if (payload()?.narrative; as narrative) {
+        <app-ui-prose [text]="narrative" />
+      }
+
+      @if (counts(); as c) {
+        <div class="report__counts">
+          @if (c.sessions_real !== undefined) {
+            <app-ui-stat-card
+              label="Sessions"
+              [value]="c.sessions_real.toString()"
+              [detail]="c.sessions_noise ? c.sessions_noise + ' sub-minute shells not counted' : null"
+            />
+          }
+          @if (c.commits !== undefined) {
+            <app-ui-stat-card label="Commits" [value]="c.commits.toString()" />
+          }
+          @if (c.longest_session_minutes !== undefined) {
+            <!-- Longest, never a total: shells overlap and a summed day runs past 24h. -->
+            <app-ui-stat-card
+              label="Longest session"
+              [value]="c.longest_session_minutes + 'm'"
+              detail="Longest, not total — sessions overlap"
+            />
+          }
+          @if (c.tasks_created !== undefined || c.tasks_closed !== undefined) {
+            <app-ui-stat-card
+              label="Vault"
+              [value]="(c.tasks_closed ?? 0) + ' / ' + (c.tasks_created ?? 0)"
+              detail="closed / created"
+              [status]="(c.tasks_created ?? 0) > (c.tasks_closed ?? 0) * 5 ? 'warn' : 'neutral'"
+            />
+          }
+        </div>
+      }
+
+      @if (arcs().length) {
+        <div class="report__block">
+          <h3 class="report__heading">Arcs</h3>
+          <ol class="report__arcs">
+            @for (arc of arcs(); track arc.title) {
+              <li class="report__arc">
+                <div class="report__arc-head">
+                  <span class="report__arc-time">{{ time(arc.from) }}–{{ time(arc.to) }}</span>
+                  <span class="report__arc-title">{{ arc.title }}</span>
+                  @if (arc.project_id) {
+                    <span class="report__arc-project">{{ arc.project_id }}</span>
+                  }
+                  @if (arc.friction && arc.friction !== 'low') {
+                    <span class="report__friction" [class]="'report__friction--' + arc.friction">
+                      {{ arc.friction }} friction
+                    </span>
+                  }
+                </div>
+                <p class="report__arc-summary">{{ arc.summary }}</p>
+                @if (arc.commits?.length) {
+                  <ul class="report__commits">
+                    @for (commit of arc.commits; track commit.sha) {
+                      <li>
+                        <code>{{ commit.sha.slice(0, 7) }}</code>
+                        <span class="report__commit-repo">{{ commit.repo }}</span>
+                        {{ commit.subject }}
+                      </li>
+                    }
+                  </ul>
+                }
+              </li>
+            }
+          </ol>
+        </div>
+      }
+
+      @if (fleet(); as f) {
+        <div class="report__block">
+          <h3 class="report__heading">Fleet</h3>
+
+          @if (f.dispatch; as d) {
+            <p class="report__pulse">
+              <span>{{ d.completed }} completed</span>
+              <span>{{ d.running }} running</span>
+              @if (d.failed) { <span class="report__bad">{{ d.failed }} failed</span> }
+              @if (d.waiting_on_marvin) { <span class="report__wait">{{ d.waiting_on_marvin }} waiting on you</span> }
+            </p>
+          }
+
+          @if (f.jobs?.length) {
+            <ul class="report__jobs">
+              @for (job of f.jobs; track job.job_name) {
+                <li>
+                  <span class="report__job-name">{{ job.job_name }}</span>
+                  <span class="report__job-runs">×{{ job.runs }}</span>
+                  @if (job.model) { <span class="report__job-model">{{ job.model }}</span> }
+                  <span class="report__job-cost">{{ cost(job.cost_usd) }}</span>
+                  @if (job.notable) { <span class="report__job-note">{{ job.notable }}</span> }
+                </li>
+              }
+            </ul>
+          }
+
+          @if (f.failures?.length) {
+            <ul class="report__failures">
+              @for (fail of f.failures; track fail.at) {
+                <li>
+                  <span class="report__job-name">{{ fail.job_name }}</span>
+                  <span class="report__arc-time">{{ time(fail.at) }}</span>
+                  {{ fail.detail }}
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
+
+      @if (movedProjects().length || quietProjects().length) {
+        <div class="report__block">
+          <h3 class="report__heading">Projects</h3>
+
+          @for (p of movedProjects(); track p.project_id) {
+            <div class="report__project">
+              <span class="report__project-name">{{ p.display_name }}</span>
+              <span class="report__project-moves">
+                @if (p.commits) { {{ p.commits }} commits }
+                @if (p.sessions) { · {{ p.sessions }} sessions }
+                @if (p.vault_closed) { · {{ p.vault_closed }} closed }
+                @if (p.vault_created) { · {{ p.vault_created }} created }
+              </span>
+              @if (p.note) { <span class="report__project-note">{{ p.note }}</span> }
+            </div>
+          }
+
+          @if (quietProjects().length) {
+            <!-- Named rather than counted: "15 quiet" hides which 15, and which
+                 one has been quiet longest is the only actionable part. -->
+            <p class="report__quiet">
+              Quiet:
+              @for (p of quietProjects(); track p.project_id; let last = $last) {
+                <span class="report__quiet-item">{{ p.display_name }} ({{ p.days_since_touched }}d){{ last ? '' : ',' }}</span>
+              }
+            </p>
+          }
+        </div>
+      }
+
+      @if (carriedDebt().length) {
+        <div class="report__block">
+          <h3 class="report__heading">Carried debt</h3>
+          <ul class="report__debt">
+            @for (d of carriedDebt(); track d.item) {
+              <li>
+                <span class="report__debt-age" [class.report__bad]="d.days_carried >= 3">{{ d.days_carried }}d</span>
+                {{ d.item }}
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+    </app-ui-stack>
+  }
+</app-ui-section>

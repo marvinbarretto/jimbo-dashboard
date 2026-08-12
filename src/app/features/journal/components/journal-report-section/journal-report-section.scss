@@ -1,0 +1,210 @@
+// The published day report. Sits at the top of the journal day and is the one
+// section meant to be *read* rather than scanned — the narrative uses the same
+// serif reading register as ui-prose, and everything below it (arcs, fleet,
+// projects) stays deliberately quieter so the prose keeps the eye first.
+
+.report__headline {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.report__counts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.5rem;
+}
+
+.report__block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.report__heading {
+  margin: 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+// ── Arcs ────────────────────────────────────────────────────────────
+
+.report__arcs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.report__arc {
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--color-border);
+}
+
+.report__arc-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.report__arc-time {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.report__arc-title {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.report__arc-project {
+  font-size: 0.68rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+// Only medium and high render at all — a low-friction arc saying "low friction"
+// is noise, and the whole point is that the flagged ones stand out.
+.report__friction {
+  font-size: 0.68rem;
+
+  &--medium { color: var(--color-text-muted); }
+  &--high { color: var(--color-danger); }
+}
+
+.report__arc-summary {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.report__commits {
+  margin: 0.3rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+
+  code {
+    font-variant-numeric: tabular-nums;
+    margin-right: 0.35rem;
+  }
+}
+
+.report__commit-repo {
+  margin-right: 0.35rem;
+  opacity: 0.7;
+}
+
+// ── Fleet ───────────────────────────────────────────────────────────
+
+.report__pulse {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.report__bad { color: var(--color-danger); }
+.report__wait { color: var(--color-warning, var(--color-text)); }
+
+.report__jobs,
+.report__failures,
+.report__debt {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.76rem;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.45rem;
+  }
+}
+
+.report__job-name {
+  font-weight: 600;
+  min-width: 9rem;
+}
+
+.report__job-runs,
+.report__job-model,
+.report__job-cost,
+.report__job-note {
+  color: var(--color-text-muted);
+}
+
+.report__job-cost {
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+
+.report__failures li {
+  color: var(--color-danger);
+}
+
+// ── Projects ────────────────────────────────────────────────────────
+
+.report__project {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  padding: 0.15rem 0;
+}
+
+.report__project-name {
+  font-weight: 600;
+  min-width: 8rem;
+}
+
+.report__project-moves,
+.report__project-note {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+// The quiet list recedes hard — it's context for the moving list, not a
+// backlog demanding attention. Naming them still beats a bare count.
+.report__quiet {
+  margin: 0.3rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  opacity: 0.8;
+}
+
+.report__quiet-item {
+  margin-right: 0.3rem;
+}
+
+// ── Carried debt ────────────────────────────────────────────────────
+
+.report__debt-age {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  min-width: 2rem;
+}
