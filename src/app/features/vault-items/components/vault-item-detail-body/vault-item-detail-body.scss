@@ -91,6 +91,21 @@
   color: #fff;
 }
 
+// Epic marker on the title band. Outlined rather than filled so it reads as a
+// kind-of-thing label, not another priority pill competing with the one beside it.
+.v3__epic-tag {
+  flex-shrink: 0;
+  align-self: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid color-mix(in srgb, #fff 55%, transparent);
+  border-radius: var(--radius);
+  color: #fff;
+}
+
 // Priority pill on the title band — the one bit of state urgent enough for the top.
 .v3__pill {
   flex-shrink: 0;

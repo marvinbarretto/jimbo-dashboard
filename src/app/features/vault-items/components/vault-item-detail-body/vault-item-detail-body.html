@@ -142,6 +142,12 @@
             }
           </div>
         </app-ui-dropdown>
+        <!-- An epic has no epic band of its own (that band shows its PARENT), so
+             without this the only thing distinguishing an epic from a task is
+             the title text — and epics aren't reliably titled "[Epic] …". -->
+        @if (item.is_epic) {
+          <span class="v3__epic-tag" title="An epic — other items can be filed under it">epic</span>
+        }
         <span class="v3__band-seq v3__band-seq--title">#{{ item.seq }}</span>
         <app-ui-inline-edit
           class="v3__title"
