@@ -1,4 +1,4 @@
-<app-ui-page width="standard">
+<app-ui-page width="standard" class="email-detail">
 @let s = state();
 
 @if (s.loading) {
@@ -6,6 +6,7 @@
 } @else if (s.error) {
   <app-ui-empty-state title="Couldn't load email" [message]="s.error" />
 } @else if (s.data; as email) {
+  @let j = journey();
   <app-ui-stack gap="lg">
     <app-ui-page-header>
       <h1 uiPageHeaderTitle>{{ email.subject ?? '(no subject)' }}</h1>
@@ -14,22 +15,249 @@
       </p>
     </app-ui-page-header>
 
-    <app-ui-section title="Details" [collapsible]="false">
+    <app-ui-stepper [steps]="steps()" />
+
+    <app-ui-section title="Overview" [collapsible]="false">
       <app-ui-meta-list>
-        <dt>From</dt><dd>{{ email.from_name ?? '—' }} &lt;{{ email.from_email }}&gt;</dd>
-        <dt>Discovered</dt><dd>{{ email.discovered_at | date: 'medium' }}</dd>
-        <dt>Verdict</dt><dd>{{ email.verdict ?? 'Pending' }}</dd>
-        @if (email.verdict_reason) {
-          <dt>Reason</dt><dd>{{ email.verdict_reason }}</dd>
+        <dt>From</dt>
+        <dd>{{ email.from_name ?? '—' }} &lt;{{ email.from_email }}&gt;</dd>
+
+        <dt>Discovered</dt>
+        <dd>{{ email.discovered_at | date: 'medium' }}</dd>
+
+        @if (email.directly_addressed !== null && email.directly_addressed !== undefined) {
+          <dt>Addressed</dt>
+          <dd>{{ email.directly_addressed ? 'directly to Marvin' : 'bulk / list' }}</dd>
         }
+
+        <dt>Verdict</dt>
+        <dd>
+          @if (email.verdict; as verdict) {
+            <app-ui-badge [tone]="verdictTone(verdict)">{{ verdict }}</app-ui-badge>
+            @if (gateDelay(); as delay) {
+              <span class="soft"> decided {{ delay }} after discovery</span>
+            }
+          } @else {
+            <span class="soft">pending — not yet gated</span>
+          }
+        </dd>
+
+        @if (email.verdict_reason) {
+          <dt>Reason</dt>
+          <dd>{{ email.verdict_reason }}</dd>
+        }
+
+        @if (email.verdict) {
+          <dt>Judged by</dt>
+          <dd>
+            {{ email.actor_id ?? 'unattributed' }}
+            @if (email.verdict_model) {
+              <span class="model">· {{ email.verdict_model }}</span>
+            }
+          </dd>
+        }
+
+        <dt>Became</dt>
+        <dd>
+          @if (email.vault_note_seq; as seq) {
+            <app-vault-chip
+              kind="task"
+              [seq]="seq"
+              [title]="email.vault_note_title ?? null"
+              [itemType]="email.vault_note_type ?? 'note'"
+              [epicSeq]="email.epic_seq ?? null"
+            />
+            @if (email.project_name) {
+              <span class="soft"> in {{ email.project_name }}</span>
+            }
+          } @else if (email.verdict === 'toss') {
+            <span class="soft">nothing — tossed</span>
+          } @else if (email.verdict) {
+            <!-- The gate said keep and no note exists: surfaced, not hidden. -->
+            <span class="lost">nothing — kept but never filed</span>
+          } @else {
+            <span class="soft">nothing yet</span>
+          }
+        </dd>
       </app-ui-meta-list>
     </app-ui-section>
 
-    @if (email.body_text) {
-      <app-ui-section title="Body" [collapsible]="false">
-        <p style="white-space: pre-wrap;">{{ email.body_text }}</p>
+    @if (j) {
+      <app-ui-section
+        title="Analysis"
+        [meta]="analysisMeta(j)"
+        [collapsible]="true"
+        [expanded]="isOpen('analysis')"
+        (toggled)="toggle('analysis')">
+        @if (j.shape === 'none') {
+          <p class="soft">
+            No analysis recorded for this email — it either predates the analysis
+            pipeline, errored before extraction, or hasn't been read yet.
+          </p>
+        } @else {
+          <app-ui-stack gap="md">
+            @if (j.shape === 'triage') {
+              <p class="notice">
+                Triage analysis only — a score/summary pass by an earlier writer.
+                No deep read (entities, events, links) has been recorded yet.
+              </p>
+            }
+
+            @if (j.summary) {
+              <p class="summary">{{ j.summary }}</p>
+            }
+
+            @if (j.entities.length > 0) {
+              <div>
+                <h3 class="sub-heading">Entities</h3>
+                <app-ui-chip-list [items]="entityChips(j.entities)" [allowRemove]="false" emptyLabel="none" />
+              </div>
+            }
+
+            @if (j.events.length > 0) {
+              <div>
+                <h3 class="sub-heading">Events spotted</h3>
+                <table class="mini-table">
+                  <thead>
+                    <tr><th>What</th><th>When</th><th>Where</th><th>Cost</th></tr>
+                  </thead>
+                  <tbody>
+                    @for (e of j.events; track $index) {
+                      <tr>
+                        <td>{{ e.what ?? '—' }}</td>
+                        <td>{{ e.when ?? '—' }}</td>
+                        <td>{{ e.where ?? '—' }}</td>
+                        <td>{{ e.cost ?? '—' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+
+            @if (j.deadlines.length > 0) {
+              <div>
+                <h3 class="sub-heading">Deadlines</h3>
+                <ul class="plain-list">
+                  @for (d of j.deadlines; track $index) {
+                    <li><strong>{{ d.what ?? '—' }}</strong> — by {{ d.by ?? '?' }}</li>
+                  }
+                </ul>
+              </div>
+            }
+
+            @if (j.keyAsks.length > 0) {
+              <div>
+                <h3 class="sub-heading">What the sender wants</h3>
+                <ul class="plain-list">
+                  @for (ask of j.keyAsks; track $index) {
+                    <li>{{ ask }}</li>
+                  }
+                </ul>
+              </div>
+            }
+
+            @if (j.extraKeys.length > 0) {
+              <p class="soft">
+                Additional recorded fields not rendered here: {{ j.extraKeys.join(', ') }}
+                — see raw analysis below.
+              </p>
+            }
+          </app-ui-stack>
+        }
+      </app-ui-section>
+
+      <app-ui-section
+        title="Links followed"
+        [meta]="linksMeta(j)"
+        [collapsible]="true"
+        [expanded]="isOpen('links')"
+        (toggled)="toggle('links')">
+        @if (linksSkipped()) {
+          <p class="soft">
+            Kipper skipped link-following on purpose: the body was classified
+            <strong>{{ j.contentType }}</strong>, and promotional / notification /
+            transactional links (unsubscribe, tracking, product pages) burn browser
+            time without producing anything useful.
+          </p>
+        } @else if (j.links.length === 0) {
+          <p class="soft">
+            @if (j.linksRecorded) {
+              The link step ran and found nothing followable in this email.
+            } @else {
+              No link step was recorded for this email.
+            }
+          </p>
+        } @else {
+          <div class="link-grid">
+            @for (link of j.links; track $index) {
+              <app-ui-card tone="soft" class="link-card">
+                <div class="link-head">
+                  @if (link.url) {
+                    <a [href]="link.url" target="_blank" rel="noopener noreferrer" class="link-title">
+                      {{ link.pageTitle || link.url }}
+                    </a>
+                  } @else {
+                    <span class="link-title">{{ link.pageTitle ?? 'unknown link' }}</span>
+                  }
+                  <app-ui-badge [tone]="fetchTone(link.fetchStatus)">
+                    {{ link.fetchStatus ?? 'unknown' }}
+                  </app-ui-badge>
+                </div>
+
+                @if (link.pageSummary) {
+                  <p class="link-summary">{{ link.pageSummary }}</p>
+                }
+
+                @if (link.entities.length > 0) {
+                  <app-ui-chip-list [items]="entityChips(link.entities)" [allowRemove]="false" emptyLabel="none" />
+                }
+
+                @if (link.events.length > 0) {
+                  <ul class="plain-list">
+                    @for (e of link.events; track $index) {
+                      <li>{{ e.what ?? '—' }} @if (e.when) {— {{ e.when }}}</li>
+                    }
+                  </ul>
+                }
+
+                @if (link.screenshotUrl; as shot) {
+                  <a [href]="shot" target="_blank" rel="noopener noreferrer" class="shot-link">
+                    <img [src]="shot" [alt]="'Snapshot of ' + (link.pageTitle ?? link.url ?? 'page')" loading="lazy" class="shot" />
+                  </a>
+                } @else {
+                  <p class="soft">No snapshot stored for this link.</p>
+                }
+              </app-ui-card>
+            }
+          </div>
+        }
       </app-ui-section>
     }
+
+    @if (email.body_text) {
+      <app-ui-section
+        title="Body"
+        meta="as fetched from Gmail"
+        [collapsible]="true"
+        [expanded]="isOpen('body')"
+        (toggled)="toggle('body')">
+        <p class="body-text">{{ email.body_text }}</p>
+      </app-ui-section>
+    }
+
+    <app-ui-section
+      title="Raw analysis"
+      meta="ralph_analysis as stored"
+      [collapsible]="true"
+      [expanded]="isOpen('raw')"
+      (toggled)="toggle('raw')">
+      @if (email.ralph_analysis !== null && email.ralph_analysis !== undefined) {
+        <pre class="raw-json">{{ email.ralph_analysis | json }}</pre>
+      } @else {
+        <p class="soft">No analysis payload stored on this row.</p>
+      }
+    </app-ui-section>
   </app-ui-stack>
 } @else {
   <app-ui-empty-state title="Email not found" message="This email may no longer be available." />

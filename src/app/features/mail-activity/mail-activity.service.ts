@@ -32,6 +32,11 @@ export interface EmailReport {
   // body_preview instead; body_text was 55% of a 313KB payload nothing rendered.
   body_text?: string | null;
   body_preview?: string | null;
+  // Detail-only, same projection rule as body_text. Unvalidated jsonb with
+  // multiple writers/shapes — normalise via toJourney(), never index directly.
+  ralph_analysis?: unknown;
+  directly_addressed?: boolean | null;
+  list_unsubscribe?: string | null;
   label_ids: string[] | null;
   discovered_at: string;
   body_fetched_at: string | null;

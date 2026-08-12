@@ -1,0 +1,112 @@
+.soft { color: var(--color-text-muted); font-size: 0.8125rem; }
+.lost { color: var(--color-danger, #ef4444); font-size: 0.8125rem; }
+.model { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-text-muted); }
+
+.notice {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--color-warning, #c08b00);
+  background: color-mix(in srgb, var(--color-warning, #c08b00) 6%, transparent);
+  font-size: 0.8125rem;
+}
+
+.summary { margin: 0; font-size: 0.9375rem; line-height: 1.5; }
+
+.sub-heading {
+  margin: 0 0 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.plain-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.8125rem;
+
+  li { margin-bottom: 0.2rem; }
+}
+
+.mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+
+  th {
+    text-align: left;
+    padding: 0.3rem 0.5rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.6875rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  td {
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px dashed var(--color-border);
+    vertical-align: top;
+  }
+}
+
+.link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+  gap: 0.75rem;
+}
+
+.link-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.link-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.link-title {
+  font-weight: 600;
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.link-summary { margin: 0; font-size: 0.8125rem; color: var(--color-text-soft, inherit); }
+
+.shot-link { display: block; }
+
+.shot {
+  max-width: 100%;
+  max-height: 14rem;
+  object-fit: cover;
+  object-position: top;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.body-text {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.raw-json {
+  margin: 0;
+  padding: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  background: var(--color-surface-soft, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  overflow-x: auto;
+  max-height: 32rem;
+}
