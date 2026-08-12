@@ -1,0 +1,178 @@
+<app-ui-page width="standard" class="poll-run-detail">
+<app-ui-stack gap="lg">
+  <app-ui-page-header>
+    <app-ui-breadcrumb uiPageHeaderLead [crumbs]="crumbs()" />
+    <h1 uiPageHeaderTitle>{{ run() ? 'Sweep ' + when() : 'Sweep' }}</h1>
+    <p uiPageHeaderHint>
+      One kipper Gmail sweep on the M4 — the mail it discovered, and the work it
+      declined. Emails are matched on the run id kipper stamped at ingest, not
+      on a timestamp window.
+    </p>
+  </app-ui-page-header>
+
+  <!-- A failed fetch must never fall through to the "nothing here" states
+       below: an empty list would then read as "this sweep found nothing",
+       which is a claim we cannot make when the request never returned. -->
+  @if (lastError(); as err) {
+    <app-ui-empty-state
+      title="Couldn't load this sweep"
+      [message]="'The request for this run\'s emails failed, so nothing below can be shown as fact: ' + err"
+    />
+  } @else {
+
+  @if (run(); as r) {
+    <app-ui-cluster gap="sm" class="stats">
+      <app-ui-stat-card label="Discovered" [value]="emails().length.toString()" detail="emails stamped by this run" />
+      <app-ui-stat-card label="Analysed" [value]="r.ok.toString()" [detail]="r.errors + ' errored'" [status]="r.errors > 0 ? 'alert' : 'neutral'" />
+      <app-ui-stat-card label="Links followed" [value]="r.linksFollowed.toString()" [detail]="countOrUnrecorded(totalLinksSkipped()) + ' not followed'" />
+      <!-- Declined work: the half that had no record before 2026-08-12. -->
+      <app-ui-stat-card label="Blacklisted" [value]="countOrUnrecorded(r.blacklistSkipped)" detail="skipped before any read" />
+      <app-ui-stat-card
+        label="Raw-forwarded"
+        [value]="r.rawLaneOn ? countOrUnrecorded(r.rawForwarded) : 'lane off'"
+        [detail]="r.rawLaneOn ? 'to LocalShout' : 'not configured on this host'"
+      />
+      <app-ui-stat-card label="Took" [value]="duration()" [detail]="r.model ?? 'unknown model'" />
+    </app-ui-cluster>
+
+    @if (r.blacklistSkipped === null) {
+      <p class="soft">
+        This sweep recorded no blacklist detail — it predates decision recording
+        (2026-08-12). That is not the same as having skipped nothing.
+      </p>
+    } @else if (r.blacklistSkips.length > 0) {
+      <!-- The decisions themselves, not just the count. "23 blacklisted" with
+           no way to ask which 23 is what step 3 existed to end: a rule quietly
+           over-matching real mail looks identical to the blacklist working. -->
+      <app-ui-section title="Declined on the blacklist" [collapsible]="false">
+        <p class="soft">
+          Skipped before any read. The raw forward runs before the blacklist, so
+          a message can be declined here and still have reached LocalShout.
+        </p>
+        <app-table-shell>
+          <table class="run-emails-table">
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>From</th>
+                <th>Caught by</th>
+                <th>Raw-forwarded</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of r.blacklistSkips; track $index) {
+                <tr>
+                  <td class="subject">{{ s.subject ?? '(no subject)' }}</td>
+                  <td class="from" [title]="s.fromEmail ?? ''">{{ s.fromEmail ?? '—' }}</td>
+                  <td class="writer">
+                    <code>{{ s.rule ?? '?' }}:{{ s.pattern ?? '?' }}</code>
+                  </td>
+                  <td>
+                    @if (s.rawForwarded) {
+                      <app-ui-badge tone="success">forwarded</app-ui-badge>
+                    } @else {
+                      <span class="soft">no</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </app-table-shell>
+
+        @if (r.blacklistSkipsTruncated && r.blacklistSkipsTruncated > 0) {
+          <!-- Never let a bounded list read as the whole story. -->
+          <p class="soft">
+            + {{ r.blacklistSkipsTruncated }} more skip(s) not listed — the run
+            summary caps the detail. The count above ({{ r.blacklistSkipped }})
+            is exact.
+          </p>
+        }
+      </app-ui-section>
+    }
+  } @else if (!loading()) {
+    <!-- The run's own event is outside the 30-day window the runs list keeps,
+         or it never carried a run id. Say which is unknown rather than
+         rendering zeros that look like measurements. -->
+    <p class="soft">
+      No run summary found for this id in the last 30 days. The emails below are
+      still exact — they carry the stamp — but the run's own totals, blacklist
+      skips and raw-forward counts are unavailable.
+    </p>
+  }
+
+  @if (unanalysed().length > 0) {
+    <app-ui-section title="Discovered but never analysed" [collapsible]="false">
+      <p class="soft">
+        The sweep found these and the deep read did not complete — usually an
+        Ollama timeout. They exist as rows with no analysis attached.
+      </p>
+      <ul class="plain-list">
+        @for (e of unanalysed(); track e.gmail_id) {
+          <li><a [routerLink]="['/mail-activity', e.gmail_id]">{{ e.subject ?? '(no subject)' }}</a></li>
+        }
+      </ul>
+    </app-ui-section>
+  }
+
+  <section>
+    <h2 class="section-title">Emails this sweep discovered</h2>
+
+    @if (emails().length === 0) {
+      @if (loading()) {
+        <p class="muted">Loading sweep…</p>
+      } @else {
+        <!-- Three distinct causes, and we cannot tell them apart from here, so
+             all three are named rather than picking the flattering one. The
+             middle case is real and bounded: kipper began stamping run ids the
+             moment its working tree changed, hours before the API could store
+             them, so runs inside that window report an id whose mail was
+             ingested without one. -->
+        <app-ui-empty-state
+          title="No emails carry this run id"
+          message="Either the sweep discovered nothing new, or it ran during the 2026-08-12 cutover — after kipper started stamping run ids but before the API could store them — or it predates stamping entirely."
+        />
+      }
+    } @else {
+      <app-table-shell>
+        <table class="run-emails-table">
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>From</th>
+              <th>Discovered</th>
+              <th>Read by</th>
+              <th>Verdict</th>
+              <th>Outcome</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of emails(); track e.gmail_id) {
+              <tr>
+                <td>
+                  <a [routerLink]="['/mail-activity', e.gmail_id]" class="subject">
+                    {{ e.subject ?? '(no subject)' }}
+                  </a>
+                </td>
+                <td class="from" [title]="e.from_email">{{ e.from_name ?? e.from_email }}</td>
+                <td class="when">{{ e.discovered_at | date: 'HH:mm' }}</td>
+                <td class="writer">{{ writerLabel(e.analysis_writer) }}</td>
+                <td>
+                  @if (e.verdict; as v) {
+                    <app-ui-badge [tone]="verdictTone(v)">{{ v }}</app-ui-badge>
+                  } @else {
+                    <span class="soft">pending</span>
+                  }
+                </td>
+                <td class="outcome">{{ outcomeLine(e) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </app-table-shell>
+    }
+  </section>
+
+  }
+</app-ui-stack>
+</app-ui-page>

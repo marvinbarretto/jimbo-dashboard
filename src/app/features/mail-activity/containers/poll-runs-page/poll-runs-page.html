@@ -87,6 +87,11 @@
             <th class="num">OK</th>
             <th class="num">Errors</th>
             <th class="num">Links</th>
+            <!-- The cheap, reliable half of the job: raw messages forwarded to
+                 LocalShout. It has no per-email row anywhere in Jimbo, so if
+                 this column doesn't show it, nothing does. -->
+            <th class="num">Raw fwd</th>
+            <th class="num">Blacklisted</th>
             <th class="num">Took</th>
             <th>Model</th>
           </tr>
@@ -95,7 +100,17 @@
           @for (run of runs(); track run.id) {
             <tr>
               <td>
-                <span class="when">{{ when(run) }}</span>
+                <!-- Only stamped runs can be drilled into: a sweep from before
+                     2026-08-12 cannot name its mail without guessing from
+                     timestamps, so it stays plain text rather than offering a
+                     link that would show an empty page. -->
+                @if (run.runId; as rid) {
+                  <a class="when" [routerLink]="['/mail-activity/poll-runs', rid]">{{ when(run) }}</a>
+                } @else {
+                  <span class="when" title="This run predates run-id stamping, so its emails cannot be identified">
+                    {{ when(run) }}
+                  </span>
+                }
                 @if (isHung(run)) {
                   <app-ui-badge tone="warning">hung</app-ui-badge>
                 }
@@ -104,6 +119,11 @@
               <td class="num">{{ run.ok }}</td>
               <td class="num" [class.bad]="run.errors > 0">{{ run.errors }}</td>
               <td class="num">{{ run.linksFollowed }}</td>
+              <!-- Three states, never collapsed: a count, "off" when the lane
+                   was unconfigured on the host, and "—" when the run predates
+                   raw-lane recording. A zero would claim all three. -->
+              <td class="num" [title]="rawForwardTitle(run)">{{ rawForward(run) }}</td>
+              <td class="num">{{ countOrDash(run.blacklistSkipped) }}</td>
               <td class="num">{{ duration(run) }}</td>
               <td><span class="model">{{ run.model ?? '—' }}</span></td>
             </tr>

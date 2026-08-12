@@ -41,6 +41,14 @@ const desktopRoutes: Routes = [
     title: 'Poll runs',
     loadComponent: () => import('./features/mail-activity/containers/poll-runs-page/poll-runs-page').then(m => m.PollRunsPage),
   },
+  // Drill-in for one sweep. Three segments, so the :gmailId route below cannot
+  // swallow it. Reachable only for runs that stamped a run id — older sweeps
+  // have no way to name their mail except by timestamp proximity.
+  {
+    path: 'mail-activity/poll-runs/:runId',
+    title: 'Sweep',
+    loadComponent: () => import('./features/mail-activity/containers/poll-run-detail/poll-run-detail').then(m => m.PollRunDetail),
+  },
   // Deep-link target for email search results (keyed by gmail_id — see
   // jimbo-api search resolveDeepLinkKey). Sibling of the list above.
   {

@@ -16,8 +16,8 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiBreadcrumb, type Crumb } from '@shared/components/ui-breadcrumb/ui-breadcrumb';
 import { VaultChip } from '@shared/components/vault-chip/vault-chip';
 import { TAB_NAVIGATION } from '@shared/utils/tab-navigation';
-import type { EmailVerdict } from '../../mail-activity.service';
-import { isRetained } from '../../mail-activity.service';
+import type { AnalysisWriter, EmailVerdict } from '../../mail-activity.service';
+import { ANALYSIS_WRITER_LABEL, isRetained } from '../../mail-activity.service';
 import { EmailDetailStore } from '../../email-detail.store';
 
 /**
@@ -122,6 +122,12 @@ export class EmailDetail {
     if (verdict === 'toss') return 'neutral';
     if (verdict && isRetained(verdict)) return 'success';
     return 'info';
+  }
+
+  /** An unrecognised writer is shown as-is rather than relabelled — a third
+   *  writer appearing must be visible, not absorbed into a known name. */
+  protected writerLabel(writer: string): string {
+    return ANALYSIS_WRITER_LABEL[writer as AnalysisWriter] ?? writer;
   }
 
   private delta(fromIso: string, toIso: string): string | null {

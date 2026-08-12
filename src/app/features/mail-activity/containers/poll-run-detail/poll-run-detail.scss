@@ -1,0 +1,75 @@
+.error { margin: 0; color: var(--color-warning, #c08b00); font-size: 0.8125rem; }
+.muted { margin: 0; color: var(--color-text-muted); font-size: 0.8125rem; }
+.soft { margin: 0; color: var(--color-text-muted); font-size: 0.8125rem; max-width: 70ch; }
+.stats { flex-wrap: wrap; }
+
+.section-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.plain-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.8125rem;
+}
+
+.run-emails-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+
+  th {
+    text-align: left;
+    padding: 0.4rem 0.6rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.6875rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  td {
+    padding: 0.5rem 0.6rem;
+    vertical-align: top;
+    border-bottom: 1px dashed var(--color-border);
+  }
+}
+
+.subject {
+  font-weight: 500;
+  /* Long newsletter subjects otherwise push the outcome column off-screen. */
+  display: inline-block;
+  max-width: 28ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+.from {
+  color: var(--color-text-muted);
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.when { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.writer {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+/* The conclusion column carries the trace grammar — what this message cost
+   and what it produced — so it gets the room to be read as a sentence. */
+.outcome {
+  color: var(--color-text-muted);
+  min-width: 24ch;
+}

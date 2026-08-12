@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiCluster } from '@shared/components/ui-cluster/ui-cluster';
 import { UiPage } from '@shared/components/ui-page/ui-page';
@@ -33,7 +34,7 @@ interface DayRow {
  */
 @Component({
   selector: 'app-poll-runs-page',
-  imports: [MailTabs, TableShell, UiBadge, UiCluster, UiPage, UiPageHeader, UiStack, UiStatCard],
+  imports: [RouterLink, MailTabs, TableShell, UiBadge, UiCluster, UiPage, UiPageHeader, UiStack, UiStatCard],
   templateUrl: './poll-runs-page.html',
   styleUrl: './poll-runs-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -118,5 +119,27 @@ export class PollRunsPage implements OnInit {
 
   protected minutesLabel(d: DayRow): string {
     return `${Math.round(d.minutes)}m`;
+  }
+
+  /** A count the run never recorded is '—', never 0 — an unmeasured zero must
+   *  not read as a measured one. */
+  protected countOrDash(n: number | null): string {
+    return n === null ? '—' : n.toString();
+  }
+
+  protected rawForward(run: PollRun): string {
+    if (!run.rawLaneOn) return run.rawForwarded === null ? '—' : 'off';
+    return this.countOrDash(run.rawForwarded);
+  }
+
+  protected rawForwardTitle(run: PollRun): string {
+    if (run.rawForwarded === null && !run.rawLaneOn) {
+      return 'This run predates raw-lane recording — not measured either way';
+    }
+    if (!run.rawLaneOn) return 'The LocalShout raw lane was not configured on this host';
+    const attempted = run.rawAttempted;
+    return attempted === null
+      ? 'Raw messages forwarded to LocalShout'
+      : `${run.rawForwarded ?? 0} of ${attempted} raw messages forwarded to LocalShout`;
   }
 }

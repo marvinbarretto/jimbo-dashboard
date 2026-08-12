@@ -24,7 +24,23 @@
         <dd>{{ email.from_name ?? '—' }} &lt;{{ email.from_email }}&gt;</dd>
 
         <dt>Discovered</dt>
-        <dd>{{ email.discovered_at | date: 'medium' }}</dd>
+        <dd>
+          {{ email.discovered_at | date: 'medium' }}
+          <!-- Which sweep found it. Recorded at ingest since 2026-08-12; on
+               older rows the answer is genuinely unknown, and saying so beats
+               inferring a run from nearby timestamps. -->
+          @if (email.poll_run_id; as runId) {
+            <span class="soft"> · </span>
+            <a [routerLink]="['/mail-activity/poll-runs', runId]">discovered in sweep</a>
+          } @else {
+            <span class="soft"> · sweep not recorded</span>
+          }
+        </dd>
+
+        @if (email.analysis_writer; as writer) {
+          <dt>Read by</dt>
+          <dd>{{ writerLabel(writer) }}</dd>
+        }
 
         @if (email.directly_addressed !== null && email.directly_addressed !== undefined) {
           <dt>Addressed</dt>
