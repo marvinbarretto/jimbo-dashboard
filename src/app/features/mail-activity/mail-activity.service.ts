@@ -49,8 +49,8 @@ export interface EmailReport {
   body_preview?: string | null;
   // Detail-only, same projection rule as body_text. Unvalidated jsonb with
   // multiple writers/shapes — normalise via toJourney(), never index directly.
-  // (Was `ralph_analysis` until 2026-08-12; the API still emits that key as a
-  // deprecated alias for the gate-emails cron, but nothing here should read it.)
+  // (Was `ralph_analysis` until 2026-08-12. The transitional alias was removed
+  // the same day, once both writers were observed running on the new key.)
   analysis?: unknown;
   /**
    * Which JOB wrote `analysis`, recorded at ingest rather than guessed from
