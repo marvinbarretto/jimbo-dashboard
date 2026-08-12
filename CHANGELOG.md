@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.176](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.175...v0.0.176) (2026-08-12)
+
+
+### Features
+
+* **scripts:** resolve per-app manifests in shared-repo monorepos ([7c3831a](https://github.com/marvinbarretto/jimbo-dashboard/commit/7c3831a727ea4be71b567ca78e55b8792e9f55eb))
+* **ui:** reading register actually reads — bigger prose, real checkboxes ([e249a32](https://github.com/marvinbarretto/jimbo-dashboard/commit/e249a322369cb46941dbd7915e4bce09c95c5aae))
+
 ### [0.0.175](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.174...v0.0.175) (2026-08-12)
 
 
