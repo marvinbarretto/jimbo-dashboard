@@ -12,6 +12,12 @@
   // descendants (e.g. <app-ui-tab-bar>) to offset below the header. Update if
   // the header's vertical metrics change.
   --app-header-height: 55px;
+  // Measured height of the tier-2 section bar (<app-section-tabs>, one
+  // .ui-tab row incl. border — 39.9px at desktop metrics). Together with the
+  // header height it forms the sticky offset for in-page (tier-3) tab bars,
+  // so both tiers pin and stack instead of colliding at the same offset.
+  --section-nav-height: 40px;
+  --tab-bar-sticky-top: calc(var(--app-header-height) + var(--section-nav-height));
   // Single horizontal page gutter. The shell owns it (applied on
   // .app-main__inner) so routed pages stay layout-agnostic and align with the
   // header chrome by default — no page should set its own horizontal padding.
@@ -21,6 +27,12 @@
 
 .app-main {
   flex: 1;
+}
+
+// The section bar is itself a ui-tab-bar; it consumes the header-only offset
+// and must not inherit the stacked one meant for tier-3 bars below it.
+app-section-tabs {
+  --tab-bar-sticky-top: var(--app-header-height);
 }
 
 .app-header {

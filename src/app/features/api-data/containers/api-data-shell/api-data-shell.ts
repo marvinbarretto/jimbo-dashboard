@@ -15,7 +15,7 @@ import { DATA_PAGES } from '../../data-pages';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="api-shell">
-      <app-ui-tab-bar label="API domains" [sticky]="false">
+      <app-ui-tab-bar label="API domains">
         @for (page of pages; track page.key) {
           <a [routerLink]="page.key" routerLinkActive="active" class="ui-tab">{{ page.title }}</a>
         }

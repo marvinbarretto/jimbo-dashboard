@@ -20,8 +20,9 @@ export interface NavSection {
 /**
  * Three-tier navigation:
  *   1. sections    — this list, rendered by <app-nav>
- *   2. tabs        — <app-ui-tab-bar>, sticky, one per section
- *   3. in-page     — <app-ui-tab-bar [sticky]="false"> or <app-ui-inline-tabs>
+ *   2. tabs        — <app-ui-tab-bar>, sticky below the header, one per section
+ *   3. in-page     — <app-ui-tab-bar> (sticky below tier 2 via the layout's
+ *                    --tab-bar-sticky-top) or <app-ui-inline-tabs>
  *
  * Work's tabs are ordered as the actual pipeline — intake → vault → grooming
  * → planning → dispatch → review → fleet — so the bar reads left to right as

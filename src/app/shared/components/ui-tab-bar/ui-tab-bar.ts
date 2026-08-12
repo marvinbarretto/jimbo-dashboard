@@ -12,12 +12,16 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     '[class.ui-tab-bar-host--static]': '!sticky()',
   },
   styles: [`
-    // Sticks below the app header so core sub-nav stays reachable on long
-    // pages. Offset comes from --app-header-height set on .app-shell.
+    // Sticks below whatever sticky chrome sits above it, so sub-nav stays
+    // reachable on long pages. The offset is published by the layout as
+    // --tab-bar-sticky-top: the desktop shell sets it to header + section bar
+    // for in-page (tier-3) bars, and resets it to header-only for the section
+    // bar itself — so tiers stack instead of pinning at the same offset.
+    // Fallback --app-header-height keeps other layouts (mobile shell) intact.
     :host {
       display: block;
       position: sticky;
-      top: var(--app-header-height, 0);
+      top: var(--tab-bar-sticky-top, var(--app-header-height, 0));
       z-index: 20;
       // Break out of the page gutter so the sticky strip + divider span the
       // full width; the inner padding re-aligns the tabs with page content.
