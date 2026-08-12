@@ -99,8 +99,7 @@ export interface ReportCarriedDebt {
  *
  * Real and noise sessions are separate numbers rather than one total, because
  * the raw count actively misleads: a day recording 138 sessions had 117
- * sub-minute shell invocations in it. There is deliberately no total-minutes
- * field — shells run concurrently and the durations sum past 24 hours.
+ * sub-minute shell invocations in it.
  */
 export interface ReportCounts {
   sessions_real?: number;
@@ -108,7 +107,18 @@ export interface ReportCounts {
   commits?: number;
   tasks_created?: number;
   tasks_closed?: number;
-  longest_session_minutes?: number;
+  /**
+   * Desk time as a union of honest evidence — overlapping sessions count once.
+   *
+   * Never a sum of session durations, and never the longest session. Terminals
+   * get left open: on 2026-08-12 the summed durations came to 2,645 minutes
+   * (44 hours, in a 22-hour day) and the longest single session read 905
+   * minutes, against 470 minutes of actual heartbeat evidence.
+   *
+   * Present it as a cost, not an achievement — the stated intent is less time
+   * at the desk, more done.
+   */
+  desk_minutes?: number;
 }
 
 export interface DayReportPayload {

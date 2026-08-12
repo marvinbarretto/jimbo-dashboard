@@ -33,12 +33,13 @@
           @if (c.commits !== undefined) {
             <app-ui-stat-card label="Commits" [value]="c.commits.toString()" />
           }
-          @if (c.longest_session_minutes !== undefined) {
-            <!-- Longest, never a total: shells overlap and a summed day runs past 24h. -->
+          @if (c.desk_minutes !== undefined) {
+            <!-- Union of heartbeat evidence, not summed durations — an open
+                 terminal is not desk time. Labelled as a cost, deliberately. -->
             <app-ui-stat-card
-              label="Longest session"
-              [value]="c.longest_session_minutes + 'm'"
-              detail="Longest, not total — sessions overlap"
+              label="At the desk"
+              [value]="deskTime()"
+              detail="Union of real activity, not session length"
             />
           }
           @if (c.tasks_created !== undefined || c.tasks_closed !== undefined) {

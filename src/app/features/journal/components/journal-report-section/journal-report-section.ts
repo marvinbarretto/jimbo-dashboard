@@ -85,6 +85,13 @@ export class JournalReportSection {
 
   protected readonly counts = computed(() => this.payload()?.counts ?? null);
 
+  /** Desk time as h/m — a bare "470m" makes the reader do the division. */
+  protected readonly deskTime = computed(() => {
+    const m = this.counts()?.desk_minutes;
+    if (m === undefined) return '';
+    return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`;
+  });
+
   /** Provenance line: which job, which model, when. First thing to check when a report reads badly. */
   protected readonly provenance = computed(() => {
     const r = this.report();
