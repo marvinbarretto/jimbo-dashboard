@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.172](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.171...v0.0.172) (2026-08-12)
+
+
+### Features
+
+* **exercise:** session card and quick-add go mobile-first, one component ([85c5822](https://github.com/marvinbarretto/jimbo-dashboard/commit/85c582290fb1c595636b566358b9edd0a05dcedd))
+* **mail:** poll-runs page — kipper's hourly Gmail sweeps ([3724b6e](https://github.com/marvinbarretto/jimbo-dashboard/commit/3724b6eceaa32a9dfa2a2f2acc419d1363bc239a))
+* **mobile:** reuse /m tab components across bottom-nav switches ([191e241](https://github.com/marvinbarretto/jimbo-dashboard/commit/191e241e4bbd92d3e5b93a281c052a481bcc5fa5))
+* **mobile:** usuals — the frequent cluster as one-tap log chips ([28182b0](https://github.com/marvinbarretto/jimbo-dashboard/commit/28182b096e92c6a671bd8d67a00c7b9693cd2512))
+* **nutrition:** usuals quick-add chips on desktop, shared with the phone shell ([3a07e8e](https://github.com/marvinbarretto/jimbo-dashboard/commit/3a07e8ea5c1186861183dd607b78fef2c18c866f))
+
+
+### Bug Fixes
+
+* **mobile:** stale-session banner responds to the tap, not the reload ([eff3d80](https://github.com/marvinbarretto/jimbo-dashboard/commit/eff3d80e97b6d45f7dc898c6279dba481916df54))
+
+
+### Performance Improvements
+
+* **mobile:** defer train 180-day history until a session needs it ([6b82405](https://github.com/marvinbarretto/jimbo-dashboard/commit/6b824055cc004e0fcd4a46741766a61a8717adac))
+* **mobile:** train prefills ride the slim /sessions/history payload ([209c1d7](https://github.com/marvinbarretto/jimbo-dashboard/commit/209c1d7da8a4541306b769caf2e6b4c9342da144))
+
 ### [0.0.171](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.170...v0.0.171) (2026-08-10)
 
 
