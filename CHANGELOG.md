@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.173](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.172...v0.0.173) (2026-08-12)
+
+
+### Features
+
+* **mail:** email-detail journey view — full ralph_analysis drill-in ([20bdd4b](https://github.com/marvinbarretto/jimbo-dashboard/commit/20bdd4b6be7aedda770ece4734658df18976de05))
+* **mail:** render the links kipper chose not to follow ([e9e1186](https://github.com/marvinbarretto/jimbo-dashboard/commit/e9e1186e8e335fa2f405eefe7104d0705ff99f9d))
+* **mail:** sweep drill-in, and the raw lane on the poll-runs page ([73f27c1](https://github.com/marvinbarretto/jimbo-dashboard/commit/73f27c160bd37cbcf658a87f69cb887851fa9872))
+* **shared:** tab-aware scrolling; breadcrumb + fixed thumbs on email detail ([de91e8d](https://github.com/marvinbarretto/jimbo-dashboard/commit/de91e8de99c962df179b3a8e99cf504d6cab3b28))
+* **shared:** tier-3 tab bars stick below the section bar, everywhere ([48a875c](https://github.com/marvinbarretto/jimbo-dashboard/commit/48a875cd8853efcba634725f0e134f04178b57d1))
+
+
+### Bug Fixes
+
+* **mail:** point the sweep drill-in at the right API path ([8eaa423](https://github.com/marvinbarretto/jimbo-dashboard/commit/8eaa423fd689117b0d497581c7df8d73789a0801))
+
+
+### Code Refactoring
+
+* **mail:** email-detail tabs as child routes, panels share a store ([77f6b9b](https://github.com/marvinbarretto/jimbo-dashboard/commit/77f6b9b341f7e3daaaad116000fbd1a3e1cc2ad9))
+* **mail:** link follows as stacked traces — why, what, conclusion ([84e4f0e](https://github.com/marvinbarretto/jimbo-dashboard/commit/84e4f0ea1398c58c9e0774f5424febd48ce1ad62))
+* **mail:** poll-runs matches on actor=kipper across the rename ([c146fb9](https://github.com/marvinbarretto/jimbo-dashboard/commit/c146fb9e58ec77fcd9582ed51eeac551d2929538))
+* **mail:** read the renamed analysis field and its writer ([2f24a40](https://github.com/marvinbarretto/jimbo-dashboard/commit/2f24a40f412bc89e1b9387adf5b2b4fab5e1bde0))
+
 ### [0.0.172](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.171...v0.0.172) (2026-08-12)
 
 
