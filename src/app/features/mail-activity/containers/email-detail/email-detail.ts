@@ -15,11 +15,15 @@ import { UiChipList, type UiChipListItem } from '@shared/components/ui-chip-list
 import { UiStepper, type UiStepperStep } from '@shared/components/ui-stepper/ui-stepper';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
+import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { VaultChip } from '@shared/components/vault-chip/vault-chip';
 import { loadOne } from '@shared/data-access/load-one';
 import type { EmailReport, EmailVerdict } from '../../mail-activity.service';
 import { isRetained } from '../../mail-activity.service';
-import { toJourney, linksSkippedByPolicy, type EmailJourney } from '../../email-journey';
+import {
+  toJourney, linksSkippedByPolicy,
+  type EmailJourney, type JourneyLink,
+} from '../../email-journey';
 
 /** Section ids for the ?open= disclosure state. */
 type SectionId = 'analysis' | 'links' | 'body' | 'raw';
@@ -40,8 +44,8 @@ const DEFAULT_OPEN: readonly SectionId[] = ['analysis', 'links'];
   selector: 'app-email-detail',
   imports: [
     DatePipe, JsonPipe,
-    UiPage, UiPageHeader, UiSection, UiMetaList, UiStack, UiBadge, UiCard,
-    UiChipList, UiStepper, UiLoadingState, UiEmptyState, VaultChip,
+    UiPage, UiPageHeader, UiSection, UiMetaList, UiStack, UiBadge,
+    UiChipList, UiStepper, UiLoadingState, UiEmptyState, UiProse, VaultChip,
   ],
   templateUrl: './email-detail.html',
   styleUrl: './email-detail.scss',
@@ -152,6 +156,53 @@ export class EmailDetail {
     if (!email?.gated_at) return null;
     return this.delta(email.discovered_at, email.gated_at);
   });
+
+  // --- Link traces ---------------------------------------------------------
+
+  /**
+   * Links grouped for reading: the same page followed N times (Meetup's login
+   * wall appeared 5× on one digest) collapses to one trace with a ×N count —
+   * the repetition is itself a finding, so it's counted, not hidden.
+   */
+  protected readonly linkTraces = computed<{ link: JourneyLink; times: number }[]>(() => {
+    const j = this.journey();
+    if (!j) return [];
+    const byKey = new Map<string, { link: JourneyLink; times: number }>();
+    for (const link of j.links) {
+      const key = link.pageTitle ?? link.url ?? `#${byKey.size}`;
+      const existing = byKey.get(key);
+      if (existing) {
+        existing.times += 1;
+        // Prefer the follow that actually captured something.
+        if (!existing.link.screenshotUrl && link.screenshotUrl) existing.link = link;
+      } else {
+        byKey.set(key, { link, times: 1 });
+      }
+    }
+    return [...byKey.values()];
+  });
+
+  protected fetchLine(link: JourneyLink): string {
+    if (link.fetchStatus === 'ok') {
+      return link.screenshotUrl ? 'fetched ok, snapshot taken' : 'fetched ok, no snapshot stored';
+    }
+    return `fetch failed (${link.fetchStatus ?? 'unknown'}) — nothing was read, no snapshot`;
+  }
+
+  /** The per-link conclusion: what this follow contributed to the analysis. */
+  protected yieldLine(link: JourneyLink): string {
+    if (link.fetchStatus !== 'ok') return 'Contributed nothing — the fetch never returned a page.';
+    const parts: string[] = [];
+    if (link.events.length > 0) {
+      parts.push(`${link.events.length} event${link.events.length === 1 ? '' : 's'}`);
+    }
+    if (link.entities.length > 0) {
+      parts.push(`${link.entities.length} entit${link.entities.length === 1 ? 'y' : 'ies'}`);
+    }
+    return parts.length > 0
+      ? `Contributed ${parts.join(' and ')} to the analysis.`
+      : 'Read, but contributed nothing to the analysis.';
+  }
 
   // --- Presentation helpers ----------------------------------------------
 
