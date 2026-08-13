@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -65,7 +67,39 @@ export class VaultItemsList {
   private readonly _ownerFilter = signal<Set<string>>(new Set());
   private readonly _projectFilter = signal<Set<string>>(new Set());
 
+  // The input stays bound to the raw signal so every keystroke echoes back
+  // instantly. The expensive part — re-filtering ~5k items — reads this
+  // debounced copy instead, so a fast typist doesn't trigger a full recompute
+  // per character; only once they pause.
   readonly search = this._search.asReadonly();
+  private readonly debouncedSearch = toSignal(
+    toObservable(this._search).pipe(debounceTime(150), distinctUntilChanged()),
+    { initialValue: '' },
+  );
+
+  // Lowercased "seq title body tags" haystack per item, built once when the
+  // item list changes rather than rebuilt from scratch on every keystroke by
+  // every filter pass below. With ~5k items and 6 independent filter passes
+  // per keystroke, skipping this cost was the difference between the search
+  // box freezing the tab and not.
+  private readonly searchIndex = computed(() => {
+    const idx = new Map<VaultItemId, string>();
+    for (const item of this.vaultItemsService.items()) {
+      idx.set(item.id, `${item.seq} ${item.title} ${item.body ?? ''} ${item.tags.join(' ')}`.toLowerCase());
+    }
+    return idx;
+  });
+
+  // Search is applied once here; applyFilters() below runs the (cheap,
+  // equality-only) type/lifecycle/category/owner/project passes over this
+  // already-narrowed set instead of re-searching the full item list per call.
+  private readonly searchFilteredItems = computed(() => {
+    const search = this.debouncedSearch().trim().toLowerCase();
+    const all = this.vaultItemsService.items();
+    if (!search) return all;
+    const idx = this.searchIndex();
+    return all.filter(item => idx.get(item.id)?.includes(search));
+  });
 
   // Cap rendering at 500 rows by default — past that, modern browsers still
   // cope but the operator can't actually navigate that many. "Show all" reveals.
@@ -275,19 +309,14 @@ export class VaultItemsList {
     skipOwner?: boolean;
     skipProject?: boolean;
   } = {}): VaultItem[] {
-    const search = this._search().trim().toLowerCase();
     const typeF = this._typeFilter();
     const lcF = this._lifecycleFilter();
     const catF = this._categoryFilter();
     const ownerF = this._ownerFilter();
     const projF = this._projectFilter();
 
-    const all = this.vaultItemsService.items();
+    const all = this.searchFilteredItems();
     return all.filter(item => {
-      if (search) {
-        const haystack = `${item.seq} ${item.title} ${item.body ?? ''} ${item.tags.join(' ')}`.toLowerCase();
-        if (!haystack.includes(search)) return false;
-      }
       if (!opts.skipType && typeF.size > 0) {
         if (!typeF.has(item.type)) return false;
       }
