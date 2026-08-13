@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { type ShapeBlock } from '../../utils/day-shape';
+import { type ShapeBlock } from '@features/briefings/utils/day-shape';
 
 /**
  * The NOW card in the morning: how the day is meant to go.

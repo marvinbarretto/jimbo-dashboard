@@ -13,10 +13,10 @@
             <p class="jbriefings__surprise">💡 {{ surprise.fact }}</p>
           }
 
-          @if (b.analysis.day_plan.length > 0) {
+          @if (b.shape.length > 0) {
             <ul class="jbriefings__plan">
-              @for (entry of b.analysis.day_plan; track entry.time) {
-                <li><span class="jbriefings__time">{{ entry.time }}</span> {{ entry.suggestion }}</li>
+              @for (block of b.shape; track $index) {
+                <li><span class="jbriefings__time">{{ block.lead }}</span> {{ block.title }}</li>
               }
             </ul>
           }

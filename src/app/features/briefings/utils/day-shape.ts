@@ -1,5 +1,5 @@
 import { formatLondonTime } from '@shared/utils/datetime.utils';
-import type { BriefingAnalysisData } from '@features/briefings/data-access/briefing.types';
+import type { BriefingAnalysisData } from '../data-access/briefing.types';
 
 /**
  * The day's shape, normalised out of whichever briefing schema the API happens
@@ -13,6 +13,11 @@ import type { BriefingAnalysisData } from '@features/briefings/data-access/brief
  *
  * Read-only by design: there is no plan-acceptance endpoint today, so nothing
  * here carries an ack flag. See the plan's follow-ups.
+ *
+ * Lives in the briefings feature rather than beside a screen because two
+ * surfaces read it — the phone's NOW card and the journal's briefings section.
+ * The journal one read `day_plan` directly for months and rendered an empty
+ * plan every day, because no briefing has written that field since v2.
  */
 
 export interface ShapeBlock {

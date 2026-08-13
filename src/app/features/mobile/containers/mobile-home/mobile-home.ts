@@ -31,7 +31,7 @@ import { injectLogicalToday } from '../../utils/logical-today';
 import { injectMinuteClock } from '../../utils/minute-clock';
 import { buildGlance } from '../../utils/glance';
 import { buildAttention } from '../../utils/attention';
-import { buildDayShape } from '../../utils/day-shape';
+import { buildDayShape } from '@features/briefings/utils/day-shape';
 import { summariseChecks } from '../../utils/day-checks-progress';
 import { selectNowCard, type ActiveFocus } from '../../utils/now-card';
 import { SHORTCUT_TILES, applyBadges } from '../../utils/shortcut-tiles';

@@ -13,6 +13,7 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { BriefingsService } from '../../../briefings/data-access/briefings.service';
 import { BriefingRating } from '../../../briefings/components/briefing-rating/briefing-rating';
+import { buildDayShape } from '../../../briefings/utils/day-shape';
 import type {
   BriefingAnalysis,
   BriefingRating as Rating,
@@ -53,9 +54,19 @@ export class JournalBriefingsSection {
   protected readonly briefings = linkedSignal<BriefingAnalysis[]>(() =>
     this.briefingsRes.hasValue() ? (this.briefingsRes.value() ?? []) : []);
 
-  // Order morning → afternoon for the day view (API returns newest-first).
+  /**
+   * Order morning → afternoon for the day view (API returns newest-first), and
+   * normalise each briefing's plan.
+   *
+   * The plan is derived once here rather than per binding: this used to read
+   * `analysis.day_plan` straight from the template and rendered an empty plan
+   * on every briefing, because nothing has written that field since v2 — the
+   * plan has lived in `priorities` and `suggested_blocks` for months.
+   */
   protected readonly ordered = computed(() =>
-    [...this.briefings()].sort((a, b) => a.generated_at.localeCompare(b.generated_at)),
+    [...this.briefings()]
+      .sort((a, b) => a.generated_at.localeCompare(b.generated_at))
+      .map((b) => ({ ...b, shape: buildDayShape(b.analysis) })),
   );
 
   // Collapse to the header once we know there's nothing; stay open while loading

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { selectNowCard, type ActiveFocus, type NowCardInput } from './now-card';
 import type { ChecksProgress } from './day-checks-progress';
-import type { ShapeBlock } from './day-shape';
+import type { ShapeBlock } from '@features/briefings/utils/day-shape';
 
 const NOTHING_LEFT: ChecksProgress = { answered: 8, total: 8, remaining: 0, costLabel: '' };
 const CHECKS_LEFT: ChecksProgress = { answered: 5, total: 8, remaining: 3, costLabel: '~25s left' };

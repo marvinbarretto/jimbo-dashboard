@@ -2,7 +2,7 @@ import { daypartAt } from '@shared/utils/daypart';
 import { pluralise } from '@shared/utils/datetime.utils';
 import { shortDayLabel } from './glance';
 import type { ChecksProgress } from './day-checks-progress';
-import type { ShapeBlock } from './day-shape';
+import type { ShapeBlock } from '@features/briefings/utils/day-shape';
 
 /**
  * The one card the home screen shows between the glance strip and the
