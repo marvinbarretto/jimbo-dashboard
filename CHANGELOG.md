@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.177](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.176...v0.0.177) (2026-08-13)
+
+
+### Features
+
+* **journal:** render the day's published report above the reconstruction ([1c7f6dc](https://github.com/marvinbarretto/jimbo-dashboard/commit/1c7f6dc318ac78a9b2434db5e3611e33c65770df))
+
+
+### Bug Fixes
+
+* **journal:** report desk time as a cost, in hours, from honest evidence ([5b0558f](https://github.com/marvinbarretto/jimbo-dashboard/commit/5b0558fbacb94f07480a0f2a6f7b5f11bc2c91c5))
+
 ### [0.0.176](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.175...v0.0.176) (2026-08-12)
 
 
