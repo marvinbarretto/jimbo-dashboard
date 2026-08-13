@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.178](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.177...v0.0.178) (2026-08-13)
+
+
+### Features
+
+* **mobile:** rebuild the Today tab as a quick-input home screen ([d91503c](https://github.com/marvinbarretto/jimbo-dashboard/commit/d91503ce8b4b6683b85dce8732fe91e4f4ce6e2a))
+* **vault-items:** search the server instead of the local item cache ([26953ae](https://github.com/marvinbarretto/jimbo-dashboard/commit/26953aeb6ed976a27246461c429b22bfebfb17f4))
+
+
+### Bug Fixes
+
+* **vault-items:** stop search input freezing the list UI ([79477fb](https://github.com/marvinbarretto/jimbo-dashboard/commit/79477fb3dc40f023ab7b9d1981c1e1c5da0d8731))
+
 ### [0.0.177](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.176...v0.0.177) (2026-08-13)
 
 
