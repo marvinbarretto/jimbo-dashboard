@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.179](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.178...v0.0.179) (2026-08-13)
+
+
+### Features
+
+* **mobile:** add the NOW card and attention row to the phone home ([9137d9b](https://github.com/marvinbarretto/jimbo-dashboard/commit/9137d9b52f2839eed4de2da3823648647f877699))
+
 ### [0.0.178](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.177...v0.0.178) (2026-08-13)
 
 
