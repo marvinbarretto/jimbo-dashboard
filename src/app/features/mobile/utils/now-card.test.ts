@@ -117,6 +117,22 @@ describe('selectNowCard — the close-day card', () => {
       answered: 5,
       total: 8,
       costLabel: '~25s left',
+      actionLabel: 'Answer 3 checks',
+    });
+  });
+
+  // Shipped as "Answer 7 7 checks": pluralise() emits the count itself, and the
+  // label was being assembled in the component where no test could see it.
+  it('counts the outstanding checks exactly once in the button label', () => {
+    const seven: ChecksProgress = { answered: 0, total: 7, remaining: 7, costLabel: '~2m left' };
+    const result = card({ now: new Date('2026-08-13T20:00:00Z'), checks: seven });
+    expect(result).toMatchObject({ actionLabel: 'Answer 7 checks' });
+  });
+
+  it('drops the plural for a single outstanding check', () => {
+    const one: ChecksProgress = { answered: 6, total: 7, remaining: 1, costLabel: '~5s left' };
+    expect(card({ now: new Date('2026-08-13T20:00:00Z'), checks: one })).toMatchObject({
+      actionLabel: 'Answer 1 check',
     });
   });
 

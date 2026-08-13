@@ -1,6 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { UiProgressMeter } from '@shared/components/ui-progress-meter/ui-progress-meter';
-import { pluralise } from '@shared/utils/datetime.utils';
 
 /**
  * The NOW card in the evening: the day's tick-list, and how little is left of it.
@@ -26,13 +25,13 @@ export class MobileCloseDayCard {
   readonly total = input.required<number>();
   /** "~25s left" — pre-formatted so the estimate stays unit-tested. */
   readonly costLabel = input.required<string>();
+  /**
+   * "Answer 7 checks" — arrives whole from selectNowCard rather than being
+   * assembled here. It was built locally once, and the count-plus-pluralise
+   * double-count that produced shipped straight to production, because a
+   * formatting branch inside a component is a branch no test can reach.
+   */
+  readonly actionLabel = input.required<string>();
 
   readonly opened = output<void>();
-
-  protected readonly remaining = computed(() => Math.max(0, this.total() - this.answered()));
-
-  protected readonly actionLabel = computed(() => {
-    const left = this.remaining();
-    return `Answer ${left} ${pluralise(left, 'check')}`;
-  });
 }

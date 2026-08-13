@@ -1,4 +1,5 @@
 import { daypartAt } from '@shared/utils/daypart';
+import { pluralise } from '@shared/utils/datetime.utils';
 import { shortDayLabel } from './glance';
 import type { ChecksProgress } from './day-checks-progress';
 import type { ShapeBlock } from './day-shape';
@@ -50,6 +51,8 @@ export type NowCard =
       readonly answered: number;
       readonly total: number;
       readonly costLabel: string;
+      /** "Answer 7 checks" — the button's whole text, counted and pluralised. */
+      readonly actionLabel: string;
     }
   | { readonly kind: 'shape'; readonly blocks: readonly ShapeBlock[] }
   | { readonly kind: 'idle' };
@@ -112,6 +115,9 @@ export function selectNowCard(input: NowCardInput): NowCard {
       answered: input.checks.answered,
       total: input.checks.total,
       costLabel: input.checks.costLabel,
+      // pluralise() emits the count itself ("7 checks"), so the caller must not
+      // prepend one — doing so shipped "Answer 7 7 checks" to production.
+      actionLabel: `Answer ${pluralise(input.checks.remaining, 'check')}`,
     };
   }
 
