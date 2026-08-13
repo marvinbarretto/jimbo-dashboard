@@ -1,5 +1,6 @@
 import {
   Archive,
+  Bot,
   Check,
   ChevronsDown,
   Clock,
@@ -8,13 +9,20 @@ import {
   Github,
   GitBranch,
   GripVertical,
+  History,
+  Inbox,
+  Keyboard,
+  ListChecks,
   LogOut,
   MessageSquare,
+  Newspaper,
   Pencil,
   Plus,
   RotateCcw,
+  ScanBarcode,
   Search,
   Sunrise,
+  Timer,
   Trash2,
   UtensilsCrossed,
   X,
@@ -44,6 +52,15 @@ export const ICONS = {
   today:          Sunrise,
   food:           UtensilsCrossed,
   gym:            Dumbbell,
+  // Home-screen launcher tiles.
+  focus:          Timer,
+  scan:           ScanBarcode,
+  capture:        Keyboard,
+  replay:         History,
+  fleet:          Bot,
+  briefing:       Newspaper,
+  'close-day':    ListChecks,
+  inbox:          Inbox,
 } as const satisfies Record<string, LucideIconData>;
 
 export type IconName = keyof typeof ICONS;

@@ -1,0 +1,79 @@
+:host {
+  display: block;
+}
+
+.launcher__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.launcher__cell {
+  display: flex;
+}
+
+// Thumb target: 64px clears the 44px minimum with room for the label.
+.launcher__tile {
+  position: relative;
+  flex: 1;
+  min-height: 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.4rem 0.2rem;
+  color: var(--color-text);
+  text-decoration: none;
+  background: var(--color-surface-soft, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: var(--radius-lg, 0.75rem);
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    border-color: var(--color-accent);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring, 2px solid var(--color-accent));
+    outline-offset: 2px;
+  }
+}
+
+.launcher__label {
+  font-size: 0.66rem;
+  line-height: 1.1;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.launcher__badge {
+  position: absolute;
+  top: -0.3rem;
+  right: -0.3rem;
+  min-width: 1.1rem;
+  padding: 0 0.25rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.1rem;
+  text-align: center;
+  color: var(--color-bg);
+  background: var(--color-accent);
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+.launcher__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

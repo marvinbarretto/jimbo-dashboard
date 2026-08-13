@@ -19,10 +19,12 @@ export const mobileRoutes: Routes = [
       import('./containers/mobile-shell/mobile-shell').then(m => m.MobileShell),
     children: [
       {
+        // Path stays `today` while the component becomes Home: the path is the
+        // cross-repo contract, the label is not.
         path: 'today',
-        title: 'Today',
+        title: 'Home',
         data: { [REUSE_TAB]: 'today' },
-        loadComponent: () => import('./containers/mobile-today/mobile-today').then(m => m.MobileToday),
+        loadComponent: () => import('./containers/mobile-home/mobile-home').then(m => m.MobileHome),
       },
       {
         path: 'log',

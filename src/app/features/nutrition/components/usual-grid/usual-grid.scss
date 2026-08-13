@@ -1,0 +1,91 @@
+:host {
+  display: block;
+}
+
+.ugrid__title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.ugrid__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+// Gym-glove metrics, like the Train tab's controls: these are thumb targets.
+.ugrid__cell {
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 3.5rem;
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  text-decoration: none;
+  color: var(--color-text);
+  background: var(--color-surface-soft, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: var(--radius-lg, 0.75rem);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    border-color: var(--color-accent);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring, 2px solid var(--color-accent));
+    outline-offset: 2px;
+  }
+}
+
+.ugrid__cell--pending {
+  opacity: 0.55;
+}
+
+// Already had one today: the cell wears its tally and the accent.
+.ugrid__cell--tallied {
+  border-color: var(--color-accent);
+}
+
+// The navigation cell is deliberately quieter than the logging cells — it
+// should never be the thing a thumb lands on by accident.
+.ugrid__cell--more {
+  background: transparent;
+  border-style: dashed;
+}
+
+.ugrid__label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.ugrid__macros {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ugrid__count {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.ugrid__empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}

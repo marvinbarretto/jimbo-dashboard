@@ -54,18 +54,44 @@ eager services (auth check, actors/projects lookups) don't fire in the
 WebView. Tabs share only the tracker primitives and data-access services with
 the desktop routes.
 
-Three tabs plus a FAB:
+Three tabs:
 
-| Tab | Owns |
-|---|---|
-| **Today** | briefing, day checks, the glance surface |
-| **Log** | nutrition day ledger — food, drink, supplements |
-| **Train** | exercise day ledger + live session |
-| FAB | quick capture |
+| Tab | Path | Owns |
+|---|---|---|
+| **Home** | `/m/today` | glance strip, the day's shape, launcher, quick log |
+| **Log** | `/m/log` | nutrition day ledger — food, drink, supplements |
+| **Train** | `/m/train` | exercise day ledger + live session |
 
-Capture is a FAB, not a tab: Telegram → hermes `/food` already handles
-zero-friction capture and raw capture speed was explicitly *not* a pain point.
-The shell's job is correcting, structuring, and showing data back.
+Home keeps the `today` path: paths are the cross-repo contract with jimbo-app,
+labels are not. Renaming one still means changing the Kotlin side in the same
+breath.
+
+Home is four fixed slots whose *contents* change with the day — glance strip,
+one card for what's happening now, a launcher, and the quick-log grid in the
+thumb zone. The structure never moves, so it stays muscle memory. It is built
+around what actually gets typed into this phone daily: food and drink, three to
+six times, overwhelmingly repeats.
+
+Two rules keep it safe to use one-handed:
+
+- **Launcher tiles navigate; they never log.** They render as anchors, so the
+  "go somewhere" affordance is structurally incapable of writing data.
+- **One-tap logging lives only in the quick-log grid**, and every tap is
+  undoable from its toast (`createUsualLogger`, so `/m/log` inherits it).
+  Duplicate logs in the wild are mistaps, not a broken guard — a real second
+  pint is a real second tap — so the fix is a way back, never a debounce.
+
+The grid is ranked by time of day (`rankUsualsForDaypart`) from a 30-day
+histogram of the log itself: breakfast surfaces in the morning, drinks after
+six. `/api/coach/food-log/frequent` only ranks all-time frequency, so the
+daypart rule is client-side and unit-tested rather than a server round trip —
+which also puts the rule most likely to need tuning where tuning is a one-line
+change and a test.
+
+Capture is a launcher tile, not a FAB or a tab: Telegram → hermes `/food`
+already handles zero-friction capture and raw capture speed was explicitly
+*not* a pain point. The shell's job is correcting, structuring, and showing
+data back.
 
 ## Delivery
 
@@ -118,17 +144,30 @@ Status as of Aug 2026:
    auth); APK rebuilt with `AuthPlugin`, verified on-device.
 4. ✅ **Service worker + manifest** — ngsw, lazy chunk caching, no /api
    dataGroup; `SwUpdateService` checks on resume and applies while hidden.
-5. ✅ **Today tab** — briefing day-plan + mood/energy check-in (day checks
-   have no REST surface yet — MCP-only, so deferred).
+5. ✅ **Today tab** — briefing day-plan + mood/energy check-in.
 6. ✅ **Infographics** — 7-day kcal strip on Log, volume strip on Train
    (`weekAxis` + UiBarChart at phone height).
 7. ✅ **Demote `gym`** — parity verified (gym's client posts a subset of the
    dashboard's fields to identical endpoints), `capacitor.config.ts` default
    now `https://jimbo.fourfoldmedia.uk/m`; gym keeps coach chat, voice and
    history in the browser.
+8. ✅ **Home** — the Today tab rebuilt as the four-slot home: glance strip,
+   the day's shape, an 8-tile launcher, and the daypart-ranked quick-log grid,
+   with undo on every one-tap log. Path and REUSE_TAB key unchanged.
 
-Next horizon (not yet scheduled): offline write queue, day-checks REST +
-Today integration, native home deep-links into tabs, real icons.
+Next horizon (not yet scheduled):
+
+- **The NOW card** — one card at a time, priority-ordered rather than
+  daypart-ordered: a running focus session wins in *any* daypart, then the
+  evening close-out, then the day's shape. Home renders the briefing plan in
+  that slot until it lands.
+- **`/api/live-status`** — one poll fills the glance strip's steps and next
+  event, the attention row, and the Fleet/Inbox tile badges. No dashboard
+  consumer today. Note its `focus` is a *code* session, not a pomo one, and
+  its `upcoming[].time` is UTC — derive from `in_minutes` instead.
+- Day-checks on Home, offline write queue, native home deep-links, real icons.
+- `/m/capture` and `/m/close-day`, so the "New item" and "Close day" tiles stop
+  borrowing `/m/log` and the desktop `/evening` page.
 
 ## API readiness
 

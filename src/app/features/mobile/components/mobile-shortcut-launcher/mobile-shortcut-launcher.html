@@ -1,0 +1,19 @@
+<nav class="launcher" aria-label="Shortcuts">
+  <ul class="launcher__grid">
+    @for (tile of tiles(); track tile.id) {
+      <li class="launcher__cell">
+        <a class="launcher__tile" [routerLink]="tile.route" [attr.data-tile]="tile.id">
+          <app-icon [name]="tile.icon" [size]="20" />
+          <span class="launcher__label">{{ tile.label }}</span>
+          @if (tile.badge) {
+            <!-- The digit is decorative; the count reaches assistive tech as
+                 part of the link's name ("Fleet, 20 waiting"), not as a
+                 stray number read after the label. -->
+            <span class="launcher__badge" aria-hidden="true">{{ tile.badge }}</span>
+            <span class="launcher__sr">, {{ tile.badgeLabel }}</span>
+          }
+        </a>
+      </li>
+    }
+  </ul>
+</nav>

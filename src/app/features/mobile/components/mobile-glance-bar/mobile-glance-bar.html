@@ -1,0 +1,8 @@
+<!-- The visible row is decorative for assistive tech: it's terse, separator-led
+     shorthand. The full sentence is exposed once, below, and the row hidden. -->
+<p class="glance__sr">{{ srSummary() }}</p>
+<div class="glance__row" aria-hidden="true">
+  <span class="glance__date">{{ dateLabel() }}</span>
+  <span class="glance__stats">{{ statsLabel() }}</span>
+  <span class="glance__next">{{ nextLabel() }}</span>
+</div>

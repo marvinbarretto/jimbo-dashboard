@@ -142,9 +142,24 @@ export function createUsualLogger(deps: {
           ...(at ? { logged_at: at } : {}),
         })
         .subscribe({
-          next: () => {
+          next: (created) => {
             clearPending(u.key);
-            toast.success(`${u.key} · ${u.kcal} kcal logged`);
+            // Undo rather than a stricter guard: a genuine second pint is a
+            // genuine second tap, so de-duplicating by time window would break
+            // the primary use case to fix a mistap. The toast owns the window.
+            toast.actionable(
+              `${u.key} · ${u.kcal} kcal logged`,
+              {
+                label: 'Undo',
+                run: () => {
+                  service.deleteFood(created.id).subscribe({
+                    next: () => onLogged(),
+                    error: () => toast.error(`Could not undo ${u.key}`),
+                  });
+                },
+              },
+              { tone: 'success' },
+            );
             onLogged();
           },
           error: () => {

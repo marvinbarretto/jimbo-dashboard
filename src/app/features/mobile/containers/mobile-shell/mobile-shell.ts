@@ -33,7 +33,7 @@ export class MobileShell {
    * `jimbo-app/docs/native-ui-roadmap.md`.
    */
   protected readonly tabs: readonly MobileTab[] = [
-    { path: 'today', label: 'Today', icon: 'today' },
+    { path: 'today', label: 'Home', icon: 'today' },
     { path: 'log', label: 'Log', icon: 'food' },
     { path: 'train', label: 'Train', icon: 'gym' },
   ];

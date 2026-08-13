@@ -1,0 +1,81 @@
+<!-- Slot 1 — glance. Read-only by contract: where the day stands, nothing more. -->
+<app-mobile-glance-bar
+  [dateLabel]="glance().dateLabel"
+  [statsLabel]="glance().statsLabel"
+  [nextLabel]="glance().nextLabel"
+  [srSummary]="glance().srSummary"
+/>
+
+<!-- Slot 2 — the day's shape. Becomes the priority-ordered NOW card (focus /
+     close-out / shape) once those land; today it renders the briefing plan. -->
+@if (briefingLoading()) {
+  <app-ui-loading-state message="Loading briefing…" />
+} @else if (briefingFailed()) {
+  <div class="home__error">
+    <p class="home__error-message">Couldn't load the briefing.</p>
+    <app-ui-button variant="secondary" (pressed)="retryBriefing()">Try again</app-ui-button>
+  </div>
+} @else if (briefingMissing()) {
+  <app-ui-empty-state message="No briefing yet — it lands mid-morning and will appear here." />
+} @else if (briefing()) {
+  <section class="home__plan" aria-label="Today's shape">
+    <header class="home__section-title">
+      Today's shape
+      <span class="home__generated">generated {{ generatedAt() }}</span>
+    </header>
+    @for (line of plan(); track $index) {
+      <div class="home__plan-item">
+        <span class="home__plan-time">{{ line.lead }}</span>
+        <span class="home__plan-suggestion">{{ line.text }}</span>
+      </div>
+    } @empty {
+      <app-ui-empty-state message="No priorities in this briefing." />
+    }
+  </section>
+}
+
+<!-- Slot 3 — the launcher. Navigation only; nothing here writes. -->
+<app-mobile-shortcut-launcher [tiles]="tiles()" />
+
+<!-- Slot 4 — the thumb zone. The hero: one tap logs, re-ranked by daypart. -->
+<app-usual-grid
+  [usuals]="usuals()"
+  [tally]="usualTally()"
+  [pending]="usualLogger.pending()"
+  moreLink="/m/log"
+  (tapped)="usualLogger.log($event)"
+/>
+
+<!-- Ungated on purpose: the check-in is an input and must never wait on a
+     briefing fetch that 404s all pre-dawn. -->
+<section class="home__checkin" aria-label="Mood and energy check-in">
+  <header class="home__section-title">
+    How's it going?
+    @if (answeredToday() > 0) {
+      <span class="home__checkin-count">{{ answeredToday() }} logged today</span>
+    }
+  </header>
+  <app-ui-score-picker label="Mood" [options]="moodLabels" [value]="mood()" (picked)="mood.set($event)" />
+  <app-ui-score-picker label="Energy" [options]="energyLabels" [value]="energy()" (picked)="energy.set($event)" />
+  <app-ui-button variant="primary" (pressed)="save()">{{ saving() ? 'Logging…' : 'Log it' }}</app-ui-button>
+</section>
+
+@if (briefing()) {
+  @for (fact of insights(); track $index) {
+    <section class="home__surprise">
+      <p class="home__surprise-fact">{{ fact }}</p>
+    </section>
+  }
+
+  @if (highlights().length) {
+    <section class="home__highlights" aria-label="Highlights">
+      <header class="home__section-title">Worth a look</header>
+      @for (h of highlights(); track $index) {
+        <div class="home__highlight">
+          <span class="home__highlight-source">{{ h.source }}</span>
+          <span class="home__highlight-headline">{{ h.headline }}</span>
+        </div>
+      }
+    </section>
+  }
+}

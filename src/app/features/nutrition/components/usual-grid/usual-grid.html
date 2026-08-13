@@ -1,0 +1,33 @@
+<section class="ugrid" [attr.aria-label]="heading() + ' — tap to log'">
+  <h2 class="ugrid__title">{{ heading() }}</h2>
+
+  <div class="ugrid__grid">
+    @for (u of usuals(); track u.key) {
+      <button
+        type="button"
+        class="ugrid__cell"
+        [class.ugrid__cell--pending]="pending().has(u.key)"
+        [class.ugrid__cell--tallied]="(tally().get(u.key) ?? 0) > 0"
+        [attr.data-usual]="u.key"
+        (click)="tapped.emit(u)"
+      >
+        <span class="ugrid__label">{{ u.key }}</span>
+        <span class="ugrid__macros">
+          {{ u.kcal }} kcal
+          @if (tally().get(u.key); as n) {
+            <span class="ugrid__count">· logged {{ n }}×</span>
+          }
+        </span>
+      </button>
+    } @empty {
+      <p class="ugrid__empty">Log something once and it'll show up here.</p>
+    }
+
+    @if (moreLink(); as link) {
+      <a class="ugrid__cell ugrid__cell--more" [routerLink]="link">
+        <span class="ugrid__label">{{ moreLabel() }}</span>
+        <span class="ugrid__macros">full log</span>
+      </a>
+    }
+  </div>
+</section>

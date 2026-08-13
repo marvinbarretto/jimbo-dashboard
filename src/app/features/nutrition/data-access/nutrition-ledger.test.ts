@@ -154,23 +154,34 @@ describe('createUsualLogger', () => {
   // Builders over mocks: a stub service capturing the body, a recording toast.
   function build(opts: { fail?: boolean; loggedAt?: () => string | undefined } = {}) {
     const created: unknown[] = [];
+    const deleted: string[] = [];
     const toasts: string[] = [];
     let settle: (() => void) | undefined;
+    let undo: (() => void) | undefined;
     const service = {
       createFood(body: unknown) {
         created.push(body);
         return {
           subscribe(observer: { next: (v: unknown) => void; error: (e: unknown) => void }) {
             // Settlement is manual so tests can observe the in-flight state.
-            settle = () => (opts.fail ? observer.error(new Error('nope')) : observer.next({}));
+            settle = () =>
+              opts.fail ? observer.error(new Error('nope')) : observer.next({ id: 'food_new' });
           },
         };
+      },
+      deleteFood(id: string) {
+        deleted.push(id);
+        return { subscribe: (o: { next: (v: unknown) => void }) => o.next(undefined) };
       },
     } as unknown as NutritionService;
     const toast = {
       success: (m: string) => toasts.push(`ok:${m}`),
       error: (m: string) => toasts.push(`err:${m}`),
       info: () => {},
+      actionable: (m: string, action: { label: string; run: () => void }, o?: { tone?: string }) => {
+        toasts.push(`${o?.tone === 'success' ? 'ok' : 'info'}:${m}`);
+        undo = action.run;
+      },
     } as unknown as ToastService;
     let loggedCount = 0;
     const logger = createUsualLogger({
@@ -179,7 +190,16 @@ describe('createUsualLogger', () => {
       loggedAt: opts.loggedAt,
       onLogged: () => loggedCount++,
     });
-    return { logger, created, toasts, settle: () => settle?.(), loggedCount: () => loggedCount };
+    return {
+      logger,
+      created,
+      deleted,
+      toasts,
+      settle: () => settle?.(),
+      undo: () => undo?.(),
+      hasUndo: () => undo !== undefined,
+      loggedCount: () => loggedCount,
+    };
   }
 
   const usual: Usual = {
@@ -218,6 +238,26 @@ describe('createUsualLogger', () => {
     expect(t.logger.pending().has('pale ale')).toBe(false);
     t.logger.log(usual); // the second pint
     expect(t.created).toHaveLength(2);
+  });
+
+  it('offers an undo that deletes the entry it just created', () => {
+    // The observed duplicate logs (three at 20:14, two at 20:36) are mistaps,
+    // not a broken guard — a real second pint is a real second tap. So the fix
+    // is a way back, not a debounce that would break the legitimate case.
+    const t = build();
+    t.logger.log(usual);
+    t.settle();
+    expect(t.hasUndo()).toBe(true);
+    t.undo();
+    expect(t.deleted).toEqual(['food_new']);
+    expect(t.loggedCount()).toBe(2); // the ledger refreshes after the undo too
+  });
+
+  it('offers no undo when the log never landed', () => {
+    const t = build({ fail: true });
+    t.logger.log(usual);
+    t.settle();
+    expect(t.hasUndo()).toBe(false);
   });
 
   it('backdates via loggedAt and clears pending on error', () => {
