@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.181](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.180...v0.0.181) (2026-08-13)
+
+
+### Bug Fixes
+
+* **journal:** show the plan for briefings written since v2 ([28fb37c](https://github.com/marvinbarretto/jimbo-dashboard/commit/28fb37cdd91cc6dd26816917b026c593aaceb6e8))
+
 ### [0.0.180](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.179...v0.0.180) (2026-08-13)
 
 
