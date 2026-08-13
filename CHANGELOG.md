@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.180](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.179...v0.0.180) (2026-08-13)
+
+
+### Bug Fixes
+
+* **mobile:** stop the close-out card counting the checks twice ([8906118](https://github.com/marvinbarretto/jimbo-dashboard/commit/8906118d9ac7c9c96f6e8fe9e27adcbd1830ccd9))
+
 ### [0.0.179](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.178...v0.0.179) (2026-08-13)
 
 
