@@ -202,6 +202,23 @@ export class VaultItemsService {
     });
   }
 
+  /**
+   * Server-side search (title/body/tags/seq) across the whole vault, not just
+   * whatever's already loaded locally. Used by the list page's search box in
+   * place of filtering the ~5k-item client cache, which got expensive per
+   * keystroke and was only ever correct for rows already fetched. No status
+   * filter — search intentionally reaches every lifecycle, including archived.
+   * Merges hits into the shared store (same freshness benefit as ensureBySeq)
+   * so other consumers looking up these ids get the fresh row too.
+   */
+  searchBoard(term: string, limit = 500): Observable<VaultItem[]> {
+    const params = new HttpParams().set('search', term).set('limit', limit);
+    return this.http.get<unknown>(`${environment.dashboardApiUrl}/api/vault/board`, { params }).pipe(
+      map((raw) => this.parseBoardResponse(raw, 'search') ?? []),
+      tap((items) => this.mergeItems(items)),
+    );
+  }
+
   getById(id: VaultItemId): VaultItem | undefined {
     return this.itemsById().get(id);
   }

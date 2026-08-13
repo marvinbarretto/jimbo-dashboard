@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, finalize, map as rxMap, of, switchMap } from 'rxjs';
 import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -68,21 +68,19 @@ export class VaultItemsList {
   private readonly _projectFilter = signal<Set<string>>(new Set());
 
   // The input stays bound to the raw signal so every keystroke echoes back
-  // instantly. The expensive part — re-filtering ~5k items — reads this
-  // debounced copy instead, so a fast typist doesn't trigger a full recompute
-  // per character; only once they pause.
+  // instantly. The expensive/networked part reads this debounced copy
+  // instead, so a fast typist doesn't trigger a request per character; only
+  // once they pause.
   readonly search = this._search.asReadonly();
   private readonly debouncedSearch = toSignal(
-    toObservable(this._search).pipe(debounceTime(150), distinctUntilChanged()),
+    toObservable(this._search).pipe(debounceTime(200), distinctUntilChanged()),
     { initialValue: '' },
   );
 
-  // Lowercased "seq title body tags" haystack per item, built once when the
-  // item list changes rather than rebuilt from scratch on every keystroke by
-  // every filter pass below. With ~5k items and 6 independent filter passes
-  // per keystroke, skipping this cost was the difference between the search
-  // box freezing the tab and not.
-  private readonly searchIndex = computed(() => {
+  // Lowercased "seq title body tags" haystack per item — used only as the
+  // instant placeholder/offline fallback below, not the primary search path.
+  // Built once when the item list changes, not rebuilt per keystroke.
+  private readonly localSearchIndex = computed(() => {
     const idx = new Map<VaultItemId, string>();
     for (const item of this.vaultItemsService.items()) {
       idx.set(item.id, `${item.seq} ${item.title} ${item.body ?? ''} ${item.tags.join(' ')}`.toLowerCase());
@@ -90,15 +88,49 @@ export class VaultItemsList {
     return idx;
   });
 
+  private localSearch(term: string): VaultItem[] {
+    const needle = term.trim().toLowerCase();
+    const idx = this.localSearchIndex();
+    return this.vaultItemsService.items().filter(item => idx.get(item.id)?.includes(needle));
+  }
+
+  // Search now runs server-side (GET /api/vault/board?search=…) — correct
+  // regardless of what's loaded locally, and doesn't grow linearly with vault
+  // size the way filtering the ~5k-item client cache did. Paired with the
+  // term it answers so a stale in-flight response for a *previous* keystroke
+  // never gets rendered against the current one.
+  private readonly _searching = signal(false);
+  readonly searching = this._searching.asReadonly();
+
+  private readonly serverSearch = toSignal(
+    toObservable(this.debouncedSearch).pipe(
+      switchMap(term => {
+        const trimmed = term.trim();
+        if (!trimmed) return of({ term: '', items: null as VaultItem[] | null });
+        this._searching.set(true);
+        return this.vaultItemsService.searchBoard(trimmed).pipe(
+          rxMap(items => ({ term: trimmed, items })),
+          catchError(() => {
+            this.toast.error('Search request failed — showing locally loaded matches only');
+            return of({ term: trimmed, items: this.localSearch(trimmed) });
+          }),
+          finalize(() => this._searching.set(false)),
+        );
+      }),
+    ),
+    { initialValue: { term: '', items: null as VaultItem[] | null } },
+  );
+
   // Search is applied once here; applyFilters() below runs the (cheap,
   // equality-only) type/lifecycle/category/owner/project passes over this
   // already-narrowed set instead of re-searching the full item list per call.
+  // Falls back to the local haystack while the server request for the
+  // current term is still in flight, so results never blank out mid-search.
   private readonly searchFilteredItems = computed(() => {
-    const search = this.debouncedSearch().trim().toLowerCase();
-    const all = this.vaultItemsService.items();
-    if (!search) return all;
-    const idx = this.searchIndex();
-    return all.filter(item => idx.get(item.id)?.includes(search));
+    const term = this.debouncedSearch().trim();
+    if (!term) return this.vaultItemsService.items();
+    const result = this.serverSearch();
+    return (result.term === term && result.items) ? result.items : this.localSearch(term);
   });
 
   // Cap rendering at 500 rows by default — past that, modern browsers still

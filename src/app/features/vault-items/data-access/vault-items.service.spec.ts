@@ -13,6 +13,7 @@ import { actorId, projectId, vaultItemId , wellKnownActorId} from '@domain/ids';
 import type { Project } from '@domain/projects/project';
 import { EMPTY_PROJECT_BRIEF } from '@domain/projects/project';
 import type { Actor } from '@domain/actors/actor';
+import type { VaultItem } from '@domain/vault/vault-item';
 import type { DraftPayload } from '../dialog/vault-item-dialog-mode';
 
 // Seed data (SEED.vault_items via fixtures.ts) already has multiple items with
@@ -801,6 +802,49 @@ describe('VaultItemsService mutations (HTTP mode, withOptimistic-backed)', () =>
       expect(restored.assigned_to).toBe(actorId('marvin'));
       expect(activityPosts).toHaveLength(0);
       expect(lastErrorToast()).toMatch(/rejection failed/i);
+    });
+  });
+
+  // ── searchBoard ─────────────────────────────────────────────────────────
+  describe('searchBoard', () => {
+    it('GETs /api/vault/board?search=… and maps the response to VaultItem[]', () => {
+      let result: VaultItem[] | undefined;
+      service.searchBoard('passport').subscribe(items => { result = items; });
+
+      const req = http.expectOne(r => r.url.includes('/api/vault/board') && r.params.get('search') === 'passport');
+      expect(req.request.method).toBe('GET');
+      req.flush({
+        items: [fakeApiItem({ id: 'item-2', seq: 200, title: 'Renew the passport' })],
+        total: 1,
+        limit: 500,
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result![0].title).toBe('Renew the passport');
+    });
+
+    it('merges hits into the shared store so getById finds them afterward', () => {
+      service.searchBoard('passport').subscribe();
+
+      const req = http.expectOne(r => r.url.includes('/api/vault/board') && r.params.get('search') === 'passport');
+      req.flush({
+        items: [fakeApiItem({ id: 'item-2', seq: 200, title: 'Renew the passport' })],
+        total: 1,
+        limit: 500,
+      });
+
+      expect(service.getById(vaultItemId('item-2'))?.title).toBe('Renew the passport');
+    });
+
+    it('surfaces a schema-mismatch response as an empty result and a toast, without throwing', () => {
+      let result: VaultItem[] | undefined;
+      service.searchBoard('passport').subscribe(items => { result = items; });
+
+      const req = http.expectOne(r => r.url.includes('/api/vault/board') && r.params.get('search') === 'passport');
+      req.flush({ items: [{ nonsense: true }], total: 1, limit: 500 });
+
+      expect(result).toEqual([]);
+      expect(lastErrorToast()).toMatch(/did not match expected shape/i);
     });
   });
 });
