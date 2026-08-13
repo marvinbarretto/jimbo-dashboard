@@ -155,17 +155,40 @@ Status as of Aug 2026:
    the day's shape, an 8-tile launcher, and the daypart-ranked quick-log grid,
    with undo on every one-tap log. Path and REUSE_TAB key unchanged.
 
+9. ✅ **The NOW card** — Home's second slot is one card at a time, chosen
+   **state-first**: a running focus session wins in *any* daypart, then the
+   evening close-out (day-checks with a "~25s left" cost estimate), then the
+   morning's shape, then a quiet idle line. `selectNowCard()` owns the
+   priority; the container's `@switch` renders one of three dumb cards.
+   `buildDayShape()` normalises `suggested_blocks` → `priorities` → `day_plan`,
+   so the card renders whichever briefing schema the API wrote.
+
+10. ✅ **`/api/live-status`** — one 60s visibility-gated poll (`liveStatusResource()`,
+    types mirrored in `domain/live-status/`) fills three things at once: the
+    glance strip's steps and next event, the attention row, and the Fleet
+    badge. Its `focus` is a *code* session, not a pomo, which is why the NOW
+    card uses `FocusSessionsService` instead; its `upcoming[].time` is UTC, so
+    the glance counts down from `in_minutes`. The attention row is a `<nav>`,
+    never `aria-live` — a live region would re-announce the same counts every
+    minute. `blockers[]` (22 on the live call) and `vault_pulse.inbox_count`
+    (163) are deliberately unrendered: an always-on badge trains dismissal.
+
 Next horizon (not yet scheduled):
 
-- **The NOW card** — one card at a time, priority-ordered rather than
-  daypart-ordered: a running focus session wins in *any* daypart, then the
-  evening close-out, then the day's shape. Home renders the briefing plan in
-  that slot until it lands.
-- **`/api/live-status`** — one poll fills the glance strip's steps and next
-  event, the attention row, and the Fleet/Inbox tile badges. No dashboard
-  consumer today. Note its `focus` is a *code* session, not a pomo one, and
-  its `upcoming[].time` is UTC — derive from `in_minutes` instead.
-- Day-checks on Home, offline write queue, native home deep-links, real icons.
+- **Answering day-checks on Home.** The close-out card counts and prices them
+  but hands off to `/evening` to answer; it is a pull surface by design.
+- **The "sync broken" attention row** — no clean REST signal for it today;
+  needs the Telemetry plugin wrapper.
+- **Steps freshness.** `/api/live-status` reported `today.steps: 34` at 17:11
+  London. If the server figure is routinely hours behind, the glance strip's
+  steps source flips to the native `HealthSnapshot` plugin — `buildGlance`
+  already takes `deviceSteps` and prefers the larger of the two.
+- **`planned_seconds` on the session PATCH** — until then the focus card's
+  pause and extend carry you to `/pomo/running` rather than acting in place.
+- **A plan-acceptance endpoint.** The shape card renders read-only: there is
+  nowhere for "looks right ✓" to go, and a localStorage tick would look like
+  agreement the briefing never hears about.
+- Offline write queue, native home deep-links, real icons.
 - `/m/capture` and `/m/close-day`, so the "New item" and "Close day" tiles stop
   borrowing `/m/log` and the desktop `/evening` page.
 

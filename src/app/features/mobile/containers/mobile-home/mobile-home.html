@@ -6,38 +6,54 @@
   [srSummary]="glance().srSummary"
 />
 
-<!-- Slot 2 — the day's shape. Becomes the priority-ordered NOW card (focus /
-     close-out / shape) once those land; today it renders the briefing plan. -->
-@if (briefingLoading()) {
-  <app-ui-loading-state message="Loading briefing…" />
-} @else if (briefingFailed()) {
-  <div class="home__error">
-    <p class="home__error-message">Couldn't load the briefing.</p>
-    <app-ui-button variant="secondary" (pressed)="retryBriefing()">Try again</app-ui-button>
-  </div>
-} @else if (briefingMissing()) {
-  <app-ui-empty-state message="No briefing yet — it lands mid-morning and will appear here." />
-} @else if (briefing()) {
-  <section class="home__plan" aria-label="Today's shape">
-    <header class="home__section-title">
-      Today's shape
-      <span class="home__generated">generated {{ generatedAt() }}</span>
-    </header>
-    @for (line of plan(); track $index) {
-      <div class="home__plan-item">
-        <span class="home__plan-time">{{ line.lead }}</span>
-        <span class="home__plan-suggestion">{{ line.text }}</span>
-      </div>
-    } @empty {
-      <app-ui-empty-state message="No priorities in this briefing." />
-    }
-  </section>
+<!-- Slot 2 — the NOW card: one card, chosen state-first. The branch lives here
+     rather than inside a component because the three cards share no inputs.
+     Aliased with @let so each case narrows the union. -->
+@let card = nowCard();
+@switch (card.kind) {
+  @case ('focus') {
+    <app-mobile-focus-card
+      [title]="card.title"
+      [remaining]="card.remaining"
+      [percent]="card.percent"
+      [canExtend]="card.canExtend"
+      [busy]="completing()"
+      (paused)="openTimer()"
+      (extended)="openTimer()"
+      (completed)="completeFocus()"
+    />
+  }
+  @case ('close-day') {
+    <app-mobile-close-day-card
+      [dayLabel]="card.dayLabel"
+      [answered]="card.answered"
+      [total]="card.total"
+      [costLabel]="card.costLabel"
+      (opened)="openCloseDay()"
+    />
+  }
+  @case ('shape') {
+    <app-mobile-shape-card [blocks]="card.blocks" />
+  }
+  @default {
+    <!-- Nothing running, nothing outstanding. The slot holds its place rather
+         than collapsing — the structure is the muscle memory. -->
+    <p class="home__idle" data-testid="mobile-now-idle">
+      Nothing running. <a class="home__idle-link" routerLink="/pomo">Start a focus session</a>
+    </p>
+  }
 }
 
-<!-- Slot 3 — the launcher. Navigation only; nothing here writes. -->
+<!-- Slot 3 — what's waiting. Renders only when it has something: an empty day
+     shows nothing rather than a reassuring zero that still costs a glance. -->
+@if (attention().length) {
+  <app-mobile-attention-row [items]="attention()" />
+}
+
+<!-- Slot 4 — the launcher. Navigation only; nothing here writes. -->
 <app-mobile-shortcut-launcher [tiles]="tiles()" />
 
-<!-- Slot 4 — the thumb zone. The hero: one tap logs, re-ranked by daypart. -->
+<!-- Slot 5 — the thumb zone. The hero: one tap logs, re-ranked by daypart. -->
 <app-usual-grid
   [usuals]="usuals()"
   [tally]="usualTally()"

@@ -1,0 +1,47 @@
+:host {
+  display: block;
+}
+
+.attention__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Quieter than the NOW card above it — this is a list of things to know about,
+// not the thing to do next. Loud styling here would flatten that difference.
+.attention__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.82rem;
+  color: var(--color-text);
+  text-decoration: none;
+  border-left: 3px solid var(--color-accent);
+  border-radius: 0 var(--radius, 0.5rem) var(--radius, 0.5rem) 0;
+  background: color-mix(in oklch, var(--color-accent) 5%, transparent);
+  -webkit-tap-highlight-color: transparent;
+
+  &:focus-visible {
+    outline: var(--focus-ring, 2px solid var(--color-accent));
+    outline-offset: 2px;
+  }
+}
+
+.attention__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attention__chevron {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}

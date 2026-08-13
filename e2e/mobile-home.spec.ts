@@ -14,9 +14,21 @@ test.describe('phone home', () => {
     // thumb zone to log. If a slot goes missing the screen still renders, so
     // assert presence rather than trusting a screenshot.
     await expect(home.glanceBar).toBeVisible();
+    await expect(home.nowCard()).toBeVisible();
     await expect(home.launcher).toBeVisible();
     await expect(home.quickLog).toBeVisible();
     await expect(page.getByRole('region', { name: /mood and energy/i })).toBeVisible();
+  });
+
+  test('fills the NOW slot with exactly one card, whatever the hour', async ({ page }) => {
+    const home = new MobileHomePage(page);
+    await home.goto();
+
+    // Which card shows is state- and clock-dependent and belongs to
+    // selectNowCard's unit tests. What matters here is that the slot never
+    // shows two cards at once and never silently collapses — the fixed
+    // four-slot structure is the muscle memory the whole screen trades on.
+    await expect(home.nowCard()).toHaveCount(1);
   });
 
   test('offers eight launcher tiles that only ever navigate', async ({ page }) => {

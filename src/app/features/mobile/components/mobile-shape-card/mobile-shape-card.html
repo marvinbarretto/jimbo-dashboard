@@ -1,0 +1,17 @@
+<section class="shape" [attr.aria-label]="heading()">
+  <h2 class="shape__title">{{ heading() }}</h2>
+
+  <ol class="shape__list">
+    @for (block of blocks(); track $index) {
+      <li class="shape__row">
+        <span class="shape__lead">{{ block.lead }}</span>
+        <span class="shape__body">
+          <span class="shape__block-title">{{ block.title }}</span>
+          @if (block.meta) {
+            <span class="shape__meta">{{ block.meta }}</span>
+          }
+        </span>
+      </li>
+    }
+  </ol>
+</section>

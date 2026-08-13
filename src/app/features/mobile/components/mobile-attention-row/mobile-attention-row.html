@@ -1,0 +1,17 @@
+<nav class="attention" aria-label="Needs attention">
+  <ul class="attention__list">
+    @for (item of items(); track item.id) {
+      <li class="attention__item">
+        <a
+          class="attention__link"
+          [routerLink]="item.route"
+          [attr.data-attention]="item.id"
+          [attr.aria-label]="item.srLabel"
+        >
+          <span class="attention__label" aria-hidden="true">{{ item.label }}</span>
+          <span class="attention__chevron" aria-hidden="true">›</span>
+        </a>
+      </li>
+    }
+  </ul>
+</nav>

@@ -1,0 +1,50 @@
+<section class="focus" aria-label="Focus session running">
+  <header class="focus__head">
+    <span class="focus__title">{{ title() }}</span>
+    <span class="focus__remaining">{{ remaining() }}</span>
+  </header>
+
+  <div
+    class="focus__track"
+    role="progressbar"
+    aria-label="Session progress"
+    [attr.aria-valuenow]="percent()"
+    [attr.aria-valuemin]="0"
+    [attr.aria-valuemax]="100"
+    [attr.aria-valuetext]="remaining()"
+  >
+    <div class="focus__fill" [style.width.%]="percent()"></div>
+  </div>
+
+  <div class="focus__actions">
+    <!-- Pause and extend live on the timer page; these carry you there rather
+         than sitting greyed out. -->
+    <button
+      type="button"
+      class="focus__action"
+      data-testid="focus-pause"
+      aria-label="Pause on the timer screen"
+      (click)="paused.emit()"
+    >
+      Pause
+    </button>
+    <button
+      type="button"
+      class="focus__action"
+      data-testid="focus-extend"
+      [attr.aria-label]="canExtend() ? null : 'Extend on the timer screen'"
+      (click)="extended.emit()"
+    >
+      {{ canExtend() ? '+15 min' : 'Extend' }}
+    </button>
+    <button
+      type="button"
+      class="focus__action focus__action--primary"
+      [class.focus__action--busy]="busy()"
+      data-testid="focus-complete"
+      (click)="completed.emit()"
+    >
+      {{ busy() ? 'Finishing…' : 'Complete' }}
+    </button>
+  </div>
+</section>

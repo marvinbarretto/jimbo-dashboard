@@ -43,6 +43,23 @@ export class MobileHomePage {
     return this.quickLog.locator('[data-usual]');
   }
 
+  /**
+   * The NOW slot, in whichever of its four states the clock and the data put
+   * it. Matched as a union rather than pinned to one card because the choice
+   * is genuinely time- and state-dependent — what's testable from outside is
+   * that the slot always holds exactly one thing.
+   */
+  nowCard(): Locator {
+    return this.page.locator(
+      [
+        '[data-testid="mobile-focus-card"]',
+        '[data-testid="mobile-close-day-card"]',
+        '[data-testid="mobile-shape-card"]',
+        '[data-testid="mobile-now-idle"]',
+      ].join(', '),
+    );
+  }
+
   /** The strip's spoken form; the visible row is aria-hidden shorthand. */
   glanceSummary(): Locator {
     return this.glanceBar.locator('p');

@@ -1,0 +1,89 @@
+:host {
+  display: block;
+}
+
+.focus {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-lg, 0.75rem);
+  background: color-mix(in oklch, var(--color-accent) 6%, transparent);
+}
+
+.focus__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.focus__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.focus__remaining {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.focus__track {
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text-muted) 18%, transparent);
+  overflow: hidden;
+}
+
+.focus__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-accent);
+  transition: width 0.3s ease;
+}
+
+.focus__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+// Thumb targets, not desktop buttons: 44px minimum on every action.
+.focus__action {
+  font: inherit;
+  flex: 1 1 0;
+  min-height: 2.75rem;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  background: var(--color-surface-soft, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: var(--radius, 0.5rem);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    border-color: var(--color-accent);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring, 2px solid var(--color-accent));
+    outline-offset: 2px;
+  }
+}
+
+.focus__action--primary {
+  font-weight: 600;
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+// Dimmed, never disabled — the container drops the duplicate tap.
+.focus__action--busy {
+  opacity: 0.55;
+}

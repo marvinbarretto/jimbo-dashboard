@@ -1,0 +1,12 @@
+<section class="closeday" aria-label="Close out the day">
+  <header class="closeday__head">
+    <span class="closeday__title">Close out {{ dayLabel() }}</span>
+    <span class="closeday__cost">{{ costLabel() }}</span>
+  </header>
+
+  <app-ui-progress-meter label="Day checks" [current]="answered()" [target]="total()" />
+
+  <button type="button" class="closeday__action" data-testid="close-day-open" (click)="opened.emit()">
+    {{ actionLabel() }}
+  </button>
+</section>

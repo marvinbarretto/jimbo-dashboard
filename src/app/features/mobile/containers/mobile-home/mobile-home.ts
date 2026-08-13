@@ -1,17 +1,19 @@
-import { HttpErrorResponse, httpResource } from '@angular/common/http';
+import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { UiButton } from '@shared/components/ui-button/ui-button';
-import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
-import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiScorePicker } from '@shared/components/ui-score-picker/ui-score-picker';
 import { ToastService } from '@shared/components/toast/toast.service';
-import { formatLondonTime, logicalDay, shiftIsoDay } from '@shared/utils/datetime.utils';
+import { logicalDay, shiftIsoDay } from '@shared/utils/datetime.utils';
 import { daypartAt } from '@shared/utils/daypart';
 import { injectHaptics } from '@shared/utils/haptics';
 import { pollWhileVisible } from '@features/journal/utils/live-poll';
 import { CheckinsService } from '@features/checkins/data-access/checkins.service';
+import { FocusSessionsService } from '@features/pomo/data-access/focus-sessions.service';
 import { type BriefingAnalysis } from '@features/briefings/data-access/briefing.types';
 import { MOOD_LABELS, ENERGY_LABELS, type MoodLogEntry } from '@domain/checkins';
+import { type DayChecksResponse } from '@domain/day-checks';
+import { type LiveStatus } from '@domain/live-status';
 import {
   NutritionService,
   frequentFoodsResource,
@@ -24,15 +26,21 @@ import {
   rankUsualsForDaypart,
 } from '@features/nutrition/utils/usual-daypart';
 import { UsualGrid } from '@features/nutrition/components/usual-grid/usual-grid';
+import { liveStatusResource, LIVE_STATUS_POLL_MS } from '../../data-access/live-status';
 import { injectLogicalToday } from '../../utils/logical-today';
 import { injectMinuteClock } from '../../utils/minute-clock';
 import { buildGlance } from '../../utils/glance';
+import { buildAttention } from '../../utils/attention';
+import { buildDayShape } from '../../utils/day-shape';
+import { summariseChecks } from '../../utils/day-checks-progress';
+import { selectNowCard, type ActiveFocus } from '../../utils/now-card';
 import { SHORTCUT_TILES, applyBadges } from '../../utils/shortcut-tiles';
 import { MobileGlanceBar } from '../../components/mobile-glance-bar/mobile-glance-bar';
 import { MobileShortcutLauncher } from '../../components/mobile-shortcut-launcher/mobile-shortcut-launcher';
-
-/** One rendered plan line — v2 priorities and v1 day_plan normalise to this. */
-type PlanLine = { lead: string; text: string };
+import { MobileAttentionRow } from '../../components/mobile-attention-row/mobile-attention-row';
+import { MobileFocusCard } from '../../components/mobile-focus-card/mobile-focus-card';
+import { MobileCloseDayCard } from '../../components/mobile-close-day-card/mobile-close-day-card';
+import { MobileShapeCard } from '../../components/mobile-shape-card/mobile-shape-card';
 
 /** Logging cells in the quick-log grid; the fourth cell is the link to the Log tab. */
 const GRID_SLOTS = 3;
@@ -46,6 +54,9 @@ const USUAL_CANDIDATES = 12;
 
 /** Days of log history behind the time-of-day ranking. */
 const HISTOGRAM_DAYS = 30;
+
+/** Everything not on the live-status poll moves on human timescales. */
+const SLOW_POLL_MS = 5 * 60_000;
 
 /**
  * Home — the phone's landing screen.
@@ -64,12 +75,15 @@ const HISTOGRAM_DAYS = 30;
 @Component({
   selector: 'app-mobile-home',
   imports: [
+    RouterLink,
     UiButton,
-    UiEmptyState,
-    UiLoadingState,
     UiScorePicker,
     MobileGlanceBar,
     MobileShortcutLauncher,
+    MobileAttentionRow,
+    MobileFocusCard,
+    MobileCloseDayCard,
+    MobileShapeCard,
     UsualGrid,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -80,6 +94,8 @@ const HISTOGRAM_DAYS = 30;
 export class MobileHome {
   private readonly checkins = inject(CheckinsService);
   private readonly nutrition = inject(NutritionService);
+  private readonly focus = inject(FocusSessionsService);
+  private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   private readonly haptics = injectHaptics();
 
@@ -109,13 +125,30 @@ export class MobileHome {
       `/api/coach/food-log?from=${shiftIsoDay(this.today(), -(HISTOGRAM_DAYS - 1))}` +
       `&to=${this.today()}&limit=500`,
   );
+  private readonly checksRes = httpResource<DayChecksResponse>(
+    () => `/api/day-checks/day?date=${this.today()}`,
+  );
+  private readonly liveRes = liveStatusResource();
 
   constructor() {
-    // The briefing lands mid-morning and /latest 404s before it; a parked tab
-    // must pick it up without a remount. Also fires on resume.
+    // The briefing lands mid-morning and /latest 404s before it, and checks get
+    // answered from the journal, MCP and Telegram — a parked tab must pick both
+    // up without a remount. Also fires on resume.
     pollWhileVisible(() => {
       if (!this.briefingRes.isLoading()) this.briefingRes.reload();
-    }, 5 * 60_000);
+      if (!this.checksRes.isLoading()) this.checksRes.reload();
+    }, SLOW_POLL_MS);
+
+    // Sessions start and end on other surfaces (the timer page, the Chrome
+    // extension), so the card can't assume it saw the transition. The service
+    // swallows its own errors and holds prior state, so a failed poll is a
+    // no-op rather than a card that flickers away. Live-status rides the same
+    // minute: both answer "what's true right now".
+    void this.focus.loadActive();
+    pollWhileVisible(() => {
+      void this.focus.loadActive();
+      if (!this.liveRes.isLoading()) this.liveRes.reload();
+    }, LIVE_STATUS_POLL_MS);
   }
 
   // ── Glance bar ──────────────────────────────────────────────────
@@ -133,16 +166,46 @@ export class MobileHome {
     return foods.reduce((sum, f) => sum + (f.est_kcal ?? 0), 0);
   });
 
-  // Steps and the next calendar event arrive with live-status in a later slice;
-  // omitted rather than faked, and buildGlance renders the shorter line.
-  protected readonly glance = computed(() =>
-    buildGlance({ day: this.today(), intakeKcal: this.intakeKcal() }),
+  /** hasValue() before value(): value() throws in the error state. */
+  private readonly live = computed<LiveStatus | null>(() =>
+    this.liveRes.hasValue() ? this.liveRes.value() : null,
   );
 
+  // steps stays `undefined` until live-status answers, and only becomes null if
+  // the server itself has nothing — buildGlance renders those two differently
+  // on purpose, so don't collapse them with a ?? here.
+  protected readonly glance = computed(() => {
+    const live = this.live();
+    return buildGlance({
+      day: this.today(),
+      intakeKcal: this.intakeKcal(),
+      steps: live?.today.steps,
+      // The API's upcoming[].time is UTC; buildGlance counts down from
+      // in_minutes instead, which has no zone to get wrong.
+      upcoming: live?.upcoming,
+    });
+  });
+
   // ── Launcher ────────────────────────────────────────────────────
-  // Badge counts come from live-status in a later slice; every tile is quiet
-  // until then, which is the correct rendering for "nothing is waiting".
-  protected readonly tiles = computed(() => applyBadges(SHORTCUT_TILES, {}));
+  // Only the two counts that mean "you specifically". vault_pulse.inbox_count
+  // sits at 163 and blockers at 22 — either would be a badge that is always on,
+  // which is a badge nobody reads.
+  protected readonly tiles = computed(() =>
+    applyBadges(SHORTCUT_TILES, {
+      fleet: this.live()?.dispatch_pulse.waiting_on_marvin ?? 0,
+      'close-day': this.checks().remaining,
+    }),
+  );
+
+  // ── Attention row ───────────────────────────────────────────────
+  protected readonly attention = computed(() =>
+    buildAttention({
+      waitingOnMarvin: this.live()?.dispatch_pulse.waiting_on_marvin,
+      checksRemaining: this.checks().remaining,
+      checksCostLabel: this.checks().costLabel,
+      closeDayOnScreen: this.nowCard().kind === 'close-day',
+    }),
+  );
 
   // ── Quick log ───────────────────────────────────────────────────
   private readonly histogram = computed(() =>
@@ -175,48 +238,73 @@ export class MobileHome {
     },
   });
 
-  // ── Briefing ────────────────────────────────────────────────────
-  protected readonly briefingLoading = computed(
-    () => this.briefingRes.isLoading() && !this.briefingRes.hasValue(),
-  );
-
-  /** 404 = no briefing in the server's freshness window — empty, not broken. */
-  protected readonly briefingMissing = computed(() => {
-    const err = this.briefingRes.error();
-    return err instanceof HttpErrorResponse && err.status === 404;
-  });
-
-  protected readonly briefingFailed = computed(
-    () => this.briefingRes.error() !== undefined && !this.briefingMissing(),
-  );
-
-  protected retryBriefing(): void {
-    this.briefingRes.reload();
-  }
-
+  // ── The NOW card ────────────────────────────────────────────────
+  // hasValue() before value(): value() *throws* in the error state, so `?.`
+  // would not save this. A 404 (no briefing yet, no checks configured) reads
+  // as an empty day rather than as a broken screen.
   protected readonly briefing = computed<BriefingAnalysis | null>(() =>
     this.briefingRes.hasValue() ? this.briefingRes.value() : null,
   );
 
-  protected readonly generatedAt = computed(() => {
-    const b = this.briefing();
-    return b ? formatLondonTime(b.generated_at) : '';
+  private readonly shape = computed(() => buildDayShape(this.briefing()?.analysis));
+
+  private readonly checks = computed(() =>
+    summariseChecks(this.checksRes.hasValue() ? this.checksRes.value().items : []),
+  );
+
+  /** The running session, reduced to what the card renders. */
+  private readonly activeFocus = computed<ActiveFocus | null>(() => {
+    const session = this.focus.active();
+    if (!session) return null;
+    return {
+      startedAt: session.started_at,
+      plannedSeconds: session.planned_seconds,
+      notes: session.notes,
+    };
   });
 
   /**
-   * v2 briefings carry priorities and null out the v1 day_plan; older rows are
-   * the reverse. Normalise both so the section renders whatever the API returns.
+   * One card at a time, chosen state-first — see selectNowCard. Recomputed off
+   * the minute clock, so the countdown ticks and the daypart tiebreak moves
+   * with the day even though this tab is never re-created.
    */
-  protected readonly plan = computed<PlanLine[]>(() => {
-    const a = this.briefing()?.analysis;
-    if (!a) return [];
-    const priorities = (a.priorities ?? []).map((p) => ({
-      lead: p.fixed_time ?? (p.deadline ? `by ${p.deadline}` : p.constraint),
-      text: p.title,
-    }));
-    if (priorities.length) return priorities;
-    return a.day_plan.map((d) => ({ lead: d.time, text: d.suggestion }));
-  });
+  protected readonly nowCard = computed(() =>
+    selectNowCard({
+      now: this.now(),
+      day: this.today(),
+      focus: this.activeFocus(),
+      checks: this.checks(),
+      shape: this.shape(),
+    }),
+  );
+
+  /** A complete is in flight — dims the action and drops the duplicate tap. */
+  protected readonly completing = signal(false);
+
+  /**
+   * Pause and extend have no API today, so the card's buttons carry you to the
+   * timer page where the session can be handled, rather than sitting greyed out
+   * on a screen that won't say why.
+   */
+  protected openTimer(): void {
+    void this.router.navigate(['/pomo/running']);
+  }
+
+  protected async completeFocus(): Promise<void> {
+    const session = this.focus.active();
+    if (!session || this.completing()) return;
+    this.completing.set(true);
+    this.haptics.tap();
+    // The service toasts on both paths and swallows its own errors; a second
+    // toast here would double up. Completing clears `active`, which is what
+    // flips the card — no reload needed.
+    await this.focus.complete(session.id);
+    this.completing.set(false);
+  }
+
+  protected openCloseDay(): void {
+    void this.router.navigate(['/evening']);
+  }
 
   /** v3 insights, with the v1 surprise folded in as one more fact. */
   protected readonly insights = computed(() => {

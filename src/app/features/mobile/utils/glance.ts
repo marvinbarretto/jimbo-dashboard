@@ -74,14 +74,25 @@ function nextFrom(upcoming: readonly GlanceEvent[]): { label: string; sr: string
   return { label: `${title} in ${hours}h`, sr: `Next: ${title} in about ${hours} hours.` };
 }
 
-export function buildGlance(input: GlanceInput): Glance {
-  // Midday UTC so the day label can't slip a date across a DST boundary.
-  const date = new Date(`${input.day}T12:00:00Z`);
-  const dateLabel = date.toLocaleDateString('en-GB', {
+/**
+ * "Thu 13 Aug" for a YYYY-MM-DD logical day — the glance strip's date and the
+ * close-day card's heading, so the two can't drift into different formats.
+ *
+ * Anchored at midday UTC so the label can't slip a date across a DST boundary,
+ * and takes the day as an argument rather than reading the clock, so callers
+ * stay testable.
+ */
+export function shortDayLabel(day: string): string {
+  return new Date(`${day}T12:00:00Z`).toLocaleDateString('en-GB', {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
   });
+}
+
+export function buildGlance(input: GlanceInput): Glance {
+  const date = new Date(`${input.day}T12:00:00Z`);
+  const dateLabel = shortDayLabel(input.day);
 
   const steps = resolveSteps(input.steps, input.deviceSteps);
 

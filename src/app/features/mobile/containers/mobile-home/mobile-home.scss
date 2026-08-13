@@ -23,49 +23,23 @@
   gap: 0.6rem;
 }
 
-.home__checkin-count,
-.home__generated {
+.home__idle {
+  margin: 0;
+  padding: 0.6rem 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.home__idle-link {
+  color: var(--color-accent);
+}
+
+.home__checkin-count {
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
   font-size: 0.75rem;
   color: var(--color-text-soft, var(--color-text-muted));
-}
-
-.home__error {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-
-.home__error-message {
-  margin: 0;
-  color: var(--color-text-muted);
-}
-
-.home__plan-item {
-  display: flex;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--color-border-subtle, var(--color-border));
-
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.home__plan-time {
-  flex-shrink: 0;
-  min-width: 3.5rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-muted);
-  font-size: 0.85rem;
-}
-
-.home__plan-suggestion {
-  font-size: 0.9rem;
-  line-height: 1.4;
 }
 
 .home__surprise {
