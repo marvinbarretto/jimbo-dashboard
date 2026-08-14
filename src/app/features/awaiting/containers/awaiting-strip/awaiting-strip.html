@@ -8,7 +8,7 @@
         [attr.aria-expanded]="!collapsed()"
       >
         <span class="awaiting__caret" aria-hidden="true">{{ collapsed() ? '▸' : '▾' }}</span>
-        <span class="awaiting__count">{{ visibleCount() }}</span>
+        <span class="awaiting__count">{{ waitingCount() }}</span>
         <span class="awaiting__title">waiting on you</span>
       </button>
 
@@ -16,8 +16,11 @@
         {{ counts().questions }} open question{{ counts().questions === 1 ? '' : 's' }}
         · {{ counts().handbacks }} handback{{ counts().handbacks === 1 ? '' : 's' }}
         <!-- The window hides rows; it must never hide the fact that it hid them. -->
+        @if (truncated()) {
+          <span class="awaiting__older">· showing newest {{ shownCount() }}</span>
+        }
         @if (olderCount() > 0) {
-          <span class="awaiting__older">· {{ olderCount() }} older, not shown</span>
+          <span class="awaiting__older">· {{ olderCount() }} older than the window</span>
         }
       </p>
 
@@ -34,7 +37,7 @@
     </header>
 
     @if (!collapsed()) {
-      @if (visibleCount() === 0) {
+      @if (waitingCount() === 0) {
         <p class="awaiting__empty">
           Nothing in the last window. {{ olderCount() }} older handback{{ olderCount() === 1 ? '' : 's' }}
           still sit with you — widen the window to see them.
@@ -69,10 +72,6 @@
                     <span class="handback__pri">{{ priorityLabel(row.handback.priority) }}</span>
                     <span class="handback__sep">·</span>
                     <span class="handback__type">{{ row.handback.type }}</span>
-                    @if (row.handback.open_questions > 0) {
-                      <span class="handback__sep">·</span>
-                      <span class="handback__q">{{ row.handback.open_questions }} open question{{ row.handback.open_questions === 1 ? '' : 's' }}</span>
-                    }
                   </p>
                 </div>
 

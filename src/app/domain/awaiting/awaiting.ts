@@ -26,7 +26,6 @@ export interface Handback {
   action:         string;
   reason:         string | null;
   priority:       number | null;
-  open_questions: number;
 }
 
 /**
@@ -46,5 +45,13 @@ export interface AwaitingCounts {
 export interface AwaitingMe {
   handbacks: Handback[];
   questions: OpenQuestionView[];
+  /**
+   * EVERY live awaited note id, of any age and ignoring the page limit.
+   *
+   * The board marks a card from this, not from the returned rows: "an agent is
+   * stalled behind this" is a property of the item, not of how far back the
+   * strip happens to be looking.
+   */
+  note_ids:  VaultItemId[];
   counts:    AwaitingCounts;
 }

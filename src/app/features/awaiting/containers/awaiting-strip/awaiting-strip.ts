@@ -62,17 +62,25 @@ export class AwaitingStrip {
   );
 
   /**
-   * The headline number. Questions and handbacks are counted separately by the
-   * server and can overlap on one note — a handback raised BECAUSE of a pending
-   * question is both. Summing them would double-count, so the headline is the
-   * row count the strip can actually show, with the breakdown beside it.
+   * The headline number, and it must equal the breakdown beside it. The server
+   * guarantees the two sets are disjoint (a question-bearing note surfaces as a
+   * question, never also as a handback), so the sum is exact.
+   *
+   * Deliberately NOT `rows().length` — that is the PAGE, which the limit
+   * truncates, and a headline that silently shrinks to the page size is the
+   * "unmeasured zero reads as an idle zero" failure in miniature.
    */
-  readonly visibleCount = computed(() => this.rows().length);
+  readonly waitingCount = computed(() => this.counts().questions + this.counts().handbacks);
+
+  /** How many of them are actually rendered. Drives the "showing newest N" note. */
+  readonly shownCount = computed(() => this.rows().length);
+
+  readonly truncated = computed(() => this.shownCount() < this.waitingCount());
 
   /** Live handbacks the window is hiding. Stated, never silently dropped. */
   readonly olderCount = computed(() => this.counts().older);
 
-  readonly hasAnything = computed(() => this.visibleCount() > 0 || this.olderCount() > 0);
+  readonly hasAnything = computed(() => this.waitingCount() > 0 || this.olderCount() > 0);
 
   agentLabel(id: string): string {
     return this.actorsService.getById(id as never)?.display_name ?? id;

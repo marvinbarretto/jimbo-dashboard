@@ -18,7 +18,6 @@ function handback(over: Partial<Handback> = {}): Handback {
     action: 'reassigned',
     reason: 'pipeline saturated',
     priority: 2,
-    open_questions: 0,
     ...over,
   };
 }

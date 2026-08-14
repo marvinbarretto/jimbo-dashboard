@@ -20,6 +20,7 @@ const DEFAULT_WINDOW_DAYS = 7;
 const EMPTY: AwaitingMe = {
   handbacks: [],
   questions: [],
+  note_ids: [],
   counts: { handbacks: 0, handbacks_total: 0, questions: 0, older: 0 },
 };
 
@@ -47,13 +48,15 @@ export class AwaitingService {
    */
   readonly questions = computed(() => this._data().questions.filter(q => q.answered_by === null));
 
-  /** Note ids with an agent waiting on them — lets a lane card read differently. */
-  readonly awaitingNoteIds = computed(() => {
-    const ids = new Set<string>();
-    for (const h of this._data().handbacks) ids.add(h.note_id as string);
-    for (const q of this.questions()) ids.add(q.vault_item_id as string);
-    return ids;
-  });
+  /**
+   * Note ids with an agent waiting on them — lets a lane card read differently.
+   *
+   * Built from the server's full `note_ids`, NOT from the returned rows: the
+   * rows are windowed and capped, so marking off them would chip whichever
+   * subset the strip's window happened to admit and silently leave the rest
+   * looking like Marvin's own captures — which is the defect, not the fix.
+   */
+  readonly awaitingNoteIds = computed(() => new Set<string>(this._data().note_ids as string[]));
 
   load(actor?: ActorId): void {
     if (isSeedMode()) {
@@ -106,6 +109,9 @@ export class AwaitingService {
       return {
         ...d,
         handbacks: kept,
+        // Drop the mark too — the item is on its way back to the agent, so it
+        // is no longer a card Marvin is blocking.
+        note_ids: d.note_ids.filter(id => id !== noteId),
         counts: {
           ...d.counts,
           handbacks: Math.max(0, d.counts.handbacks - removed),
