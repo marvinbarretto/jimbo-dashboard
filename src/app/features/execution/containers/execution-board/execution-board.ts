@@ -38,6 +38,8 @@ import {
 import { ExecutionConfigService } from '@features/execution/data-access/execution-config.service';
 import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { VaultTypesService } from '@features/vault-items/data-access/vault-types.service';
+import { AwaitingService } from '@features/awaiting/data-access/awaiting.service';
+import { AwaitingStrip } from '@features/awaiting/containers/awaiting-strip/awaiting-strip';
 
 // The board collapsed from "Ready + 8 commission-stage columns" into three
 // workflow lanes that BOTH manual (human-owned) and automated (agent-commission)
@@ -97,7 +99,13 @@ function laneForManual(item: VaultItem): BoardLane {
 // both kinds share one comparator with the grooming board.
 type BoardCard =
   | { readonly kind: 'commission'; readonly item: CommissionItem; readonly lane: BoardLane; readonly sort: SortableCard; readonly doneAt: string | null }
-  | { readonly kind: 'manual'; readonly item: VaultItem; readonly lane: BoardLane; readonly blocked: boolean; readonly blockerLabel: string | null; readonly sort: SortableCard; readonly doneAt: string | null };
+  | {
+      readonly kind: 'manual'; readonly item: VaultItem; readonly lane: BoardLane;
+      readonly blocked: boolean; readonly blockerLabel: string | null;
+      /** An agent handed this back and is stalled behind it — not Marvin's own capture. */
+      readonly awaiting: boolean;
+      readonly sort: SortableCard; readonly doneAt: string | null;
+    };
 
 interface LaneView {
   lane:       BoardLane;
@@ -115,7 +123,7 @@ interface FacetSkip { skipOwner?: boolean; skipProject?: boolean; skipPriority?:
 
 @Component({
   selector: 'app-execution-board',
-  imports: [VaultCard, CommissionCard, KanbanColumn, KanbanFilterBar, BoardCreateBar, UiButtonLink],
+  imports: [VaultCard, CommissionCard, KanbanColumn, KanbanFilterBar, BoardCreateBar, UiButtonLink, AwaitingStrip],
   templateUrl: './execution-board.html',
   styleUrl: './execution-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -135,6 +143,9 @@ export class ExecutionBoard {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly executionConfig = inject(ExecutionConfigService);
+  // Read-only here: the strip owns the fetch. The board only needs to know
+  // WHICH cards an agent is stalled behind, so it can mark them.
+  private readonly awaitingService = inject(AwaitingService);
 
   // null = never auto-clear (default — matches pre-feature behavior).
   private readonly doneLaneAutoClearDays = computed(
@@ -306,6 +317,8 @@ export class ExecutionBoard {
   readonly lanes = computed<LaneView[]>(() => {
     const cards: BoardCard[] = [];
 
+    const awaitingIds = this.awaitingService.awaitingNoteIds();
+
     for (const item of this.visibleManualItems()) {
       const blockers = this.dependenciesService.blockersFor(item.id)();
       const blocked  = laneForManual(item) === 'ready' && blockers.length > 0;
@@ -315,6 +328,7 @@ export class ExecutionBoard {
         lane:        laneForManual(item),
         blocked,
         blockerLabel: blocked ? `blocked · #${blockers[0].blocker_seq}` : null,
+        awaiting:    awaitingIds.has(item.id as string),
         sort:        toSortableCard(item),
         doneAt:      item.completed_at,
       });

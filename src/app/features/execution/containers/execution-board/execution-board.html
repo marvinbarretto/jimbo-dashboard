@@ -15,6 +15,9 @@
     <app-ui-button-link [routerLink]="['/execution', 'settings']" variant="ghost" size="sm">⚙ Settings</app-ui-button-link>
   </header>
 
+  <!-- Pinned above the lanes: the one thing the operator is watching for. -->
+  <app-awaiting-strip />
+
   <button
     type="button"
     class="board__filter-toggle"
@@ -101,6 +104,11 @@
               >
                 @if (card.blocked) {
                   <span class="board__chip board__chip--blocked">{{ card.blockerLabel }}</span>
+                }
+                <!-- A card an agent is stalled behind must not read like one
+                     Marvin captured himself — that conflation is the defect. -->
+                @if (card.awaiting) {
+                  <span class="board__chip board__chip--awaiting">blocking an agent</span>
                 }
                 <app-vault-card
                   [context]="cardContextForManual(card.item)"

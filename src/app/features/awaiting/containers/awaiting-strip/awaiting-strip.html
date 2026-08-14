@@ -1,0 +1,102 @@
+@if (loaded() && hasAnything()) {
+  <section class="awaiting" [class.awaiting--collapsed]="collapsed()">
+    <header class="awaiting__header">
+      <button
+        type="button"
+        class="awaiting__toggle"
+        (click)="collapsed.update(v => !v)"
+        [attr.aria-expanded]="!collapsed()"
+      >
+        <span class="awaiting__caret" aria-hidden="true">{{ collapsed() ? '▸' : '▾' }}</span>
+        <span class="awaiting__count">{{ visibleCount() }}</span>
+        <span class="awaiting__title">waiting on you</span>
+      </button>
+
+      <p class="awaiting__breakdown">
+        {{ counts().questions }} open question{{ counts().questions === 1 ? '' : 's' }}
+        · {{ counts().handbacks }} handback{{ counts().handbacks === 1 ? '' : 's' }}
+        <!-- The window hides rows; it must never hide the fact that it hid them. -->
+        @if (olderCount() > 0) {
+          <span class="awaiting__older">· {{ olderCount() }} older, not shown</span>
+        }
+      </p>
+
+      <div class="awaiting__window" role="group" aria-label="Handback window">
+        @for (opt of windowOptions; track opt.label) {
+          <button
+            type="button"
+            class="awaiting__window-btn"
+            [class.awaiting__window-btn--active]="windowDays() === opt.days"
+            (click)="setWindow(opt.days)"
+          >{{ opt.label }}</button>
+        }
+      </div>
+    </header>
+
+    @if (!collapsed()) {
+      @if (visibleCount() === 0) {
+        <p class="awaiting__empty">
+          Nothing in the last window. {{ olderCount() }} older handback{{ olderCount() === 1 ? '' : 's' }}
+          still sit with you — widen the window to see them.
+        </p>
+      }
+
+      <ul class="awaiting__rows">
+        @for (row of rows(); track row.key) {
+          <li class="awaiting__row">
+            @if (row.kind === 'question') {
+              <app-question-card
+                [question]="row.question"
+                (answered)="onAnswered($event)" />
+            } @else {
+              <article class="handback">
+                <div class="handback__main">
+                  <a class="handback__link" [routerLink]="['/vault-items', row.handback.seq]">
+                    #{{ row.handback.seq }} · {{ row.handback.title }}
+                  </a>
+                  @if (row.handback.reason) {
+                    <p class="handback__reason">{{ row.handback.reason }}</p>
+                  }
+                  <p class="handback__meta">
+                    handed back by
+                    <app-entity-chip
+                      type="actor"
+                      [id]="row.handback.from_actor"
+                      [label]="agentLabel(row.handback.from_actor)" />
+                    <span class="handback__sep">·</span>
+                    <span>{{ ageLabel(row.handback.ts) }}</span>
+                    <span class="handback__sep">·</span>
+                    <span class="handback__pri">{{ priorityLabel(row.handback.priority) }}</span>
+                    <span class="handback__sep">·</span>
+                    <span class="handback__type">{{ row.handback.type }}</span>
+                    @if (row.handback.open_questions > 0) {
+                      <span class="handback__sep">·</span>
+                      <span class="handback__q">{{ row.handback.open_questions }} open question{{ row.handback.open_questions === 1 ? '' : 's' }}</span>
+                    }
+                  </p>
+                </div>
+
+                <div class="handback__actions">
+                  @if (returning() === row.handback.note_id) {
+                    <span class="handback__confirm">
+                      Give #{{ row.handback.seq }} back to {{ agentLabel(row.handback.from_actor) }}?
+                    </span>
+                    <button type="button" class="handback__btn handback__btn--go"
+                      (click)="returnToAgent(row.handback)">yes, send it back</button>
+                    <button type="button" class="handback__btn"
+                      (click)="toggleReturn(row.handback.note_id)">cancel</button>
+                  } @else {
+                    <button type="button" class="handback__btn handback__btn--primary"
+                      (click)="toggleReturn(row.handback.note_id)">
+                      back to &#64;{{ agentLabel(row.handback.from_actor) }}
+                    </button>
+                  }
+                </div>
+              </article>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+}
