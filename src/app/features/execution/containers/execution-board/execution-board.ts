@@ -25,12 +25,16 @@ import {
 import { createKanbanDragState } from '@shared/kanban/drag-state';
 import {
   projectFilterGroup, ownerFilterGroup, priorityFilterGroup, epicFilterGroup,
+  readinessFilterGroup, readinessKeyOf,
   epicsForProjects, effectiveEpicSelection, epicKeyOf,
-  PROJECT, OWNER, PRIORITY, EPIC, UNASSIGNED, NO_PRIORITY,
+  PROJECT, OWNER, PRIORITY, EPIC, READINESS, UNASSIGNED, NO_PRIORITY,
 } from '@shared/kanban/filter-groups';
 import { withVaultDetailModal, swapDetailSeq } from '@shared/kanban/detail-modal';
 import { CommandShortcutsService } from '@shared/services/command-shortcuts.service';
-import { effectivePriority, isActive, isDone, type VaultItem } from '@domain/vault';
+import {
+  effectivePriority, isActive, isDone, compareSortableBy, toSortableCard, SORT_OPTIONS,
+  type SortMode, type SortableCard, type VaultItem,
+} from '@domain/vault';
 import { ExecutionConfigService } from '@features/execution/data-access/execution-config.service';
 import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { VaultTypesService } from '@features/vault-items/data-access/vault-types.service';
@@ -86,15 +90,14 @@ function laneForManual(item: VaultItem): BoardLane {
   return 'ready';
 }
 
-// Lowest-integer-wins priority for sort; null (no priority) sinks to the bottom.
-const PRIORITY_FLOOR = 99;
-
 // One card per ITEM. Commission cards come from the per-item dispatch view-model;
-// manual cards reuse the unified vault-card. `lane`, `priority` and `createdAt`
-// are precomputed so the column grouping + sort stay cheap and pure.
+// manual cards reuse the unified vault-card. `lane` and `sort` are precomputed so
+// the column grouping + sort stay cheap and pure. `sort` is the SortableCard
+// projection — a commission has no vault item of its own, so this is what lets
+// both kinds share one comparator with the grooming board.
 type BoardCard =
-  | { readonly kind: 'commission'; readonly item: CommissionItem; readonly lane: BoardLane; readonly priority: number; readonly createdAt: string; readonly doneAt: string | null }
-  | { readonly kind: 'manual'; readonly item: VaultItem; readonly lane: BoardLane; readonly blocked: boolean; readonly blockerLabel: string | null; readonly priority: number; readonly createdAt: string; readonly doneAt: string | null };
+  | { readonly kind: 'commission'; readonly item: CommissionItem; readonly lane: BoardLane; readonly sort: SortableCard; readonly doneAt: string | null }
+  | { readonly kind: 'manual'; readonly item: VaultItem; readonly lane: BoardLane; readonly blocked: boolean; readonly blockerLabel: string | null; readonly sort: SortableCard; readonly doneAt: string | null };
 
 interface LaneView {
   lane:       BoardLane;
@@ -108,7 +111,7 @@ interface LaneView {
 
 // Which facets a count should ignore (so a facet's own selection doesn't collapse
 // its counts to its active set).
-interface FacetSkip { skipOwner?: boolean; skipProject?: boolean; skipPriority?: boolean; skipEpic?: boolean }
+interface FacetSkip { skipOwner?: boolean; skipProject?: boolean; skipPriority?: boolean; skipEpic?: boolean; skipReadiness?: boolean }
 
 @Component({
   selector: 'app-execution-board',
@@ -151,14 +154,22 @@ export class ExecutionBoard {
 
   // --- filter state -------------------------------------------------------
   // Same facets as the grooming board (built via @shared/kanban/filter-groups).
-  private readonly filter = createKanbanFilterState([PROJECT, OWNER, PRIORITY, EPIC]);
-  private readonly projectFilter  = this.filter.active<string>(PROJECT);
-  private readonly ownerFilter    = this.filter.active<string>(OWNER);
-  private readonly priorityFilter = this.filter.active<number>(PRIORITY);
-  private readonly epicFilter     = this.filter.active<string>(EPIC);
+  private readonly filter = createKanbanFilterState([PROJECT, OWNER, PRIORITY, EPIC, READINESS]);
+  private readonly projectFilter   = this.filter.active<string>(PROJECT);
+  private readonly ownerFilter     = this.filter.active<string>(OWNER);
+  private readonly priorityFilter  = this.filter.active<number>(PRIORITY);
+  private readonly epicFilter      = this.filter.active<string>(EPIC);
+  private readonly readinessFilter = this.filter.active<string>(READINESS);
 
   private readonly _searchTerm = signal<string>('');
   readonly searchTerm = this._searchTerm.asReadonly();
+
+  // Lane sort. Shares the grooming board's modes so "Oldest" means the same
+  // thing on both. Commission cards have no vault item of their own, so the
+  // board projects every card onto SortableCard before comparing.
+  private readonly _sortMode = signal<SortMode>('priority');
+  readonly sortMode = this._sortMode.asReadonly();
+  readonly sortOptions = SORT_OPTIONS;
 
   // Per-lane render cap — same composable the grooming board uses. Done lanes
   // in particular accumulate without bound between auto-clear thresholds.
@@ -244,10 +255,17 @@ export class ExecutionBoard {
       for (const id of (params.get(EPIC)?.split(',').filter(Boolean) ?? [])) {
         this.filter.toggle(EPIC, id);
       }
+      for (const id of (params.get(READINESS)?.split(',').filter(Boolean) ?? [])) {
+        this.filter.toggle(READINESS, id);
+      }
       const q = params.get('q');
       if (q) this._searchTerm.set(q);
       const limit = parseColumnLimit(params.get('limit'));
       if (limit !== undefined) this.columnLimit.setLimit(limit);
+      const sort = params.get('sort');
+      if (sort && SORT_OPTIONS.some(o => o.value === sort)) {
+        this._sortMode.set(sort as SortMode);
+      }
     });
 
     effect(() => {
@@ -255,17 +273,22 @@ export class ExecutionBoard {
       const owners     = Array.from(this.ownerFilter());
       const priorities = Array.from(this.priorityFilter());
       const epics      = Array.from(this.epicFilter());
+      const readiness  = Array.from(this.readinessFilter());
       const q = this._searchTerm();
       const limit = this.columnLimit.limit();
+      const sort = this._sortMode();
       this.router.navigate([], {
         relativeTo: this.route,
         queryParams: {
-          [PROJECT]:  projects.length   ? projects.join(',')   : null,
-          [OWNER]:    owners.length     ? owners.join(',')     : null,
-          [PRIORITY]: priorities.length ? priorities.join(',') : null,
-          [EPIC]:     epics.length      ? epics.join(',')      : null,
-          q:          q || null,
-          limit:      serializeColumnLimit(limit),
+          [PROJECT]:   projects.length   ? projects.join(',')   : null,
+          [OWNER]:     owners.length     ? owners.join(',')     : null,
+          [PRIORITY]:  priorities.length ? priorities.join(',') : null,
+          [EPIC]:      epics.length      ? epics.join(',')      : null,
+          [READINESS]: readiness.length  ? readiness.join(',')  : null,
+          q:           q || null,
+          limit:       serializeColumnLimit(limit),
+          // Default stays out of the URL so a plain board link is the plain board.
+          sort:        sort === 'priority' ? null : sort,
         },
         queryParamsHandling: 'merge',
         replaceUrl: true,
@@ -292,8 +315,7 @@ export class ExecutionBoard {
         lane:        laneForManual(item),
         blocked,
         blockerLabel: blocked ? `blocked · #${blockers[0].blocker_seq}` : null,
-        priority:    effectivePriority(item) ?? PRIORITY_FLOOR,
-        createdAt:   item.created_at,
+        sort:        toSortableCard(item),
         doneAt:      item.completed_at,
       });
     }
@@ -304,8 +326,15 @@ export class ExecutionBoard {
         kind:      'commission',
         item:      c,
         lane:      laneForStage(c.stage),
-        priority:  (vi ? effectivePriority(vi) : null) ?? PRIORITY_FLOOR,
-        createdAt: c.latest.created_at,
+        // A commission inherits its task's priority and identity, but its own
+        // dispatch timestamp — the dispatch is what's moving, not the capture.
+        sort: {
+          priority:         vi ? effectivePriority(vi) : null,
+          createdAt:        c.latest.created_at,
+          seq:              vi?.seq ?? 0,
+          latestActivityAt: c.latest.completed_at ?? c.latest.started_at ?? c.latest.created_at,
+          daysInColumn:     vi?.days_in_column ?? null,
+        },
         // Not every terminal stage guarantees completed_at (e.g. a rejected
         // commission never completes) — fall back through started_at to
         // created_at so every done/terminal card still gets a housekeeping
@@ -316,6 +345,7 @@ export class ExecutionBoard {
 
     const autoClearDays = this.doneLaneAutoClearDays();
     const doneCutoffMs = autoClearDays !== null ? Date.now() - autoClearDays * 24 * 60 * 60 * 1000 : null;
+    const comparator = compareSortableBy(this._sortMode());
 
     return LANE_ORDER.map(lane => {
       const all = cards
@@ -328,7 +358,7 @@ export class ExecutionBoard {
           if (!card.doneAt) return true;
           return new Date(card.doneAt).getTime() >= doneCutoffMs;
         })
-        .sort((a, b) => a.priority - b.priority || b.createdAt.localeCompare(a.createdAt));
+        .sort((a, b) => comparator(a.sort, b.sort));
       return {
         lane,
         label:      LANE_LABELS[lane],
@@ -503,6 +533,12 @@ export class ExecutionBoard {
         this.facetItems({ skipPriority: true }),
         this.priorityFilter(),
       ),
+      // The Ready lane admits anything human-owned regardless of grooming state,
+      // so this is the only way to see the DoR-passing subset on its own.
+      readinessFilterGroup(
+        this.facetItems({ skipReadiness: true }),
+        this.readinessFilter(),
+      ),
     ];
     // Epic facet is a drill-down of the project selection — it only appears
     // once a project is chosen, and only if that project actually has epics.
@@ -547,6 +583,13 @@ export class ExecutionBoard {
 
   onLimitChange(limit: number | null): void { this.columnLimit.setLimit(limit); }
 
+  onSortChange(mode: string): void {
+    this._sortMode.set(mode as SortMode);
+    // A new order makes per-column expansions meaningless — the cap should be
+    // the top N of the order you just picked, not the top N of the last one.
+    this.columnLimit.collapseAll();
+  }
+
   onShowMore(lane: BoardLane): void { this.columnLimit.showMore(lane); }
 
   resetFilters(): void {
@@ -582,6 +625,7 @@ export class ExecutionBoard {
     const projF  = this.projectFilter();
     const priF   = this.priorityFilter();
     const epicF  = this.effectiveEpicFilter();
+    const readyF = this.readinessFilter();
 
     if (!skip.skipOwner && ownerF.size > 0) {
       const key = (item?.assigned_to ?? UNASSIGNED) as string;
@@ -598,6 +642,9 @@ export class ExecutionBoard {
     }
     if (!skip.skipEpic && epicF.size > 0) {
       if (!item || !epicF.has(epicKeyOf(item, this.selectableEpicIds()))) return false;
+    }
+    if (!skip.skipReadiness && readyF.size > 0) {
+      if (!item || !readyF.has(readinessKeyOf(item))) return false;
     }
     return true;
   }
