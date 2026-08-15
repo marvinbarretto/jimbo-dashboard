@@ -76,6 +76,42 @@ export class DispatchService {
     return this._entries().find(e => e.id === id);
   }
 
+  /**
+   * Re-read ONE dispatch. Driven by `dispatch.stage_changed` on the live
+   * stream, where refetching the whole 100-row queue per event would be the
+   * expensive answer to a question about a single card.
+   *
+   * Silent on failure and on a 404 — this is a freshness top-up, not a user
+   * action, and a stale card beats a toast the operator can't act on. A
+   * dispatch that has been hard-deleted is dropped from the store rather than
+   * left behind as a card with no row.
+   */
+  refreshOne(id: DispatchId): void {
+    if (isSeedMode()) return;
+    this.http.get<unknown>(`${environment.dashboardApiUrl}/api/dispatch/${id}`).subscribe({
+      next: (raw) => {
+        const result = ApiDispatchEntrySchema.safeParse(raw);
+        if (!result.success) {
+          console.error('[dispatch] refreshOne response failed schema:', result.error.issues);
+          return;
+        }
+        const fresh = toDispatchEntry(result.data);
+        this._entries.update(entries => {
+          // `removed` rows are filtered out of the bulk load too — keeping the
+          // rule in one shape means a removal arriving live behaves the same as
+          // one that was already removed at page load.
+          if (result.data.status === 'removed') {
+            return entries.filter(e => e.id !== fresh.id);
+          }
+          return entries.some(e => e.id === fresh.id)
+            ? entries.map(e => e.id === fresh.id ? fresh : e)
+            : [...entries, fresh];
+        });
+      },
+      error: () => { /* freshness top-up — keep what we have */ },
+    });
+  }
+
   // All dispatches for a given vault item, newest first. Used by vault-item-detail
   // to show the dispatch history alongside the activity log.
   forTask(taskId: VaultItemId) {

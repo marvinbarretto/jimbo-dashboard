@@ -40,6 +40,7 @@ import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { VaultTypesService } from '@features/vault-items/data-access/vault-types.service';
 import { AwaitingService } from '@features/awaiting/data-access/awaiting.service';
 import { AwaitingStrip } from '@features/awaiting/containers/awaiting-strip/awaiting-strip';
+import { withLiveBoardUpdates } from '@features/execution/live/board-live';
 
 // The board collapsed from "Ready + 8 commission-stage columns" into three
 // workflow lanes that BOTH manual (human-owned) and automated (agent-commission)
@@ -235,6 +236,11 @@ export class ExecutionBoard {
       ),
     );
   });
+
+  // Live board: refresh the one item each stream event names, never the board.
+  // Exposed so the header can say when the feed has dropped — a card that
+  // silently stops updating is worse than one that admits it is stale.
+  protected readonly live = withLiveBoardUpdates();
 
   constructor() {
     withVaultDetailModal();

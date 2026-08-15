@@ -70,3 +70,25 @@
     border-color: var(--color-border-strong, var(--color-border));
   }
 }
+
+// Live-stream indicator. Muted when connected (nothing to say), loud when the
+// feed is down, because a stale board that looks fresh is the failure mode.
+.board__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+}
+.board__live-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+.board__live--open .board__live-dot { background: var(--color-success); }
+.board__live--down {
+  color: var(--color-danger);
+  .board__live-dot { background: var(--color-danger); }
+}
