@@ -43,11 +43,27 @@ export function computeReadiness(
   ownerIsHuman = false,
 ): Readiness {
   const groomingReady = item.grooming_status === 'ready';
-  // `grooming_override` lets a human owner accept an item ahead of the full
-  // grooming pipeline ("groomed enough for me, not for Jimbo"). It only
-  // takes effect while the current owner is human — reassigning to an agent
-  // reinstates the real gate, since the override was never that agent's call.
-  const groomingOverridden = !groomingReady && item.grooming_override && ownerIsHuman;
+  // Grooming is the HANDOFF protocol: acceptance criteria exist so an agent
+  // knows when to stop, because it cannot ask. Groom it if you want someone
+  // else to do it; don't groom it if you're doing it. So an item a human owns,
+  // with criteria and a priority, is ready on its own terms — it needs no
+  // agent-facing handoff at all.
+  //
+  // This could never pass the grooming gate: the pump only ever offered
+  // agent-owned items to grooming, so `grooming_status` was structurally
+  // unreachable for human-owned work. 173 items sat one unreachable check short
+  // of ready.
+  //
+  // Scoped to a human owner, exactly as the retired `grooming_override` was:
+  // reassigning to an agent reinstates the real gate, because the agent still
+  // cannot ask. Nothing dispatches off this verdict — the pump reads
+  // grooming_status in SQL — so it reclassifies what the board SHOWS, not what
+  // the pipeline will run. See docs/decisions/decision-log.md, 2026-08-18.
+  const hasPriority = item.manual_priority !== null || item.ai_priority !== null;
+  const humanReady = !groomingReady
+    && ownerIsHuman
+    && item.acceptance_criteria.length > 0
+    && hasPriority;
   const checks: ReadinessCheck[] = [
     {
       key: 'acceptance_criteria',
@@ -64,16 +80,14 @@ export function computeReadiness(
     {
       key: 'priority',
       label: 'Priority scored',
-      ok: item.manual_priority !== null || item.ai_priority !== null,
-      blocker: (item.manual_priority !== null || item.ai_priority !== null)
-        ? null
-        : 'neither AI nor manual has been set',
+      ok: hasPriority,
+      blocker: hasPriority ? null : 'neither AI nor manual has been set',
     },
     {
       key: 'grooming_complete',
-      label: groomingOverridden ? 'Grooming complete (manual override)' : 'Grooming complete',
-      ok: groomingReady || groomingOverridden,
-      blocker: (groomingReady || groomingOverridden) ? null : `currently ${item.grooming_status.replace('_', ' ')}`,
+      label: humanReady ? 'Yours — no handoff needed' : 'Grooming complete',
+      ok: groomingReady || humanReady,
+      blocker: (groomingReady || humanReady) ? null : `currently ${item.grooming_status.replace('_', ' ')}`,
     },
   ];
 

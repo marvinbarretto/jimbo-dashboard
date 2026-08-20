@@ -180,12 +180,6 @@ export class VaultItemDialogStore {
   /** Grooming-override control is only offered while the item is genuinely
    *  ungroomed (nothing to override once the real gate passes) and owned by
    *  a human — an agent can't make the "good enough for me" call. */
-  readonly groomingOverridable = computed(() => {
-    const i = this.item();
-    if (!i || i.grooming_status === 'ready') return false;
-    return this.owner()?.kind === 'human';
-  });
-
   readonly nextAction = computed(() => {
     const i = this.item();
     const r = this.readiness();
@@ -453,11 +447,6 @@ export class VaultItemDialogStore {
     this.vaultItemsService.update(i.id, { manual_priority: p });
   }
 
-
-  setGroomingOverride(next: boolean): void {
-    const i = this.item(); if (!i) return;
-    this.vaultItemsService.update(i.id, { grooming_override: next });
-  }
 
   /** Effort in 25-minute pomodoro blocks. null clears the estimate — the
    *  planner falls back to 1 block rather than treating null as zero effort. */

@@ -1,0 +1,39 @@
+import type { OpenQuestionView } from '../thread';
+import type { Handback } from './awaiting';
+
+/**
+ * One queue, not two. A question and a handback are both "an agent is stalled
+ * behind you"; splitting them into separate lists would make the operator scan
+ * twice and would bury whichever list happened to be second.
+ */
+export type AwaitingRow =
+  | { readonly kind: 'question'; readonly key: string; readonly at: string; readonly question: OpenQuestionView }
+  | { readonly kind: 'handback'; readonly key: string; readonly at: string; readonly handback: Handback };
+
+/**
+ * Interleave handbacks and open questions, newest first.
+ *
+ * A note can appear as both — a handback raised BECAUSE a question is pending
+ * is one event with two records. The question wins, because it carries the
+ * answer affordance and the handback row would only offer "give it back",
+ * which is the wrong move while the agent is waiting on an answer.
+ */
+export function mergeAwaitingRows(
+  handbacks: readonly Handback[],
+  questions: readonly OpenQuestionView[],
+): AwaitingRow[] {
+  const questioned = new Set(questions.map(q => q.vault_item_id as string));
+
+  const rows: AwaitingRow[] = [
+    ...questions.map(q => ({
+      kind: 'question' as const, key: `q:${q.id}`, at: q.created_at, question: q,
+    })),
+    ...handbacks
+      .filter(h => !questioned.has(h.note_id as string))
+      .map(h => ({
+        kind: 'handback' as const, key: `h:${h.activity_id}`, at: h.ts, handback: h,
+      })),
+  ];
+
+  return rows.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+}

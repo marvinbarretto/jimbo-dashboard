@@ -42,7 +42,12 @@ export interface SortOption {
     '[attr.data-group]': 'group().id',
   },
   template: `
-    <span class="group__label">{{ group().label }}</span>
+    <span class="group__label" [class.group__label--active]="activeCount() > 0">
+      {{ group().label }}
+      @if (activeCount() > 0) {
+        <span class="group__badge" [attr.aria-label]="activeCount() + ' selected'">{{ activeCount() }}</span>
+      }
+    </span>
     @for (opt of group().options; track opt.value) {
       @if (opt.entityType) {
         <button type="button" class="group__entity-btn"
@@ -82,11 +87,36 @@ export interface SortOption {
     }
 
     .group__label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
       font-size: 0.65rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--color-text-muted);
       margin-right: 0.2rem;
+    }
+
+    // A facet with a selection reads as ON at a glance — without this the only
+    // signal is a chip fill somewhere in a wrapped row you may have scrolled past.
+    .group__label--active {
+      color: var(--color-accent);
+      font-weight: 600;
+    }
+
+    .group__badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.05rem;
+      height: 1.05rem;
+      padding: 0 0.25rem;
+      border-radius: 999px;
+      background: var(--color-accent);
+      color: var(--color-bg);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0;
     }
 
     .group__entity-btn {
@@ -105,6 +135,8 @@ export interface SortOption {
 export class KanbanFilterGroup {
   readonly group   = input.required<FilterGroup>();
   readonly toggled = output<string | number>();
+
+  readonly activeCount = computed(() => this.group().active.size);
 }
 
 // Generic kanban filter bar. The board passes in a list of named groups; this
@@ -151,8 +183,21 @@ export class KanbanFilterBar {
   readonly inlineGroups = computed(() => this.groups().filter(g => !g.wide));
   readonly wideGroups   = computed(() => this.groups().filter(g => g.wide));
 
-  readonly hasActive = computed(() =>
-    this.groups().some(g => g.active.size > 0) || this.searchTerm().length > 0,
+  // Total selections across every facet, plus the search box if it has text.
+  // Drives the reset button's label so "Clear 3 filters" states what it will
+  // undo rather than making you count chips.
+  readonly activeCount = computed(() => {
+    const facets = this.groups().reduce((n, g) => n + g.active.size, 0);
+    return facets + (this.searchTerm().length > 0 ? 1 : 0);
+  });
+
+  readonly hasActive = computed(() => this.activeCount() > 0);
+
+  // Sort and density are view preferences, not filters — they're never part of
+  // activeCount and reset never touches them. Surfacing the current value in the
+  // section label means the setting is legible without hunting for the filled chip.
+  readonly activeSortLabel = computed(
+    () => this.sortOptions().find(o => o.value === this.activeSort())?.label ?? '',
   );
 
   onToggle(groupId: string, value: string | number): void {

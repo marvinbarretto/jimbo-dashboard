@@ -56,7 +56,6 @@ function makeItem(overrides: Partial<VaultItem> = {}): VaultItem {
     actionability: null,
     parent_id: null,
     is_epic: false,
-    grooming_override: false,
     archived_at: null,
     due_at: null,
     completed_at: null,

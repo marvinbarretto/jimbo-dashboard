@@ -13,7 +13,27 @@
       (create)="onCreateManualItem()"
     />
     <app-ui-button-link [routerLink]="['/execution', 'settings']" variant="ghost" size="sm">⚙ Settings</app-ui-button-link>
+
+    <!-- Cards move themselves off the live stream. When that feed drops they
+         quietly stop, so the board says so rather than looking merely idle. -->
+    <span
+      class="board__live"
+      [class.board__live--open]="live.status() === 'open'"
+      [class.board__live--down]="live.status() === 'closed'"
+      [title]="live.lastError() ?? 'Live updates'"
+    >
+      <span class="board__live-dot" aria-hidden="true"></span>
+      @switch (live.status()) {
+        @case ('open')       { live }
+        @case ('connecting') { connecting… }
+        @case ('closed')     { stream down — cards are stale }
+        @default             { not live }
+      }
+    </span>
   </header>
+
+  <!-- Pinned above the lanes: the one thing the operator is watching for. -->
+  <app-awaiting-strip />
 
   <button
     type="button"
@@ -33,11 +53,14 @@
     [class.board__filters--collapsed]="!showMobileFilters()"
     [groups]="filterGroups()"
     [searchTerm]="searchTerm()"
+    [sortOptions]="sortOptions"
+    [activeSort]="sortMode()"
     [limitOptions]="limitOptions"
     [activeLimit]="activeLimit()"
     searchPlaceholder="Search task / executor…"
     (toggle)="onFilterToggle($event)"
     (searchChange)="onSearchChange($event)"
+    (sortChange)="onSortChange($event)"
     (limitChange)="onLimitChange($event)"
     (reset)="resetFilters()"
   />
@@ -98,6 +121,11 @@
               >
                 @if (card.blocked) {
                   <span class="board__chip board__chip--blocked">{{ card.blockerLabel }}</span>
+                }
+                <!-- A card an agent is stalled behind must not read like one
+                     Marvin captured himself — that conflation is the defect. -->
+                @if (card.awaiting) {
+                  <span class="board__chip board__chip--awaiting">blocking an agent</span>
                 }
                 <app-vault-card
                   [context]="cardContextForManual(card.item)"

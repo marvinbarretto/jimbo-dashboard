@@ -12,10 +12,11 @@ import type { FilterGroup, FilterOption } from '@shared/components/kanban-filter
 
 // Filter dimension ids — one source of truth for createKanbanFilterState, the
 // chip groups, the toggle handler, and URL sync across boards.
-export const PROJECT  = 'project';
-export const OWNER    = 'owner';
-export const PRIORITY = 'priority';
-export const EPIC     = 'epic';
+export const PROJECT   = 'project';
+export const OWNER     = 'owner';
+export const PRIORITY  = 'priority';
+export const EPIC      = 'epic';
+export const READINESS = 'readiness';
 
 // "Unassigned" owner token alongside actor ids — a sentinel keeps Set<string>
 // membership simple. "No priority set" is distinct from 0 for the same reason,
@@ -23,6 +24,13 @@ export const EPIC     = 'epic';
 export const UNASSIGNED = '__unassigned__';
 export const NO_PRIORITY = -1;
 export const NO_EPIC = '__no_epic__';
+
+// Definition-of-Ready facet values. The execution board admits anything owned by
+// a human REGARDLESS of grooming state (a person controls it directly), so its
+// Ready lane mixes DoR-passing agent work with everything the operator happens
+// to own. This facet is how you separate the two without changing that rule.
+export const DOR_READY     = 'dor_ready';      // grooming_status === 'ready'
+export const DOR_NOT_READY = 'dor_not_ready';  // present, but hasn't passed the gate
 
 // Minimal project shape the project facet needs — Project structurally satisfies it.
 export interface ProjectMeta {
@@ -96,6 +104,27 @@ export function priorityFilterGroup(
     { value: NO_PRIORITY, label: 'no priority', count: counts.get(NO_PRIORITY) ?? 0 },
   ];
   return { id: PRIORITY, label: 'Priority', options, active };
+}
+
+/** Which Definition-of-Ready bucket an item falls in. */
+export function readinessKeyOf(item: VaultItem): string {
+  return item.grooming_status === 'ready' ? DOR_READY : DOR_NOT_READY;
+}
+
+export function readinessFilterGroup(
+  items: readonly VaultItem[],
+  active: Set<string>,
+): FilterGroup<string> {
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    const key = readinessKeyOf(item);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const options: FilterOption<string>[] = [
+    { value: DOR_READY,     label: 'meets DoR',  count: counts.get(DOR_READY) ?? 0 },
+    { value: DOR_NOT_READY, label: 'not groomed', count: counts.get(DOR_NOT_READY) ?? 0 },
+  ];
+  return { id: READINESS, label: 'Ready', options, active };
 }
 
 // Which epic option an item belongs to. parent_id can point at a non-epic

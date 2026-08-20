@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { buildVaultItem } from '@domain/vault/vault-item.test-helpers';
 import type { VaultItem } from '@domain/vault';
-import { epicFilterGroup, epicsForProjects, effectiveEpicSelection, epicKeyOf, EPIC, NO_EPIC } from './filter-groups';
+import {
+  epicFilterGroup, epicsForProjects, effectiveEpicSelection, epicKeyOf, EPIC, NO_EPIC,
+  readinessFilterGroup, readinessKeyOf, READINESS, DOR_READY, DOR_NOT_READY,
+} from './filter-groups';
 
 // Epic facet helpers — the subordinate facet that only exists under a project
 // selection. Board wiring (visibility, URL sync) lives in the boards; the
@@ -101,5 +104,43 @@ describe('effectiveEpicSelection', () => {
 
   it('is empty when nothing is selected', () => {
     expect(effectiveEpicSelection(new Set(), [epicA])).toEqual(new Set());
+  });
+});
+
+describe('readiness facet (Definition of Ready)', () => {
+  describe('readinessKeyOf', () => {
+    it('buckets a groomed-ready item as meeting DoR', () => {
+      expect(readinessKeyOf(buildVaultItem({ grooming_status: 'ready' }))).toBe(DOR_READY);
+    });
+
+    // Everything short of 'ready' is one bucket on purpose — the operator asks
+    // "has this passed the gate or not", not "which grooming stage is it in".
+    it.each(['ungroomed', 'classified', 'decomposed', 'needs_rework'] as const)(
+      'buckets %s as not groomed',
+      status => {
+        expect(readinessKeyOf(buildVaultItem({ grooming_status: status }))).toBe(DOR_NOT_READY);
+      },
+    );
+  });
+
+  describe('readinessFilterGroup', () => {
+    it('counts each bucket and preserves the active set', () => {
+      const items = [
+        buildVaultItem({ grooming_status: 'ready' }),
+        buildVaultItem({ grooming_status: 'ready' }),
+        buildVaultItem({ grooming_status: 'ungroomed' }),
+      ];
+      const group = readinessFilterGroup(items, new Set([DOR_READY]));
+
+      expect(group.id).toBe(READINESS);
+      expect(group.options.find(o => o.value === DOR_READY)?.count).toBe(2);
+      expect(group.options.find(o => o.value === DOR_NOT_READY)?.count).toBe(1);
+      expect(group.active).toEqual(new Set([DOR_READY]));
+    });
+
+    it('offers both buckets at zero when there are no items', () => {
+      const group = readinessFilterGroup([], new Set());
+      expect(group.options.map(o => o.count)).toEqual([0, 0]);
+    });
   });
 });

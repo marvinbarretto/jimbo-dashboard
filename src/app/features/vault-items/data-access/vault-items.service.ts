@@ -268,7 +268,6 @@ export class VaultItemsService {
       ai_priority: null, manual_priority: input.manual_priority ?? null,
       ai_rationale: null, priority_confidence: null,
       actionability: null, parent_id: input.parent_id ? vaultItemId(input.parent_id) : null, is_epic: input.is_epic ?? false,
-      grooming_override: false,
       archived_at: null, due_at: null, completed_at: null,
       source: { kind: 'manual', ref: 'board', url: null },
       created_at: now,
@@ -804,7 +803,6 @@ export class VaultItemsService {
       is_epic: draft.is_epic,
       // The quick-create draft has no grounding step — an epic made this way is
       // ungrounded until someone fills the trace on the detail view.
-      grooming_override: false,
       archived_at: null,
       due_at: null,
       completed_at: null,
@@ -1106,7 +1104,6 @@ function toApiUpdateBody(p: UpdateVaultItemPayload): Record<string, unknown> {
   if (p.completed_at !== undefined) body['completed_at'] = p.completed_at;
   if (p.started_at !== undefined) body['started_at'] = p.started_at;
   if (p.grooming_status !== undefined) body['grooming_status'] = p.grooming_status;
-  if (p.grooming_override !== undefined) body['grooming_override'] = p.grooming_override;
   if (p.estimated_blocks !== undefined) body['estimated_blocks'] = p.estimated_blocks;
   if (p.is_epic !== undefined) body['is_epic'] = p.is_epic;
   if (p.source !== undefined) {
@@ -1148,7 +1145,6 @@ function toVaultItem(a: ApiVaultItem): VaultItem {
           .map(text => ({ text, done: false }))
       : [],
     grooming_status: narrowGroomingStatus(a.grooming_status),
-    grooming_override: a.grooming_override,
     ai_priority: narrowPriority(a.ai_priority),
     manual_priority: narrowPriority(a.manual_priority),
     ai_rationale: a.ai_rationale,

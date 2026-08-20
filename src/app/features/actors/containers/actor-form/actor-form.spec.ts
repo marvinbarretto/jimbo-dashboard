@@ -1,9 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter, ActivatedRoute } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { ActorForm } from './actor-form';
 
+
+// The forms pull in root services that fetch on construction. Without a test
+// backend those requests hang against a real HttpClient, so `whenStable()` waits
+// on something that only ever settles by failing — which is why this file used
+// to flake under load. provideHttpClientTesting() intercepts them, so nothing is
+// ever in flight and the wait resolves immediately.
 describe('ActorForm', () => {
   let component: ActorForm;
   let fixture: ComponentFixture<ActorForm>;
@@ -15,6 +23,8 @@ describe('ActorForm', () => {
       providers: [
         provideZonelessChangeDetection(),
         provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         {
           provide: ActivatedRoute,
           useValue: { paramMap: of(new Map(params as [string, string][])) },

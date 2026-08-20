@@ -15,12 +15,14 @@ import { Injectable, inject } from '@angular/core';
 
 import { ThreadService } from '@features/thread/data-access/thread.service';
 import { QuestionsService } from '@features/questions/data-access/questions.service';
+import { AwaitingService } from '@features/awaiting/data-access/awaiting.service';
 import type { CreateThreadMessagePayload } from '@domain/thread';
 
 @Injectable({ providedIn: 'root' })
 export class ThreadCommands {
   private readonly thread = inject(ThreadService);
   private readonly questions = inject(QuestionsService);
+  private readonly awaiting = inject(AwaitingService);
 
   /**
    * Post a thread message — comment, question, answer, or correction.
@@ -37,8 +39,9 @@ export class ThreadCommands {
 
   /**
    * Compound: post an answer to a question AND mark the question resolved
-   * in the global questions index. Used by the questions page where both
-   * stores need to update for the answer to propagate everywhere.
+   * in every index that tracks open questions — the questions page and the
+   * execution board's awaiting strip. Both must clear the row optimistically
+   * or answering appears to do nothing until the next fetch.
    *
    * Throws synchronously if the payload isn't a properly-formed answer
    * (kind must be 'answer', in_reply_to must reference the question id) —
@@ -54,5 +57,6 @@ export class ThreadCommands {
     }
     this.thread.post(payload);
     this.questions.markAnswered(payload.in_reply_to, payload.id);
+    this.awaiting.markAnswered(payload.in_reply_to, payload.id);
   }
 }

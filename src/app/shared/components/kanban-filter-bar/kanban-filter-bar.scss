@@ -13,11 +13,29 @@
   flex-shrink: 0;
 }
 
-.filters__controls {
+.filters__row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem 1.5rem;
+  gap: 0.5rem 0.75rem;
+}
+
+// The view row is presentation-only (sort + density), so it reads as a distinct
+// band rather than another set of filters. The rule above it is the separation.
+.filters__row--view {
+  padding-top: 0.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+// Vertical hairline between sections on a row. Collapses on narrow viewports,
+// where wrapping already does the separating and a stray rule looks like debris.
+.filters__divider {
+  width: 1px;
+  align-self: stretch;
+  min-height: 1.1rem;
+  background: color-mix(in srgb, var(--color-border) 70%, transparent);
+
+  @media (max-width: 720px) { display: none; }
 }
 
 .filters__search-input {
@@ -37,13 +55,30 @@
     border-color: var(--color-accent);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 20%, transparent);
   }
+
+  // A search term is a filter like any other — it should look engaged even when
+  // the box doesn't have focus.
+  &--active {
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+  }
 }
 
-.filters__sort,
-.filters__limit {
+.filters__section {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+.filters__current {
+  margin-left: 0.3rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  color: var(--color-accent);
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .filters__limit-hint {
@@ -53,6 +88,8 @@
 }
 
 .filters__label {
+  display: inline-flex;
+  align-items: center;
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -63,14 +100,16 @@
 .filters__reset {
   font: inherit;
   font-size: 0.7rem;
-  border: none;
-  background: none;
-  color: var(--color-text-muted);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  color: var(--color-accent);
+  border-radius: var(--radius);
   cursor: pointer;
   margin-left: auto;
-  padding: 0.2rem 0.4rem;
+  padding: 0.2rem 0.5rem;
 
-  &:hover { color: var(--color-text); text-decoration: underline; }
+  &:hover { background: color-mix(in srgb, var(--color-accent) 20%, transparent); }
+  &:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 }
 
 // Tone overrides for chips — priority (grooming) and dispatch-status (execution).
