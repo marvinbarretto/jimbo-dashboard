@@ -86,25 +86,53 @@ describe('computeReadiness', () => {
       expect(computeReadiness(other).checks.find(c => c.key === 'grooming_complete')?.ok).toBe(false);
     });
 
-    it('grooming_override passes the check only when the owner is human', () => {
-      const item = buildVaultItem({ grooming_status: 'ungroomed', grooming_override: true });
+    // The 173 items that sat one structurally-unreachable check short of ready:
+    // the pump only ever offered agent-owned work to grooming, so a human-owned
+    // item could never reach grooming_status='ready' however complete it was.
+    it('a human-owned item with criteria and a priority is ready on its own terms', () => {
+      const item = buildVaultItem({
+        grooming_status: 'ungroomed',
+        acceptance_criteria: [{ text: 'ship it', done: false }],
+        manual_priority: 1,
+      });
       expect(computeReadiness(item, [], [], true).checks.find(c => c.key === 'grooming_complete')?.ok).toBe(true);
+    });
+
+    // Scoped to the owner, exactly as the retired grooming_override was: the
+    // agent still cannot ask, so it still needs the real handoff.
+    it('the same item is not ready once an agent owns it', () => {
+      const item = buildVaultItem({
+        grooming_status: 'ungroomed',
+        acceptance_criteria: [{ text: 'ship it', done: false }],
+        manual_priority: 1,
+      });
       expect(computeReadiness(item, [], [], false).checks.find(c => c.key === 'grooming_complete')?.ok).toBe(false);
     });
 
-    it('grooming_override is ignored without ownerIsHuman (defaults false)', () => {
-      const item = buildVaultItem({ grooming_status: 'ungroomed', grooming_override: true });
-      expect(computeReadiness(item).checks.find(c => c.key === 'grooming_complete')?.ok).toBe(false);
+    it('human ownership alone is not enough — criteria and a priority are still required', () => {
+      const noCriteria = buildVaultItem({ grooming_status: 'ungroomed', manual_priority: 1 });
+      const noPriority = buildVaultItem({
+        grooming_status: 'ungroomed',
+        acceptance_criteria: [{ text: 'ship it', done: false }],
+        manual_priority: null,
+        ai_priority: null,
+      });
+      expect(computeReadiness(noCriteria, [], [], true).checks.find(c => c.key === 'grooming_complete')?.ok).toBe(false);
+      expect(computeReadiness(noPriority, [], [], true).checks.find(c => c.key === 'grooming_complete')?.ok).toBe(false);
     });
 
-    it('grooming_override label flags the check as a manual override', () => {
-      const item = buildVaultItem({ grooming_status: 'ungroomed', grooming_override: true });
+    it('labels the human-owned path as needing no handoff, not as a groomed item', () => {
+      const item = buildVaultItem({
+        grooming_status: 'ungroomed',
+        acceptance_criteria: [{ text: 'ship it', done: false }],
+        manual_priority: 1,
+      });
       const check = computeReadiness(item, [], [], true).checks.find(c => c.key === 'grooming_complete');
-      expect(check?.label).toContain('override');
+      expect(check?.label).toBe('Yours — no handoff needed');
     });
 
-    it('grooming_override does nothing once the item is genuinely ready', () => {
-      const item = buildVaultItem({ grooming_status: 'ready', grooming_override: true });
+    it('a genuinely groomed item keeps the grooming label whoever owns it', () => {
+      const item = buildVaultItem({ grooming_status: 'ready' });
       const check = computeReadiness(item, [], [], true).checks.find(c => c.key === 'grooming_complete');
       expect(check?.label).toBe('Grooming complete');
     });

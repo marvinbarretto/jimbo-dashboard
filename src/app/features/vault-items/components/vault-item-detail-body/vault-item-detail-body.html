@@ -343,14 +343,11 @@
           </div>
 
           <!-- readiness omitted here — it's the one-line verdict under the work;
-               this panel is just "define done" (the AC checklist + override). -->
+               this panel is just "define done" (the AC checklist). -->
           <app-vault-item-delivery-block
             [criteria]="item.acceptance_criteria"
             [editable]="true"
-            [groomingOverridable]="store.groomingOverridable()"
-            [groomingOverride]="item.grooming_override"
             (criteriaChange)="store.updateCriteria($event)"
-            (groomingOverrideChange)="store.setGroomingOverride($event)"
           />
         }
 

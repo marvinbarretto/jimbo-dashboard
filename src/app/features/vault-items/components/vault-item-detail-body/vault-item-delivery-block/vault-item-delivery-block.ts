@@ -25,15 +25,6 @@ import { acceptanceCriterionStatus } from '@shared/validation/acceptance-criteri
         <app-ui-readiness-panel [data]="r" />
       }
 
-      @if (groomingOverridable()) {
-        <button
-          type="button"
-          class="vault-item-delivery-block__grooming-override"
-          (click)="groomingOverrideChange.emit(!groomingOverride())">
-          {{ groomingOverride() ? 'Undo manual override' : "Not groomed — mark good enough for me" }}
-        </button>
-      }
-
       <app-ui-subhead label="Acceptance criteria" [count]="criteria().length" />
 
       @if (editable() || criteria().length > 0) {
@@ -90,13 +81,6 @@ export class VaultItemDeliveryBlock {
   readonly criteria       = input.required<readonly AcceptanceCriterion[]>();
   readonly editable       = input<boolean>(false);
   readonly criteriaChange = output<readonly AcceptanceCriterion[]>();
-
-  // Human-owner readiness override — see readiness.ts. groomingOverridable
-  // gates visibility (only shown while genuinely ungroomed and human-owned);
-  // groomingOverride reflects the item's current flag.
-  readonly groomingOverridable   = input<boolean>(false);
-  readonly groomingOverride      = input<boolean>(false);
-  readonly groomingOverrideChange = output<boolean>();
 
   readonly checklistItems = computed<readonly UiChecklistItem[]>(() =>
     this.criteria().map(ac => {

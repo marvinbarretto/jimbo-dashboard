@@ -1,19 +1,17 @@
-import { vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter, ActivatedRoute } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { ActorForm } from './actor-form';
 
-// These forms inject root services that fetch on construction against a real
-// HttpClient (no HttpTestingController), so `fixture.whenStable()` waits on a
-// request that only ever settles by failing. Under load that overran the 5s
-// default and made the file flake — the timeout was the symptom, the unstubbed
-// fetch is the cause. Raised here rather than fixed properly because the fix is
-// a testing-harness change these specs share with several others.
-vi.setConfig({ testTimeout: 20_000 });
 
-
+// The forms pull in root services that fetch on construction. Without a test
+// backend those requests hang against a real HttpClient, so `whenStable()` waits
+// on something that only ever settles by failing — which is why this file used
+// to flake under load. provideHttpClientTesting() intercepts them, so nothing is
+// ever in flight and the wait resolves immediately.
 describe('ActorForm', () => {
   let component: ActorForm;
   let fixture: ComponentFixture<ActorForm>;
@@ -25,6 +23,8 @@ describe('ActorForm', () => {
       providers: [
         provideZonelessChangeDetection(),
         provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         {
           provide: ActivatedRoute,
           useValue: { paramMap: of(new Map(params as [string, string][])) },
