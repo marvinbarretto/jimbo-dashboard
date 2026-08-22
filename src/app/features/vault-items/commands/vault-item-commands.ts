@@ -43,7 +43,14 @@ export class VaultItemCommands {
    */
   archive(id: VaultItemId, reason: string | null = null): void {
     const item = this.vaultItems.getById(id);
-    if (!item || item.archived_at) return;
+    // Already archived is a legitimate no-op. Not being in the store at all is
+    // not — it means a caller holds an item this service cannot act on, and
+    // returning silently makes the archive vanish with no signal anywhere.
+    if (!item) {
+      console.warn('[vault-items] archive() ignored — item not in store', { id });
+      return;
+    }
+    if (item.archived_at) return;
     this.vaultItems.archive(id, reason);
   }
 

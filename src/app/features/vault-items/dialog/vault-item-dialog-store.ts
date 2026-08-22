@@ -525,8 +525,13 @@ export class VaultItemDialogStore {
       in_reply_to: null,
       answered_by: null,
     });
+    // No unconditional success toast. archive() is a no-op when the item is not
+    // in the store, and vaultItems.archive() toasts "Archived #seq" itself on a
+    // confirmed response — so announcing success here as well could only ever
+    // report *intent*, and did: on 2026-08-22 a resolve posted its thread
+    // message, silently archived nothing, and still said "Resolved and
+    // archived". The item then kept holding a notification slot for hours.
     this.commands.archive(i.id, text);
-    this.toast.success('Resolved and archived');
   }
 
   // ── Handing back after a reply ────────────────────────────────────────────

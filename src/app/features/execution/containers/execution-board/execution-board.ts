@@ -40,6 +40,7 @@ import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { VaultTypesService } from '@features/vault-items/data-access/vault-types.service';
 import { AwaitingService } from '@features/awaiting/data-access/awaiting.service';
 import { AwaitingStrip } from '@features/awaiting/containers/awaiting-strip/awaiting-strip';
+import { GatesStrip } from '@features/execution/components/gates-strip/gates-strip';
 import { withLiveBoardUpdates } from '@features/execution/live/board-live';
 
 // The board collapsed from "Ready + 8 commission-stage columns" into three
@@ -124,7 +125,7 @@ interface FacetSkip { skipOwner?: boolean; skipProject?: boolean; skipPriority?:
 
 @Component({
   selector: 'app-execution-board',
-  imports: [VaultCard, CommissionCard, KanbanColumn, KanbanFilterBar, BoardCreateBar, UiButtonLink, AwaitingStrip],
+  imports: [VaultCard, CommissionCard, KanbanColumn, KanbanFilterBar, BoardCreateBar, UiButtonLink, AwaitingStrip, GatesStrip],
   templateUrl: './execution-board.html',
   styleUrl: './execution-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
