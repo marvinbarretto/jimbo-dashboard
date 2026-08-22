@@ -52,15 +52,22 @@ const DAY_MS = 86_400_000;
             </header>
 
             <p class="gate__count">
-              <strong>{{ g.current }}</strong><span class="gate__of"> / {{ g.threshold }}</span>
+              <strong>{{ g.current }}</strong>
+              @if (g.threshold > 0) {
+                <span class="gate__of"> / {{ g.threshold }}</span>
+              }
             </p>
 
             <!-- A bar that can exceed 100% on purpose: grooming sits at 26x its
                  threshold, and clamping it to "full" would read as merely full. -->
-            <div class="gate__bar" [attr.aria-label]="g.current + ' of ' + g.threshold">
-              <div class="gate__fill" [class.gate__fill--over]="g.current > g.threshold"
-                   [style.width.%]="fillPct(g)"></div>
-            </div>
+            <!-- Gates with threshold 0 are disclosures, not budgets (the deferred
+                 pile). A bar would imply some number of parked items is the target. -->
+            @if (g.threshold > 0) {
+              <div class="gate__bar" [attr.aria-label]="g.current + ' of ' + g.threshold">
+                <div class="gate__fill" [class.gate__fill--over]="g.current > g.threshold"
+                     [style.width.%]="fillPct(g)"></div>
+              </div>
+            }
 
             <p class="gate__detail">{{ g.detail }}</p>
 
@@ -134,7 +141,7 @@ export class GatesStrip {
 
   /** Caps the *bar* at 100% while the number above it still tells the truth. */
   protected fillPct(g: Gate): number {
-    if (g.threshold <= 0) return 100;
+    if (g.threshold <= 0) return 0;
     return Math.min(100, (g.current / g.threshold) * 100);
   }
 
