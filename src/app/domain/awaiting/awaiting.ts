@@ -55,3 +55,25 @@ export interface AwaitingMe {
   note_ids:  VaultItemId[];
   counts:    AwaitingCounts;
 }
+
+/**
+ * Finished agent work that needs accepting. The third kind of "waiting on you",
+ * alongside handbacks and open questions.
+ *
+ * It is not cosmetic that this sits with the other two: the commission pump
+ * counts unaccepted work against its concurrency cap, so an unreviewed pile
+ * does not merely sit there — it stops new work being commissioned at all.
+ * Three PRs went unnoticed for 63-120 days while this queue had its own page
+ * that nothing pointed at.
+ */
+export interface ReviewWaiting {
+  /** note id — the stable key, and what approve/send-back address. */
+  id:          string;
+  seq:         string | null;
+  title:       string | null;
+  skill:       string | null;
+  summary:     string | null;
+  prUrl:       string | null;
+  prState:     string | null;
+  completedAt: string | null;
+}

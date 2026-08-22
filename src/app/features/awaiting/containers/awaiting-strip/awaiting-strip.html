@@ -12,15 +12,23 @@
         <span class="awaiting__title">waiting on you</span>
       </button>
 
+      <!-- Broken down by the ACTION each needs, not by internal record type —
+           "3 to accept" is actionable, "3 completed dispatches" is not. -->
       <p class="awaiting__breakdown">
-        {{ counts().questions }} open question{{ counts().questions === 1 ? '' : 's' }}
-        · {{ counts().handbacks }} handback{{ counts().handbacks === 1 ? '' : 's' }}
-        <!-- The window hides rows; it must never hide the fact that it hid them. -->
+        @if (reviewCount() > 0) {
+          <app-ui-badge tone="success" [subtle]="true">{{ reviewCount() }} to accept</app-ui-badge>
+        }
+        @if (counts().questions > 0) {
+          <app-ui-badge tone="danger" [subtle]="true">{{ counts().questions }} to answer</app-ui-badge>
+        }
+        @if (counts().handbacks > 0) {
+          <app-ui-badge tone="warning" [subtle]="true">{{ counts().handbacks }} to decide</app-ui-badge>
+        }
         @if (truncated()) {
-          <span class="awaiting__older">· showing newest {{ shownCount() }}</span>
+          <span class="awaiting__older">showing newest {{ shownCount() }}</span>
         }
         @if (olderCount() > 0) {
-          <span class="awaiting__older">· {{ olderCount() }} older than the window</span>
+          <span class="awaiting__older">{{ olderCount() }} older than the window</span>
         }
       </p>
 
@@ -47,51 +55,115 @@
       <ul class="awaiting__rows">
         @for (row of rows(); track row.key) {
           <li class="awaiting__row">
-            @if (row.kind === 'question') {
-              <app-question-card
-                [question]="row.question"
-                (answered)="onAnswered($event)" />
-            } @else {
-              <article class="handback">
-                <div class="handback__main">
-                  <a class="handback__link" [routerLink]="['/vault-items', row.handback.seq]">
-                    #{{ row.handback.seq }} · {{ row.handback.title }}
-                  </a>
-                  @if (row.handback.reason) {
-                    <p class="handback__reason">{{ row.handback.reason }}</p>
-                  }
-                  <p class="handback__meta">
-                    handed back by
-                    <app-entity-chip
-                      type="actor"
-                      [id]="row.handback.from_actor"
-                      [label]="agentLabel(row.handback.from_actor)" />
-                    <span class="handback__sep">·</span>
-                    <span>{{ ageLabel(row.handback.ts) }}</span>
-                    <span class="handback__sep">·</span>
-                    <span class="handback__pri">{{ priorityLabel(row.handback.priority) }}</span>
-                    <span class="handback__sep">·</span>
-                    <span class="handback__type">{{ row.handback.type }}</span>
-                  </p>
-                </div>
+            @switch (row.kind) {
 
-                <div class="handback__actions">
-                  @if (returning() === row.handback.note_id) {
-                    <span class="handback__confirm">
-                      Give #{{ row.handback.seq }} back to {{ agentLabel(row.handback.from_actor) }}?
-                    </span>
-                    <button type="button" class="handback__btn handback__btn--go"
-                      (click)="returnToAgent(row.handback)">yes, send it back</button>
-                    <button type="button" class="handback__btn"
-                      (click)="toggleReturn(row.handback.note_id)">cancel</button>
-                  } @else {
-                    <button type="button" class="handback__btn handback__btn--primary"
-                      (click)="toggleReturn(row.handback.note_id)">
-                      back to &#64;{{ agentLabel(row.handback.from_actor) }}
-                    </button>
-                  }
-                </div>
-              </article>
+              @case ('review') {
+                <article class="wait wait--accept">
+                  <div class="wait__lead">
+                    <app-ui-badge tone="success">accept</app-ui-badge>
+                  </div>
+                  <div class="wait__main">
+                    <a class="wait__link" [routerLink]="['/vault-items', row.review.seq]">
+                      #{{ row.review.seq }} · {{ row.review.title }}
+                    </a>
+                    @if (row.review.summary) {
+                      <app-card-callout variant="result" label="what the agent produced">
+                        {{ row.review.summary }}
+                      </app-card-callout>
+                    }
+                    <p class="wait__meta">
+                      <span class="wait__mono">{{ row.review.skill ?? 'no skill' }}</span>
+                      @if (row.review.completedAt) {
+                        <span class="wait__sep">·</span>
+                        <span>finished {{ ageLabel(row.review.completedAt) }}</span>
+                      }
+                      @if (row.review.prUrl) {
+                        <span class="wait__sep">·</span>
+                        <a class="wait__pr" [href]="row.review.prUrl" target="_blank" rel="noopener">
+                          PR{{ row.review.prState ? ' · ' + row.review.prState : '' }} ↗
+                        </a>
+                      }
+                    </p>
+                  </div>
+                  <div class="wait__actions">
+                    @if (rejecting() === row.review.id) {
+                      <input
+                        class="wait__reason"
+                        type="text"
+                        placeholder="What needs redoing?"
+                        #reason
+                        (keydown.enter)="sendBackReview(row.review, reason.value)" />
+                      <button type="button" class="wait__btn wait__btn--warn"
+                        (click)="sendBackReview(row.review, reason.value)">send back</button>
+                      <button type="button" class="wait__btn" (click)="toggleReject(row.review.id)">cancel</button>
+                    } @else {
+                      <button type="button" class="wait__btn wait__btn--go"
+                        (click)="approveReview(row.review)">accept ✓</button>
+                      <button type="button" class="wait__btn"
+                        (click)="toggleReject(row.review.id)">send back</button>
+                    }
+                  </div>
+                </article>
+              }
+
+              @case ('question') {
+                <article class="wait wait--answer">
+                  <div class="wait__lead">
+                    <app-ui-badge tone="danger">answer</app-ui-badge>
+                  </div>
+                  <div class="wait__main wait__main--card">
+                    <app-question-card
+                      [question]="row.question"
+                      (answered)="onAnswered($event)" />
+                  </div>
+                </article>
+              }
+
+              @default {
+                <article class="wait wait--decide">
+                  <div class="wait__lead">
+                    <app-ui-badge tone="warning">decide</app-ui-badge>
+                  </div>
+                  <div class="wait__main">
+                    <a class="wait__link" [routerLink]="['/vault-items', row.handback.seq]">
+                      #{{ row.handback.seq }} · {{ row.handback.title }}
+                    </a>
+                    @if (row.handback.reason) {
+                      <app-card-callout variant="question" label="why it came back">
+                        {{ row.handback.reason }}
+                      </app-card-callout>
+                    }
+                    <p class="wait__meta">
+                      <app-entity-chip
+                        type="actor"
+                        [id]="row.handback.from_actor"
+                        [label]="agentLabel(row.handback.from_actor)" />
+                      <span class="wait__sep">·</span>
+                      <span>{{ ageLabel(row.handback.ts) }}</span>
+                      <span class="wait__sep">·</span>
+                      <span class="wait__mono">{{ priorityLabel(row.handback.priority) }}</span>
+                      <span class="wait__sep">·</span>
+                      <span class="wait__mono">{{ row.handback.type }}</span>
+                    </p>
+                  </div>
+                  <div class="wait__actions">
+                    @if (returning() === row.handback.note_id) {
+                      <span class="wait__confirm">
+                        Give #{{ row.handback.seq }} back to {{ agentLabel(row.handback.from_actor) }}?
+                      </span>
+                      <button type="button" class="wait__btn wait__btn--go"
+                        (click)="returnToAgent(row.handback)">yes, send it back</button>
+                      <button type="button" class="wait__btn"
+                        (click)="toggleReturn(row.handback.note_id)">cancel</button>
+                    } @else {
+                      <button type="button" class="wait__btn wait__btn--primary"
+                        (click)="toggleReturn(row.handback.note_id)">
+                        back to &#64;{{ agentLabel(row.handback.from_actor) }}
+                      </button>
+                    }
+                  </div>
+                </article>
+              }
             }
           </li>
         }

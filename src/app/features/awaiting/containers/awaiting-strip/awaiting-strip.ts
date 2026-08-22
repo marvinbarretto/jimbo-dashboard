@@ -1,15 +1,18 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
-import { mergeAwaitingRows, type AwaitingRow, type Handback } from '@domain/awaiting';
+import { mergeAwaitingRows, type AwaitingRow, type Handback, type ReviewWaiting } from '@domain/awaiting';
 import type { CreateThreadMessagePayload } from '@domain/thread';
 import type { VaultItemId } from '@domain/ids';
 import { ActorsService } from '@features/actors/data-access/actors.service';
 import { AwaitingService } from '@features/awaiting/data-access/awaiting.service';
 import { QuestionCard } from '@features/questions/components/question-card/question-card';
 import { ThreadCommands } from '@features/thread/commands/thread-commands';
+import { ReviewService, type ReviewItem } from '@features/dispatch-review/data-access/review.service';
 import { VaultItemCommands } from '@features/vault-items/commands/vault-item-commands';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
+import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { CardCallout } from '@shared/components/card-callout/card-callout';
 import { relativeTime } from '@shared/utils/datetime.utils';
 
 interface WindowOption { readonly label: string; readonly days: number | null }
@@ -32,7 +35,7 @@ const WINDOW_OPTIONS: readonly WindowOption[] = [
  */
 @Component({
   selector: 'app-awaiting-strip',
-  imports: [QuestionCard, EntityChip, RouterLink],
+  imports: [QuestionCard, EntityChip, RouterLink, UiBadge, CardCallout],
   templateUrl: './awaiting-strip.html',
   styleUrl: './awaiting-strip.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,6 +45,10 @@ export class AwaitingStrip {
   private readonly threadCommands = inject(ThreadCommands);
   private readonly vaultCommands = inject(VaultItemCommands);
   private readonly actorsService = inject(ActorsService);
+  // The review queue already has a service with approve / send-back and
+  // optimistic removal — reused wholesale rather than reimplemented, so the
+  // strip and the /review page can never disagree about what is outstanding.
+  private readonly reviewService = inject(ReviewService);
 
   readonly windowOptions = WINDOW_OPTIONS;
   readonly windowDays = this.awaiting.windowDays;
@@ -52,13 +59,24 @@ export class AwaitingStrip {
   readonly collapsed = signal(false);
   /** Which handback's "give it back" confirm is open. */
   readonly returning = signal<VaultItemId | null>(null);
+  /** Which review row has its send-back reason box open. */
+  readonly rejecting = signal<string | null>(null);
 
   constructor() {
     this.awaiting.load(CURRENT_ACTOR_ID);
   }
 
+  /** ReviewItem -> the framework-free domain shape the merge understands. */
+  private readonly reviewsWaiting = computed<ReviewWaiting[]>(
+    () => this.reviewService.items().map(r => ({
+      id: r.noteId, seq: r.seq, title: r.title, skill: r.skill,
+      summary: r.resultSummary, prUrl: r.prUrl, prState: r.prState,
+      completedAt: r.completedAt,
+    })),
+  );
+
   readonly rows = computed<AwaitingRow[]>(
-    () => mergeAwaitingRows(this.awaiting.handbacks(), this.awaiting.questions()),
+    () => mergeAwaitingRows(this.awaiting.handbacks(), this.awaiting.questions(), this.reviewsWaiting()),
   );
 
   /**
@@ -70,12 +88,17 @@ export class AwaitingStrip {
    * truncates, and a headline that silently shrinks to the page size is the
    * "unmeasured zero reads as an idle zero" failure in miniature.
    */
-  readonly waitingCount = computed(() => this.counts().questions + this.counts().handbacks);
+  readonly waitingCount = computed(
+    () => this.counts().questions + this.counts().handbacks + this.reviewsWaiting().length,
+  );
 
   /** How many of them are actually rendered. Drives the "showing newest N" note. */
   readonly shownCount = computed(() => this.rows().length);
 
   readonly truncated = computed(() => this.shownCount() < this.waitingCount());
+
+  /** Finished work awaiting acceptance. */
+  readonly reviewCount = computed(() => this.reviewsWaiting().length);
 
   /** Live handbacks the window is hiding. Stated, never silently dropped. */
   readonly olderCount = computed(() => this.counts().older);
@@ -110,6 +133,23 @@ export class AwaitingStrip {
    * back to the agent that was waiting. Until step 3 lands a real transient
    * "blocked on" state, reassignment IS the round-trip.
    */
+  /** Accept finished work — the note goes done and a commission slot frees. */
+  approveReview(r: ReviewWaiting): void {
+    const item = this.reviewService.items().find(i => i.noteId === r.id);
+    if (item) this.reviewService.approve(item);
+  }
+
+  /** Send it back for rework, with the reason the agent will read. */
+  sendBackReview(r: ReviewWaiting, reason: string): void {
+    const item = this.reviewService.items().find(i => i.noteId === r.id);
+    if (item) this.reviewService.sendBack(item, reason);
+    this.rejecting.set(null);
+  }
+
+  toggleReject(id: string): void {
+    this.rejecting.update(cur => (cur === id ? null : id));
+  }
+
   returnToAgent(h: Handback): void {
     this.vaultCommands.reassign(h.note_id, h.from_actor, 'returned by the operator from the awaiting strip');
     this.awaiting.dismiss(h.note_id);

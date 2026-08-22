@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mergeAwaitingRows } from './awaiting-rows';
-import type { Handback } from './awaiting';
+import type { Handback, ReviewWaiting } from './awaiting';
 import type { OpenQuestionView } from '../thread';
 import type { ActorId, ThreadMessageId, VaultItemId } from '../ids';
 
@@ -37,6 +37,20 @@ function question(over: Partial<OpenQuestionView> = {}): OpenQuestionView {
     answered_by: null,
     created_at: '2026-08-14T09:00:00.000Z',
     age_days: 1,
+    ...over,
+  };
+}
+
+function review(over: Partial<ReviewWaiting> = {}): ReviewWaiting {
+  return {
+    id: 'note-3',
+    seq: '303',
+    title: 'Add a CONTRIBUTING note',
+    skill: 'code/pr-from-issue',
+    summary: 'Opened PR #28',
+    prUrl: 'https://github.com/marvinbarretto/pmq-bingo/pull/28',
+    prState: 'open',
+    completedAt: '2026-08-14T11:00:00.000Z',
     ...over,
   };
 }
@@ -85,5 +99,46 @@ describe('mergeAwaitingRows', () => {
 
   it('returns nothing when there is nothing waiting', () => {
     expect(mergeAwaitingRows([], [])).toEqual([]);
+  });
+
+  it('interleaves finished work with the other two kinds by recency', () => {
+    const rows = mergeAwaitingRows(
+      [handback({ ts: '2026-08-14T08:00:00.000Z' })],
+      [question({ created_at: '2026-08-14T12:00:00.000Z' })],
+      [review({ completedAt: '2026-08-14T10:00:00.000Z' })],
+    );
+
+    expect(rows.map(r => r.kind)).toEqual(['question', 'review', 'handback']);
+  });
+
+  // "Accept this" is a later and more actionable state than "an agent gave
+  // this back" — showing both for one note would offer two different verbs.
+  it('drops a handback whose note is already awaiting acceptance', () => {
+    const shared = 'note-42';
+    const rows = mergeAwaitingRows(
+      [handback({ note_id: shared as never })],
+      [],
+      [review({ id: shared })],
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].kind).toBe('review');
+  });
+
+  // completedAt is null on older rows; an Invalid Date would sort them to the
+  // top and bury genuinely recent work.
+  it('sorts undated finished work last rather than first', () => {
+    const rows = mergeAwaitingRows(
+      [],
+      [question({ created_at: '2026-08-01T00:00:00.000Z' })],
+      [review({ completedAt: null })],
+    );
+
+    expect(rows.map(r => r.kind)).toEqual(['question', 'review']);
+  });
+
+  it('still works when no reviews are passed at all', () => {
+    const rows = mergeAwaitingRows([handback()], [question()]);
+    expect(rows.map(r => r.kind).sort()).toEqual(['handback', 'question']);
   });
 });
