@@ -22,6 +22,12 @@ export type LifecycleBannerState = 'archived' | 'done' | 'deferred';
  *
  * So this is deliberately a banner and not a chip. A chip is something you can
  * fail to notice; the whole point is that this cannot be scanned past.
+ *
+ * The first cut styled `archived` muted, on the reasoning that archiving is
+ * usually the correct outcome and shouldn't read as an error. In the real
+ * layout it disappeared between two saturated purple bands — right about a
+ * principle, wrong about the pixels. Warning-weight now: this sits directly
+ * under a coloured title bar and has to survive that contrast.
  */
 @Component({
   selector: 'app-lifecycle-banner',
@@ -44,31 +50,42 @@ export type LifecycleBannerState = 'archived' | 'done' | 'deferred';
       display: flex;
       align-items: baseline;
       gap: 0.5rem;
-      padding: 0.4rem 0.75rem;
-      font-size: 0.75rem;
-      border-left: 3px solid var(--color-border);
-      background: var(--color-surface-soft);
-      color: var(--color-text-soft);
+      padding: 0.5rem 0.75rem;
+      font-size: 0.78rem;
+      /* Full-width tinted band, not a left tick. It has to hold its own against
+         the coloured project/title bars stacked immediately above it. */
+      border-left: 4px solid var(--color-warning);
+      border-top: 1px solid color-mix(in srgb, var(--color-warning) 35%, transparent);
+      border-bottom: 1px solid color-mix(in srgb, var(--color-warning) 35%, transparent);
+      background: color-mix(in srgb, var(--color-warning) 14%, var(--color-surface));
+      color: var(--color-warning);
     }
     .lifecycle-banner__label {
-      font-weight: 700;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.07em;
+      letter-spacing: 0.09em;
       flex: none;
     }
-    .lifecycle-banner__detail { color: var(--color-text-soft); }
+    /* Detail is dimmed relative to the label but stays inside the warning
+       family — dropping it to neutral grey was what made the band read as
+       ordinary metadata. */
+    .lifecycle-banner__detail {
+      color: color-mix(in srgb, var(--color-warning) 75%, var(--color-text-soft));
+    }
 
-    /* Archived reads as withdrawn, not as an error — it is usually the correct
-       outcome. Muted and unmistakable, rather than alarming. */
-    .lifecycle-banner--archived {
-      border-left-color: var(--color-text-soft);
-      background: var(--color-surface-sunken, var(--color-surface-soft));
-    }
+    /* archived + deferred both mean "not live work" and share the warning
+       treatment. done is the one genuinely-good terminal state, so it keeps the
+       success family — a completed item should not read as a problem. */
     .lifecycle-banner--done {
-      border-left-color: var(--color-success, #4a9);
-      color: var(--color-success, #4a9);
+      border-left-color: var(--color-success);
+      border-top-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+      border-bottom-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+      background: color-mix(in srgb, var(--color-success) 14%, var(--color-surface));
+      color: var(--color-success);
     }
-    .lifecycle-banner--deferred { border-left-color: var(--color-warning, #d0a13a); }
+    .lifecycle-banner--done .lifecycle-banner__detail {
+      color: color-mix(in srgb, var(--color-success) 75%, var(--color-text-soft));
+    }
   `],
 })
 export class LifecycleBanner {

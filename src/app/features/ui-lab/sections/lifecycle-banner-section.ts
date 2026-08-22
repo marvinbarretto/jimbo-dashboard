@@ -35,10 +35,13 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
         </div>
 
         <p class="ui-lab__support-copy">
-          <code>archived</code> is muted rather than alarming — it is usually the correct
-          outcome, and colouring it as an error would train the operator to ignore it.
-          <code>done</code> and <code>archived</code> stay distinct: finished and abandoned are
-          different facts, and merging them loses the one a reader needs.
+          <code>archived</code> and <code>deferred</code> share the warning family — both mean
+          "not live work", and the first cut styled them muted on the theory that archiving is
+          usually correct. In the real layout that band vanished between two saturated purple
+          headers: right about the principle, wrong about the pixels.
+          <code>done</code> keeps the success family — a completed item should not read as a
+          problem — and stays distinct from <code>archived</code>, because finished and
+          abandoned are different facts and merging them loses the one a reader needs.
         </p>
       </app-ui-stack>
     </app-ui-section>
