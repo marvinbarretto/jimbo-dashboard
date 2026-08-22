@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.182](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.181...v0.0.182) (2026-08-22)
+
+
+### Features
+
+* **execution:** move cards off the live stream, and say when it drops ([82a58b1](https://github.com/marvinbarretto/jimbo-dashboard/commit/82a58b1730d6b891d1d6195d598d5b98b992cf9f))
+* **execution:** one strip for everything waiting, led by the action it needs ([1cf4b97](https://github.com/marvinbarretto/jimbo-dashboard/commit/1cf4b97739eb37384fcfd669c8e63ad035db85e5))
+* **execution:** pin an "waiting on you" strip above the lanes ([bdd4327](https://github.com/marvinbarretto/jimbo-dashboard/commit/bdd4327e5da1c4ffdf6d35c0d161feb1528d71d4))
+* **execution:** wire sort modes and the Definition-of-Ready facet ([7ef62dd](https://github.com/marvinbarretto/jimbo-dashboard/commit/7ef62dd8cd4ae1e8346df7ffd43c6a891cda9557))
+* **kanban:** share one sort rule and add a Definition-of-Ready facet ([4cb7cb6](https://github.com/marvinbarretto/jimbo-dashboard/commit/4cb7cb6fde660909aab8523e4e65b37a4b235606))
+* **vault:** human-owned work is ready on its own terms; retire grooming_override ([f33a597](https://github.com/marvinbarretto/jimbo-dashboard/commit/f33a597de945c01aef0218ba9581d4d67aaf2458))
+
+
+### Bug Fixes
+
+* **execution:** headline matches the breakdown; chip every awaited card ([529297f](https://github.com/marvinbarretto/jimbo-dashboard/commit/529297f15402d558ef7a0edbad288df70db33f2d))
+
 ### [0.0.181](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.180...v0.0.181) (2026-08-13)
 
 
