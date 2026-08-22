@@ -222,6 +222,7 @@ const desktopRoutes: Routes = [
       { path: 'epic-rollup',             loadComponent: () => import('./features/ui-lab/sections/epic-rollup-section').then(m => m.EpicRollupSection) },
       { path: 'card-parent-link',        loadComponent: () => import('./features/ui-lab/sections/card-parent-link-section').then(m => m.CardParentLinkSection) },
       { path: 'card-callout',            loadComponent: () => import('./features/ui-lab/sections/card-callout-section').then(m => m.CardCalloutSection) },
+      { path: 'lifecycle-banner',        loadComponent: () => import('./features/ui-lab/sections/lifecycle-banner-section').then(m => m.LifecycleBannerSection) },
       { path: 'commission-stage-pill',   loadComponent: () => import('./features/ui-lab/sections/commission-stage-pill-section').then(m => m.CommissionStagePillSection) },
       { path: 'commission-card',         loadComponent: () => import('./features/ui-lab/sections/commission-card-section').then(m => m.CommissionCardSection) },
       { path: 'dispatch-history-list',   loadComponent: () => import('./features/ui-lab/sections/dispatch-history-list-section').then(m => m.DispatchHistoryListSection) },

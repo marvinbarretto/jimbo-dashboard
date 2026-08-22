@@ -165,6 +165,13 @@
       </div>
     </div>
 
+    <!-- Lifecycle first: an archived item otherwise looks identical to a live
+         one, so a silently-failed archive is indistinguishable from a real one.
+         Above the meta row because it changes how everything below reads. -->
+    @if (lifecycleState(); as ls) {
+      <app-lifecycle-banner [state]="ls" [detail]="lifecycleDetail()" />
+    }
+
     <!-- ══ ZONE 2 · META + CTA ══════════════════════════════════════════════ -->
     <div class="v3__meta-row">
       <span class="v3__meta">created <b>{{ item.created_at | relativeTime }}</b></span>

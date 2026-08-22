@@ -34,6 +34,8 @@ import { IntakeRationalePanel } from '../intake-rationale-panel/intake-rationale
 import { VaultItemQuestions } from './vault-item-questions/vault-item-questions';
 import type { DialogMode } from '../../dialog/vault-item-dialog-mode';
 import { VaultItemDialogStore } from '../../dialog/vault-item-dialog-store';
+import { LifecycleBanner, type LifecycleBannerState } from '@shared/components/lifecycle-banner/lifecycle-banner';
+import { lifecycleState as deriveLifecycle } from '@domain/vault/vault-item';
 import type { CreateThreadMessagePayload } from '@domain/thread';
 
 /**
@@ -57,7 +59,7 @@ import type { CreateThreadMessagePayload } from '@domain/thread';
  */
 @Component({
   selector: 'app-vault-item-detail-body',
-  imports: [IntakeRationalePanel, 
+  imports: [LifecycleBanner, IntakeRationalePanel, 
     RouterLink,
     UiInlineEdit,
     UiDropdown,
@@ -85,6 +87,31 @@ import type { CreateThreadMessagePayload } from '@domain/thread';
   },
 })
 export class VaultItemDetailBody {
+  /**
+   * The one lifecycle fact worth interrupting for, or null for ordinary live
+   * work. Only one banner ever shows: an archived-and-blocked item is archived
+   * first, because that is what makes everything else on screen moot.
+   */
+  protected readonly lifecycleState = computed<LifecycleBannerState | null>(() => {
+    const i = this.store.item();
+    if (!i) return null;
+    // Reuse the domain derivation rather than re-reading the timestamps here —
+    // a second copy of "what archived means" is exactly the drift the domain
+    // comment warns about.
+    const state = deriveLifecycle(i);
+    if (state === 'archived') return 'archived';
+    if (state === 'done') return 'done';
+    return null;
+  });
+
+  protected readonly lifecycleDetail = computed<string | null>(() => {
+    const i = this.store.item();
+    if (!i) return null;
+    if (i.archived_at) return `archived ${i.archived_at.slice(0, 10)}`;
+    if (i.completed_at) return `completed ${i.completed_at.slice(0, 10)}`;
+    return null;
+  });
+
   readonly mode = input.required<DialogMode>();
   /** 'page' shows a back-to-vault link; 'modal' hides it (the shell has its own
    *  close affordance and navigation swaps ?detail= instead of the URL). */
