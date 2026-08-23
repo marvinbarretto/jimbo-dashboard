@@ -4,6 +4,15 @@
   height: 100vh;
 }
 
+// The lanes are the page, but they're last in a flex column that the pinned
+// chrome above them (header, gates strip, awaiting strip, filter bar) fills
+// first — leaving them ~150px, a sliver showing one card. A floor stops that:
+// past it the board outgrows the viewport and the page scrolls, which beats
+// crushing the thing the page is named after. Columns keep their own scroll.
+.board__columns {
+  min-height: 28rem;
+}
+
 .board__hint {
   strong { color: var(--color-text); font-weight: 500; }
 }
@@ -91,4 +100,12 @@
 .board__live--down {
   color: var(--color-danger);
   .board__live-dot { background: var(--color-danger); }
+}
+
+// Sits with the live indicator: both answer "how much of reality is this?"
+.board__window {
+  margin-left: 0.6rem;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
 }
