@@ -63,7 +63,15 @@
 
   &__older { color: var(--color-text-soft); }
 
-  &__window { display: flex; gap: .2rem; }
+  &__window { display: flex; gap: .2rem; align-items: center; }
+
+  &__window-label {
+    margin-right: .3rem;
+    font-size: .65rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--color-text-muted);
+  }
 
   &__window-btn {
     background: none;

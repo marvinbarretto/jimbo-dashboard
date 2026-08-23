@@ -105,6 +105,21 @@ export class AwaitingStrip {
 
   readonly hasAnything = computed(() => this.waitingCount() > 0 || this.olderCount() > 0);
 
+  /**
+   * What this strip is NOT showing, as one sentence. Both facts previously
+   * rendered as bare adjacent spans, so "showing newest 69" followed by "979
+   * older than the window" read as a single number, 69979.
+   */
+  readonly coverageNote = computed<string | null>(() => {
+    const parts: string[] = [];
+    if (this.truncated()) parts.push(`showing the newest ${this.shownCount()}`);
+    if (this.olderCount() > 0) {
+      const n = this.olderCount();
+      parts.push(`${n} handback${n === 1 ? '' : 's'} older than the window`);
+    }
+    return parts.length ? parts.join(' · ') : null;
+  });
+
   agentLabel(id: string): string {
     return this.actorsService.getById(id as never)?.display_name ?? id;
   }

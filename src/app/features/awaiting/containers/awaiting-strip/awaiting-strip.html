@@ -24,15 +24,18 @@
         @if (counts().handbacks > 0) {
           <app-ui-badge tone="warning" [subtle]="true">{{ counts().handbacks }} to decide</app-ui-badge>
         }
-        @if (truncated()) {
-          <span class="awaiting__older">showing newest {{ shownCount() }}</span>
-        }
-        @if (olderCount() > 0) {
-          <span class="awaiting__older">{{ olderCount() }} older than the window</span>
+        <!-- One sentence, not two spans: "showing newest 69" and "979 older
+             than the window" sat side by side and read as the number 69979. -->
+        @if (coverageNote(); as note) {
+          <span class="awaiting__older">{{ note }}</span>
         }
       </p>
 
+      <!-- Labelled because the window filters handbacks ONLY. Reviews and
+           questions ignore it — two of the reviews below are months old, and an
+           unlabelled "7 days" chip above them claims otherwise. -->
       <div class="awaiting__window" role="group" aria-label="Handback window">
+        <span class="awaiting__window-label">handbacks</span>
         @for (opt of windowOptions; track opt.label) {
           <button
             type="button"
