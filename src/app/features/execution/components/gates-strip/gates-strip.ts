@@ -21,6 +21,13 @@ interface Gate {
   detail: string;
 }
 
+/** A gate with its ages and bar width resolved once, at fetch time. */
+interface GateView extends Omit<Gate, 'blockers'> {
+  fillPct: number;
+  movedAge: string | null;
+  blockers: readonly (GateBlocker & { age: string })[];
+}
+
 const DAY_MS = 86_400_000;
 
 /**
@@ -39,6 +46,7 @@ const DAY_MS = 86_400_000;
 @Component({
   selector: 'app-gates-strip',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './gates-strip.scss',
   template: `
     @if (gates().length) {
       <div class="gates" role="group" aria-label="Pipeline gates">
@@ -58,14 +66,15 @@ const DAY_MS = 86_400_000;
               }
             </p>
 
-            <!-- A bar that can exceed 100% on purpose: grooming sits at 26x its
-                 threshold, and clamping it to "full" would read as merely full. -->
+            <!-- A bar that can exceed 100% on purpose: grooming sits many times
+                 over its threshold, and clamping it to "full" would read as
+                 merely full. -->
             <!-- Gates with threshold 0 are disclosures, not budgets (the deferred
                  pile). A bar would imply some number of parked items is the target. -->
             @if (g.threshold > 0) {
               <div class="gate__bar" [attr.aria-label]="g.current + ' of ' + g.threshold">
                 <div class="gate__fill" [class.gate__fill--over]="g.current > g.threshold"
-                     [style.width.%]="fillPct(g)"></div>
+                     [style.width.%]="g.fillPct"></div>
               </div>
             }
 
@@ -77,80 +86,54 @@ const DAY_MS = 86_400_000;
                   <li>
                     <span class="gate__seq">#{{ b.seq ?? '?' }}</span>
                     <span class="gate__title">{{ b.title ?? b.note_id }}</span>
-                    <span class="gate__age">{{ age(b.since) }}</span>
+                    <span class="gate__age">{{ b.age }}</span>
                   </li>
                 }
               </ul>
             }
 
-            @if (g.last_moved_at) {
-              <p class="gate__moved">last moved {{ age(g.last_moved_at) }} ago</p>
+            @if (g.movedAge) {
+              <p class="gate__moved">last moved {{ g.movedAge }} ago</p>
             }
           </article>
         }
       </div>
     }
   `,
-  styles: [`
-    .gates {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-      gap: 0.75rem;
-      margin-bottom: 1rem;
-    }
-    .gate {
-      border: 1px solid var(--border, #333);
-      border-radius: 6px;
-      padding: 0.75rem;
-      background: var(--surface, #16181d);
-    }
-    .gate--blocked { border-color: var(--danger, #d9534f); }
-    .gate__head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
-    .gate__label { font-weight: 600; font-size: 0.85rem; }
-    .gate__state {
-      font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em;
-      color: var(--muted, #8b929e);
-    }
-    .gate__state--blocked { color: var(--danger, #d9534f); font-weight: 700; }
-    .gate__count { margin: 0.35rem 0 0.25rem; font-size: 1.5rem; line-height: 1; }
-    .gate__of { font-size: 0.9rem; color: var(--muted, #8b929e); }
-    .gate__bar {
-      height: 4px; border-radius: 2px; overflow: hidden;
-      background: var(--border, #333); margin-bottom: 0.5rem;
-    }
-    .gate__fill { height: 100%; background: var(--ok, #4a9); }
-    .gate__fill--over { background: var(--danger, #d9534f); }
-    .gate__detail { margin: 0; font-size: 0.75rem; color: var(--muted, #8b929e); }
-    .gate__blockers { list-style: none; margin: 0.5rem 0 0; padding: 0; font-size: 0.72rem; }
-    .gate__blockers li {
-      display: flex; gap: 0.4rem; align-items: baseline;
-      padding: 0.15rem 0; border-top: 1px solid var(--border, #2a2d34);
-    }
-    .gate__seq { color: var(--muted, #8b929e); flex: none; }
-    .gate__title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .gate__age { margin-left: auto; flex: none; color: var(--muted, #8b929e); }
-    .gate__moved { margin: 0.4rem 0 0; font-size: 0.68rem; color: var(--muted, #8b929e); }
-  `],
 })
 export class GatesStrip {
   private readonly res = httpResource<{ items: Gate[] }>(
     () => `${environment.dashboardApiUrl}/api/gates`,
   );
 
-  protected readonly gates = computed(() => this.res.value()?.items ?? []);
+  /**
+   * Ages are stamped here rather than read per binding: gate ages are
+   * hour-granular, so the fetch is the honest moment to measure them, and a
+   * template that calls `Date.now()` re-measures on every change detection.
+   */
+  protected readonly gates = computed<GateView[]>(() => {
+    const now = Date.now();
+    return (this.res.value()?.items ?? []).map(g => ({
+      ...g,
+      fillPct: g.threshold > 0 ? Math.min(100, (g.current / g.threshold) * 100) : 0,
+      movedAge: g.last_moved_at ? age(g.last_moved_at, now) : null,
+      blockers: g.blockers.map(b => ({ ...b, age: age(b.since, now) })),
+    }));
+  });
+}
 
-  /** Caps the *bar* at 100% while the number above it still tells the truth. */
-  protected fillPct(g: Gate): number {
-    if (g.threshold <= 0) return 0;
-    return Math.min(100, (g.current / g.threshold) * 100);
-  }
-
-  protected age(iso: string): string {
-    const days = (Date.now() - Date.parse(iso)) / DAY_MS;
-    if (Number.isNaN(days)) return '';
-    if (days >= 1) return `${Math.floor(days)}d`;
-    const hours = days * 24;
-    if (hours >= 1) return `${Math.floor(hours)}h`;
-    return '<1h';
-  }
+/**
+ * Coarse elapsed-time label.
+ *
+ * @param iso timestamp to measure from
+ * @param now reference time, passed in so a whole strip shares one clock
+ * @returns e.g. `16d`, `4h`, `<1h`, or `''` when the timestamp is unparseable
+ */
+function age(iso: string, now: number): string {
+  const days = (now - Date.parse(iso)) / DAY_MS;
+  if (Number.isNaN(days)) return '';
+  if (days >= 1) return `${Math.floor(days)}d`;
+  const hours = days * 24;
+  if (hours >= 1) return `${Math.floor(hours)}h`;
+  return '<1h';
 }
