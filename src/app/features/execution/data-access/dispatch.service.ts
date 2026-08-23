@@ -31,9 +31,22 @@ export class DispatchService {
 
   private readonly _entries = signal<DispatchQueueEntry[]>([]);
   private readonly _loading = signal(true);
+  /** Rows the server holds, vs. the QUEUE_LIMIT this loads. */
+  private readonly _total = signal(0);
 
   readonly entries  = this._entries.asReadonly();
   readonly isLoading = this._loading.asReadonly();
+
+  /**
+   * How much of the dispatch table the board is actually looking at. Agent
+   * cards derive entirely from this window, so a board that renders one
+   * commission out of thousands of rows has to be able to say so.
+   */
+  readonly window = computed(() => ({
+    loaded: this._entries().length,
+    total:  this._total(),
+    truncated: this._total() > this._entries().length,
+  }));
 
   // Per-item commission view — one entry per vault item, commission flow only,
   // with current stage + history. This is what the rebuilt execution board
@@ -46,6 +59,7 @@ export class DispatchService {
   private load(): void {
     if (isSeedMode()) {
       this._entries.set([...SEED.dispatch_entries]);
+      this._total.set(SEED.dispatch_entries.length);
       this._loading.set(false);
       return;
     }
@@ -63,6 +77,7 @@ export class DispatchService {
           return;
         }
         this._entries.set(result.data.items.filter(a => a.status !== 'removed').map(toDispatchEntry));
+        this._total.set(result.data.total);
         this._loading.set(false);
       },
       error: () => {

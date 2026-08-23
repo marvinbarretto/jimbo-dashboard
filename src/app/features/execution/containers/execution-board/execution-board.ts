@@ -238,6 +238,9 @@ export class ExecutionBoard {
     );
   });
 
+  /** How much of the dispatch table the agent cards are drawn from. */
+  protected readonly dispatchWindow = this.dispatchService.window;
+
   // Live board: refresh the one item each stream event names, never the board.
   // Exposed so the header can say when the feed has dropped — a card that
   // silently stops updating is worse than one that admits it is stale.
