@@ -1,0 +1,94 @@
+<app-ui-page heading="Delivery">
+  <p class="delivery__intro">
+    Agents merge into master continuously; production only moves when you release
+    and deploy. This is the gap between the two.
+  </p>
+
+  <header class="delivery__totals">
+    <span class="delivery__stat">
+      <span class="delivery__stat-n">{{ totals().unshipped }}</span>
+      <span class="delivery__stat-l">commits built, not shipped</span>
+    </span>
+    <span class="delivery__stat">
+      <span class="delivery__stat-n">{{ totals().openPrs }}</span>
+      <span class="delivery__stat-l">open PRs</span>
+    </span>
+    <span class="delivery__stat" [class.delivery__stat--alert]="totals().failing > 0">
+      <span class="delivery__stat-n">{{ totals().failing }}</span>
+      <span class="delivery__stat-l">failing</span>
+    </span>
+
+    <button type="button" class="delivery__refresh" (click)="refresh()" [disabled]="loading()">
+      {{ loading() ? 'checking…' : 'refresh' }}
+    </button>
+  </header>
+
+  <!-- A red PR is the only thing here that asks for something. With auto-merge
+       it does not fail loudly — it just never lands — so it leads the page. -->
+  @if (failingPrs().length > 0) {
+    <section class="delivery__alert">
+      <h2 class="delivery__alert-title">These stopped and nothing will retry them</h2>
+      <ul class="delivery__alert-list">
+        @for (row of failingPrs(); track row.pr.url) {
+          <li>
+            <app-ui-badge tone="danger">CI failed</app-ui-badge>
+            <a [href]="row.pr.url" target="_blank" rel="noopener">#{{ row.pr.number }} {{ row.pr.title }}</a>
+            <span class="delivery__muted">{{ row.project }} · {{ row.pr.ageDays }}d open</span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (loaded() && projects().length === 0) {
+    <p class="delivery__empty">Everything built has been shipped. Nothing is waiting.</p>
+  }
+
+  <ul class="delivery__projects">
+    @for (p of projects(); track p.projectId) {
+      <li class="proj">
+        <header class="proj__head">
+          <span class="proj__name">{{ p.displayName }}</span>
+          <span class="proj__repo">{{ p.repo }}</span>
+          @if (p.failing > 0) {
+            <app-ui-badge tone="danger">{{ p.failing }} failing</app-ui-badge>
+          }
+        </header>
+
+        @if (p.error) {
+          <p class="proj__error">couldn't read this repo — {{ p.error }}</p>
+        } @else {
+          <p class="proj__ship">
+            <strong>{{ p.unshipped }}</strong> unshipped
+            <span class="delivery__muted">
+              since {{ p.latestTag ?? 'the beginning — never released' }}
+            </span>
+          </p>
+
+          @if (p.openPrs.length > 0) {
+            <ul class="proj__prs">
+              @for (pr of p.openPrs; track pr.number) {
+                <li class="pr">
+                  <app-ui-badge [tone]="ciTone(pr.ci)" [subtle]="pr.ci !== 'failing'">
+                    {{ ciLabel(pr.ci) }}
+                  </app-ui-badge>
+                  <a class="pr__link" [href]="pr.url" target="_blank" rel="noopener">
+                    #{{ pr.number }} {{ pr.title }}
+                  </a>
+                  @if (pr.autoMerge) {
+                    <span class="pr__auto" title="Merges itself once checks pass">auto</span>
+                  }
+                  @if (pr.draft) { <span class="delivery__muted">draft</span> }
+                  <span class="delivery__muted">{{ pr.ageDays }}d</span>
+                  @if (pr.noteSeq !== null) {
+                    <a class="pr__note" [routerLink]="['/vault-items', pr.noteSeq]">#{{ pr.noteSeq }}</a>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        }
+      </li>
+    }
+  </ul>
+</app-ui-page>

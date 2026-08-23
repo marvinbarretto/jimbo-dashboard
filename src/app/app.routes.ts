@@ -133,6 +133,10 @@ const desktopRoutes: Routes = [
     loadChildren: () => import('./features/execution/execution.routes').then(m => m.executionRoutes),
   },
   {
+    path: 'delivery',
+    loadChildren: () => import('./features/delivery/delivery.routes').then(m => m.deliveryRoutes),
+  },
+  {
     path: 'review',
     loadChildren: () => import('./features/dispatch-review/dispatch-review.routes').then(m => m.dispatchReviewRoutes),
   },

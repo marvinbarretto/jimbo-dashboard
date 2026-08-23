@@ -55,6 +55,7 @@ export const navSections: readonly NavSection[] = [
       { href: '/planner', label: 'Planner' },
       { href: '/execution', label: 'Execution' },
       { href: '/review', label: 'Review' },
+      { href: '/delivery', label: 'Delivery' },
       { href: '/fleet', label: 'Fleet' },
     ],
   },

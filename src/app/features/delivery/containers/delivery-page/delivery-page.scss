@@ -1,0 +1,157 @@
+.delivery {
+  &__intro {
+    margin: 0 0 1rem;
+    font-size: .8rem;
+    color: var(--color-text-muted);
+    max-width: 44rem;
+  }
+
+  &__totals {
+    display: flex;
+    align-items: baseline;
+    gap: 1.75rem;
+    flex-wrap: wrap;
+    padding: .75rem 0 1rem;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 1rem;
+  }
+
+  &__stat { display: flex; align-items: baseline; gap: .4rem; }
+
+  &__stat-n {
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__stat-l { font-size: .75rem; color: var(--color-text-muted); }
+
+  // Zero failing is the normal state and should look calm; any other number
+  // should not.
+  &__stat--alert .delivery__stat-n { color: var(--color-danger); }
+  &__stat--alert .delivery__stat-l { color: var(--color-danger); }
+
+  &__refresh {
+    margin-left: auto;
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: .25rem .6rem;
+    font-size: .7rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+
+    &:hover:not(:disabled) { border-color: var(--color-accent); color: var(--color-text); }
+    &:disabled { opacity: .5; cursor: default; }
+    &:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  }
+
+  &__alert {
+    border: 1px solid var(--color-danger);
+    border-left: 4px solid var(--color-danger);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--color-danger) 7%, transparent);
+    padding: .6rem .75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  &__alert-title {
+    margin: 0 0 .5rem;
+    font-size: .8rem;
+    color: var(--color-danger);
+  }
+
+  &__alert-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+
+    li { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; font-size: .78rem; }
+    a { color: var(--color-text); text-decoration: none; &:hover { color: var(--color-accent); } }
+  }
+
+  &__empty { font-size: .8rem; color: var(--color-text-muted); }
+
+  &__muted { font-size: .7rem; color: var(--color-text-muted); }
+
+  &__projects {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+  }
+}
+
+.proj {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: .6rem .75rem;
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-bottom: .3rem;
+  }
+
+  &__name { font-size: .85rem; font-weight: 600; color: var(--color-text); }
+  &__repo { font-family: var(--font-mono); font-size: .7rem; color: var(--color-text-muted); }
+  &__error { margin: 0; font-size: .75rem; color: var(--color-warning); }
+
+  &__ship {
+    margin: 0;
+    font-size: .78rem;
+    color: var(--color-text-soft);
+
+    strong { font-family: var(--font-mono); color: var(--color-text); }
+  }
+
+  &__prs {
+    list-style: none;
+    margin: .5rem 0 0;
+    padding: .5rem 0 0;
+    border-top: 1px dashed var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+  }
+}
+
+.pr {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  flex-wrap: wrap;
+  font-size: .75rem;
+
+  &__link {
+    color: var(--color-text);
+    text-decoration: none;
+    &:hover { color: var(--color-accent); }
+  }
+
+  &__auto {
+    font-family: var(--font-mono);
+    font-size: .65rem;
+    color: var(--color-success);
+    border: 1px solid var(--color-success);
+    border-radius: var(--radius);
+    padding: 0 .25rem;
+  }
+
+  &__note {
+    font-family: var(--font-mono);
+    font-size: .7rem;
+    color: var(--color-accent);
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
+}
