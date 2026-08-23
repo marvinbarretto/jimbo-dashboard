@@ -42,8 +42,14 @@ export const ApiDispatchEntrySchema = z.object({
   started_at:     z.string().nullable(),
   completed_at:   z.string().nullable(),
   created_at:     z.string(),
-  task_title:     z.string().nullable(),
-  task_seq:       z.union([z.number(), z.string()]).nullable(),
+  // Joined from the vault item, and ONLY by the list endpoint: GET
+  // /api/dispatch/{id} returns the bare dispatch row without them. Required
+  // here, every `dispatch.stage_changed` event on the live stream failed to
+  // parse and was dropped — the board advertised "live" while no card moved.
+  // `nullish`, not `nullable`: absent and null mean different things to the
+  // caller (keep what you had vs. it really is empty).
+  task_title:     z.string().nullish(),
+  task_seq:       z.union([z.number(), z.string()]).nullish(),
 });
 
 export type ApiDispatchEntry = z.infer<typeof ApiDispatchEntrySchema>;

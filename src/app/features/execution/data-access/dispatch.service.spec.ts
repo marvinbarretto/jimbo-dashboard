@@ -206,3 +206,64 @@ describe('DispatchService mapper — db_status preserves raw status (T1.3)', () 
     expect(rejected.db_status).toBe('rejected'); // preserved (truthful)
   });
 });
+
+// GET /api/dispatch/{id} returns the bare dispatch row — no `task_title` /
+// `task_seq`, which only the list endpoint joins in. When the schema required
+// them, every live `dispatch.stage_changed` event failed to parse and was
+// dropped: the board showed a green "live" dot while no card ever moved.
+describe('DispatchService.refreshOne — tolerates the un-joined single-row shape', () => {
+  let service: DispatchService;
+  let http: HttpTestingController;
+
+  beforeEach(() => {
+    window.history.replaceState({}, '', window.location.pathname);
+    resetSeedModeCache();
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection(), provideHttpClient(), provideHttpClientTesting()],
+    });
+    service = TestBed.inject(DispatchService);
+    http = TestBed.inject(HttpTestingController);
+    http.expectOne(r => r.url.includes('/api/dispatch/queue')).flush({
+      items: [fakeEntry({ id: 7, status: 'approved', task_title: 'ship the thing', task_seq: 99 })],
+      total: 1,
+    });
+  });
+
+  afterEach(() => {
+    http.verify();
+    resetSeedModeCache();
+  });
+
+  /** The single-row payload: every schema field except the two joined ones. */
+  function bareRow(overrides: Partial<ApiDispatchEntry> = {}) {
+    const { task_title: _t, task_seq: _s, ...rest } = fakeEntry({ id: 7, ...overrides });
+    return rest;
+  }
+
+  it('applies the stage change instead of dropping the response', () => {
+    service.refreshOne(dispatchId('7'));
+    http.expectOne(r => r.url.endsWith('/api/dispatch/7')).flush(bareRow({ status: 'running' }));
+
+    expect(service.getById(dispatchId('7'))!.status).toBe('running');
+  });
+
+  it('carries over the title and seq the single-row endpoint omits', () => {
+    service.refreshOne(dispatchId('7'));
+    http.expectOne(r => r.url.endsWith('/api/dispatch/7')).flush(bareRow({ status: 'running' }));
+
+    const entry = service.getById(dispatchId('7'))!;
+    expect(entry.task_title).toBe('ship the thing');
+    expect(entry.task_seq).toBe(99);
+  });
+
+  it('takes an explicit null over the prior value — absent is not empty', () => {
+    service.refreshOne(dispatchId('7'));
+    http
+      .expectOne(r => r.url.endsWith('/api/dispatch/7'))
+      .flush(fakeEntry({ id: 7, status: 'running', task_title: null, task_seq: null }));
+
+    const entry = service.getById(dispatchId('7'))!;
+    expect(entry.task_title).toBeNull();
+    expect(entry.task_seq).toBeNull();
+  });
+});

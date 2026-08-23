@@ -95,7 +95,13 @@ export class DispatchService {
           console.error('[dispatch] refreshOne response failed schema:', result.error.issues);
           return;
         }
-        const fresh = toDispatchEntry(result.data);
+        // The single-row endpoint doesn't join the vault item, so title/seq
+        // arrive undefined. Carry over what the list load already knew rather
+        // than blanking a card's title as the price of a stage update. A
+        // dispatch we've never seen has nothing to carry over — it renders
+        // titleless until the next full load, which beats not appearing.
+        const prior = this._entries().find(e => e.id === dispatchId(String(result.data.id)));
+        const fresh = withCarriedOverTaskRef(toDispatchEntry(result.data), result.data, prior);
         this._entries.update(entries => {
           // `removed` rows are filtered out of the bulk load too — keeping the
           // rule in one shape means a removal arriving live behaves the same as
@@ -259,6 +265,31 @@ function narrowStatus(s: ApiDispatchEntry['status']): DispatchStatus {
     case 'completed':   return 'completed';
     case 'failed':      return 'failed';
   }
+}
+
+/**
+ * Restore `task_title` / `task_seq` a single-row refresh couldn't supply.
+ *
+ * Absent (the field is missing from the payload) means "this endpoint doesn't
+ * know", so the prior value stands. An explicit `null` means the vault item
+ * genuinely has no title/seq, and overwrites. Exported for the spec.
+ *
+ * @param fresh   the newly mapped entry
+ * @param raw     the wire payload, needed to tell absent from null
+ * @param prior   the entry already in the store, if any
+ * @returns the entry to store
+ */
+export function withCarriedOverTaskRef(
+  fresh: DispatchQueueEntry,
+  raw: Pick<ApiDispatchEntry, 'task_title' | 'task_seq'>,
+  prior: DispatchQueueEntry | undefined,
+): DispatchQueueEntry {
+  if (!prior) return fresh;
+  return {
+    ...fresh,
+    task_title: raw.task_title === undefined ? prior.task_title : fresh.task_title,
+    task_seq:   raw.task_seq   === undefined ? prior.task_seq   : fresh.task_seq,
+  };
 }
 
 function toDispatchEntry(a: ApiDispatchEntry): DispatchQueueEntry {
