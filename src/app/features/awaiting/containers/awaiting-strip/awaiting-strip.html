@@ -4,7 +4,7 @@
       <button
         type="button"
         class="awaiting__toggle"
-        (click)="collapsed.update(v => !v)"
+        (click)="toggleCollapsed()"
         [attr.aria-expanded]="!collapsed()"
       >
         <span class="awaiting__caret" aria-hidden="true">{{ collapsed() ? '▸' : '▾' }}</span>
@@ -151,11 +151,19 @@
                   </div>
                   <div class="wait__actions">
                     @if (returning() === row.handback.note_id) {
-                      <span class="wait__confirm">
-                        Give #{{ row.handback.seq }} back to {{ agentLabel(row.handback.from_actor) }}?
-                      </span>
+                      <!-- The reason is the whole point of this control. Sending
+                           it back unblocks one item; saying why is what stops the
+                           next fifty arriving, because it becomes a routing
+                           correction the lesson distiller reads. -->
+                      <input
+                        class="wait__reason"
+                        type="text"
+                        placeholder="Why shouldn't this have reached you?"
+                        #backReason
+                        (keydown.enter)="returnToAgent(row.handback, backReason.value)" />
                       <button type="button" class="wait__btn wait__btn--go"
-                        (click)="returnToAgent(row.handback)">yes, send it back</button>
+                        [disabled]="!backReason.value.trim()"
+                        (click)="returnToAgent(row.handback, backReason.value)">send back &amp; teach</button>
                       <button type="button" class="wait__btn"
                         (click)="toggleReturn(row.handback.note_id)">cancel</button>
                     } @else {

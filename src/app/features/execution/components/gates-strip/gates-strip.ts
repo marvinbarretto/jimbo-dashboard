@@ -51,7 +51,7 @@ const DAY_MS = 86_400_000;
     @if (gates().length) {
       <div class="gates" role="group" aria-label="Pipeline gates">
         @for (g of gates(); track g.id) {
-          <article class="gate" [class.gate--blocked]="g.blocked">
+          <article class="gate" [class.gate--blocked]="g.blocked" [class.gate--haslist]="g.blockers.length > 0">
             <header class="gate__head">
               <span class="gate__label">{{ g.label }}</span>
               <span class="gate__state" [class.gate__state--blocked]="g.blocked">

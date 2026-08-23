@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { mergeAwaitingRows, type AwaitingRow, type Handback, type ReviewWaiting } from '@domain/awaiting';
@@ -56,7 +56,23 @@ export class AwaitingStrip {
   readonly loading = this.awaiting.loading;
   readonly loaded = this.awaiting.loaded;
 
+  /**
+   * Starts collapsed once the pile is big enough to bury the page.
+   *
+   * This strip sits above the kanban on /execution, and with 69 rows rendered
+   * the board was simply off-screen — it read as "the kanban is gone" rather
+   * than "the strip is long". Expanded is still right for a handful of items,
+   * where seeing them beats one more click.
+   *
+   * Set from an effect rather than at construction because the count arrives
+   * with the fetch, and it only fires while untouched: once the operator opens
+   * or closes it, that is the answer and loading data must not override it.
+   */
   readonly collapsed = signal(false);
+  private readonly collapseTouched = signal(false);
+
+  /** Above this, the strip is long enough to hide whatever follows it. */
+  private static readonly COLLAPSE_ABOVE = 12;
   /** Which handback's "give it back" confirm is open. */
   readonly returning = signal<VaultItemId | null>(null);
   /** Which review row has its send-back reason box open. */
@@ -64,6 +80,17 @@ export class AwaitingStrip {
 
   constructor() {
     this.awaiting.load(CURRENT_ACTOR_ID);
+
+    effect(() => {
+      const n = this.waitingCount();
+      if (this.collapseTouched() || !this.loaded()) return;
+      if (n > AwaitingStrip.COLLAPSE_ABOVE) this.collapsed.set(true);
+    });
+  }
+
+  toggleCollapsed(): void {
+    this.collapseTouched.set(true);
+    this.collapsed.update(v => !v);
   }
 
   /** ReviewItem -> the framework-free domain shape the merge understands. */
@@ -165,8 +192,25 @@ export class AwaitingStrip {
     this.rejecting.update(cur => (cur === id ? null : id));
   }
 
-  returnToAgent(h: Handback): void {
-    this.vaultCommands.reassign(h.note_id, h.from_actor, 'returned by the operator from the awaiting strip');
+  /**
+   * Hand an item back to the agent that sent it — and say why.
+   *
+   * The reason is not decoration. `reassignNote` turns a marvin -> agent
+   * handback carrying a reason into a `grooming_corrections` row, which the
+   * distiller reads and turns into a lesson served to every grooming agent.
+   * That is the only path by which acting on this strip changes what arrives
+   * next week. This used to pass the fixed string "returned by the operator
+   * from the awaiting strip", so 124 handbacks a week taught the router nothing.
+   *
+   * Refuses an empty reason rather than sending a hollow one: a correction with
+   * no reason records that a mistake happened without saying what the rule
+   * should be, which is worse than no correction because it dilutes the set the
+   * distiller learns from.
+   */
+  returnToAgent(h: Handback, reason: string): void {
+    const why = reason.trim();
+    if (!why) return;
+    this.vaultCommands.reassign(h.note_id, h.from_actor, why);
     this.awaiting.dismiss(h.note_id);
     this.returning.set(null);
   }

@@ -216,6 +216,16 @@
     &--warn    { border-color: var(--color-warning); color: var(--color-warning); }
 
     &:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+    // The send-back button is gated on a reason being typed. Without this it
+    // looks identical to an enabled one, so a click that does nothing reads as
+    // a broken button rather than an unmet requirement.
+    &:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+
+      &:hover { border-color: var(--color-border); color: var(--color-text-muted); }
+    }
   }
 }
 

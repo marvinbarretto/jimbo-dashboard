@@ -1,8 +1,16 @@
 :host { display: block; }
 
+// Equal columns were wrong for what these cards actually hold. A gate that can
+// name its blockers does (see gates-strip.ts) — Notifications carries a
+// paragraph, a three-item list and a timestamp, while Deferred carries the
+// words "Nothing parked." Splitting the row evenly cramped the first to fit the
+// last. Sizing by content instead: every gate keeps a floor so the row stays
+// scannable, and the ones with a list are allowed to grow into the slack the
+// empty ones are not using.
 .gates {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(13rem, auto));
+  align-items: start;
   gap: 0.75rem;
   margin-bottom: 1rem;
 }
@@ -12,8 +20,13 @@
   border-radius: var(--radius);
   padding: 0.75rem;
   background: var(--color-surface);
+  min-width: 0;   // let long blocker titles ellipsize rather than widen the track
 
   &--blocked { border-color: var(--color-danger); }
+
+  // A gate listing blockers earns more room; one reading "Nothing parked" does
+  // not. Falls back to a normal track where :has() is unsupported.
+  &--haslist { grid-column: span 2; }
 }
 
 .gate__head {
