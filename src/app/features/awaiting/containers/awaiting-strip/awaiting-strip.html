@@ -96,14 +96,15 @@
                         placeholder="What needs redoing?"
                         #reason
                         (keydown.enter)="sendBackReview(row.review, reason.value)" />
-                      <button type="button" class="wait__btn wait__btn--warn"
-                        (click)="sendBackReview(row.review, reason.value)">send back</button>
-                      <button type="button" class="wait__btn" (click)="toggleReject(row.review.id)">cancel</button>
+                      <app-ui-button size="sm" variant="danger"
+                        (pressed)="sendBackReview(row.review, reason.value)">send back</app-ui-button>
+                      <app-ui-button size="sm" variant="ghost"
+                        (pressed)="toggleReject(row.review.id)">cancel</app-ui-button>
                     } @else {
-                      <button type="button" class="wait__btn wait__btn--go"
-                        (click)="approveReview(row.review)">accept ✓</button>
-                      <button type="button" class="wait__btn"
-                        (click)="toggleReject(row.review.id)">send back</button>
+                      <app-ui-button size="sm" variant="primary" class="wait__go"
+                        (pressed)="approveReview(row.review)">accept ✓</app-ui-button>
+                      <app-ui-button size="sm" variant="ghost"
+                        (pressed)="toggleReject(row.review.id)">send back</app-ui-button>
                     }
                   </div>
                 </article>
@@ -161,16 +162,16 @@
                         placeholder="Why shouldn't this have reached you?"
                         #backReason
                         (keydown.enter)="returnToAgent(row.handback, backReason.value)" />
-                      <button type="button" class="wait__btn wait__btn--go"
+                      <app-ui-button size="sm" variant="primary" class="wait__go"
                         [disabled]="!backReason.value.trim()"
-                        (click)="returnToAgent(row.handback, backReason.value)">send back &amp; teach</button>
-                      <button type="button" class="wait__btn"
-                        (click)="toggleReturn(row.handback.note_id)">cancel</button>
+                        (pressed)="returnToAgent(row.handback, backReason.value)">send back &amp; teach</app-ui-button>
+                      <app-ui-button size="sm" variant="ghost"
+                        (pressed)="toggleReturn(row.handback.note_id)">cancel</app-ui-button>
                     } @else {
-                      <button type="button" class="wait__btn wait__btn--primary"
-                        (click)="toggleReturn(row.handback.note_id)">
+                      <app-ui-button size="sm" variant="primary"
+                        (pressed)="toggleReturn(row.handback.note_id)">
                         back to &#64;{{ agentLabel(row.handback.from_actor) }}
-                      </button>
+                      </app-ui-button>
                     }
                   </div>
                 </article>

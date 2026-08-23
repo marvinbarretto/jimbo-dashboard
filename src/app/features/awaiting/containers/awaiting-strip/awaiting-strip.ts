@@ -12,6 +12,7 @@ import { ReviewService, type ReviewItem } from '@features/dispatch-review/data-a
 import { VaultItemCommands } from '@features/vault-items/commands/vault-item-commands';
 import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
+import { UiButton } from '@shared/components/ui-button/ui-button';
 import { CardCallout } from '@shared/components/card-callout/card-callout';
 import { relativeTime } from '@shared/utils/datetime.utils';
 
@@ -35,7 +36,7 @@ const WINDOW_OPTIONS: readonly WindowOption[] = [
  */
 @Component({
   selector: 'app-awaiting-strip',
-  imports: [QuestionCard, EntityChip, RouterLink, UiBadge, CardCallout],
+  imports: [QuestionCard, EntityChip, RouterLink, UiBadge, CardCallout, UiButton],
   templateUrl: './awaiting-strip.html',
   styleUrl: './awaiting-strip.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

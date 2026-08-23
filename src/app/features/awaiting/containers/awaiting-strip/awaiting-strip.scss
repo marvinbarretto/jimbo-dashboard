@@ -185,7 +185,12 @@
     justify-content: flex-end;
   }
 
-  &__confirm { font-size: .7rem; color: var(--color-text-soft); }
+  // ui-button has no success variant, and "accept" / "send back & teach" are
+  // affirmative rather than merely primary. Retone in place via the custom
+  // property the variants themselves use, so focus, hover and disabled all
+  // still come from the primitive.
+  &__go { --button-color: var(--color-success); }
+
 
   &__reason {
     background: var(--color-surface);
@@ -199,34 +204,6 @@
     &:focus-visible { outline: none; box-shadow: var(--focus-ring); }
   }
 
-  &__btn {
-    background: none;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    padding: .2rem .5rem;
-    font-size: .7rem;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    white-space: nowrap;
-
-    &:hover { border-color: var(--color-accent); color: var(--color-text); }
-
-    &--primary { border-color: var(--color-accent); color: var(--color-accent); }
-    &--go      { border-color: var(--color-success); color: var(--color-success); }
-    &--warn    { border-color: var(--color-warning); color: var(--color-warning); }
-
-    &:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-
-    // The send-back button is gated on a reason being typed. Without this it
-    // looks identical to an enabled one, so a click that does nothing reads as
-    // a broken button rather than an unmet requirement.
-    &:disabled {
-      opacity: .45;
-      cursor: not-allowed;
-
-      &:hover { border-color: var(--color-border); color: var(--color-text-muted); }
-    }
-  }
 }
 
 // Stack the row on narrow screens — the three-column grid collapses badly
