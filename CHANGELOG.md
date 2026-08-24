@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.184](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.183...v0.0.184) (2026-08-24)
+
+
+### Features
+
+* **notification-bar:** collapse duplicate failures, add dismiss all ([61440ba](https://github.com/marvinbarretto/jimbo-dashboard/commit/61440ba42cd08a6d5ddbc7c232ae648283064bdc))
+
 ### [0.0.183](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.182...v0.0.183) (2026-08-24)
 
 
