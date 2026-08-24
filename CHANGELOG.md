@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.185](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.184...v0.0.185) (2026-08-24)
+
+
+### Features
+
+* **config:** pipeline levers page ([7c68038](https://github.com/marvinbarretto/jimbo-dashboard/commit/7c680387f0d1a1ea461d0d1f1ea2058c510687fe))
+* **journal:** add the day-stream section to the work page ([91c6a6a](https://github.com/marvinbarretto/jimbo-dashboard/commit/91c6a6a1c63291abce8bc928057f439d63b8e65c))
+
+
+### Bug Fixes
+
+* **journal:** keep commits visible when the push poller comes back ([e22c2a8](https://github.com/marvinbarretto/jimbo-dashboard/commit/e22c2a814edd656f8f9ed7cfaa9bef72a6faf356))
+
 ### [0.0.184](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.183...v0.0.184) (2026-08-24)
 
 
