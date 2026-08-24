@@ -1,0 +1,90 @@
+<app-ui-section title="The day, in order" [meta]="sectionMeta()"
+  [expanded]="open()" (toggled)="open.set(!open())">
+
+  @if (loading()) {
+    <app-ui-loading-state message="Assembling the day…" />
+  } @else if (failed()) {
+    <app-ui-empty-state
+      title="Could not assemble the day"
+      message="The day-stream endpoint failed. Every other section on this page reads its own source, so they may still be accurate." />
+  } @else {
+    <app-ui-stack gap="lg">
+
+      <!-- Broken sources first. A dead collector rendered as a zero is the
+           failure this whole view exists to prevent, so it goes above the
+           day rather than in a panel underneath it. -->
+      @if (deadSignals().length) {
+        <ul class="day-stream__dead">
+          @for (s of deadSignals(); track s.id) {
+            <li class="day-stream__dead-row">
+              <app-ui-badge tone="danger">{{ s.label }}</app-ui-badge>
+              <span class="day-stream__dead-note">{{ s.note }}</span>
+              <span class="day-stream__dead-age">{{ staleLabel(s) }}</span>
+            </li>
+          }
+        </ul>
+      }
+
+      @if (aggregates().length) {
+        <div class="day-stream__stats">
+          @for (a of aggregates(); track a.source + a.key) {
+            <app-ui-stat-card [label]="a.label" [value]="formatAggregate(a)" />
+          }
+        </div>
+      }
+
+      @if (rows().length === 0) {
+        <app-ui-empty-state
+          title="Nothing recorded"
+          message="No source produced a moment in this day's window." />
+      } @else {
+        <ol class="day-stream__list">
+          @for (r of rows(); track r.key) {
+            <li class="day-stream__row" [attr.data-category]="r.category">
+              <div class="day-stream__when">
+                <span class="day-stream__time">{{ r.time }}</span>
+                @if (r.timeEnd) {
+                  <span class="day-stream__time-end">{{ r.timeEnd }}</span>
+                }
+              </div>
+
+              <div class="day-stream__body">
+                <div class="day-stream__head">
+                  <app-ui-badge [tone]="r.tone">{{ r.kind }}</app-ui-badge>
+                  <span class="day-stream__title">{{ r.title }}</span>
+                  @if (r.magnitude) {
+                    <span class="day-stream__magnitude">{{ r.magnitude }}</span>
+                  }
+                </div>
+
+                @if (r.projectName || r.detail) {
+                  <p class="day-stream__detail">
+                    @if (r.projectName) {
+                      <span class="day-stream__project">{{ r.projectName }}</span>
+                    }
+                    @if (r.detail) { {{ r.detail }} }
+                  </p>
+                }
+
+                @if (r.commits.length) {
+                  <ul class="day-stream__commits">
+                    @for (c of r.commits; track $index) {
+                      <li>{{ c }}</li>
+                    }
+                  </ul>
+                }
+              </div>
+            </li>
+          }
+        </ol>
+      }
+
+      @if (fleetCount()) {
+        <button type="button" class="day-stream__toggle" (click)="showFleet.set(!showFleet())">
+          {{ showFleet() ? 'Hide' : 'Show' }} {{ fleetCount() }} fleet {{ fleetCount() === 1 ? 'moment' : 'moments' }}
+        </button>
+      }
+
+    </app-ui-stack>
+  }
+</app-ui-section>

@@ -31,6 +31,7 @@ import {
 } from '@shared/utils/date-keys';
 import { RouterLink } from '@angular/router';
 import { JournalCodeSessionsSection } from '../../components/journal-code-sessions-section/journal-code-sessions-section';
+import { JournalDayStreamSection } from '../../components/journal-day-stream-section/journal-day-stream-section';
 import { JournalPeriodHeader } from '../../components/journal-period-header/journal-period-header';
 import {
   JournalDataService,
@@ -91,6 +92,7 @@ interface RepoBucket {
     UiSubhead,
     UiSubsection,
     JournalCodeSessionsSection,
+    JournalDayStreamSection,
     JournalPeriodHeader,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -115,7 +117,9 @@ export class JournalWorkPage {
     { initialValue: '' },
   );
 
-  private readonly safeKey = computed(() => {
+  // Protected: the day-stream section takes the validated key straight from
+  // the template rather than re-deriving the fallback.
+  protected readonly safeKey = computed(() => {
     const g = this.granularity();
     const k = this.key();
     const ok = g === 'day' ? isDayKey(k) : g === 'week' ? isWeekKey(k) : isMonthKey(k);

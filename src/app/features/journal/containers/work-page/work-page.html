@@ -165,6 +165,14 @@
       </app-ui-stack>
     </app-ui-section>
 
+    <!-- ── THE DAY, IN ORDER ───────────────────────────────── -->
+    <!-- Every source in one column, chronological. Day only: a week of
+         moments is a log nobody reads, and the rollups above already answer
+         the week/month questions. -->
+    @if (isDay()) {
+      <app-journal-day-stream-section [date]="safeKey()" />
+    }
+
     <!-- ── CODE SESSIONS ───────────────────────────────────── -->
     <!-- Claude Code hook captures — the richest "what actually got done"
          signal. On week/month this lists the whole period's sessions. -->

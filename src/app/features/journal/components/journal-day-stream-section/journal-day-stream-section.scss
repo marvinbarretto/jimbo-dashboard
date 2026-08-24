@@ -1,0 +1,160 @@
+.day-stream__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.75rem;
+}
+
+// Broken sources. Deliberately loud: the point of the whole view is that a
+// dead collector must not read as a quiet day.
+.day-stream__dead {
+  list-style: none;
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
+  border-radius: var(--radius-md, 0.5rem);
+  background: color-mix(in srgb, var(--color-danger) 7%, transparent);
+}
+
+.day-stream__dead-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.day-stream__dead-note {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  flex: 1 1 18rem;
+}
+
+.day-stream__dead-age {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-danger);
+}
+
+.day-stream__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.day-stream__row {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: 0.75rem;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 35%, transparent);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  // A thin category rail. Colour is the fastest way to read the shape of a
+  // day — where the work sits against the walking and the watching.
+  border-left: 3px solid transparent;
+
+  &[data-category='work']        { border-left-color: color-mix(in srgb, var(--color-accent) 70%, transparent); }
+  &[data-category='body']        { border-left-color: color-mix(in srgb, var(--color-success) 70%, transparent); }
+  &[data-category='state']       { border-left-color: color-mix(in srgb, var(--color-info) 70%, transparent); }
+  &[data-category='consumption'] { border-left-color: color-mix(in srgb, var(--color-warning) 70%, transparent); }
+
+  @media (max-width: 40rem) {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+}
+
+.day-stream__when {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.day-stream__time {
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-stream__time-end {
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.day-stream__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.day-stream__head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.day-stream__title {
+  font-size: 0.9rem;
+  min-width: 0;
+}
+
+.day-stream__magnitude {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
+
+.day-stream__detail {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.day-stream__project {
+  margin-right: 0.4rem;
+  color: var(--color-text);
+}
+
+.day-stream__commits {
+  list-style: none;
+  margin: 0.15rem 0 0;
+  padding: 0 0 0 0.75rem;
+  border-left: 2px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+
+  li {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.74rem;
+    color: var(--color-text-muted);
+    overflow-wrap: anywhere;
+  }
+}
+
+.day-stream__toggle {
+  align-self: flex-start;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 0.35rem);
+  padding: 0.3rem 0.6rem;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-text);
+    border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-border));
+  }
+}
