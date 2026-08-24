@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.183](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.182...v0.0.183) (2026-08-24)
+
+
+### Features
+
+* **delivery:** a page for the gap between merged and shipped ([b35a1d5](https://github.com/marvinbarretto/jimbo-dashboard/commit/b35a1d5d68f3cf2eed7b6515fea0038ad618cbc3))
+* **execution:** gates strip — what is blocking, and what is holding it ([21401b9](https://github.com/marvinbarretto/jimbo-dashboard/commit/21401b9865aa83077309e276f8771f67b30c71c9)), closes [#4230](https://github.com/marvinbarretto/jimbo-dashboard/issues/4230)
+* **execution:** say how much of the dispatch table the board can see ([02fa775](https://github.com/marvinbarretto/jimbo-dashboard/commit/02fa77507ce798b0c9a717db380d3e4da9a794ec))
+* **execution:** say why on a handback; give the board back; size gates by content ([145bd0b](https://github.com/marvinbarretto/jimbo-dashboard/commit/145bd0bd9e5111a4a780a38365cba964f9e0c1de))
+* **notification-bar:** add sticky notification primitives + UI-Lab sections ([f3e40c5](https://github.com/marvinbarretto/jimbo-dashboard/commit/f3e40c5289fa766943d3a4e4abd88eaef779fe4e))
+* **notification-bar:** wire the site-wide bar to live dispatch failures ([9016c84](https://github.com/marvinbarretto/jimbo-dashboard/commit/9016c84a8fc0c5e7481986a8ab6650ce46e9d79c))
+* **ui:** lifecycle banner — archived items stop looking live ([a33e567](https://github.com/marvinbarretto/jimbo-dashboard/commit/a33e567ec6959118901564b276eafd0192ee607e))
+
+
+### Bug Fixes
+
+* **awaiting-strip:** "showing newest 69" + "979 older" read as 69979 ([229e267](https://github.com/marvinbarretto/jimbo-dashboard/commit/229e267f48275f19f843c45e0b2e3fe1b4716109))
+* **execution:** live board updates were being dropped on the floor ([21b3745](https://github.com/marvinbarretto/jimbo-dashboard/commit/21b37456de28694060b62cc59302410ee1842ad9))
+* **execution:** the lanes were a 150px sliver under their own chrome ([f5183d5](https://github.com/marvinbarretto/jimbo-dashboard/commit/f5183d589f7c44e41b606e654b7cb4b731b02b93))
+* **gates-strip:** it was rendering on fallback hex, invisible in light mode ([79c84b5](https://github.com/marvinbarretto/jimbo-dashboard/commit/79c84b538cd9a59bc7edb49f9ddd69aa869c5930))
+* **gates-strip:** render threshold-less gates as disclosures, not full bars ([f01b284](https://github.com/marvinbarretto/jimbo-dashboard/commit/f01b2847efe1f904f8a8f8522106ad7630b04d5b))
+* **lifecycle-banner:** warning weight — the muted version vanished in situ ([cd3ff26](https://github.com/marvinbarretto/jimbo-dashboard/commit/cd3ff264dd52029db76df80e63f0f2108326d98e))
+
+
+### Code Refactoring
+
+* **awaiting-strip:** row buttons come from ui-button ([7c0a9bc](https://github.com/marvinbarretto/jimbo-dashboard/commit/7c0a9bcba2dd9e911a0bcb18127fae0c1c4c1faf))
+
 ### [0.0.182](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.181...v0.0.182) (2026-08-22)
 
 
