@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.186](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.185...v0.0.186) (2026-08-24)
+
+
+### Features
+
+* **config:** show queue depth and flow order on the pipeline page ([8ba53c2](https://github.com/marvinbarretto/jimbo-dashboard/commit/8ba53c2ad15e3f48677eccaea5c42fbabb52bb59))
+
+
+### Bug Fixes
+
+* **config:** colour the project chips by project ([12e3df6](https://github.com/marvinbarretto/jimbo-dashboard/commit/12e3df67d5a99da4af3a9fc0713122fced9abd0f))
+* **config:** re-home the projectless warning to the control that clears it ([119f830](https://github.com/marvinbarretto/jimbo-dashboard/commit/119f830beb26a15da4d0fa2fae8527d9a9e9a363))
+
 ### [0.0.185](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.184...v0.0.185) (2026-08-24)
 
 
