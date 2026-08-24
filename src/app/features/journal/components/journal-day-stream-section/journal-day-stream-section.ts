@@ -107,23 +107,48 @@ export class JournalDayStreamSection {
 
   /**
    * Commits are folded into the session that produced them rather than listed
-   * as peers.
+   * as peers — seven identical timestamps in a row reads as noise, not history.
    *
-   * They carry no real timestamp of their own — session artifacts anchor every
-   * commit to its session's start — so streaming them as siblings puts seven
-   * identical times in a row and implies a precision the data does not have.
+   * Two anchoring rules, because the endpoint unions two producers:
+   *
+   * - `via: 'code_session'` commits carry no timestamp of their own; the server
+   *   anchors them to their session's start, so they match by exact instant.
+   * - `via: 'github_push'` commits carry a real `author_date`, which will match
+   *   no session start. They fold into whichever work span contains them.
+   *
+   * The second rule is dormant today — the push poller has been down since
+   * 2026-08-13, so every commit currently arrives by the first route. It is
+   * here because the day the token is replaced is precisely the day exact-match
+   * folding would silently drop every commit on the page.
+   *
+   * Anything that matches neither becomes its own row. A commit is never
+   * dropped for failing to find a parent.
    */
   protected readonly rows = computed<readonly StreamRow[]>(() => {
-    const commitsBySessionTime = new Map<string, string[]>();
-    for (const m of this.visibleMoments()) {
-      if (m.kind !== 'commit') continue;
-      const list = commitsBySessionTime.get(m.ts) ?? [];
-      list.push(m.title);
-      commitsBySessionTime.set(m.ts, list);
+    const visible = this.visibleMoments();
+    const commits = visible.filter(m => m.kind === 'commit');
+    const spans = visible.filter(m => m.kind !== 'commit');
+
+    const adopted = new Map<Moment, string[]>();
+    const orphans: Moment[] = [];
+
+    for (const c of commits) {
+      // Only a work span can own a commit; a walk sharing an instant must not
+      // adopt one.
+      const candidates = spans.filter(s => s.category === 'work');
+      const parent = c.meta['via'] === 'code_session'
+        ? candidates.find(s => s.ts === c.ts)
+        : candidates.find(s => {
+            if (!s.ts_end) return false;
+            return c.ts >= s.ts && c.ts <= s.ts_end;
+          });
+
+      if (!parent) { orphans.push(c); continue; }
+      adopted.set(parent, [...(adopted.get(parent) ?? []), c.title]);
     }
 
-    return this.visibleMoments()
-      .filter(m => m.kind !== 'commit')
+    return [...spans, ...orphans]
+      .sort((a, b) => a.ts.localeCompare(b.ts))
       .map((m, i) => ({
         key: `${m.source}:${m.ts}:${i}`,
         time: hhmm(m.ts),
@@ -135,9 +160,7 @@ export class JournalDayStreamSection {
         detail: m.detail,
         projectName: m.project_id ? this.projectName(m.project_id) : null,
         magnitude: this.magnitude(m),
-        // Only a work span can own commits; a walk sharing a start instant must
-        // not adopt them.
-        commits: m.category === 'work' ? (commitsBySessionTime.get(m.ts) ?? []) : [],
+        commits: adopted.get(m) ?? [],
       }));
   });
 
