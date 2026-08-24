@@ -206,3 +206,14 @@
   font-size: 0.85rem;
   color: var(--color-text);
 }
+
+/* Project identity dot. A chip with no `color` falls back to the muted token,
+   which makes its selected state a faint grey tint — indistinguishable at a
+   glance on a dark surface, and the reason this panel first read as inert. */
+.pipeline__swatch {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.25);
+}

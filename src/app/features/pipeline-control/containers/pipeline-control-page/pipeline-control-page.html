@@ -111,8 +111,15 @@
         @for (project of projects(); track project.id) {
           <app-ui-select-chip
             [label]="project.id"
+            [color]="project.color_token"
             [selected]="scopeProjects().includes(project.id)"
-            (toggle)="onToggleProject(keys.scopeProjects, project.id)" />
+            (toggle)="onToggleProject(keys.scopeProjects, project.id)">
+            <span
+              chipLead
+              class="pipeline__swatch"
+              [style.background]="project.color_token"
+              aria-hidden="true"></span>
+          </app-ui-select-chip>
         }
       </div>
     </app-ui-section>
@@ -155,8 +162,15 @@
         @for (project of projects(); track project.id) {
           <app-ui-select-chip
             [label]="project.id"
+            [color]="project.color_token"
             [selected]="autonomousProjects().includes(project.id)"
-            (toggle)="onToggleProject(keys.autonomousProjects, project.id)" />
+            (toggle)="onToggleProject(keys.autonomousProjects, project.id)">
+            <span
+              chipLead
+              class="pipeline__swatch"
+              [style.background]="project.color_token"
+              aria-hidden="true"></span>
+          </app-ui-select-chip>
         }
       </div>
     </app-ui-section>
