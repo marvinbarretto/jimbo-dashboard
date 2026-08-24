@@ -99,6 +99,8 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'refresh-control',         name: 'Refresh Control',       group: 'utilities',       selector: 'app-ui-refresh-control', description: 'Freshness timestamp + reload button for activity-style polling pages.' },
   { id: 'datetime-pipes',          name: 'Date & Time Pipes',     group: 'utilities',                                          description: 'datetime and relativeTime pipes for ISO string formatting.' },
   { id: 'ui-prose',                name: 'Prose',                 group: 'utilities',       selector: 'app-ui-prose',           description: 'Renders a plain-text field as a paragraph, splitting an inline enumerated list ("(1) foo, (2) bar") into a real <ol> — display-only, source string untouched.' },
+  { id: 'notification-item',       name: 'Notification Item',    group: 'utilities',       selector: 'app-notification-item', description: 'Atom — sticky-until-dismissed alert row: source, message, when, optional deep link, dismiss ×. No auto-dismiss timer, unlike app-toast.' },
+  { id: 'notification-bar',        name: 'Notification Bar',     group: 'utilities',       selector: 'app-notification-bar',  description: 'Organism — sticky top-of-shell stack of Notification Items. Fleet-wide, not scoped to the current page; the whole point is not having to go looking for it.' },
 
   // Workflows — page-level patterns
   { id: 'list-workflow',           name: 'List Workflow',         group: 'workflows',                                          description: 'Typical page header + table pattern for browsable lists.' },

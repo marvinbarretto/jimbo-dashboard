@@ -237,6 +237,8 @@ const desktopRoutes: Routes = [
       { path: 'nutrition-row',           loadComponent: () => import('./features/ui-lab/sections/nutrition-row-section').then(m => m.NutritionRowSection) },
       { path: 'tracker',                 loadComponent: () => import('./features/ui-lab/sections/tracker-section').then(m => m.TrackerSection) },
       { path: 'nutrition-mobile',        loadComponent: () => import('./features/ui-lab/sections/nutrition-mobile-section').then(m => m.NutritionMobileSection) },
+      { path: 'notification-item',      loadComponent: () => import('./features/ui-lab/sections/notification-item-section').then(m => m.NotificationItemSection) },
+      { path: 'notification-bar',       loadComponent: () => import('./features/ui-lab/sections/notification-bar-section').then(m => m.NotificationBarSection) },
     ],
   },
   {
