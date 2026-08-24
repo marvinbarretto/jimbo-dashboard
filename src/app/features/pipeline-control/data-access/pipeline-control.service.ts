@@ -16,6 +16,21 @@ import { environment } from '../../../../environments/environment';
 
 export type PipelineScope = 'all' | 'priority_1_only';
 
+export interface StageQueue {
+  stage: string;
+  /** Everything sitting at this stage's grooming_status. */
+  at_status: number;
+  /** What the pump would actually admit right now. */
+  eligible: number;
+  per_tick: number;
+}
+
+export interface PipelineQueue {
+  ts: string;
+  stages: StageQueue[];
+  ticks_per_day: number;
+}
+
 /** The one place the key strings live. Mirrors `SETTINGS` in pipeline-pump.ts. */
 export const PIPELINE_KEYS = {
   enabled: 'pipeline.enabled',
@@ -76,6 +91,9 @@ function parseInt10(raw: string | undefined, fallback: number): number {
 export class PipelineControlService {
   private readonly http = inject(HttpClient);
   private readonly base = environment.dashboardApiUrl;
+
+  private readonly _queue = signal<PipelineQueue | null>(null);
+  readonly queue = this._queue.asReadonly();
 
   private readonly _settings = signal<Record<string, string>>({});
   private readonly _loading = signal(true);
@@ -143,6 +161,36 @@ export class PipelineControlService {
 
   constructor() {
     void this.load();
+    void this.loadQueue();
+  }
+
+  /** Depth is derived from settings, so a saved lever invalidates it. */
+  async loadQueue(): Promise<void> {
+    try {
+      this._queue.set(
+        await firstValueFrom(this.http.get<PipelineQueue>(`${this.base}/api/pipeline/queue`)),
+      );
+    } catch {
+      this._queue.set(null);
+    }
+  }
+
+  queueFor(stage: string): StageQueue | null {
+    return this._queue()?.stages.find(s => s.stage === stage) ?? null;
+  }
+
+  readonly ticksPerDay = computed(() => this._queue()?.ticks_per_day ?? 0);
+
+  /**
+   * Days to clear a stage's eligible backlog at its current rate. Null when the
+   * rate is 0 (never drains) or there is nothing waiting — both of which are
+   * states a number would misrepresent as progress.
+   */
+  drainDays(stage: string): number | null {
+    const q = this.queueFor(stage);
+    const perDay = (q?.per_tick ?? 0) * this.ticksPerDay();
+    if (!q || q.eligible === 0 || perDay <= 0) return null;
+    return Math.ceil(q.eligible / perDay);
   }
 
   private raw(key: PipelineKey): string | undefined {
@@ -177,6 +225,7 @@ export class PipelineControlService {
         this.http.put<{ key: string; value: string }>(`${this.base}/api/settings/${key}`, { value }),
       );
       this._settings.update(s => ({ ...s, [key]: saved.value }));
+      await this.loadQueue();
     } catch {
       this._error.set(`Could not save ${key}.`);
     } finally {

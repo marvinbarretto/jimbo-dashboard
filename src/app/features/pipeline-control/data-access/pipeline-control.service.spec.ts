@@ -33,12 +33,26 @@ describe('PipelineControlService', () => {
     service = TestBed.inject(PipelineControlService);
     http = TestBed.inject(HttpTestingController);
     http.expectOne(url).flush(settings);
+    // The constructor also probes queue depth; leave it unmatched and
+    // afterEach's verify() fails on a request the test never asked about.
+    http.expectOne(`${environment.dashboardApiUrl}/api/pipeline/queue`)
+      .flush({ ts: '2026-08-24T00:00:00Z', stages: [], ticks_per_day: 48 });
     await Promise.resolve();
   }
 
+  /** save() re-reads depth on success, since every lever changes eligibility. */
+  async function flushQueueProbe(): Promise<void> {
+    await Promise.resolve();
+    http.expectOne(`${environment.dashboardApiUrl}/api/pipeline/queue`)
+      .flush({ ts: '2026-08-24T00:00:00Z', stages: [], ticks_per_day: 48 });
+  }
+
   afterEach(() => {
-    http.verify();
-    TestBed.resetTestingModule();
+    try {
+      http.verify();
+    } finally {
+      TestBed.resetTestingModule();
+    }
   });
 
   describe('array settings', () => {
@@ -114,6 +128,7 @@ describe('PipelineControlService', () => {
       expect(req.request.body).toEqual({ value: ['jimbo'] });
       // normalizeSettingValue JSON-encodes server-side; trust the echo.
       req.flush({ key: PIPELINE_KEYS.scopeProjects, value: '["jimbo"]' });
+      await flushQueueProbe();
       await pending;
 
       expect(service.scopeProjects()).toEqual(['jimbo']);
@@ -126,6 +141,7 @@ describe('PipelineControlService', () => {
       const req = http.expectOne(`${url}/${PIPELINE_KEYS.scopeProjects}`);
       expect(req.request.body).toEqual({ value: ['localshout'] });
       req.flush({ key: PIPELINE_KEYS.scopeProjects, value: '["localshout"]' });
+      await flushQueueProbe();
       await pending;
 
       expect(service.scopeProjects()).toEqual(['localshout']);

@@ -47,7 +47,15 @@
     </app-ui-section>
 
     <!-- Flow ---------------------------------------------------------- -->
-    <app-ui-section title="Stages" meta="items admitted per tick" [collapsible]="false">
+    <app-ui-section title="Stages" meta="work flows left to right" [collapsible]="false">
+      @if (entryBlocked()) {
+        <p class="pipeline__warn" role="note">
+          <strong>Nothing can enter the pipeline.</strong>
+          {{ queueFor('intake')?.at_status }} notes are waiting at the entry stage and
+          <strong>none of them qualify</strong> under the current project scope. Work already
+          past intake keeps draining; nothing new joins it.
+        </p>
+      }
       <ol class="pipeline__flow">
         @for (stage of stages; track stage.id) {
           <li
@@ -56,11 +64,25 @@
             data-testid="pipeline-stage"
             [attr.data-stage]="stage.id">
             <div class="pipeline__stage-head">
+              <span class="pipeline__stage-ord" aria-hidden="true">{{ $index + 1 }}</span>
               <span class="pipeline__stage-label">{{ stage.label }}</span>
               @if (stage.entry) {
                 <app-ui-badge tone="info">entry</app-ui-badge>
               }
             </div>
+
+            @if (queueFor(stage.id); as q) {
+              <div class="pipeline__depth">
+                <span
+                  class="pipeline__depth-eligible"
+                  [class.pipeline__depth-eligible--zero]="q.eligible === 0">
+                  {{ q.eligible }}
+                </span>
+                <span class="pipeline__depth-label">
+                  eligible now<br />of {{ q.at_status }} at this stage
+                </span>
+              </div>
+            }
 
             <div class="pipeline__stepper">
               <app-ui-button
@@ -78,6 +100,17 @@
                 (pressed)="onStep(stage.key, stage.value(), 1)">+</app-ui-button>
             </div>
 
+            <p class="pipeline__rate">
+              @if (stage.value() > 0) {
+                {{ perDay(stage.id) }} / day at this rate
+                @if (drainDays(stage.id); as days) {
+                  · clears in ~{{ days }} day{{ days === 1 ? '' : 's' }}
+                }
+              } @else {
+                nothing moves through this stage
+              }
+            </p>
+
             <p class="pipeline__blurb">{{ stage.blurb }}</p>
 
             @if (stage.value() <= 0) {
@@ -86,6 +119,14 @@
           </li>
         }
       </ol>
+
+      @if (hasQueue()) {
+        <p class="pipeline__blurb pipeline__ticks">
+          The pump ticks every 30 minutes — {{ ticksPerDay() }} times a day. Each stage's
+          per-tick number multiplied by that is its ceiling; the drain estimate assumes nothing
+          new arrives.
+        </p>
+      }
 
       @if (deepreadOff()) {
         <p class="pipeline__note" role="note">

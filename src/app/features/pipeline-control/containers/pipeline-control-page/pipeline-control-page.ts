@@ -137,6 +137,28 @@ export class PipelineControlPage {
     () => this.pipeline.intakePerTick() + this.pipeline.deepreadPerTick(),
   );
 
+  queueFor(stage: string) {
+    return this.pipeline.queueFor(stage);
+  }
+
+  drainDays(stage: string): number | null {
+    return this.pipeline.drainDays(stage);
+  }
+
+  perDay(stage: string): number {
+    return (this.pipeline.queueFor(stage)?.per_tick ?? 0) * this.pipeline.ticksPerDay();
+  }
+
+  readonly ticksPerDay = this.pipeline.ticksPerDay;
+  readonly hasQueue = computed(() => this.pipeline.queue() !== null);
+
+  /** Entry is blocked when work exists at the entry status but none of it
+   *  qualifies — the single most misread state on this page. */
+  readonly entryBlocked = computed(() => {
+    const q = this.pipeline.queueFor('intake');
+    return !!q && q.at_status > 0 && q.eligible === 0;
+  });
+
   isSaving(key: PipelineKey): boolean {
     return this.savingKey() === key;
   }
