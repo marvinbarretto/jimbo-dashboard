@@ -6,7 +6,7 @@
 import { HttpClient } from '@angular/common/http';
 import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { ApiFleetStatsSchema, failureToNotification, type ApiFleetStats } from '@domain/dispatch';
+import { ApiFleetStatsSchema, failureToNotification, type ApiFleetStats, type FleetFailure } from '@domain/dispatch';
 import type { NotificationEntry } from '@shared/components/notification-bar/notification-bar';
 import { environment } from '../../../../environments/environment';
 import { ToastService } from '@shared/components/toast/toast.service';
@@ -39,14 +39,29 @@ export class FleetService {
   readonly stuckNotes = computed(() => this._stats()?.stuck_notes ?? []);
   readonly lastPipelineEnqueueAt = computed(() => this._stats()?.last_pipeline_enqueue_at ?? null);
 
-  // Site-wide notification bar feed — every failure() minus whatever's been
-  // dismissed, mapped to the shared shape. Lives here (not in the bar itself)
+  // Repeat failures on the same note (a grooming retry loop, a briefing
+  // that fails every run) would otherwise flood the bar with one row per
+  // attempt — group by note (falling back to task_id for failures with no
+  // note) so the bar shows one row per underlying problem. failures_24h
+  // arrives completed_at DESC, so each group's first member is the latest.
+  private readonly failureGroups = computed<ReadonlyMap<string, readonly FleetFailure[]>>(() => {
+    const groups = new Map<string, FleetFailure[]>();
+    for (const f of this.failures()) {
+      if (f.dismissed_at) continue;
+      const key = f.note_title ?? f.task_id;
+      const group = groups.get(key);
+      if (group) group.push(f);
+      else groups.set(key, [f]);
+    }
+    return groups;
+  });
+
+  // Site-wide notification bar feed. Lives here (not in the bar itself)
   // because it's the same 24h feed fleet-board already reads; the bar is just
-  // another consumer that additionally filters on dismissed_at.
+  // another consumer that additionally filters on dismissed_at and groups.
   readonly notifications = computed<readonly NotificationEntry[]>(() =>
-    this.failures()
-      .filter(f => !f.dismissed_at)
-      .map(failureToNotification));
+    [...this.failureGroups().values()]
+      .map(group => failureToNotification(group[0], group.length)));
 
   private timerHandle: ReturnType<typeof setInterval> | null = null;
   private started = false;
@@ -94,22 +109,35 @@ export class FleetService {
   // filter above), then persists. Rolled back on failure so a dropped request
   // doesn't leave the server thinking something was acknowledged that wasn't
   // — the 30s poll would otherwise silently resurrect it anyway, which reads
-  // as a bug rather than as "the dismiss didn't take".
+  // as a bug rather than as "the dismiss didn't take". `id` is the entry's
+  // (most recent) failure id; every failure grouped under the same note gets
+  // dismissed alongside it, or the older retries would just resurface as a
+  // "new" notification once the latest one is gone.
   async dismiss(id: string): Promise<void> {
     const previous = this._stats();
     if (!previous) return;
 
+    const group = [...this.failureGroups().values()].find(g => g[0].id === id);
+    const ids = group ? group.map(f => f.id) : [id];
+
     const now = new Date().toISOString();
     this._stats.set({
       ...previous,
-      failures_24h: previous.failures_24h.map(f => (f.id === id ? { ...f, dismissed_at: now } : f)),
+      failures_24h: previous.failures_24h.map(f => (ids.includes(f.id) ? { ...f, dismissed_at: now } : f)),
     });
 
     try {
-      await firstValueFrom(this.http.post(`${environment.dashboardApiUrl}/api/dispatch/${id}/dismiss`, {}));
+      await Promise.all(ids.map(fid =>
+        firstValueFrom(this.http.post(`${environment.dashboardApiUrl}/api/dispatch/${fid}/dismiss`, {}))));
     } catch {
       this._stats.set(previous);
       this.toast.error('Could not dismiss — try again');
     }
+  }
+
+  // "Dismiss all" gesture from the bar — one dismiss() per visible (already
+  // grouped) entry, so each still clears its whole retry group.
+  async dismissAll(): Promise<void> {
+    await Promise.all(this.notifications().map(entry => this.dismiss(entry.id)));
   }
 }

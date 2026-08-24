@@ -3,6 +3,7 @@
     <app-notification-bar
       [entries]="fleet.notifications()"
       (dismiss)="fleet.dismiss($event)"
+      (dismissAll)="fleet.dismissAll()"
     />
 
     <header class="app-header">

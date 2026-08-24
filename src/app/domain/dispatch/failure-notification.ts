@@ -29,8 +29,13 @@ function href(f: FleetFailure): string {
   return f.task_id.startsWith(BRIEFING_PREFIX) ? '/briefings' : '/fleet';
 }
 
-/** Fleet-wide dispatch failure → one notification-bar entry. */
-export function failureToNotification(f: FleetFailure): NotificationEntry {
+/**
+ * Fleet-wide dispatch failure → one notification-bar entry. `count` lets a
+ * caller collapse repeat failures on the same underlying note (retries) into
+ * one row — the entry keeps the most recent failure's id, so dismissing it
+ * is still a valid dispatch id to acknowledge.
+ */
+export function failureToNotification(f: FleetFailure, count = 1): NotificationEntry {
   return {
     id: f.id,
     source: sourceLabel(f),
@@ -38,5 +43,6 @@ export function failureToNotification(f: FleetFailure): NotificationEntry {
     timestamp: f.completed_at,
     tone: 'danger',
     href: href(f),
+    count,
   };
 }

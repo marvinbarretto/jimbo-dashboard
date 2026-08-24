@@ -29,6 +29,9 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
           <dd><code>danger</code> (default) / <code>warning</code> / <code>info</code></dd>
           <dt>href</dt>
           <dd>string or null — renders a "View →" deep link when present</dd>
+          <dt>count</dt>
+          <dd>number, default 1 — renders a "×N" badge when a host has collapsed repeat
+            failures on the same underlying note into one row</dd>
           <dt>(dismiss)</dt>
           <dd>output — fires when the × is pressed; the host owns actually removing it</dd>
         </app-ui-meta-list>
@@ -57,6 +60,13 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
             source="Briefing · evening"
             message="Skill has no metadata.executors configured — cannot dispatch"
             tone="danger" />
+
+          <app-notification-item
+            source="Grooming"
+            message="Define detection strategy distinguishing manual review from automatic rules — DECOMPOSITION_TOO_DEEP"
+            timestamp="2026-08-24T13:25:41Z"
+            tone="danger"
+            [count]="5" />
         </app-ui-stack>
       </app-ui-stack>
     </app-ui-section>

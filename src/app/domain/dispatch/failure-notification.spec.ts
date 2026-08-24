@@ -58,4 +58,9 @@ describe('failureToNotification', () => {
     expect(n.timestamp).toBe('2026-08-24T06:40:57Z');
     expect(n.tone).toBe('danger');
   });
+
+  it('defaults count to 1, but carries a caller-supplied group size through', () => {
+    expect(failureToNotification(failure()).count).toBe(1);
+    expect(failureToNotification(failure(), 5).count).toBe(5);
+  });
 });

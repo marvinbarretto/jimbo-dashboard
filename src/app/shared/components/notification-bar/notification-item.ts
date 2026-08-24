@@ -18,6 +18,9 @@ export type NotificationTone = 'danger' | 'warning' | 'info';
     <div [class]="cls()" role="alert">
       <span class="notification-item__source">{{ source() }}</span>
       <span class="notification-item__message">{{ message() }}</span>
+      @if (count() > 1) {
+        <span class="notification-item__count">×{{ count() }}</span>
+      }
       @if (when(); as w) {
         <span class="notification-item__time">{{ w }}</span>
       }
@@ -60,6 +63,14 @@ export type NotificationTone = 'danger' | 'warning' | 'info';
       white-space: nowrap;
     }
 
+    .notification-item__count {
+      flex: none;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--tone-color);
+      opacity: 0.75;
+    }
+
     .notification-item__time {
       flex: none;
       font-size: 0.72rem;
@@ -96,6 +107,7 @@ export class NotificationItem {
   readonly timestamp = input<string | null>(null);
   readonly tone = input<NotificationTone>('danger');
   readonly href = input<string | null>(null);
+  readonly count = input<number>(1);
 
   readonly dismiss = output<void>();
 

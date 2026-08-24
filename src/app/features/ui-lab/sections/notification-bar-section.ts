@@ -40,16 +40,19 @@ const DEMO_ENTRIES: readonly NotificationEntry[] = [
 
         <app-ui-meta-list>
           <dt>entries</dt>
-          <dd><code>NotificationEntry[]</code> — id, source, message, timestamp?, tone?, href?</dd>
+          <dd><code>NotificationEntry[]</code> — id, source, message, timestamp?, tone?, href?, count?</dd>
           <dt>(dismiss)</dt>
           <dd>output — emits the dismissed entry's id; host removes it (and, in the real
             wiring, persists the dismissal server-side so it stays gone across devices)</dd>
+          <dt>(dismissAll)</dt>
+          <dd>output — shown as a "Dismiss all" action once there's more than one entry</dd>
         </app-ui-meta-list>
 
         <div class="ui-lab__sticky-demo">
           <app-notification-bar
             [entries]="entries()"
-            (dismiss)="onDismiss($event)" />
+            (dismiss)="onDismiss($event)"
+            (dismissAll)="onDismissAll()" />
           <p class="ui-lab__support-copy">Scroll this frame — the bar stays pinned to its top, same as it would pin to the app header.</p>
           <p class="ui-lab__support-copy">More page content…</p>
           <p class="ui-lab__support-copy">…and more, so there's something to scroll past.</p>
@@ -65,6 +68,10 @@ export class NotificationBarSection {
 
   protected onDismiss(id: string): void {
     this.entries.update(es => es.filter(e => e.id !== id));
+  }
+
+  protected onDismissAll(): void {
+    this.entries.set([]);
   }
 
   protected reset(): void {
