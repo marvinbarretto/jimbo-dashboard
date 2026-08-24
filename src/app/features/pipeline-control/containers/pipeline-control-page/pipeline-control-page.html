@@ -100,6 +100,13 @@
       <p class="pipeline__blurb">
         Entry stages only admit notes in these projects. Empty means no project filter at all.
       </p>
+      <p class="pipeline__current" data-testid="pipeline-scope-summary">
+        @if (scopeProjects().length) {
+          In scope: <strong>{{ scopeProjects().join(', ') }}</strong>
+        } @else {
+          <strong>No project filter</strong> — every project is eligible.
+        }
+      </p>
       <div class="pipeline__chips">
         @for (project of projects(); track project.id) {
           <app-ui-select-chip
@@ -108,14 +115,6 @@
             (toggle)="onToggleProject(keys.scopeProjects, project.id)" />
         }
       </div>
-
-      @if (projectlessExcluded()) {
-        <p class="pipeline__warn" role="note">
-          A project filter is set and no projectless types are admitted, so
-          <strong>notes with no project can never be groomed</strong> — they are excluded, not
-          queued. Add a type below if spikes should reach the pipeline.
-        </p>
-      }
     </app-ui-section>
 
     <app-ui-section
@@ -134,6 +133,14 @@
             (toggle)="onToggleProject(keys.scopeIncludeProjectlessTypes, type)" />
         }
       </div>
+
+      @if (projectlessExcluded()) {
+        <p class="pipeline__warn" role="note">
+          Nothing selected, and a project filter is set above — so
+          <strong>notes with no project can never be groomed</strong>. They are excluded, not
+          queued. Pick <code>spike</code> if curiosities should reach the pipeline.
+        </p>
+      }
     </app-ui-section>
 
     <app-ui-section

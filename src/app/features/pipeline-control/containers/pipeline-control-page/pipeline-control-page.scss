@@ -197,3 +197,12 @@
 .pipeline__scalar-label {
   font-weight: 600;
 }
+
+/* Live readout of an array setting. Without it, toggling a chip changes only
+   the chip's own state — which reads as "nothing happened" and made the whole
+   panel feel hardcoded on first use. */
+.pipeline__current {
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
