@@ -4,11 +4,13 @@ import { AppIcon } from '@shared/components/app-icon/app-icon';
 import { Nav } from '@shared/components/nav/nav';
 import { NavState } from '@shared/components/nav/nav-state.service';
 import { SectionTabs } from '@shared/components/nav/section-tabs';
+import { NotificationBar } from '@shared/components/notification-bar/notification-bar';
 import { CommandShortcutsService } from '@shared/services/command-shortcuts.service';
 import { ThemeService } from '@shared/services/theme.service';
 import { ActorsService } from '@features/actors/data-access/actors.service';
 import { ProjectsService } from '@features/projects/data-access/projects.service';
 import { AuthService } from '@features/auth/data-access/auth.service';
+import { FleetService } from '@features/fleet/data-access/fleet.service';
 
 /**
  * Desktop chrome as a layout route: header, section tabs, page gutter.
@@ -20,7 +22,7 @@ import { AuthService } from '@features/auth/data-access/auth.service';
  */
 @Component({
   selector: 'app-desktop-layout',
-  imports: [AppIcon, RouterOutlet, Nav, SectionTabs],
+  imports: [AppIcon, RouterOutlet, Nav, SectionTabs, NotificationBar],
   templateUrl: './desktop-layout.html',
   styleUrl: './desktop-layout.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,4 +43,14 @@ export class DesktopLayout {
   protected readonly auth = inject(AuthService);
   private readonly _eagerActors = inject(ActorsService);
   private readonly _eagerProjects = inject(ProjectsService);
+
+  // Site-wide notification bar's data source. Started here (not left to
+  // fleet-board, its only prior consumer) so a failure surfaces regardless of
+  // which page is open — the whole point of the bar being shell-level rather
+  // than page-scoped.
+  protected readonly fleet = inject(FleetService);
+
+  constructor() {
+    this.fleet.start();
+  }
 }

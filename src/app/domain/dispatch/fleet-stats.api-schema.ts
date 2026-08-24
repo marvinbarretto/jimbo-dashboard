@@ -88,6 +88,9 @@ export const ApiFleetFailureSchema = z.object({
   error_message: z.string().nullable(),
   retry_count:   z.number().int(),
   completed_at:  z.string().nullable(),
+  // Notification-bar dismiss. Optional-with-default: landed after this feed
+  // did, and an API predating it must not fail parsing.
+  dismissed_at:  z.string().nullable().optional().default(null),
 });
 
 // Note the grooming machinery parked: lock held past the reap window, no

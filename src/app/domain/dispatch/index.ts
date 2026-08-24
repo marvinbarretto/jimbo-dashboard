@@ -27,6 +27,7 @@ export type {
   FleetStuckNote,
 } from './fleet-stats.api-schema';
 export { ApiFleetStatsSchema } from './fleet-stats.api-schema';
+export { failureToNotification } from './failure-notification';
 
 export type {
   ApiDailyFleetReport,

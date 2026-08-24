@@ -1,50 +1,57 @@
 <div class="app-shell" [style.--section-accent]="nav.accent()">
-  <header class="app-header">
-    <div class="app-header__inner">
-      <app-nav />
+  <div class="app-shell__top-chrome">
+    <app-notification-bar
+      [entries]="fleet.notifications()"
+      (dismiss)="fleet.dismiss($event)"
+    />
 
-      <div class="app-header__commands">
-        <button
-          type="button"
-          class="app-header__cmd app-header__cmd--icon"
-          (click)="theme.toggle()"
-          [attr.aria-pressed]="theme.isLight()"
-          [attr.aria-label]="theme.isLight() ? 'Switch to dark theme' : 'Switch to light theme'"
-        >
-          @if (theme.isLight()) {
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
-            </svg>
-          } @else {
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="4" />
-              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-            </svg>
-          }
-        </button>
-        <button type="button" class="app-header__cmd" (click)="shortcuts.openSearch()" aria-label="Open search">
-          <app-icon name="search" [size]="14" />
-          <span class="app-header__cmd-label">Search <kbd>/</kbd></span>
-        </button>
-        <button type="button" class="app-header__cmd" (click)="shortcuts.openCapture()" aria-label="New item">
-          <app-icon name="add" [size]="14" />
-          <span class="app-header__cmd-label">New item <kbd>⇧N</kbd></span>
-        </button>
+    <header class="app-header">
+      <div class="app-header__inner">
+        <app-nav />
 
-        @if (auth.isChecked()) {
-          @if (auth.isAuthenticated()) {
-            <span class="app-header__user">{{ auth.currentUser() }}</span>
-            <button type="button" class="app-header__cmd" (click)="auth.logout()" aria-label="Sign out">
-              <app-icon name="sign-out" [size]="14" />
-              <span class="app-header__cmd-label">Sign out</span>
-            </button>
-          } @else {
-            <a class="app-header__cmd" href="/auth/login" aria-label="Sign in">Sign in</a>
+        <div class="app-header__commands">
+          <button
+            type="button"
+            class="app-header__cmd app-header__cmd--icon"
+            (click)="theme.toggle()"
+            [attr.aria-pressed]="theme.isLight()"
+            [attr.aria-label]="theme.isLight() ? 'Switch to dark theme' : 'Switch to light theme'"
+          >
+            @if (theme.isLight()) {
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+              </svg>
+            } @else {
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+              </svg>
+            }
+          </button>
+          <button type="button" class="app-header__cmd" (click)="shortcuts.openSearch()" aria-label="Open search">
+            <app-icon name="search" [size]="14" />
+            <span class="app-header__cmd-label">Search <kbd>/</kbd></span>
+          </button>
+          <button type="button" class="app-header__cmd" (click)="shortcuts.openCapture()" aria-label="New item">
+            <app-icon name="add" [size]="14" />
+            <span class="app-header__cmd-label">New item <kbd>⇧N</kbd></span>
+          </button>
+
+          @if (auth.isChecked()) {
+            @if (auth.isAuthenticated()) {
+              <span class="app-header__user">{{ auth.currentUser() }}</span>
+              <button type="button" class="app-header__cmd" (click)="auth.logout()" aria-label="Sign out">
+                <app-icon name="sign-out" [size]="14" />
+                <span class="app-header__cmd-label">Sign out</span>
+              </button>
+            } @else {
+              <a class="app-header__cmd" href="/auth/login" aria-label="Sign in">Sign in</a>
+            }
           }
-        }
+        </div>
       </div>
-    </div>
-  </header>
+    </header>
+  </div>
 
   <main class="app-main">
     <div class="app-main__inner">

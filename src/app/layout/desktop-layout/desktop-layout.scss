@@ -35,10 +35,19 @@ app-section-tabs {
   --tab-bar-sticky-top: var(--app-header-height);
 }
 
-.app-header {
+// Owns the stickiness for the whole top strip — the notification bar (0..N
+// rows, height varies with content) plus the header beneath it. A single
+// sticky ancestor means the header never needs to know the bar's height to
+// avoid overlapping it: both are just normal-flow children stacking inside
+// one pinned box, instead of two independently-sticky siblings racing for
+// the same top:0.
+.app-shell__top-chrome {
   position: sticky;
   top: 0;
   z-index: 100;
+}
+
+.app-header {
   background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
   // viewport-fit=cover lets an edge-to-edge WebView draw under the status bar,

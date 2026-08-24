@@ -6,7 +6,8 @@
 import { HttpClient } from '@angular/common/http';
 import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { ApiFleetStatsSchema, type ApiFleetStats } from '@domain/dispatch';
+import { ApiFleetStatsSchema, failureToNotification, type ApiFleetStats } from '@domain/dispatch';
+import type { NotificationEntry } from '@shared/components/notification-bar/notification-bar';
 import { environment } from '../../../../environments/environment';
 import { ToastService } from '@shared/components/toast/toast.service';
 
@@ -37,6 +38,15 @@ export class FleetService {
   readonly failures = computed(() => this._stats()?.failures_24h ?? []);
   readonly stuckNotes = computed(() => this._stats()?.stuck_notes ?? []);
   readonly lastPipelineEnqueueAt = computed(() => this._stats()?.last_pipeline_enqueue_at ?? null);
+
+  // Site-wide notification bar feed — every failure() minus whatever's been
+  // dismissed, mapped to the shared shape. Lives here (not in the bar itself)
+  // because it's the same 24h feed fleet-board already reads; the bar is just
+  // another consumer that additionally filters on dismissed_at.
+  readonly notifications = computed<readonly NotificationEntry[]>(() =>
+    this.failures()
+      .filter(f => !f.dismissed_at)
+      .map(failureToNotification));
 
   private timerHandle: ReturnType<typeof setInterval> | null = null;
   private started = false;
@@ -77,6 +87,29 @@ export class FleetService {
       this._lastError.set(msg);
     } finally {
       this._loading.set(false);
+    }
+  }
+
+  // Optimistic: the bar removes the row immediately (via the notifications
+  // filter above), then persists. Rolled back on failure so a dropped request
+  // doesn't leave the server thinking something was acknowledged that wasn't
+  // — the 30s poll would otherwise silently resurrect it anyway, which reads
+  // as a bug rather than as "the dismiss didn't take".
+  async dismiss(id: string): Promise<void> {
+    const previous = this._stats();
+    if (!previous) return;
+
+    const now = new Date().toISOString();
+    this._stats.set({
+      ...previous,
+      failures_24h: previous.failures_24h.map(f => (f.id === id ? { ...f, dismissed_at: now } : f)),
+    });
+
+    try {
+      await firstValueFrom(this.http.post(`${environment.dashboardApiUrl}/api/dispatch/${id}/dismiss`, {}));
+    } catch {
+      this._stats.set(previous);
+      this.toast.error('Could not dismiss — try again');
     }
   }
 }
