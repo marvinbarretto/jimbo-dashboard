@@ -27,6 +27,12 @@ export const configRoutes: Routes = [
         loadChildren: () => import('../actors/actors.routes').then(m => m.actorsRoutes),
       },
       {
+        path: 'pipeline',
+        loadComponent: () =>
+          import('../pipeline-control/containers/pipeline-control-page/pipeline-control-page')
+            .then(m => m.PipelineControlPage),
+      },
+      {
         path: 'settings',
         loadComponent: () => import('./containers/settings-index/settings-index').then(m => m.SettingsIndex),
       },

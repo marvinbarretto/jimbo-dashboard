@@ -1,0 +1,200 @@
+<app-ui-page width="standard">
+<app-ui-stack gap="lg">
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Pipeline</h1>
+    <p uiPageHeaderHint>
+      Every gate between a captured note and commissioned work. Changes save immediately.
+    </p>
+  </app-ui-page-header>
+
+  @if (error(); as message) {
+    <p class="pipeline__error" role="alert">
+      {{ message }}
+      <app-ui-button size="sm" variant="ghost" (pressed)="onRefresh()">Retry</app-ui-button>
+    </p>
+  }
+
+  @if (isLoading()) {
+    <p class="pipeline__loading">Loading pipeline settings…</p>
+  } @else {
+
+    <!-- Master switch ------------------------------------------------- -->
+    <app-ui-section title="Master switch" [collapsible]="false">
+      <div class="pipeline__master">
+        <div class="pipeline__master-copy">
+          <span class="pipeline__master-state" [class.pipeline__master-state--on]="enabled()">
+            {{ enabled() ? 'Pump running' : 'Pump stopped' }}
+          </span>
+          <span class="pipeline__blurb">
+            When off, every tick returns immediately and nothing is groomed at all.
+          </span>
+        </div>
+        <app-ui-toggle
+          label="Pipeline enabled"
+          [checked]="enabled()"
+          [disabled]="isSaving(keys.enabled)"
+          (changed)="onToggleEnabled($event)" />
+      </div>
+
+      <dl class="pipeline__actors">
+        <div><dt>Groomer</dt><dd>{{ groomer() }}</dd></div>
+        <div><dt>Orchestrator</dt><dd>{{ orchestrator() }}</dd></div>
+        <div>
+          <dt>Entry throughput</dt>
+          <dd>{{ entryThroughput() }} note{{ entryThroughput() === 1 ? '' : 's' }} / tick</dd>
+        </div>
+      </dl>
+    </app-ui-section>
+
+    <!-- Flow ---------------------------------------------------------- -->
+    <app-ui-section title="Stages" meta="items admitted per tick" [collapsible]="false">
+      <ol class="pipeline__flow">
+        @for (stage of stages; track stage.id) {
+          <li
+            class="pipeline__stage"
+            [class.pipeline__stage--off]="stage.value() <= 0"
+            data-testid="pipeline-stage"
+            [attr.data-stage]="stage.id">
+            <div class="pipeline__stage-head">
+              <span class="pipeline__stage-label">{{ stage.label }}</span>
+              @if (stage.entry) {
+                <app-ui-badge tone="info">entry</app-ui-badge>
+              }
+            </div>
+
+            <div class="pipeline__stepper">
+              <app-ui-button
+                size="sm"
+                variant="ghost"
+                [ariaLabel]="'Decrease ' + stage.label + ' per tick'"
+                [disabled]="isSaving(stage.key) || stage.value() <= 0"
+                (pressed)="onStep(stage.key, stage.value(), -1)">−</app-ui-button>
+              <span class="pipeline__value" [attr.data-value]="stage.value()">{{ stage.value() }}</span>
+              <app-ui-button
+                size="sm"
+                variant="ghost"
+                [ariaLabel]="'Increase ' + stage.label + ' per tick'"
+                [disabled]="isSaving(stage.key)"
+                (pressed)="onStep(stage.key, stage.value(), 1)">+</app-ui-button>
+            </div>
+
+            <p class="pipeline__blurb">{{ stage.blurb }}</p>
+
+            @if (stage.value() <= 0) {
+              <p class="pipeline__stage-off">Off — this stage never runs.</p>
+            }
+          </li>
+        }
+      </ol>
+
+      @if (deepreadOff()) {
+        <p class="pipeline__note" role="note">
+          Deep read is <strong>off</strong>, not merely slow. While it is 0, intake takes its
+          candidates too — so nothing queues behind a stage that never runs.
+        </p>
+      }
+    </app-ui-section>
+
+    <!-- Scope --------------------------------------------------------- -->
+    <app-ui-section title="What may be groomed" meta="pipeline.scope_projects" [collapsible]="false">
+      <p class="pipeline__blurb">
+        Entry stages only admit notes in these projects. Empty means no project filter at all.
+      </p>
+      <div class="pipeline__chips">
+        @for (project of projects(); track project.id) {
+          <app-ui-select-chip
+            [label]="project.id"
+            [selected]="scopeProjects().includes(project.id)"
+            (toggle)="onToggleProject(keys.scopeProjects, project.id)" />
+        }
+      </div>
+
+      @if (projectlessExcluded()) {
+        <p class="pipeline__warn" role="note">
+          A project filter is set and no projectless types are admitted, so
+          <strong>notes with no project can never be groomed</strong> — they are excluded, not
+          queued. Add a type below if spikes should reach the pipeline.
+        </p>
+      }
+    </app-ui-section>
+
+    <app-ui-section
+      title="Projectless types"
+      meta="pipeline.scope_include_projectless_types"
+      [collapsible]="false">
+      <p class="pipeline__blurb">
+        Types admitted to the entry stages even with no project attached. Leave empty to exclude
+        every projectless note.
+      </p>
+      <div class="pipeline__chips">
+        @for (type of typeOptions; track type) {
+          <app-ui-select-chip
+            [label]="type"
+            [selected]="projectlessTypes().includes(type)"
+            (toggle)="onToggleProject(keys.scopeIncludeProjectlessTypes, type)" />
+        }
+      </div>
+    </app-ui-section>
+
+    <app-ui-section
+      title="What may be commissioned"
+      meta="pipeline.autonomous_projects"
+      [collapsible]="false">
+      <p class="pipeline__blurb">
+        Groomed, ready work is only handed to an agent for these projects. Separate gate from
+        grooming — widening one without the other does nothing.
+      </p>
+      <div class="pipeline__chips">
+        @for (project of projects(); track project.id) {
+          <app-ui-select-chip
+            [label]="project.id"
+            [selected]="autonomousProjects().includes(project.id)"
+            (toggle)="onToggleProject(keys.autonomousProjects, project.id)" />
+        }
+      </div>
+    </app-ui-section>
+
+    <!-- Priority scope + limits --------------------------------------- -->
+    <app-ui-section title="Priority scope" meta="pipeline.scope" [collapsible]="false">
+      <div class="pipeline__chips">
+        <app-ui-select-chip
+          label="All priorities"
+          [selected]="scope() === 'all'"
+          (toggle)="onSetScope('all')" />
+        <app-ui-select-chip
+          label="P1 and unranked only"
+          [selected]="scope() === 'priority_1_only'"
+          (toggle)="onSetScope('priority_1_only')" />
+      </div>
+    </app-ui-section>
+
+    <app-ui-section title="Limits" [collapsible]="false">
+      <ul class="pipeline__scalars">
+        @for (lever of scalars; track lever.key) {
+          <li class="pipeline__scalar" data-testid="pipeline-scalar" [attr.data-key]="lever.key">
+            <div class="pipeline__scalar-copy">
+              <span class="pipeline__scalar-label">{{ lever.label }}</span>
+              <span class="pipeline__blurb">{{ lever.blurb }}</span>
+            </div>
+            <div class="pipeline__stepper">
+              <app-ui-button
+                size="sm"
+                variant="ghost"
+                [ariaLabel]="'Decrease ' + lever.label"
+                [disabled]="isSaving(lever.key) || lever.value() <= lever.min"
+                (pressed)="onStep(lever.key, lever.value(), -1, lever.min)">−</app-ui-button>
+              <span class="pipeline__value">{{ lever.value() }}</span>
+              <app-ui-button
+                size="sm"
+                variant="ghost"
+                [ariaLabel]="'Increase ' + lever.label"
+                [disabled]="isSaving(lever.key)"
+                (pressed)="onStep(lever.key, lever.value(), 1, lever.min)">+</app-ui-button>
+            </div>
+          </li>
+        }
+      </ul>
+    </app-ui-section>
+  }
+</app-ui-stack>
+</app-ui-page>

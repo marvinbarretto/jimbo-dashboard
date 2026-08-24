@@ -1,0 +1,199 @@
+.pipeline__blurb {
+  display: block;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.pipeline__loading {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.pipeline__error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--color-danger);
+  border-radius: 8px;
+  color: var(--color-danger);
+}
+
+/* ── Master switch ──────────────────────────────────────────────── */
+
+.pipeline__master {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pipeline__master-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.pipeline__master-state {
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.pipeline__master-state--on {
+  color: var(--color-accent);
+}
+
+.pipeline__actors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin: 1rem 0 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--color-border);
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  dt {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+  }
+}
+
+/* ── Stage flow ─────────────────────────────────────────────────── */
+
+.pipeline__flow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pipeline__stage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface-soft);
+}
+
+/* An off stage should read as switched off at a glance, not just a small number. */
+.pipeline__stage--off {
+  opacity: 0.72;
+  border-style: dashed;
+}
+
+.pipeline__stage-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pipeline__stage-label {
+  font-weight: 600;
+}
+
+.pipeline__stage-off {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* ── Steppers ───────────────────────────────────────────────────── */
+
+.pipeline__stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pipeline__value {
+  min-width: 2.25rem;
+  padding: 0.1rem 0;
+  text-align: center;
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Chips + notes ──────────────────────────────────────────────── */
+
+.pipeline__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.pipeline__note,
+.pipeline__warn {
+  margin: 0.9rem 0 0;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.pipeline__note {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-soft);
+  color: var(--color-text-muted);
+}
+
+.pipeline__warn {
+  border: 1px solid var(--color-danger);
+  color: var(--color-text);
+}
+
+/* ── Scalars ────────────────────────────────────────────────────── */
+
+.pipeline__scalars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pipeline__scalar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+
+  & + & {
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+.pipeline__scalar-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.pipeline__scalar-label {
+  font-weight: 600;
+}

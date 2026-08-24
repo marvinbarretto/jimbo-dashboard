@@ -1,0 +1,146 @@
+import { TestBed } from '@angular/core/testing';
+import { provideZonelessChangeDetection } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { describe, it, expect, afterEach } from 'vitest';
+
+import { PIPELINE_KEYS, PipelineControlService } from './pipeline-control.service';
+import { environment } from '../../../../environments/environment';
+
+// The parsing here is not incidental: the pump JSON.parses these same values and
+// falls back to [] on a throw, silently. A scalar written where an array was
+// meant therefore reads as "nothing in scope" — indistinguishable from a
+// deliberate shutdown. This page exists to make that visible, so it has to fail
+// the same way the pump does rather than more cleverly.
+
+describe('PipelineControlService', () => {
+  let service: PipelineControlService;
+  let http: HttpTestingController;
+  const url = `${environment.dashboardApiUrl}/api/settings`;
+
+  // The constructor's load() resolves through firstValueFrom, so the signal is
+  // set in a microtask *after* flush() returns. Await before asserting or every
+  // computed still reads its default.
+  async function init(settings: Record<string, string>): Promise<void> {
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        PipelineControlService,
+      ],
+    });
+    service = TestBed.inject(PipelineControlService);
+    http = TestBed.inject(HttpTestingController);
+    http.expectOne(url).flush(settings);
+    await Promise.resolve();
+  }
+
+  afterEach(() => {
+    http.verify();
+    TestBed.resetTestingModule();
+  });
+
+  describe('array settings', () => {
+    it('parses a JSON-encoded array', async () => {
+      await init({ [PIPELINE_KEYS.scopeProjects]: '["pmq-bingo","jimbo"]' });
+      expect(service.scopeProjects()).toEqual(['pmq-bingo', 'jimbo']);
+    });
+
+    it('reads a bare-string array setting as empty, exactly as the pump does', async () => {
+      // String(['pmq-bingo']) === 'pmq-bingo' — the brackets vanish. This has
+      // bitten production once already; the UI must not paper over it.
+      await init({ [PIPELINE_KEYS.scopeProjects]: 'pmq-bingo' });
+      expect(service.scopeProjects()).toEqual([]);
+    });
+
+    it('treats an unset key as empty rather than erroring', async () => {
+      await init({});
+      expect(service.scopeProjects()).toEqual([]);
+      expect(service.projectlessTypes()).toEqual([]);
+    });
+  });
+
+  describe('projectlessExcluded', () => {
+    it('is true when a project filter is set and no types are admitted', async () => {
+      await init({ [PIPELINE_KEYS.scopeProjects]: '["pmq-bingo"]' });
+      expect(service.projectlessExcluded()).toBe(true);
+    });
+
+    it('is false once a projectless type is admitted', async () => {
+      await init({
+        [PIPELINE_KEYS.scopeProjects]: '["pmq-bingo"]',
+        [PIPELINE_KEYS.scopeIncludeProjectlessTypes]: '["spike"]',
+      });
+      expect(service.projectlessExcluded()).toBe(false);
+    });
+
+    it('is false when no project filter is set — nothing is being excluded', async () => {
+      await init({ [PIPELINE_KEYS.scopeProjects]: '[]' });
+      expect(service.projectlessExcluded()).toBe(false);
+    });
+  });
+
+  describe('scalars', () => {
+    it('falls back to the pump defaults when unset', async () => {
+      await init({});
+      expect(service.intakePerTick()).toBe(2);
+      expect(service.staleMinutes()).toBe(20);
+      expect(service.enabled()).toBe(false);
+    });
+
+    it('distinguishes deep-read off from deep-read slow', async () => {
+      await init({ [PIPELINE_KEYS.deepreadPerTick]: '0' });
+      expect(service.deepreadOff()).toBe(true);
+
+      TestBed.resetTestingModule();
+      await init({ [PIPELINE_KEYS.deepreadPerTick]: '1' });
+      expect(service.deepreadOff()).toBe(false);
+    });
+
+    it('ignores an unparseable number rather than rendering NaN', async () => {
+      await init({ [PIPELINE_KEYS.concurrencyCap]: 'lots' });
+      expect(service.concurrencyCap()).toBe(1);
+    });
+  });
+
+  describe('save', () => {
+    it('stores the value the API echoes back, not the one sent', async () => {
+      await init({});
+      const pending = service.save(PIPELINE_KEYS.scopeProjects, ['jimbo']);
+
+      const req = http.expectOne(`${url}/${PIPELINE_KEYS.scopeProjects}`);
+      expect(req.request.method).toBe('PUT');
+      expect(req.request.body).toEqual({ value: ['jimbo'] });
+      // normalizeSettingValue JSON-encodes server-side; trust the echo.
+      req.flush({ key: PIPELINE_KEYS.scopeProjects, value: '["jimbo"]' });
+      await pending;
+
+      expect(service.scopeProjects()).toEqual(['jimbo']);
+    });
+
+    it('toggleInArray removes an entry that is already present', async () => {
+      await init({ [PIPELINE_KEYS.scopeProjects]: '["jimbo","localshout"]' });
+      const pending = service.toggleInArray(PIPELINE_KEYS.scopeProjects, 'jimbo');
+
+      const req = http.expectOne(`${url}/${PIPELINE_KEYS.scopeProjects}`);
+      expect(req.request.body).toEqual({ value: ['localshout'] });
+      req.flush({ key: PIPELINE_KEYS.scopeProjects, value: '["localshout"]' });
+      await pending;
+
+      expect(service.scopeProjects()).toEqual(['localshout']);
+    });
+
+    it('surfaces a failed write instead of silently keeping the old value', async () => {
+      await init({});
+      const pending = service.save(PIPELINE_KEYS.enabled, true);
+      http.expectOne(`${url}/${PIPELINE_KEYS.enabled}`)
+        .flush('nope', { status: 500, statusText: 'Server Error' });
+      await pending;
+
+      expect(service.error()).toContain(PIPELINE_KEYS.enabled);
+      expect(service.enabled()).toBe(false);
+      expect(service.savingKey()).toBeNull();
+    });
+  });
+});

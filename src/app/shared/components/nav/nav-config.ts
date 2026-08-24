@@ -98,6 +98,7 @@ export const navSections: readonly NavSection[] = [
       { href: '/config/model-stacks', label: 'Stacks' },
       { href: '/config/actors', label: 'Actors' },
       { href: '/entities', label: 'Entities' },
+      { href: '/config/pipeline', label: 'Pipeline' },
       { href: '/config/settings', label: 'Settings' },
     ],
     // No 'actors': /actors redirects, and NavState reads urlAfterRedirects.

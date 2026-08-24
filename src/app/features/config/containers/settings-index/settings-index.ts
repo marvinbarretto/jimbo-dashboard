@@ -18,6 +18,12 @@ interface SettingsEntry {
 
 const SETTINGS_ENTRIES: readonly SettingsEntry[] = [
   {
+    title: 'Pipeline',
+    description:
+      'Every gate between a captured note and commissioned work — what may be groomed, what may be commissioned, and how fast.',
+    link: '/config/pipeline',
+  },
+  {
     title: 'Grooming',
     description: 'GitHub issue assessment routing — who runs it (executor) and with which skill.',
     link: '/grooming/settings',
