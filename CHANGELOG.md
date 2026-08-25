@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.189](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.188...v0.0.189) (2026-08-25)
+
+
+### Bug Fixes
+
+* **journal:** resolve "today" against the working day, not midnight ([d9f5a55](https://github.com/marvinbarretto/jimbo-dashboard/commit/d9f5a55443e40a92e16480494edc53a4179a96f1))
+
 ### [0.0.188](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.187...v0.0.188) (2026-08-25)
 
 
