@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><title>02 — Work · day</title>
+<link rel="stylesheet" href="wire-kit.css"></head><body>
+<div class="frame">
+  <p class="w-h1">02 · Journal → Work (day)</p>
+  <p class="w-subtitle">The drill-in. Mostly as-is — two changes.</p>
+
+  <div class="w-intent"><dl>
+    <dt>Goal</dt><dd>Explain the gap Overview surfaced: <em>where</em> the desk time went, on what, and when.</dd>
+    <dt>Persona</dt><dd>Marvin, arriving from Overview with a specific question — usually “why is today low?”</dd>
+    <dt>Primary</dt><dd>None (read). The dominant control is the <b>Desk activity</b> chart's baseline toggle.</dd>
+    <dt>Success</dt><dd>The deficit Overview showed is attributable to an hour range or a project within one screen.</dd>
+  </dl></div>
+
+  <div class="w-tabs">
+    <a href="#" data-goto="01">Overview</a><a href="#" class="is-active">Work</a>
+    <a href="#" data-goto="03">Body</a><a href="#" data-goto="04">Jimbo</a><a href="#">Phone</a>
+  </div>
+
+  <div class="w-block">
+    <div class="w-block__head"><span class="w-h3">Work</span><span class="w-body w-muted">3h 12m · 0 pomos · 10 commits</span></div>
+    <div class="w-grid w-grid--4" style="margin-bottom:14px;">
+      <div class="w-placeholder" style="height:64px;">stat tiles<br>(unchanged — these are drill-in facts, not headline metrics)</div>
+      <div class="w-placeholder" style="height:64px;">Pomodoros</div>
+      <div class="w-placeholder" style="height:64px;">Commits</div>
+      <div class="w-placeholder" style="height:64px;">Calendar</div>
+    </div>
+    <div class="w-row">
+      <div>
+        <p class="w-h3" style="margin-bottom:6px;">Desk activity by hour <span class="w-tag w-tag--update">CHANGED</span></p>
+        <div class="w-placeholder" style="height:170px;">
+          [ ui-bar-chart + NEW <code>[baseline]</code> ghost ]<br><br>
+          solid bars = today · faint bars behind = median Tuesday shape
+        </div>
+      </div>
+      <div>
+        <p class="w-h3" style="margin-bottom:6px;">Project time</p>
+        <div class="w-placeholder" style="height:170px;">[ ui-donut-chart — unchanged ]</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-notes"><b>Notes</b><ul>
+    <li>Only real change: the hourly bars gain a comparison shape, so “the afternoon vanished” is visible rather
+      than inferred. Sibling input to the existing <code>showTrend</code>.</li>
+    <li>Stat tiles here stay as <code>ui-stat-card</code>. Deliberate: on a drill-in page they are context for the
+      charts, not the headline. Only Overview's rail becomes <code>ui-metric</code>.</li>
+  </ul></div>
+
+  <div class="w-bar"><span class="w-h3">▾ Pomodoro sessions</span><span class="w-muted">0 today</span></div>
+  <div class="w-bar"><span class="w-h3">▾ Day stream</span><span class="w-muted">44 moments · fleet hidden</span></div>
+  <div class="w-bar"><span class="w-h3">▾ Code sessions</span><span class="w-muted">6 sessions · 3 repos</span></div>
+  <div class="w-bar"><span class="w-h3">▾ Timeline (lanes)</span><span class="w-tag w-tag--move" style="margin:0;">MOVED HERE FROM OVERVIEW</span></div>
+
+  <div class="w-notes"><b>Notes — the timeline move</b><ul>
+    <li>The lane timeline answers “what was running when”. That is a <em>drill-in</em> question, not a glance
+      question, and it was the largest single element on Overview.</li>
+    <li>Work now holds three chronological views (stream, sessions, lanes). Arguably one too many — a follow-up
+      question, not a blocker for this restructure.</li>
+    <li>Nothing is deleted anywhere in this wireframe set. Every element on today's Overview either gains context,
+      shrinks to one number, or moves to the tab that owns it.</li>
+  </ul></div>
+</div>
+<script src="wire-nav.js"></script></body></html>

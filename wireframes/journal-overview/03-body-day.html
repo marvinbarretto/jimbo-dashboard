@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><title>03 — Body · day</title>
+<link rel="stylesheet" href="wire-kit.css"></head><body>
+<div class="frame">
+  <p class="w-h1">03 · Journal → Body (day)</p>
+  <p class="w-subtitle">Receives the fuel &amp; training block from Overview.</p>
+
+  <div class="w-intent"><dl>
+    <dt>Goal</dt><dd>The full picture of fuel, training and recovery — the depth Overview deliberately refuses to show.</dd>
+    <dt>Persona</dt><dd>Marvin, either logging or checking whether he hit protein / trained this week.</dd>
+    <dt>Primary</dt><dd><b>Log food</b> — the one place on the journal where body data is entered.</dd>
+    <dt>Success</dt><dd>He can see the week's protein trajectory and today's macro split without leaving the tab.</dd>
+  </dl></div>
+
+  <div class="w-tabs">
+    <a href="#" data-goto="01">Overview</a><a href="#" data-goto="02">Work</a>
+    <a href="#" class="is-active">Body</a><a href="#" data-goto="04">Jimbo</a><a href="#">Phone</a>
+  </div>
+
+  <div class="w-block">
+    <div class="w-block__head"><span class="w-h3">Fuel <span class="w-tag w-tag--move">MOVED FROM OVERVIEW</span></span>
+      <button class="w-btn-primary">Log food</button></div>
+    <div class="w-row">
+      <div>
+        <div class="w-placeholder" style="height:52px;margin-bottom:8px;">[ ui-progress-meter · Protein today 88/150g · pace tick · "112g same day last week" ]</div>
+        <div class="w-placeholder" style="height:52px;">[ ui-progress-meter · This week 612/1050g · pace tick ]</div>
+      </div>
+      <div class="w-placeholder" style="height:112px;">[ ui-donut-chart · today's macros ]</div>
+    </div>
+  </div>
+
+  <div class="w-block">
+    <div class="w-block__head"><span class="w-h3">Training <span class="w-tag w-tag--move">MOVED FROM OVERVIEW</span></span>
+      <span class="w-body w-muted">12 sets · 2,140kg · 0m cardio</span></div>
+    <div class="w-placeholder" style="height:130px;">[ ui-bar-chart · volume per day this week, with baseline ghost ]</div>
+  </div>
+
+  <div class="w-block">
+    <div class="w-block__head"><span class="w-h3">Routine <span class="w-tag w-tag--move">MOVED FROM OVERVIEW</span></span>
+      <span class="w-body w-muted">1 / 4</span></div>
+    <div class="w-placeholder" style="height:96px;">[ ui-checklist · move ✓ · supplements 0/3 · work across projects 2/2 · eat something 0/1 ]</div>
+  </div>
+
+  <div class="w-notes"><b>Notes</b><ul>
+    <li>Everything here is <em>already built</em> — it is being relocated, not written. The Overview day-summary
+      component contributes its fuel/training/routine half to this page wholesale.</li>
+    <li><code>ui-progress-meter</code> already carries <code>pace</code> + <code>compareValue</code>. It was doing the
+      “number with context” job correctly before anything else on the journal was — worth noting that the redesign
+      is generalising an existing pattern rather than inventing one.</li>
+    <li>Sleep and weight belong here too; currently neither has a live feed. Absent must render as “no data”,
+      not 0.</li>
+  </ul></div>
+</div>
+<script src="wire-nav.js"></script></body></html>

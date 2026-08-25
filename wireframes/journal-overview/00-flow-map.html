@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>00 — Journal IA · Flow map</title>
+<link rel="stylesheet" href="wire-kit.css">
+</head>
+<body>
+<div class="frame">
+
+  <p class="w-h1">Journal IA — Overview as the story layer</p>
+  <p class="w-subtitle">Wireframe set · desktop 1280 · structure and intent only</p>
+
+  <div class="w-intent">
+    <dl>
+      <dt>Persona</dt>
+      <dd>Marvin, mid-afternoon or end of day, opening <code>/journal/overview/day/&lt;today&gt;</code>. He is not
+          reconstructing anything — he wants to know what today amounts to.</dd>
+      <dt>Job</dt>
+      <dd>Read the day's story <em>through data</em> in ~15 seconds: is this a normal day, a good day, or a day
+          that quietly went nowhere — and where do I click to find out why.</dd>
+      <dt>Entry</dt>
+      <dd>Life → Journal → Overview (default landing). Also arrived at from a Telegram briefing link.</dd>
+      <dt>Exit</dt>
+      <dd>Either satisfied and gone, or drilled into Work / Body / Jimbo, or opened Evening to log what the
+          machine can't see.</dd>
+      <dt>Viewport</dt>
+      <dd>Desktop, 1280px frame. Mobile shell (<code>/m</code>) is a separate surface, out of scope here.</dd>
+    </dl>
+  </div>
+
+  <div class="w-notes">
+    <b>The premise being tested</b>
+    <ul>
+      <li>Overview currently shows <em>counters</em>. A counter with no baseline is not a story —
+          "FOCUS 0m" at 17:55 only means something against "you normally have 95m by now".</li>
+      <li>So: <b>every headline number on Overview carries context</b> — vs yesterday, vs the 7-day median for
+          that weekday, and a cumulative day/week figure.</li>
+      <li>Overview stays work-first. Personal data supports at subordinate weight and links out.</li>
+      <li>No generated prose at the top. The shape of the data <em>is</em> the narrative; the written day
+          report stays available but collapsed, below the evidence.</li>
+    </ul>
+  </div>
+
+  <p class="w-h3" style="margin:24px 0 10px;">The split</p>
+
+  <div class="w-block" data-goto="01">
+    <div class="w-block__head">
+      <span class="w-h2">01 · Overview (day) — the story layer</span>
+      <span class="w-tag w-tag--update">REBUILT</span>
+    </div>
+    <p class="w-body">
+      Metric rail (context-carrying) → the day's shape (cumulative vs typical) → work realised (bullets) →
+      personal strip → Jimbo strip → day report, collapsed.
+    </p>
+    <p class="w-body w-muted" style="margin-top:6px;">
+      Gains: cumulative chart, deltas everywhere, outcome bullets.
+      Loses: raw counter tiles, the half-page fuel/macros block, the checks panel, the lane timeline.
+    </p>
+  </div>
+
+  <div class="w-row" style="margin-bottom:14px;">
+    <div class="w-block" style="margin:0;" data-goto="02">
+      <div class="w-block__head"><span class="w-h2">02 · Work</span><span class="w-tag w-tag--exists">MOSTLY AS-IS</span></div>
+      <p class="w-body">Already the deepest tab. <b>Receives</b> the lane timeline from Overview. Desk-by-hour bars
+        gain a 7-day median ghost so the shape is comparable.</p>
+    </div>
+    <div class="w-block" style="margin:0;" data-goto="03">
+      <div class="w-block__head"><span class="w-h2">03 · Body</span><span class="w-tag w-tag--move">RECEIVES</span></div>
+      <p class="w-body"><b>Receives</b> the whole fuel &amp; training block currently occupying Overview:
+        protein meters, macros donut, gym sets/volume.</p>
+    </div>
+  </div>
+
+  <div class="w-row" style="margin-bottom:14px;">
+    <div class="w-block" style="margin:0;" data-goto="04">
+      <div class="w-block__head"><span class="w-h2">04 · Jimbo</span><span class="w-tag w-tag--update">EXTENDED</span></div>
+      <p class="w-body">Agent runs, spend, failure rate. Overview shows one strip; this is where cost per skill and
+        the failure detail live.</p>
+    </div>
+    <div class="w-block" style="margin:0;" data-goto="05">
+      <div class="w-block__head"><span class="w-h2">05 · Evening</span><span class="w-tag w-tag--move">RECEIVES</span></div>
+      <p class="w-body"><b>Receives</b> the day-checks authoring panel. Authoring belongs in a reflection flow,
+        not on a read-only glance page.</p>
+    </div>
+  </div>
+
+  <div class="w-block" data-goto="06">
+    <div class="w-block__head">
+      <span class="w-h2">06 · Metric anatomy — the primitive being proposed</span>
+      <span class="w-tag w-tag--new">NEW</span>
+    </div>
+    <p class="w-body">Every variant of <code>ui-metric</code> / <code>ui-delta</code> in one place: positive,
+      negative, inverted (YouTube up is bad), no-comparison, cumulative, zero.</p>
+  </div>
+
+  <p class="w-h3" style="margin:28px 0 10px;">Primitives this flow implies</p>
+  <div class="w-block">
+    <div class="w-list-item">
+      <span class="w-tag w-tag--new" style="width:64px;">NEW</span>
+      <span class="w-list-item__main"><b>ui-metric</b> — big numeral + label + delta stack + sparkline. The tile that
+        replaces the counter.</span>
+    </div>
+    <div class="w-list-item">
+      <span class="w-tag w-tag--new" style="width:64px;">NEW</span>
+      <span class="w-list-item__main"><b>ui-delta</b> — the "▲ +3 vs yest" atom. Standalone so bullets and table rows
+        reuse it. Owns sign, direction and inversion.</span>
+    </div>
+    <div class="w-list-item">
+      <span class="w-tag w-tag--new" style="width:64px;">NEW</span>
+      <span class="w-list-item__main"><b>ui-sparkline</b> — 8-point inline trend. Hand-rolled SVG, <em>not</em>
+        Chart.js: a 5-tile rail would otherwise spin up 5 canvases.</span>
+    </div>
+    <div class="w-list-item">
+      <span class="w-tag w-tag--new" style="width:64px;">NEW</span>
+      <span class="w-list-item__main"><b>ui-cumulative-chart</b> — today's accreting line against a ghost band of the
+        typical day. The one chart that answers "so far today".</span>
+    </div>
+    <div class="w-list-item">
+      <span class="w-tag w-tag--update" style="width:64px;">UPDATE</span>
+      <span class="w-list-item__main"><b>ui-stat-card</b> — <em>narrowed</em>, not restyled. It currently does two jobs;
+        metrics move to ui-metric, it keeps the text-fact job (vault detail, nutrition totals). Drops its
+        <code>::ng-deep</code> flex patch.</span>
+    </div>
+    <div class="w-list-item">
+      <span class="w-tag w-tag--update" style="width:64px;">UPDATE</span>
+      <span class="w-list-item__main"><b>ui-bar-chart</b> — optional <code>[baseline]</code> ghost dataset, sibling to
+        the existing <code>showTrend</code>.</span>
+    </div>
+    <div class="w-list-item">
+      <span class="w-tag w-tag--exists" style="width:64px;">REUSE</span>
+      <span class="w-list-item__main"><b>ui-period-totals</b> — already rolls daily totals to day/week/month with
+        pace-scaled targets. Likely the vehicle for cumulative figures rather than new code.</span>
+    </div>
+    <div class="w-list-item">
+      <span class="w-tag w-tag--exists" style="width:64px;">REUSE</span>
+      <span class="w-list-item__main"><b>ui-progress-meter</b> — already has <code>pace</code> +
+        <code>compareLabel</code>/<code>compareValue</code>. It is already the pattern; the rest of the page is
+        catching up to it.</span>
+    </div>
+  </div>
+
+  <div class="w-notes">
+    <b>Open questions — decisions for Marvin</b>
+    <ul>
+      <li><b>Baseline definition.</b> "vs 7d ago" — same weekday a week back, or the median of the last 7 days?
+        A Tuesday against a Saturday is a meaningless comparison. Proposal: <em>median of the last 4 same-weekdays</em>
+        for the ghost, <em>literal yesterday</em> for the day delta. Needs a call.</li>
+      <li><b>Data cost.</b> Deltas need a trailing window. <code>/api/journal/work?since=&amp;until=</code> already
+        takes an arbitrary range, so no new endpoint — but Overview goes from one day-fetch to a day-fetch plus a
+        28-day rollup. Acceptable, or do we want a server-side <code>/api/journal/overview</code> that returns the
+        comparisons pre-computed?</li>
+      <li><b>What counts as "work realised".</b> Commits are cheap to count and weak as an outcome. Do vault items
+        moving to <code>done</code> outrank commits in the bullet list? Currently sketched as: vault items first,
+        then commits grouped by project.</li>
+      <li><b>Does the day report survive?</b> It is genuinely good prose, but "story through data, not narrative"
+        argues against it leading. Sketched as collapsed-at-the-bottom. Could equally move to Evening.</li>
+      <li><b>Zero-state honesty.</b> On a 0-focus day the page should read as <em>unusual</em>, not empty. See the
+        alternate states on screen 01.</li>
+    </ul>
+  </div>
+
+</div>
+<script src="wire-nav.js"></script>
+</body>
+</html>

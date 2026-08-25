@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><title>04 — Jimbo · day</title>
+<link rel="stylesheet" href="wire-kit.css"></head><body>
+<div class="frame">
+  <p class="w-h1">04 · Journal → Jimbo (day)</p>
+  <p class="w-subtitle">What the fleet did, cost, and failed at.</p>
+
+  <div class="w-intent"><dl>
+    <dt>Goal</dt><dd>Account for the fleet's day: what ran, what it cost, what broke — and whether that's normal.</dd>
+    <dt>Persona</dt><dd>Marvin arriving from Overview's fleet strip, usually because a failure count spiked.</dd>
+    <dt>Primary</dt><dd><b>Open the failing job</b> — from failures straight into dispatch detail.</dd>
+    <dt>Success</dt><dd>A failure spike is attributable to one skill or one cause without opening the fleet board.</dd>
+  </dl></div>
+
+  <div class="w-tabs">
+    <a href="#" data-goto="01">Overview</a><a href="#" data-goto="02">Work</a>
+    <a href="#" data-goto="03">Body</a><a href="#" class="is-active">Jimbo</a><a href="#">Phone</a>
+  </div>
+
+  <div class="w-block">
+    <div class="w-block__head"><span class="w-h3">Failures <span class="w-tag w-tag--update">EXTENDED</span></span>
+      <span class="w-body w-muted">7 today · 0 yesterday</span></div>
+    <div class="w-list-item"><span class="w-list-item__time">×7</span>
+      <span class="w-list-item__main"><span class="w-chip w-chip--solid">grooming</span> <b>reaper: timeout</b>
+      — <span class="w-muted">all 7 children of one epic, 00:27 → 17:32</span></span>
+      <button class="w-btn-ghost">Open →</button></div>
+    <div class="w-placeholder" style="height:110px;margin-top:12px;">[ ui-bar-chart · failures per day, 14d, with baseline — a spike should be visibly a spike ]</div>
+  </div>
+
+  <div class="w-block">
+    <div class="w-block__head"><span class="w-h3">Runs &amp; spend</span><span class="w-body w-muted">42 runs · $0.0032 · £0.71 month to date</span></div>
+    <div class="w-row">
+      <div class="w-placeholder" style="height:140px;">[ ui-bar-chart · runs per hour ]</div>
+      <div class="w-placeholder" style="height:140px;">[ ui-donut-chart · spend by skill ]</div>
+    </div>
+  </div>
+
+  <div class="w-notes"><b>Notes</b><ul>
+    <li>Grouping the 7 timeouts to <em>one row with a ×7</em> here is the same fix the notification bar needs —
+      <code>failureGroups</code> keys on note title, so correlated failures fan out into separate rows.
+      Solving it once in the service fixes both surfaces.</li>
+    <li>“Vault groomed −9 vs typical” on Overview is the downstream effect; this tab holds the cause. The link
+      between them is the reason the fleet strip earns its place on a work-first Overview.</li>
+  </ul></div>
+</div>
+<script src="wire-nav.js"></script></body></html>

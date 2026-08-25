@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><title>06 — Metric anatomy</title>
+<link rel="stylesheet" href="wire-kit.css"></head><body>
+<div class="frame">
+  <p class="w-h1">06 · <code>ui-metric</code> — anatomy &amp; variants</p>
+  <p class="w-subtitle">The primitive the whole restructure rests on. Destined for /ui-lab.</p>
+
+  <div class="w-intent"><dl>
+    <dt>Goal</dt><dd>Pin down every state <code>ui-metric</code> / <code>ui-delta</code> must handle before either is written.</dd>
+    <dt>Persona</dt><dd>Us, building it. This screen is a spec, not a product surface.</dd>
+    <dt>Primary</dt><dd>Agree the variant list, then build against it.</dd>
+    <dt>Success</dt><dd>No “what does it do when…” questions survive to implementation.</dd>
+  </dl></div>
+
+  <div class="w-block">
+    <div class="w-block__head"><span class="w-h3">Anatomy</span></div>
+    <div class="w-row">
+      <div class="w-metric" style="max-width:250px;flex:0 0 250px;">
+        <div class="w-metric__label">Desk time</div>
+        <div class="w-metric__value">3h 12<small>m</small></div>
+        <div class="w-metric__deltas">
+          <span>▼ −1h 04m vs yesterday</span>
+          <span>▼ −38% vs typical Tue</span>
+          <span class="w-muted">week to date · 14h 20m</span>
+        </div>
+        <div class="w-metric__spark">[ sparkline · last 8 days ]</div>
+      </div>
+      <div class="w-body" style="padding-left:8px;">
+        <p><b>label</b> — small, uppercase, never competes with the value</p>
+        <p><b>value</b> — dominant. ~30px vs today's 0.8rem/12.8px. This single change is most of the
+          “stat cards look ugly” complaint.</p>
+        <p><b>delta · near</b> — <code>ui-delta</code>, vs yesterday (time-truncated on a live day)</p>
+        <p><b>delta · baseline</b> — <code>ui-delta</code>, vs typical same-weekday</p>
+        <p><b>cumulative</b> — muted, week/month to date. A fact, not a comparison, so no arrow</p>
+        <p><b>sparkline</b> — <code>ui-sparkline</code>, 8 points, no axes, no tooltip</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-block">
+    <div class="w-block__head"><span class="w-h3">ui-delta variants</span></div>
+    <div class="w-grid w-grid--4">
+      <div class="w-metric w-metric--sub"><div class="w-metric__label">up = good</div><div class="w-metric__value">10</div><div class="w-metric__deltas"><span>▲ +4 vs yesterday</span></div></div>
+      <div class="w-metric w-metric--sub"><div class="w-metric__label">down = bad</div><div class="w-metric__value">0</div><div class="w-metric__deltas"><span>▼ −4 vs yesterday</span></div></div>
+      <div class="w-metric w-metric--sub"><div class="w-metric__label">inverted (up = bad)</div><div class="w-metric__value">5h 39<small>m</small></div><div class="w-metric__deltas"><span>▲ +2h 10m vs typical</span></div></div>
+      <div class="w-metric w-metric--sub"><div class="w-metric__label">no change</div><div class="w-metric__value">2</div><div class="w-metric__deltas"><span>— level with yesterday</span></div></div>
+      <div class="w-metric w-metric--sub"><div class="w-metric__label">no baseline</div><div class="w-metric__value">3</div><div class="w-metric__deltas"><span class="w-muted">no typical yet · 2 of 4</span></div></div>
+      <div class="w-metric w-metric--sub"><div class="w-metric__label">from zero</div><div class="w-metric__value">6</div><div class="w-metric__deltas"><span>▲ +6 · none yesterday</span></div></div>
+      <div class="w-metric w-metric--sub"><div class="w-metric__label">no data (≠ zero)</div><div class="w-metric__value w-muted">—</div><div class="w-metric__deltas"><span class="w-muted">not logged today</span></div></div>
+      <div class="w-metric w-metric--sub"><div class="w-metric__label">time-truncated</div><div class="w-metric__value">24<small>m</small></div><div class="w-metric__deltas"><span>▼ −16m vs typical Tue at 08:30</span></div></div>
+    </div>
+  </div>
+
+  <div class="w-notes"><b>Notes — the rules that fall out</b><ul>
+    <li><b>Percentage vs absolute.</b> Absolute when the unit is human-readable and the base is small
+      (“+4 commits”); percentage when the base is large or the unit is time (“−38%”). Not a per-caller choice —
+      the primitive decides, so the rail stays consistent.</li>
+    <li><b>“From zero” never shows a percentage.</b> +∞% is not a fact. It reads “+6 · none yesterday”.</li>
+    <li><b>Absent ≠ zero</b>, everywhere. Em-dash and a reason, never a 0 and a red arrow.</li>
+    <li><b>Inversion is per-metric</b>, declared by the caller (<code>[higherIsBetter]="false"</code>). YouTube and
+      sleep-debt break any global rule.</li>
+    <li><b>No colour decisions in this wireframe.</b> Arrows carry direction here; whether the production version
+      also tints is a visual pass, deliberately deferred.</li>
+  </ul></div>
+
+  <div class="w-notes"><b>Notes — what this means for <code>ui-stat-card</code></b><ul>
+    <li>Do <em>not</em> mutate stat-card into this. It has a second, legitimate job: text facts
+      (<code>value="Manual · operator-intake"</code> in vault-detail, nutrition totals). A 30px numeral treatment
+      would wreck those.</li>
+    <li>So: <code>ui-metric</code> is new, <code>ui-stat-card</code> is narrowed to fact-tiles and loses its
+      <code>::ng-deep</code> flex patch. Two clean primitives instead of one overloaded one.</li>
+  </ul></div>
+</div>
+<script src="wire-nav.js"></script></body></html>

@@ -1,0 +1,138 @@
+/* wire-kit — structure only. Greyscale, one mono face, fixed desktop frame.
+   No colour, no icons, no polish. If something here starts looking designed,
+   it has drifted. */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Courier New', Courier, monospace;
+  background: #eeeeee;
+  color: #111;
+  padding: 24px 16px 96px;
+  line-height: 1.5;
+}
+
+.frame { width: 1280px; max-width: 100%; margin: 0 auto; }
+
+/* ── intent block ─────────────────────────────────────────────────── */
+.w-intent {
+  border: 2px solid #111; background: #fff;
+  padding: 14px 18px; margin-bottom: 20px;
+}
+.w-intent dl { display: grid; grid-template-columns: 84px 1fr; gap: 4px 12px; }
+.w-intent dt { font-size: 10px; font-weight: bold; letter-spacing: 1px; color: #666; }
+.w-intent dd { font-size: 12px; }
+
+/* ── type ─────────────────────────────────────────────────────────── */
+.w-h1 { font-size: 20px; font-weight: bold; margin-bottom: 2px; }
+.w-h2 { font-size: 14px; font-weight: bold; }
+.w-h3 { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #666; }
+.w-body { font-size: 12px; color: #444; }
+.w-subtitle { font-size: 11px; color: #888; margin-bottom: 20px; }
+.w-muted { color: #999; }
+
+/* ── structural blocks ────────────────────────────────────────────── */
+.w-bar {
+  border: 1px solid #bbb; background: #fff;
+  padding: 10px 14px; display: flex; align-items: center;
+  justify-content: space-between; gap: 12px; margin-bottom: 4px;
+}
+.w-block {
+  border: 1px solid #bbb; background: #fff;
+  padding: 16px 18px; margin-bottom: 14px;
+}
+.w-block--sub { background: #f7f7f7; border-style: dashed; }
+.w-block__head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px;
+}
+
+.w-row { display: flex; gap: 12px; align-items: stretch; }
+.w-row > * { flex: 1; min-width: 0; }
+.w-grid { display: grid; gap: 12px; }
+.w-grid--4 { grid-template-columns: repeat(4, 1fr); }
+.w-grid--5 { grid-template-columns: repeat(5, 1fr); }
+.w-grid--2 { grid-template-columns: repeat(2, 1fr); }
+
+/* ── metric tile (the NEW primitive being proposed) ───────────────── */
+.w-metric { border: 1px solid #bbb; background: #fff; padding: 12px 14px; }
+.w-metric__label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #888; }
+.w-metric__value { font-size: 30px; font-weight: bold; line-height: 1.1; margin: 4px 0 2px; }
+.w-metric__value small { font-size: 14px; font-weight: normal; color: #666; }
+.w-metric__deltas { font-size: 10px; color: #666; display: flex; flex-direction: column; gap: 1px; }
+.w-metric__spark {
+  height: 26px; margin-top: 8px; border: 1px dashed #ccc;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; color: #aaa;
+}
+.w-metric--sub .w-metric__value { font-size: 18px; }
+.w-metric--sub { padding: 9px 11px; }
+
+/* ── placeholders ─────────────────────────────────────────────────── */
+.w-placeholder {
+  border: 1px dashed #bbb; background: #fafafa;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; font-size: 11px; color: #999; padding: 12px;
+}
+
+/* ── list / bullets ───────────────────────────────────────────────── */
+.w-list-item {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px;
+}
+.w-list-item:last-child { border-bottom: 0; }
+.w-list-item__time { font-size: 10px; color: #999; width: 44px; flex-shrink: 0; }
+.w-list-item__main { flex: 1; min-width: 0; }
+.w-list-item__meta { font-size: 10px; color: #999; flex-shrink: 0; }
+
+/* ── chips, buttons, inputs ───────────────────────────────────────── */
+.w-chip {
+  display: inline-block; font-size: 10px; padding: 1px 7px;
+  border: 1px solid #999; color: #444; border-radius: 10px; white-space: nowrap;
+}
+.w-chip--solid { background: #111; color: #fff; border-color: #111; }
+.w-btn-primary {
+  display: inline-block; font-family: inherit; font-size: 12px;
+  background: #111; color: #fff; border: 1px solid #111;
+  padding: 7px 16px; cursor: pointer;
+}
+.w-btn-ghost {
+  display: inline-block; font-family: inherit; font-size: 11px;
+  background: transparent; color: #444; border: 1px solid #bbb;
+  padding: 5px 12px; cursor: pointer;
+}
+.w-input { border: 1px solid #bbb; background: #fff; padding: 7px 10px; font-family: inherit; font-size: 12px; width: 100%; }
+.w-tabs { display: flex; gap: 0; border-bottom: 1px solid #bbb; margin-bottom: 14px; }
+.w-tabs a {
+  font-size: 12px; padding: 7px 14px; color: #888; text-decoration: none;
+  border: 1px solid transparent; border-bottom: 0;
+}
+.w-tabs a.is-active { color: #111; font-weight: bold; background: #fff; border-color: #bbb; }
+.w-seg { display: inline-flex; border: 1px solid #bbb; }
+.w-seg span { font-size: 11px; padding: 4px 12px; border-right: 1px solid #ddd; color: #888; }
+.w-seg span:last-child { border-right: 0; }
+.w-seg span.is-active { background: #111; color: #fff; }
+
+/* ── annotations ──────────────────────────────────────────────────── */
+.w-notes {
+  border-left: 3px solid #111; background: #f7f7f7;
+  padding: 10px 14px; margin: 0 0 20px; font-size: 11px; color: #555;
+}
+.w-notes b { display: block; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: #111; margin-bottom: 5px; }
+.w-notes li { margin: 0 0 4px 16px; line-height: 1.5; }
+
+.w-tag { display: inline-block; font-size: 9px; padding: 1px 6px; border: 1px solid; margin-right: 4px; letter-spacing: .5px; }
+.w-tag--new    { border-color: #111; color: #111; font-weight: bold; }
+.w-tag--update { border-color: #777; color: #555; }
+.w-tag--exists { border-color: #ccc; color: #aaa; }
+.w-tag--move   { border-color: #111; color: #fff; background: #111; font-weight: bold; }
+
+/* ── state separator ──────────────────────────────────────────────── */
+.w-sep {
+  margin: 44px 0 20px; border-top: 3px double #999; padding-top: 14px;
+  font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; color: #111;
+}
+
+/* ── hotspots ─────────────────────────────────────────────────────── */
+[data-goto] { cursor: pointer; }
+[data-goto]:hover { outline: 2px solid #111; outline-offset: 2px; }

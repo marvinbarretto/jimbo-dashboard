@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><title>05 — Evening · checks</title>
+<link rel="stylesheet" href="wire-kit.css"></head><body>
+<div class="frame">
+  <p class="w-h1">05 · Life → Evening</p>
+  <p class="w-subtitle">Receives the day-checks authoring panel.</p>
+
+  <div class="w-intent"><dl>
+    <dt>Goal</dt><dd>Capture what the machine cannot see — the subjective half of the day.</dd>
+    <dt>Persona</dt><dd>Marvin at the end of the day, having <em>chosen</em> to reflect. Not passing through.</dd>
+    <dt>Primary</dt><dd><b>Answer today's checks</b> — the one filled action, and the reason the page exists.</dd>
+    <dt>Success</dt><dd>Checks answered at a rate closer to the 10/10 post-pomodoro figure than the 2/44 nudge figure.</dd>
+  </dl></div>
+
+  <div class="w-block">
+    <div class="w-block__head"><span class="w-h3">Today's checks <span class="w-tag w-tag--move">MOVED FROM OVERVIEW</span></span>
+      <span class="w-body w-muted">1 of 4 answered</span></div>
+    <div class="w-list-item"><span class="w-list-item__main">Did I start the day on purpose?</span>
+      <span class="w-seg"><span>1</span><span>2</span><span class="is-active">3</span><span>4</span><span>5</span></span></div>
+    <div class="w-list-item"><span class="w-list-item__main">Did I make the call I meant to make?</span>
+      <span class="w-btn-ghost">☐</span></div>
+    <div class="w-list-item"><span class="w-list-item__main">What pulled focus today?</span></div>
+    <div style="margin:4px 0 14px;"><input class="w-input" placeholder="…"></div>
+    <div style="display:flex;gap:8px;"><input class="w-input" placeholder="Add a one-off — did I call X?"><button class="w-btn-ghost">Add</button></div>
+  </div>
+
+  <div class="w-bar"><span class="w-h3">▸ Day report</span><span class="w-muted">read what Boris wrote</span></div>
+  <div class="w-bar"><span class="w-h3">▸ Tomorrow</span><span class="w-muted">what's queued</span></div>
+
+  <div class="w-notes"><b>Notes — why the move</b><ul>
+    <li>The panel's own rationale is sound and documented: it is the only authoring surface in a read-only journal,
+      and it is <em>pull</em> because scheduled Telegram nudges were answered 2/44 while post-pomodoro buttons were
+      answered 10/10. None of that argues it must sit on Overview.</li>
+    <li>It felt unfinished on Overview because it is a <em>form</em> in the middle of a <em>readout</em> — three
+      different input types (checkbox / 1–5 scale / free text) plus an add-item box, in a generic collapsible.
+      In a reflection flow it is the main event and reads as intentional.</li>
+    <li>Cost of the move: the checks lose their daily incidental impression. Mitigation — Overview's routine metric
+      ("Routine 1/4") can carry an unanswered-checks count, linking here. Worth deciding.</li>
+    <li><b>Alternative if you disagree:</b> keep it on Overview but give it real identity — full-width, its own
+      heading treatment, and only <em>unanswered</em> items shown. Cheaper; less coherent.</li>
+  </ul></div>
+</div>
+<script src="wire-nav.js"></script></body></html>

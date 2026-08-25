@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 — Overview · day</title>
+<link rel="stylesheet" href="wire-kit.css">
+</head>
+<body>
+<div class="frame">
+
+  <p class="w-h1">01 · Journal → Overview (day)</p>
+  <p class="w-subtitle">The story layer. Desktop 1280.</p>
+
+  <div class="w-intent">
+    <dl>
+      <dt>Goal</dt>
+      <dd>Tell Marvin what today amounts to, through data, without him assembling anything — and make an
+          abnormal day <em>look</em> abnormal.</dd>
+      <dt>Persona</dt>
+      <dd>Marvin, mid-afternoon or end of day. Came to check whether the day went where he thought it went.</dd>
+      <dt>Primary</dt>
+      <dd>None — this page is <b>read</b>. Its one filled control is the drill-in: <b>“Open Work →”</b>. That is
+          deliberate; the moment Overview grows a form it stops being a glance.</dd>
+      <dt>Success</dt>
+      <dd>He can say “today was light on desk time but shipped more than usual” without clicking anything —
+          and knows which tab explains the gap.</dd>
+    </dl>
+  </div>
+
+  <!-- ── chrome ─────────────────────────────────────────────────── -->
+  <div class="w-tabs">
+    <a href="#" class="is-active">Overview</a>
+    <a href="#" data-goto="02">Work</a>
+    <a href="#" data-goto="03">Body</a>
+    <a href="#" data-goto="04">Jimbo</a>
+    <a href="#">Phone</a>
+  </div>
+
+  <div class="w-bar">
+    <span class="w-btn-ghost">‹</span>
+    <span class="w-h2">Tuesday, 25 August 2026 <span class="w-muted">· today</span></span>
+    <span class="w-seg"><span class="is-active">Day</span><span>Week</span><span>Month</span></span>
+    <span class="w-btn-ghost">›</span>
+  </div>
+
+  <!-- ── 1. METRIC RAIL ─────────────────────────────────────────── -->
+  <div class="w-block">
+    <div class="w-block__head">
+      <span class="w-h3">The numbers · work</span>
+      <span class="w-body w-muted">compared to yesterday and to a typical Tuesday</span>
+    </div>
+
+    <div class="w-grid w-grid--4">
+      <div class="w-metric">
+        <div class="w-metric__label">Desk time</div>
+        <div class="w-metric__value">3h 12<small>m</small></div>
+        <div class="w-metric__deltas">
+          <span>▼ −1h 04m vs yesterday</span>
+          <span>▼ −38% vs typical Tue</span>
+          <span class="w-muted">week to date · 14h 20m</span>
+        </div>
+        <div class="w-metric__spark">[ sparkline · last 8 days ]</div>
+      </div>
+
+      <div class="w-metric">
+        <div class="w-metric__label">Commits</div>
+        <div class="w-metric__value">10</div>
+        <div class="w-metric__deltas">
+          <span>▲ +4 vs yesterday</span>
+          <span>▲ +2 vs typical Tue</span>
+          <span class="w-muted">week to date · 37</span>
+        </div>
+        <div class="w-metric__spark">[ sparkline · last 8 days ]</div>
+      </div>
+
+      <div class="w-metric">
+        <div class="w-metric__label">Projects touched</div>
+        <div class="w-metric__value">2</div>
+        <div class="w-metric__deltas">
+          <span>— level with yesterday</span>
+          <span>▼ −1 vs typical Tue</span>
+          <span class="w-muted">week to date · 5 distinct</span>
+        </div>
+        <div class="w-metric__spark">[ sparkline · last 8 days ]</div>
+      </div>
+
+      <div class="w-metric">
+        <div class="w-metric__label">Focus sessions</div>
+        <div class="w-metric__value">0</div>
+        <div class="w-metric__deltas">
+          <span>▼ −4 vs yesterday</span>
+          <span>▼ −5 vs typical Tue</span>
+          <span class="w-muted">week to date · 11</span>
+        </div>
+        <div class="w-metric__spark">[ sparkline · last 8 days ]</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-notes">
+    <b>Notes — metric rail</b>
+    <ul>
+      <li><b>This is the whole ask in one component.</b> Same four facts as today's tiles, but each carries a
+        baseline, a trend and a cumulative. <code>0</code> focus sessions now reads as a <em>deficit</em>, not a blank.</li>
+      <li>Four tiles, not five. <code>YOUTUBE</code> and <code>JIMBO $</code> are dropped from the headline rail —
+        they aren't work output. They reappear at subordinate weight further down.</li>
+      <li>Three delta lines is the maximum before the tile stops being scannable. Ordering is deliberate:
+        <em>yesterday</em> (visceral) → <em>typical weekday</em> (honest) → <em>cumulative</em> (progress).</li>
+      <li>Existing: nothing. New: <code>ui-metric</code>, <code>ui-delta</code>, <code>ui-sparkline</code>.</li>
+      <li><b>Open:</b> "typical Tue" = median of the last 4 Tuesdays. Needs enough history — see the
+        <em>no baseline</em> state at the bottom of this file.</li>
+    </ul>
+  </div>
+
+  <!-- ── 2. THE DAY'S SHAPE ─────────────────────────────────────── -->
+  <div class="w-block">
+    <div class="w-block__head">
+      <span class="w-h3">The day's shape</span>
+      <span class="w-seg"><span class="is-active">Today</span><span>This week</span></span>
+    </div>
+    <div class="w-placeholder" style="height:190px;">
+      [ ui-cumulative-chart ]<br><br>
+      x = 06:00 → 17:55 (now) &nbsp;·&nbsp; y = cumulative desk minutes<br>
+      solid line = today &nbsp;·&nbsp; ghost band = typical Tuesday (median of last 4)<br><br>
+      <em>today's line sits below the band from ~11:00 onward — the gap IS the story</em>
+    </div>
+    <p class="w-body w-muted" style="margin-top:8px;">
+      192 min so far · a typical Tuesday is at 310 min by now
+    </p>
+  </div>
+
+  <div class="w-notes">
+    <b>Notes — the day's shape</b>
+    <ul>
+      <li>This is the “progress of what's happened so far today” you asked for, and the reason it must be
+        <em>cumulative</em> rather than the per-hour bars: bars show distribution, a rising line shows
+        <em>accumulation against expectation</em>.</li>
+      <li>Deliberately not prose. The divergence between the two lines does the narrating.</li>
+      <li>The Today/This-week toggle switches the x-axis to Mon→Sun with the same ghost treatment, giving the
+        cumulative week figure a shape rather than just a number.</li>
+      <li>Competes with the metric rail for attention — resolved by putting the rail first (facts) and the chart
+        second (interpretation). If the chart won, the page would become a dashboard again.</li>
+      <li>New: <code>ui-cumulative-chart</code>. Chart.js line, reuses the existing <code>BaseChartDirective</code>
+        already wired for <code>ui-bar-chart</code>.</li>
+    </ul>
+  </div>
+
+  <!-- ── 3. WORK REALISED ───────────────────────────────────────── -->
+  <div class="w-block">
+    <div class="w-block__head">
+      <span class="w-h3">Work realised</span>
+      <span class="w-body w-muted">outcomes, not activity — 6 of 14</span>
+    </div>
+
+    <div class="w-list-item">
+      <span class="w-list-item__time">16:42</span>
+      <span class="w-list-item__main">
+        <span class="w-chip">jimbo</span>
+        <b>Closed LOC-3062</b> — vault: <span class="w-muted">settled terminal grooming state</span>
+      </span>
+      <span class="w-list-item__meta">done</span>
+    </div>
+    <div class="w-list-item">
+      <span class="w-list-item__time">15:10</span>
+      <span class="w-list-item__main">
+        <span class="w-chip">jimbo</span>
+        <b>3 commits</b> — <span class="w-muted">fleet notification tone, queue depth on pipeline page</span>
+      </span>
+      <span class="w-list-item__meta">dashboard</span>
+    </div>
+    <div class="w-list-item">
+      <span class="w-list-item__time">13:05</span>
+      <span class="w-list-item__main">
+        <span class="w-chip">localshout</span>
+        <b>7 commits</b> — <span class="w-muted">contradiction detection engine</span>
+      </span>
+      <span class="w-list-item__meta">api</span>
+    </div>
+    <div class="w-list-item">
+      <span class="w-list-item__time">11:20</span>
+      <span class="w-list-item__main">
+        <span class="w-chip">jimbo</span>
+        <b>Released v0.0.186</b>
+      </span>
+      <span class="w-list-item__meta">deploy</span>
+    </div>
+    <div class="w-list-item">
+      <span class="w-list-item__time">09:48</span>
+      <span class="w-list-item__main">
+        <span class="w-chip">localshout</span>
+        <b>2 vault items moved to active</b>
+      </span>
+      <span class="w-list-item__meta">groomed</span>
+    </div>
+    <div class="w-list-item">
+      <span class="w-list-item__time">08:15</span>
+      <span class="w-list-item__main">
+        <span class="w-chip w-chip--solid">Boris</span>
+        <b>Day report generated</b>
+      </span>
+      <span class="w-list-item__meta">agent</span>
+    </div>
+
+    <div style="margin-top:12px; display:flex; gap:10px; align-items:center;">
+      <button class="w-btn-primary" data-goto="02">Open Work →</button>
+      <span class="w-body w-muted">full stream, sessions, code activity, timeline</span>
+    </div>
+  </div>
+
+  <div class="w-notes">
+    <b>Notes — work realised</b>
+    <ul>
+      <li>The bullets you asked for. The rule that makes them <em>outcomes</em> rather than a feed:
+        <b>one line per thing that changed state</b> — an item closed, a batch of commits on one project, a release.
+        Individual commits are grouped, never listed one per row.</li>
+      <li>Explicitly <em>not</em> the day-stream (which stays on Work). Day-stream is chronological and complete;
+        this is selective and ranked.</li>
+      <li>Capped at ~6 lines with a count in the header, so the section can't grow into a wall.</li>
+      <li>Existing pieces: <code>ui-list</code>-style rows, <code>app-chip</code>, <code>app-project-avatar</code>,
+        <code>app-actor-chip</code>. Probably <b>no new primitive needed</b> — a styled list using existing chips.
+        Worth confirming rather than reflexively adding <code>ui-highlight-list</code>.</li>
+      <li><b>Open:</b> ranking. Currently sketched reverse-chronological. Should a closed vault item always outrank
+        a commit batch regardless of time?</li>
+    </ul>
+  </div>
+
+  <!-- ── 4. PERSONAL STRIP ──────────────────────────────────────── -->
+  <div class="w-block w-block--sub">
+    <div class="w-block__head">
+      <span class="w-h3">Supporting · body &amp; attention</span>
+      <a href="#" class="w-body" data-goto="03">Body →</a>
+    </div>
+    <div class="w-grid w-grid--5">
+      <div class="w-metric w-metric--sub">
+        <div class="w-metric__label">Protein</div>
+        <div class="w-metric__value">88<small>g</small></div>
+        <div class="w-metric__deltas"><span>59% of 150g · pace 74%</span><span class="w-muted">wk 612g</span></div>
+      </div>
+      <div class="w-metric w-metric--sub">
+        <div class="w-metric__label">Training</div>
+        <div class="w-metric__value">yes</div>
+        <div class="w-metric__deltas"><span>12 sets · 2,140kg</span><span class="w-muted">wk 3 sessions</span></div>
+      </div>
+      <div class="w-metric w-metric--sub">
+        <div class="w-metric__label">Sleep</div>
+        <div class="w-metric__value">6h 20<small>m</small></div>
+        <div class="w-metric__deltas"><span>▼ −55m vs typical</span><span class="w-muted">wk avg 6h 48m</span></div>
+      </div>
+      <div class="w-metric w-metric--sub">
+        <div class="w-metric__label">YouTube</div>
+        <div class="w-metric__value">5h 39<small>m</small></div>
+        <div class="w-metric__deltas"><span>▲ +2h 10m vs typical</span><span class="w-muted">wk 19h 04m</span></div>
+      </div>
+      <div class="w-metric w-metric--sub" data-goto="05">
+        <div class="w-metric__label">Routine</div>
+        <div class="w-metric__value">1<small>/4</small></div>
+        <div class="w-metric__deltas"><span>move ✓ · supps ✗ · eat ✗</span><span class="w-muted">wk 11/28</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-notes">
+    <b>Notes — personal strip</b>
+    <ul>
+      <li>One row, half the type size of the work rail. That ratio <em>is</em> the “work-first, personal supporting”
+        instruction made structural.</li>
+      <li>The macros donut, the two protein meters and the gym breakdown all move to <b>Body</b>. What survives here
+        is one number each, with context.</li>
+      <li><b>YouTube 5h39m against a 3h29m typical, on a day with 0 focus sessions and 3h12m desk time</b> — placing it
+        adjacent to the work rail is the point. Neither number accuses; together they're legible.</li>
+      <li><code>ui-delta</code> needs an <code>[inverted]</code> input: YouTube up is not good news, sleep down is not
+        good news. Colour/arrow semantics must be per-metric, not global.</li>
+      <li>Today's routine checklist collapses to a 1/4 metric here. The full checklist is a Body concern.</li>
+    </ul>
+  </div>
+
+  <!-- ── 5. JIMBO STRIP ─────────────────────────────────────────── -->
+  <div class="w-block w-block--sub">
+    <div class="w-block__head">
+      <span class="w-h3">Supporting · the fleet</span>
+      <a href="#" class="w-body" data-goto="04">Jimbo →</a>
+    </div>
+    <div class="w-grid w-grid--4">
+      <div class="w-metric w-metric--sub">
+        <div class="w-metric__label">Agent runs</div>
+        <div class="w-metric__value">42</div>
+        <div class="w-metric__deltas"><span>▲ +6 vs typical</span><span class="w-muted">wk 231</span></div>
+      </div>
+      <div class="w-metric w-metric--sub">
+        <div class="w-metric__label">Spend</div>
+        <div class="w-metric__value">$0.0032</div>
+        <div class="w-metric__deltas"><span>— level with typical</span><span class="w-muted">mo $0.71 / £5 budget</span></div>
+      </div>
+      <div class="w-metric w-metric--sub">
+        <div class="w-metric__label">Failures</div>
+        <div class="w-metric__value">7</div>
+        <div class="w-metric__deltas"><span>▲ +7 vs yesterday</span><span class="w-muted">all grooming · reaper timeout</span></div>
+      </div>
+      <div class="w-metric w-metric--sub">
+        <div class="w-metric__label">Vault groomed</div>
+        <div class="w-metric__value">3</div>
+        <div class="w-metric__deltas"><span>▼ −9 vs typical</span><span class="w-muted">wk 41</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-notes">
+    <b>Notes — fleet strip</b>
+    <ul>
+      <li>This is where the notification storm becomes <em>data</em>. “Failures 7, ▲ +7 vs yesterday, all grooming”
+        is a better representation of today's problem than seven stacked red banners — and it is still here tomorrow
+        when the banners have been dismissed.</li>
+      <li>It doesn't replace the notification bar (that exists to interrupt), but it does reduce the pressure on it,
+        which strengthens the case for capping the bar at 3 rows + “+N more”.</li>
+      <li>“Vault groomed 3, ▼ −9 vs typical” is the <em>consequence</em> of those failures, sitting right next to the
+        cause. That pairing is only possible because both are on the same strip.</li>
+    </ul>
+  </div>
+
+  <!-- ── 6. REPORT ──────────────────────────────────────────────── -->
+  <div class="w-bar">
+    <span class="w-h3">▸ Day report <span class="w-muted" style="text-transform:none;letter-spacing:0;">— written overnight by Boris, 04:15</span></span>
+    <span class="w-btn-ghost">Expand</span>
+  </div>
+
+  <div class="w-notes" style="margin-top:14px;">
+    <b>Notes — report placement</b>
+    <ul>
+      <li>Collapsed, and last. You said “tell the story through data, not build a narrative” — so the prose cannot
+        lead, but it's too good to delete. Collapsed-at-the-bottom is the compromise; moving it to Evening is the
+        alternative.</li>
+      <li>Currently it sits <em>above</em> the evidence (<code>overview-page.ts</code> comment argues it has “already
+        done the assembling”). That argument holds for a page of raw spans; it holds less once the data above is
+        self-narrating.</li>
+    </ul>
+  </div>
+
+  <!-- ══════════════════ ALTERNATE STATES ══════════════════ -->
+
+  <p class="w-sep">State · early morning (08:30, little has happened)</p>
+  <div class="w-block">
+    <div class="w-grid w-grid--4">
+      <div class="w-metric">
+        <div class="w-metric__label">Desk time</div>
+        <div class="w-metric__value">24<small>m</small></div>
+        <div class="w-metric__deltas"><span>▲ +24m vs yesterday at 08:30</span><span>▼ −16m vs typical Tue at 08:30</span><span class="w-muted">week to date · 11h 32m</span></div>
+      </div>
+      <div class="w-metric">
+        <div class="w-metric__label">Commits</div>
+        <div class="w-metric__value">0</div>
+        <div class="w-metric__deltas"><span>— level with yesterday at 08:30</span><span>— level with typical Tue</span><span class="w-muted">week to date · 27</span></div>
+      </div>
+      <div class="w-metric"><div class="w-metric__label">Projects touched</div><div class="w-metric__value">1</div><div class="w-metric__deltas"><span>▲ +1 vs yesterday at 08:30</span><span class="w-muted">week to date · 5 distinct</span></div></div>
+      <div class="w-metric"><div class="w-metric__label">Focus sessions</div><div class="w-metric__value">0</div><div class="w-metric__deltas"><span>— level with typical Tue</span><span class="w-muted">week to date · 11</span></div></div>
+    </div>
+  </div>
+  <div class="w-notes">
+    <b>Notes — the time-of-day rule</b>
+    <ul>
+      <li><b>Comparisons on a live day are time-truncated.</b> At 08:30 the page compares against yesterday
+        <em>at 08:30</em>, not yesterday's total — otherwise every morning reads as catastrophic failure.</li>
+      <li>The delta label says so explicitly (“vs yesterday at 08:30”) so the reader is never guessing which
+        comparison they're looking at. On a past day the qualifier disappears.</li>
+      <li>This is the single most important correctness rule in the whole redesign and the easiest to get wrong.</li>
+    </ul>
+  </div>
+
+  <p class="w-sep">State · no baseline yet (new metric, &lt;4 same-weekdays of history)</p>
+  <div class="w-block">
+    <div class="w-grid w-grid--4">
+      <div class="w-metric">
+        <div class="w-metric__label">Desk time</div>
+        <div class="w-metric__value">3h 12<small>m</small></div>
+        <div class="w-metric__deltas"><span>▼ −1h 04m vs yesterday</span><span class="w-muted">no typical yet · 2 of 4 Tuesdays</span><span class="w-muted">week to date · 14h 20m</span></div>
+        <div class="w-metric__spark">[ sparkline · 2 points ]</div>
+      </div>
+      <div class="w-placeholder" style="grid-column: span 3;">
+        remaining tiles unchanged — a missing baseline degrades <em>one line of one tile</em>,<br>
+        it never blanks the tile or hides the metric
+      </div>
+    </div>
+  </div>
+  <div class="w-notes">
+    <b>Notes</b>
+    <ul>
+      <li>Mirrors the day-stream registry rule already in the codebase: a signal reports live / quiet / dead, and
+        <em>absent must never render as zero</em>. “No typical yet” is a fact; “0%” would be a lie.</li>
+    </ul>
+  </div>
+
+  <p class="w-sep">State · loading</p>
+  <div class="w-block">
+    <div class="w-grid w-grid--4">
+      <div class="w-metric"><div class="w-metric__label">Desk time</div><div class="w-metric__value w-muted">3h 12<small>m</small></div><div class="w-metric__deltas w-muted"><span>comparing…</span></div></div>
+      <div class="w-placeholder" style="grid-column: span 3;">
+        today's figures render immediately from the day bundle;<br>
+        the <em>comparison</em> window resolves after and fills the delta lines in place
+      </div>
+    </div>
+  </div>
+  <div class="w-notes">
+    <b>Notes — two-phase load</b>
+    <ul>
+      <li>Never block the whole page on the 28-day rollup. Today's numbers come from the existing day bundle and
+        paint first; deltas arrive second and slot in. Same two-phase pattern already used on the board.</li>
+      <li>This also means a failed comparison fetch degrades to today's-numbers-only rather than an error page.</li>
+    </ul>
+  </div>
+
+  <p class="w-sep">State · past day (not today)</p>
+  <div class="w-notes" style="margin-top:0;">
+    <b>Notes</b>
+    <ul>
+      <li>“The day's shape” chart runs the full 24h with no “now” marker; deltas drop the “at HH:MM” qualifier and
+        compare whole day to whole day.</li>
+      <li>The cumulative <em>week</em> figure becomes week-to-that-day, not week-to-now.</li>
+      <li>No polling — the existing service already treats a past window as immutable and skips the refetch.</li>
+    </ul>
+  </div>
+
+</div>
+<script src="wire-nav.js"></script>
+</body>
+</html>
