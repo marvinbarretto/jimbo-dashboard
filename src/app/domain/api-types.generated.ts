@@ -4,6 +4,1123 @@
  */
 
 export interface paths {
+    "/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign in and receive a 180-day session cookie */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["LoginBody"];
+                };
+            };
+            responses: {
+                /** @description Signed in */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LoginOk"];
+                    };
+                };
+                /** @description Invalid credentials */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LoginFail"];
+                    };
+                };
+                /** @description Server misconfigured */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LoginFail"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clear the session cookie */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Signed out */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LoginOk"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Return current authenticated user, or null */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Auth status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MeResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/commitments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List commitments */
+        get: {
+            parameters: {
+                query?: {
+                    for_day?: string;
+                    made_on?: string;
+                    status?: components["schemas"]["CommitmentStatus"];
+                    open_only?: boolean | null;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Commitments */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["Commitment"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Make a commitment */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CommitmentCreateBody"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Commitment"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/commitments/day": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A day's commitments, including anything still open from before
+         * @description Overdue rows are included deliberately: an unresolved commitment from yesterday has not gone away, and letting it vanish by not being looked at is the exact failure a commitment log exists to prevent.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    day?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Due, overdue, and made-tonight */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            day: string;
+                            due: components["schemas"]["Commitment"][];
+                            overdue: components["schemas"]["Commitment"][];
+                            made_tonight: components["schemas"]["Commitment"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/commitments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One commitment */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Commitment */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Commitment"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Delete a commitment */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /**
+         * Edit an open commitment
+         * @description for_day is not editable — moving the date silently is the deferral that /carry exists to make visible.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CommitmentUpdateBody"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Commitment"];
+                    };
+                };
+                /** @description Missing or already resolved */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/commitments/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record what became of a commitment
+         * @description Marvin's call, always. Nothing infers 'kept' from activity — the briefing may show evidence beside an open commitment, but it may not close it.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CommitmentResolveBody"];
+                };
+            };
+            responses: {
+                /** @description Resolved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Commitment"];
+                    };
+                };
+                /** @description Missing or not open */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/commitments/{id}/carry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Defer to another day
+         * @description Closes this one as carried and returns a successor pointing back at it. The chain is the evidence — rolling for_day forward would make a fourth deferral look like a first.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        for_day?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Successor created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Commitment"];
+                    };
+                };
+                /** @description Missing or not open */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/commitments/{id}/dispatch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Link the dispatch row this became */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        dispatch_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Linked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Commitment"];
+                    };
+                };
+                /** @description Missing or not open */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reflection/day/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Everything the evening page needs for one day
+         * @description Authored rows and fleet prep come back side by side and are never merged. A candidate is an offer; a gratitude row is a record. Blurring the two would put words in Marvin's mouth.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    date: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The day */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            day: string;
+                            session: components["schemas"]["ReflectionSession"];
+                            gratitude: components["schemas"]["ReflectionGratitude"][];
+                            candidates: components["schemas"]["ReflectionGratitudeCandidate"][];
+                            prep: components["schemas"]["ReflectionPrep"];
+                            made_tonight: {
+                                id: string;
+                                made_on: string;
+                                for_day: string;
+                                content: string;
+                                /** @enum {string} */
+                                kind: "do" | "avoid" | "decide";
+                                goal_id: string | null;
+                                delegable: boolean;
+                                dispatch_id: string | null;
+                                /** @enum {string} */
+                                status: "open" | "kept" | "missed" | "dropped" | "carried";
+                                resolved_at: string | null;
+                                resolution_note: string | null;
+                                carried_from: string | null;
+                                created_at: string;
+                                carry_count: number;
+                            }[];
+                            due_today: {
+                                id: string;
+                                made_on: string;
+                                for_day: string;
+                                content: string;
+                                /** @enum {string} */
+                                kind: "do" | "avoid" | "decide";
+                                goal_id: string | null;
+                                delegable: boolean;
+                                dispatch_id: string | null;
+                                /** @enum {string} */
+                                status: "open" | "kept" | "missed" | "dropped" | "carried";
+                                resolved_at: string | null;
+                                resolution_note: string | null;
+                                carried_from: string | null;
+                                created_at: string;
+                                carry_count: number;
+                            }[];
+                            overdue: {
+                                id: string;
+                                made_on: string;
+                                for_day: string;
+                                content: string;
+                                /** @enum {string} */
+                                kind: "do" | "avoid" | "decide";
+                                goal_id: string | null;
+                                delegable: boolean;
+                                dispatch_id: string | null;
+                                /** @enum {string} */
+                                status: "open" | "kept" | "missed" | "dropped" | "carried";
+                                resolved_at: string | null;
+                                resolution_note: string | null;
+                                carried_from: string | null;
+                                created_at: string;
+                                carry_count: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        /**
+         * Write the day itself — highs, lows, drift note, tomorrow shape
+         * @description Creates the session row on first write. Omitted keys are left alone; an explicit null clears — striking a high he no longer stands by has to be possible.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    date: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReflectionSessionBody"];
+                };
+            };
+            responses: {
+                /** @description Session */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReflectionSession"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reflection/day/{date}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark the evening finished
+         * @description Idempotent, and it keeps the first completion time. Re-opening the page to add a line later is not a second evening.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    date: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Session */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReflectionSession"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reflection/day/{date}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Un-finish an evening */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    date: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Session */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReflectionSession"];
+                    };
+                };
+                /** @description No session that day */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reflection/day/{date}/gratitude": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a gratitude line
+         * @description `{content}` records his own words. `{seed_ref}` accepts a prep candidate, optionally with `content` to reword it — the reword sets `edited`, which is the only honest measure of whether seeding is working. Declining a candidate is not a call here: it never became a row.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    date: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReflectionGratitudeBody"];
+                };
+            };
+            responses: {
+                /** @description Added */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReflectionGratitude"];
+                    };
+                };
+                /** @description seed_ref matches no candidate */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reflection/gratitude/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Discard a gratitude line */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Reword a gratitude line */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        content: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReflectionGratitude"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/reflection/prep/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What the fleet prepared for a day */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    date: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Prep */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReflectionPrep"];
+                    };
+                };
+                /** @description Nothing prepared */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /**
+         * The prep job writes here
+         * @description The only write the fleet has in this domain. Re-running is safe by construction: it cannot reach the tables holding what Marvin wrote.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    date: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReflectionPrepBody"];
+                };
+            };
+            responses: {
+                /** @description Stored */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReflectionPrep"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/day-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recent reports, newest first
+         * @description Headlines only — the archive index. Full payloads carry prose and several rollups, and a month of them is not something an index should ship.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Report index */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["DayReportSummary"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/day-reports/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One day's report
+         * @description Pass `today` for the current logical day (04:00 cutover). 404 means nothing has been published for that day — which the page must distinguish from a quiet day, because a failed writer and a slow Sunday look identical otherwise.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    date: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Report */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DayReport"];
+                    };
+                };
+                /** @description Nothing published */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /**
+         * The report job writes here
+         * @description Replaces the day outright rather than merging. Nothing in this table was written by a human, so a re-run has nothing to clobber — and a merge would let a section the writer has stopped emitting linger forever.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    date: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["DayReportBody"];
+                };
+            };
+            responses: {
+                /** @description Published */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DayReport"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/day-reports/{date}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Everything the writer needs, with every number already settled
+         * @description The deterministic half of a report. Counts, fleet rollups, per-project movement and carried debt are computed in SQL here; the writer supplies only prose (headline, narrative, arcs) and PUTs the merged payload back. A model asked to total a column will produce a plausible total, so it is never asked to.
+         *
+         *     `sessions` and `commits` are raw material for the prose — they are not report sections and should not be echoed back verbatim. Note `sessions[].project_id_guess`: a hint from the cwd prefix map that mislabels routinely, so attribute from the narrative text instead.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    date: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Draft */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/triage/queue": {
         parameters: {
             query?: never;
@@ -222,7 +1339,10 @@ export interface paths {
         /** Get a context file with sections and items */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description Filter sections by scope: a project id, or "none" for global-only sections. Omit for all sections. */
+                    project_id?: string;
+                };
                 header?: never;
                 path: {
                     /** @description URL-friendly slug */
@@ -493,42 +1613,36 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/context/sections/{id}/items": {
+    "/api/context/items/{id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        /** Add an item to a section */
-        post: {
+        /** Get a single context item with its parent section/file */
+        get: {
             parameters: {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description Section ID */
+                    /** @description Item ID */
                     id: number | null;
                 };
                 cookie?: never;
             };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["CreateItem"];
-                };
-            };
+            requestBody?: never;
             responses: {
-                /** @description Item created */
-                201: {
+                /** @description Context item */
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["ContextItem"];
+                        "application/json": components["schemas"]["ContextItemDetail"];
                     };
                 };
-                /** @description Section not found */
+                /** @description Item not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -539,20 +1653,6 @@ export interface paths {
                 };
             };
         };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/context/items/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
         /** Update a context item */
         put: {
             parameters: {
@@ -627,6 +1727,58 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/context/sections/{id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add an item to a section */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Section ID */
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateItem"];
+                };
+            };
+            responses: {
+                /** @description Item created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ContextItem"];
+                    };
+                };
+                /** @description Section not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1145,6 +2297,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/activity/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a single activity by id */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Resource ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Activity */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Activity"];
+                    };
+                };
+                /** @description Activity not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/activity/{id}/rate": {
         parameters: {
             query?: never;
@@ -1199,6 +2399,42 @@ export interface paths {
                 };
             };
         };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vault/types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The vault type vocabulary, with what each type requires to be ready */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Type specs in display order */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VaultTypeSpec"][];
+                    };
+                };
+            };
+        };
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -1314,51 +2550,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/vault/ingest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Re-ingest vault notes from filesystem */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Ingestion result */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["IngestResult"];
-                    };
-                };
-                /** @description Server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/vault/notes/batch": {
         parameters: {
             query?: never;
@@ -1406,6 +2597,153 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/vault/notes/by-seq/{seq}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a vault note by its integer seq handle */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    seq: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Note deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Note not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Note has subtasks — detach or delete them first */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update a vault note by its integer seq handle */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    seq: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateNote"];
+                };
+            };
+            responses: {
+                /** @description Updated note */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VaultNote"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Note not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/vault/board": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Board-shaped vault note list with embedded enrichments (project, counters, latest event/message) */
+        get: {
+            parameters: {
+                query?: {
+                    status?: string | string[];
+                    grooming_status?: string | string[];
+                    assigned_to?: string | string[];
+                    id?: string | string[];
+                    search?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Board notes */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                [key: string]: unknown;
+                            }[];
+                            total: number;
+                            limit: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/vault/notes": {
@@ -1461,6 +2799,8 @@ export interface paths {
                     executor?: string;
                     /** @description Filter by epic status */
                     is_epic?: "true" | "false";
+                    /** @description Filter to notes linked to this project (via vault_item_projects) */
+                    project_id?: string;
                     /** @description Max items to return (1-100) */
                     limit?: number;
                     /** @description Number of items to skip */
@@ -1541,7 +2881,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description Note ID */
+                    /** @description Note id (note_xxxx) or the numeric seq handle (e.g. 3061) */
                     id: string;
                 };
                 cookie?: never;
@@ -1576,7 +2916,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description Note ID */
+                    /** @description Note id (note_xxxx) or the numeric seq handle (e.g. 3061) */
                     id: string;
                 };
                 cookie?: never;
@@ -1618,7 +2958,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description Note ID */
+                    /** @description Note id (note_xxxx) or the numeric seq handle (e.g. 3061) */
                     id: string;
                 };
                 cookie?: never;
@@ -1673,7 +3013,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description Note ID */
+                    /** @description Note id (note_xxxx) or the numeric seq handle (e.g. 3061) */
                     id: string;
                 };
                 cookie?: never;
@@ -1707,7 +3047,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description Note ID */
+                    /** @description Note id (note_xxxx) or the numeric seq handle (e.g. 3061) */
                     id: string;
                 };
                 cookie?: never;
@@ -1768,7 +3108,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    /** @description Note ID */
+                    /** @description Note id (note_xxxx) or the numeric seq handle (e.g. 3061) */
                     id: string;
                 };
                 cookie?: never;
@@ -1820,7 +3160,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description Note ID */
+                    /** @description Note id (note_xxxx) or the numeric seq handle (e.g. 3061) */
                     id: string;
                 };
                 cookie?: never;
@@ -1879,7 +3219,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description Note ID */
+                    /** @description Note id (note_xxxx) or the numeric seq handle (e.g. 3061) */
                     id: string;
                 };
                 cookie?: never;
@@ -1906,7 +3246,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description Note ID */
+                    /** @description Note id (note_xxxx) or the numeric seq handle (e.g. 3061) */
                     id: string;
                 };
                 cookie?: never;
@@ -1935,6 +3275,144 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vault/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Typeahead search over active vault notes (title) */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Search term matched against title */
+                    q: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Matching notes */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                seq: number | null;
+                                title: string;
+                                status: string;
+                                type: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vault/backfill-embeddings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Backfill pgvector embeddings for all active project-linked notes (runs async) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Backfill started */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            status: "started";
+                            total: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vault/project-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Semantic search over vault notes linked to a project (pgvector) */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Project ID to scope the search */
+                    project_id: string;
+                    /** @description Natural-language search query */
+                    query: string;
+                    /** @description Number of results */
+                    k?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Top-k semantically similar project notes */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                note_id: string;
+                                title: string;
+                                snippet: string;
+                                score: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2058,6 +3536,45 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/costs/by-note/{noteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aggregate LLM cost + token usage for all dispatches of a vault note */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Vault note ID */
+                    noteId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Per-note cost rollup */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CostsByNote"];
                     };
                 };
             };
@@ -2265,6 +3782,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/experiments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete an experiment run */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Resource ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Run not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/emails/reports": {
         parameters: {
             query?: never;
@@ -2272,12 +3835,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List email reports (most recent first) */
+        /** List email reports (most recent first). ?pending=true for unverdicted only. */
         get: {
             parameters: {
                 query?: {
                     limit?: number;
                     offset?: number | null;
+                    pending?: boolean | null;
                 };
                 header?: never;
                 path?: never;
@@ -2292,6 +3856,190 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["EmailReportListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Ingest a ralph-processed email (sets discovered_at + body_fetched_at) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["IngestReportBody"];
+                };
+            };
+            responses: {
+                /** @description Upserted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/emails/reports/senders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-sender volume and toss rate — ranks unsubscribe/blocklist candidates */
+        get: {
+            parameters: {
+                query?: {
+                    min_total?: number;
+                    limit?: number;
+                    sort?: "junk" | "volume";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sender statistics, ranked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["SenderStat"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/emails/reports/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gate runs with per-run verdict breakdown */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Runs, newest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["GateRun"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/emails/reports/runs/{run_id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every decision in one gate run, keepers first */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    run_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Decisions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["EmailReport"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/emails/reports/poll-runs/{poll_run_id}/emails": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Emails discovered by one kipper poll run, oldest first */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    poll_run_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Emails this sweep discovered. Empty for runs predating run stamping (2026-08-12). */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["PollRunEmail"][];
+                        };
                     };
                 };
             };
@@ -2350,6 +4098,56 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/emails/reports/{gmail_id}/verdict": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set verdict (keep/toss) on an email report */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Gmail message ID */
+                    gmail_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["VerdictBody"];
+                };
+            };
+            responses: {
+                /** @description Verdict recorded */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Report not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/uploads/presign": {
@@ -2430,7 +4228,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["BriefingAnalysis"];
+                        "application/json": components["schemas"]["CreateBriefingResponse"];
                     };
                 };
                 /** @description Validation error */
@@ -2462,7 +4260,7 @@ export interface paths {
             parameters: {
                 query?: {
                     /** @description Filter by session type */
-                    session?: "morning" | "afternoon";
+                    session?: "morning" | "afternoon" | "evening";
                 };
                 header?: never;
                 path?: never;
@@ -2509,8 +4307,12 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    /** @description Max items to return (1-100) */
+                    /** @description Max items to return (1-1000) */
                     limit?: number;
+                    /** @description Only briefings generated at/after this ISO 8601 instant */
+                    since?: string;
+                    /** @description Only briefings generated before this ISO 8601 instant */
+                    until?: string;
                 };
                 header?: never;
                 path?: never;
@@ -2529,6 +4331,93 @@ export interface paths {
                 };
                 /** @description Validation error */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/briefing/feedback-rollup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aggregate hit/miss feedback across recent briefings — the generator reads this instead of per-briefing raw rows */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description How many recent briefings to aggregate over (default 14 ≈ one week of morning+afternoon) */
+                    briefings?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Aggregated feedback with pre-computed act_on signals (2+ same-tag misses on a section) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BriefingFeedbackRollup"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/briefing/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a single briefing analysis by id */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Numeric resource ID */
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Briefing analysis */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BriefingAnalysis"];
+                    };
+                };
+                /** @description Briefing not found */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2607,73 +4496,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/health": {
+    "/api/briefing/{id}/feedback": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Comprehensive health check (auto-saves snapshot) */
+        /** List hit/miss feedback for a briefing */
         get: {
             parameters: {
                 query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    /** @description Numeric resource ID */
+                    id: number | null;
+                };
                 cookie?: never;
             };
             requestBody?: never;
             responses: {
-                /** @description Health status */
+                /** @description Feedback entries */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["HealthData"];
+                        "application/json": {
+                            feedback: components["schemas"]["BriefingFeedbackEntry"][];
+                        };
                     };
                 };
             };
         };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/health/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Recent health snapshots */
-        get: {
+        /** Set hit/miss feedback on a briefing section or item */
+        put: {
             parameters: {
-                query?: {
-                    /** @description Number of days to look back */
-                    days?: number;
-                };
+                query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    /** @description Numeric resource ID */
+                    id: number | null;
+                };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PutBriefingFeedback"];
+                };
+            };
             responses: {
-                /** @description Health history */
+                /** @description Feedback stored */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["HealthHistoryResponse"];
+                        "application/json": components["schemas"]["BriefingFeedbackEntry"];
                     };
                 };
-                /** @description Validation error */
-                400: {
+                /** @description Briefing not found */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2683,45 +4566,34 @@ export interface paths {
                 };
             };
         };
-        put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/health/trends": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Aggregated health trends and streaks */
-        get: {
+        /** Clear a hit/miss verdict — the third press of the ▲/▼ toggle */
+        delete: {
             parameters: {
-                query?: {
-                    /** @description Number of days to look back */
-                    days?: number;
+                query: {
+                    /** @description Analysis section key, e.g. "insights", "priorities" */
+                    section: string;
+                    /** @description Index within the section; absent = the verdict on the whole section */
+                    item_index?: number | null;
                 };
                 header?: never;
-                path?: never;
+                path: {
+                    /** @description Numeric resource ID */
+                    id: number | null;
+                };
                 cookie?: never;
             };
             requestBody?: never;
             responses: {
-                /** @description Health trends */
-                200: {
+                /** @description Verdict cleared, or there was none to clear */
+                204: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": components["schemas"]["HealthTrends"];
-                    };
+                    content?: never;
                 };
-                /** @description Validation error */
-                400: {
+                /** @description Briefing not found */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2731,9 +4603,6 @@ export interface paths {
                 };
             };
         };
-        put?: never;
-        post?: never;
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3064,16 +4933,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/fitness/sync": {
+    "/api/coach/food-log": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List food/drink intake entries (newest first) */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description London calendar day (YYYY-MM-DD); returns that day's entries */
+                    date?: string;
+                    /** @description London day YYYY-MM-DD, inclusive; with `to` overrides days */
+                    from?: string;
+                    /** @description London day YYYY-MM-DD, inclusive */
+                    to?: string;
+                    /** @description Last N days window (ignored when date or from/to set) */
+                    days?: number;
+                    /** @description Max rows (default 50) */
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Entries */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CoachFoodLogListResponse"];
+                    };
+                };
+            };
+        };
         put?: never;
-        /** Sync fitness records from a device */
+        /** Log food/drink intake; LLM estimates per-item macros */
         post: {
             parameters: {
                 query?: never;
@@ -3083,21 +4983,21 @@ export interface paths {
             };
             requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["SyncPayload"];
+                    "application/json": components["schemas"]["CoachFoodLogRequest"];
                 };
             };
             responses: {
-                /** @description Sync result */
+                /** @description Logged */
                 201: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["SyncResult"];
+                        "application/json": components["schemas"]["CoachFoodLogResponse"];
                     };
                 };
-                /** @description Validation error */
-                400: {
+                /** @description LLM/estimation failure */
+                500: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3113,19 +5013,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/fitness/summary": {
+    "/api/coach/food-log/daily": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get fitness summary with daily breakdowns */
+        /** Per-day macro totals (London calendar days) */
         get: {
             parameters: {
                 query?: {
-                    /** @description Number of days to look back */
+                    /** @description Window size in days (default 14, ignored when from/to set) */
                     days?: number;
+                    /** @description London day YYYY-MM-DD, inclusive; with `to` overrides days */
+                    from?: string;
+                    /** @description London day YYYY-MM-DD, inclusive */
+                    to?: string;
                 };
                 header?: never;
                 path?: never;
@@ -3133,17 +5037,149 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Fitness summary */
+                /** @description Daily totals */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["FitnessSummary"];
+                        "application/json": components["schemas"]["CoachFoodDailyResponse"];
                     };
                 };
-                /** @description Validation error */
-                400: {
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/coach/food-log/frequent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Most-logged foods with latest macros (self-growing autocomplete catalog) */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Max foods (default 40) */
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Frequent foods */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CoachFrequentFoodsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/coach/food-log/manual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Manually log food/drink (caller-supplied macros, optional backdate) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CoachFoodLogManualBody"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CoachFoodLogEntry"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/coach/food-log/barcode/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolve a scanned barcode to macros (preview, does not log) */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Manufacturer servings consumed (default 1) */
+                    servings?: number;
+                    /** @description Grams consumed; overrides servings */
+                    grams?: number;
+                };
+                header?: never;
+                path: {
+                    /** @description Decoded EAN/UPC digits */
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Resolved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CoachFoodBarcodeResolveResponse"];
+                    };
+                };
+                /** @description Unknown product */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Product lookup failed */
+                500: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3161,28 +5197,1044 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/fitness/records": {
+    "/api/coach/food-log/barcode": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List fitness records with filters */
+        get?: never;
+        put?: never;
+        /** Log food/drink from a scanned barcode */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CoachFoodBarcodeBody"];
+                };
+            };
+            responses: {
+                /** @description Logged */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CoachFoodLogEntry"];
+                    };
+                };
+                /** @description Unknown product */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Product lookup failed */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/coach/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List products seen by the scanner, most recently updated first */
         get: {
             parameters: {
                 query?: {
-                    /** @description Number of days to look back */
-                    days?: number;
-                    /** @description Filter by record type */
-                    type?: string;
-                    /** @description Filter by source app */
-                    source?: string;
-                    /** @description Filter by specific date (YYYY-MM-DD) */
-                    date?: string;
-                    /** @description Max items to return (1-100) */
                     limit?: number;
-                    /** @description Number of items to skip */
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Products */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CoachProductListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/coach/products/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one cached product */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Decoded EAN/UPC digits */
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Product */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CoachStoredProduct"];
+                    };
+                };
+                /** @description Never scanned */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Correct a cached product (pins it against future refreshes) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Decoded EAN/UPC digits */
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CoachProductCorrectionBody"];
+                };
+            };
+            responses: {
+                /** @description Corrected */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CoachStoredProduct"];
+                    };
+                };
+                /** @description Never scanned */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/coach/food-log/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a food/drink entry */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Food log entry ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update a food/drink entry */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Food log entry ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CoachFoodLogUpdateBody"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CoachFoodLogEntry"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/coach/supplement-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List supplement intakes (newest first), joined to the catalog */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description London calendar day (YYYY-MM-DD); returns that day's intakes */
+                    date?: string;
+                    /** @description London day YYYY-MM-DD, inclusive; with `to` overrides days */
+                    from?: string;
+                    /** @description London day YYYY-MM-DD, inclusive */
+                    to?: string;
+                    /** @description Last N days window (ignored when date or from/to set) */
+                    days?: number;
+                    /** @description Max rows (default 50) */
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Intakes */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CoachSupplementLogListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/coach/supplement-log/manual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Manually log a supplement intake (optional backdate) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CoachSupplementLogManualBody"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CoachSupplementLogEntry"];
+                    };
+                };
+                /** @description Unknown supplement */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/coach/supplement-log/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a supplement intake */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Supplement log entry ID */
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update a supplement intake */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Supplement log entry ID */
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CoachSupplementLogUpdateBody"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CoachSupplementLogEntry"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/coach/protocol": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Active supplement protocol (catalog rows with timing tags) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Protocol */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CoachProtocolResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/checkins/tick": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Evaluate whether to push a mood/energy nudge; called by Hermes cron */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tick result */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CheckInTickResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/checkins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List check-in entries (newest first) */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description London calendar day (YYYY-MM-DD); returns that day's entries */
+                    date?: string;
+                    /** @description London day YYYY-MM-DD, inclusive; with `to` overrides days */
+                    from?: string;
+                    /** @description London day YYYY-MM-DD, inclusive */
+                    to?: string;
+                    /** @description Last N days window (ignored when date or from/to set) */
+                    days?: number;
+                    /** @description Max rows (default 50) */
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Entries */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CheckInListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Log a mood/energy check-in (pomo completion, dashboard, or manual) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CheckInCreateBody"];
+                };
+            };
+            responses: {
+                /** @description Logged */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MoodLogEntry"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/checkins/daily": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-day mood/energy averages (London calendar days) */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Window size in days (default 14, ignored when from/to set) */
+                    days?: number;
+                    /** @description London day YYYY-MM-DD, inclusive; with `to` overrides days */
+                    from?: string;
+                    /** @description London day YYYY-MM-DD, inclusive */
+                    to?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Daily averages */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CheckInDailyResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/checkins/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a check-in entry */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Check-in entry ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update a check-in entry */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Check-in entry ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CheckInUpdateBody"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MoodLogEntry"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/day-checks/day": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One day's tick list: active checks joined to that day's answers */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Logical day (YYYY-MM-DD). Defaults to today, where "today" runs from the 04:00 cutover — a 01:30 tick belongs to the day that is ending. */
+                    date?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Checks for the day */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DayChecksResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/day-checks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List check definitions */
+        get: {
+            parameters: {
+                query?: {
+                    include_archived?: boolean | null;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Definitions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["DayCheckDef"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a check definition */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["DayCheckCreateBody"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DayCheckDef"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/day-checks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update or archive a check definition */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Day-check definition ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["DayCheckUpdateBody"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DayCheckDef"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/day-checks/{id}/entry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Record or correct this check's answer for a day */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Day-check definition ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["DayCheckEntryBody"];
+                };
+            };
+            responses: {
+                /** @description Recorded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DayCheckEntry"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Clear this check's answer for a day (un-tick = no data, not "no") */
+        delete: {
+            parameters: {
+                query?: {
+                    /** @description Logical day (YYYY-MM-DD). Defaults to today, where "today" runs from the 04:00 cutover — a 01:30 tick belongs to the day that is ending. */
+                    date?: string;
+                };
+                header?: never;
+                path: {
+                    /** @description Day-check definition ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Cleared */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            cleared: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/day-checks/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One check's answers over a window (newest first) */
+        get: {
+            parameters: {
+                query?: {
+                    from?: string;
+                    to?: string;
+                    /** @description Window size ending today (default 30); ignored when from/to are set */
+                    days?: number;
+                };
+                header?: never;
+                path: {
+                    /** @description Day-check definition ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description History */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DayCheckHistoryResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/telemetry/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Query device events with filters */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Filter by collector */
+                    collector?: string;
+                    /** @description Filter by type */
+                    type?: string;
+                    /** @description Filter by device_id */
+                    device_id?: string;
+                    /** @description ISO 8601 lower bound on ts (inclusive) */
+                    since?: string;
+                    /** @description ISO 8601 upper bound on ts (exclusive) */
+                    until?: string;
+                    /** @description Max items (1-500) */
+                    limit?: number;
+                    /** @description Skip count */
                     offset?: number | null;
                 };
                 header?: never;
@@ -3191,16 +6243,15 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Fitness records */
+                /** @description Events */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
                         "application/json": {
-                            days: number;
                             total: number;
-                            records: components["schemas"]["FitnessRecord"][];
+                            events: components["schemas"]["TelemetryEvent"][];
                         };
                     };
                 };
@@ -3216,7 +6267,40 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /** Ingest a batch of device events */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TelemetryPayload"];
+                };
+            };
+            responses: {
+                /** @description Ingest result */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TelemetryIngestResult"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -3238,6 +6322,14 @@ export interface paths {
                     status?: string;
                     /** @description Filter by batch ID */
                     batch_id?: string;
+                    /** @description Filter to tasks linked to this project via vault_item_projects */
+                    project_id?: string;
+                    /** @description Filter by dispatch flow (groom / commission / recon) */
+                    flow?: "commission" | "recon" | "groom" | "fold";
+                    /** @description Filter by executor (e.g. boris, kipper) */
+                    executor?: string;
+                    /** @description Only rows completed at or after this ISO timestamp */
+                    since?: string;
                     /** @description Max items (1-100) */
                     limit?: number;
                     /** @description Items to skip */
@@ -3310,6 +6402,149 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/awaiting-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List completed commission work awaiting Marvin review */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Notes with a completed commission dispatch, not yet approved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["AwaitingReviewItem"][];
+                            total: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/review/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve reviewed work → mark the note done */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReviewApproveBody"];
+                };
+            };
+            responses: {
+                /** @description Approved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+                /** @description Note not found or not awaiting review */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/review/send-back": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send reviewed work back → needs_rework with a reason */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReviewSendBackBody"];
+                };
+            };
+            responses: {
+                /** @description Sent back */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+                /** @description Note not found or not awaiting review */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -3408,6 +6643,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dispatch/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fleet observability: queue depth per lane, worker heartbeats, completions with token/cost rollups, 5h worker burn, fold cadence
+         * @description Read-only aggregate for the dispatch dashboard. burn_5h covers ONLY worker-recorded dispatch turns (task_type=dispatch_turn) — interactive Claude usage is invisible server-side, so it is a floor on subscription-quota pressure, not the whole picture.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Fleet stats */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FleetStats"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dispatch/agent-types": {
         parameters: {
             query?: never;
@@ -3483,64 +6757,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["ProposalResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/dispatch/propose/github": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Propose commissions from GitHub issues */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["ProposeGitHubBody"];
-                };
-            };
-            responses: {
-                /** @description No eligible issues found */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ProposalResponse"];
-                    };
-                };
-                /** @description Batch proposed from GitHub issues */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ProposalResponse"];
-                    };
-                };
-                /** @description GitHub fetch error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
                     };
                 };
             };
@@ -3848,7 +7064,7 @@ export interface paths {
             parameters: {
                 query?: {
                     /** @description Filter to tasks for a specific executor */
-                    executor?: "jimbo" | "marvin" | "kipper" | "boris";
+                    executor?: "jimbo" | "marvin" | "kipper" | "boris" | "jeffrey" | "steward";
                 };
                 header?: never;
                 path?: never;
@@ -3985,6 +7201,15 @@ export interface paths {
                 };
                 /** @description Task not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Dispatch already terminal, or a groom dispatch whose note still holds its grooming lock */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -4133,6 +7358,12 @@ export interface paths {
                 query?: {
                     /** @description Comma-separated status filter */
                     status?: string;
+                    /** @description Filter by dispatch flow (groom / commission / recon) */
+                    flow?: "commission" | "recon" | "groom" | "fold";
+                    /** @description Filter by executor (e.g. boris, kipper) */
+                    executor?: string;
+                    /** @description Only rows completed at or after this ISO timestamp */
+                    since?: string;
                     /** @description Max items (1-100) */
                     limit?: number;
                     /** @description Items to skip */
@@ -4213,6 +7444,412 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Operator-triggered retry of a failed dispatch
+         * @description Flips a terminally-failed dispatch back to 'approved' so the executor will pick it up again. Clears error_message, started_at, completed_at; increments retry_count. Refuses with 409 when the row isn't in 'failed' status — failTask owns the auto-retry path while retry_count < MAX_RETRIES, and this endpoint is only for the manual override after that gate has tripped.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Dispatch queue item ID */
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Dispatch flipped back to approved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DispatchQueueItem"];
+                    };
+                };
+                /** @description Dispatch not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Dispatch is not in failed status */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/{id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Acknowledge a dispatch failure so the notification bar stops showing it
+         * @description Sets dismissed_at on the row. Additive, not a delete: fleet-board reads the same failures_24h feed and keeps showing every row regardless — only the notification bar's own consumer filters on dismissed_at.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Dispatch queue item ID */
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Row marked dismissed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: number;
+                            dismissed_at: string | null;
+                        };
+                    };
+                };
+                /** @description Dispatch not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/{id}/reassign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reassign the executor on an approved dispatch
+         * @description Swaps the executor column on a dispatch row that is still 'approved'. Refuses with 409 once a row has moved past approved (running/completed/failed/etc.) so a sweep can never steal work an executor has already started.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Dispatch queue item ID */
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReassignExecutorBody"];
+                };
+            };
+            responses: {
+                /** @description Dispatch reassigned to the new executor */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DispatchQueueItem"];
+                    };
+                };
+                /** @description Dispatch not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Dispatch is not in approved status */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fetch a single dispatch queue item by id */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Dispatch queue item ID */
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Dispatch queue item */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DispatchQueueItem"];
+                    };
+                };
+                /** @description Dispatch not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /**
+         * Hard-delete a terminal dispatch row
+         * @description Removes the row from dispatch_queue. Only allowed when status is one of completed / failed / removed / rejected — running / approved / proposed dispatches refuse with 409 to avoid orphaning in-flight work. costs.dispatch_id cascades to NULL so accounting history survives.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Dispatch queue item ID */
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Dispatch deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Dispatch not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Dispatch is in a non-terminal status */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/clear-terminal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk-delete dispatch rows whose status is in the requested set
+         * @description Operator-driven sweep for "dismiss all completed" / "archive all failed" gestures. Server filters the requested statuses to the terminal subset (completed / failed / removed / rejected) — non-terminal entries are silently dropped, never blocked.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @description Terminal statuses whose rows should be deleted. */
+                        statuses: ("completed" | "failed" | "removed" | "rejected")[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Number of rows deleted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            deleted: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/{id}/create-doc": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a Google Doc from a recon body and store the URL (backfill) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Dispatch queue item ID */
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        title: string;
+                        body: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Doc created and URL stored */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            doc_url: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/fleet-report/daily": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the daily fleet activity report (Boris/Kipper job counts, model mix, cost, failures)
+         * @description Defaults to yesterday's logical day (starts at LOGICAL_DAY_CUTOVER_HOURS local time, not midnight). Feeds both the fleet-daily-report Hermes cron skill and the dashboard's daily-report page.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Logical day (YYYY-MM-DD). Defaults to yesterday. */
+                    date?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Daily fleet report */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DailyFleetReport"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4321,7 +7958,9 @@ export interface paths {
         /** List all Google Task lists */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    account?: components["schemas"]["GoogleAccount"];
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -4356,6 +7995,396 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/google-tasks/inbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List incomplete tasks from all enabled lists */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tasks from enabled lists, flattened */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InboxResponse"];
+                    };
+                };
+                /** @description Google API error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/google-tasks/task": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Fetch a single Google Task by {listId, taskId} */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["GoogleTaskFetch"];
+                };
+            };
+            responses: {
+                /** @description Task with list metadata */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InboxTask"];
+                    };
+                };
+                /** @description Task or list not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Google API error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/google-tasks/triage-now": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run the triage-pre-grooming skill against a Google Task synchronously */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TriageNowBody"];
+                };
+            };
+            responses: {
+                /** @description Proposal (or null if the model returned unparseable text — see debug.raw_response) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TriageNowResponse"];
+                    };
+                };
+                /** @description Task not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Server error (skill missing, OpenRouter failure) */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/google-tasks/triage-now/cached": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a cached triage-pre-grooming proposal (current skill version only) */
+        get: {
+            parameters: {
+                query: {
+                    listId: string;
+                    taskId: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Lookup result — { cached: true, ...proposal } or { cached: false, reason } */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TriageNowCachedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/google-tasks/triage-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record an operator triage decision (promote / discard / skip) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TriageLogBody"];
+                };
+            };
+            responses: {
+                /** @description Logged */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TriageLogResponse"];
+                    };
+                };
+                /** @description Database error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/google-tasks/triage-next": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pull next ungroomed Google Task for autonomous triage (boris-loop on M2) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Either { status: ready, ...task + snapshot } or { status: idle, inbox_size } */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TriageNextResponse"];
+                    };
+                };
+                /** @description Server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/google-tasks/triage-result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit a triage proposal produced externally (boris-loop on M2) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TriageResultBody"];
+                };
+            };
+            responses: {
+                /** @description Result recorded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TriageResultResponse"];
+                    };
+                };
+                /** @description Database error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/google-tasks/triage-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List recent triage proposals (boris-loop + /triage-now combined) */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Most recent rows from triage_proposals */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TriageHistoryResponse"];
+                    };
+                };
+                /** @description Database error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/google-tasks/tasks": {
         parameters: {
             query?: never;
@@ -4369,6 +8398,7 @@ export interface paths {
                 query?: {
                     /** @description Task list ID (default: @default) */
                     listId?: string;
+                    account?: components["schemas"]["GoogleAccount"];
                 };
                 header?: never;
                 path?: never;
@@ -4579,6 +8609,351 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/google-tasks/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a task as completed in Google Tasks (stays in Completed view) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TaskDelete"];
+                };
+            };
+            responses: {
+                /** @description Task marked completed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GoogleTask"];
+                    };
+                };
+                /** @description Google API error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/google-tasks/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Google Tasks configuration */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Google Tasks configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GoogleTasksConfigSetting"];
+                    };
+                };
+                /** @description Setting not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /** Update Google Tasks configuration */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateGoogleTasksConfigBody"];
+                };
+            };
+            responses: {
+                /** @description Updated Google Tasks config */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Setting"];
+                    };
+                };
+                /** @description Invalid value */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/google-tasks/auto-triage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enrich, classify and route URL-bearing tasks; completes the Google Task when handled
+         * @description Closes the capture loop: enriches each URL (X via fxtwitter, others via page metadata), classifies with an LLM, writes/updates the vault note, books a Jimbo Suggestions block for long watch items, then completes the Google Task. Low-confidence items are left untouched in the inbox. DEFAULTS TO DRY-RUN — pass dryRun:false to write.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AutoTriageBody"];
+                };
+            };
+            responses: {
+                /** @description Per-item verdicts and what was done with each */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AutoTriageResponse"];
+                    };
+                };
+                /** @description Triage failed */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/google-tasks/archive-digest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What url-triage auto-archived recently, and why */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Look-back window (default 7) */
+                    days?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Archived items with the reason given for each */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ArchiveDigestResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/google-tasks/pending-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Calendar blocks Jimbo pencilled in that Marvin has not confirmed
+         * @description The briefing reads this to raise proposals for sign-off. A block stays pending until confirmed, so the calendar never fills with commitments Marvin never made.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Unconfirmed url-triage proposals, soonest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PendingSuggestionsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/google-tasks/resolve-suggestion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm or decline a pencilled-in block */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ResolveSuggestionBody"];
+                };
+            };
+            responses: {
+                /** @description Confirmed (kept, marked signed-off) or declined (event deleted) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ResolveSuggestionResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/google-tasks/watch-queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Videos and long reads url-triage kept, as a plain list
+         * @description Unranked and unplaced by design. Ranking and calendar placement are separate jobs — placement in particular needs sight of gym/family/work commitments that url-triage knows nothing about. Exists as its own route because /api/vault/notes has no tags filter and silently ignores one.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The watch queue, priority-first then shortest-first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WatchQueueResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/google-calendar/calendars": {
         parameters: {
             query?: never;
@@ -4589,7 +8964,10 @@ export interface paths {
         /** List all visible calendars */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description Which Google account to query */
+                    account?: components["schemas"]["GoogleAccount"] & unknown;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -4639,6 +9017,14 @@ export interface paths {
                     calendarId?: string;
                     /** @description Days ahead to fetch */
                     days?: number;
+                    /** @description Range start (ISO 8601). Given with until, overrides days — the only way to fetch PAST events (journal day pages) */
+                    since?: string;
+                    /** @description Range end (ISO 8601), exclusive */
+                    until?: string;
+                    /** @description Filter by commitment status — actual = committed calendars only, potential = interest/options calendars only, all = everything enabled (default) */
+                    type?: "actual" | "potential" | "all";
+                    /** @description Which Google account to query (marvin = marvinbarretto@gmail.com, jimbo = marvinbarretto.labs@gmail.com) */
+                    account?: components["schemas"]["GoogleAccount"] & unknown;
                 };
                 header?: never;
                 path?: never;
@@ -4707,6 +9093,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/google-calendar/events/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a calendar event */
+        delete: {
+            parameters: {
+                query: {
+                    /** @description Calendar ID the event lives in */
+                    calendarId: string;
+                    account?: components["schemas"]["GoogleAccount"];
+                };
+                header?: never;
+                path: {
+                    /** @description Google Calendar event id */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Event deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Google API error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update a calendar event */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Google Calendar event id */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateEvent"];
+                };
+            };
+            responses: {
+                /** @description Event updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CalendarEvent"];
+                    };
+                };
+                /** @description Google API error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/google-calendar/conflicts": {
         parameters: {
             query?: never;
@@ -4766,7 +9238,9 @@ export interface paths {
         /** Get Gmail profile */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    account?: components["schemas"]["GoogleAccount"];
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -4818,6 +9292,7 @@ export interface paths {
                     hours?: number;
                     /** @description Max messages to return */
                     limit?: number;
+                    account?: components["schemas"]["GoogleAccount"];
                 };
                 header?: never;
                 path?: never;
@@ -4863,7 +9338,9 @@ export interface paths {
         /** Get a single Gmail message with full body */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    account?: components["schemas"]["GoogleAccount"];
+                };
                 header?: never;
                 path: {
                     /** @description Resource ID */
@@ -4980,6 +9457,67 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai-chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Chat completion via OpenRouter with atomic cost logging
+         * @description Single entry point for LLM inference. Calls OpenRouter via the tiered registry and writes a row to the cost ledger before returning. Foundry and other autonomous workers call this instead of holding the OpenRouter key directly.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ChatCompletionRequest"];
+                };
+            };
+            responses: {
+                /** @description Completion produced and cost logged */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChatCompletionResponse"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Upstream provider error */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -5477,6 +10015,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/grooming/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Decisions agents took on Marvin's behalf, with their reasoning */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Agent-answered questions, newest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GroomingDecision"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/grooming/corrections": {
         parameters: {
             query?: never;
@@ -5593,6 +10169,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/grooming/corrections/uningested/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Count corrections not yet ingested by the distiller */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Uningested correction count */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            total: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/grooming/corrections/ingest": {
         parameters: {
             query?: never;
@@ -5667,6 +10281,73 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["SubmitAnalysisResponse"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Dispatch or note not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict: wrong status or lock cleared */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grooming/submit/deepread": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit a deep-read disposition (enrich/spawn/archive/ask) — closes dispatch */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SubmitDeepRead"];
+                };
+            };
+            responses: {
+                /** @description Disposition applied, dispatch completed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SubmitDeepReadResponse"];
                     };
                 };
                 /** @description Validation error */
@@ -5822,6 +10503,73 @@ export interface paths {
                     };
                 };
                 /** @description Conflict: wrong status or lock cleared */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grooming/submit/triage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit triage-pre-grooming proposal (closes dispatch — STUB, no persistence) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SubmitTriage"];
+                };
+            };
+            responses: {
+                /** @description Proposal echoed, dispatch completed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SubmitTriageResponse"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Dispatch not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Conflict (reserved — current stub only emits 404) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -6112,6 +10860,84 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/grooming/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get grooming configuration (GitHub issue assessment routing) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Grooming configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GroomingConfigSetting"];
+                    };
+                };
+                /** @description Server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /** Update grooming configuration */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateGroomingConfigBody"];
+                };
+            };
+            responses: {
+                /** @description Updated grooming config */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Setting"];
+                    };
+                };
+                /** @description Invalid value */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/pipeline/runs": {
         parameters: {
             query?: never;
@@ -6284,6 +11110,150 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/pipeline/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-stage queue depth — what is waiting vs what is eligible */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Queue depth per stage */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PipelineQueue"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pipeline/tick": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run one grooming-pump tick (reap stale, enqueue intake/classify/decompose) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tick completed (may be a no-op if pipeline.enabled=false) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PipelineTickResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pipeline/commission-tick": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run one commission-pump tick (auto-commission ready work in autonomous projects) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tick completed (no-op unless pipeline.commission_enabled=true) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CommissionTickResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/steward/tick": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run one steward pump tick — enqueue due PM ticks for enrolled projects */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tick telemetry */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StewardTickResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/note-activity": {
         parameters: {
             query?: never;
@@ -6297,7 +11267,7 @@ export interface paths {
                 query?: {
                     note_id?: string;
                     actor?: string;
-                    action?: "assigned" | "unassigned" | "priority_changed" | "priority_scored" | "grooming_status_changed" | "dispatch_started" | "submitted_analysis" | "submitted_decomposition" | "question_raised" | "question_answered" | "reassigned" | "feedback_reject" | "feedback_archive" | "feedback_accept" | "commission_completed";
+                    action?: "note_created" | "assigned" | "unassigned" | "priority_changed" | "priority_scored" | "grooming_status_changed" | "grooming_override_changed" | "status_changed" | "dispatch_started" | "submitted_analysis" | "submitted_decomposition" | "submitted_deepread" | "question_raised" | "question_answered" | "thread_message_posted" | "reassigned" | "feedback_reject" | "feedback_archive" | "feedback_accept" | "commission_completed" | "recon_completed" | "review_approved" | "review_sent_back" | "commit_linked";
                     /** @description ISO timestamp — return rows after this ts */
                     since?: string;
                     limit?: number;
@@ -6358,6 +11328,259 @@ export interface paths {
                     content: {
                         "application/json": {
                             items: components["schemas"]["NoteActivityRow"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/note-activity/awaiting-me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Handbacks from agents plus open questions — what an agent is waiting on you for. A note with an unanswered question surfaces as a question, never also as a handback. */
+        get: {
+            parameters: {
+                query?: {
+                    actor?: string;
+                    /** @description ISO timestamp — only notes handed back after this. Counts stay unbounded. */
+                    since?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Handbacks (newest first) and open questions, with unbounded counts */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            handbacks: components["schemas"]["AwaitingHandback"][];
+                            questions: components["schemas"]["AwaitingQuestion"][];
+                            /** @description Every live awaited note id — unwindowed and uncapped, for marking board cards */
+                            note_ids: string[];
+                            counts: {
+                                /** @description Live handbacks inside the window */
+                                handbacks: number;
+                                /** @description Live handbacks of any age */
+                                handbacks_total: number;
+                                questions: number;
+                                /** @description Handbacks the window hid */
+                                older: number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/note-activity/flush-marvin-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deliver pending handoffs to Marvin via Telegram (server-side assignment-watch) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Flush result */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Handoffs delivered this tick — 0 or 1; the pusher drips */
+                            sent: number;
+                            /** @description Held by the notification schedule (quiet hours / mute / disabled) */
+                            gated: boolean;
+                            /**
+                             * @description Why nothing was sent, when sent is 0
+                             * @enum {string}
+                             */
+                            held?: "schedule" | "wip_cap" | "min_interval" | "nothing_pending";
+                            /** @description Pushed handoffs Marvin has not yet dealt with */
+                            outstanding: number;
+                            /**
+                             * @description What became of the send, when sent is 1
+                             * @enum {string}
+                             */
+                            delivery?: "sent" | "failed" | "not_configured" | "suppressed";
+                            /** @description Failure detail when delivery is failed */
+                            delivery_error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/note-activity/pushes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Notification ledger — what Jimbo pushed at Marvin, and whether it was delivered */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Only pushes for this note */
+                    note_id?: string;
+                    /** @description Only pushes that did not reach him (includes unknown-outcome legacy rows) */
+                    undelivered?: "true";
+                    /** @description Only pushes still on his plate */
+                    unresolved?: "true";
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Push ledger rows, newest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["AssignmentPushRow"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/delivery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What agents have built that has not been shipped yet, per project */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Bypass the 60s cache */
+                    refresh?: "true" | "false";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Delivery status per active project with a repo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            projects: components["schemas"]["DeliveryProject"][];
+                            totals: {
+                                unshipped: number;
+                                open_prs: number;
+                                failing: number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/buckets/weekly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Weekly attention split — Marvin's interactive time grouped into life/work buckets (the mirror) */
+        get: {
+            parameters: {
+                query?: {
+                    days?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Weekly bucket split */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            since: string;
+                            until: string;
+                            days: number;
+                            coverage: components["schemas"]["BucketCoverage"];
+                            buckets: components["schemas"]["BucketWeekly"][];
+                            unassigned: {
+                                minutes: number;
+                                projects: {
+                                    project_id: string;
+                                    minutes: number;
+                                }[];
+                            };
                         };
                     };
                 };
@@ -6457,6 +11680,88 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/hermes/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read model tier preferences from config.yaml */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Model preferences */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HermesModelPrefs"];
+                    };
+                };
+                /** @description Read error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update a model tier and sync all auxiliary sections that used the old value */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["HermesModelPrefsPatch"];
+                };
+            };
+            responses: {
+                /** @description Updated preferences */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HermesModelPrefs"];
+                    };
+                };
+                /** @description Write error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/hermes/jobs": {
@@ -6621,7 +11926,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Pause a scheduled job */
+        /** Pause a scheduled job, optionally recording why */
         post: {
             parameters: {
                 query?: never;
@@ -6631,7 +11936,11 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["HermesPause"];
+                };
+            };
             responses: {
                 /** @description Job paused */
                 200: {
@@ -6768,7 +12077,7 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        /** Update job name or schedule */
+        /** Update job name, schedule, or model/provider pin */
         patch: {
             parameters: {
                 query?: never;
@@ -6828,6 +12137,447 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/agent-runs/rollup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hermes cron run health rollup
+         * @description Default window is trailing N days. Pass since/until for exact-range queries (e.g. a single calendar day).
+         */
+        get: {
+            parameters: {
+                query?: {
+                    days?: number;
+                    /** @description ISO timestamp — inclusive lower bound. Overrides days when set. */
+                    since?: string;
+                    /** @description ISO timestamp — exclusive upper bound. Defaults to now. */
+                    until?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Per job × model × outcome counts */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["AgentRunRollupRow"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-runs/tail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Newest-first agent.end rows with classified outcome */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tail of classified agent runs */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["AgentRunTailRow"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-runs/ratings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-job usefulness ratings (keep/watch/cut) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description All job ratings */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["JobRating"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-runs/ratings/{job_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set a job usefulness rating */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    job_name: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["JobRatingBody"];
+                };
+            };
+            responses: {
+                /** @description Rating saved */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-runs/effectiveness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Per-job effort and answer rate
+         * @description Effort from agent.end runs, value from job_ask_events. response_rate is null when the job asked nothing — a poller that never interrupts is not a job with a 0% answer rate.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    days?: number;
+                    since?: string;
+                    until?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Per-job effectiveness */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["JobEffectivenessRow"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-runs/deliveries/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Asks still waiting on an answer */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Open asks, newest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["OpenAsk"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-runs/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record that a job delivered something
+         * @description Idempotent per (job_name, run_ts).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["JobDeliveryBody"];
+                };
+            };
+            responses: {
+                /** @description Delivery recorded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["JobDelivery"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agent-runs/deliveries/{id}/respond": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Attach a response to a delivery
+         * @description The first attribution wins — a later, weaker guess cannot overwrite what was already established. Returns 409 if the delivery is already answered.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["JobDeliveryRespondBody"];
+                };
+            };
+            responses: {
+                /** @description Response recorded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["JobDelivery"];
+                    };
+                };
+                /** @description Already answered, or not an ask */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mcp-calls/rollup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * MCP tool-call rollup
+         * @description Per-tool counts, success/error split, average + p95 latency. Default window is trailing N days; pass since/until for exact-range queries (e.g. a single calendar day).
+         */
+        get: {
+            parameters: {
+                query?: {
+                    days?: number;
+                    /** @description ISO timestamp — inclusive lower bound. Overrides days when set. */
+                    since?: string;
+                    /** @description ISO timestamp — exclusive upper bound. Defaults to now. */
+                    until?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Per-tool rollup */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["McpCallRollupRow"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mcp-calls/tail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Newest-first MCP tool calls
+         * @description Default is the latest N globally. Pass since/until for exact-range queries (e.g. a full day for client-side hour bucketing).
+         */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    /** @description ISO timestamp — inclusive lower bound. */
+                    since?: string;
+                    /** @description ISO timestamp — exclusive upper bound. */
+                    until?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Tail of MCP tool calls */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["McpCallTailRow"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/events": {
@@ -9259,6 +15009,306 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/clarifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List clarifications */
+        get: {
+            parameters: {
+                query?: {
+                    status?: "open" | "answered" | "expired" | "dismissed";
+                    kind?: "disambiguate" | "validate" | "followup" | "ambient";
+                    source_kind?: "vault" | "google_task" | "calendar" | "model-gap" | "briefing";
+                    source_ref?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Clarifications */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            clarifications: components["schemas"]["Clarification"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a clarification — dedup and the open-questions cap are enforced here, so the generator should POST first and only message Marvin on 201 */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateClarification"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Clarification"];
+                    };
+                };
+                /** @description Validation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Duplicate — this source already has an open or recently-asked clarification (error.context.existing holds it) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Open-questions cap reached — no new questions until some are answered, dismissed, or expire */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/clarifications/dedup-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether the generator should skip a source (open clarification exists, or one was asked/dismissed/expired within the window) */
+        get: {
+            parameters: {
+                query: {
+                    source_ref: string;
+                    days?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Dedup result */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClarificationDedupCheck"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/clarifications/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Dismiss/expire a clarification, or attach the posted channel message id */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Clarification ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateClarification"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Clarification"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/clarifications/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Inbound answer entrypoint — resolves the clarification (by id, or by discord_message_id as a fallback), interprets the answer into the settled model, and returns an echo-back receipt */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AnswerClarification"];
+                };
+            };
+            responses: {
+                /** @description Answered */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AnswerClarificationResponse"];
+                    };
+                };
+                /** @description No open clarification found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List/search the entity registry (people, places, orgs, things Jimbo has learned about) */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Match against name (substring) or aliases (exact, case-insensitive) */
+                    q?: string;
+                    kind?: "person" | "place" | "org" | "thing";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Entities */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            entities: components["schemas"]["Entity"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Upsert an entity — matches existing by name/alias (case-insensitive) and merges, otherwise creates */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpsertEntity"];
+                };
+            };
+            responses: {
+                /** @description Upserted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Entity"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects": {
         parameters: {
             query?: never;
@@ -9458,6 +15508,664 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/projects/{id}/provision-working-doc": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create the F7 Google Doc for a project (idempotent — no-op if already set) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Resource ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Provisioning triggered (fire-and-forget) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Project not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{id}/working-doc": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the plain text content of the project working doc */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Resource ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Doc content */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            content: string;
+                        };
+                    };
+                };
+                /** @description Project or doc not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{id}/working-doc/annotate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Replace a question string in the working doc (used by poller and skills to update status) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Resource ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @description Exact text to find in the doc */
+                        search: string;
+                        /** @description Text to replace it with */
+                        replacement: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Annotation applied */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+                /** @description Project or doc not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{id}/understanding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read structured belief blocks from project.current_state */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Resource ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Understanding */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            short_code: string | null;
+                            working_doc_url: string | null;
+                            sections: {
+                                name: string;
+                                letter: string;
+                                beliefs: {
+                                    id: string;
+                                    text: string;
+                                    tags: {
+                                        key: string;
+                                        value: string;
+                                    }[];
+                                }[];
+                            }[];
+                            last_updated: string | null;
+                        };
+                    };
+                };
+                /** @description Project not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{id}/understanding/belief/{beliefId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update a single belief in project.current_state; also patches in-flight dispatch vault note bodies */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    beliefId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @description New belief text */
+                        text?: string;
+                        /** @description Mark belief as corrected (stamps today's date) */
+                        corrected?: boolean;
+                        /** @description ISO date or null to clear */
+                        expires_at?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated understanding */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            short_code: string | null;
+                            working_doc_url: string | null;
+                            sections: {
+                                name: string;
+                                letter: string;
+                                beliefs: {
+                                    id: string;
+                                    text: string;
+                                    tags: {
+                                        key: string;
+                                        value: string;
+                                    }[];
+                                }[];
+                            }[];
+                            last_updated: string | null;
+                        };
+                    };
+                };
+                /** @description Project or belief not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/projects/{id}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent note_activity events for vault notes linked to this project */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Max rows */
+                    limit?: number;
+                    /** @description ISO timestamp — return rows after this ts */
+                    since?: string;
+                };
+                header?: never;
+                path: {
+                    /** @description Resource ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Activity rows newest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: number;
+                                note_id: string;
+                                note_title: string | null;
+                                note_seq: number | null;
+                                ts: string;
+                                actor: string;
+                                action: string;
+                                from_value: string | null;
+                                to_value: string | null;
+                                reason: string | null;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Project not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{id}/epics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open epics belonging to this project */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Open epics, newest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["VaultEpicSummary"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{id}/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Composed project state — brief, beliefs, epics, dispatch, proposals, activity, WIP counters */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Resource ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Project state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectState"];
+                    };
+                };
+                /** @description Project not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/github-issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List a project's open GitHub issues, annotated with linked-vault-item status */
+        get: {
+            parameters: {
+                query: {
+                    project_id: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Open issues with sync status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ListGithubIssuesResponse"];
+                    };
+                };
+                /** @description Project has no parseable repo_url */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Project not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description GitHub API error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/github-issues/promote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply the 'jimbo' label to a GitHub issue — the existing webhook then ingests it */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PromoteGithubIssueBody"];
+                };
+            };
+            responses: {
+                /** @description Label applied */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PromoteGithubIssueResponse"];
+                    };
+                };
+                /** @description Project has no parseable repo_url */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Project not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description GitHub API error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/execution/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get execution board configuration (Done-lane auto-clear) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Execution board configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ExecutionConfigSetting"];
+                    };
+                };
+                /** @description Server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /** Update execution board configuration */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateExecutionConfigBody"];
+                };
+            };
+            responses: {
+                /** @description Updated execution config */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Setting"];
+                    };
+                };
+                /** @description Invalid value */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/actors": {
@@ -9668,7 +16376,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List vault-item↔project links. Provide exactly one of vault_item_id or project_id. */
+        /** List vault-item↔project links. Optional vault_item_id / project_id filters; returns all rows when omitted. */
         get: {
             parameters: {
                 query?: {
@@ -9692,19 +16400,10 @@ export interface paths {
                         "application/json": components["schemas"]["VaultItemProject"][];
                     };
                 };
-                /** @description Missing required query param */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
             };
         };
         put?: never;
-        /** Link a vault item to a project (idempotent) */
+        /** Link a vault item to a project (idempotent). Set is_primary to make it the item's primary project (demotes any prior primary). */
         post: {
             parameters: {
                 query?: never;
@@ -9718,13 +16417,13 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Junction row created (or already existed) */
+                /** @description Junction row created (or already existed); echoes is_primary */
                 201: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["VaultItemProject"];
+                        "application/json": components["schemas"]["VaultItemProjectCreated"];
                     };
                 };
                 /** @description Validation error */
@@ -9780,6 +16479,47 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What is currently stopping work moving — thresholds, and the rows holding them
+         * @description Read-only. The equivalent state was previously reachable only via POST flush-marvin-assignments and POST commission-tick, both of which have side effects (sending a Telegram, enqueueing work) and so could not be polled.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current gate state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["Gate"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -10101,6 +16841,47 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/skills/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Per-skill dispatch outcome counts
+         * @description Aggregated from dispatch_queue. Skills with no dispatch history are absent — the caller should treat a missing row as zero runs rather than unknown.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Usage per skill id */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["SkillUsageRow"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -11196,10 +17977,3443 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/focus-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List focus sessions */
+        get: {
+            parameters: {
+                query?: {
+                    project_id?: string;
+                    status?: "running" | "completed" | "abandoned";
+                    interrupted?: "true" | "false";
+                    days?: number;
+                    since?: string;
+                    until?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description List of focus sessions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FocusSessionList"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Start a focus session */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["StartFocusSession"];
+                };
+            };
+            responses: {
+                /** @description Session started */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FocusSession"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/focus-sessions/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the currently running focus session, if any */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Active session or null */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ActiveFocusSession"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/focus-sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a focus session by id */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Resource ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Focus session */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FocusSession"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update reflection metadata (mood, notes, tags, interrupted) on any focus session
+         * @description Used by /pomo to attach reflection after the Chrome extension has already auto-completed the session. Works regardless of status. Fields explicitly set to null clear the column; omitted fields are left unchanged.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Resource ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateFocusSession"];
+                };
+            };
+            responses: {
+                /** @description Updated session */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FocusSession"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/focus-sessions/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Mark a running session as completed, optionally with mood, notes, tags, interrupted flag */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Resource ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CompleteFocusSession"];
+                };
+            };
+            responses: {
+                /** @description Updated session */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FocusSession"];
+                    };
+                };
+                /** @description Not found or not running */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/focus-sessions/{id}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Persist the activity summary captured by the Chrome extension during the session
+         * @description Raw events live in IndexedDB on the user's machine for privacy; only this aggregated summary is uploaded. Overwrites any existing summary for the session.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Resource ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ActivitySummary"];
+                };
+            };
+            responses: {
+                /** @description Updated session */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FocusSession"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/focus-sessions/{id}/abandon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Abandon a running focus session */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Resource ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Updated session */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FocusSession"];
+                    };
+                };
+                /** @description Not found or not running */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/focus-sessions/{id}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List vault notes linked to a focus session */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Resource ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Linked vault notes */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["SessionVaultNote"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Link a vault note to a focus session */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Resource ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        vault_note_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Linked */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Session not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/focus-sessions/{id}/notes/{noteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Unlink a vault note from a focus session */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    noteId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Unlinked */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/journal/phone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-day phone rollups: screen minutes, unlocks, notifications, media sessions */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Window start (ISO 8601). The client passes its local-midnight boundary — the server never guesses a timezone. */
+                    since: string;
+                    /** @description Window end (ISO 8601), exclusive */
+                    until: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Per-day buckets (24h steps from since) plus window totals */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["JournalPhoneBundle"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unexpected error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/journal/work": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Work evidence for a window: focus sessions, code sessions, heartbeats, github pushes */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Window start (ISO 8601). The client passes its local-midnight boundary — the server never guesses a timezone. */
+                    since: string;
+                    /** @description Window end (ISO 8601), exclusive */
+                    until: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Composed work bundle (each source fails soft to an empty list) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["JournalWorkBundle"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unexpected error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/journal/day": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Day bundle: focus sessions, calendar, telemetry, code sessions, heartbeats for one window */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Window start (ISO 8601). The client passes its local-midnight boundary — the server never guesses a timezone. */
+                    since: string;
+                    /** @description Window end (ISO 8601), exclusive */
+                    until: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Composed day bundle (each source fails soft to an empty list) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["JournalDayBundle"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unexpected error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/journal/project-share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-project desk minutes and share for a window (union of focus + honest code evidence) */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Window start (ISO 8601). The client passes its local-midnight boundary — the server never guesses a timezone. */
+                    since: string;
+                    /** @description Window end (ISO 8601), exclusive */
+                    until: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Projects sorted by minutes desc; project_id null = unattributed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["JournalProjectShare"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unexpected error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/journal/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One day's work metrics with prior-day, baseline, cumulative and trend context
+         * @description Answers "is today normal", not "what happened today". Every metric arrives with the comparisons already made, so that the dashboard, a briefing and a Telegram digest all quote the same figure rather than each re-deriving it.
+         *
+         *     The baseline is the **median of prior same-weekdays** — a Tuesday against Tuesdays. A rolling seven-day mean would fold weekends into a working-day baseline, and a mean of any window lets one fourteen-hour day distort a month.
+         *
+         *     On a **live day every comparison is clipped to the same elapsed time of day**: at 08:30, `prev_day` is yesterday at 08:30. Comparing a partial day against complete ones would report a collapse every morning. `as_of` carries how far the day was measured, and is null once the day is complete.
+         *
+         *     **Absent is not zero.** `baseline` is null when too few prior same-weekdays had collection coverage, and a weekday with no data is excluded from the samples rather than averaged in as a zero.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Local calendar day (YYYY-MM-DD). Windows are resolved in COACH_TZ. */
+                    date: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Metrics with comparisons resolved server-side */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["JournalOverview"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Unexpected error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/journal/day-stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One logical day as a single chronological body, from every registered source
+         * @description Assembles the day from a registry of contributors: code sessions, commits, pomodoros, walks, steps, mood check-ins, day checks, YouTube, phone use, location, dispatch, vault flow and MCP calls. Adding a source means adding one registry entry — it then appears here and in every UI built on this endpoint without a schema change.
+         *
+         *     `moments` are discrete and timeline-shaped, normalised across sources so one component can render all of them. `aggregates` are day-level numbers. High-volume collectors (notifications, location) are aggregate-only — 257 notification rows would bury the day's real story in a chronological view.
+         *
+         *     `signals[]` is the honest part: every contributor reports `live`, `quiet` or `dead` with the date it last produced anything. **Absent is not zero.** A source rendered as 0 instead of dead is how the GitHub commit poller went unnoticed for eleven days.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Logical day (YYYY-MM-DD). Starts at LOGICAL_DAY_CUTOVER_HOURS local time, not midnight. */
+                    date: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The day, plus per-source health */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DayStream"];
+                    };
+                };
+                /** @description Unexpected error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/code-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List recent code sessions */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    /** @description ISO 8601 lower bound on started_at (inclusive) */
+                    since?: string;
+                    /** @description ISO 8601 upper bound on started_at (exclusive) */
+                    until?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Recent sessions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["CodeSession"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Open a coding-agent session (SessionStart hook). Idempotent on session_id. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["StartCodeSession"];
+                };
+            };
+            responses: {
+                /** @description Session opened */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CodeSession"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/code-sessions/{session_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Finish a session with the narrated summary + friction (SessionEnd hook). 404s if no running row exists (the SessionEnd hook treats that as a no-op). */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    session_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CompleteCodeSession"];
+                };
+            };
+            responses: {
+                /** @description Completed session */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CodeSession"];
+                    };
+                };
+                /** @description No session with that id */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/code-sessions/{session_id}/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bump a running session's last-seen timestamp (Stop hook, every turn). Keeps live-status focus accurate and stops the reaper abandoning an active session. No-op (updated:false) if no running row exists. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    session_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Heartbeat result */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            updated: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/code-sessions/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the currently running code session, if any */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Active session or null */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            active: components["schemas"]["CodeSession"] & unknown;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/code-sessions/heartbeats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List heartbeat ticks (one per agent turn) in a time range */
+        get: {
+            parameters: {
+                query: {
+                    /** @description ISO 8601 lower bound on ts (inclusive) */
+                    since: string;
+                    /** @description ISO 8601 upper bound on ts (exclusive) */
+                    until: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Heartbeats, ascending by ts */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                session_id: string;
+                                ts: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/code-sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a code session by session_id */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    session_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Code session */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CodeSession"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/live-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Composed live status for agents (Jimbo/hermes). Pass ?since=<ISO> for the delta block. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description ISO timestamp; when present, the response includes a `delta` of what changed since then. */
+                    since?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Live status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LiveStatus"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Jimbo's self-description for agents: what can be asked, and what to distrust */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description State index */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StateIndex"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/state/instruments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-signal liveness, authorship and known contamination */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Filter to one trust grade. */
+                    trust?: "reliable" | "caveated" | "contaminated";
+                    /** @description true returns only instruments that have stopped being written past their cadence. */
+                    dormant?: "true" | "false";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Instruments report */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InstrumentsReport"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/state/pipeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Intake, output, WIP, lead time and conversion per lane — with declared gates */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Window length in weeks (default 12). */
+                    weeks?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Pipeline report */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PipelineReport"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/state/valves": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The live pump valves — what is open, what is throttled, what is off */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Valves */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ValvesReport"];
+                    };
+                };
+            };
+        };
+        /** Open, throttle or close pump valves — takes effect on the next tick */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SetValvesRequest"];
+                };
+            };
+            responses: {
+                /** @description What changed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SetValvesResult"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/state/pipeline/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Repair pr_state from GitHub for pull requests still recorded as open */
+        post: {
+            parameters: {
+                query?: {
+                    /** @description Maximum PRs to check in one pass (default 100). */
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description What was repaired */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReconcileResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/muscle-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List muscle groups */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Muscle groups */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymMuscleGroup"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/exercises": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search exercises by name (trigram) and/or primary muscle group */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Trigram fuzzy match on name */
+                    q?: string;
+                    muscle_group?: number | null;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Matches */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymExercise"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a user-defined exercise */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateGymExercise"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymExercise"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/exercises/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one exercise */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exercise */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymExercise"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update an exercise */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateGymExercise"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymExercise"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/gym/gyms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List user gyms */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Gyms */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymUserGym"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Add a gym */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateGymUserGym"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymUserGym"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/gyms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update a gym */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateGymUserGym"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymUserGym"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/gym/gyms/{gymId}/equipment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List equipment at a gym */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    gymId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Equipment */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymEquipment"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/equipment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add equipment to a gym */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateGymEquipment"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymEquipment"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/equipment/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update equipment */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateGymEquipment"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymEquipment"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/gym/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get fitness profile (singleton) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Profile */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymProfile"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update fitness profile */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateGymProfile"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymProfile"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/gym/body-metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List body-metric readings, newest first */
+        get: {
+            parameters: {
+                query?: {
+                    metric?: string;
+                    /** @description London day YYYY-MM-DD, inclusive; with `to` overrides days */
+                    from?: string;
+                    /** @description London day YYYY-MM-DD, inclusive */
+                    to?: string;
+                    /** @description Trailing window in days */
+                    days?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Readings */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymBodyMetricList"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Log a body-metric reading (weight etc.); latest weight syncs gym_profile */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateGymBodyMetric"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymBodyMetric"];
+                    };
+                };
+                /** @description Implausible value */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/body-metrics/daily": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-day body-metric averages (London calendar days) — trend-line feed */
+        get: {
+            parameters: {
+                query?: {
+                    metric?: string;
+                    days?: number;
+                    /** @description London day YYYY-MM-DD, inclusive; with `to` overrides `days` */
+                    from?: string;
+                    /** @description London day YYYY-MM-DD, inclusive */
+                    to?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Daily values */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymBodyMetricDailyResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/body-metrics/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a body-metric reading */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            deleted: boolean;
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Correct a body-metric reading */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateGymBodyMetric"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymBodyMetric"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/gym/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List sessions, newest first */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Max items to return (1-100) */
+                    limit?: number;
+                    /** @description Number of items to skip */
+                    offset?: number | null;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sessions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymSession"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Start a session */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateGymSession"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymSession"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/sessions/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get current active (un-ended) session, if any */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Active session or null */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymSession"] & unknown;
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/sessions/daily": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-day rollup of sessions/sets/cardio (London calendar days) */
+        get: {
+            parameters: {
+                query?: {
+                    days?: number;
+                    /** @description London day YYYY-MM-DD, inclusive; with `to` overrides `days` */
+                    from?: string;
+                    /** @description London day YYYY-MM-DD, inclusive */
+                    to?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Daily totals */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymDailyResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/sessions/detailed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List sessions with their sets and cardio (exercise names included) */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description London calendar day YYYY-MM-DD; takes precedence over from/to and days */
+                    date?: string;
+                    /** @description London day YYYY-MM-DD, inclusive; with `to` overrides days */
+                    from?: string;
+                    /** @description London day YYYY-MM-DD, inclusive */
+                    to?: string;
+                    /** @description Trailing window in days */
+                    days?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Detailed sessions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymSessionDetailedList"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/sessions/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Slim trailing history for "last time" prefills (sessions with their set rows, minimum fields) */
+        get: {
+            parameters: {
+                query?: {
+                    days?: number;
+                    /** @description Max sessions in the window, newest first */
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description History sessions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymSessionHistoryList"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/activity/daily": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-day passive activity (steps/distance/calories) from Health Connect */
+        get: {
+            parameters: {
+                query?: {
+                    days?: number;
+                    /** @description London day YYYY-MM-DD, inclusive; with `to` overrides `days` */
+                    from?: string;
+                    /** @description London day YYYY-MM-DD, inclusive */
+                    to?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Daily activity */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymActivityResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get session with sets and cardio */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Session detail */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymSessionDetail"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Delete a session (cascades to its sets + cardio) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update session (e.g., end it) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateGymSession"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymSession"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/gym/sessions/{id}/sets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Log a strength set */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateGymSessionSet"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymSessionSet"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/sessions/{id}/cardio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Log a cardio entry */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateGymSessionCardio"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymSessionCardio"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gym/sets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a strength set */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update a strength set */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateGymSessionSet"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymSessionSet"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/gym/cardio/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a cardio entry */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update a cardio entry */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateGymSessionCardio"];
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GymSessionCardio"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/discord/poll-attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Poll project Discord channels for new file attachments and ingest them into vault */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Poll complete */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            projects_polled: number;
+                            attachments_seen: number;
+                            notes_created: number;
+                            skipped: number;
+                            errors: string[];
+                        };
+                    };
+                };
+                /** @description Poll failed (no projects could be queried) */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/discord/notify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post a message to a Discord channel (best-effort — silent no-op if DISCORD_BOT_TOKEN is unset) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["DiscordNotifyBody"];
+                };
+            };
+            responses: {
+                /** @description Post attempted (Discord API failures are swallowed — see postDiscord) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DiscordNotifyResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/enrich/artist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Look up an artist/act on Spotify + YouTube (best-effort, either may be null) */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Artist/act name to look up */
+                    name: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Whatever was found — a failed or unconfigured provider returns null, not an error */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ArtistEnrichResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/understanding-proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List understanding proposals */
+        get: {
+            parameters: {
+                query?: {
+                    status?: "pending" | "accepted" | "rejected" | "expired";
+                    project_id?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Proposals newest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            project_id: string;
+                            /** @enum {string} */
+                            proposal_type: "update_belief" | "add_belief";
+                            belief_id: string | null;
+                            section_title: string | null;
+                            summary: string;
+                            patch: {
+                                [key: string]: unknown;
+                            };
+                            source: string;
+                            /** @enum {string} */
+                            confidence: "low" | "med" | "high";
+                            telegram_message_id: number | null;
+                            /** @enum {string} */
+                            status: "pending" | "accepted" | "rejected" | "expired";
+                            decided_at: string | null;
+                            created_at: string;
+                            expires_at: string;
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Submit a write-back proposal for a project belief block */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        project_id: string;
+                        /** @enum {string} */
+                        proposal_type: "update_belief" | "add_belief";
+                        belief_id?: string | null;
+                        section_title?: string | null;
+                        summary: string;
+                        patch: {
+                            text?: string;
+                            corrected?: boolean;
+                            expires_at?: string | null;
+                        };
+                        source: string;
+                        /** @enum {string} */
+                        confidence: "low" | "med" | "high";
+                        /**
+                         * @description false = store silently, no Telegram send. For agents (e.g. the steward) whose proposals are walked in a /pm session instead of pushed.
+                         * @default true
+                         */
+                        notify?: boolean;
+                        /** @description Override the 24h expiry. The steward passes 168 so proposals survive to the next check-in. */
+                        ttl_hours?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Proposal created and Telegram message sent */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            project_id: string;
+                            /** @enum {string} */
+                            proposal_type: "update_belief" | "add_belief";
+                            belief_id: string | null;
+                            section_title: string | null;
+                            summary: string;
+                            patch: {
+                                [key: string]: unknown;
+                            };
+                            source: string;
+                            /** @enum {string} */
+                            confidence: "low" | "med" | "high";
+                            telegram_message_id: number | null;
+                            /** @enum {string} */
+                            status: "pending" | "accepted" | "rejected" | "expired";
+                            decided_at: string | null;
+                            created_at: string;
+                            expires_at: string;
+                        };
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Project not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/understanding-proposals/{id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Manually accept a proposal (fallback if Telegram button is missed) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Accepted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                            project: string;
+                            belief_id: string | null;
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not pending */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/understanding-proposals/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Manually reject a proposal */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Rejected */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Not pending */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish a dispatch document output (draft/research report) to cairn */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PublishReportBody"];
+                };
+            };
+            responses: {
+                /** @description Report published to cairn */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublishReportResponse"];
+                    };
+                };
+                /** @description Cairn publish failed (write/build/commit/push) */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send Marvin a message on a channels.yaml-routed channel */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["NotifyBody"];
+                };
+            };
+            responses: {
+                /** @description Accepted (delivery is fire-and-forget) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NotifyResponse"];
+                    };
+                };
+                /** @description Unknown channel alias */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description channels.yaml unreadable and a non-default channel was requested */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/modules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List module docs (frontmatter + computed staleness, no bodies) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Module doc index */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ModuleDocListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/modules/{module}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one module doc: frontmatter, markdown body, staleness */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Module doc name (kebab-case) */
+                    module: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Module doc */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ModuleDoc"];
+                    };
+                };
+                /** @description No such module doc */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        LoginOk: {
+            /** @enum {boolean} */
+            ok: true;
+        };
+        LoginFail: {
+            /** @enum {boolean} */
+            ok: false;
+            error: string;
+        };
+        LoginBody: {
+            username: string;
+            password: string;
+        };
+        MeResponse: {
+            user: string | null;
+        };
+        Commitment: {
+            id: string;
+            made_on: string;
+            for_day: string;
+            content: string;
+            kind: components["schemas"]["CommitmentKind"];
+            goal_id: string | null;
+            delegable: boolean;
+            dispatch_id: string | null;
+            status: components["schemas"]["CommitmentStatus"];
+            resolved_at: string | null;
+            resolution_note: string | null;
+            carried_from: string | null;
+            created_at: string;
+            /** @description How many times this has already been deferred — the chain length behind it. */
+            carry_count: number;
+        };
+        /** @enum {string} */
+        CommitmentKind: "do" | "avoid" | "decide";
+        /** @enum {string} */
+        CommitmentStatus: "open" | "kept" | "missed" | "dropped" | "carried";
+        CommitmentCreateBody: {
+            content: string;
+            /** @description Logical day. Defaults to tomorrow. */
+            for_day?: string;
+            made_on?: string;
+            kind?: components["schemas"]["CommitmentKind"];
+            goal_id?: string | null;
+            delegable?: boolean;
+        };
+        Error: {
+            error: {
+                code: string;
+                message: string;
+                /** Format: uuid */
+                request_id: string;
+                details?: {
+                    path: string;
+                    issue: string;
+                }[];
+            };
+        };
+        CommitmentUpdateBody: {
+            content?: string;
+            kind?: components["schemas"]["CommitmentKind"];
+            goal_id?: string | null;
+            delegable?: boolean;
+        };
+        CommitmentResolveBody: {
+            /** @enum {string} */
+            status: "kept" | "missed" | "dropped";
+            note?: string | null;
+        };
+        ReflectionSession: {
+            day: string;
+            opened_at: string;
+            completed_at: string | null;
+            highs: string | null;
+            lows: string | null;
+            drift_note: string | null;
+            tomorrow_shape: string | null;
+            /** @enum {string} */
+            source: "dashboard" | "mcp" | "manual";
+            updated_at: string;
+        } | null;
+        ReflectionGratitude: {
+            id: number;
+            day: string;
+            content: string;
+            /** @enum {string} */
+            origin: "human" | "seeded";
+            seed_ref: string | null;
+            edited: boolean;
+            created_at: string;
+        };
+        ReflectionGratitudeCandidate: {
+            ref: string;
+            content: string;
+            accepted: boolean;
+        };
+        ReflectionPrep: {
+            day: string;
+            generated_at: string;
+            generator: string;
+            payload: components["schemas"]["ReflectionPrepPayload"];
+        } | null;
+        ReflectionPrepPayload: {
+            [key: string]: unknown;
+        };
+        ReflectionSessionBody: {
+            highs?: string | null;
+            lows?: string | null;
+            drift_note?: string | null;
+            tomorrow_shape?: string | null;
+            /** @enum {string} */
+            source?: "dashboard" | "mcp" | "manual";
+        };
+        ReflectionGratitudeBody: {
+            content?: string;
+            seed_ref?: string;
+        };
+        ReflectionPrepBody: {
+            generator: string;
+            payload: components["schemas"]["ReflectionPrepPayload"];
+        };
+        DayReportSummary: {
+            day: string;
+            generated_at: string;
+            generator: string;
+            model: string | null;
+            headline: string | null;
+        };
+        DayReport: {
+            day: string;
+            generated_at: string;
+            generator: string;
+            model: string | null;
+            payload: components["schemas"]["DayReportPayload"];
+        };
+        DayReportPayload: {
+            [key: string]: unknown;
+        };
+        DayReportBody: {
+            /** @description Which job wrote it, so a bad report is traceable to a run on the fleet page. */
+            generator: string;
+            /** @description The model that authored the prose — first thing to check when quality drops. */
+            model?: string | null;
+            payload: components["schemas"]["DayReportPayload"];
+        };
         QueueResponse: {
             items: components["schemas"]["ManifestItem"][];
             total: number;
@@ -11254,18 +21468,6 @@ export interface components {
                 [key: string]: number;
             };
         };
-        Error: {
-            error: {
-                code: string;
-                message: string;
-                /** Format: uuid */
-                request_id: string;
-                details?: {
-                    path: string;
-                    issue: string;
-                }[];
-            };
-        };
         UndoBody: {
             id: string;
         };
@@ -11294,6 +21496,7 @@ export interface components {
             format: "list" | "prose";
             sort_order: number;
             updated_at: string;
+            project_id: string | null;
             items: components["schemas"]["ContextItem"][];
         };
         ContextItem: {
@@ -11303,10 +21506,11 @@ export interface components {
             content: string;
             timeframe: string | null;
             /** @enum {string|null} */
-            status: "active" | "paused" | "completed" | "deferred" | null;
+            status: "active" | "paused" | "completed" | "deferred" | "archived" | null;
             /** @enum {string|null} */
             category: "project" | "life-area" | "habit" | "one-off" | null;
             expires_at: string | null;
+            source_clarification_id: string | null;
             sort_order: number;
             updated_at: string;
         };
@@ -11318,6 +21522,8 @@ export interface components {
              * @enum {string}
              */
             format?: "list" | "prose";
+            /** @description Project to scope this section to; omit/null for global */
+            project_id?: string | null;
         };
         UpdateSection: {
             /** @description Section name */
@@ -11331,6 +21537,11 @@ export interface components {
         ReorderBody: {
             /** @description Ordered list of IDs */
             order: number[];
+        };
+        ContextItemDetail: components["schemas"]["ContextItem"] & {
+            section_name: string;
+            file_slug: string;
+            file_name: string;
         };
         CreateItem: {
             /** @description Item content */
@@ -11405,6 +21616,8 @@ export interface components {
         CalendarItemConfig: {
             enabled: boolean;
             tag: string | null;
+            /** @default false */
+            potential: boolean;
         };
         Setting: {
             key: string;
@@ -11417,7 +21630,35 @@ export interface components {
         SettingsMap: {
             [key: string]: string;
         };
-        StructuredSetting: components["schemas"]["CalendarAvailableSetting"] | components["schemas"]["CalendarConfigSetting"] | components["schemas"]["DispatchWorkerSetting"];
+        StructuredSetting: components["schemas"]["AssignmentPacingSetting"] | components["schemas"]["CalendarAvailableSetting"] | components["schemas"]["CalendarConfigSetting"] | components["schemas"]["DispatchWorkerSetting"] | components["schemas"]["GoogleTasksConfigSetting"] | components["schemas"]["GroomingConfigSetting"] | components["schemas"]["ExecutionConfigSetting"] | components["schemas"]["NotificationScheduleSetting"] | components["schemas"]["UrlTriageConfigSetting"] | components["schemas"]["EmailGateConfigSetting"];
+        AssignmentPacingSetting: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            key: "assignment_pacing";
+            value: components["schemas"]["AssignmentPacingValue"];
+            updated_at: string;
+        };
+        AssignmentPacingValue: {
+            /**
+             * @description Max unresolved pushed handoffs before the gate closes
+             * @default 3
+             * @example 3
+             */
+            wip_cap: number;
+            /**
+             * @description Minimum minutes between two pushes
+             * @default 90
+             * @example 90
+             */
+            min_interval_minutes: number;
+            /**
+             * @description Only push items at or above this priority (0=P0). null = no floor
+             * @default null
+             */
+            priority_floor: number | null;
+        };
         DispatchWorkerSetting: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -11438,6 +21679,127 @@ export interface components {
             machine?: string;
         } & {
             [key: string]: unknown;
+        };
+        GoogleTasksConfigSetting: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            key: "google_tasks_config";
+            value: components["schemas"]["GoogleTasksConfigValue"];
+            updated_at: string;
+        };
+        GoogleTasksConfigValue: {
+            lists: {
+                [key: string]: components["schemas"]["GoogleTasksItemConfig"];
+            };
+        };
+        GoogleTasksItemConfig: {
+            enabled: boolean;
+            tag: string | null;
+        };
+        GroomingConfigSetting: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            key: "grooming_config";
+            value: components["schemas"]["GroomingConfigValue"];
+            updated_at: string;
+        };
+        GroomingConfigValue: {
+            /** @enum {string} */
+            github_assessment_executor: "jimbo" | "marvin" | "kipper" | "boris";
+            github_assessment_skill: string;
+            /**
+             * @description Max levels a subtask may sit below its nearest epic. Decomposition beyond this is rejected at submit.
+             * @default 2
+             * @example 2
+             */
+            max_depth_below_epic: number;
+        };
+        ExecutionConfigSetting: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            key: "execution_config";
+            value: components["schemas"]["ExecutionConfigValue"];
+            updated_at: string;
+        };
+        ExecutionConfigValue: {
+            done_lane_auto_clear_days: number | null;
+        };
+        NotificationScheduleSetting: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            key: "notification_schedule";
+            value: components["schemas"]["NotificationScheduleValue"];
+            updated_at: string;
+        };
+        NotificationScheduleValue: {
+            enabled: boolean;
+            /**
+             * @description Interruptible window start, "HH:mm" local time
+             * @example 09:00
+             */
+            start: string;
+            /**
+             * @description Interruptible window end, "HH:mm" local time
+             * @example 22:00
+             */
+            end: string;
+            /**
+             * @description IANA timezone, e.g. Europe/London
+             * @example Europe/London
+             */
+            timezone: string;
+            /** @description ISO timestamp — suppress all check-ins/pings until this time */
+            muted_until: string | null;
+        };
+        UrlTriageConfigSetting: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            key: "url_triage_config";
+            value: components["schemas"]["UrlTriageConfigValue"];
+            updated_at: string;
+        };
+        UrlTriageConfigValue: {
+            /**
+             * @description Overrides the built-in classifier system prompt. null = use the built-in.
+             * @default null
+             */
+            system_prompt: string | null;
+            /**
+             * @description Below this a verdict becomes UNSURE and returns to Marvin. Raise it to send more back. null = 0.7.
+             * @default null
+             */
+            confidence_floor: number | null;
+            /**
+             * @description ai-models tier to classify with. null = fast.
+             * @default null
+             * @enum {string|null}
+             */
+            tier: "free" | "fast" | "balanced" | "powerful" | null;
+        };
+        EmailGateConfigSetting: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            key: "email_gate_config";
+            value: components["schemas"]["EmailGateConfigValue"];
+            updated_at: string;
+        };
+        EmailGateConfigValue: {
+            /** @default [] */
+            blocked_senders: string[];
+            /** @default [] */
+            trusted_senders: string[];
         };
         UpdateSettingBody: {
             /** @description Setting value (any JSON) */
@@ -11494,6 +21856,18 @@ export interface components {
             /** @description Optional notes about the rating */
             notes?: string;
         };
+        VaultTypeSpec: {
+            /** @description Stored in vault_notes.type */
+            type: string;
+            label: string;
+            /** @description One line on what belongs in this type */
+            hint: string;
+            /** @description Enters grooming/dispatch, can be ready, appears on work boards */
+            actionable: boolean;
+            needsAcceptanceCriteria: boolean;
+            needsActionability: boolean;
+            carriesPriority: boolean;
+        };
         VaultTaskSummary: {
             done_today: number;
             done_this_week: number;
@@ -11537,9 +21911,6 @@ export interface components {
             velocity_7d: number;
             velocity_30d: number;
         };
-        IngestResult: {
-            ingested: number;
-        };
         BatchUpdateResult: {
             updated: number;
             errors: {
@@ -11556,6 +21927,7 @@ export interface components {
             title?: string;
             body?: string | null;
             status?: string;
+            type?: string;
             ai_priority?: number | null;
             ai_rationale?: string | null;
             manual_priority?: number | null;
@@ -11567,6 +21939,12 @@ export interface components {
             blocked_by?: string | null;
             parent_id?: string | null;
             source_signal?: string | null;
+            /** @description Canonical link for the item. Writable on update, not just create — otherwise re-processing an existing note can never attach one. */
+            source_url?: string | null;
+            /** @description Source-specific ingest metadata. Replaces the stored object wholesale — read-modify-write if you need to preserve other keys. */
+            raw_frontmatter?: {
+                [key: string]: unknown;
+            } | null;
             last_nudged_at?: string | null;
             nudge_count?: number;
             route?: string;
@@ -11576,7 +21954,7 @@ export interface components {
             suggested_route?: string | null;
             suggested_ac?: string | null;
             /** @enum {string} */
-            grooming_status?: "ungroomed" | "needs_rework" | "intake_rejected" | "intake_complete" | "classified" | "decomposed" | "ready";
+            grooming_status?: "ungroomed" | "needs_rework" | "intake_rejected" | "intake_complete" | "classified" | "decomposed" | "ready" | "settled";
             _actor?: string;
             _audit_reason?: string | null;
             _audit_metadata?: {
@@ -11584,11 +21962,15 @@ export interface components {
             } | null;
             suggested_skills?: string | null;
             /** @enum {string|null} */
-            executor?: "jimbo" | "marvin" | "kipper" | "boris" | null;
+            executor?: "jimbo" | "marvin" | "kipper" | "boris" | "jeffrey" | "steward" | null;
             is_epic?: number;
             blocked_reason?: string | null;
             /** @description Internal grooming lock — only set null to clear an orphan lock when no active dispatch exists */
             grooming_started_at?: string | null;
+            /** @description Manual-track in-progress marker — ISO timestamp when the operator started the task (drag Ready→In Progress); null clears it (drag back to Ready) */
+            started_at?: string | null;
+            /** @description Effort in 25-minute pomodoro blocks. Null clears the estimate (consumers fall back to 1 block). */
+            estimated_blocks?: number | null;
             priority_confidence?: number | null;
             ai_rationale_model?: string | null;
             /** @description Required when ai_priority / ai_rationale is set — identifies the scoring model */
@@ -11601,66 +21983,6 @@ export interface components {
             target_type: "vault_note" | "context_item";
             target_id: string;
         };
-        VaultNoteSummary: {
-            id: string;
-            seq: number | null;
-            title: string;
-            type: string;
-            /** @description Sub-type for items — granular taxonomy (media, reference, political, recipe, etc.) when type is note/bookmark. Added 2026-04-28. */
-            category?: string | null;
-            status: string;
-            body: string | null;
-            ai_priority: number | null;
-            ai_rationale: string | null;
-            manual_priority: number | null;
-            sort_position: number | null;
-            actionability: string | null;
-            source_kind?: string | null;
-            source_ref?: string | null;
-            source_url?: string | null;
-            tags: string | null;
-            created_at: string | null;
-            updated_at: string | null;
-            completed_at: string | null;
-            assigned_to: string;
-            due_at: string | null;
-            blocked_by: string | null;
-            parent_id: string | null;
-            source_signal: string | null;
-            last_nudged_at: string | null;
-            nudge_count: number;
-            route: string;
-            agent_type: string | null;
-            acceptance_criteria: string | null;
-            /** @description 1 if item meets Definition of Ready for its type */
-            ready: number;
-            suggested_agent_type: string | null;
-            suggested_parent_id: string | null;
-            cited_lesson_ids: string | null;
-            suggested_route: string | null;
-            suggested_ac: string | null;
-            /** @default ungroomed */
-            grooming_status: string;
-            /** @default null */
-            suggested_skills: string | null;
-            /** @default null */
-            executor: string | null;
-            /** @default 0 */
-            is_epic: number;
-            /** @default null */
-            epic_started_at: string | null;
-            /** @default null */
-            blocked_reason: string | null;
-            /** @default null */
-            blocked_at: string | null;
-            /** @default null */
-            grooming_started_at: string | null;
-            /** @default 0 */
-            retry_count: number;
-            priority_confidence?: number | null;
-            /** @description Model that produced ai_rationale / ai_priority */
-            ai_rationale_model?: string | null;
-        };
         VaultNote: {
             id: string;
             seq: number | null;
@@ -11672,6 +21994,8 @@ export interface components {
             body: string | null;
             ai_priority: number | null;
             ai_rationale: string | null;
+            /** @description Structured intake-quality answers (what_is_this / why_verdict / inferred_* / confidence). Rendered as an exam grid in the dashboard. */
+            intake_rationale?: unknown;
             manual_priority: number | null;
             sort_position: number | null;
             actionability: string | null;
@@ -11715,18 +22039,102 @@ export interface components {
             /** @default null */
             blocked_at: string | null;
             /** @default null */
+            blocked_on: string | null;
+            /** @default null */
+            blocked_on_at: string | null;
+            /** @default null */
+            blocked_on_reason: string | null;
+            /** @default null */
             grooming_started_at: string | null;
+            /** @default null */
+            started_at: string | null;
             /** @default 0 */
             retry_count: number;
             priority_confidence?: number | null;
             /** @description Model that produced ai_rationale / ai_priority */
             ai_rationale_model?: string | null;
+            /** @default null */
+            estimated_blocks: number | null;
+        };
+        VaultNoteSummary: {
+            id: string;
+            seq: number | null;
+            title: string;
+            type: string;
+            /** @description Sub-type for items — granular taxonomy (media, reference, political, recipe, etc.) when type is note/bookmark. Added 2026-04-28. */
+            category?: string | null;
+            status: string;
+            body: string | null;
+            ai_priority: number | null;
+            ai_rationale: string | null;
+            /** @description Structured intake-quality answers (what_is_this / why_verdict / inferred_* / confidence). Rendered as an exam grid in the dashboard. */
+            intake_rationale?: unknown;
+            manual_priority: number | null;
+            sort_position: number | null;
+            actionability: string | null;
+            source_kind?: string | null;
+            source_ref?: string | null;
+            source_url?: string | null;
+            tags: string | null;
+            created_at: string | null;
+            updated_at: string | null;
+            completed_at: string | null;
+            assigned_to: string;
+            due_at: string | null;
+            blocked_by: string | null;
+            parent_id: string | null;
+            source_signal: string | null;
+            last_nudged_at: string | null;
+            nudge_count: number;
+            route: string;
+            agent_type: string | null;
+            acceptance_criteria: string | null;
+            /** @description 1 if item meets Definition of Ready for its type */
+            ready: number;
+            suggested_agent_type: string | null;
+            suggested_parent_id: string | null;
+            cited_lesson_ids: string | null;
+            suggested_route: string | null;
+            suggested_ac: string | null;
+            /** @default ungroomed */
+            grooming_status: string;
+            /** @default null */
+            suggested_skills: string | null;
+            /** @default null */
+            executor: string | null;
+            /** @default 0 */
+            is_epic: number;
+            /** @default null */
+            epic_started_at: string | null;
+            /** @default null */
+            blocked_reason: string | null;
+            /** @default null */
+            blocked_at: string | null;
+            /** @default null */
+            blocked_on: string | null;
+            /** @default null */
+            blocked_on_at: string | null;
+            /** @default null */
+            blocked_on_reason: string | null;
+            /** @default null */
+            grooming_started_at: string | null;
+            /** @default null */
+            started_at: string | null;
+            /** @default 0 */
+            retry_count: number;
+            priority_confidence?: number | null;
+            /** @description Model that produced ai_rationale / ai_priority */
+            ai_rationale_model?: string | null;
+            /** @default null */
+            estimated_blocks: number | null;
         };
         CreateNote: {
             /** @description Note title */
             title: string;
             body?: string;
             type?: string;
+            /** @description Sub-type category (e.g. recon-output, media, reference) */
+            category?: string;
             status?: string;
             /** @description Opaque structured snapshot stored with the note for source-specific ingest metadata */
             raw_frontmatter?: {
@@ -11736,7 +22144,12 @@ export interface components {
             source_ref?: string;
             source_url?: string;
             tags?: string;
+            /** @description Marvin's own override. Agents must NOT write this — use ai_priority, which grooming can re-score. */
             manual_priority?: number;
+            /** @description Agent-assigned priority (0-3). Requires _model. Grooming may re-score it; manual_priority may not be written by agents. */
+            ai_priority?: number | null;
+            /** @description Required when ai_priority is set — identifies the scoring model */
+            _model?: string;
             actionability?: string;
             assigned_to?: string;
             due_at?: string;
@@ -11748,6 +22161,10 @@ export interface components {
             executor?: string;
             /** @description Structured links to other entities */
             links?: components["schemas"]["NoteLinkInput"][];
+            /** @description Create as an epic (1). An epic must resolve to a project — via primary_project_id, or a parent_id whose ancestor chain already has one — or creation fails with EPIC_PROJECT_REQUIRED. */
+            is_epic?: number;
+            /** @description Link the new item to a project as its primary vault_item_projects junction, in the same transaction as creation. Required for is_epic when parent_id does not already resolve to a project. */
+            primary_project_id?: string;
         };
         NoteActivityRow: {
             id: number;
@@ -11769,7 +22186,7 @@ export interface components {
             assigned_to: string | null;
             /** @description Optional priority change (0-3) */
             manual_priority?: number | null;
-            /** @description Optional rationale for the reassignment */
+            /** @description Rationale for the reassignment — required when assigned_to is marvin */
             reason?: string;
             /**
              * @description Who is performing the reassign
@@ -11807,7 +22224,7 @@ export interface components {
             task_type: string;
             input_tokens: number;
             output_tokens: number;
-            estimated_cost: number;
+            estimated_cost: number | null;
             notes: string | null;
         };
         /**
@@ -11840,28 +22257,52 @@ export interface components {
             period_days: number;
             total_cost: number;
             total_interactions: number;
+            /** @description Rows with no rate on file; excluded from total_cost */
+            unpriced: number;
             by_model: {
                 model: components["schemas"]["ModelId"];
-                total: number;
+                total: number | null;
                 count: number;
+                unpriced: number;
                 input_tokens: number;
                 output_tokens: number;
             }[];
             by_task_type: {
                 task_type: string;
-                total: number;
+                total: number | null;
                 count: number;
+                unpriced: number;
             }[];
             by_day: {
                 day: string;
-                total: number;
+                total: number | null;
                 count: number;
+                unpriced: number;
             }[];
             monthly_cost: number;
         };
         CostListResponse: {
             days: number;
             entries: components["schemas"]["Cost"][];
+        };
+        CostsByNote: {
+            note_id: string;
+            total_input_tokens: number;
+            total_output_tokens: number;
+            total_cache_read_tokens: number;
+            total_cache_write_tokens: number;
+            total_cost_usd: number;
+            turn_count: number;
+            dispatch_count: number;
+            by_dispatch: {
+                dispatch_id: number;
+                skill: string | null;
+                status: string | null;
+                input_tokens: number;
+                output_tokens: number;
+                cost_usd: number;
+                turn_count: number;
+            }[];
         };
         Run: {
             run_id: string;
@@ -11931,6 +22372,24 @@ export interface components {
             /** @description Optional notes about the run */
             user_notes?: string;
         };
+        IngestReportBody: {
+            gmail_id: string;
+            thread_id?: string | null;
+            from_name?: string | null;
+            from_email: string;
+            subject?: string | null;
+            body_text?: string | null;
+            label_ids?: string[] | null;
+            list_unsubscribe?: boolean | null;
+            directly_addressed?: boolean | null;
+            analysis?: {
+                [key: string]: unknown;
+            } | null;
+            analysis_writer?: components["schemas"]["AnalysisWriter"];
+            poll_run_id?: string | null;
+        };
+        /** @enum {string|null} */
+        AnalysisWriter: "kipper-email" | "email-processor" | null;
         EmailReportListResponse: {
             items: components["schemas"]["EmailReport"][];
             /** @description Total number of matching items */
@@ -11942,20 +22401,106 @@ export interface components {
             from_name: string | null;
             from_email: string;
             subject: string | null;
-            body_text: string | null;
+            body_text?: string | null;
+            body_preview?: string | null;
             label_ids: string[] | null;
+            /** @description Email carried a List-Unsubscribe header. Its absence is the strongest available human-sender marker. Null = ingested before 2026-08-05. */
+            list_unsubscribe: boolean | null;
+            /** @description Marvin was a named recipient on a short To/Cc list, not a list address. Null = ingested before 2026-08-05. */
+            directly_addressed: boolean | null;
+            analysis?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * @description Which job produced `analysis`. Null = no analysis, or a shape predating attribution that could not be honestly assigned. For "who gated this", read actor_id.
+             * @enum {string|null}
+             */
+            analysis_writer?: "kipper-email" | "email-processor" | null;
+            poll_run_id?: string | null;
             discovered_at: string;
             body_fetched_at: string | null;
             gated_at: string | null;
             verdict: components["schemas"]["Verdict"];
             verdict_reason: string | null;
+            /** @description Which MODEL produced the verdict. For "which member of the fleet", read actor_id — the two were conflated in this column until 2026-08-06. */
             verdict_model: string | null;
+            /**
+             * @description Fleet member that gated this email. Null for rows predating 2026-08-06 that could not be honestly attributed.
+             * @enum {string|null}
+             */
+            actor_id: "jimbo" | "marvin" | "kipper" | "boris" | "jeffrey" | "steward" | null;
             vault_note_id: string | null;
+            vault_note_seq?: number | null;
+            vault_note_title?: string | null;
+            vault_note_type?: string | null;
+            vault_note_status?: string | null;
+            epic_seq?: number | null;
+            epic_title?: string | null;
+            project_id?: string | null;
+            project_name?: string | null;
+            project_color?: string | null;
             created_at: string;
             updated_at: string;
         };
         /** @enum {string|null} */
-        Verdict: "keep" | "toss" | null;
+        Verdict: "fact" | "alert" | "event" | "reference" | "keep" | "toss" | null;
+        SenderStat: {
+            from_email: string;
+            from_name: string | null;
+            total: number;
+            tossed: number;
+            kept: number;
+            pending: number;
+            /** @description tossed / decided. Pending rows are excluded — they are not evidence either way. */
+            toss_rate: number;
+            /** @description Some message from this sender carried List-Unsubscribe, so unsubscribing at source is possible rather than only gating locally. */
+            has_unsubscribe: boolean;
+            first_seen: string;
+            last_seen: string;
+            /** @description Already matched by a blocked_senders substring in email_gate_config. */
+            blocked: boolean;
+            /** @description Already matched by a trusted_senders substring — never auto-suggest blocking these. */
+            trusted: boolean;
+        };
+        GateRun: {
+            /** @description The run's first gated_at, ISO. Stable and sortable; pass it to /runs/{run_id}/decisions. */
+            run_id: string;
+            started_at: string;
+            ended_at: string;
+            actor_id: string | null;
+            models: string[];
+            total: number;
+            kept: number;
+            /** @description How many reached a vault note. kept - filed is silent loss. */
+            filed: number;
+            by_verdict: {
+                [key: string]: number;
+            };
+        };
+        PollRunEmail: {
+            gmail_id: string;
+            subject: string | null;
+            from_name: string | null;
+            from_email: string;
+            discovered_at: string;
+            verdict: string | null;
+            analysis_writer: string | null;
+            /** @description Null = no analysis stored. 0 is a real count and means something different. */
+            links_followed: number | null;
+            /** @description Links the writer declined to open. Null on runs predating skip recording. */
+            links_skipped: number | null;
+            vault_note_seq: number | null;
+            vault_note_title: string | null;
+        };
+        VerdictBody: {
+            verdict: components["schemas"]["Verdict"];
+            verdict_reason?: string | null;
+            verdict_model?: string | null;
+            /** @enum {string|null} */
+            actor_id?: "jimbo" | "marvin" | "kipper" | "boris" | "jeffrey" | "steward" | null;
+            /** @description Vault note this email was linked into (set by email-triage when the email relates to an active project). Omitting/null never clears an existing link. */
+            vault_note_id?: string | null;
+        };
         PresignResponse: {
             upload_url: string;
             public_url: string;
@@ -11968,6 +22513,10 @@ export interface components {
              * @example image/png
              */
             content_type: string;
+        };
+        CreateBriefingResponse: components["schemas"]["BriefingAnalysis"] & {
+            /** @description Telegram message id when telegram_summary was delivered; null when delivery failed; absent when no summary was supplied */
+            telegram_message_id?: number | null;
         };
         BriefingAnalysis: {
             id: number;
@@ -11996,9 +22545,101 @@ export interface components {
                     priority: number;
                     actionability: string;
                     note: string;
+                    provenance?: string;
                 }[];
+                schema_version?: number;
+                landed?: {
+                    title: string;
+                    detail?: string;
+                    project?: string;
+                    ref?: string;
+                }[];
+                moved?: {
+                    title: string;
+                    detail?: string;
+                    project?: string;
+                    minutes?: number;
+                }[];
+                drifted?: {
+                    record: string;
+                    correction: string;
+                    ref?: string;
+                    applied?: boolean;
+                }[];
+                next_intent?: string;
+                reflection?: string;
+                receipts?: {
+                    job: string;
+                    outcome: string;
+                    links?: string[];
+                }[];
+                still_open?: {
+                    title: string;
+                    days_open: number;
+                    degrading?: boolean;
+                    ref?: string;
+                }[];
+                yesterday_review?: {
+                    area: string;
+                    note: string;
+                }[];
+                week_tracking?: {
+                    intention: string;
+                    /** @enum {string} */
+                    status: "on-track" | "at-risk" | "off-track" | "done";
+                    note?: string;
+                }[];
+                priorities?: {
+                    title: string;
+                    reasoning: string;
+                    /** @enum {string} */
+                    constraint: "daytime" | "anytime" | "fixed";
+                    fixed_time?: string;
+                    deadline?: string;
+                    /** @enum {string} */
+                    deadline_confidence?: "hard" | "ambition";
+                    bucket?: string;
+                }[];
+                open_questions?: {
+                    question: string;
+                    gates?: string;
+                    evidence?: {
+                        source: string;
+                        claim: string;
+                        ref?: string;
+                    }[];
+                    clarification_id?: string;
+                    source_ref?: string;
+                    options?: string[];
+                }[];
+                insights?: {
+                    fact: string;
+                    strategy?: string;
+                }[];
+                opportunities_threats?: {
+                    /** @enum {string} */
+                    kind: "opportunity" | "threat";
+                    note: string;
+                    action?: string;
+                }[];
+                suggested_blocks?: {
+                    title: string;
+                    size_blocks: number;
+                    /** @enum {string} */
+                    constraint: "daytime" | "anytime" | "fixed";
+                    start_hint?: string;
+                    bucket?: string;
+                    project?: string;
+                    vault_seq?: number;
+                    start?: string;
+                }[];
+                health_status?: string;
             };
             user_rating: number | null;
+            /** @enum {string|null} */
+            rating: "bad" | "ok" | "good" | "great" | null;
+            rating_note: string | null;
+            rated_at: string | null;
             created_at: string;
         };
         CreateBriefing: {
@@ -12007,12 +22648,15 @@ export interface components {
              * @example morning
              * @enum {string}
              */
-            session: "morning" | "afternoon";
+            session: "morning" | "afternoon" | "evening";
             model: components["schemas"]["ModelId"] & unknown;
-            /** @description When the briefing was generated (ISO 8601) */
-            generated_at: string;
-            /** @description Day plan entries (non-empty) */
-            day_plan: {
+            /**
+             * Format: date-time
+             * @description When the briefing was generated (ISO 8601). Defaults to server time if omitted.
+             */
+            generated_at?: string;
+            /** @description v1 timed day plan. Optional since v2 — a briefing must carry day_plan or priorities */
+            day_plan?: {
                 time: string;
                 suggestion: string;
                 source: string;
@@ -12033,35 +22677,145 @@ export interface components {
                 priority: number;
                 actionability: string;
                 note: string;
+                provenance?: string;
+            }[];
+            schema_version?: number;
+            landed?: {
+                title: string;
+                detail?: string;
+                project?: string;
+                ref?: string;
+            }[];
+            moved?: {
+                title: string;
+                detail?: string;
+                project?: string;
+                minutes?: number;
+            }[];
+            drifted?: {
+                record: string;
+                correction: string;
+                ref?: string;
+                applied?: boolean;
+            }[];
+            next_intent?: string;
+            reflection?: string;
+            receipts?: {
+                job: string;
+                outcome: string;
+                links?: string[];
+            }[];
+            still_open?: {
+                title: string;
+                days_open: number;
+                degrading?: boolean;
+                ref?: string;
+            }[];
+            yesterday_review?: {
+                area: string;
+                note: string;
+            }[];
+            week_tracking?: {
+                intention: string;
+                /** @enum {string} */
+                status: "on-track" | "at-risk" | "off-track" | "done";
+                note?: string;
+            }[];
+            priorities?: {
+                title: string;
+                reasoning: string;
+                /** @enum {string} */
+                constraint: "daytime" | "anytime" | "fixed";
+                fixed_time?: string;
+                deadline?: string;
+                /** @enum {string} */
+                deadline_confidence?: "hard" | "ambition";
+                bucket?: string;
+            }[];
+            open_questions?: {
+                question: string;
+                gates?: string;
+                evidence?: {
+                    source: string;
+                    claim: string;
+                    ref?: string;
+                }[];
+                clarification_id?: string;
+                source_ref?: string;
+                options?: string[];
+            }[];
+            insights?: {
+                fact: string;
+                strategy?: string;
+            }[];
+            opportunities_threats?: {
+                /** @enum {string} */
+                kind: "opportunity" | "threat";
+                note: string;
+                action?: string;
+            }[];
+            suggested_blocks?: {
+                title: string;
+                size_blocks: number;
+                /** @enum {string} */
+                constraint: "daytime" | "anytime" | "fixed";
+                start_hint?: string;
+                bucket?: string;
+                project?: string;
+                vault_seq?: number;
+                start?: string;
+            }[];
+            health_status?: string;
+            /** @description Human-readable briefing synopsis. When present, jimbo-api appends a dashboard link and delivers it to Marvin via the Hermes Telegram bot after persisting the analysis. Not stored. */
+            telegram_summary?: string;
+        };
+        BriefingFeedbackRollup: {
+            briefings_covered: number;
+            since: string | null;
+            sections: {
+                section: string;
+                hits: number;
+                misses: number;
+                tags: {
+                    [key: string]: number;
+                };
+                recent_notes: {
+                    note: string;
+                    updated_at: string;
+                }[];
+            }[];
+            act_on: {
+                section: string;
+                tag: string;
+                count: number;
             }[];
         };
         RateBriefing: {
             /**
-             * @description User rating (1-10)
-             * @example 7
+             * @description Categorical quality rating
+             * @example good
+             * @enum {string}
              */
-            rating: number;
+            rating: "bad" | "ok" | "good" | "great";
+            /** @description Optional free-text "why" behind the rating */
+            note?: string;
         };
-        HealthData: {
-            overall: string;
-            issues: string[];
-        } & {
-            [key: string]: unknown;
+        BriefingFeedbackEntry: {
+            section: string;
+            item_index: number | null;
+            /** @enum {string} */
+            verdict: "hit" | "miss";
+            note: string | null;
+            updated_at: string;
         };
-        HealthHistoryResponse: {
-            days: number;
-            snapshots: components["schemas"]["HealthSnapshot"][];
-        };
-        HealthSnapshot: {
-            id: number;
-            timestamp: string;
-            overall: string;
-            issues: string;
-        } & {
-            [key: string]: unknown;
-        };
-        HealthTrends: {
-            [key: string]: unknown;
+        PutBriefingFeedback: {
+            /** @description Analysis section key, e.g. "insights", "priorities" */
+            section: string;
+            /** @description Index within the section; null/absent = verdict on the whole section */
+            item_index?: number | null;
+            /** @enum {string} */
+            verdict: "hit" | "miss";
+            note?: string;
         };
         CoachToday: {
             date: string;
@@ -12123,6 +22877,8 @@ export interface components {
             generated: number;
             pushed: number;
             expired: number;
+            /** @description Of `pushed`, how many actually reached Telegram. `pushed` above `delivered` means nudges were marked sent but never arrived — the state this module sat in, unreported, from 2026-07-07 to 2026-08-01. */
+            delivered: number;
         };
         CoachInventoryResponse: {
             items: components["schemas"]["CoachInventoryItem"][];
@@ -12154,69 +22910,457 @@ export interface components {
             created_at: string;
             updated_at: string;
         };
-        SyncResult: {
-            inserted: number;
-            skipped: number;
-        };
-        SyncPayload: {
-            /**
-             * @description Device identifier
-             * @example iphone-14-abc
-             */
-            device_id: string;
-            /** @description Fitness records to sync (non-empty) */
-            records: {
-                /**
-                 * @description Type of fitness record
-                 * @example steps
-                 */
-                record_type: string;
-                value?: number | null;
-                unit?: string | null;
-                /** @description Start time (ISO 8601) */
-                start_time: string;
-                /** @description End time (ISO 8601) */
-                end_time: string;
-                source_app?: string | null;
-                metadata?: {
-                    [key: string]: unknown;
-                };
-            }[];
-        };
-        FitnessSummary: {
-            days: number;
-            daily: {
-                date: string;
-                steps: number;
-                distance_m: number;
-                calories_active: number;
-                calories_total: number;
-                floors: number;
-                exercise_sessions: {
-                    type: string;
-                    duration_min: number;
-                    start_time: string;
-                }[];
-            }[];
-            totals: {
-                steps: number;
-                distance_m: number;
-                exercise_sessions: number;
-            };
-        };
-        FitnessRecord: {
+        CoachFoodLogResponse: {
             id: string;
-            record_type: string;
-            value: number | null;
-            unit: string | null;
-            start_time: string;
-            end_time: string;
-            source_app: string | null;
-            metadata: {
+            items: components["schemas"]["CoachFoodItem"][];
+            totals: components["schemas"]["CoachFoodTotals"];
+        };
+        CoachFoodItem: {
+            label: string;
+            /** @enum {string} */
+            kind: "food" | "drink";
+            qty: number;
+            unit?: string;
+            kcal: number;
+            protein_g: number;
+            carbs_g: number;
+            fat_g: number;
+            alcoholic?: boolean;
+            sugars_g?: number | null;
+            fiber_g?: number | null;
+            sat_fat_g?: number | null;
+            salt_g?: number | null;
+            /** @description Grams of ethanol, not % ABV */
+            alcohol_g?: number | null;
+        };
+        CoachFoodTotals: {
+            kcal: number;
+            protein_g: number;
+            carbs_g: number;
+            fat_g: number;
+            sugars_g?: number | null;
+            fiber_g?: number | null;
+            sat_fat_g?: number | null;
+            salt_g?: number | null;
+            /** @description Grams of ethanol, not % ABV */
+            alcohol_g?: number | null;
+        };
+        CoachFoodLogRequest: {
+            /** @example 2 guinness, chicken burger, chips */
+            text: string;
+            /**
+             * @default telegram
+             * @enum {string}
+             */
+            source: "telegram" | "in_app" | "manual";
+        };
+        CoachFoodDailyResponse: {
+            days: components["schemas"]["CoachFoodDailyRow"][];
+        };
+        CoachFoodDailyRow: {
+            /** @description London calendar day, YYYY-MM-DD */
+            date: string;
+            kcal: number;
+            protein_g: number;
+            carbs_g: number;
+            fat_g: number;
+            sugars_g: number | null;
+            fiber_g: number | null;
+            sat_fat_g: number | null;
+            salt_g: number | null;
+            /** @description Grams of ethanol consumed */
+            alcohol_g: number | null;
+            /** @description Calories from ethanol alone at 7 kcal/g — not the whole drink */
+            alcohol_kcal: number | null;
+            count: number;
+            /** @description Entries whose macros came from manufacturer data — the honesty denominator */
+            measured_count: number;
+        };
+        CoachFoodLogListResponse: {
+            items: components["schemas"]["CoachFoodLogEntry"][];
+        };
+        CoachFoodLogEntry: {
+            id: string;
+            logged_at: string;
+            raw_text: string;
+            items: components["schemas"]["CoachFoodItem"][];
+            est_kcal: number | null;
+            est_protein_g: number | null;
+            est_carbs_g: number | null;
+            est_fat_g: number | null;
+            source: string;
+            /** @description EAN/UPC when captured by scanning */
+            barcode: string | null;
+            /**
+             * @description How much to trust the macros. Null on rows written before this existed.
+             * @enum {string|null}
+             */
+            macro_source: "openfoodfacts" | "llm_estimate" | "manual" | null;
+            est_sugars_g: number | null;
+            est_fiber_g: number | null;
+            est_sat_fat_g: number | null;
+            est_salt_g: number | null;
+            /** @description Grams of ethanol */
+            est_alcohol_g: number | null;
+        };
+        CoachFrequentFoodsResponse: {
+            items: components["schemas"]["CoachFrequentFood"][];
+        };
+        CoachFrequentFood: {
+            label: string;
+            est_kcal: number | null;
+            est_protein_g: number | null;
+            est_carbs_g: number | null;
+            est_fat_g: number | null;
+            count: number;
+            /** @description ISO timestamp of the most recent log of this food — lets clients blend recency into quick-add ranking. */
+            last_logged_at: string;
+        };
+        CoachFoodLogManualBody: {
+            /** @example chicken burger, chips */
+            raw_text: string;
+            /**
+             * Format: date-time
+             * @description ISO timestamp; defaults to now. Set to backdate a retrospective entry.
+             */
+            logged_at?: string;
+            est_kcal?: number | null;
+            est_protein_g?: number | null;
+            est_carbs_g?: number | null;
+            est_fat_g?: number | null;
+            items?: components["schemas"]["CoachFoodItem"][];
+            notes?: string | null;
+            /** @description When true and no macros supplied, fill them via the LLM estimator (best-effort). */
+            estimate?: boolean;
+        };
+        CoachFoodBarcodeResolveResponse: {
+            barcode: string;
+            product: components["schemas"]["CoachBarcodeProduct"];
+            items: components["schemas"]["CoachFoodItem"][];
+            totals: components["schemas"]["CoachFoodTotals"];
+            /**
+             * @description 'llm_estimate' means the product was found but Open Food Facts had no macros, so they were estimated from its name.
+             * @enum {string}
+             */
+            macro_source: "openfoodfacts" | "llm_estimate";
+            /**
+             * @description Where the portion came from. 'pack' means the product stated no serving size and the whole pack was small enough to be one (a 330ml can); 'default_100g' means neither was known.
+             * @enum {string}
+             */
+            portion_source: "grams" | "servings" | "serving_size" | "pack" | "default_100g";
+            /** @description Grams the portion resolved to — what totals are for */
+            portion_g: number;
+        };
+        CoachBarcodeProduct: {
+            barcode: string;
+            label: string;
+            brand: string | null;
+            /** @description null when the product exists but carries no nutrition data */
+            per100g: {
+                kcal: number;
+                protein_g: number;
+                carbs_g: number;
+                fat_g: number;
+                sugars_g: number | null;
+                fiber_g: number | null;
+                sat_fat_g: number | null;
+                salt_g: number | null;
+            } | null;
+            serving_g: number | null;
+            /** @description Grams/ml in the whole pack, when stated */
+            pack_g: number | null;
+            /** @description % alcohol by volume, as Open Food Facts reports it */
+            abv: number | null;
+            /** @enum {string} */
+            kind: "food" | "drink";
+            alcoholic: boolean;
+        };
+        CoachFoodBarcodeBody: {
+            /**
+             * @description Decoded EAN/UPC digits
+             * @example 5000213001004
+             */
+            barcode: string;
+            servings?: number;
+            grams?: number;
+            /**
+             * Format: date-time
+             * @description ISO timestamp; defaults to now. Set to backdate a missed scan.
+             */
+            logged_at?: string;
+            notes?: string | null;
+        };
+        CoachProductListResponse: {
+            items: components["schemas"]["CoachStoredProduct"][];
+        };
+        CoachStoredProduct: components["schemas"]["CoachBarcodeProduct"] & {
+            /** @description Hand-corrected; never overwritten by a refetch */
+            corrected: boolean;
+            fetched_at: string;
+            updated_at: string;
+        };
+        CoachProductCorrectionBody: {
+            label?: string;
+            brand?: string | null;
+            /** @enum {string} */
+            kind?: "food" | "drink";
+            alcoholic?: boolean;
+            serving_g?: number | null;
+            pack_g?: number | null;
+            kcal_100g?: number | null;
+            protein_100g?: number | null;
+            carbs_100g?: number | null;
+            fat_100g?: number | null;
+            sugars_100g?: number | null;
+            fiber_100g?: number | null;
+            sat_fat_100g?: number | null;
+            salt_100g?: number | null;
+            /** @description % ABV, not grams */
+            alcohol_100g?: number | null;
+        };
+        CoachFoodLogUpdateBody: {
+            raw_text?: string;
+            /** Format: date-time */
+            logged_at?: string;
+            est_kcal?: number | null;
+            est_protein_g?: number | null;
+            est_carbs_g?: number | null;
+            est_fat_g?: number | null;
+            notes?: string | null;
+        };
+        CoachSupplementLogListResponse: {
+            items: components["schemas"]["CoachSupplementLogEntry"][];
+        };
+        CoachSupplementLogEntry: {
+            id: number;
+            taken_at: string;
+            supplement_id: string;
+            name: string;
+            /** @enum {string} */
+            type: "protein" | "creatine" | "vitamin" | "other";
+            dosage: number;
+            dose_unit: string;
+            /** @enum {string} */
+            source: "in_app" | "telegram_deeplink" | "manual";
+            nudge_id: number | null;
+            notes: string | null;
+        };
+        CoachSupplementLogManualBody: {
+            /** @example supp_creatine */
+            supplement_id: string;
+            dosage: number;
+            /**
+             * Format: date-time
+             * @description ISO timestamp; defaults to now. Set to backdate.
+             */
+            taken_at?: string;
+            notes?: string | null;
+        };
+        CoachSupplementLogUpdateBody: {
+            supplement_id?: string;
+            dosage?: number;
+            /** Format: date-time */
+            taken_at?: string;
+            notes?: string | null;
+        };
+        CoachProtocolResponse: {
+            items: components["schemas"]["CoachSupplement"][];
+        };
+        CheckInTickResponse: {
+            sent: boolean;
+            reason: string;
+            id?: string;
+            alerted?: boolean;
+            expired?: number;
+        };
+        MoodLogEntry: {
+            id: string;
+            /** @enum {string} */
+            source: "telegram_nudge" | "pomo_complete" | "manual" | "dashboard";
+            /** @enum {string} */
+            state: "pending" | "answered" | "dismissed" | "expired";
+            mood: number | null;
+            energy: number | null;
+            sent_at: string;
+            answered_at: string | null;
+            context: {
                 [key: string]: unknown;
             };
-            synced_at: string;
-            device_id: string | null;
+            notes: string | null;
+        };
+        CheckInCreateBody: {
+            /** @enum {string} */
+            source: "pomo_complete" | "manual" | "dashboard";
+            mood: number;
+            energy: number;
+            context?: {
+                [key: string]: unknown;
+            };
+            notes?: string;
+        };
+        CheckInListResponse: {
+            items: components["schemas"]["MoodLogEntry"][];
+        };
+        CheckInDailyResponse: {
+            days: components["schemas"]["CheckInDailyRow"][];
+        };
+        CheckInDailyRow: {
+            /** @description London calendar day, YYYY-MM-DD */
+            date: string;
+            avg_mood: number;
+            avg_energy: number;
+            count: number;
+        };
+        CheckInUpdateBody: {
+            mood?: number;
+            energy?: number;
+            notes?: string | null;
+        };
+        DayChecksResponse: {
+            day: string;
+            items: components["schemas"]["DayCheckItem"][];
+        };
+        DayCheckItem: components["schemas"]["DayCheckDef"] & {
+            entry: components["schemas"]["DayCheckEntry"];
+        };
+        DayCheckEntry: {
+            id: string;
+            def_id: string;
+            day: string;
+            value_bool: boolean | null;
+            value_int: number | null;
+            value_text: string | null;
+            /** @enum {string} */
+            source: "dashboard" | "telegram" | "mcp" | "manual";
+            noted_at: string;
+        } | null;
+        DayCheckDef: {
+            id: string;
+            label: string;
+            prompt: string | null;
+            /** @enum {string} */
+            response_type: "bool" | "scale" | "text";
+            scale_min: number | null;
+            scale_max: number | null;
+            /** @enum {string} */
+            cadence: "daily" | "once";
+            active: boolean;
+            sort_order: number;
+            watchdog_ref: string | null;
+            notes: string | null;
+            created_at: string;
+            archived_at: string | null;
+        };
+        DayCheckCreateBody: {
+            label: string;
+            prompt?: string | null;
+            /** @enum {string} */
+            response_type?: "bool" | "scale" | "text";
+            scale_min?: number | null;
+            scale_max?: number | null;
+            /** @enum {string} */
+            cadence?: "daily" | "once";
+            sort_order?: number;
+            watchdog_ref?: string | null;
+            notes?: string | null;
+        };
+        DayCheckUpdateBody: {
+            label?: string;
+            prompt?: string | null;
+            /** @enum {string} */
+            cadence?: "daily" | "once";
+            active?: boolean;
+            sort_order?: number;
+            watchdog_ref?: string | null;
+            notes?: string | null;
+            /** @description true archives the definition (keeps its history), false restores it */
+            archived?: boolean;
+        };
+        DayCheckEntryBody: {
+            date?: string;
+            value_bool?: boolean | null;
+            value_int?: number | null;
+            value_text?: string | null;
+            /** @enum {string} */
+            source?: "dashboard" | "telegram" | "mcp" | "manual";
+        };
+        DayCheckHistoryResponse: {
+            def_id: string;
+            from: string;
+            to: string;
+            rows: {
+                day: string;
+                value_bool: boolean | null;
+                value_int: number | null;
+                value_text: string | null;
+            }[];
+        };
+        TelemetryIngestResult: {
+            received: number;
+            inserted: number;
+            duplicates: number;
+        };
+        TelemetryPayload: {
+            /**
+             * @description Stable device identifier
+             * @example android-pixel-marvin
+             */
+            device_id: string;
+            /** @description Events to ingest (1..500). */
+            events: components["schemas"]["TelemetryEventInput"][];
+        };
+        TelemetryEventInput: {
+            /**
+             * @description Client-generated unique id (ULID/UUID) — used for idempotency
+             * @example 01HRABCXYZ12345
+             */
+            client_event_id: string;
+            /**
+             * @description Collector identifier
+             * @example health_connect
+             */
+            collector: string;
+            /**
+             * @description Event type within the collector
+             * @example steps
+             */
+            type: string;
+            /**
+             * Format: date-time
+             * @description When the event occurred (ISO 8601 UTC). For intervals, the start.
+             */
+            ts: string;
+            /**
+             * Format: date-time
+             * @description Interval end (ISO 8601 UTC). Omit for instant events.
+             */
+            ts_end?: string | null;
+            /** @description Optional scalar value (e.g. steps count, battery percent). */
+            value?: number | null;
+            /** @description Unit of `value` (count, percent, meters, kcal, ...). */
+            unit?: string | null;
+            /** @description Originating app or sensor. */
+            source?: string | null;
+            /** @description Type-specific JSON. Server stores; does not validate per type. */
+            payload?: {
+                [key: string]: unknown;
+            };
+        };
+        TelemetryEvent: {
+            id: string;
+            device_id: string;
+            client_event_id: string;
+            collector: string;
+            type: string;
+            ts: string;
+            ts_end: string | null;
+            value: number | null;
+            unit: string | null;
+            source: string | null;
+            payload: {
+                [key: string]: unknown;
+            };
+            received_at: string;
         };
         DispatchQueueItem: {
             id: number;
@@ -12228,7 +23372,7 @@ export interface components {
              * @description Network identity that will execute the task. Nullable only on legacy rows pre-migration.
              * @enum {string|null}
              */
-            executor: "jimbo" | "marvin" | "kipper" | "boris" | null;
+            executor: "jimbo" | "marvin" | "kipper" | "boris" | "jeffrey" | "steward" | null;
             /** @description Path under hub/skills/ (e.g. "code/pr-from-issue"). Nullable during transition period. */
             skill: string | null;
             /** @description JSON-encoded context blob passed to the skill at runtime. */
@@ -12247,7 +23391,7 @@ export interface components {
             /** @description LLM model identifier that produced the completion (e.g. claude-opus-4-7, openrouter/anthropic/claude-3-5-sonnet). */
             completed_model: string | null;
             /** @enum {string} */
-            flow: "commission" | "recon" | "groom";
+            flow: "commission" | "recon" | "groom" | "fold";
             issue_number: number | null;
             issue_repo: string | null;
             issue_title: string | null;
@@ -12259,6 +23403,30 @@ export interface components {
             started_at: string | null;
             completed_at: string | null;
             created_at: string;
+            task_title?: string | null;
+            task_seq?: number | null;
+            dismissed_at?: string | null;
+        };
+        AwaitingReviewItem: {
+            note_id: string;
+            seq: string | null;
+            title: string | null;
+            assigned_to: string | null;
+            dispatch_id: string;
+            skill: string | null;
+            result_summary: string | null;
+            pr_url: string | null;
+            pr_state: string | null;
+            completed_at: string | null;
+        };
+        ReviewApproveBody: {
+            note_id: string;
+            actor?: string;
+        };
+        ReviewSendBackBody: {
+            note_id: string;
+            reason: string;
+            actor?: string;
         };
         BriefingSummary: {
             commissions: {
@@ -12293,6 +23461,84 @@ export interface components {
             };
             needs_grooming: number;
         };
+        FleetStats: {
+            generated_at: string;
+            queue: {
+                executor: string | null;
+                /** @enum {string} */
+                status: "proposed" | "approved" | "rejected" | "removed" | "dispatching" | "running" | "completed" | "failed";
+                count: number;
+            }[];
+            workers: {
+                id: string;
+                machine: string | null;
+                status: string | null;
+                checked_at: string | null;
+                next_poll_at: string | null;
+            }[];
+            now: {
+                id: string;
+                task_id: string;
+                note_title: string | null;
+                skill: string | null;
+                flow: string;
+                executor: string | null;
+                started_at: string | null;
+            }[];
+            failures_24h: {
+                id: string;
+                task_id: string;
+                note_title: string | null;
+                skill: string | null;
+                flow: string;
+                executor: string | null;
+                error_message: string | null;
+                retry_count: number;
+                completed_at: string | null;
+                dismissed_at?: string | null;
+            }[];
+            stuck_notes: {
+                note_id: string;
+                seq: string | null;
+                title: string | null;
+                grooming_status: string | null;
+                retry_count: number;
+                grooming_started_at: string | null;
+            }[];
+            last_pipeline_enqueue_at: string | null;
+            recent: {
+                id: string;
+                task_id: string;
+                skill: string | null;
+                flow: string;
+                executor: string | null;
+                status: string;
+                completed_model: string | null;
+                error_message: string | null;
+                started_at: string | null;
+                completed_at: string | null;
+                turns: number;
+                input_tokens: number;
+                output_tokens: number;
+                cache_read_tokens: number;
+                estimated_cost: number;
+            }[];
+            burn_5h: {
+                actor: string | null;
+                model: string;
+                turns: number;
+                input_tokens: number;
+                output_tokens: number;
+                estimated_cost: number;
+            }[];
+            folds: {
+                skill: string | null;
+                last_enqueued_at: string | null;
+                last_completed_at: string | null;
+                last_status: string | null;
+                runs_7d: number;
+            }[];
+        };
         AgentTypeConfig: {
             [key: string]: components["schemas"]["AgentTypeDefinition"];
         };
@@ -12314,12 +23560,6 @@ export interface components {
             /** @description Number of tasks to propose (1-10) */
             batch_size?: number;
         };
-        ProposeGitHubBody: {
-            /** @description GitHub repos to fetch issues from */
-            repos?: string[];
-            /** @description Number of tasks to propose (1-10) */
-            batch_size?: number;
-        };
         EnqueueBody: {
             /** @description Vault note ID to enqueue */
             task_id: string;
@@ -12327,7 +23567,7 @@ export interface components {
              * @description Network identity that will execute the task
              * @enum {string}
              */
-            executor: "jimbo" | "marvin" | "kipper" | "boris";
+            executor: "jimbo" | "marvin" | "kipper" | "boris" | "jeffrey" | "steward";
             /** @description Skill path under hub/skills/ (e.g. "vault-grooming/analyse") */
             skill: string;
             /** @description Optional JSON blob passed to the skill at runtime */
@@ -12344,7 +23584,7 @@ export interface components {
              * @default commission
              * @enum {string}
              */
-            flow: "commission" | "recon" | "groom";
+            flow: "commission" | "recon" | "groom" | "fold";
             /**
              * @description Audit trail: what triggered the enqueue
              * @default pipeline-pump
@@ -12387,7 +23627,7 @@ export interface components {
         };
         StartBody: {
             /** @description Dispatch queue item ID */
-            id: number;
+            id: number | null;
             /** @description Override dispatch prompt */
             prompt?: string;
             /** @description Override dispatch repo */
@@ -12395,23 +23635,30 @@ export interface components {
         };
         CompleteBody: {
             /** @description Dispatch queue item ID */
-            id: number;
+            id: number | null;
             /** @description Summary of the completed work */
             result_summary: string;
             /** @description JSON string of artifacts */
             result_artifacts?: string;
             /** @description Pull request URL */
             pr_url?: string;
+            /** @description Full research markdown — when present on recon completions, jimbo-api creates a Google Doc and links it in the notification. */
+            research_body?: string;
             /** @description LLM model identifier that produced this completion (e.g. claude-opus-4-7, openrouter/anthropic/claude-3-5-sonnet). Required — provenance is recorded on the dispatch row. */
             model: string;
+            /**
+             * @description Whether a completed recon should announce itself. Set false when the dispatch already delivered its own output — a briefing that posted itself does not also need a receipt saying it posted. Ignored for non-recon flows, which never notify.
+             * @default true
+             */
+            notify: boolean;
         };
         NotifyReconBody: {
             /** @description Dispatch queue item ID */
-            id: number;
+            id: number | null;
         };
         FailBody: {
             /** @description Dispatch queue item ID */
-            id: number;
+            id: number | null;
             /** @description Error message describing the failure */
             error_message: string;
         };
@@ -12454,6 +23701,45 @@ export interface components {
             started_at: string;
             /** @description ISO timestamp when the API call returned */
             ended_at: string;
+        };
+        ReassignExecutorBody: {
+            /**
+             * @description New executor to assign this dispatch to
+             * @enum {string}
+             */
+            executor: "jimbo" | "marvin" | "kipper" | "boris" | "jeffrey" | "steward";
+        };
+        DailyFleetReport: {
+            /** @description Logical day (YYYY-MM-DD), starting at LOGICAL_DAY_CUTOVER_HOURS local time */
+            report_date: string;
+            generated_at: string;
+            actors: {
+                executor: string;
+                total_jobs: number;
+                completed: number;
+                failed: number;
+                estimated_cost: number;
+                input_tokens: number;
+                output_tokens: number;
+                models_used: {
+                    model: string | null;
+                    count: number;
+                }[];
+                by_skill: {
+                    skill: string | null;
+                    flow: string;
+                    count: number;
+                    first_at: string | null;
+                    last_at: string | null;
+                    sustained_loop: boolean;
+                }[];
+                failures: {
+                    id: string;
+                    skill: string | null;
+                    error_message: string | null;
+                    completed_at: string | null;
+                }[];
+            }[];
         };
         ProductSummaryRecord: {
             id: number;
@@ -12519,9 +23805,18 @@ export interface components {
             title: string;
             updated: string;
         };
-        TasksListResponse: {
-            tasks: components["schemas"]["GoogleTask"][];
+        /**
+         * @default marvin
+         * @enum {string}
+         */
+        GoogleAccount: "marvin" | "jimbo";
+        InboxResponse: {
+            tasks: components["schemas"]["InboxTask"][];
             count: number;
+        };
+        InboxTask: components["schemas"]["GoogleTask"] & {
+            listId: string;
+            listTitle: string;
         };
         GoogleTask: {
             id: string;
@@ -12530,6 +23825,197 @@ export interface components {
             due?: string;
             updated: string;
             status: string;
+        };
+        GoogleTaskFetch: {
+            /** @description Google Task list ID */
+            listId: string;
+            /** @description Google Task ID within the list */
+            taskId: string;
+            account?: components["schemas"]["GoogleAccount"];
+        };
+        TriageNowResponse: {
+            proposal: components["schemas"]["TriageProposal"];
+            debug: {
+                skill_version: string | null;
+                model: string;
+                url_detected: string | null;
+                /** @enum {string} */
+                url_kind: "x" | "generic" | "none";
+                /** @enum {string} */
+                url_fetch_status: "fetched" | "x-fetched" | "skipped-x-no-creds" | "fetch-failed" | "no-url";
+                url_fetch_summary: string | null;
+                prompt_chars: number;
+                raw_response_chars: number;
+                parse_ok: boolean;
+                latency_ms: number;
+                raw_response: string;
+                usage: {
+                    prompt_tokens: number | null;
+                    completion_tokens: number | null;
+                    total_tokens: number | null;
+                };
+            };
+        };
+        /** @description null when the model returned text we could not parse as JSON; check debug.raw_response. */
+        TriageProposal: {
+            /** @enum {string} */
+            type: "task" | "note" | "idea";
+            category: string | null;
+            ai_priority: number | null;
+            priority_confidence: number | null;
+            tags: string[];
+            suggested_parent_id: string | null;
+            suggested_agent_type: string | null;
+            ai_rationale: string;
+            questions: {
+                q: string;
+                why: string;
+            }[];
+        } | null;
+        TriageNowBody: {
+            listId: string;
+            taskId: string;
+            user_context?: string;
+            /** @description Override the SKILL.md recommended_model. Useful for A/B testing models from the dashboard. */
+            model_override?: string;
+        };
+        TriageNowCachedResponse: components["schemas"]["TriageNowCachedHit"] | components["schemas"]["TriageNowCachedMiss"];
+        TriageNowCachedHit: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            cached: "true";
+            proposal: components["schemas"]["TriageProposal"];
+            debug: {
+                skill_version: string | null;
+                model: string;
+                url_detected: string | null;
+                /** @enum {string} */
+                url_kind: "x" | "generic" | "none";
+                /** @enum {string} */
+                url_fetch_status: "fetched" | "x-fetched" | "skipped-x-no-creds" | "fetch-failed" | "no-url";
+                url_fetch_summary: string | null;
+                prompt_chars: number;
+                raw_response_chars: number;
+                parse_ok: boolean;
+                latency_ms: number;
+                raw_response: string;
+                usage: {
+                    prompt_tokens: number | null;
+                    completion_tokens: number | null;
+                    total_tokens: number | null;
+                };
+            };
+            skill_version: string | null;
+            created_at: string;
+        };
+        TriageNowCachedMiss: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            cached: "false";
+            /** @enum {string} */
+            reason: "miss" | "stale";
+            stored_skill_version?: string | null;
+        };
+        TriageLogResponse: {
+            /** @enum {boolean} */
+            ok: true;
+        };
+        TriageLogBody: {
+            listId: string;
+            taskId: string;
+            proposal: components["schemas"]["TriageProposal"];
+            user_context?: string | null;
+            /** @enum {string} */
+            action: "promote" | "discard" | "skip";
+            override?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        TriageNextResponse: components["schemas"]["TriageNextReady"] | components["schemas"]["TriageNextIdle"];
+        TriageNextReady: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            status: "ready";
+            listId: string;
+            listTitle: string;
+            task: components["schemas"]["GoogleTask"] & unknown;
+            /** @description Snapshot output from /api/snapshot, included so the agent has everything in one round-trip. */
+            snapshot?: unknown;
+            /** @description Current SKILL.md version on the server. Echo this back in /triage-result so cache hits stay aligned. */
+            skill_version: string | null;
+        };
+        TriageNextIdle: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            status: "idle";
+            /** @description Total tasks across enabled lists (includes already-cached). 0 = inbox empty; >0 = all already triaged. */
+            inbox_size: number;
+        };
+        TriageResultResponse: {
+            /** @enum {boolean} */
+            ok: true;
+            /** @description true = upserted into triage_proposals (will hit on next /triage-now-cached lookup). */
+            cached: boolean;
+        };
+        TriageResultBody: {
+            listId: string;
+            taskId: string;
+            proposal: components["schemas"]["TriageProposal"] & unknown;
+            /** @description Same shape as TriageNowResponse.debug. Boris-loop fills tokens/latency/model from claude-code stream-json output and leaves URL fields as defaults. */
+            debug: {
+                skill_version: string | null;
+                model: string;
+                url_detected?: string | null;
+                /** @enum {string} */
+                url_kind?: "x" | "generic" | "none";
+                /** @enum {string} */
+                url_fetch_status?: "fetched" | "x-fetched" | "skipped-x-no-creds" | "fetch-failed" | "no-url";
+                url_fetch_summary?: string | null;
+                prompt_chars: number;
+                raw_response_chars: number;
+                parse_ok: boolean;
+                latency_ms: number;
+                raw_response: string;
+                usage: {
+                    prompt_tokens: number | null;
+                    completion_tokens: number | null;
+                    total_tokens: number | null;
+                };
+                /**
+                 * @description Source of the proposal. Distinguishes external boris-loop runs from server-side /triage-now calls.
+                 * @enum {string}
+                 */
+                runner?: "boris-loop";
+                runner_version?: string;
+            };
+            user_context?: string | null;
+        };
+        TriageHistoryResponse: {
+            items: components["schemas"]["TriageHistoryItem"][];
+            count: number;
+        };
+        TriageHistoryItem: {
+            google_list_id: string;
+            google_task_id: string;
+            proposal: components["schemas"]["TriageProposal"];
+            /** @description Same shape as TriageNowResponse.debug, plus optional runner / runner_version when produced by an external agent (boris-loop). Untyped here because /triage-now and /triage-result write slightly different optional fields. */
+            debug?: unknown;
+            skill_version: string | null;
+            model: string;
+            user_context_at_creation: string | null;
+            created_at: string;
+        };
+        TasksListResponse: {
+            tasks: components["schemas"]["GoogleTask"][];
+            count: number;
         };
         TaskRefineResponse: {
             draft: components["schemas"]["TaskRefineDraft"];
@@ -12555,6 +24041,8 @@ export interface components {
         TaskCommitResponse: {
             vaultNoteId: string;
             googleTaskDeleted: boolean;
+            /** @description False when no project_id was given, or when the link failed (the note still exists). */
+            projectLinked: boolean;
         };
         TaskCommit: {
             /** @description Google Task ID to commit */
@@ -12572,6 +24060,10 @@ export interface components {
             due_at?: string;
             route?: string;
             acceptance_criteria?: string;
+            /** @description Link the new note to this project as its primary project. */
+            project_id?: string;
+            /** @description Epic (or parent note) to file the new note under. */
+            parent_id?: string;
         };
         TaskDelete: {
             /** @description Google Task ID to delete */
@@ -12587,6 +24079,112 @@ export interface components {
             due?: string;
             /** @description Task list ID (default: @default) */
             listId?: string;
+        };
+        UpdateGoogleTasksConfigBody: {
+            value: components["schemas"]["GoogleTasksConfigValue"];
+        };
+        AutoTriageResponse: {
+            dryRun: boolean;
+            scanned: number;
+            withUrls: number;
+            enrichFailed: number;
+            items: components["schemas"]["TriagedItem"][];
+            counts: {
+                [key: string]: number;
+            };
+            tier: string;
+            model: string;
+            skippedExhausted: number;
+            tokensUsed: number;
+            costUsd: number;
+        };
+        TriagedItem: {
+            taskId: string;
+            originalTitle: string;
+            url: string;
+            /** @enum {string} */
+            verdict: "DISMISS" | "REF" | "QUICK" | "QUEUE" | "PROJECT" | "UNSURE";
+            title: string;
+            reason: string;
+            confidence: number;
+            minutes: number | null;
+            projectId: string | null;
+            noteId: string | null;
+            taskCompleted: boolean;
+            attempts?: number;
+            needsHuman?: boolean;
+            /** @enum {string} */
+            kind: "x" | "generic";
+            enriched: boolean;
+            duplicateOfTaskId?: string | null;
+            /** @description Dry runs only — the enrichment text the classifier saw, so a verdict can be audited. */
+            enrichedSummary?: string;
+        };
+        AutoTriageBody: {
+            /** @description Google Tasks list id (default @default) */
+            listId?: string;
+            /** @description Cap items processed in one run */
+            limit?: number;
+            /** @description Defaults to TRUE. Must be explicitly false to write — classifies and reports without archiving, scheduling, or completing anything. */
+            dryRun?: boolean;
+            /**
+             * @description ai-models tier to classify with (default fast). Never a literal model id — ids rot.
+             * @enum {string}
+             */
+            tier?: "free" | "fast" | "balanced" | "powerful";
+        };
+        ArchiveDigestResponse: {
+            days: number;
+            total: number;
+            unsureCount: number;
+            needsHumanCount: number;
+            entries: {
+                id: string;
+                seq: number | null;
+                title: string;
+                url: string | null;
+                reason: string;
+                archivedAt: string | null;
+            }[];
+        };
+        PendingSuggestionsResponse: {
+            count: number;
+            suggestions: {
+                eventId: string;
+                summary: string;
+                start: string;
+                end: string;
+                minutes: number;
+                sourceKey: string | null;
+                description: string | null;
+            }[];
+        };
+        ResolveSuggestionResponse: {
+            ok: boolean;
+            action: string | null;
+            reason: string | null;
+        };
+        ResolveSuggestionBody: {
+            eventId: string;
+            /** @description true accepts the block; false deletes it */
+            confirm: boolean;
+        };
+        WatchQueueResponse: {
+            count: number;
+            totalMinutes: number;
+            totalWatchMinutes: number;
+            items: {
+                id: string;
+                seq: number | null;
+                title: string;
+                url: string | null;
+                minutes: number | null;
+                watchMinutes: number | null;
+                blocks: number | null;
+                reason: string;
+                priority: number | null;
+                createdAt: string | null;
+            }[];
         };
         CalendarsListResponse: {
             calendars: components["schemas"]["CalendarEntry"][];
@@ -12632,6 +24230,21 @@ export interface components {
             };
             created?: string;
             updated?: string;
+            /** @description Source calendar ID — injected by the multi-calendar fanout, absent on single-calendar queries */
+            calendarId?: string;
+            /** @description Taxonomy tag from calendar config */
+            calendarTag?: string | null;
+            /** @description True when the source calendar is marked as potential (interest/options) rather than committed */
+            isPotential?: boolean;
+            extendedProperties?: components["schemas"]["ExtendedProperties"];
+        };
+        ExtendedProperties: {
+            private?: {
+                [key: string]: string;
+            };
+            shared?: {
+                [key: string]: string;
+            };
         };
         CreateEvent: {
             /** @description Event title */
@@ -12648,6 +24261,25 @@ export interface components {
             calendarId?: string;
             /** @description Time zone (default: Europe/London) */
             timeZone?: string;
+            /** @description Recurrence rules — RFC 5545 RRULE strings, e.g. ["RRULE:FREQ=WEEKLY;BYDAY=SU"] */
+            recurrence?: string[];
+            extendedProperties?: components["schemas"]["ExtendedProperties"] & unknown;
+            account?: components["schemas"]["GoogleAccount"];
+        };
+        UpdateEvent: {
+            /** @description Calendar ID the event lives in */
+            calendarId: string;
+            summary?: string;
+            /** @description Start time (ISO 8601) */
+            start?: string;
+            /** @description End time (ISO 8601) */
+            end?: string;
+            description?: string;
+            location?: string;
+            /** @description Time zone (default: Europe/London) — only applied if start or end is also set */
+            timeZone?: string;
+            extendedProperties?: components["schemas"]["ExtendedProperties"];
+            account?: components["schemas"]["GoogleAccount"];
         };
         ConflictsResponse: {
             calendars: {
@@ -12666,6 +24298,7 @@ export interface components {
             end: string;
             /** @description Calendar IDs to check (default: primary) */
             calendarIds?: string[];
+            account?: components["schemas"]["GoogleAccount"];
         };
         GmailProfile: {
             emailAddress: string;
@@ -12719,6 +24352,7 @@ export interface components {
             subject: string;
             /** @description Email body (plain text) */
             body: string;
+            account?: components["schemas"]["GoogleAccount"];
         };
         ModelsResponse: {
             models: {
@@ -12727,17 +24361,75 @@ export interface components {
         };
         ModelConfig: {
             id: string;
+            fallback?: string[];
             provider: string;
             tier: string;
             description: string;
         };
+        ChatCompletionResponse: {
+            content: string;
+            model: string;
+            usage: {
+                input: number;
+                output: number;
+            };
+            estimated_cost: number;
+            cost_id: string;
+        };
+        ChatCompletionRequest: {
+            /**
+             * @description Capability tier; resolves to a registered model in ai-models.ts
+             * @example balanced
+             * @enum {string}
+             */
+            tier: "free" | "fast" | "balanced" | "powerful";
+            messages: {
+                /** @enum {string} */
+                role: "system" | "user" | "assistant";
+                content: string;
+            }[];
+            opts?: {
+                temperature?: number;
+                maxTokens?: number;
+                jsonMode?: boolean;
+            };
+            /**
+             * @description Caller-supplied identifier for the cost ledger (e.g. "foundry.synthesize", "google-tasks.refine")
+             * @example foundry.synthesize
+             */
+            task_type: string;
+            notes?: string;
+        };
         Snapshot: {
             priorities: components["schemas"]["ContextFile"] & unknown;
             goals: components["schemas"]["ContextFile"] & unknown;
-            active_tasks: components["schemas"]["VaultNoteSummary"][];
+            coverage: components["schemas"]["SnapshotCoverage"];
+            active_tasks: components["schemas"]["SnapshotTask"][];
             task_summary: components["schemas"]["VaultTaskSummary"];
             epics: components["schemas"]["VaultEpicSummary"][];
             lessons: components["schemas"]["GroomingLesson"][];
+        };
+        /** @description What the active_tasks list actually represents. Read before treating it as the definitive set of what matters. */
+        SnapshotCoverage: {
+            returned: number;
+            total_active_tasks: number;
+            unranked: number;
+            /** @enum {string} */
+            ranked_by: "effective_priority";
+            detail_endpoint: string;
+            note: string;
+        };
+        SnapshotTask: {
+            id: string;
+            seq: number | null;
+            title: string;
+            type: string;
+            status: string;
+            manual_priority: number | null;
+            ai_priority: number | null;
+            parent_id: string | null;
+            due_at: string | null;
+            tags: string | null;
         };
         VaultEpicSummary: {
             id: string;
@@ -12752,7 +24444,7 @@ export interface components {
             kind: "confidence" | "priority" | "routing" | "tagging" | "archive";
             trigger: string;
             guidance: string;
-            active: number;
+            active: boolean;
             hit_count: number;
             miss_count: number;
             supersedes_id: number | null;
@@ -12795,6 +24487,7 @@ export interface components {
             delegable: number;
             answer: string | null;
             answered_by: string | null;
+            answer_rationale: string | null;
             dispatch_id: string | null;
             created_at: string;
             resolved_at: string | null;
@@ -12809,6 +24502,19 @@ export interface components {
             answer: string;
             /** @default marvin */
             answered_by: string;
+            /** @description Why this answer was given. Expected when answered_by is an agent rather than marvin. */
+            rationale?: string;
+        };
+        GroomingDecision: {
+            question_id: number;
+            note_id: string;
+            seq: number | null;
+            title: string;
+            question: string;
+            answer: string;
+            answer_rationale: string | null;
+            answered_by: string;
+            resolved_at: string | null;
         };
         GroomingCorrection: {
             id: number;
@@ -12833,7 +24539,7 @@ export interface components {
         };
         SubmitAnalysis: {
             note_id: string;
-            dispatch_id: number;
+            dispatch_id: number | null;
             /** @default boris */
             actor: string;
             /** @description LLM model identifier that produced the analysis (e.g. claude-opus-4-7) */
@@ -12860,6 +24566,81 @@ export interface components {
                 why: string;
             }[];
         };
+        SubmitDeepReadResponse: {
+            note_id: string;
+            /** @enum {string} */
+            disposition: "enrich" | "spawn" | "archive" | "ask";
+            /** @description Resulting grooming_status (or "archived" lifecycle state for the archive disposition). */
+            new_status: string;
+            /** @description IDs of spawned seed tasks (spawn disposition only). */
+            children?: string[];
+            questions_created: number;
+        };
+        SubmitDeepRead: {
+            note_id: string;
+            dispatch_id: number | null;
+            /** @default boris */
+            actor: string;
+            model: string;
+            /** @enum {string} */
+            disposition: "enrich" | "spawn" | "archive" | "ask";
+            read: components["schemas"]["DeepReadRead"];
+            enrich?: {
+                /**
+                 * @default note
+                 * @enum {string}
+                 */
+                item_type: "note" | "bookmark";
+                category?: string | null;
+                /** @default [] */
+                tags: string[];
+                /** @description What it is, who made it, why worth keeping, what it connects to. Stored as a thread comment. */
+                rationale: string;
+            };
+            spawn?: {
+                /**
+                 * @default note
+                 * @enum {string}
+                 */
+                item_type: "note" | "bookmark";
+                /** @default [] */
+                tags: string[];
+                rationale: string;
+                seeds: components["schemas"]["DeepReadSeed"][];
+            };
+            archive?: {
+                reason: string;
+            };
+            ask?: {
+                questions: {
+                    q: string;
+                    why: string;
+                }[];
+            };
+        };
+        DeepReadRead: {
+            /** @description The source URL that was followed. */
+            url: string;
+            /** @description False when the source could not be read (403, unparsed PDF, Google Docs/Keep, unresolved link). When false the disposition MUST be "ask" — never assert unread content. */
+            readable: boolean;
+            /** @description One plain sentence: what the source is. */
+            what_is_this: string;
+            /** @description Author / handle, or null. */
+            author?: string | null;
+            /** @description What the source actually says — only when readable. */
+            summary?: string | null;
+            /** @description Which active project / goal / interest this touches, or "none". */
+            relevance: string;
+            /** @enum {string} */
+            confidence: "high" | "medium" | "low";
+        };
+        DeepReadSeed: {
+            /** @description Clean task title — must NOT contain the source URL (a URL-carrying seed would loop straight back into deep-read). */
+            title: string;
+            done_looks_like: string;
+            /** @enum {string} */
+            kind: "research" | "mockup" | "competitor-analysis" | "prototype" | "other";
+        };
         SubmitIntakeResponse: {
             note_id: string;
             /** @enum {string} */
@@ -12868,16 +24649,36 @@ export interface components {
         };
         SubmitIntake: {
             note_id: string;
-            dispatch_id: number;
+            dispatch_id: number | null;
             /** @default boris */
             actor: string;
             model: string;
             /** @enum {string} */
             actionability: "clear" | "needs-breakdown" | "vague";
+            intake_rationale?: components["schemas"]["IntakeRationale"];
             questions?: {
                 q: string;
                 why: string;
             }[];
+        };
+        IntakeRationale: {
+            /** @description Plain-prose answer to "what is the operator asking for?" Lead the dashboard render. */
+            what_is_this: string;
+            /** @description Why this actionability verdict landed where it did (clear/needs-breakdown/vague). One sentence. */
+            why_verdict: string;
+            /** @description Project this note appears to belong to, by slug — e.g. "localshout", "jimbo", "spoonscount". null when the body gives no signal. */
+            inferred_project?: string | null;
+            /** @description Existing epic this note plausibly fits under — seq number or title fragment. null when standalone. */
+            inferred_epic?: string | null;
+            /** @description What completing this note achieves for the operator. null when the verdict is vague. */
+            inferred_goal?: string | null;
+            /** @description What done looks like — implicit acceptance criteria. null when the verdict is vague. */
+            inferred_done?: string | null;
+            /**
+             * @description Skill's own self-rating across the inferred_* fields. Surfaced so the operator can weight the answers.
+             * @enum {string}
+             */
+            confidence?: "high" | "medium" | "low";
         };
         SubmitClassificationResponse: {
             note_id: string;
@@ -12886,7 +24687,7 @@ export interface components {
         };
         SubmitClassification: {
             note_id: string;
-            dispatch_id: number;
+            dispatch_id: number | null;
             /** @default boris */
             actor: string;
             model: string;
@@ -12894,18 +24695,58 @@ export interface components {
             priority_confidence: number;
             tags: string[];
             ai_rationale: string;
+            suggested_agent_type?: string | null;
+        };
+        SubmitTriageResponse: {
+            google_list_id: string;
+            google_task_id: string;
+            dispatch_id: number;
+            /** @description Always false at the stub stage — proposal storage lands later */
+            proposal_persisted: boolean;
+            dispatch_completed: boolean;
+            echoed: components["schemas"]["SubmitTriage"];
+        };
+        /** @description The validated proposal body, returned for inspection */
+        SubmitTriage: {
+            google_list_id: string;
+            google_task_id: string;
+            dispatch_id: number | null;
+            /** @default boris */
+            actor: string;
+            /** @description LLM model identifier that produced the proposal */
+            model: string;
+            /** @description Semver of the triage-pre-grooming skill that produced this proposal — recorded for corpus provenance, no enforcement. */
+            skill_version?: string;
+            /**
+             * @description Locked taxonomy: task | note | idea. `idea` is downgraded to `note + category=idea` at vault-write time until the grooming enum migrates.
+             * @enum {string}
+             */
+            type: "task" | "note" | "idea";
+            category?: string | null;
+            ai_priority: number | null;
+            priority_confidence: number | null;
+            tags: string[];
+            suggested_parent_id?: string | null;
+            suggested_agent_type?: string | null;
+            ai_rationale: string;
+            /** @default [] */
+            questions: components["schemas"]["TriageQuestion"][];
+        };
+        TriageQuestion: {
+            q: string;
+            why: string;
         };
         SubmitDecompositionResponse: {
             parent_id: string;
             children: string[];
             /** @enum {string} */
-            new_status: "decomposed" | "classified";
-            /** @description Questions generated for missing ready-gate fields. Non-zero means new_status is classified (back to classification). */
+            new_status: "ready" | "decomposed" | "classified";
+            /** @description Questions generated for missing ready-gate fields. Non-zero means new_status is classified (back to classification). "ready" means a leaf item (no subtasks) met the Definition of Ready and was promoted straight through. */
             blocking_questions: number;
         };
         SubmitDecomposition: {
             note_id: string;
-            dispatch_id: number;
+            dispatch_id: number | null;
             /** @default boris */
             actor: string;
             /** @description LLM model identifier that produced the decomposition (e.g. claude-opus-4-7). Required — recorded in the submitted_decomposition activity context. */
@@ -12950,6 +24791,9 @@ export interface components {
         };
         DeactivateLesson: {
             reason: string;
+        };
+        UpdateGroomingConfigBody: {
+            value: components["schemas"]["GroomingConfigValue"];
         };
         PipelineRun: {
             id: number;
@@ -13012,6 +24856,180 @@ export interface components {
             error?: string;
             posted_at?: string;
         };
+        PipelineQueue: {
+            ts: string;
+            stages: components["schemas"]["StageQueue"][];
+            ticks_per_day: number;
+        };
+        StageQueue: {
+            /** @enum {string} */
+            stage: "intake" | "deepread" | "classify" | "decompose";
+            at_status: number;
+            eligible: number;
+            per_tick: number;
+        };
+        PipelineTickResult: {
+            ts: string;
+            skipped: boolean;
+            /** @enum {string} */
+            reason?: "disabled";
+            in_flight_before: number;
+            in_flight_after: number;
+            reaped: number;
+            orphaned_locks_cleared: number;
+            stuck_notes: components["schemas"]["PipelineTickStuckNote"][];
+            promoted: number;
+            intake_enqueued: number;
+            deepread_enqueued: number;
+            classified_enqueued: number;
+            decomposed_enqueued: number;
+            /** @enum {string} */
+            scope: "all" | "priority_1_only";
+            scope_projects: string[];
+            autonomous_projects: string[];
+            concurrency_cap: number;
+        };
+        PipelineTickStuckNote: {
+            note_id: string;
+            retry_count: number;
+        };
+        CommissionTickResult: {
+            ts: string;
+            skipped: boolean;
+            /** @enum {string} */
+            reason?: "disabled" | "no_autonomous_projects" | "at_capacity";
+            enqueued: number;
+            enqueued_ids: string[];
+            in_flight_before: number;
+            in_flight_after: number;
+            cap: number;
+            per_tick: number;
+            autonomous_projects: string[];
+        };
+        StewardTickResult: {
+            ts: string;
+            skipped: boolean;
+            /** @enum {string} */
+            reason?: "disabled";
+            reaped: number;
+            roster: number;
+            enqueued: {
+                project_id: string;
+                dispatch_id: number;
+                agenda_note_id: string;
+            }[];
+            skips: {
+                project_id: string;
+                /** @enum {string} */
+                reason: "already_in_flight" | "shadow_tier" | "not_due" | "waiting_on_marvin" | "global_cap";
+            }[];
+        };
+        AwaitingHandback: {
+            activity_id: number;
+            note_id: string;
+            seq: number;
+            title: string;
+            type: string;
+            status: string;
+            ts: string;
+            /** @description The agent that handed it back */
+            from_actor: string;
+            /** @description Who performed the handoff */
+            actor: string;
+            action: ("note_created" | "assigned" | "unassigned" | "priority_changed" | "priority_scored" | "grooming_status_changed" | "grooming_override_changed" | "status_changed" | "dispatch_started" | "submitted_analysis" | "submitted_decomposition" | "submitted_deepread" | "question_raised" | "question_answered" | "thread_message_posted" | "reassigned" | "feedback_reject" | "feedback_archive" | "feedback_accept" | "commission_completed" | "recon_completed" | "review_approved" | "review_sent_back" | "commit_linked") | string;
+            reason: string | null;
+            priority: number | null;
+        };
+        AwaitingQuestion: {
+            id: string;
+            vault_item_id: string;
+            vault_item_seq: number;
+            vault_item_title: string;
+            vault_item_grooming_status: string;
+            vault_item_assigned_to: string | null;
+            author_actor_id: string;
+            /** @enum {string} */
+            kind: "question";
+            body: string;
+            in_reply_to: string | null;
+            answered_by: unknown;
+            created_at: string;
+            age_days: number;
+        };
+        AssignmentPushRow: {
+            id: number;
+            activity_id: number;
+            note_id: string;
+            seq: number | null;
+            title: string | null;
+            pushed_at: string;
+            resolved_at: string | null;
+            resolved_reason: string | null;
+            /** @description null on rows predating delivery recording — outcome genuinely unknown, not assumed sent */
+            delivery_status: ("sent" | "failed" | "not_configured" | "suppressed") | string | unknown;
+            telegram_message_id: number | null;
+            delivery_error: string | null;
+        };
+        DeliveryProject: {
+            project_id: string;
+            display_name: string;
+            repo: string;
+            latest_tag: string | null;
+            /** @description Commits on the default branch since latest_tag — built but not released */
+            unshipped: number;
+            open_prs: components["schemas"]["DeliveryPr"][];
+            /** @description Open PRs whose checks failed — the rows that want attention */
+            failing: number;
+            /** @description Per-repo failure; the other rows still render */
+            error: string | null;
+        };
+        DeliveryPr: {
+            number: number;
+            title: string;
+            url: string;
+            /** @enum {string} */
+            ci: "passing" | "failing" | "pending" | "none";
+            /** @description Set to merge itself once checks pass */
+            auto_merge: boolean;
+            age_days: number;
+            /** @description Vault item the PR came from, via the dispatch/<note_id> branch */
+            note_seq: number | null;
+            draft: boolean;
+        };
+        /** @description What this measurement actually covers. Read it before quoting any figure here as a share of Marvin's attention — it measures one channel over a limited window, and several buckets have no source at all. */
+        BucketCoverage: {
+            /** @enum {string} */
+            channel: "claude_code_heartbeats";
+            data_since: string | null;
+            effective_days: number;
+            truncated: boolean;
+            unwired_buckets: string[];
+            note: string;
+        };
+        BucketWeekly: {
+            key: string;
+            label: string;
+            /** @enum {string} */
+            kind: "work" | "life";
+            /**
+             * @description How this bucket's urgency behaves over time, and so what control it needs (ship=deadline, compound=ceiling, runway=floor, cadence=rate floor, opportunistic=trigger). Null where it has not been decided.
+             * @enum {string|null}
+             */
+            clock: "ship" | "compound" | "runway" | "cadence" | "opportunistic" | null;
+            minutes: number;
+            hours: number;
+            sessions: number;
+            projects: {
+                project_id: string;
+                minutes: number;
+            }[];
+            metrics?: {
+                label: string;
+                value: number;
+                unit: string;
+            }[];
+            pending?: boolean;
+        };
         SearchResponse: {
             q: string;
             took_ms: number;
@@ -13031,6 +25049,8 @@ export interface components {
             updated_at: string | null;
             /** @description Dashboard deep link */
             url: string;
+            /** @description vault_notes only: operator-facing sequence number for detail modal */
+            seq?: number | null;
         };
         SearchIntegrityResponse: {
             ok: boolean;
@@ -13041,6 +25061,23 @@ export interface components {
             table: number;
             index: number;
             diff: number;
+        };
+        HermesModelPrefs: {
+            tiers: components["schemas"]["HermesModelTiers"];
+            default: string;
+            auxiliary: {
+                [key: string]: string;
+            };
+        };
+        HermesModelTiers: {
+            cheap: string;
+            balanced: string;
+            capable: string;
+        };
+        HermesModelPrefsPatch: {
+            /** @enum {string} */
+            tier: "cheap" | "balanced" | "capable";
+            model: string;
         };
         HermesJobsResponse: {
             jobs: components["schemas"]["HermesJob"][];
@@ -13066,10 +25103,12 @@ export interface components {
             last_delivery_error: string | null;
             runs_completed: number | null;
             skill: string | null;
+            script: string | null;
             deliver: string | null;
             prompt: string | null;
             skills: string[] | null;
             model: string | null;
+            provider: string | null;
             created_at: string | null;
         };
         HermesRunsResponse: {
@@ -13091,9 +25130,127 @@ export interface components {
             response_chars: number;
             tool_calls: string[];
         };
+        HermesPause: {
+            reason?: string;
+        };
         HermesJobPatch: {
             name?: string;
             schedule_display?: string;
+            model?: string | null;
+            /** @enum {string|null} */
+            provider?: "openrouter" | "openai-codex" | "anthropic" | "gemini" | "xai" | "nous" | "copilot" | "ollama-cloud" | "huggingface" | "zai" | "kimi-coding" | "minimax" | "kilocode" | "xiaomi" | "arcee" | null;
+            paused_reason?: string | null;
+        };
+        AgentRunRollupRow: {
+            job_name: string;
+            model: string | null;
+            outcome: components["schemas"]["AgentRunOutcome"];
+            count: number;
+            avg_duration_ms: number | null;
+            last_ts: string;
+            cost_usd: number | null;
+            tokens_total: number | null;
+            billing: components["schemas"]["BillingMode"];
+        };
+        /** @enum {string} */
+        AgentRunOutcome: "CREDIT_402" | "QUOTA_403" | "AUTH_403" | "AUTH_ERR" | "RATE_429" | "UPSTREAM_5XX" | "API_FAIL" | "POLL_NO_WORK" | "POLL_CORRUPTED" | "PROSE_RESPONSE";
+        /** @enum {string} */
+        BillingMode: "flat" | "metered" | "mixed" | "unknown";
+        AgentRunTailRow: {
+            ts: string;
+            job_name: string;
+            model: string | null;
+            duration_ms: number | null;
+            outcome: components["schemas"]["AgentRunOutcome"];
+            title: string;
+            session_id: string | null;
+            cost_usd: number | null;
+            tokens_total: number | null;
+        };
+        JobRating: {
+            job_name: string;
+            rating: components["schemas"]["JobRatingValue"];
+            note: string | null;
+            updated_at: string;
+        };
+        /** @enum {string} */
+        JobRatingValue: "keep" | "watch" | "cut";
+        JobRatingBody: {
+            rating: components["schemas"]["JobRatingValue"];
+            note?: string | null;
+        };
+        JobEffectivenessRow: {
+            job_name: string;
+            fires: number;
+            silent: number;
+            errors: number;
+            tokens: number | null;
+            last_run_at: string;
+            asked: number;
+            answered: number;
+            last_response_at: string | null;
+            /** @description null when the job asked nothing in the window — "no data", not 0%. */
+            response_rate: number | null;
+            /** @enum {string|null} */
+            rating: "keep" | "watch" | "cut" | null;
+            rating_note: string | null;
+        };
+        OpenAsk: components["schemas"]["JobDelivery"] & {
+            /** @description The ask's own words, from the agent.end row it was derived from, with hermes' 'agent end: ' prefix and trailing duration stripped. Null when no run row matches — a delivery posted directly to /deliveries has no agent.end behind it. */
+            text: string | null;
+        };
+        /** @enum {string} */
+        DeliveryChannel: "telegram" | "discord" | "vault_thread" | "blog" | "none" | "app";
+        /** @enum {string|null} */
+        ResponseKind: "reply" | "artifact" | "dismissed" | null;
+        /**
+         * @description How we know it was answered. 'app' is a first-hand action in jimbo-app — as certain as reply_id, and deliberately not folded into 'manual', which means Marvin curated the record by hand.
+         * @enum {string|null}
+         */
+        ResponseAttribution: "reply_id" | "window" | "artifact" | "manual" | "app" | null;
+        JobDelivery: {
+            id: number;
+            job_name: string;
+            run_ts: string;
+            channel: components["schemas"]["DeliveryChannel"];
+            telegram_message_id: number | null;
+            asked: boolean;
+            responded_at: string | null;
+            response_kind: components["schemas"]["ResponseKind"];
+            attribution: components["schemas"]["ResponseAttribution"];
+        };
+        JobDeliveryBody: {
+            job_name: string;
+            run_ts: string;
+            channel: components["schemas"]["DeliveryChannel"];
+            telegram_message_id?: number | null;
+            /** @description True only if this delivery expects Marvin to do something. A blog post or a status pulse is a delivery that asks nothing, and must not enter the denominator. */
+            asked?: boolean;
+        };
+        JobDeliveryRespondBody: {
+            responded_at?: string;
+            response_kind: components["schemas"]["ResponseKind"];
+            attribution: components["schemas"]["ResponseAttribution"];
+        };
+        McpCallRollupRow: {
+            tool: string;
+            count: number;
+            success_count: number;
+            error_count: number;
+            avg_duration_ms: number;
+            p95_duration_ms: number;
+            last_ts: string;
+        };
+        McpCallTailRow: {
+            ts: string;
+            tool: string;
+            caller: string | null;
+            duration_ms: number;
+            success: boolean;
+            error_message: string | null;
+            args: {
+                [key: string]: unknown;
+            } | null;
         };
         SystemEvent: {
             id: number;
@@ -13312,6 +25469,7 @@ export interface components {
             confidence?: number;
             /** @enum {string} */
             status?: "active" | "archived" | "superseded";
+            source?: string;
         };
         CloseInterrogateExperiment: {
             verdict: string;
@@ -13535,6 +25693,22 @@ export interface components {
         };
         StalenessModeEntry: {
             slug: string;
+            name: string;
+            /** @description The psychological frame the mode is built on. */
+            frame: string;
+            family: string;
+            /**
+             * @description Auto-pick filters on this — a light-energy session must not be handed a deep mode.
+             * @enum {string}
+             */
+            depth: "light" | "medium" | "deep";
+            length_minutes: number;
+            /** @description Entity types this mode can produce. */
+            entities: string[];
+            /** @enum {string} */
+            requires_data: "none" | "optional" | "required";
+            /** @description Meta modes (court/verdict/scan) walk existing state and are never auto-picked. */
+            meta: boolean;
             mode_staleness: number;
             mode_novelty: number;
             contradiction_backlog: number;
@@ -13578,23 +25752,186 @@ export interface components {
                 [key: string]: components["schemas"]["ContextFile"];
             };
         };
+        Clarification: {
+            id: string;
+            content: string;
+            /** @enum {string} */
+            kind: "disambiguate" | "validate" | "followup" | "ambient";
+            /** @enum {string} */
+            source_kind: "vault" | "google_task" | "calendar" | "model-gap" | "briefing";
+            source_ref: string | null;
+            /** @description Canonical source id — source_ref with generator prefix noise stripped server-side; dedup keys on this */
+            source_id: string | null;
+            /** @enum {string} */
+            status: "open" | "answered" | "expired" | "dismissed";
+            discord_message_id: string | null;
+            asked_at: string;
+            answered_at: string | null;
+            answer_text: string | null;
+            interpreted_action: {
+                [key: string]: unknown;
+            } | null;
+            expires_at: string | null;
+            created_at: string;
+            updated_at: string;
+        };
+        ClarificationDedupCheck: {
+            /** @description True if an open clarification exists for this source, or one was asked/dismissed/expired within the given window — the generator should skip re-asking */
+            recent: boolean;
+        };
+        CreateClarification: {
+            content: string;
+            /** @enum {string} */
+            kind: "disambiguate" | "validate" | "followup" | "ambient";
+            /** @enum {string} */
+            source_kind: "vault" | "google_task" | "calendar" | "model-gap" | "briefing";
+            source_ref?: string | null;
+            discord_message_id?: string | null;
+            expires_at?: string | null;
+        };
+        UpdateClarification: {
+            /** @enum {string} */
+            status?: "dismissed" | "expired";
+            discord_message_id?: string;
+        };
+        AnswerClarificationResponse: {
+            clarification: components["schemas"]["Clarification"];
+            /** @description Plain-language receipt to post back into the Discord thread */
+            echo: string;
+        };
+        AnswerClarification: {
+            /** @description The clarification id, when the caller has already resolved which one this answers */
+            clarification_id?: string;
+            /** @description Fallback lookup by the discord_message_id of the original question, when clarification_id is not available */
+            discord_message_id?: string;
+            /** @description Create-then-answer an unfiled question in one call, bypassing the open-questions cap */
+            create?: {
+                content: string;
+                /** @enum {string} */
+                kind: "disambiguate" | "validate" | "followup" | "ambient";
+                /** @enum {string} */
+                source_kind: "vault" | "google_task" | "calendar" | "model-gap" | "briefing";
+                source_ref?: string | null;
+            };
+            answer_text: string;
+        };
+        Entity: {
+            id: string;
+            /** @enum {string} */
+            kind: "person" | "place" | "org" | "thing";
+            name: string;
+            aliases: string[];
+            description: string | null;
+            keywords: string[];
+            emails: string[];
+            phones: string[];
+            urls: string[];
+            url_hosts: string[];
+            location: string | null;
+            close: boolean;
+            source: string | null;
+            verified_at: string | null;
+            attributes: {
+                [key: string]: string | number | boolean | unknown;
+            };
+            source_clarification_id: string | null;
+            created_at: string;
+            updated_at: string;
+        };
+        UpsertEntity: {
+            /** @enum {string} */
+            kind: "person" | "place" | "org" | "thing";
+            name: string;
+            aliases?: string[];
+            description?: string | null;
+            /** @description Topic keywords for relevance matching, e.g. ["comedy", "edinburgh", "football"] */
+            keywords?: string[];
+            emails?: string[];
+            phones?: string[];
+            urls?: string[];
+            location?: string | null;
+            close?: boolean;
+            /** @description Trust signal — 'manual' is hand-enriched, 'google-contacts' is a skeleton */
+            source?: string | null;
+            /** @description YYYY-MM-DD last enriched by hand */
+            verified_at?: string | null;
+            /** @description Long-tail facts, e.g. {"relation":"mother","deceased":"yes"} */
+            attributes?: {
+                [key: string]: string | number | boolean | unknown;
+            };
+            source_clarification_id?: string | null;
+        };
         Project: {
             /** @description Slug identifier, e.g. "localshout" */
             id: string;
             display_name: string;
             description: string | null;
             /**
-             * @description Project lifecycle state. 'archived' is the soft-delete state.
+             * @description Project lifecycle state. 'paused' means it exists and may resume but isn't current work; 'archived' is the soft-delete state.
              * @enum {string}
              */
-            status: "active" | "archived";
+            status: "active" | "paused" | "archived";
+            /**
+             * @description How much attention this project actually gets, independent of status. 'primary' = the current push; 'secondary' = real, active, not the current push; 'shadow' = has real work but isn't acknowledged anywhere yet.
+             * @enum {string}
+             */
+            attention_tier: "primary" | "secondary" | "shadow";
+            /**
+             * @description 'major' = permanent project; 'minor' = time-boxed mini-project (1–6 months); 'admin' = catch-all bucket for life-admin work (passwords, finance, household).
+             * @enum {string}
+             */
+            kind: "major" | "minor" | "admin";
             /** @description Actor who owns this project (nullable) */
             owner_actor_id: string | null;
             /** @description Freeform markdown: goals, domain rules */
             criteria: string | null;
             repo_url: string | null;
+            /** @description CSS color string for UI accent; picked from palette on create */
+            color_token: string | null;
             /** @description ISO 8601 timestamp */
             created_at: string;
+            intent: string | null;
+            personas: string | null;
+            success_criteria: string | null;
+            current_state: string | null;
+            out_of_scope: string | null;
+            key_resources: string | null;
+            entry_points: string | null;
+            deploy_target: string | null;
+            observability: string | null;
+            conventions_url: string | null;
+            footguns: string | null;
+            /**
+             * @description How autonomously agents may act on this project: 'none' = read-only, 'propose' = suggest changes for human approval, 'ship' = land changes directly. Null = inherit global default.
+             * @enum {string|null}
+             */
+            autonomy_level: "none" | "propose" | "ship" | null;
+            current_blocker: string | null;
+            common_tasks: string | null;
+            working_doc_id: string | null;
+            working_doc_url: string | null;
+            agenda_note_id?: string | null;
+            short_code: string | null;
+            synced_at: string | null;
+            /** @description Sha of the last commit touching docs/project.md at sync time. Provenance for repo-owned fields. */
+            synced_commit?: string | null;
+            repos: components["schemas"]["ProjectRepo"][] | null;
+        };
+        ProjectRepo: {
+            /** @description Repo slug, e.g. "dashboard" */
+            repo: string;
+            /** @description Dev-root-relative path, e.g. "jimbo/dashboard" */
+            path: string | null;
+            /** @description What this repo does in the project */
+            role: string | null;
+            entry_points: string | null;
+            footguns: string | null;
+            conventions_url: string | null;
+            /**
+             * @description How autonomously agents may act on this project: 'none' = read-only, 'propose' = suggest changes for human approval, 'ship' = land changes directly. Null = inherit global default.
+             * @enum {string|null}
+             */
+            autonomy_level: "none" | "propose" | "ship" | null;
         };
         CreateProject: {
             /**
@@ -13605,25 +25942,220 @@ export interface components {
             display_name: string;
             description?: string | null;
             /**
-             * @description Project lifecycle state. 'archived' is the soft-delete state.
+             * @description Project lifecycle state. 'paused' means it exists and may resume but isn't current work; 'archived' is the soft-delete state.
              * @enum {string}
              */
-            status: "active" | "archived";
+            status: "active" | "paused" | "archived";
+            /**
+             * @description How much attention this project actually gets, independent of status. 'primary' = the current push; 'secondary' = real, active, not the current push; 'shadow' = has real work but isn't acknowledged anywhere yet.
+             * @default secondary
+             * @enum {string}
+             */
+            attention_tier: "primary" | "secondary" | "shadow";
+            /**
+             * @description 'major' = permanent project; 'minor' = time-boxed mini-project (1–6 months); 'admin' = catch-all bucket for life-admin work (passwords, finance, household).
+             * @default major
+             * @enum {string}
+             */
+            kind: "major" | "minor" | "admin";
             owner_actor_id: string | null;
             criteria?: string | null;
             repo_url?: string | null;
+            color_token?: string | null;
+            short_code?: string | null;
+            /** @description One-line purpose / north star */
+            intent?: string | null;
+            /** @description Who this project serves */
+            personas?: string | null;
+            /** @description What "done" looks like */
+            success_criteria?: string | null;
+            /** @description Where things are now */
+            current_state?: string | null;
+            /** @description Explicit exclusions */
+            out_of_scope?: string | null;
+            /** @description Links, docs, references (markdown) */
+            key_resources?: string | null;
+            /** @description "Start reading here" — files or doc links */
+            entry_points?: string | null;
+            /** @description How it ships, where it runs */
+            deploy_target?: string | null;
+            /** @description Logs / metrics / dashboards */
+            observability?: string | null;
+            /** @description Link to AGENTS.md / CLAUDE.md / style guide */
+            conventions_url?: string | null;
+            /** @description Known gotchas a newcomer would trip on */
+            footguns?: string | null;
+            /** @description What is currently blocking progress */
+            current_blocker?: string | null;
+            /** @description Templated entry points (markdown list) */
+            common_tasks?: string | null;
+            /**
+             * @description How autonomously agents may act on this project: 'none' = read-only, 'propose' = suggest changes for human approval, 'ship' = land changes directly. Null = inherit global default.
+             * @enum {string|null}
+             */
+            autonomy_level?: "none" | "propose" | "ship" | null;
         };
         UpdateProject: {
             display_name?: string;
             description?: string | null;
             /**
-             * @description Project lifecycle state. 'archived' is the soft-delete state.
+             * @description Project lifecycle state. 'paused' means it exists and may resume but isn't current work; 'archived' is the soft-delete state.
              * @enum {string}
              */
-            status?: "active" | "archived";
+            status?: "active" | "paused" | "archived";
+            /**
+             * @description How much attention this project actually gets, independent of status. 'primary' = the current push; 'secondary' = real, active, not the current push; 'shadow' = has real work but isn't acknowledged anywhere yet.
+             * @enum {string}
+             */
+            attention_tier?: "primary" | "secondary" | "shadow";
+            /**
+             * @description 'major' = permanent project; 'minor' = time-boxed mini-project (1–6 months); 'admin' = catch-all bucket for life-admin work (passwords, finance, household).
+             * @enum {string}
+             */
+            kind?: "major" | "minor" | "admin";
             owner_actor_id?: string | null;
             criteria?: string | null;
             repo_url?: string | null;
+            color_token?: string | null;
+            short_code?: string | null;
+            /** @description One-line purpose / north star */
+            intent?: string | null;
+            /** @description Who this project serves */
+            personas?: string | null;
+            /** @description What "done" looks like */
+            success_criteria?: string | null;
+            /** @description Where things are now */
+            current_state?: string | null;
+            /** @description Explicit exclusions */
+            out_of_scope?: string | null;
+            /** @description Links, docs, references (markdown) */
+            key_resources?: string | null;
+            /** @description "Start reading here" — files or doc links */
+            entry_points?: string | null;
+            /** @description How it ships, where it runs */
+            deploy_target?: string | null;
+            /** @description Logs / metrics / dashboards */
+            observability?: string | null;
+            /** @description Link to AGENTS.md / CLAUDE.md / style guide */
+            conventions_url?: string | null;
+            /** @description Known gotchas a newcomer would trip on */
+            footguns?: string | null;
+            /** @description What is currently blocking progress */
+            current_blocker?: string | null;
+            /** @description Templated entry points (markdown list) */
+            common_tasks?: string | null;
+            /**
+             * @description How autonomously agents may act on this project: 'none' = read-only, 'propose' = suggest changes for human approval, 'ship' = land changes directly. Null = inherit global default.
+             * @enum {string|null}
+             */
+            autonomy_level?: "none" | "propose" | "ship" | null;
+            synced_at?: string | null;
+            synced_commit?: string | null;
+            repos?: components["schemas"]["ProjectRepo"][] | null;
+        };
+        ProjectState: {
+            project: components["schemas"]["Project"];
+            understanding: {
+                sections: {
+                    name: string;
+                    letter: string;
+                    beliefs: {
+                        id: string;
+                        text: string;
+                        tags: {
+                            key: string;
+                            value: string;
+                        }[];
+                    }[];
+                }[];
+                last_updated: string | null;
+            };
+            epics: {
+                id: string;
+                seq: number;
+                title: string;
+                status: string;
+                blocked_reason: string | null;
+                open_children: {
+                    id: string;
+                    seq: number;
+                    title: string;
+                    ready: boolean;
+                }[];
+                done_children: number;
+                last_touched: string | null;
+                stale: boolean;
+            }[];
+            dispatch: {
+                proposed: {
+                    [key: string]: unknown;
+                }[];
+                in_flight: {
+                    [key: string]: unknown;
+                }[];
+            };
+            pending_proposals: {
+                [key: string]: unknown;
+            }[];
+            recent_activity: {
+                id: number;
+                note_id: string;
+                note_title: string | null;
+                note_seq: number | null;
+                ts: string;
+                actor: string;
+                action: string;
+                from_value: string | null;
+                to_value: string | null;
+                reason: string | null;
+            }[];
+            github_issues: {
+                repo: string;
+                open: number;
+            } | null;
+            agenda: {
+                note_id: string;
+                updated_at: string;
+            } | null;
+            wip: {
+                pending_proposals: number;
+                proposed_dispatches: number;
+                in_flight_dispatches: number;
+                stale_epics: number;
+            };
+        };
+        ListGithubIssuesResponse: {
+            repo: string;
+            issues: components["schemas"]["GithubIssueRow"][];
+        };
+        GithubIssueRow: {
+            number: number;
+            title: string;
+            html_url: string;
+            state: string;
+            labels: string[];
+            created_at: string;
+            updated_at: string;
+            linked: components["schemas"]["LinkedVaultNote"];
+        };
+        LinkedVaultNote: {
+            note_id: string;
+            seq: number | null;
+            status: string;
+            grooming_status: string | null;
+        } | null;
+        PromoteGithubIssueResponse: {
+            /** @enum {boolean} */
+            ok: true;
+            repo: string;
+            number: number;
+        };
+        PromoteGithubIssueBody: {
+            project_id: string;
+            issue_number: number;
+        };
+        UpdateExecutionConfigBody: {
+            value: components["schemas"]["ExecutionConfigValue"];
         };
         Actor: {
             /** @description Slug identifier, e.g. "marvin", "kipper" */
@@ -13687,9 +26219,33 @@ export interface components {
             /** @description Project ID (FK → projects.id) */
             project_id: string;
         };
+        VaultItemProjectCreated: components["schemas"]["VaultItemProject"] & {
+            /** @description Whether this link is the item's primary project */
+            is_primary: boolean;
+        };
         CreateVaultItemProject: {
             vault_item_id: string;
             project_id: string;
+            /** @default false */
+            is_primary: boolean;
+        };
+        Gate: {
+            /** @enum {string} */
+            id: "notifications" | "grooming" | "commission" | "deferred";
+            label: string;
+            current: number;
+            threshold: number;
+            blocked: boolean;
+            reason: string | null;
+            last_moved_at: string | null;
+            blockers: components["schemas"]["GateBlocker"][];
+            detail: string;
+        };
+        GateBlocker: {
+            seq: number | null;
+            note_id: string;
+            title: string | null;
+            since: string;
         };
         VaultItemDependency: {
             /** @description Vault item that must complete first */
@@ -13774,6 +26330,29 @@ export interface components {
             argument_hint?: string;
             /** @description Skill kept around for back-compat but should not be used */
             deprecated?: boolean;
+            /** @description Operator rating 1-5 of the skill's potential value if wired to how work actually happens */
+            potential?: number;
+            /**
+             * @description Lifecycle verdict: keep / refine / wire-ambient / shelve / infra (sub-skill)
+             * @enum {string}
+             */
+            status?: "keep" | "refine" | "wire-ambient" | "shelve" | "infra";
+            /**
+             * @description How the skill is meant to be triggered
+             * @enum {string}
+             */
+            fires_via?: "reactive" | "ambient" | "ritual" | "cron" | "hermes" | "sub-skill";
+            /** @description Short operator note / next action for this skill */
+            verdict?: string;
+        };
+        SkillUsageRow: {
+            skill_id: string;
+            runs: number;
+            completed: number;
+            rejected: number;
+            proposed: number;
+            failed: number;
+            last_run_at: string | null;
         };
         SkillPatchBody: {
             name?: string;
@@ -13785,6 +26364,12 @@ export interface components {
                 produces?: string[];
                 completes_dispatch?: boolean;
                 is_active?: boolean;
+                potential?: number;
+                /** @enum {string} */
+                status?: "keep" | "refine" | "wire-ambient" | "shelve" | "infra";
+                /** @enum {string} */
+                fires_via?: "reactive" | "ambient" | "ritual" | "cron" | "hermes" | "sub-skill";
+                verdict?: string;
             };
             body?: string;
         };
@@ -13799,6 +26384,12 @@ export interface components {
                 produces?: string[];
                 completes_dispatch?: boolean;
                 is_active?: boolean;
+                potential?: number;
+                /** @enum {string} */
+                status?: "keep" | "refine" | "wire-ambient" | "shelve" | "infra";
+                /** @enum {string} */
+                fires_via?: "reactive" | "ambient" | "ritual" | "cron" | "hermes" | "sub-skill";
+                verdict?: string;
             };
             body: string;
         };
@@ -13819,6 +26410,7 @@ export interface components {
         HubModelMetadata: {
             status: components["schemas"]["HubModelStatus"];
             provider: string;
+            inference_provider?: string;
             context_window?: number;
             prices_usd_per_million?: components["schemas"]["HubModelPrices"];
             considered_at?: string;
@@ -13838,6 +26430,7 @@ export interface components {
             metadata?: {
                 status?: components["schemas"]["HubModelStatus"];
                 provider?: string;
+                inference_provider?: string;
                 context_window?: number;
                 prices_usd_per_million?: components["schemas"]["HubModelPrices"];
                 considered_at?: string;
@@ -13981,6 +26574,1028 @@ export interface components {
                     fixtures: components["schemas"]["FootballFixture"][];
                 }[];
             };
+        };
+        FocusSession: {
+            id: string;
+            project_id: string | null;
+            started_at: string;
+            ended_at: string | null;
+            planned_seconds: number;
+            actual_seconds: number | null;
+            /** @enum {string} */
+            status: "running" | "completed" | "abandoned";
+            /** @description -1=bad 0=neutral 1=good */
+            mood: -1 | 0 | 1 | unknown;
+            interrupted: boolean;
+            notes: string | null;
+            tags: string[];
+            activity: components["schemas"]["ActivitySummary"];
+            created_at: string;
+        };
+        ActivitySummary: {
+            tab_switches: number;
+            distinct_domains: number;
+            top_domain: string | null;
+            top_domain_seconds: number;
+            /** @description top_domain_seconds / planned_seconds, clamped */
+            focus_ratio: number;
+            idle_seconds: number;
+            unfocused_seconds: number;
+            domain_breakdown: {
+                domain: string;
+                seconds: number;
+            }[];
+        } | null;
+        StartFocusSession: {
+            /** @description Project slug; omit or null for unassigned focus */
+            project_id?: string | null;
+            /**
+             * @description Planned duration in seconds (1m–8h)
+             * @example 1500
+             */
+            planned_seconds: number;
+            notes?: string;
+            tags?: string[];
+        };
+        ActiveFocusSession: {
+            active: components["schemas"]["FocusSession"] & unknown;
+        };
+        FocusSessionList: {
+            items: components["schemas"]["FocusSession"][];
+        };
+        CompleteFocusSession: {
+            /** @description Reflection captured at end of session */
+            notes?: string;
+            tags?: string[];
+            /** @description -1=bad 0=neutral 1=good */
+            mood?: -1 | 0 | 1;
+            /** @description Mark session as derailed by distractions */
+            interrupted?: boolean;
+        };
+        UpdateFocusSession: {
+            notes?: string | null;
+            tags?: string[];
+            /** @description -1=bad 0=neutral 1=good */
+            mood?: -1 | 0 | 1 | unknown;
+            interrupted?: boolean;
+        };
+        SessionVaultNote: {
+            vault_note_id: string;
+            title: string;
+            status: string;
+            type: string;
+            linked_at: string;
+        };
+        JournalPhoneBundle: {
+            days: {
+                since: string;
+                screen_minutes: number;
+                unlocks: number;
+                notifications: number;
+                media_sessions: number;
+            }[];
+            totals: {
+                screen_minutes: number;
+                unlocks: number;
+                notifications: number;
+                media_sessions: number;
+            };
+        };
+        JournalWorkBundle: {
+            focus_sessions: components["schemas"]["FocusSession"][];
+            code_sessions: components["schemas"]["CodeSession"][];
+            heartbeats: {
+                session_id: string;
+                ts: string;
+            }[];
+            github_pushes: components["schemas"]["TelemetryEvent"][];
+        };
+        CodeSession: {
+            id: string;
+            session_id: string;
+            /** @enum {string} */
+            source: "claude_code" | "cursor" | "aider" | "other";
+            /** @enum {string} */
+            status: "running" | "completed" | "abandoned";
+            started_at: string;
+            ended_at: string | null;
+            duration_minutes: number | null;
+            cwd: string;
+            repo: string | null;
+            branch: string | null;
+            actor: string | null;
+            project_id: string | null;
+            headline: string | null;
+            bullets: string[];
+            narrative: string | null;
+            next_steps: string[];
+            topics: string[];
+            artifacts: components["schemas"]["CodeSessionArtifacts"];
+            friction: components["schemas"]["CodeSessionFriction"];
+            prompting: components["schemas"]["CodeSessionPrompting"];
+            /** @enum {string|null} */
+            outcome: "completed" | "partial" | "abandoned" | "unknown" | null;
+            summary_model: string | null;
+            digest_version: number | null;
+            /** @description Deterministic server-derived tags (session type: build/research/ops; detectors may append) */
+            tags: string[];
+            created_at: string;
+            updated_at: string;
+            /** @description Last Stop-hook heartbeat — the latest evidence of activity; the honest end of a still-running session */
+            last_seen_at: string | null;
+        };
+        CodeSessionArtifacts: {
+            /** @default [] */
+            commits: {
+                sha: string;
+                subject: string;
+            }[];
+            /** @default 0 */
+            files_touched: number;
+            /** @default [] */
+            top_files: string[];
+            /** @default [] */
+            prs: string[];
+            /** @default null */
+            tests_run: boolean | null;
+            /** @default null */
+            tests_passed: boolean | null;
+        };
+        CodeSessionFriction: {
+            /** @description User prompts in the session */
+            turns: number;
+            /** @description Redirects / "no, that's wrong" / restarts */
+            corrections: number;
+            /**
+             * @description Derived from turns + corrections
+             * @enum {string}
+             */
+            level: "low" | "medium" | "high";
+        } | null;
+        CodeSessionPrompting: {
+            /** @default null */
+            prompt_words_median: number | null;
+            /** @default null */
+            prompt_words_max: number | null;
+            /**
+             * @description Share of prompts containing a question
+             * @default null
+             */
+            question_ratio: number | null;
+            /**
+             * @description Median seconds between consecutive human prompts
+             * @default null
+             */
+            median_gap_seconds: number | null;
+            /**
+             * @description Assistant tool calls per human prompt — how much work each prompt buys
+             * @default null
+             */
+            tool_uses_per_prompt: number | null;
+            /**
+             * @description One-sentence LLM observation on prompting style (later tier)
+             * @default null
+             */
+            observation: string | null;
+        } | null;
+        JournalDayBundle: {
+            focus_sessions: components["schemas"]["FocusSession"][];
+            calendar_events: components["schemas"]["CalendarEvent"][];
+            telemetry: components["schemas"]["TelemetryEvent"][];
+            code_sessions: components["schemas"]["CodeSession"][];
+            heartbeats: {
+                session_id: string;
+                ts: string;
+            }[];
+            /** @description Present only when the day held more telemetry than the cap. Events are ordered newest-first, so truncation drops the EARLIEST events — treat anything before `oldest_returned` as unobserved, not as absent. */
+            telemetry_truncated?: {
+                cap: number;
+                total: number;
+                oldest_returned: string;
+            };
+        };
+        JournalProjectShare: {
+            since: string;
+            until: string;
+            /** @description Union across all evidence — overlapping spans count once */
+            desk_minutes: number;
+            projects: {
+                /** @description null = unattributed work */
+                project_id: string | null;
+                minutes: number;
+                /** @description Fraction of summed per-project minutes, 0..1 */
+                share: number;
+            }[];
+        };
+        JournalOverview: {
+            date: string;
+            /** @description How far a live day was measured; null once the day is complete */
+            as_of: string | null;
+            /** @description 0 = Sunday */
+            weekday: number;
+            baseline: {
+                window_same_weekdays: number;
+                min_samples: number;
+                /** @enum {string} */
+                statistic: "median";
+            };
+            metrics: {
+                /** @enum {string} */
+                key: "desk_minutes" | "commits" | "projects_touched" | "focus_sessions";
+                value: number;
+                prev_day: {
+                    value: number;
+                    /** @description Clipped to the same time of day as a live subject day */
+                    truncated: boolean;
+                } | null;
+                /** @description Null when fewer than min_samples prior same-weekdays are available — absent, never zero */
+                baseline: {
+                    value: number;
+                    /** @description Prior same-weekdays with collection coverage for THIS metric — a collector outage can disqualify a day for desk metrics while it still counts for commits */
+                    samples: number;
+                    truncated: boolean;
+                } | null;
+                cumulative: {
+                    week_to_date: number;
+                    month_to_date: number;
+                };
+                /** @description Oldest first, ending with value */
+                series: number[];
+            }[];
+        };
+        DayStream: {
+            day: string;
+            window: {
+                start: string;
+                end: string;
+                cutover_note: string;
+            };
+            generated_at: string;
+            moments: components["schemas"]["DayStreamMoment"][];
+            aggregates: components["schemas"]["DayStreamAggregate"][];
+            signals: components["schemas"]["DayStreamSignal"][];
+            dead_signals: string[];
+        };
+        DayStreamMoment: {
+            ts: string;
+            /** @description End of a span; null for point events */
+            ts_end: string | null;
+            /** @description Contributor id — join key into signals[] */
+            source: string;
+            /** @enum {string} */
+            category: "work" | "body" | "state" | "consumption" | "fleet" | "schedule" | "vault";
+            /** @description Discriminator within a source, e.g. walk, code_session, commit */
+            kind: string;
+            title: string;
+            detail: string | null;
+            project_id: string | null;
+            value: number | null;
+            unit: string | null;
+            meta: {
+                [key: string]: unknown;
+            };
+        };
+        DayStreamAggregate: {
+            source: string;
+            /** @enum {string} */
+            category: "work" | "body" | "state" | "consumption" | "fleet" | "schedule" | "vault";
+            key: string;
+            label: string;
+            value: number | null;
+            unit: string | null;
+        };
+        DayStreamSignal: {
+            id: string;
+            label: string;
+            /** @enum {string} */
+            category: "work" | "body" | "state" | "consumption" | "fleet" | "schedule" | "vault";
+            /** @enum {string} */
+            mode: "moments" | "aggregate";
+            /**
+             * @description live = produced today; quiet = producer healthy but the day holds nothing; dead = silent past its cadence, or no producer wired. Rendering dead as 0 is how a broken collector goes unnoticed.
+             * @enum {string}
+             */
+            status: "live" | "quiet" | "dead";
+            count: number;
+            last_seen: string | null;
+            stale_days: number | null;
+            note: string | null;
+        };
+        StartCodeSession: {
+            /** @description Agent session id; upsert/idempotency key */
+            session_id: string;
+            /**
+             * @default claude_code
+             * @enum {string}
+             */
+            source: "claude_code" | "cursor" | "aider" | "other";
+            /** Format: date-time */
+            started_at: string;
+            /** @description Absolute working dir; used for project resolution */
+            cwd: string;
+            /** @description Git remote slug, e.g. marvinbarretto/collectr */
+            repo?: string | null;
+            branch?: string | null;
+            /** @description null/absent = Marvin's interactive session; 'boris'/'kipper' = automated executor */
+            actor?: string | null;
+        };
+        CompleteCodeSession: {
+            /** Format: date-time */
+            ended_at: string;
+            /**
+             * @default completed
+             * @enum {string}
+             */
+            status: "completed" | "abandoned";
+            /**
+             * @default unknown
+             * @enum {string}
+             */
+            outcome: "completed" | "partial" | "abandoned" | "unknown";
+            headline: string;
+            /** @default [] */
+            bullets: string[];
+            /** @description A few sentences of prose; grounding context for Jimbo */
+            narrative?: string | null;
+            /**
+             * @description Open threads left unfinished
+             * @default []
+             */
+            next_steps: string[];
+            /**
+             * @description Normalised tags for grouping/search
+             * @default []
+             */
+            topics: string[];
+            artifacts: components["schemas"]["CodeSessionArtifacts"];
+            friction: components["schemas"]["CodeSessionFriction"];
+            prompting?: components["schemas"]["CodeSessionPrompting"];
+            summary_model?: string | null;
+            digest_version?: number | null;
+            /** @description Directory holding most files touched this session (absolute); completion-time attribution evidence */
+            dominant_cwd?: string | null;
+            /** @description Remote slug of the dominant directory's repo, e.g. marvinbarretto/collectr */
+            dominant_repo?: string | null;
+        };
+        LiveStatus: {
+            /** @description Server clock (ISO) */
+            now: string;
+            generated_at: string;
+            focus: {
+                /** @enum {string} */
+                source: "claude_code" | "cursor" | "aider" | "other";
+                project: string | null;
+                repo: string | null;
+                session_started: string;
+                minutes_elapsed: number;
+                headline: string | null;
+                /** @enum {string|null} */
+                friction: "low" | "medium" | "high" | null;
+                /** @description null = Marvin's interactive session; 'boris'/'kipper' = automated executor — never treat as human focus */
+                actor: string | null;
+                /** @description True if this session's started_at predates today's logical-day boundary — it's a carried-over/stray session, not evidence of continuous focus today */
+                started_before_today: boolean;
+            } | null;
+            today: {
+                code_sessions: number;
+                /** @description Primary "real work" signal; not pomodoro-dependent */
+                code_minutes: number;
+                projects_touched: string[];
+                /** @description From github push telemetry only. Reads 0 whenever the poller is down, which is indistinguishable from a genuinely commitless day — /api/journal/day-stream unions this with code_sessions.artifacts and reports source health. */
+                commits: number;
+                tasks_completed: number;
+                /** @description Vault notes with type='task' created today. NOT the same as the day-report draft's tasks_created, which counts every note type. */
+                tasks_created: number;
+                pomo_sessions: number;
+                /** @description Always 0 — the activities table has no writer. See /api/journal/day-stream signals[] for source health. */
+                activity_entries: number;
+                /** @description From pomo retros (-1..1); null if no pomos. This is NOT the mood check-in answer — see `mood`. */
+                mood_avg: number | null;
+                /** @description Average of today's answered mood check-ins (1-5); null if none answered */
+                mood: number | null;
+                /** @description Average of today's answered energy check-ins (1-3); null if none answered */
+                energy: number | null;
+                /** @description Mood/energy nudges answered today */
+                checkins_answered: number;
+                /** @enum {string|null} */
+                friction: "low" | "medium" | "high" | null;
+                steps: number | null;
+                /** @description Mapped from health_connect/calories_total */
+                active_calories: number | null;
+                /** @description Best-effort; null when no sleep_session that night */
+                sleep_hours: number | null;
+            };
+            briefing: {
+                /** @description Raw text from today's briefing day_plan window */
+                plan_for_now: string | null;
+                /**
+                 * @description v1: cheap heuristic only — does focus.project match a project named in the plan window? No LLM verdict.
+                 * @enum {string}
+                 */
+                against_plan: "on-track" | "off-track" | "unknown";
+            };
+            blockers: components["schemas"]["LiveStatusBlocker"][];
+            dispatch_pulse: {
+                waiting_on_marvin: number;
+                running: number;
+                completed_today: number;
+                failed: number;
+            };
+            vault_pulse: {
+                inbox_count: number;
+                overdue: number;
+                ready: number;
+                /** @description Completed/day, trailing 7d */
+                velocity_7d: number;
+            };
+            /** @description Live Google Calendar; served from a short server-side cache to avoid per-poll round-trips */
+            upcoming: {
+                time: string;
+                title: string;
+                /** @enum {string} */
+                source: "calendar";
+                in_minutes: number;
+            }[];
+            delta: {
+                since: string;
+                /** @description Derived = OR of the populated delta fields; never set independently. Fast-path for the check-in cron. */
+                has_changes: boolean;
+                /** @description True if a code_session started OR ended since `since` (server keeps no prior-focus snapshot to diff against) */
+                focus_changed: boolean;
+                new_code_sessions: number;
+                /** @description note_ids with completed_at in (since, now] */
+                tasks_completed: string[];
+                /** @description note_ids with created_at in (since, now] */
+                tasks_created: string[];
+                /** @description friction: code_sessions since `since`; overdue: due_at crossed in (since, now]; dependency: created since */
+                new_blockers: components["schemas"]["LiveStatusBlocker"][];
+            } | null;
+        };
+        LiveStatusBlocker: {
+            /** @enum {string} */
+            type: "overdue";
+            note_id: string;
+            title: string;
+            days_overdue: number;
+        } | {
+            /** @enum {string} */
+            type: "dependency";
+            note_id: string;
+            title: string;
+            blocked_by: string;
+        } | {
+            /** @enum {string} */
+            type: "friction";
+            session_id: string;
+            title: string;
+        };
+        StateIndex: {
+            generated_at: string;
+            service: string;
+            read_this_first: string;
+            answers: components["schemas"]["StateAnswer"][];
+            /** @description Live conditions an agent must know before quoting anything — dormant instruments, closed gates, sensors that have stopped writing. */
+            warnings: string[];
+            instrument_summary: {
+                total: number;
+                contaminated: number;
+                dormant: number;
+            };
+        };
+        StateAnswer: {
+            /** @description Phrased as the question an agent actually has. */
+            question: string;
+            endpoint: string;
+            mcp_tool: string | null;
+            freshness: string | null;
+            notes: string | null;
+        };
+        InstrumentsReport: {
+            generated_at: string;
+            summary: {
+                total: number;
+                reliable: number;
+                caveated: number;
+                contaminated: number;
+                dormant: number;
+            };
+            instruments: components["schemas"]["Instrument"][];
+        };
+        Instrument: {
+            key: string;
+            label: string;
+            table: string;
+            rows: number | null;
+            last_write: string | null;
+            days_stale: number | null;
+            /**
+             * @description Who produces the rows. The single most useful field here: every loop that requires a human write has lapsed, every loop that captures silently is enormous. Do not read an agent-written table as evidence about Marvin.
+             * @enum {string}
+             */
+            writer: "human" | "agent" | "device" | "import" | "mixed";
+            /**
+             * @description Expected write rhythm. `dormant` is derived by comparing days_stale against this.
+             * @enum {string}
+             */
+            cadence: "continuous" | "daily" | "session" | "one-off";
+            /**
+             * @description reliable — read it at face value. caveated — usable, but the caveats change the interpretation. contaminated — the headline count means something other than it appears to; read `caveats` and `use_instead` before quoting any number from it.
+             * @enum {string}
+             */
+            trust: "reliable" | "caveated" | "contaminated";
+            /** @description Derived: stale well past its expected cadence. */
+            dormant: boolean;
+            caveats: string[];
+            /** @description Where to get the honest version of what this table appears to offer. */
+            use_instead: string | null;
+            /** @description Set when liveness could not be read. */
+            error: string | null;
+        };
+        PipelineReport: {
+            generated_at: string;
+            window_weeks: number;
+            lanes: components["schemas"]["Lane"][];
+            warnings: string[];
+        };
+        Lane: {
+            lane: string;
+            description: string;
+            gate: components["schemas"]["Gate"];
+            /** @description What is actually counted as output. Named explicitly because the obvious column is the wrong one: dispatch status="completed" fires when the agent exits, not when anything shipped. */
+            output_event: string;
+            weeks: components["schemas"]["LaneWeek"][];
+            totals: {
+                intake: components["schemas"]["Metric"];
+                started: components["schemas"]["Metric"] & unknown;
+                output: components["schemas"]["Metric"];
+                wip: components["schemas"]["Metric"];
+                lead_time_weeks: components["schemas"]["Metric"];
+                conversion: components["schemas"]["Metric"];
+            };
+        };
+        LaneWeek: {
+            /** @description ISO date, Monday of the ISO week. */
+            week_start: string;
+            intake: number;
+            /** @description Reached the terminal event — merged, or task done. */
+            output: number;
+            /** @description Pull requests opened, merged or not. */
+            opened: number;
+        };
+        Metric: {
+            /** @description null whenever state is not "measured". */
+            value: number | null;
+            /**
+             * @description measured — a real reading. not_applicable — the channel cannot exist for this subject (a non-code goal has no commits). not_measured — the instrument exists but has never covered this. gated — deliberately switched off; `gate` carries since/reason. Only `measured` values may be quoted as fact.
+             * @enum {string}
+             */
+            state: "measured" | "not_applicable" | "not_measured" | "gated";
+            /** @description Denominator the value was computed over. */
+            n: number | null;
+            /** @description ISO timestamp of the newest row behind this value. */
+            as_of: string | null;
+            note: string | null;
+        };
+        ValvesReport: {
+            generated_at: string;
+            note: string;
+            valves: components["schemas"]["Valve"][];
+        };
+        Valve: {
+            key: string;
+            label: string;
+            /** @enum {string} */
+            type: "bool" | "int" | "enum" | "string_array";
+            /** @enum {string} */
+            lane: "groom" | "commission";
+            master: boolean;
+            value: string;
+            /** @description True when no settings row exists and the fallback is in force. */
+            is_default: boolean;
+            min: number | null;
+            max: number | null;
+            options: string[] | null;
+            description: string;
+        };
+        SetValvesResult: {
+            applied: {
+                key: string;
+                from: string;
+                to: string;
+            }[];
+            rejected: {
+                key: string;
+                reason: string;
+            }[];
+            valves: components["schemas"]["Valve"][];
+        };
+        SetValvesRequest: {
+            /** @description Map of valve key to new value. Unknown keys are rejected rather than written. */
+            changes: {
+                [key: string]: string | number | boolean | string[];
+            };
+        };
+        ReconcileResult: {
+            checked: number;
+            updated: {
+                dispatch_id: number;
+                pr_url: string;
+                from: string | null;
+                to: string;
+            }[];
+            unreachable: {
+                dispatch_id: number;
+                pr_url: string;
+                reason: string;
+            }[];
+            note: string;
+        };
+        GymMuscleGroup: {
+            id: number;
+            name: string;
+        };
+        GymExercise: {
+            id: string;
+            /** @enum {string} */
+            source: "system" | "user";
+            name: string;
+            primary_muscle_group: number | null;
+            description: string | null;
+            /** @enum {string|null} */
+            movement_type: "compound" | "isolation" | null;
+            /** @enum {string|null} */
+            equipment_type: "machine" | "free_weight" | "cable" | "bodyweight" | "cardio" | null;
+            secondary_muscle_groups: number[];
+            created_at: string;
+        };
+        CreateGymExercise: {
+            name: string;
+            primary_muscle_group?: number;
+            description?: string;
+            /** @enum {string} */
+            movement_type?: "compound" | "isolation";
+            /** @enum {string} */
+            equipment_type?: "machine" | "free_weight" | "cable" | "bodyweight" | "cardio";
+            /** @default [] */
+            secondary_muscle_groups: number[];
+        };
+        UpdateGymExercise: {
+            name?: string;
+            primary_muscle_group?: number | null;
+            description?: string | null;
+            /** @enum {string|null} */
+            movement_type?: "compound" | "isolation" | null;
+            /** @enum {string|null} */
+            equipment_type?: "machine" | "free_weight" | "cable" | "bodyweight" | "cardio" | null;
+            secondary_muscle_groups?: number[];
+        };
+        GymUserGym: {
+            id: string;
+            name: string;
+            location: string | null;
+            notes: string | null;
+            created_at: string;
+        };
+        CreateGymUserGym: {
+            name: string;
+            location?: string;
+            notes?: string;
+        };
+        UpdateGymUserGym: {
+            name?: string;
+            location?: string | null;
+            notes?: string | null;
+        };
+        GymEquipment: {
+            id: string;
+            gym_id: string;
+            name: string;
+            /** @enum {string} */
+            type: "machine" | "free_weight" | "cable" | "bodyweight" | "cardio";
+            description: string | null;
+            photo_url: string | null;
+            created_at: string;
+        };
+        CreateGymEquipment: {
+            gym_id: string;
+            name: string;
+            /** @enum {string} */
+            type: "machine" | "free_weight" | "cable" | "bodyweight" | "cardio";
+            description?: string;
+            photo_url?: string;
+        };
+        UpdateGymEquipment: {
+            name?: string;
+            /** @enum {string} */
+            type?: "machine" | "free_weight" | "cable" | "bodyweight" | "cardio";
+            description?: string | null;
+            photo_url?: string | null;
+        };
+        GymProfile: {
+            /** @enum {string} */
+            id: "me";
+            display_name: string | null;
+            height_cm: number | null;
+            weight_kg: number | null;
+            date_of_birth: string | null;
+            fitness_goal: string | null;
+            /** @enum {string|null} */
+            experience_level: "beginner" | "intermediate" | "advanced" | null;
+            created_at: string;
+            updated_at: string;
+        };
+        UpdateGymProfile: {
+            display_name?: string | null;
+            height_cm?: number | null;
+            weight_kg?: number | null;
+            date_of_birth?: string | null;
+            fitness_goal?: string | null;
+            /** @enum {string|null} */
+            experience_level?: "beginner" | "intermediate" | "advanced" | null;
+        };
+        GymBodyMetric: {
+            id: string;
+            metric: string;
+            value: number;
+            measured_at: string;
+            source: string;
+            notes: string | null;
+            created_at: string;
+        };
+        CreateGymBodyMetric: {
+            /** @default weight_kg */
+            metric: string;
+            value: number;
+            /**
+             * Format: date-time
+             * @description ISO timestamp; defaults to now. Set to backdate a retrospective reading.
+             */
+            measured_at?: string;
+            /** @description telegram | in_app | manual (default manual) */
+            source?: string;
+            notes?: string;
+        };
+        GymBodyMetricList: {
+            items: components["schemas"]["GymBodyMetric"][];
+        };
+        GymBodyMetricDailyResponse: {
+            days: components["schemas"]["GymBodyMetricDailyRow"][];
+        };
+        GymBodyMetricDailyRow: {
+            date: string;
+            value: number;
+            count: number;
+        };
+        UpdateGymBodyMetric: {
+            value?: number;
+            /** Format: date-time */
+            measured_at?: string;
+            notes?: string | null;
+        };
+        GymSession: {
+            id: string;
+            started_at: string;
+            ended_at: string | null;
+            pre_energy: number | null;
+            notes: string | null;
+            vault_note_id: string | null;
+            created_at: string;
+        };
+        CreateGymSession: {
+            /** Format: date-time */
+            started_at?: string;
+            pre_energy?: number;
+            notes?: string;
+        };
+        GymDailyResponse: {
+            days: components["schemas"]["GymDailyRow"][];
+        };
+        GymDailyRow: {
+            date: string;
+            sessions: number;
+            sets: number;
+            total_reps: number;
+            volume_kg: number;
+            cardio_count: number;
+            cardio_duration_s: number;
+            cardio_distance_km: number;
+        };
+        GymSessionDetailedList: {
+            items: components["schemas"]["GymSessionDetailed"][];
+        };
+        GymSessionDetailed: components["schemas"]["GymSession"] & {
+            sets: components["schemas"]["GymSessionSetDetailed"][];
+            cardio: components["schemas"]["GymSessionCardioDetailed"][];
+        };
+        GymSessionSetDetailed: components["schemas"]["GymSessionSet"] & {
+            exercise_name: string | null;
+        };
+        GymSessionSet: {
+            id: string;
+            session_id: string;
+            exercise_id: string;
+            set_number: number;
+            /** @description How many identical sets this row represents (e.g. 2 = "2 × 10 × 25kg") */
+            sets: number;
+            reps: number | null;
+            weight_kg: number | null;
+            rpe: number | null;
+            duration_s: number | null;
+            notes: string | null;
+            created_at: string;
+        };
+        GymSessionCardioDetailed: components["schemas"]["GymSessionCardio"] & {
+            exercise_name: string | null;
+        };
+        GymSessionCardio: {
+            id: string;
+            session_id: string;
+            exercise_id: string;
+            duration_s: number | null;
+            distance_km: number | null;
+            avg_heart_rate: number | null;
+            notes: string | null;
+            created_at: string;
+        };
+        GymSessionHistoryList: {
+            items: components["schemas"]["GymSessionHistoryItem"][];
+        };
+        GymSessionHistoryItem: {
+            id: string;
+            started_at: string;
+            /** @description Logged order (created_at ASC); never empty — set-less sessions are omitted */
+            sets: components["schemas"]["GymSessionHistorySet"][];
+        };
+        GymSessionHistorySet: {
+            exercise_id: string;
+            /** @description How many identical sets this row represents */
+            sets: number;
+            reps: number | null;
+            weight_kg: number | null;
+            rpe: number | null;
+        };
+        GymActivityResponse: {
+            days: components["schemas"]["GymActivityRow"][];
+        };
+        GymActivityRow: {
+            date: string;
+            steps: number;
+            distance_km: number;
+            kcal: number;
+        };
+        GymSessionDetail: components["schemas"]["GymSession"] & {
+            sets: components["schemas"]["GymSessionSet"][];
+            cardio: components["schemas"]["GymSessionCardio"][];
+        };
+        UpdateGymSession: {
+            /** Format: date-time */
+            started_at?: string;
+            ended_at?: string | null;
+            pre_energy?: number | null;
+            notes?: string | null;
+            vault_note_id?: string | null;
+        };
+        CreateGymSessionSet: {
+            exercise_id: string;
+            set_number: number;
+            /** @default 1 */
+            sets: number;
+            reps?: number;
+            weight_kg?: number;
+            rpe?: number;
+            duration_s?: number;
+            notes?: string;
+        };
+        CreateGymSessionCardio: {
+            exercise_id: string;
+            duration_s?: number;
+            distance_km?: number;
+            avg_heart_rate?: number;
+            notes?: string;
+        };
+        UpdateGymSessionSet: {
+            exercise_id?: string;
+            set_number?: number;
+            sets?: number;
+            reps?: number | null;
+            weight_kg?: number | null;
+            rpe?: number | null;
+            duration_s?: number | null;
+            notes?: string | null;
+        };
+        UpdateGymSessionCardio: {
+            exercise_id?: string;
+            duration_s?: number | null;
+            distance_km?: number | null;
+            avg_heart_rate?: number | null;
+            notes?: string | null;
+        };
+        DiscordNotifyResponse: {
+            /** @description The posted message id, or null if DISCORD_BOT_TOKEN is unset or the post failed — always 200 either way, since this is best-effort */
+            message_id: string | null;
+        };
+        DiscordNotifyBody: {
+            /** @description Raw Discord channel id (see hub/hermes/channels.yaml for the alias registry) */
+            channel_id: string;
+            content: string;
+        };
+        ArtistEnrichResponse: {
+            spotify: components["schemas"]["SpotifyMatch"];
+            youtube: components["schemas"]["YoutubeMatch"];
+        };
+        SpotifyMatch: {
+            name: string;
+            url: string;
+            genres: string[];
+            popularity: number;
+        } | null;
+        YoutubeMatch: {
+            videoId: string;
+            title: string;
+            channelTitle: string;
+            url: string;
+        } | null;
+        PublishReportResponse: {
+            /** @description Canonical per-post URL — surface this to the caller. */
+            report_url: string;
+            post_url: string;
+            tag_url: string;
+            filename: string;
+            slug: string;
+            date: string;
+        };
+        PublishReportBody: {
+            /** @description Report headline — also the cairn post title and slug source. */
+            title: string;
+            /** @description Markdown body. No frontmatter needed — it is assembled here; a leading frontmatter block and/or leading H1 in the body is stripped. */
+            body: string;
+            /** @description Topic tags (array, or a comma-joined string). 'report' is always added. */
+            tags?: string[] | string;
+            /** @description Publish date YYYY-MM-DD. Defaults to today (UTC). */
+            date?: string;
+            /** @description Frontmatter description. Defaults to the title. */
+            description?: string;
+            /** @description Provenance label for the preamble, e.g. "a draft" or "a research report". */
+            kind?: string;
+        };
+        NotifyResponse: {
+            ok: boolean;
+            /** @description false when the platform credentials are unset or the send failed (both are no-ops) */
+            delivered: boolean;
+            /** @description Telegram message id, for callers that need to correlate a reply. Always null for Discord targets — see discord_message_id. */
+            message_id: number | null;
+            /** @description The alias the message was routed to */
+            channel: string;
+            /**
+             * @description Where it actually went
+             * @enum {string}
+             */
+            platform: "telegram" | "discord";
+            /** @description Discord message id (a snowflake, hence string). Always null for Telegram targets. */
+            discord_message_id: string | null;
+        };
+        NotifyBody: {
+            /** @description Message text (Telegram caps at 4096 chars) */
+            text: string;
+            /**
+             * @description Telegram parse mode; omit for plain text. Ignored on Discord, which renders markdown natively.
+             * @enum {string}
+             */
+            parse_mode?: "HTML" | "Markdown";
+            /** @description Who is pinging (e.g. a skill id) — prefixed onto the message so Marvin knows the sender */
+            source?: string;
+            /** @description Alias from hermes channels.yaml (e.g. "jimbo-insights", "jimbo-system", "project-localshout"). Defaults to "marvin-personal" — Marvin's phone — so consult channels.yaml's decision_rules before omitting it: analytical reports and passive info with no required action belong on Discord. */
+            channel?: string;
+        };
+        ModuleDocListResponse: {
+            /** @description Short HEAD commit of the serving checkout, null if git unavailable */
+            head: string | null;
+            items: components["schemas"]["ModuleDocSummary"][];
+        };
+        ModuleDocSummary: {
+            module: string;
+            repo: string;
+            description: string;
+            generated_at: string | null;
+            /** @description section slug → "derived" | "asserted" */
+            sections: {
+                [key: string]: string;
+            };
+            source_paths: string[];
+            staleness: components["schemas"]["ModuleDocStaleness"];
+        };
+        ModuleDocStaleness: {
+            /** @enum {string} */
+            status: "fresh" | "stale" | "unknown";
+            reviewed_commit: string | null;
+            commits_behind: number | null;
+            /** @description "<hash> <subject>" lines since reviewed_commit touching source_paths */
+            commits: string[];
+            changed_files: string[];
+        };
+        ModuleDoc: components["schemas"]["ModuleDocSummary"] & {
+            /** @description Markdown body without frontmatter */
+            body: string;
         };
     };
     responses: never;
