@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.187](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.186...v0.0.187) (2026-08-25)
+
+
+### Features
+
+* **journal:** add work realised and the supporting strips ([27c1cf1](https://github.com/marvinbarretto/jimbo-dashboard/commit/27c1cf1315a930762ece871d4a2eae97049affd9))
+* **journal:** chart the day's shape against a typical one ([d2ab71a](https://github.com/marvinbarretto/jimbo-dashboard/commit/d2ab71aafc2300c889c54c53c8afbda64d71453e))
+* **journal:** lead Overview with metrics that carry their context ([69d30ab](https://github.com/marvinbarretto/jimbo-dashboard/commit/69d30abcd9f99af5b620f16419956604c6d9ebd9))
+* **ui:** add metric, delta and sparkline primitives ([43c7957](https://github.com/marvinbarretto/jimbo-dashboard/commit/43c79577c6b6e7367c17e50e665d89f76a933b25))
+* **ui:** give subhead a trailing meta qualifier ([09c2d63](https://github.com/marvinbarretto/jimbo-dashboard/commit/09c2d63a5e5c37ee335bb2558f62ad09d614bb33))
+* **vault:** add the `settled` terminal grooming state ([bae2aad](https://github.com/marvinbarretto/jimbo-dashboard/commit/bae2aade85ce76312993d226008e1d2f9c2ee3c9))
+
+
+### Bug Fixes
+
+* **fleet:** grade failure notification tone by retry-cap proximity ([212dabe](https://github.com/marvinbarretto/jimbo-dashboard/commit/212dabe95435f44747a2f389739ae08360df9ebc))
+
+
+### Code Refactoring
+
+* **journal:** fold evening in as the Reflect domain ([01932f7](https://github.com/marvinbarretto/jimbo-dashboard/commit/01932f7ec8fd6bd2669fa1625c4e1d1815d0ac65))
+* **journal:** move the drill-ins off Overview ([5095301](https://github.com/marvinbarretto/jimbo-dashboard/commit/5095301ac7583d1f2bc19e1e15117fe1fe3a6351))
+
 ### [0.0.186](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.185...v0.0.186) (2026-08-24)
 
 
