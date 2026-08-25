@@ -185,6 +185,7 @@ const desktopRoutes: Routes = [
     loadComponent: () => import('./features/ui-lab/ui-lab-shell').then(m => m.UiLabShell),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'library-surface' },
+      { path: 'metric',                   loadComponent: () => import('./features/ui-lab/sections/metric-section').then(m => m.MetricSection) },
       { path: 'library-surface',        loadComponent: () => import('./features/ui-lab/sections/library-surface-section').then(m => m.LibrarySurfaceSection) },
       { path: 'toggle',                  loadComponent: () => import('./features/ui-lab/sections/toggle-section').then(m => m.ToggleSection) },
       { path: 'entity-chip',             loadComponent: () => import('./features/ui-lab/sections/entity-chip-section').then(m => m.EntityChipSection) },

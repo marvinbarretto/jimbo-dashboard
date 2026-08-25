@@ -6,6 +6,7 @@ export type LabGroup =
   | 'overview'
   | 'identity'
   | 'cards'
+  | 'data-display'
   | 'forms-editing'
   | 'detail-surfaces'
   | 'utilities'
@@ -23,6 +24,7 @@ const GROUP_ORDER: readonly LabGroup[] = [
   'overview',
   'identity',
   'cards',
+  'data-display',
   'forms-editing',
   'detail-surfaces',
   'utilities',
@@ -33,6 +35,7 @@ const GROUP_LABEL: Record<LabGroup, string> = {
   'overview':         'Overview',
   'identity':         'Identity',
   'cards':            'Cards',
+  'data-display':     'Data Display',
   'forms-editing':    'Forms & Editing',
   'detail-surfaces':  'Detail Surfaces',
   'utilities':        'Utilities',
@@ -70,6 +73,9 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'item-header',             name: 'Item Header',           group: 'cards',           selector: 'app-item-header',       description: 'Shared identity strip — project avatar + priority + owner + time-or-epic + optional lock. Used by both app-block-card and app-vault-card so the same kind of thing reads the same way everywhere.' },
 
   // Forms & editing — input controls and form chrome
+  // Data display
+  { id: 'metric',                  name: 'Metric, Delta & Sparkline', group: 'data-display', selector: 'app-ui-metric',         description: 'A number with its context attached — near comparison, baseline, cumulative, recent shape. The answer to "is today normal"; distinct from Stat Card, which states a fact rather than a measurement.' },
+
   { id: 'ui-button',               name: 'Button',                group: 'forms-editing',   selector: 'app-ui-button',         description: 'Button primitives — UiButton (action) and UiButtonLink (navigation) sharing one visual contract.' },
   { id: 'app-icon',                name: 'Icon',                  group: 'forms-editing',   selector: 'app-icon',              description: 'Single primitive over lucide-angular. Curated semantic names, currentColor strokes.' },
   { id: 'ui-add-tile',             name: 'Add Tile',              group: 'forms-editing',   selector: 'app-ui-add-tile',       description: 'Dashed-outline tile that sits at the end of a card grid as the "+ Add" affordance.' },
