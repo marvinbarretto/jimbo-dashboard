@@ -36,8 +36,9 @@ const CHECK_PRIORITY: readonly ReadinessCheckKey[] = [
 // actors driving different transitions — naming the actual blocked move ("your
 // approval", "decomposition") is more useful to the operator than the column name
 // ("grooming (decomposed)"). `ready` doesn't appear because readiness.verdict
-// short-circuits before this map is consulted.
-const GROOMING_NEXT_MOVE: Record<Exclude<GroomingStatus, 'ready'>, string> = {
+// short-circuits before this map is consulted, and neither does `settled` — both
+// are terminal, so nothing is pending on them.
+const GROOMING_NEXT_MOVE: Record<Exclude<GroomingStatus, 'ready' | 'settled'>, string> = {
   ungroomed:        'intake review',
   intake_rejected:  'questions to be answered',
   intake_complete:  'classification',
@@ -57,6 +58,9 @@ function waitingLabel(key: ReadinessCheckKey, item: VaultItem, readiness: Readin
     case 'grooming_complete': {
       const status = item.grooming_status;
       if (status === 'ready') return 'review'; // defensive — shouldn't reach here when ready
+      // A reference item or an epic is not waiting on grooming; it has left the
+      // pipeline for good. Same defensive shape as `ready` above.
+      if (status === 'settled') return 'nothing — settled out of the pipeline';
       return GROOMING_NEXT_MOVE[status];
     }
     case 'acceptance_criteria':

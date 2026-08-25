@@ -80,7 +80,8 @@ export type GroomingStatus =
   | 'intake_complete'    // intake-quality accepted; ready for classification
   | 'classified'         // vault-classify ran; priority/confidence/actionability set
   | 'decomposed'         // vault-decompose ran; subtasks + acceptance criteria drafted
-  | 'ready';             // marvin approved the decomposition; dispatchable
+  | 'ready'              // marvin approved the decomposition; dispatchable
+  | 'settled';           // terminal: a reference kind or an epic — finished, not un-ready
 
 // Canonical left-to-right column order for kanban views. `satisfies` ensures every
 // GroomingStatus value appears exactly once — adding a new state to the union without
@@ -93,6 +94,11 @@ export const GROOMING_STATUS_ORDER = [
   'classified',
   'decomposed',
   'ready',
+  // Rightmost, past Ready: `settled` is the other way out of the pipeline. A
+  // reference note or an epic can never be `ready` — no answer makes a container
+  // or a bookmark dispatchable — so the gate used to re-ask forever. Settled is
+  // where those land. See jimbo-api 20260825110000_grooming_status_settled.sql.
+  'settled',
 ] as const satisfies readonly GroomingStatus[];
 
 // Display labels for column headers. Kept here so the kanban and any other
@@ -105,6 +111,7 @@ export const GROOMING_STATUS_LABELS: Record<GroomingStatus, string> = {
   classified:       'Classified',
   decomposed:       'Decomposed',
   ready:            'Ready',
+  settled:          'Settled',
 };
 
 // Per-column empty-state copy for the kanban. Status-specific lines read better
@@ -118,6 +125,7 @@ export const GROOMING_EMPTY_LABELS: Record<GroomingStatus, string> = {
   classified:       'Nothing classified yet',
   decomposed:       'Nothing in draft',
   ready:            'No ready items',
+  settled:          'Nothing settled',
 };
 
 // Priority as integer to match hermes and the jimbo-api storage.

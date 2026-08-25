@@ -48,9 +48,12 @@ describe('isActive / isDone / isArchived', () => {
 });
 
 describe('GROOMING_STATUS_ORDER', () => {
-  it('starts with needs_rework and ends with ready', () => {
+  it('starts with needs_rework and ends with the two terminal states', () => {
     expect(GROOMING_STATUS_ORDER[0]).toBe('needs_rework');
-    expect(GROOMING_STATUS_ORDER[GROOMING_STATUS_ORDER.length - 1]).toBe('ready');
+    // Two ways out of the pipeline, both at the right-hand end: `ready` for work
+    // that will be dispatched, `settled` for items that can never be ready at
+    // all — a reference kind or a container.
+    expect(GROOMING_STATUS_ORDER.slice(-2)).toEqual(['ready', 'settled']);
   });
 
   it('has a label for every status', () => {

@@ -91,6 +91,10 @@ function groomingActions(ctx: GroomingCardContext): CardAction[] {
     case 'ready':
       // Passive — pump claims it. No actions needed.
       return [];
+    case 'settled':
+      // Terminal: reference material or a container. Nothing to groom, but it
+      // can still be filed away.
+      return [archive];
   }
 }
 

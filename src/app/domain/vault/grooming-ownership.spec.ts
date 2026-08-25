@@ -7,7 +7,7 @@ const kipper = wellKnownActorId('kipper');
 const marvin = wellKnownActorId('marvin');
 
 describe('OWNER_BY_GROOMING_STATE', () => {
-  it('maps every state — boris/kipper for skill states, marvin for approvals, null for ready', () => {
+  it('maps every state — boris/kipper for skill states, marvin for approvals, null for the terminal ones', () => {
     expect(OWNER_BY_GROOMING_STATE).toEqual({
       ungroomed:        boris,
       intake_rejected:  marvin,
@@ -16,6 +16,7 @@ describe('OWNER_BY_GROOMING_STATE', () => {
       decomposed:       marvin,
       needs_rework:     marvin,
       ready:            null,
+      settled:          null,
     });
   });
 });

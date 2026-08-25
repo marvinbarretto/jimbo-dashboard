@@ -13,6 +13,7 @@ import type { GroomingStatus } from './vault-item';
 //   decomposed        → marvin  (approves the decomposition)
 //   needs_rework      → marvin  (decides where the rework goes)
 //   ready             → null    (keep current owner; dispatcher picks executor)
+//   settled           → null    (terminal; nobody is working it, owner is history)
 //
 // `null` means "transition does not force a reassignment". The current owner
 // stays put. Used for `ready`, which is the handoff to the dispatch queue.
@@ -24,6 +25,9 @@ export const OWNER_BY_GROOMING_STATE: Record<GroomingStatus, ActorId | null> = {
   decomposed:       wellKnownActorId('marvin'),
   needs_rework:     wellKnownActorId('marvin'),
   ready:            null,
+  // Terminal. A reference item or an epic has left the pipeline — reassigning it
+  // would imply someone still owes work on it. Keep whoever last held it.
+  settled:          null,
 };
 
 // Given a state and the current owner, returns the actor who SHOULD own the

@@ -54,6 +54,8 @@ const ITEM_AC = vaultItemId('88888888-0016-0016-0016-000000000016');
 const ITEM_AD = vaultItemId('88888888-0017-0017-0017-000000000017');
 const ITEM_AE = vaultItemId('88888888-0018-0018-0018-000000000018');
 const ITEM_AF = vaultItemId('88888888-0019-0019-0019-000000000019');
+// AG: the `settled` column — a reference item that left the pipeline.
+const ITEM_AG = vaultItemId('88888888-0020-0020-0020-000000000020');
 
 export const VAULT_ITEM_IDS = {
   A: ITEM_A,  B: ITEM_B,  C: ITEM_C,  D: ITEM_D,
@@ -473,6 +475,30 @@ export const VAULT_ITEMS = [
     created_at: '2026-04-23T11:32:00Z',
   },
 
+  // AG: the `settled` column — a book reference. It can never be `ready`: no
+  // answer makes reference material dispatchable, and before `settled` existed
+  // the ready gate re-asked "should this be retyped?" forever. Null priority and
+  // no acceptance criteria are correct here, not missing.
+  {
+    id: ITEM_AG, seq: 2431,
+    title: 'Reference: Building a StoryBrand — Donald Miller',
+    body:
+      'Framework for clarifying a brand message: the customer is the hero, the '
+      + 'brand is the guide. Kept to consult when rewriting portfolio copy.',
+    type: 'reference', category: null, assigned_to: wellKnownActorId('marvin'),
+    tags: ['reference', 'positioning'],
+    acceptance_criteria: [],
+    grooming_status: 'settled',
+    ai_priority: null, manual_priority: null,
+    ai_rationale: null,
+    priority_confidence: null, actionability: null,
+    parent_id: null, archived_at: null,
+    is_epic: false,
+    due_at: null, completed_at: null,
+    source: { kind: 'manual', ref: 'marvin-2026-05-21', url: null },
+    created_at: '2026-05-21T09:14:00Z',
+  },
+
   // V: P2 standard, owner @boris
   {
     id: ITEM_V, seq: 2422,
@@ -761,6 +787,7 @@ export const VAULT_ITEM_PROJECTS = [
   { vault_item_id: ITEM_M, project_id: projectId('personal') },      // helen request
   { vault_item_id: ITEM_AA, project_id: projectId('personal') },     // refactoring guru bookmark
   { vault_item_id: ITEM_AD, project_id: projectId('personal') },     // 50d board games
+  { vault_item_id: ITEM_AG, project_id: projectId('personal') },     // settled book reference
 ] as const satisfies readonly VaultItemProject[];
 
 // Dependencies. A blocks C (existing). Q (prod incident) blocks R (reaper backoff) — can't

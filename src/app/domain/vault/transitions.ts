@@ -30,6 +30,10 @@ export const ALLOWED_TRANSITIONS = {
   decomposed:       ['ready', 'classified', 'needs_rework'],
   ready:            ['decomposed', 'needs_rework'],
   needs_rework:     ['ungroomed', 'intake_complete', 'classified', 'decomposed', 'ready'],
+  // `settled` is entered by the ready gate, not by an operator, so no state
+  // lists it as a target here — this table is what the UI offers a human. Its
+  // outgoing edges are the re-entry path back into the pipeline after a retype.
+  settled:          ['ungroomed', 'needs_rework'],
 } as const satisfies Record<GroomingStatus, readonly GroomingStatus[]>;
 
 export function isAllowedTransition(from: GroomingStatus, to: GroomingStatus): boolean {
