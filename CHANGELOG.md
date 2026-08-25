@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.190](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.189...v0.0.190) (2026-08-25)
+
+
+### Features
+
+* **journal:** surface fleet health on the Jimbo tab ([7240c21](https://github.com/marvinbarretto/jimbo-dashboard/commit/7240c21ebfe4c5fe0f0b33f36d286a1fa717da4a))
+
 ### [0.0.189](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.188...v0.0.189) (2026-08-25)
 
 
