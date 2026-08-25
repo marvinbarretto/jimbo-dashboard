@@ -1,10 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { catchError, map, of, startWith, switchMap } from 'rxjs';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { UiMetric } from '@shared/components/ui-metric/ui-metric';
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
 import { formatMetric, type MetricUnit } from '@shared/utils/metric-format';
-import { metricByKey, type JournalOverview, type MetricKey } from '@domain/journal/overview';
+import { metricByKey, type MetricKey } from '@domain/journal/overview';
 import { JournalOverviewService } from '../../data-access/journal-overview.service';
 
 /** Presentation for each key the endpoint returns. Order is the rail's order. */
@@ -16,13 +14,6 @@ const RAIL: readonly { key: MetricKey; label: string; unit: MetricUnit }[] = [
 ];
 
 const WEEKDAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
-
-/** Explicit rather than overloading null and undefined — the three states read
- *  differently on screen and the distinction is easy to invert by accident. */
-type RailState =
-  | { status: 'pending' }
-  | { status: 'ready'; data: JournalOverview }
-  | { status: 'failed' };
 
 interface RailTile {
   key: MetricKey;
@@ -97,34 +88,14 @@ interface RailTile {
   `],
 })
 export class JournalMetricRail {
-  readonly date = input.required<string>();
-
   private readonly service = inject(JournalOverviewService);
 
-  // Same rxjs-interop shape as the sibling sections: a required input read
-  // eagerly by a resource would fire before the input is bound.
-  private readonly state = toSignal(
-    toObservable(this.date).pipe(
-      switchMap(date =>
-        this.service.overview(date).pipe(
-          map((data): RailState => ({ status: 'ready', data })),
-          catchError(() => of<RailState>({ status: 'failed' })),
-          // Re-enter pending on every date change, so a slow fetch never shows
-          // the previous day's figures under the new day's heading.
-          startWith<RailState>({ status: 'pending' }),
-        ),
-      ),
-    ),
-    { initialValue: { status: 'pending' } as RailState },
-  );
+  // The page owns loading (and polling) the day; several sections read the one
+  // payload, so fetching here too would double every request.
+  private readonly overview = this.service.overview;
 
-  private readonly overview = computed(() => {
-    const s = this.state();
-    return s.status === 'ready' ? s.data : null;
-  });
-
-  protected readonly failed = computed(() => this.state().status === 'failed');
-  protected readonly pending = computed(() => this.state().status === 'pending');
+  protected readonly failed = computed(() => this.service.state().status === 'failed');
+  protected readonly pending = computed(() => this.service.state().status === 'pending');
 
   /** True while a live day is still running — every comparison is truncated. */
   private readonly asOf = computed(() => this.overview()?.as_of ?? null);

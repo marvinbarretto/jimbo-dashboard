@@ -1,27 +1,19 @@
-<section class="day-summary">
-  <div class="day-summary__routine">
-    <header class="day-summary__head">
-      <span class="day-summary__label">Today's routine</span>
-      <span class="day-summary__progress">{{ routineDone() }}/{{ routineTotal() }}</span>
+<section class="routine-fuel">
+  <div class="routine-fuel__routine">
+    <header class="routine-fuel__head">
+      <span class="routine-fuel__label">Today's routine</span>
+      <span class="routine-fuel__progress">{{ routineDone() }}/{{ routineTotal() }}</span>
     </header>
     <app-ui-checklist [items]="routineItems()" />
   </div>
 
-  <div class="day-summary__stats">
-    <app-ui-stat-card label="Focus" [value]="formatMinutes(focusMinutes())" [detail]="pomos() + ' pomos'" />
-    <app-ui-stat-card label="Commits" [value]="commits().toString()" />
-    <app-ui-stat-card label="Projects" [value]="projectCount().toString()" detail="worked" />
-    <app-ui-stat-card label="Jimbo" [value]="jimboCostLabel()" [detail]="jimboDetail()" />
-    <app-ui-stat-card label="YouTube" [value]="formatMinutes(youtube().minutes)" [detail]="youtubeDetail()" />
-  </div>
-
-  <div class="day-summary__fuel">
-    <header class="day-summary__head">
-      <span class="day-summary__label">Fuel &amp; training</span>
+  <div class="routine-fuel__fuel">
+    <header class="routine-fuel__head">
+      <span class="routine-fuel__label">Fuel &amp; training</span>
     </header>
 
-    <div class="day-summary__fuel-grid">
-      <div class="day-summary__fuel-block">
+    <div class="routine-fuel__fuel-grid">
+      <div class="routine-fuel__fuel-block">
         <app-ui-progress-meter
           label="Protein today"
           [current]="proteinTodayG()"
@@ -32,7 +24,7 @@
           [compareValue]="proteinLastWeekSameDay()"
         />
         <app-ui-progress-meter
-          class="day-summary__fuel-week-meter"
+          class="routine-fuel__fuel-week-meter"
           label="This week"
           [current]="weekProteinG()"
           [target]="weekProteinTarget"
@@ -43,25 +35,25 @@
         />
       </div>
 
-      <div class="day-summary__fuel-block">
+      <div class="routine-fuel__fuel-block">
         @if (hasTraining()) {
-          <div class="day-summary__training">
-            <span class="day-summary__training-stat"><b>{{ gymStats().sets }}</b> sets</span>
-            <span class="day-summary__training-stat"><b>{{ gymStats().volumeKg }}</b> kg</span>
-            <span class="day-summary__training-stat"><b>{{ formatMinutes(gymStats().cardioMin) }}</b> cardio</span>
+          <div class="routine-fuel__training">
+            <span class="routine-fuel__training-stat"><b>{{ gymStats().sets }}</b> sets</span>
+            <span class="routine-fuel__training-stat"><b>{{ gymStats().volumeKg }}</b> kg</span>
+            <span class="routine-fuel__training-stat"><b>{{ formatMinutes(gymStats().cardioMin) }}</b> cardio</span>
           </div>
         } @else {
-          <p class="day-summary__fuel-quiet">No training logged today</p>
+          <p class="routine-fuel__fuel-quiet">No training logged today</p>
         }
-        <p class="day-summary__fuel-week">{{ weekVolumeKg() }}kg lifted this week</p>
+        <p class="routine-fuel__fuel-week">{{ weekVolumeKg() }}kg lifted this week</p>
       </div>
 
-      <div class="day-summary__chart day-summary__chart--macros">
-        <span class="day-summary__chart-label">Today's macros</span>
+      <div class="routine-fuel__chart routine-fuel__chart--macros">
+        <span class="routine-fuel__chart-label">Today's macros</span>
         @if (macros().kcal > 0) {
           <app-ui-donut-chart [labels]="macroLabels" [values]="macroValues()" suffix=" g" [height]="160" />
         } @else {
-          <p class="day-summary__chart-empty">Nothing logged yet</p>
+          <p class="routine-fuel__chart-empty">Nothing logged yet</p>
         }
       </div>
     </div>

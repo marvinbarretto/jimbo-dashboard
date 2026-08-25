@@ -1,12 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of, switchMap } from 'rxjs';
-import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiChecklist, type UiChecklistItem } from '@shared/components/ui-checklist/ui-checklist';
 import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { UiProgressMeter } from '@shared/components/ui-progress-meter/ui-progress-meter';
 import { formatMinutes } from '@shared/utils/datetime.utils';
-import { AgentRunsService, type AgentRunRollupRow } from '../../../hermes/data-access/agent-runs.service';
 import type { SessionDetailed, GymDailyRow } from '../../../exercise/data-access/exercise.service';
 import { EXERCISE_READ } from '../../../exercise/data-access/exercise.read';
 import { sessionStats } from '../../../exercise/utils/exercise-format';
@@ -14,7 +12,6 @@ import type { FoodLogEntry, SupplementLogEntry, FoodDailyRow } from '../../../nu
 import { NUTRITION_READ } from '../../../nutrition/data-access/nutrition.read';
 import { JournalDataService } from '../../data-access/journal-data.service';
 import {
-  dayWindowIso,
   dateFromDayKey,
   weekKeyFromDate,
   daysInWeek,
@@ -48,24 +45,29 @@ const ROUTINE: readonly {
 ];
 
 /**
- * Dashboard-esque "today at a glance" header for the journal day.
+ * Daily routine adherence, plus the magnitudes behind it: protein against
+ * target, training volume, macro split.
  *
- * Surfaces the daily routine (ticked from logged actuals), the headline work
- * numbers, and how much Jimbo has done and cost. Self-contained like its sibling
- * sections: it reads the already-loaded work bundle from the shared service and
- * fetches the supplement/food/agent feeds on date change (not polled — this is a
- * glance, not a live panel).
+ * Lives on the Body domain. It began as the journal Overview's header, which
+ * gave half of a work-first glance page to protein meters; Overview now leads
+ * with work metrics and this went where it was always about.
+ *
+ * The routine checklist and the meters answer different questions on purpose —
+ * "did I do it" versus "how much" — because a count-against-target bar
+ * flattens both and loses the grams.
+ *
+ * Fetches its feeds on date change rather than polling: a glance, not a live
+ * panel.
  */
 @Component({
-  selector: 'app-journal-day-summary',
-  imports: [UiStatCard, UiChecklist, UiDonutChart, UiProgressMeter],
-  templateUrl: './journal-day-summary.html',
-  styleUrl: './journal-day-summary.scss',
+  selector: 'app-journal-routine-fuel-section',
+  imports: [UiChecklist, UiDonutChart, UiProgressMeter],
+  templateUrl: './journal-routine-fuel-section.html',
+  styleUrl: './journal-routine-fuel-section.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class JournalDaySummary {
+export class JournalRoutineFuelSection {
   private readonly journal = inject(JournalDataService);
-  private readonly agents = inject(AgentRunsService);
   private readonly exercise = inject(EXERCISE_READ);
   private readonly nutrition = inject(NUTRITION_READ);
 
@@ -107,17 +109,6 @@ export class JournalDaySummary {
     this.date$.pipe(
       switchMap(date =>
         this.nutrition.list({ date, limit: 100 }).pipe(catchError(() => of({ items: [] as FoodLogEntry[] }))),
-      ),
-    ),
-    { initialValue: null },
-  );
-
-  private readonly agentRuns = toSignal(
-    this.date$.pipe(
-      switchMap(date =>
-        this.agents
-          .rollup(dayWindowIso(date))
-          .pipe(catchError(() => of({ items: [] as AgentRunRollupRow[] }))),
       ),
     ),
     { initialValue: null },
@@ -180,62 +171,13 @@ export class JournalDaySummary {
     { initialValue: null },
   );
 
-  // ── Work headline (from the shared bundle) ───────────────────────────────
-  protected readonly focusMinutes = computed(() => this.bundle()?.totals.focus_minutes ?? 0);
-  protected readonly pomos = computed(() => this.bundle()?.totals.pomos_completed ?? 0);
-  protected readonly projectCount = computed(() => this.bundle()?.by_project.length ?? 0);
-
-  protected readonly commits = computed(() => {
-    const telemetry = this.bundle()?.telemetry ?? [];
-    return telemetry
-      .filter(e => e.collector === 'github' && e.type === 'push')
-      .reduce((sum, e) => sum + ((e.payload?.['commits'] as unknown[] | undefined)?.length ?? 0), 0);
-  });
+  // Kept for the routine checklist only — "work across projects" is an
+  // adherence question, distinct from the rail's project count.
+  private readonly projectCount = computed(() => this.bundle()?.by_project.length ?? 0);
 
   private readonly healthExerciseCount = computed(() =>
     (this.bundle()?.telemetry ?? []).filter(e => e.collector === 'health_connect' && e.type === 'exercise_session').length,
   );
-
-  // YouTube watch time, summed from the Chrome extension's watch segments. Many
-  // short segments per day (one per pause/navigation) sum into real minutes
-  // watched — the one number Google's own exports can't give you.
-  protected readonly youtube = computed(() => {
-    const sessions = (this.bundle()?.telemetry ?? []).filter(
-      e => e.collector === 'youtube' && e.type === 'watch_session',
-    );
-    const totalSeconds = sessions.reduce((s, e) => s + (e.value ?? 0), 0);
-    const byVideo = new Map<string, number>();
-    const byChannel = new Map<string, number>();
-    for (const e of sessions) {
-      const p = e.payload ?? {};
-      const videoKey = (p['videoId'] as string) || (p['url'] as string) || 'unknown';
-      byVideo.set(videoKey, (byVideo.get(videoKey) ?? 0) + (e.value ?? 0));
-      const channel = (p['channel'] as string) || '';
-      if (channel) byChannel.set(channel, (byChannel.get(channel) ?? 0) + (e.value ?? 0));
-    }
-    const topChannel = [...byChannel.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
-    return { minutes: Math.round(totalSeconds / 60), videoCount: byVideo.size, topChannel };
-  });
-
-  protected readonly youtubeDetail = computed(() => {
-    const y = this.youtube();
-    if (y.videoCount === 0) return 'nothing watched';
-    const videos = `${y.videoCount} ${y.videoCount === 1 ? 'video' : 'videos'}`;
-    return y.topChannel ? `${videos} · ${y.topChannel}` : videos;
-  });
-
-  // ── Jimbo (agent activity + cost) ────────────────────────────────────────
-  private readonly agentRows = computed(() => this.agentRuns()?.items ?? []);
-  protected readonly jimboRuns = computed(() => this.agentRows().reduce((s, r) => s + r.count, 0));
-  protected readonly jimboCost = computed(() => this.agentRows().reduce((s, r) => s + (r.cost_usd ?? 0), 0));
-  protected readonly jimboCostLabel = computed(() => {
-    const c = this.jimboCost();
-    return '$' + c.toFixed(c < 0.1 ? 4 : 2);
-  });
-  protected readonly jimboDetail = computed(() => {
-    const runs = this.jimboRuns();
-    return runs ? `${runs} ${runs === 1 ? 'run' : 'runs'}` : 'idle';
-  });
 
   // ── Routine ──────────────────────────────────────────────────────────────
   private readonly snapshot = computed<RoutineSnapshot>(() => ({

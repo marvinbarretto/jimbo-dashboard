@@ -22,7 +22,8 @@ import {
   weekStartFromKey,
 } from '@shared/utils/date-keys';
 import { JournalChecksSection } from '../../components/journal-checks-section/journal-checks-section';
-import { JournalDaySummary } from '../../components/journal-day-summary/journal-day-summary';
+import { JournalDayShape } from '../../components/journal-day-shape/journal-day-shape';
+import { JournalMetricRail } from '../../components/journal-metric-rail/journal-metric-rail';
 import { JournalPeriodHeader } from '../../components/journal-period-header/journal-period-header';
 import { JournalPeriodSummary } from '../../components/journal-period-summary/journal-period-summary';
 import { JournalReportSection } from '../../components/journal-report-section/journal-report-section';
@@ -31,6 +32,7 @@ import {
   JournalDataService,
   type TelemetryEventLite,
 } from '../../data-access/journal-data.service';
+import { JournalOverviewService } from '../../data-access/journal-overview.service';
 import { type JournalGranularity, currentKeyFor } from '../../utils/period-links';
 import { pollWhileVisible } from '../../utils/live-poll';
 
@@ -43,10 +45,15 @@ interface ApiTelemetryEvents {
 }
 
 /**
- * The glance layer. Day: summary + reconstructed timeline. Week/month: the
- * same cross-domain questions rolled up over the period, plus the per-day
- * trends and drill-in a single day can't show. The timeline stays day-only —
- * it's inherently a day construct.
+ * The story layer. Day: what today amounts to, told through data rather than
+ * prose — four work metrics carrying their own baselines, then the evidence
+ * behind them. Week/month: the same cross-domain questions rolled up, plus the
+ * per-day trends a single day can't show.
+ *
+ * Work-first by construction. Body and fleet data support at subordinate
+ * weight or live on the domain that owns them; the routine and fuel block that
+ * used to head this page took half of it for protein meters and now sits on
+ * Body.
  */
 @Component({
   selector: 'app-journal-overview-page',
@@ -56,7 +63,8 @@ interface ApiTelemetryEvents {
     UiPage,
     UiStack,
     JournalChecksSection,
-    JournalDaySummary,
+    JournalDayShape,
+    JournalMetricRail,
     JournalPeriodHeader,
     JournalPeriodSummary,
     JournalReportSection,
@@ -72,9 +80,12 @@ interface ApiTelemetryEvents {
     />
 
     @if (isDay()) {
-      <app-journal-day-summary [date]="safeKey()" />
-
       <app-ui-stack gap="lg">
+        <!-- Metrics first, then the shape that produced them: the numbers are
+             the finding, the chart is why. -->
+        <app-journal-metric-rail />
+        <app-journal-day-shape />
+
         <!-- Above the reconstruction, not inside it: the report has already done
              the assembling the timeline below asks the reader to do. -->
         <app-journal-report-section [date]="safeKey()" />
@@ -113,6 +124,7 @@ export class JournalOverviewPage {
   private readonly route = inject(ActivatedRoute);
   private readonly titleService = inject(Title);
   private readonly journal = inject(JournalDataService);
+  private readonly overview = inject(JournalOverviewService);
 
   protected readonly granularity = toSignal(
     this.route.data.pipe(map(d => (d['granularity'] ?? 'day') as JournalGranularity)),
@@ -184,8 +196,14 @@ export class JournalOverviewPage {
     effect(() => {
       const g = this.granularity();
       const k = this.safeKey();
-      if (g === 'day') void this.journal.loadDay(k);
-      else void this.journal.loadWork(g, k);
+      if (g === 'day') {
+        void this.journal.loadDay(k);
+        // The page owns this fetch, not the sections — the rail and the shape
+        // chart read one payload and would otherwise request it twice.
+        void this.overview.load(k);
+      } else {
+        void this.journal.loadWork(g, k);
+      }
     });
 
     // Keep a live period fresh; past periods load once (the service skips
@@ -194,7 +212,12 @@ export class JournalOverviewPage {
       const g = this.granularity();
       const k = this.safeKey();
       if (g === 'day') {
-        if (k === todayKey()) void this.journal.loadDay(k);
+        if (k === todayKey()) {
+          void this.journal.loadDay(k);
+          // force: the comparisons move with the clock even when nothing new
+          // has been logged, because every one of them is time-truncated.
+          void this.overview.load(k, true);
+        }
       } else {
         void this.journal.loadWork(g, k);
       }

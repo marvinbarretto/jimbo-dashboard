@@ -21,14 +21,19 @@ import { ExerciseSummarySection } from '../../../exercise/components/exercise-su
 import { NutritionDaySection } from '../../../nutrition/components/nutrition-day-section/nutrition-day-section';
 import { JournalHealthSection } from '../../components/journal-health-section/journal-health-section';
 import { JournalPeriodHeader } from '../../components/journal-period-header/journal-period-header';
+import { JournalRoutineFuelSection } from '../../components/journal-routine-fuel-section/journal-routine-fuel-section';
 import { TrainingFuelSection } from '../../components/training-fuel-section/training-fuel-section';
 import { JournalDataService } from '../../data-access/journal-data.service';
 import { type JournalGranularity, currentKeyFor } from '../../utils/period-links';
 import { pollWhileVisible } from '../../utils/live-poll';
 
 /**
- * The Body domain. Day: Health Connect rollup + nutrition + exercise ledgers.
- * Week/month: exercise summary + training-fuel (both already range-based).
+ * The Body domain. Day: Health Connect rollup, routine adherence and fuel
+ * magnitudes, then the nutrition and exercise ledgers. Week/month: exercise
+ * summary + training-fuel (both already range-based).
+ *
+ * The routine/fuel block arrived from the journal Overview, where protein
+ * meters were taking prime space on a work-first page.
  */
 @Component({
   selector: 'app-journal-body-page',
@@ -41,6 +46,7 @@ import { pollWhileVisible } from '../../utils/live-poll';
     NutritionDaySection,
     JournalHealthSection,
     JournalPeriodHeader,
+    JournalRoutineFuelSection,
     TrainingFuelSection,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -59,6 +65,7 @@ import { pollWhileVisible } from '../../utils/live-poll';
         } @else {
           <app-journal-health-section [events]="telemetry()" />
         }
+        <app-journal-routine-fuel-section [date]="dayKey()" />
         <app-nutrition-day-section [date]="dayKey()" />
         <app-exercise-day-section [date]="dayKey()" />
       } @else {

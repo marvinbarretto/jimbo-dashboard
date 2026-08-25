@@ -26821,6 +26821,12 @@ export interface components {
                 };
                 /** @description Oldest first, ending with value */
                 series: number[];
+                hourly: {
+                    /** @description Running total at each hour boundary; length is how far the day has run */
+                    cumulative: number[];
+                    /** @description Median shape across the same sample days, always a full day — where a normal day gets to */
+                    baseline: number[] | null;
+                };
             }[];
         };
         DayStream: {
