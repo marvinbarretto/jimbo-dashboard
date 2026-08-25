@@ -52,11 +52,17 @@ describe('failureToNotification', () => {
     expect(n.message).toBe('Dispatch failed');
   });
 
-  it('carries id, timestamp, and a danger tone through unchanged', () => {
+  it('carries id and timestamp through unchanged', () => {
     const n = failureToNotification(failure());
     expect(n.id).toBe('4608');
     expect(n.timestamp).toBe('2026-08-24T06:40:57Z');
-    expect(n.tone).toBe('danger');
+  });
+
+  it('grades tone by proximity to the retry cap, not a flat danger', () => {
+    expect(failureToNotification(failure({ retry_count: 0 })).tone).toBe('warning');
+    expect(failureToNotification(failure({ retry_count: 1 })).tone).toBe('warning');
+    expect(failureToNotification(failure({ retry_count: 2 })).tone).toBe('danger');
+    expect(failureToNotification(failure({ retry_count: 5 })).tone).toBe('danger');
   });
 
   it('defaults count to 1, but carries a caller-supplied group size through', () => {

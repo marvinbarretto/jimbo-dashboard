@@ -1,7 +1,22 @@
 import type { NotificationEntry } from '@shared/components/notification-bar/notification-bar';
+import type { NotificationTone } from '@shared/components/notification-bar/notification-item';
 import type { FleetFailure } from './fleet-stats.api-schema';
 
 const BRIEFING_PREFIX = 'briefing-';
+
+// Mirrors pipeline.max_retries' server-side default (pipeline-pump.ts
+// DEFAULTS.maxRetries). This is a display heuristic, not the enforcement
+// point — it's read live nowhere on this page — so if the setting is ever
+// tuned away from 2, grading just drifts a notch soft/hard until this is
+// updated to match, it doesn't change what the pump actually does.
+const DEFAULT_MAX_RETRIES = 2;
+
+// A note still under the retry cap is expected pipeline noise (the reaper
+// doing its job); one that's reached the cap is stuck and won't clear itself
+// without a human, which is the distinction worth a harder color.
+function tone(f: FleetFailure): NotificationTone {
+  return f.retry_count >= DEFAULT_MAX_RETRIES ? 'danger' : 'warning';
+}
 
 // Short caps label for the notification bar. Briefing dispatches get a
 // readable session name (they're the one flow with a fixed, known-good task_id
@@ -41,7 +56,7 @@ export function failureToNotification(f: FleetFailure, count = 1): NotificationE
     source: sourceLabel(f),
     message: message(f),
     timestamp: f.completed_at,
-    tone: 'danger',
+    tone: tone(f),
     href: href(f),
     count,
   };
