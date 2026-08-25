@@ -7,6 +7,7 @@ import { map } from 'rxjs';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
+import { isLiveDay } from '@shared/utils/datetime.utils';
 import {
   type DayKey,
   daysInMonth,
@@ -119,7 +120,7 @@ export class JournalBodyPage {
       if (this.isDay()) void this.journal.loadDay(this.safeKey());
     });
     pollWhileVisible(() => {
-      if (this.isDay() && this.safeKey() === todayKey()) void this.journal.loadDay(this.safeKey());
+      if (this.isDay() && isLiveDay(this.safeKey())) void this.journal.loadDay(this.safeKey());
     });
   }
 }

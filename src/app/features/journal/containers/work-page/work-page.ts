@@ -15,7 +15,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiSubhead } from '@shared/components/ui-subhead/ui-subhead';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
-import { absoluteTime, formatMinutes, pluralise } from '@shared/utils/datetime.utils';
+import { absoluteTime, formatMinutes, pluralise, isLiveDay } from '@shared/utils/datetime.utils';
 import {
   type DayKey,
   dateFromDayKey,
@@ -146,7 +146,7 @@ export class JournalWorkPage {
       const g = this.granularity();
       const k = this.safeKey();
       if (g === 'day') {
-        if (k === todayKey()) void this.journal.loadDay(k);
+        if (isLiveDay(k)) void this.journal.loadDay(k);
       } else {
         void this.journal.loadWork(g, k);
       }

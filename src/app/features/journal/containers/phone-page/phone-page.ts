@@ -13,7 +13,7 @@ import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiSubsection } from '@shared/components/ui-subsection/ui-subsection';
-import { formatMinutes } from '@shared/utils/datetime.utils';
+import { formatMinutes, isLiveDay } from '@shared/utils/datetime.utils';
 import {
   daysInMonth,
   daysInWeek,
@@ -240,7 +240,7 @@ export class JournalPhonePage {
       if (this.isDay()) void this.journal.loadDay(this.safeKey());
     });
     pollWhileVisible(() => {
-      if (this.isDay() && this.safeKey() === todayKey()) void this.journal.loadDay(this.safeKey());
+      if (this.isDay() && isLiveDay(this.safeKey())) void this.journal.loadDay(this.safeKey());
     });
   }
 }

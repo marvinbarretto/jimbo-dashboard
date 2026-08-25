@@ -15,6 +15,7 @@ import {
   shiftWeek,
   todayKey,
 } from '@shared/utils/date-keys';
+import { logicalToday } from '@shared/utils/datetime.utils';
 import {
   type JournalGranularity,
   currentKeyFor,
@@ -132,7 +133,10 @@ function formatMonthLabel(key: string): string {
 
 // Friendly subtitle: "Today", "Yesterday", "3 days ago", "in 2 days".
 function relativeDayLabel(key: DayKey): string {
-  const today = todayKey();
+  // The logical day, matching the pages beneath it. Labelling the day in
+  // progress "Yesterday" between midnight and 04:00 would be technically true
+  // and actively confusing — the same call the Evening page already makes.
+  const today = logicalToday();
   if (key === today) return 'Today';
   if (shiftDay(key, 1) === today) return 'Yesterday';
   if (shiftDay(key, -1) === today) return 'Tomorrow';

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { thisMonthKey, thisWeekKey, todayKey } from '@shared/utils/date-keys';
+import { thisMonthKey, thisWeekKey } from '@shared/utils/date-keys';
 import { logicalToday } from '@shared/utils/datetime.utils';
 
 // Domain-first IA: /journal/<domain>/<granularity>/<key>. The shell renders
@@ -11,7 +11,9 @@ const granularityChildren = (
   { path: 'day/:date', title, data: { granularity: 'day' }, loadComponent: loadComponent as never },
   { path: 'week/:week', title, data: { granularity: 'week' }, loadComponent: loadComponent as never },
   { path: 'month/:month', title, data: { granularity: 'month' }, loadComponent: loadComponent as never },
-  { path: '', pathMatch: 'full' as const, redirectTo: () => `day/${todayKey()}` },
+  // The working day, not the calendar date: opening the journal at 00:30 should
+  // land on the session you are still in, not on a day that has not started.
+  { path: '', pathMatch: 'full' as const, redirectTo: () => `day/${logicalToday()}` },
 ];
 
 export const journalRoutes: Routes = [
@@ -76,11 +78,11 @@ export const journalRoutes: Routes = [
       { path: 'day/:date', redirectTo: ({ params }) => `/journal/overview/day/${params['date']}` },
       { path: 'week/:week', redirectTo: ({ params }) => `/journal/work/week/${params['week']}` },
       { path: 'month/:month', redirectTo: ({ params }) => `/journal/work/month/${params['month']}` },
-      { path: 'day', redirectTo: () => `/journal/overview/day/${todayKey()}` },
+      { path: 'day', redirectTo: () => `/journal/overview/day/${logicalToday()}` },
       { path: 'week', redirectTo: () => `/journal/work/week/${thisWeekKey()}` },
       { path: 'month', redirectTo: () => `/journal/work/month/${thisMonthKey()}` },
 
-      { path: '', pathMatch: 'full', redirectTo: () => `/journal/overview/day/${todayKey()}` },
+      { path: '', pathMatch: 'full', redirectTo: () => `/journal/overview/day/${logicalToday()}` },
     ],
   },
 ];

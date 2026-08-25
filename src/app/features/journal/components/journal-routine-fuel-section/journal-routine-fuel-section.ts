@@ -4,7 +4,7 @@ import { catchError, of, switchMap } from 'rxjs';
 import { UiChecklist, type UiChecklistItem } from '@shared/components/ui-checklist/ui-checklist';
 import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
 import { UiProgressMeter } from '@shared/components/ui-progress-meter/ui-progress-meter';
-import { formatMinutes } from '@shared/utils/datetime.utils';
+import { formatMinutes, isLiveDay } from '@shared/utils/datetime.utils';
 import type { SessionDetailed, GymDailyRow } from '../../../exercise/data-access/exercise.service';
 import { EXERCISE_READ } from '../../../exercise/data-access/exercise.read';
 import { sessionStats } from '../../../exercise/utils/exercise-format';
@@ -233,7 +233,7 @@ export class JournalRoutineFuelSection {
   // the day — only meaningful for today (a past day's pace is just its
   // target, which the bar already shows, so skip the tick there).
   protected readonly proteinPace = computed(() => {
-    if (this.date() !== todayKey()) return null;
+    if (!isLiveDay(this.date())) return null;
     const now = new Date();
     const dayFraction = (now.getHours() * 60 + now.getMinutes()) / (24 * 60);
     return Math.round(this.proteinTarget * dayFraction);

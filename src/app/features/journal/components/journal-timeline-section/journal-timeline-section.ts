@@ -3,7 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { Chip } from '@shared/components/chip/chip';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiSection } from '@shared/components/ui-section/ui-section';
-import { absoluteTime } from '@shared/utils/datetime.utils';
+import { absoluteTime, isLiveDay } from '@shared/utils/datetime.utils';
 import { type DayKey, dateFromDayKey, todayKey } from '@shared/utils/date-keys';
 import { map, timer } from 'rxjs';
 import { PROJECTS_READ } from '../../../projects/data-access/projects.read';
@@ -241,7 +241,7 @@ export class JournalTimelineSection {
 
   // Now-line only on today's page, and only when "now" falls inside the window.
   readonly nowLineTopPx = computed<number | null>(() => {
-    if (this.date() !== todayKey()) return null;
+    if (!isLiveDay(this.date())) return null;
     const w = this.window();
     const now = this.nowMs();
     if (now < w.startMs || now > w.endMs) return null;

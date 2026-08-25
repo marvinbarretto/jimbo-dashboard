@@ -39,12 +39,33 @@ export function londonDay(iso: string): string {
 // as "last night", not "today". Mirrors LOGICAL_DAY_CUTOVER_HOURS in
 // jimbo-api's coach-tz.ts. Only relevant for deciding what "Today" means for
 // these two features — journal/other pages still use plain londonToday().
+//
+// The journal now uses it too, via isLiveDay() below: between midnight and
+// 04:00 the calendar date has rolled but the working day has not, and pages
+// that disagreed about which one "today" meant went blank for four hours a
+// night. See isLiveDay for the specifics.
 
 const LOGICAL_DAY_CUTOVER_HOURS = 4;
 
 /** Today's logical day (YYYY-MM-DD) — starts at 04:00 Europe/London, not midnight. */
 export function logicalToday(now: Date = new Date()): string {
   return londonToday(new Date(now.getTime() - LOGICAL_DAY_CUTOVER_HOURS * 3600_000));
+}
+
+/**
+ * Is this day key the one currently in progress?
+ *
+ * Not `key === todayKey()`. Between midnight and 04:00 those disagree, and the
+ * day you are actually working in is the one that is ending — which is the
+ * whole reason the cutover exists. Used for "should this page keep polling",
+ * "is a pace tick meaningful", and "is this window still mutable".
+ *
+ * @param key - Day key to test (YYYY-MM-DD)
+ * @param now - Injected for deterministic tests
+ * @returns True when `key` is the logical day in progress
+ */
+export function isLiveDay(key: string, now: Date = new Date()): boolean {
+  return key === logicalToday(now);
 }
 
 /** The logical day (YYYY-MM-DD) a timestamp falls on. */

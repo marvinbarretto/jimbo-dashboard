@@ -26,9 +26,9 @@ import {
   dayKeyOf,
   monthRange,
   shiftDay,
-  todayKey,
   weekStartFromKey,
 } from '@shared/utils/date-keys';
+import { isLiveDay } from '@shared/utils/datetime.utils';
 
 export interface FocusSessionLite {
   readonly id: string;
@@ -194,7 +194,7 @@ export class JournalDataService {
     // the cycle, but on TODAY it never returns, so write → re-run → fetch →
     // write span an unbounded loop (~4 req/s, observed 6.6k calls in one hour,
     // each fanning out to one Google Calendar request per configured calendar).
-    if (untracked(this.day)?.date === key && key !== todayKey()) return;
+    if (untracked(this.day)?.date === key && !isLiveDay(key)) return;
     return this.guardedLoad('day', async () => {
       const { since, until } = localWindow(dateFromDayKey(key), dateFromDayKey(shiftDay(key, 1)));
       const res = await firstValueFrom(

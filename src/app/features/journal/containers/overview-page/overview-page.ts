@@ -9,6 +9,7 @@ import { environment } from '../../../../../environments/environment';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
+import { isLiveDay } from '@shared/utils/datetime.utils';
 import {
   type DayKey,
   formatDayLong,
@@ -206,7 +207,7 @@ export class JournalOverviewPage {
       const g = this.granularity();
       const k = this.safeKey();
       if (g === 'day') {
-        if (k === todayKey()) {
+        if (isLiveDay(k)) {
           void this.journal.loadDay(k);
           // force: the comparisons move with the clock even when nothing new
           // has been logged, because every one of them is time-truncated.
