@@ -12,17 +12,20 @@ const DOMAINS = [
   { key: 'body', label: 'Body' },
   { key: 'jimbo', label: 'Jimbo' },
   { key: 'phone', label: 'Phone' },
+  { key: 'reflect', label: 'Reflect' },
 ] as const;
 
-// Every domain supports all three granularities. Kept as a set so a future
-// day-only domain is one entry, not a re-plumb.
-const DAY_ONLY_DOMAINS: ReadonlySet<string> = new Set<string>();
+// Reflect is what Marvin *said* about a day; the others are what the machine
+// saw. There is no weekly or monthly reflection to roll up to, so it pins to
+// the day peer of whatever period the other domains are showing.
+const DAY_ONLY_DOMAINS: ReadonlySet<string> = new Set<string>(['reflect']);
 
 const GRANULARITIES: ReadonlySet<string> = new Set(['day', 'week', 'month']);
 
 /**
  * Journal shell: sticky tab bar of data DOMAINS (Overview · Work · Body ·
- * Jimbo · Phone). Switching domains preserves the current point-in-time —
+ * Jimbo · Phone · Reflect). Switching domains preserves the current
+ * point-in-time —
  * viewing Work's week → Body lands on Body's same week; domains that don't
  * support the current granularity fall back to its day peer.
  */

@@ -1,5 +1,8 @@
 import { httpResource } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
+import { map } from 'rxjs';
 import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
@@ -58,11 +61,26 @@ const KINDS: readonly { value: CommitmentKind; label: string }[] = [
 export class EveningPage {
   private readonly service = inject(EveningService);
   private readonly toast = inject(ToastService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   protected readonly kinds = KINDS;
 
-  /** Logical day: a session opened at 01:30 belongs to the evening that is ending. */
-  protected readonly day = signal(logicalToday());
+  // The URL owns the day, not the component. Reflect is a journal domain now
+  // (/journal/reflect/day/:date), and a page whose date disagreed with the
+  // journal's own pager would be the worst of both.
+  private readonly routeDate = toSignal(
+    this.route.paramMap.pipe(map(p => p.get('date'))),
+    { initialValue: null },
+  );
+
+  /**
+   * Logical day: a session opened at 01:30 belongs to the evening that is
+   * ending. Falls back to that only when the URL carries no date — the
+   * standalone `/evening` entry point redirects with one, so in practice this
+   * default covers the first tick before the route resolves.
+   */
+  protected readonly day = computed(() => this.routeDate() ?? logicalToday());
   protected readonly tomorrow = computed(() => shiftIsoDay(this.day(), 1));
 
   private readonly dayRes = httpResource<ReflectionDay>(() => `/api/reflection/day/${this.day()}`);
@@ -124,11 +142,21 @@ export class EveningPage {
   protected readonly newDelegable = signal(false);
 
   protected shiftDay(delta: number): void {
-    this.day.update(d => shiftIsoDay(d, delta));
+    void this.goTo(shiftIsoDay(this.day(), delta));
   }
 
   protected toToday(): void {
-    this.day.set(logicalToday());
+    void this.goTo(logicalToday());
+  }
+
+  // The same page is mounted twice: as the journal's Reflect domain, and at
+  // /evening for the mobile shell (whose "Close day" tile points there). Paging
+  // must keep the reader inside whichever shell they arrived through — a mobile
+  // reader tapping "previous day" into the desktop layout would be a trap.
+  private goTo(date: string): Promise<boolean> {
+    return this.router.url.startsWith('/journal')
+      ? this.router.navigate(['/journal', 'reflect', 'day', date])
+      : this.router.navigate(['/evening', date]);
   }
 
   protected readonly isToday = computed(() => this.day() === logicalToday());

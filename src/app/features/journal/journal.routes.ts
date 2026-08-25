@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { thisMonthKey, thisWeekKey, todayKey } from '@shared/utils/date-keys';
+import { logicalToday } from '@shared/utils/datetime.utils';
 
 // Domain-first IA: /journal/<domain>/<granularity>/<key>. The shell renders
 // the domain tab bar; each domain page owns its granularity switcher.
@@ -53,6 +54,22 @@ export const journalRoutes: Routes = [
           () => import('./containers/phone-page/phone-page').then(m => m.JournalPhonePage),
           'Journal — Phone',
         ),
+      },
+
+      // Reflect has no week or month form — a reflection is written about one
+      // evening — so it takes the day shape directly rather than
+      // granularityChildren.
+      {
+        path: 'reflect',
+        children: [
+          {
+            path: 'day/:date',
+            title: 'Journal — Reflect',
+            loadComponent: () =>
+              import('../evening/containers/evening-page/evening-page').then(m => m.EveningPage),
+          },
+          { path: '', pathMatch: 'full' as const, redirectTo: () => `day/${logicalToday()}` },
+        ],
       },
 
       // ── Legacy URLs (pre domain-first IA) — keep old bookmarks working ──
