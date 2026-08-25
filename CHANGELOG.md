@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.188](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.187...v0.0.188) (2026-08-25)
+
+
+### Bug Fixes
+
+* **journal:** correct YouTube units and distance precision ([afc9672](https://github.com/marvinbarretto/jimbo-dashboard/commit/afc9672c39b33057175d1c8b6fb3d39bd3cc07a6))
+
 ### [0.0.187](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.186...v0.0.187) (2026-08-25)
 
 
