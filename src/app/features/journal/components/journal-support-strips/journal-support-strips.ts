@@ -143,7 +143,7 @@ export class JournalSupportStrips {
   protected readonly body = computed<StripTile[]>(() => [
     this.tile('health', 'steps', 'Steps', 'count'),
     this.tile('health', 'active_calories', 'Active kcal', 'count'),
-    this.tile('health', 'distance_km', 'Distance', 'count', 'km'),
+    this.tile('health', 'distance_km', 'Distance', 'km'),
     this.tile('phone', 'notifications', 'Notifications', 'count', 'interruptions', false),
     {
       id: 'youtube.minutes',
@@ -187,10 +187,12 @@ export class JournalSupportStrips {
   });
 
   private readonly youtubeMinutes = computed(() => {
-    const videos = this.moments().filter(m => m.source === 'youtube');
+    // The registry states each moment's unit; trust it rather than assuming.
+    // These arrive as minutes, and treating them as seconds under-reported a
+    // six-hour afternoon as seven minutes.
+    const videos = this.moments().filter(m => m.source === 'youtube' && m.unit === 'minutes');
     if (videos.length === 0) return null;
-    const seconds = videos.reduce((total, m) => total + (m.value ?? 0), 0);
-    return Math.round(seconds / 60);
+    return Math.round(videos.reduce((total, m) => total + (m.value ?? 0), 0));
   });
 
   private readonly youtubeDetail = computed(() => {

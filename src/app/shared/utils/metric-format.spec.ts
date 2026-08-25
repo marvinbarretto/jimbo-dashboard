@@ -18,6 +18,13 @@ describe('formatMetric', () => {
     expect(formatMetric(12.5, 'currency')).toBe('$12.50');
   });
 
+  // 6.22km rendered as "6" discards a fifth of the walk; distance is the one
+  // unit here where the decimal carries most of the signal.
+  it('keeps one decimal for distance', () => {
+    expect(formatMetric(6.22, 'km')).toBe('6.2km');
+    expect(formatMetric(10, 'km')).toBe('10.0km');
+  });
+
   it('groups large counts', () => {
     expect(formatMetric(2140, 'count')).toBe('2,140');
   });

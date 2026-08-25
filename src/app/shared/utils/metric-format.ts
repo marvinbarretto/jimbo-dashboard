@@ -8,7 +8,7 @@
  */
 
 /** The quantities the journal actually measures. Add a case, get a formatter. */
-export type MetricUnit = 'count' | 'minutes' | 'currency' | 'grams' | 'kg';
+export type MetricUnit = 'count' | 'minutes' | 'currency' | 'grams' | 'kg' | 'km';
 
 /**
  * Renders a metric's absolute value in its unit.
@@ -25,6 +25,9 @@ export function formatMetric(value: number, unit: MetricUnit): string {
     case 'currency': return `$${value < 1 ? value.toFixed(4) : value.toFixed(2)}`;
     case 'grams': return `${Math.round(value)}g`;
     case 'kg': return `${Math.round(value).toLocaleString('en-GB')}kg`;
+    // Distance is single-digit and the decimal is most of the signal —
+    // 6.2km rounded to 6km discards a fifth of the walk.
+    case 'km': return `${value.toFixed(1)}km`;
     case 'count': return Math.round(value).toLocaleString('en-GB');
   }
 }
