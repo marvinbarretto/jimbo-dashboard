@@ -26,6 +26,7 @@ import type {
   CommitmentResolution,
   ReflectionDay,
 } from '@domain/reflection';
+import { JournalChecksSection } from '@features/journal/components/journal-checks-section/journal-checks-section';
 import { EveningService } from '../../data-access/evening.service';
 
 const KINDS: readonly { value: CommitmentKind; label: string }[] = [
@@ -44,9 +45,14 @@ const KINDS: readonly { value: CommitmentKind; label: string }[] = [
  * it when he opens it, and an evening he skips is missing data rather than a
  * failure.
  *
- * Three panels — today, gratitude, tomorrow. The spec's fourth ("against
+ * Four panels — today, checks, gratitude, tomorrow. The spec's fifth ("against
  * goals") is deliberately absent until `interrogate_goals` has rows: a drift
  * question computed from zero goals could only be theatre.
+ *
+ * The day-checks panel moved here from the journal Overview. Its own rationale
+ * always pointed this way — it is the one authoring surface in an otherwise
+ * read-only journal — but on a glance page it was a form interrupting a
+ * readout. Here it is the main event.
  */
 @Component({
   selector: 'app-evening-page',
@@ -54,6 +60,7 @@ const KINDS: readonly { value: CommitmentKind; label: string }[] = [
   imports: [
     UiPage, UiPageHeader, UiStack, UiCluster, UiCard, UiButton, UiBadge,
     UiSection, UiEmptyState, UiLoadingState,
+    JournalChecksSection,
   ],
   templateUrl: './evening-page.html',
   styleUrl: './evening-page.scss',

@@ -86,6 +86,12 @@
       </app-ui-stack>
     </app-ui-section>
 
+    <!-- ── Checks ───────────────────────────────────────────────── -->
+    <!-- Arrived from the journal Overview, where a form sat in the middle of a
+         read-only reconstruction and read as unfinished. Authoring belongs in
+         the flow he opens deliberately. -->
+    <app-journal-checks-section [date]="day()" />
+
     <!-- ── Grateful for ─────────────────────────────────────────── -->
     <app-ui-section title="Grateful for">
       <app-ui-stack gap="md">

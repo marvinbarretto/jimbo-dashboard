@@ -171,6 +171,22 @@
          the week/month questions. -->
     @if (isDay()) {
       <app-journal-day-stream-section [date]="safeKey()" />
+
+      <!-- ── WHAT WAS RUNNING WHEN ───────────────────────────── -->
+      <!-- Lanes, not a log. Moved here from Overview: "what overlapped what"
+           is a drill-in question, and it was the largest thing on a page whose
+           job is the glance. -->
+      @let b = bundle();
+      @if (b) {
+        <app-journal-timeline-section
+          [date]="safeKey()"
+          [sessions]="b.sessions"
+          [events]="b.events"
+          [telemetry]="b.telemetry"
+          [codeSessions]="b.code_sessions"
+          [heartbeats]="b.heartbeats"
+        />
+      }
     }
 
     <!-- ── CODE SESSIONS ───────────────────────────────────── -->

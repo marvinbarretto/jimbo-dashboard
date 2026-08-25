@@ -6,7 +6,6 @@ import { ActivatedRoute } from '@angular/router';
 import { formatPageTitle } from '@app/app-title-strategy';
 import { map } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiLoadingState } from '@shared/components/ui-loading-state/ui-loading-state';
 import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
@@ -21,13 +20,11 @@ import {
   todayKey,
   weekStartFromKey,
 } from '@shared/utils/date-keys';
-import { JournalChecksSection } from '../../components/journal-checks-section/journal-checks-section';
 import { JournalDayShape } from '../../components/journal-day-shape/journal-day-shape';
 import { JournalMetricRail } from '../../components/journal-metric-rail/journal-metric-rail';
 import { JournalPeriodHeader } from '../../components/journal-period-header/journal-period-header';
 import { JournalPeriodSummary } from '../../components/journal-period-summary/journal-period-summary';
 import { JournalReportSection } from '../../components/journal-report-section/journal-report-section';
-import { JournalTimelineSection } from '../../components/journal-timeline-section/journal-timeline-section';
 import {
   JournalDataService,
   type TelemetryEventLite,
@@ -58,17 +55,14 @@ interface ApiTelemetryEvents {
 @Component({
   selector: 'app-journal-overview-page',
   imports: [
-    UiEmptyState,
     UiLoadingState,
     UiPage,
     UiStack,
-    JournalChecksSection,
     JournalDayShape,
     JournalMetricRail,
     JournalPeriodHeader,
     JournalPeriodSummary,
     JournalReportSection,
-    JournalTimelineSection,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -86,24 +80,10 @@ interface ApiTelemetryEvents {
         <app-journal-metric-rail />
         <app-journal-day-shape />
 
-        <!-- Above the reconstruction, not inside it: the report has already done
-             the assembling the timeline below asks the reader to do. -->
+        <!-- Last, not first. The prose is good, but the data above is now
+             self-narrating, and leading with someone else's summary of the day
+             undercuts the point of showing the day. -->
         <app-journal-report-section [date]="safeKey()" />
-        <app-journal-checks-section [date]="safeKey()" />
-        @if (loading()) {
-          <app-ui-loading-state message="Pulling the day's data…" />
-        } @else if (bundle(); as b) {
-          <app-journal-timeline-section
-            [date]="safeKey()"
-            [sessions]="b.sessions"
-            [events]="b.events"
-            [telemetry]="b.telemetry"
-            [codeSessions]="b.code_sessions"
-            [heartbeats]="b.heartbeats"
-          />
-        } @else {
-          <app-ui-empty-state title="No data" message="Couldn't load this day." />
-        }
       </app-ui-stack>
     } @else {
       <!-- The summary stays mounted across the load: tearing it down on every

@@ -32,6 +32,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { JournalCodeSessionsSection } from '../../components/journal-code-sessions-section/journal-code-sessions-section';
 import { JournalDayStreamSection } from '../../components/journal-day-stream-section/journal-day-stream-section';
+import { JournalTimelineSection } from '../../components/journal-timeline-section/journal-timeline-section';
 import { JournalPeriodHeader } from '../../components/journal-period-header/journal-period-header';
 import {
   JournalDataService,
@@ -93,6 +94,7 @@ interface RepoBucket {
     UiSubsection,
     JournalCodeSessionsSection,
     JournalDayStreamSection,
+    JournalTimelineSection,
     JournalPeriodHeader,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
