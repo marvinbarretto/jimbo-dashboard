@@ -61,6 +61,8 @@ for the rule to prevent, and blocking them produced only ceremony:
 | `watch-queue.service`  | Read-only by design — see the note in the file about why it never writes. |
 | `agent-runs.service`   | Reads, plus `setRating` — one field, no cross-store composition. |
 | `briefings.service`    | Reads, plus `rate` — same shape, and the service already owns its own in-flight/error state. |
+| `journal-overview.service`   | Read-only; one GET into a shared signal. Exists so the metric rail and the day-shape chart share a single fetch — funnelling it would reinstate the duplicate request it removes. |
+| `journal-day-stream.service` | Read-only; one GET into a shared signal, same reasoning — Overview reads it from two sections. |
 
 **Adding a destructive method to any of these means deleting its line from
 the group in `eslint.config.js`.** Keep the list short and justified. It is
@@ -185,7 +187,7 @@ maturity ratchet.
 - `features/grooming/components/grooming-card/grooming-card.ts` — switched to `inject(VAULT_ITEMS_READ)` for the parent-seq lookup; thread coupling already migrated to `ThreadCommands` in an earlier commit
 - `features/planner/components/watch-queue-panel/watch-queue-panel.ts` — kept on `WatchQueueService`; the service is read-only, so `watch-queue.service` was added to the named-exception list instead. A short-lived `WATCH_QUEUE_READ` token was tried first and reverted as ceremony.
 - `features/exercise/components/exercise-{day,summary}-section`, `features/journal/components/{journal-code-sessions,journal-timeline,training-fuel}-section`, `features/picture/components/belief-card` — switched to `EXERCISE_READ` / `PROJECTS_READ` / `INTERROGATE_ENTITY_READ`; all three services carry destructive methods, so the narrowing is load-bearing
-- `features/journal/components/journal-{agents,briefings}-section`, `journal-day-summary` — resolved by the named-exception list, no token needed
+- `features/journal/components/journal-{agents,briefings}-section`, `journal-routine-fuel-section` (formerly `journal-day-summary`) — resolved by the named-exception list, no token needed
 
 ### THREAD-COMMANDS-002 — Thread mutations go through ThreadCommands
 

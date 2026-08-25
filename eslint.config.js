@@ -107,6 +107,13 @@ module.exports = tseslint.config(
                 '!**/data-access/journal-data.service',
                 '!**/data-access/watch-queue.service',
                 '!**/data-access/vault-types.service',
+                // journal-overview / journal-day-stream: read-only, one GET
+                // each into a shared signal. They exist precisely so several
+                // sections of a page share one fetch, so the alternative to
+                // injecting them is the duplicate requests they were written
+                // to remove.
+                '!**/data-access/journal-overview.service',
+                '!**/data-access/journal-day-stream.service',
                 // agent-runs / briefings: reads plus one single-field
                 // preference write (a job rating, a briefing rating). Both
                 // writes are self-contained — no cross-store composition,

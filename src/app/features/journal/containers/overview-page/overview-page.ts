@@ -22,6 +22,8 @@ import {
 } from '@shared/utils/date-keys';
 import { JournalDayShape } from '../../components/journal-day-shape/journal-day-shape';
 import { JournalMetricRail } from '../../components/journal-metric-rail/journal-metric-rail';
+import { JournalSupportStrips } from '../../components/journal-support-strips/journal-support-strips';
+import { JournalWorkRealised } from '../../components/journal-work-realised/journal-work-realised';
 import { JournalPeriodHeader } from '../../components/journal-period-header/journal-period-header';
 import { JournalPeriodSummary } from '../../components/journal-period-summary/journal-period-summary';
 import { JournalReportSection } from '../../components/journal-report-section/journal-report-section';
@@ -29,6 +31,7 @@ import {
   JournalDataService,
   type TelemetryEventLite,
 } from '../../data-access/journal-data.service';
+import { JournalDayStreamService } from '../../data-access/journal-day-stream.service';
 import { JournalOverviewService } from '../../data-access/journal-overview.service';
 import { type JournalGranularity, currentKeyFor } from '../../utils/period-links';
 import { pollWhileVisible } from '../../utils/live-poll';
@@ -60,6 +63,8 @@ interface ApiTelemetryEvents {
     UiStack,
     JournalDayShape,
     JournalMetricRail,
+    JournalSupportStrips,
+    JournalWorkRealised,
     JournalPeriodHeader,
     JournalPeriodSummary,
     JournalReportSection,
@@ -79,6 +84,13 @@ interface ApiTelemetryEvents {
              the finding, the chart is why. -->
         <app-journal-metric-rail />
         <app-journal-day-shape />
+
+        <!-- What the numbers were made of — outcomes, not activity. -->
+        <app-journal-work-realised [date]="safeKey()" />
+
+        <!-- Half the weight of the rail above, which is the editorial position
+             made structural rather than argued in a comment. -->
+        <app-journal-support-strips [date]="safeKey()" />
 
         <!-- Last, not first. The prose is good, but the data above is now
              self-narrating, and leading with someone else's summary of the day
@@ -105,6 +117,7 @@ export class JournalOverviewPage {
   private readonly titleService = inject(Title);
   private readonly journal = inject(JournalDataService);
   private readonly overview = inject(JournalOverviewService);
+  private readonly dayStream = inject(JournalDayStreamService);
 
   protected readonly granularity = toSignal(
     this.route.data.pipe(map(d => (d['granularity'] ?? 'day') as JournalGranularity)),
@@ -181,6 +194,7 @@ export class JournalOverviewPage {
         // The page owns this fetch, not the sections — the rail and the shape
         // chart read one payload and would otherwise request it twice.
         void this.overview.load(k);
+        void this.dayStream.load(k);
       } else {
         void this.journal.loadWork(g, k);
       }
@@ -197,6 +211,7 @@ export class JournalOverviewPage {
           // force: the comparisons move with the clock even when nothing new
           // has been logged, because every one of them is time-truncated.
           void this.overview.load(k, true);
+          void this.dayStream.load(k, true);
         }
       } else {
         void this.journal.loadWork(g, k);
