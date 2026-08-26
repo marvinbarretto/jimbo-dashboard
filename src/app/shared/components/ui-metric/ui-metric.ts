@@ -172,7 +172,7 @@ export class UiMetric {
   readonly cumulative = input<string | null>(null);
 
   /** Oldest first. Under two points the sparkline is omitted. */
-  readonly series = input<readonly number[]>([]);
+  readonly series = input<readonly (number | null)[]>([]);
 
   /** Half-size variant for the supporting strips. */
   readonly compact = input<boolean>(false);

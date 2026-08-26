@@ -26819,8 +26819,8 @@ export interface components {
                     week_to_date: number;
                     month_to_date: number;
                 };
-                /** @description Oldest first, ending with value */
-                series: number[];
+                /** @description Oldest first, ending with value; null = no collection coverage that day, which is not a zero */
+                series: (number | null)[];
                 hourly: {
                     /** @description Running total at each hour boundary; length is how far the day has run */
                     cumulative: number[];

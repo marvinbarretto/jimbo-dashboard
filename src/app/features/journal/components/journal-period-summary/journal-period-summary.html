@@ -16,52 +16,9 @@
     <app-ui-stat-card label="YouTube" [value]="formatMinutes(youtubeMinutes())" [detail]="youtubeDetail()" />
   </div>
 
-  <div class="period-summary__fuel">
-    <header class="period-summary__head">
-      <span class="period-summary__label">Fuel &amp; training</span>
-    </header>
-
-    <div class="period-summary__fuel-grid">
-      <div class="period-summary__fuel-block">
-        <app-ui-progress-meter
-          label="Protein"
-          [current]="proteinG()"
-          [target]="proteinTarget()"
-          unit="g"
-          [pace]="proteinPace()"
-          [compareLabel]="compareLabel()"
-          [compareValue]="proteinPreviousG()"
-        />
-      </div>
-
-      <div class="period-summary__fuel-block">
-        @if (hasTraining()) {
-          <div class="period-summary__training">
-            <span class="period-summary__training-stat"><b>{{ gymTotals().sessions }}</b> sessions</span>
-            <span class="period-summary__training-stat"><b>{{ gymTotals().sets }}</b> sets</span>
-            <span class="period-summary__training-stat"><b>{{ gymTotals().volumeKg }}</b> kg</span>
-            <span class="period-summary__training-stat"><b>{{ formatMinutes(gymTotals().cardioMin) }}</b> cardio</span>
-          </div>
-        } @else {
-          <p class="period-summary__fuel-quiet">No training logged this period</p>
-        }
-        <p class="period-summary__fuel-week">
-          Trained on {{ gymTotals().trainedDays }} of {{ elapsedCount() }} days
-        </p>
-      </div>
-
-      <div class="period-summary__chart">
-        <span class="period-summary__chart-label">Macros</span>
-        @if (macros().kcal > 0) {
-          <app-ui-donut-chart [labels]="macroLabels" [values]="macroValues()" suffix=" g" [height]="160" />
-        } @else {
-          <p class="period-summary__chart-empty">Nothing logged</p>
-        }
-      </div>
-    </div>
-  </div>
-
-  <!-- The one thing a day view can't answer: is this going up or down. -->
+  <!-- The one thing a day view can't answer: is this going up or down.
+       Work only — protein and training volume moved to Body, which renders
+       them range-aware already and was showing the same charts twice. -->
   <div class="period-summary__trends">
     <header class="period-summary__head">
       <span class="period-summary__label">Trends</span>
@@ -84,36 +41,7 @@
         }
       </div>
 
-      <div class="period-summary__chart">
-        <span class="period-summary__chart-label">Protein per day</span>
-        @if (hasProtein()) {
-          <app-ui-bar-chart
-            [labels]="dayLabels()"
-            [values]="proteinPerDay()"
-            label="Protein"
-            suffix=" g"
-            accent="rgba(52, 211, 153, 0.7)"
-            [showTrend]="true"
-          />
-        } @else {
-          <p class="period-summary__chart-empty">Nothing logged</p>
-        }
-      </div>
 
-      <div class="period-summary__chart">
-        <span class="period-summary__chart-label">Training volume per day</span>
-        @if (hasVolume()) {
-          <app-ui-bar-chart
-            [labels]="dayLabels()"
-            [values]="volumePerDay()"
-            label="Volume"
-            suffix=" kg"
-            accent="rgba(99, 179, 237, 0.7)"
-          />
-        } @else {
-          <p class="period-summary__chart-empty">No lifting logged</p>
-        }
-      </div>
     </div>
   </div>
 

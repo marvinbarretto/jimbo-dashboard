@@ -24,8 +24,10 @@ interface RailTile {
   baselineValue: number | null;
   baselineLabel: string;
   baselineNote: string | null;
+  /** Set when the metric has no signal at all — see `dormant` below. */
+  absentNote: string | null;
   cumulative: string;
-  series: readonly number[];
+  series: readonly (number | null)[];
 }
 
 /**
@@ -62,7 +64,7 @@ interface RailTile {
               [baselineNote]="tile.baselineNote"
               [cumulative]="tile.cumulative"
               [series]="tile.series"
-              [absentNote]="pending() ? 'loading…' : null" />
+              [absentNote]="pending() ? 'loading…' : tile.absentNote" />
           }
         </div>
       }
@@ -122,21 +124,31 @@ export class JournalMetricRail {
     return RAIL.map(spec => {
       const metric = metricByKey(overview ?? undefined, spec.key);
       const min = overview?.baseline.min_samples ?? 0;
+      // A metric that is zero today, zero on a typical day, and zero across the
+      // whole trailing window is not a finding — it is a feature that is not in
+      // use. Rendering it as "0, level with typical" is technically true and
+      // says nothing, so it reads as dormant instead. Pomodoros have been in
+      // this state for weeks and were quietly occupying a quarter of the rail.
+      const dormant = metric !== null
+        && metric.value === 0
+        && (metric.baseline?.value ?? 0) === 0
+        && metric.series.every(v => v === null || v === 0);
 
       return {
         ...spec,
         // Absent until the payload lands — a placeholder zero would be a claim.
-        value: metric?.value ?? null,
+        value: dormant ? null : metric?.value ?? null,
+        absentNote: dormant ? 'not in use lately' : null,
         previousValue: metric?.prev_day?.value ?? null,
         baselineValue: metric?.baseline?.value ?? null,
         baselineLabel,
-        baselineNote: metric && !metric.baseline
-          ? `no ${baselineLabel} yet · needs ${min}`
+        baselineNote: dormant ? null
+          : metric && !metric.baseline ? `no ${baselineLabel} yet · needs ${min}`
           : null,
-        cumulative: metric
+        cumulative: metric && !dormant
           ? `week to date · ${formatMetric(metric.cumulative.week_to_date, spec.unit)}`
           : '',
-        series: metric?.series ?? [],
+        series: dormant ? [] : metric?.series ?? [],
       };
     });
   });

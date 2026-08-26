@@ -4,8 +4,6 @@ import { RouterLink } from '@angular/router';
 import { catchError, of, switchMap } from 'rxjs';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiChecklist, type UiChecklistItem } from '@shared/components/ui-checklist/ui-checklist';
-import { UiDonutChart } from '@shared/components/ui-donut-chart/ui-donut-chart';
-import { UiProgressMeter } from '@shared/components/ui-progress-meter/ui-progress-meter';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { formatMinutes, pluralise } from '@shared/utils/datetime.utils';
 import {
@@ -61,18 +59,29 @@ const ROUTINE: readonly {
 ];
 
 /**
- * The week/month counterpart of journal-day-summary: the same questions
- * (routine, work, Jimbo, fuel, training) answered across a period, plus the
- * per-day trends a single day can't show.
+ * Overview's week and month view: work totals across the period, plus the
+ * per-day trend a single day can't show.
+ *
+ * It began as a parallel implementation of the old day summary and drifted
+ * into a second copy of Body — protein meters, a macros donut, training
+ * volume, all of which Body's own week and month views already render from
+ * range endpoints. Those are gone from here; Overview is work-first at every
+ * horizon, as the day view already is.
+ *
+ * Still the odd one out, and knowingly so: day now leads with metrics that
+ * carry their own baselines while this leads with bare totals, because the
+ * comparison endpoint is day-keyed. Making it period-aware is the change that
+ * would let one set of components serve all three horizons and delete this
+ * component outright.
  *
  * Work evidence comes from the shared work bundle the page already loads;
- * nutrition, exercise, supplements and agent runs are range endpoints fetched
- * on window change (not polled — this is a glance, not a live panel). YouTube
- * segments are passed in by the page, which owns the telemetry query.
+ * agent runs are a range endpoint fetched on window change (not polled — this
+ * is a glance, not a live panel). YouTube segments are passed in by the page,
+ * which owns the telemetry query.
  */
 @Component({
   selector: 'app-journal-period-summary',
-  imports: [RouterLink, UiBarChart, UiChecklist, UiDonutChart, UiProgressMeter, UiStatCard],
+  imports: [RouterLink, UiBarChart, UiChecklist, UiStatCard],
   templateUrl: './journal-period-summary.html',
   styleUrls: ['./journal-period-summary.scss', '../../journal-sections.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
