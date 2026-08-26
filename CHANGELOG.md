@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.194](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.193...v0.0.194) (2026-08-26)
+
+
+### Features
+
+* **journal:** stop offering month where it cannot be acted on ([2d9b0c5](https://github.com/marvinbarretto/jimbo-dashboard/commit/2d9b0c574969ae1caff71147da7f5d8b1ba88289))
+
 ### [0.0.193](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.192...v0.0.193) (2026-08-26)
 
 
