@@ -24,6 +24,19 @@ const APPROVAL_STATUSES = new Set(['proposed']);
 
 export type HealthTone = 'ok' | 'warn' | 'alert';
 
+/**
+ * Statuses meaning "ran, and deliberately chose not to work".
+ *
+ * `cooldown` is a quota throttle; `gated` is Kipper's launchd runner finding
+ * the laptop on battery. Both are the worker doing exactly what it should, and
+ * alarming on either teaches the reader to ignore the panel.
+ *
+ * The distinction from silence matters: a gated worker still checks in. It is
+ * only quiet about *work*, never about itself — which is the whole reason the
+ * gate was changed to report rather than exit.
+ */
+const IDLE_BY_DESIGN = new Set(['cooldown', 'gated']);
+
 export interface HealthRow {
   readonly id: string;
   readonly label: string;
@@ -68,14 +81,23 @@ export function formatAge(mins: number): string {
 export function workerRows(workers: readonly FleetWorker[], now: Date): HealthRow[] {
   return workers.map(w => {
     const mins = minutesSince(w.checked_at, now);
-    const cooling = w.status === 'cooldown' || w.next_poll_at !== null;
+    const idleByDesign = IDLE_BY_DESIGN.has(w.status ?? '');
+    // "Parked" is a promise with a deadline: cooldown says "back at T". Until T
+    // it is calm; past T it has broken its own word and the thresholds apply
+    // again.
+    const parkedUntil = w.next_poll_at ? Date.parse(w.next_poll_at) : NaN;
+    const parked = Number.isFinite(parkedUntil) && parkedUntil > now.getTime();
     const suspended = activeSuspension(w, now);
 
     // A suspension changes the expectation; it does not hide the row. The
     // worker is still listed, still shows how long it has been quiet, and
     // still says when it is due back — it simply stops reading as a fault,
     // because being down is what was predicted.
-    const tone: HealthTone = suspended || cooling || mins === null ? 'ok'
+    // Standing down from *work* is not standing down from *reporting*. A gated
+    // worker still ticks every five minutes; if it goes quiet altogether its
+    // runner has died, which is a real outage and must still fire. Only an
+    // explicit suspension or an unexpired park suppresses the thresholds.
+    const tone: HealthTone = suspended || parked || mins === null ? 'ok'
       : mins >= WORKER_LOST_MIN ? 'alert'
       : mins >= WORKER_LATE_MIN ? 'warn'
       : 'ok';
@@ -90,7 +112,9 @@ export function workerRows(workers: readonly FleetWorker[], now: Date): HealthRo
           : `${w.status ?? 'unknown'} · last seen ${formatAge(mins)} ago`,
       expectation: suspended
         ? `back ${formatUntil(suspended.until, now)}`
-        : cooling ? 'cooling down'
+        // The worker's own words where it gave them: it knows why it stood
+        // down, and repeating that beats a generic label.
+        : idleByDesign || parked ? (w.reason ?? 'idle by design')
         : `every ${WORKER_LATE_MIN}m`,
       tone,
     };

@@ -11155,7 +11155,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Run one grooming-pump tick (reap stale, enqueue intake/classify/decompose) */
+        /**
+         * Run one grooming-pump tick (reap orphans, reap stale, enqueue intake/classify/decompose)
+         * @description Runs the orphan reaper first and unconditionally, then the grooming pump.
+         *
+         *     The order matters. Every flow reaps its own work, which left dispatches no pump owns — briefings, day reports, triage — with nothing watching them; two sat in `running` for twenty-six days. The orphan reaper is the backstop for exactly those, and it runs even when the pump is disabled, because abandoned rows accumulate regardless of whether grooming is switched on.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -23480,6 +23485,8 @@ export interface components {
                 checked_at: string | null;
                 next_poll_at: string | null;
                 /** @default null */
+                reason: string | null;
+                /** @default null */
                 suspended: {
                     reason: string;
                     until: string;
@@ -24885,6 +24892,8 @@ export interface components {
             in_flight_before: number;
             in_flight_after: number;
             reaped: number;
+            /** @default 0 */
+            orphans_reaped: number;
             orphaned_locks_cleared: number;
             stuck_notes: components["schemas"]["PipelineTickStuckNote"][];
             promoted: number;

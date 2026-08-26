@@ -20,6 +20,9 @@ export const ApiFleetWorkerSchema = z.object({
   // then (quota throttle), not dead. Optional so the page tolerates an API
   // that predates the field.
   next_poll_at: z.string().nullable().optional().default(null),
+  // Why a worker is deliberately not working — "on battery — waiting for
+  // mains". The difference between correct behaviour and an outage.
+  reason: z.string().nullable().optional().default(null),
   // A deliberate, time-boxed outage declared from outside the worker — a
   // machine that is off cannot heartbeat "I meant to do that". Optional so a
   // dashboard newer than the API still parses.

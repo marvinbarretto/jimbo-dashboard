@@ -10,7 +10,7 @@ const agoMin = (m: number) => new Date(NOW.getTime() - m * 60_000).toISOString()
 
 const worker = (p: Partial<FleetWorker> & { id: string }): FleetWorker => ({
   machine: 'm2', status: 'polling', checked_at: agoMin(1), next_poll_at: null,
-  suspended: null, ...p,
+  suspended: null, reason: null, ...p,
 });
 
 const depth = (executor: string, status: string, count: number): FleetQueueDepth =>
@@ -38,11 +38,24 @@ describe('workerRows', () => {
 
   // A throttled worker is deliberately quiet. Alarming on it would cry wolf
   // every time the fleet backs off for quota, and the panel would be ignored.
-  it('never alarms on a cooling-down worker', () => {
-    const cooling = worker({ id: 'boris', status: 'cooldown', checked_at: agoMin(240) });
-    const row = workerRows([cooling], NOW)[0];
+  it('never alarms on a worker parked until a stated time', () => {
+    const parked = worker({
+      id: 'jeffrey', status: 'cooldown', checked_at: agoMin(240),
+      next_poll_at: new Date(NOW.getTime() + 5 * 60_000).toISOString(),
+    });
+    const row = workerRows([parked], NOW)[0];
     expect(row.tone).toBe('ok');
-    expect(row.expectation).toBe('cooling down');
+  });
+
+  // Cooldown is a promise with a deadline. Past it, the worker has broken its
+  // own word, and "I'll be back at 3" four hours ago is indistinguishable from
+  // a worker that died at 3.
+  it('alarms once a parked worker overruns its own return time', () => {
+    const overdue = worker({
+      id: 'jeffrey', status: 'cooldown', checked_at: agoMin(240),
+      next_poll_at: new Date(NOW.getTime() - 60 * 60_000).toISOString(),
+    });
+    expect(workerRows([overdue], NOW)[0].tone).toBe('alert');
   });
 
   it('says so when a worker has never checked in', () => {
@@ -293,5 +306,42 @@ describe('approval queue vs worker backlog', () => {
   it('still counts approved work as worker backlog', () => {
     expect(backlogByExecutor([depth('boris', 'approved', 4), depth('boris', 'dispatching', 1)]).get('boris')).toBe(5);
     expect(awaitingApproval([depth('boris', 'proposed', 21)]).get('boris')).toBe(21);
+  });
+});
+
+// Kipper's launchd runner fires every five minutes and works only on mains
+// power. It used to exit silently when on battery, so fifteen hours of exactly
+// correct behaviour rendered as a dead worker.
+describe('idle by design', () => {
+  it('stays calm for a gated worker and repeats its own reason', () => {
+    const row = workerRows([worker({
+      id: 'kipper', machine: 'm4', status: 'gated',
+      reason: 'on battery — waiting for mains', checked_at: agoMin(3),
+    })], NOW)[0];
+
+    expect(row.tone).toBe('ok');
+    expect(row.expectation).toBe('on battery — waiting for mains');
+  });
+
+  // A gated worker is quiet about work, never about itself. If it stops
+  // checking in altogether, that is a real outage and must still fire.
+  it('still alerts when a gated worker stops checking in', () => {
+    const row = workerRows([worker({
+      id: 'kipper', status: 'gated', reason: 'on battery', checked_at: agoMin(90),
+    })], NOW)[0];
+
+    expect(row.tone).toBe('alert');
+  });
+
+  it('falls back to a plain label when no reason is given', () => {
+    const row = workerRows([worker({ id: 'jeffrey', status: 'cooldown', checked_at: agoMin(2) })], NOW)[0];
+    expect(row.expectation).toBe('idle by design');
+  });
+
+  it('keeps a gated worker calm while it is still ticking', () => {
+    const row = workerRows([worker({
+      id: 'kipper', status: 'gated', reason: 'on battery', checked_at: agoMin(4),
+    })], NOW)[0];
+    expect(row.tone).toBe('ok');
   });
 });
