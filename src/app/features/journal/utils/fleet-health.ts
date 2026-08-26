@@ -7,8 +7,20 @@ export const WORKER_LATE_MIN = 15;
 export const WORKER_LOST_MIN = 60;
 // Dispatches are minutes of work. Hours means hung, not busy.
 export const JOB_STUCK_HOURS = 2;
-/** Statuses meaning "accepted but not started" — the backlog that matters. */
-const WAITING_STATUSES = new Set(['proposed', 'approved', 'queued', 'pending']);
+/**
+ * Statuses where a *worker* is the thing standing between the job and being
+ * done. `approved` and `dispatching` qualify; `proposed` does not.
+ *
+ * That distinction is the whole point. A dispatch lands as `proposed` unless
+ * auto-approve is on, so proposals pile up waiting on Marvin, not on Boris —
+ * and reporting them as "nothing is picking them up" blames a worker that is
+ * polling normally. This panel exists to stop false alarms, so it must not
+ * manufacture one out of a workflow state.
+ */
+const WAITING_STATUSES = new Set(['approved', 'dispatching']);
+
+/** Awaiting a human decision, not a worker. Shown, but never as a fault. */
+const APPROVAL_STATUSES = new Set(['proposed']);
 
 export type HealthTone = 'ok' | 'warn' | 'alert';
 
@@ -104,11 +116,23 @@ function formatUntil(until: string, now: Date): string {
   return `in ${days} days`;
 }
 
-/** Accepted but unstarted work per executor — what a stalled worker leaves behind. */
+/** Approved but unstarted work per executor — what a stalled worker leaves behind. */
 export function backlogByExecutor(queue: readonly FleetQueueDepth[]): Map<string, number> {
+  return countByExecutor(queue, WAITING_STATUSES);
+}
+
+/** Dispatches still awaiting approval, per executor. A queue for Marvin. */
+export function awaitingApproval(queue: readonly FleetQueueDepth[]): Map<string, number> {
+  return countByExecutor(queue, APPROVAL_STATUSES);
+}
+
+function countByExecutor(
+  queue: readonly FleetQueueDepth[],
+  statuses: ReadonlySet<string>,
+): Map<string, number> {
   const out = new Map<string, number>();
   for (const q of queue) {
-    if (!WAITING_STATUSES.has(q.status)) continue;
+    if (!statuses.has(q.status)) continue;
     const key = q.executor ?? 'unassigned';
     out.set(key, (out.get(key) ?? 0) + q.count);
   }
@@ -164,6 +188,17 @@ export function healthAlerts(
           : 'accepted but not started',
       expectation: suspension ? 'expected to accumulate' : 'drains continuously',
       tone: suspension ? 'ok' : idle ? 'alert' : 'warn',
+    });
+  }
+
+  for (const [executor, count] of awaitingApproval(queue)) {
+    if (count === 0) continue;
+    rows.push({
+      id: `approval-${executor}`,
+      label: `${count} dispatch${count === 1 ? '' : 'es'} awaiting approval`,
+      detail: `proposed for ${executor} — waiting on a decision, not on the worker`,
+      expectation: 'yours to approve or reject',
+      tone: 'warn',
     });
   }
 

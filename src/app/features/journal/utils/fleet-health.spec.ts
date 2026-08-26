@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { FleetQueueDepth, FleetRunning, FleetWorker } from '@domain/dispatch';
 import type { Signal as DayStreamSignal } from '@domain/day-stream/day-stream';
-import { backlogByExecutor, formatAge, healthAlerts, healthHeadline, healthNotifications, workerRows } from './fleet-health';
+import { awaitingApproval, backlogByExecutor, formatAge, healthAlerts, healthHeadline, healthNotifications, workerRows } from './fleet-health';
 
 // Fixed clock throughout — a health panel that behaves differently depending on
 // when the suite runs is the last thing that should be flaky.
@@ -54,7 +54,7 @@ describe('workerRows', () => {
 describe('backlogByExecutor', () => {
   it('counts only work that is accepted but not started', () => {
     const backlog = backlogByExecutor([
-      depth('boris', 'proposed', 21),
+      depth('boris', 'approved', 21),
       depth('boris', 'running', 6),      // started — not backlog
       depth('boris', 'completed', 100),  // finished — not backlog
       depth('jeffrey', 'approved', 2),
@@ -70,7 +70,7 @@ describe('healthAlerts', () => {
   it('escalates a backlog sitting behind an overdue worker', () => {
     const rows = healthAlerts(
       [worker({ id: 'boris', checked_at: agoMin(20) })],
-      [depth('boris', 'proposed', 21)],
+      [depth('boris', 'approved', 21)],
       [], [], NOW,
     );
     const backlog = rows.find(r => r.id === 'backlog-boris')!;
@@ -88,7 +88,7 @@ describe('healthAlerts', () => {
   });
 
   it('does not vouch for an executor it has no worker for', () => {
-    const rows = healthAlerts([], [depth('ralph', 'proposed', 3)], [], [], NOW);
+    const rows = healthAlerts([], [depth('ralph', 'approved', 3)], [], [], NOW);
     expect(rows[0].tone).toBe('alert');
   });
 
@@ -135,7 +135,7 @@ describe('headline', () => {
   it('counts each severity separately', () => {
     const rows = healthAlerts(
       [worker({ id: 'boris', checked_at: agoMin(90) })],
-      [depth('boris', 'proposed', 5), depth('kipper', 'proposed', 1)],
+      [depth('boris', 'approved', 5), depth('kipper', 'approved', 1)],
       [], [], NOW,
     );
     expect(healthHeadline(rows)).toBe('2 needing attention');
@@ -172,7 +172,7 @@ describe('healthNotifications', () => {
 
     const stalled = healthNotifications(
       [worker({ id: 'boris', checked_at: agoMin(120) })],
-      [depth('boris', 'proposed', 21)], [], NOW);
+      [depth('boris', 'approved', 21)], [], NOW);
     expect(stalled.some(r => r.message.includes('21 jobs waiting on boris'))).toBe(true);
   });
 
@@ -200,7 +200,7 @@ describe('healthNotifications', () => {
   it('never offers a dismiss on a standing condition', () => {
     const rows = healthNotifications(
       [worker({ id: 'boris', checked_at: agoMin(200) })],
-      [depth('boris', 'proposed', 21)],
+      [depth('boris', 'approved', 21)],
       [running({ id: '1', started_at: agoMin(600) })],
       NOW);
     expect(rows.length).toBeGreaterThan(0);
@@ -237,7 +237,7 @@ describe('suspension', () => {
   });
 
   it('treats the backlog as expected accumulation, still visible', () => {
-    const rows = healthAlerts([suspended(60 * 24 * 9)], [depth('boris', 'proposed', 21)], [], [], NOW);
+    const rows = healthAlerts([suspended(60 * 24 * 9)], [depth('boris', 'approved', 21)], [], [], NOW);
     const backlog = rows.find(r => r.id === 'backlog-boris')!;
 
     expect(backlog.tone).toBe('ok');
@@ -247,12 +247,51 @@ describe('suspension', () => {
 
   // Visible where you go to look; absent where you are interrupted.
   it('never reaches the notification bar', () => {
-    const rows = healthNotifications([suspended(60 * 24 * 9)], [depth('boris', 'proposed', 21)], [], NOW);
+    const rows = healthNotifications([suspended(60 * 24 * 9)], [depth('boris', 'approved', 21)], [], NOW);
     expect(rows).toEqual([]);
   });
 
   it('reaches the bar again once it lapses', () => {
-    const rows = healthNotifications([suspended(-1)], [depth('boris', 'proposed', 21)], [], NOW);
+    const rows = healthNotifications([suspended(-1)], [depth('boris', 'approved', 21)], [], NOW);
     expect(rows.length).toBeGreaterThan(0);
+  });
+});
+
+// A dispatch lands as `proposed` unless auto-approve is on, so proposals queue
+// on Marvin's decision, not on a worker. Reporting them as "nothing is picking
+// them up" blames a worker that is polling perfectly well — a false alarm from
+// the panel built to stop false alarms.
+describe('approval queue vs worker backlog', () => {
+  it('does not treat proposals as a stalled worker', () => {
+    const rows = healthAlerts(
+      [worker({ id: 'boris', checked_at: agoMin(120) })],
+      [depth('boris', 'proposed', 21)],
+      [], [], NOW,
+    );
+    expect(rows.find(r => r.id === 'backlog-boris')).toBeUndefined();
+  });
+
+  it('surfaces them as a decision waiting on Marvin', () => {
+    const rows = healthAlerts([worker({ id: 'boris' })], [depth('boris', 'proposed', 21)], [], [], NOW);
+    const row = rows.find(r => r.id === 'approval-boris')!;
+
+    expect(row.label).toContain('21 dispatches awaiting approval');
+    expect(row.expectation).toBe('yours to approve or reject');
+    // Never an alert: nothing is broken.
+    expect(row.tone).toBe('warn');
+  });
+
+  it('keeps them out of the notification bar', () => {
+    const rows = healthNotifications(
+      [worker({ id: 'boris', checked_at: agoMin(200) })],
+      [depth('boris', 'proposed', 21)],
+      [], NOW,
+    );
+    expect(rows.some(r => r.id.startsWith('health-backlog'))).toBe(false);
+  });
+
+  it('still counts approved work as worker backlog', () => {
+    expect(backlogByExecutor([depth('boris', 'approved', 4), depth('boris', 'dispatching', 1)]).get('boris')).toBe(5);
+    expect(awaitingApproval([depth('boris', 'proposed', 21)]).get('boris')).toBe(21);
   });
 });
