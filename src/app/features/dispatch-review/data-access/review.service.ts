@@ -18,6 +18,7 @@ interface ApiReviewItem {
   seq: string | null;
   title: string | null;
   assigned_to: string | null;
+  acceptance_criteria: string | null;
   dispatch_id: string;
   skill: string | null;
   result_summary: string | null;
@@ -33,6 +34,12 @@ export interface ReviewItem {
   seq: string | null;
   title: string | null;
   assignedTo: string | null;
+  /**
+   * What the work was commissioned to achieve. Rendered beside the agent's own
+   * summary so approving is a check against the brief, not a rubber stamp —
+   * this gate paces the whole commission lane.
+   */
+  acceptanceCriteria: string | null;
   dispatchId: string;
   skill: string | null;
   resultSummary: string | null;
@@ -48,6 +55,7 @@ function toReviewItem(r: ApiReviewItem): ReviewItem {
     seq: r.seq,
     title: r.title,
     assignedTo: r.assigned_to,
+    acceptanceCriteria: r.acceptance_criteria,
     dispatchId: r.dispatch_id,
     skill: r.skill,
     resultSummary: r.result_summary,

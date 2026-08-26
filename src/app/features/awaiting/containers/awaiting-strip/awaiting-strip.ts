@@ -98,7 +98,8 @@ export class AwaitingStrip {
   private readonly reviewsWaiting = computed<ReviewWaiting[]>(
     () => this.reviewService.items().map(r => ({
       id: r.noteId, seq: r.seq, title: r.title, skill: r.skill,
-      summary: r.resultSummary, prUrl: r.prUrl, prState: r.prState,
+      summary: r.resultSummary, acceptanceCriteria: r.acceptanceCriteria,
+      prUrl: r.prUrl, prState: r.prState,
       completedAt: r.completedAt,
     })),
   );

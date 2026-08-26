@@ -69,6 +69,14 @@
                     <a class="wait__link" [routerLink]="['/vault-items', row.review.seq]">
                       #{{ row.review.seq }} · {{ row.review.title }}
                     </a>
+                    <!-- Brief first, then the agent's account of itself. Reading
+                         them the other way round anchors on the summary and the
+                         accept becomes a rubber stamp. -->
+                    @if (row.review.acceptanceCriteria) {
+                      <app-card-callout variant="brief" label="what it had to do">
+                        {{ row.review.acceptanceCriteria }}
+                      </app-card-callout>
+                    }
                     @if (row.review.summary) {
                       <app-card-callout variant="result" label="what the agent produced">
                         {{ row.review.summary }}

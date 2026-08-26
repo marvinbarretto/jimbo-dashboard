@@ -73,6 +73,12 @@ export interface ReviewWaiting {
   title:       string | null;
   skill:       string | null;
   summary:     string | null;
+  /**
+   * The criteria the work was commissioned against. Rendered beside `summary`
+   * so accepting is a check rather than a rubber stamp: `summary` is the
+   * agent's own account of itself, and this is the brief it was given.
+   */
+  acceptanceCriteria: string | null;
   prUrl:       string | null;
   prState:     string | null;
   completedAt: string | null;

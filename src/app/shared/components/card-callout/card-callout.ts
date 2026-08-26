@@ -1,6 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-export type CalloutVariant = 'question' | 'rework' | 'draft' | 'rationale' | 'result' | 'error';
+export type CalloutVariant =
+  | 'question' | 'rework' | 'draft' | 'rationale' | 'result' | 'error'
+  // The brief a piece of work was commissioned against, shown so a result can
+  // be judged against it. Deliberately neutral: it is the yardstick, not an
+  // outcome, and colouring it success or warning would prejudge the answer.
+  | 'brief';
 
 @Component({
   selector: 'app-card-callout',
@@ -51,6 +56,9 @@ export type CalloutVariant = 'question' | 'rework' | 'draft' | 'rationale' | 're
 
     .card-callout--rationale { border-color: var(--color-info); background: color-mix(in srgb, var(--color-info) 8%, transparent); }
     .card-callout--rationale .card-callout__label { color: var(--color-info); }
+
+    .card-callout--brief     { border-color: var(--color-border); background: color-mix(in srgb, var(--color-text) 4%, transparent); }
+    .card-callout--brief .card-callout__label { color: var(--color-text-muted); }
 
     .card-callout--result    { border-color: var(--color-success); background: color-mix(in srgb, var(--color-success) 8%, transparent); }
     .card-callout--result .card-callout__label { color: var(--color-success); }
