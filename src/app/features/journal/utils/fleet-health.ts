@@ -1,5 +1,6 @@
 import type { FleetQueueDepth, FleetRunning, FleetWorker } from '@domain/dispatch';
 import type { Signal as DayStreamSignal } from '@domain/day-stream/day-stream';
+import type { NotificationEntry } from '@shared/components/notification-bar/notification-bar';
 
 // A worker that has not checked in for this long is not resting.
 export const WORKER_LATE_MIN = 15;
@@ -176,4 +177,91 @@ export function healthHeadline(rows: readonly HealthRow[]): string {
   if (!alerts && !warns) return 'all clear';
   return [alerts ? `${alerts} needing attention` : null, warns ? `${warns} to watch` : null]
     .filter(Boolean).join(' · ');
+}
+
+/**
+ * The subset of fleet health urgent enough to interrupt.
+ *
+ * Deliberately narrower than {@link healthAlerts}. The notification bar pushes
+ * the whole page down, which is what makes it effective and what makes it
+ * intolerable when over-used — so only conditions that mean *work is not
+ * happening right now* qualify.
+ *
+ * Excluded on purpose: dead and quiet collectors. A feed that has been dead for
+ * twelve days is a standing fact, not news, and a permanent undismissable row
+ * about it would train the reader to ignore the bar entirely. Those live on the
+ * Jimbo tab, where looking is the deliberate act.
+ *
+ * Every entry is non-dismissible, because each describes something still true.
+ * A dismiss would silence a live outage rather than resolve it; these clear
+ * themselves the moment the underlying state does.
+ *
+ * @param workers - Worker heartbeats
+ * @param queue - Queue depths by executor and status
+ * @param running - Jobs currently marked running
+ * @param now - Reference time
+ * @returns Notification-bar entries, most urgent first
+ */
+export function healthNotifications(
+  workers: readonly FleetWorker[],
+  queue: readonly FleetQueueDepth[],
+  running: readonly FleetRunning[],
+  now: Date,
+): NotificationEntry[] {
+  const rows: NotificationEntry[] = [];
+  const byWorker = new Map(workerRows(workers, now).map(r => [r.id, r]));
+
+  for (const w of workers) {
+    const tone = byWorker.get(`worker-${w.id}`)?.tone;
+    if (tone !== 'alert') continue;
+    const mins = minutesSince(w.checked_at, now);
+    rows.push({
+      id: `health-worker-${w.id}`,
+      source: 'Fleet',
+      message: `${w.id}${w.machine ? ` on ${w.machine}` : ''} has not checked in for ${mins === null ? 'ever' : formatAge(mins)}`,
+      tone: 'danger',
+      href: '/fleet',
+      dismissible: false,
+      standingHint: 'Clears when the worker checks in again',
+    });
+  }
+
+  for (const [executor, count] of backlogByExecutor(queue)) {
+    if (count === 0) continue;
+    // Only when nothing is picking the work up. A backlog behind a healthy
+    // worker is a busy queue, and a busy queue is not an emergency.
+    if ((byWorker.get(`worker-${executor}`)?.tone ?? 'alert') === 'ok') continue;
+    rows.push({
+      id: `health-backlog-${executor}`,
+      source: 'Fleet',
+      message: `${count} job${count === 1 ? '' : 's'} waiting on ${executor} and nothing is picking them up`,
+      tone: 'danger',
+      href: '/fleet',
+      count,
+      dismissible: false,
+      standingHint: 'Clears when the queue starts draining',
+    });
+  }
+
+  // One row for all hung jobs, never one each: six stuck dispatches are a
+  // single problem, and six rows would bury everything else in the bar.
+  const stuck = running
+    .map(job => minutesSince(job.started_at, now))
+    .filter((m): m is number => m !== null && m >= JOB_STUCK_HOURS * 60)
+    .sort((a, b) => b - a);
+
+  if (stuck.length > 0) {
+    rows.push({
+      id: 'health-stuck-jobs',
+      source: 'Fleet',
+      message: `${stuck.length} job${stuck.length === 1 ? '' : 's'} hung — oldest running ${formatAge(stuck[0])}`,
+      tone: 'warning',
+      href: '/fleet',
+      count: stuck.length,
+      dismissible: false,
+      standingHint: 'Clears when the jobs finish or are reaped',
+    });
+  }
+
+  return rows;
 }

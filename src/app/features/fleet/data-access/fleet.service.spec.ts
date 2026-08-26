@@ -94,6 +94,35 @@ describe('FleetService notification grouping + dismiss', () => {
     expect(service.notifications().length).toBe(2);
   });
 
+  // The state from the screenshot that started this: seven different grooming
+  // notes, each timing out on the same reaper, filling the bar with seven rows.
+  // Distinct notes, so per-note grouping cannot help — that is one broken thing
+  // reported seven times.
+  it('collapses a storm of distinct notes under one skill into a single row', async () => {
+    await loadFailures([
+      failure({ id: '10', task_id: 'note-a', note_title: 'Design the detection algorithm', error_message: 'reaper: timeout' }),
+      failure({ id: '11', task_id: 'note-b', note_title: 'Implement signal extraction', error_message: 'reaper: timeout' }),
+      failure({ id: '12', task_id: 'note-c', note_title: 'Integrate configuration system', error_message: 'reaper: timeout' }),
+    ]);
+
+    expect(service.notifications().length).toBe(1);
+    const entry = service.notifications()[0];
+    expect(entry.message).toContain('3 notes');
+    // Keyed to a real dispatch id, so dismissing the storm still round-trips.
+    expect(entry.id).toBe('10');
+  });
+
+  // Restraint is the point: two failures that merely share a skill are two
+  // problems, and collapsing them would hide one behind the other.
+  it('leaves a pair of distinct notes as separate rows', async () => {
+    await loadFailures([
+      failure({ id: '10', task_id: 'note-a', note_title: 'Design the detection algorithm' }),
+      failure({ id: '11', task_id: 'note-b', note_title: 'Implement signal extraction' }),
+    ]);
+
+    expect(service.notifications().length).toBe(2);
+  });
+
   it('dismiss() on the collapsed entry dismisses every underlying failure in the group', async () => {
     await loadFailures(RETRY_ROWS);
 

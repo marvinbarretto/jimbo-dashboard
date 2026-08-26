@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { FleetQueueDepth, FleetRunning, FleetWorker } from '@domain/dispatch';
 import type { Signal as DayStreamSignal } from '@domain/day-stream/day-stream';
-import { backlogByExecutor, formatAge, healthAlerts, healthHeadline, workerRows } from './fleet-health';
+import { backlogByExecutor, formatAge, healthAlerts, healthHeadline, healthNotifications, workerRows } from './fleet-health';
 
 // Fixed clock throughout — a health panel that behaves differently depending on
 // when the suite runs is the last thing that should be flaky.
@@ -146,5 +146,64 @@ describe('formatAge', () => {
     expect(formatAge(45)).toBe('45m');
     expect(formatAge(190)).toBe('3h 10m');
     expect(formatAge(60 * 24 * 26 + 300)).toBe('26d 5h');
+  });
+});
+
+describe('healthNotifications', () => {
+  it('raises a standing row for a lost worker', () => {
+    const rows = healthNotifications([worker({ id: 'boris', checked_at: agoMin(120) })], [], [], NOW);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].message).toContain('has not checked in for 2h');
+    // Non-dismissible on purpose: the outage is still happening.
+    expect(rows[0].dismissible).toBe(false);
+  });
+
+  it('stays silent while workers are checking in', () => {
+    expect(healthNotifications([worker({ id: 'kipper', checked_at: agoMin(1) })], [], [], NOW)).toEqual([]);
+  });
+
+  // A busy queue is not an emergency. Only a queue nothing is draining is.
+  it('only raises a backlog when nothing is picking the work up', () => {
+    const healthy = healthNotifications(
+      [worker({ id: 'jeffrey', checked_at: agoMin(2) })],
+      [depth('jeffrey', 'approved', 40)], [], NOW);
+    expect(healthy).toEqual([]);
+
+    const stalled = healthNotifications(
+      [worker({ id: 'boris', checked_at: agoMin(120) })],
+      [depth('boris', 'proposed', 21)], [], NOW);
+    expect(stalled.some(r => r.message.includes('21 jobs waiting on boris'))).toBe(true);
+  });
+
+  // Six stuck dispatches are one problem. Six rows would bury everything else.
+  it('collapses every hung job into a single row', () => {
+    const rows = healthNotifications([], [], [
+      running({ id: '1', started_at: agoMin(60 * 5) }),
+      running({ id: '2', started_at: agoMin(60 * 24 * 26) }),
+      running({ id: '3', started_at: agoMin(60 * 9) }),
+      running({ id: '4', started_at: agoMin(5) }), // still working
+    ], NOW);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].count).toBe(3);
+    expect(rows[0].message).toContain('oldest running 26d');
+  });
+
+  // Standing facts, not news. A permanent undismissable row about a feed that
+  // died a fortnight ago trains the reader to ignore the bar.
+  it('keeps dead feeds out of the bar entirely', () => {
+    const rows = healthNotifications([worker({ id: 'kipper', checked_at: agoMin(1) })], [], [], NOW);
+    expect(rows).toEqual([]);
+  });
+
+  it('never offers a dismiss on a standing condition', () => {
+    const rows = healthNotifications(
+      [worker({ id: 'boris', checked_at: agoMin(200) })],
+      [depth('boris', 'proposed', 21)],
+      [running({ id: '1', started_at: agoMin(600) })],
+      NOW);
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every(r => r.dismissible === false)).toBe(true);
+    expect(rows.every(r => r.standingHint !== null)).toBe(true);
   });
 });

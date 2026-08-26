@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { NotificationItem, type NotificationTone } from './notification-item';
 
@@ -15,7 +15,20 @@ export interface NotificationEntry {
   tone?: NotificationTone;
   href?: string | null;
   count?: number;
+  /**
+   * False for a condition that is still true — a stalled worker, a queue that
+   * is not draining. These clear themselves; offering a dismiss would let a
+   * live outage be silenced while it is still happening.
+   */
+  dismissible?: boolean;
+  /** Tooltip explaining what will clear a standing row. */
+  standingHint?: string | null;
 }
+
+// The bar pushes the page down, which is exactly why it works and exactly why
+// it must stay short. Seven rows for one failing grooming run made the whole
+// shell unusable; the host groups what it can and this caps the rest.
+const MAX_VISIBLE = 4;
 
 // Sticky top-of-shell stack, not a corner toast: this is for things that must
 // still be visible after the page that caused them is long gone (a briefing
@@ -31,12 +44,12 @@ export interface NotificationEntry {
   template: `
     @if (entries().length > 0) {
       <div class="notification-bar" role="region" aria-label="System notifications">
-        @if (entries().length > 1) {
+        @if (dismissableCount() > 1) {
           <div class="notification-bar__actions">
             <app-ui-button variant="ghost" size="sm" [bare]="true" (pressed)="dismissAll.emit()">Dismiss all</app-ui-button>
           </div>
         }
-        @for (entry of entries(); track entry.id) {
+        @for (entry of visible(); track entry.id) {
           <app-notification-item
             [source]="entry.source"
             [message]="entry.message"
@@ -44,8 +57,15 @@ export interface NotificationEntry {
             [tone]="entry.tone ?? 'danger'"
             [href]="entry.href ?? null"
             [count]="entry.count ?? 1"
+            [dismissible]="entry.dismissible ?? true"
+            [standingHint]="entry.standingHint ?? null"
             (dismiss)="dismiss.emit(entry.id)"
           />
+        }
+        @if (overflow() > 0) {
+          <p class="notification-bar__overflow">
+            and {{ overflow() }} more — see the fleet board
+          </p>
         }
       </div>
     }
@@ -59,6 +79,14 @@ export interface NotificationEntry {
       flex-direction: column;
     }
 
+    .notification-bar__overflow {
+      margin: 0;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.72rem;
+      color: var(--color-text-muted);
+      background: var(--color-surface);
+    }
+
     .notification-bar__actions {
       display: flex;
       justify-content: flex-end;
@@ -69,6 +97,21 @@ export interface NotificationEntry {
 })
 export class NotificationBar {
   readonly entries = input.required<readonly NotificationEntry[]>();
+
+  // Standing conditions come first: they are the ones that mean something is
+  // wrong *now*, where a failure row is a record of something already over.
+  private readonly ordered = computed(() => {
+    const list = [...this.entries()];
+    return [
+      ...list.filter(e => e.dismissible === false),
+      ...list.filter(e => e.dismissible !== false),
+    ];
+  });
+
+  protected readonly visible = computed(() => this.ordered().slice(0, MAX_VISIBLE));
+  protected readonly overflow = computed(() => Math.max(0, this.ordered().length - MAX_VISIBLE));
+  protected readonly dismissableCount = computed(() =>
+    this.entries().filter(e => e.dismissible !== false).length);
   readonly dismiss = output<string>();
   readonly dismissAll = output<void>();
 }

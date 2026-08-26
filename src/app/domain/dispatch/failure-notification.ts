@@ -61,3 +61,33 @@ export function failureToNotification(f: FleetFailure, count = 1): NotificationE
     count,
   };
 }
+
+/**
+ * Many notes failing the same way → one row.
+ *
+ * A retry loop is one note failing repeatedly and is already collapsed by
+ * grouping on the note. This is the other shape, and the worse one: a single
+ * broken thing taking out many items at once. Seven notes timing out on the
+ * same grooming reaper filled the bar with seven rows, which is one problem
+ * reported seven times and a shell pushed off the screen.
+ *
+ * @param groups - Per-note failure groups, newest note-group first
+ * @returns One entry standing for the whole storm, keyed to the latest failure
+ *   so dismissing it is still a valid dispatch id
+ */
+export function stormToNotification(groups: readonly (readonly FleetFailure[])[]): NotificationEntry {
+  const latest = groups[0][0];
+  const attempts = groups.reduce((total, g) => total + g.length, 0);
+  const reason = latest.error_message ?? 'Dispatch failed';
+  return {
+    id: latest.id,
+    source: sourceLabel(latest),
+    // Note count, not attempt count: the number of distinct things affected is
+    // what tells you whether this is a blip or an outage.
+    message: `${groups.length} notes — ${reason}`,
+    timestamp: latest.completed_at,
+    tone: tone(latest),
+    href: href(latest),
+    count: attempts,
+  };
+}

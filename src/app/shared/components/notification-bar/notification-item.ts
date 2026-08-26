@@ -27,7 +27,11 @@ export type NotificationTone = 'danger' | 'warning' | 'info';
       @if (href(); as h) {
         <a class="notification-item__action" [href]="h" target="_blank" rel="noopener">View →</a>
       }
-      <button type="button" class="notification-item__dismiss" (click)="dismiss.emit()" aria-label="Dismiss">×</button>
+      @if (dismissible()) {
+        <button type="button" class="notification-item__dismiss" (click)="dismiss.emit()" aria-label="Dismiss">×</button>
+      } @else {
+        <span class="notification-item__standing" [attr.title]="standingHint()">standing</span>
+      }
     </div>
   `,
   styles: [`
@@ -44,6 +48,18 @@ export type NotificationTone = 'danger' | 'warning' | 'info';
       &--danger  { --tone-color: var(--color-danger); }
       &--warning { --tone-color: var(--color-warning); }
       &--info    { --tone-color: var(--color-accent); }
+    }
+
+    // A condition, not an event: it clears when the underlying state clears.
+    // Marked rather than silently missing its × so the absence reads as
+    // deliberate instead of broken.
+    .notification-item__standing {
+      flex: none;
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      opacity: 0.75;
+      cursor: help;
     }
 
     .notification-item__source {
@@ -108,6 +124,14 @@ export class NotificationItem {
   readonly tone = input<NotificationTone>('danger');
   readonly href = input<string | null>(null);
   readonly count = input<number>(1);
+  /**
+   * False for a *condition* rather than an event — something still true right
+   * now, which clears itself when the underlying state does. Offering a dismiss
+   * on one would let a live outage be silenced while it is still happening.
+   */
+  readonly dismissible = input<boolean>(true);
+  /** Tooltip on the "standing" marker, explaining what will clear the row. */
+  readonly standingHint = input<string | null>(null);
 
   readonly dismiss = output<void>();
 

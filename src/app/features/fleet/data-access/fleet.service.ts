@@ -6,12 +6,17 @@
 import { HttpClient } from '@angular/common/http';
 import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { ApiFleetStatsSchema, failureToNotification, type ApiFleetStats, type FleetFailure } from '@domain/dispatch';
+import { ApiFleetStatsSchema, failureToNotification, stormToNotification, type ApiFleetStats, type FleetFailure } from '@domain/dispatch';
 import type { NotificationEntry } from '@shared/components/notification-bar/notification-bar';
 import { environment } from '../../../../environments/environment';
 import { ToastService } from '@shared/components/toast/toast.service';
+import { healthNotifications } from '@features/journal/utils/fleet-health';
 
 const REFRESH_INTERVAL_MS = 30_000;
+
+// Distinct notes failing under one skill before it reads as an outage rather
+// than a coincidence. Purely a display threshold.
+const STORM_THRESHOLD = 3;
 
 @Injectable({ providedIn: 'root' })
 export class FleetService {
@@ -39,11 +44,12 @@ export class FleetService {
   readonly stuckNotes = computed(() => this._stats()?.stuck_notes ?? []);
   readonly lastPipelineEnqueueAt = computed(() => this._stats()?.last_pipeline_enqueue_at ?? null);
 
-  // Repeat failures on the same note (a grooming retry loop, a briefing
-  // that fails every run) would otherwise flood the bar with one row per
-  // attempt — group by note (falling back to task_id for failures with no
-  // note) so the bar shows one row per underlying problem. failures_24h
-  // arrives completed_at DESC, so each group's first member is the latest.
+  // Level one: repeat failures on the same note (a retry loop) collapse to one
+  // row. Keyed on the note rather than the error because each retry comes back
+  // with different wording — truncated model output — so any message-derived
+  // key would split a loop back into five rows.
+  // failures_24h arrives completed_at DESC, so each group's first member is
+  // the latest, and its id is a real dispatch id, so dismissing still works.
   private readonly failureGroups = computed<ReadonlyMap<string, readonly FleetFailure[]>>(() => {
     const groups = new Map<string, FleetFailure[]>();
     for (const f of this.failures()) {
@@ -56,12 +62,51 @@ export class FleetService {
     return groups;
   });
 
-  // Site-wide notification bar feed. Lives here (not in the bar itself)
-  // because it's the same 24h feed fleet-board already reads; the bar is just
-  // another consumer that additionally filters on dismissed_at and groups.
-  readonly notifications = computed<readonly NotificationEntry[]>(() =>
-    [...this.failureGroups().values()]
-      .map(group => failureToNotification(group[0], group.length)));
+  /**
+   * Site-wide notification bar feed: standing conditions, then failures.
+   *
+   * Conditions come from the health rules rather than the failure feed because
+   * the fleet's worst state produces no failures at all — a worker that stops
+   * picking up work raises nothing. Boris sat with 21 jobs queued and 6 hung
+   * and this bar was empty.
+   *
+   * Lives here (not in the bar) because it is the same 24h feed the fleet board
+   * already reads; the bar is another consumer that filters and groups.
+   */
+  private readonly asOf = computed(() => {
+    const stamp = this._lastFetch();
+    return stamp ? new Date(stamp) : new Date(0);
+  });
+
+  /**
+   * Level two: many *different* notes failing under one skill collapse to a
+   * single storm row.
+   *
+   * Only past a threshold, and that restraint is the point. Two unrelated
+   * failures that happen to share a skill are two problems and read better as
+   * two rows; seven are one broken thing, and seven rows for it is what made
+   * the bar unusable. The threshold is a display heuristic, nothing more.
+   */
+  private readonly failureRows = computed<NotificationEntry[]>(() => {
+    const bySkill = new Map<string, (readonly FleetFailure[])[]>();
+    for (const group of this.failureGroups().values()) {
+      const key = group[0].skill ?? group[0].flow;
+      bySkill.set(key, [...(bySkill.get(key) ?? []), group]);
+    }
+    return [...bySkill.values()].flatMap(groups =>
+      groups.length >= STORM_THRESHOLD
+        ? [stormToNotification(groups)]
+        : groups.map(g => failureToNotification(g[0], g.length)));
+  });
+
+  readonly notifications = computed<readonly NotificationEntry[]>(() => [
+    // The poll's own timestamp, not an ambient `new Date()`: a computed that
+    // reads the wall clock is impure and recomputes to a different answer with
+    // no input change. Ages are therefore "as of the last fetch", which is the
+    // honest framing anyway — the data is that old too.
+    ...healthNotifications(this.workers(), this.queue(), this.now(), this.asOf()),
+    ...this.failureRows(),
+  ]);
 
   private timerHandle: ReturnType<typeof setInterval> | null = null;
   private started = false;
@@ -137,7 +182,18 @@ export class FleetService {
 
   // "Dismiss all" gesture from the bar — one dismiss() per visible (already
   // grouped) entry, so each still clears its whole retry group.
+  /**
+   * Acknowledges every dismissable row.
+   *
+   * Standing conditions are skipped: their ids are synthetic, so a dismiss
+   * would 400 — and more to the point, acknowledging a stalled worker should
+   * not make it disappear while it is still stalled.
+   */
   async dismissAll(): Promise<void> {
-    await Promise.all(this.notifications().map(entry => this.dismiss(entry.id)));
+    await Promise.all(
+      this.notifications()
+        .filter(entry => entry.dismissible !== false)
+        .map(entry => this.dismiss(entry.id)),
+    );
   }
 }
