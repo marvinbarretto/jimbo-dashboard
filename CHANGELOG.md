@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.196](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.195...v0.0.196) (2026-08-26)
+
+
+### Bug Fixes
+
+* **fleet:** stop blaming workers for the approval queue ([24e71b1](https://github.com/marvinbarretto/jimbo-dashboard/commit/24e71b1cc92e054970f2ea29473210977335e4d2))
+
 ### [0.0.195](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.194...v0.0.195) (2026-08-26)
 
 
