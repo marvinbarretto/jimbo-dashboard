@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { peerKeys, periodContainsToday } from './period-links';
+import { peerKeys, periodContainsToday, granularitiesFor, resolveGranularity } from './period-links';
 import { todayKey } from '../../../shared/utils/date-keys';
 
 describe('peerKeys', () => {
@@ -45,5 +45,36 @@ describe('periodContainsToday', () => {
     expect(periodContainsToday('day', '2020-01-01')).toBe(false);
     expect(periodContainsToday('week', '2020-W01')).toBe(false);
     expect(periodContainsToday('month', '2020-01')).toBe(false);
+  });
+});
+
+describe('domain horizons', () => {
+  // A month is too long to act on — by the time a bad one is visible it is
+  // over — so Overview stops at a week. Jimbo keeps it because spend is
+  // genuinely billed monthly.
+  it('offers days and weeks everywhere, and months only where the cycle is monthly', () => {
+    expect(granularitiesFor('overview')).toEqual(['day', 'week']);
+    expect(granularitiesFor('work')).toEqual(['day', 'week']);
+    expect(granularitiesFor('jimbo')).toEqual(['day', 'week', 'month']);
+    expect(granularitiesFor('reflect')).toEqual(['day']);
+  });
+
+  it('falls back to all three for an unknown domain', () => {
+    expect(granularitiesFor('something-new')).toEqual(['day', 'week', 'month']);
+  });
+});
+
+describe('resolveGranularity', () => {
+  it('keeps the horizon when the destination supports it', () => {
+    expect(resolveGranularity('overview', 'week')).toBe('week');
+    expect(resolveGranularity('jimbo', 'month')).toBe('month');
+  });
+
+  // Switching from Jimbo's month to Overview must not land on a horizon
+  // Overview will not offer a control to leave.
+  it('narrows to the nearest supported horizon', () => {
+    expect(resolveGranularity('overview', 'month')).toBe('week');
+    expect(resolveGranularity('reflect', 'month')).toBe('day');
+    expect(resolveGranularity('reflect', 'week')).toBe('day');
   });
 });

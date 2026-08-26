@@ -43,7 +43,7 @@ import type { CodeSession, CodeSessionHeartbeat } from '../../data-access/code-s
 import { ProjectsService } from '../../../projects/data-access/projects.service';
 import { heartbeatBursts } from '../../utils/retro-timeline';
 import type { JournalGranularity } from '../../utils/period-links';
-import { currentKeyFor } from '../../utils/period-links';
+import { currentKeyFor, granularitiesFor } from '../../utils/period-links';
 import { pollWhileVisible } from '../../utils/live-poll';
 import {
   codeEvidenceSpans,
@@ -106,6 +106,8 @@ export class JournalWorkPage {
   private readonly titleService = inject(Title);
   private readonly journal = inject(JournalDataService);
   private readonly projects = inject(ProjectsService);
+
+  protected readonly granularities = granularitiesFor('work');
 
   protected readonly granularity = toSignal(
     this.route.data.pipe(map(d => (d['granularity'] ?? 'day') as JournalGranularity)),

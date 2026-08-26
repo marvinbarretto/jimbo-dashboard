@@ -35,7 +35,7 @@ import {
 } from '../../data-access/journal-data.service';
 import { JournalDayStreamService } from '../../data-access/journal-day-stream.service';
 import { JournalOverviewService } from '../../data-access/journal-overview.service';
-import { type JournalGranularity, currentKeyFor } from '../../utils/period-links';
+import { type JournalGranularity, currentKeyFor, granularitiesFor } from '../../utils/period-links';
 import { pollWhileVisible } from '../../utils/live-poll';
 
 interface ApiTelemetryEvents {
@@ -76,6 +76,7 @@ interface ApiTelemetryEvents {
     <app-ui-page width="full">
     <app-journal-period-header
       domain="overview"
+      [granularities]="granularities"
       [granularity]="granularity()"
       [key]="key()"
     />
@@ -120,6 +121,8 @@ export class JournalOverviewPage {
   private readonly journal = inject(JournalDataService);
   private readonly overview = inject(JournalOverviewService);
   private readonly dayStream = inject(JournalDayStreamService);
+
+  protected readonly granularities = granularitiesFor('overview');
 
   protected readonly granularity = toSignal(
     this.route.data.pipe(map(d => (d['granularity'] ?? 'day') as JournalGranularity)),

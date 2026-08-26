@@ -25,7 +25,7 @@ import { JournalPeriodHeader } from '../../components/journal-period-header/jour
 import { JournalRoutineFuelSection } from '../../components/journal-routine-fuel-section/journal-routine-fuel-section';
 import { TrainingFuelSection } from '../../components/training-fuel-section/training-fuel-section';
 import { JournalDataService } from '../../data-access/journal-data.service';
-import { type JournalGranularity, currentKeyFor } from '../../utils/period-links';
+import { type JournalGranularity, currentKeyFor, granularitiesFor } from '../../utils/period-links';
 import { pollWhileVisible } from '../../utils/live-poll';
 
 /**
@@ -55,6 +55,7 @@ import { pollWhileVisible } from '../../utils/live-poll';
     <app-ui-page width="wide">
     <app-journal-period-header
       domain="body"
+      [granularities]="granularities"
       [granularity]="granularity()"
       [key]="key()"
     />
@@ -81,6 +82,8 @@ export class JournalBodyPage {
   private readonly route = inject(ActivatedRoute);
   private readonly titleService = inject(Title);
   private readonly journal = inject(JournalDataService);
+
+  protected readonly granularities = granularitiesFor('body');
 
   protected readonly granularity = toSignal(
     this.route.data.pipe(map(d => (d['granularity'] ?? 'day') as JournalGranularity)),

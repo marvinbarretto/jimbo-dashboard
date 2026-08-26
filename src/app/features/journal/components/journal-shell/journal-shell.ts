@@ -4,7 +4,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { filter, map, startWith } from 'rxjs';
 import { UiTabBar } from '@shared/components/ui-tab-bar/ui-tab-bar';
 import { todayKey } from '@shared/utils/date-keys';
-import { type JournalGranularity, currentKeyFor, peerKeys } from '../../utils/period-links';
+import { type JournalGranularity, currentKeyFor, peerKeys, resolveGranularity } from '../../utils/period-links';
 
 const DOMAINS = [
   { key: 'overview', label: 'Overview' },
@@ -15,17 +15,15 @@ const DOMAINS = [
   { key: 'reflect', label: 'Reflect' },
 ] as const;
 
-// Reflect is what Marvin *said* about a day; the others are what the machine
-// saw. There is no weekly or monthly reflection to roll up to, so it pins to
-// the day peer of whatever period the other domains are showing.
-const DAY_ONLY_DOMAINS: ReadonlySet<string> = new Set<string>(['reflect']);
-
 const GRANULARITIES: ReadonlySet<string> = new Set(['day', 'week', 'month']);
 
 /**
  * Journal shell: sticky tab bar of data DOMAINS (Overview · Work · Body ·
  * Jimbo · Phone · Reflect). Switching domains preserves the current
- * point-in-time —
+ * point-in-time, narrowed to what the destination supports — Reflect is a
+ * day construct, and most domains stop at a week. See `granularitiesFor`.
+ *
+ * Switching domains preserves the current point-in-time —
  * viewing Work's week → Body lands on Body's same week; domains that don't
  * support the current granularity fall back to its day peer.
  */
@@ -86,7 +84,9 @@ export class JournalShell {
     const key = parts?.key ?? todayKey();
     const peers = peerKeys(granularity, key);
     return DOMAINS.map(d => {
-      const g: JournalGranularity = DAY_ONLY_DOMAINS.has(d.key) ? 'day' : granularity;
+      // Domains declare their own horizons, so switching never lands on one
+      // the destination will not offer a way back out of.
+      const g = resolveGranularity(d.key, granularity);
       return { key: d.key, label: d.label, link: ['/journal', d.key, g, peers[g]] };
     });
   });

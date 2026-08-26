@@ -32,7 +32,7 @@ import {
   JournalDataService,
   type TelemetryEventLite,
 } from '../../data-access/journal-data.service';
-import { type JournalGranularity, currentKeyFor } from '../../utils/period-links';
+import { type JournalGranularity, currentKeyFor, granularitiesFor } from '../../utils/period-links';
 import { pollWhileVisible } from '../../utils/live-poll';
 
 interface ApiTelemetryEvents {
@@ -84,6 +84,7 @@ interface ApiPhoneBundle {
     <app-ui-page width="wide">
     <app-journal-period-header
       domain="phone"
+      [granularities]="granularities"
       [granularity]="granularity()"
       [key]="key()"
     />
@@ -146,6 +147,8 @@ export class JournalPhonePage {
   private readonly route = inject(ActivatedRoute);
   private readonly titleService = inject(Title);
   private readonly journal = inject(JournalDataService);
+
+  protected readonly granularities = granularitiesFor('phone');
 
   protected readonly granularity = toSignal(
     this.route.data.pipe(map(d => (d['granularity'] ?? 'day') as JournalGranularity)),

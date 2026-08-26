@@ -21,7 +21,7 @@ import { JournalFleetHealth } from '../../components/journal-fleet-health/journa
 import { JournalMcpSection } from '../../components/journal-mcp-section/journal-mcp-section';
 import { JournalPeriodHeader } from '../../components/journal-period-header/journal-period-header';
 import { JournalDayStreamService } from '../../data-access/journal-day-stream.service';
-import { type JournalGranularity, currentKeyFor } from '../../utils/period-links';
+import { type JournalGranularity, currentKeyFor, granularitiesFor } from '../../utils/period-links';
 
 /**
  * The Jimbo domain: fleet health, then briefings, Hermes cron ticks and MCP
@@ -55,6 +55,7 @@ import { type JournalGranularity, currentKeyFor } from '../../utils/period-links
     <app-ui-page width="wide">
     <app-journal-period-header
       domain="jimbo"
+      [granularities]="granularities"
       [granularity]="granularity()"
       [key]="key()"
     />
@@ -85,6 +86,8 @@ export class JournalJimboPage {
 
   /** Collector health — the other half of "is the machinery working". */
   protected readonly signals = computed(() => this.dayStream.stream()?.signals ?? []);
+
+  protected readonly granularities = granularitiesFor('jimbo');
 
   protected readonly granularity = toSignal(
     this.route.data.pipe(map(d => (d['granularity'] ?? 'day') as JournalGranularity)),
