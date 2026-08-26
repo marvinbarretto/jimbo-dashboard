@@ -18699,20 +18699,24 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * One day's work metrics with prior-day, baseline, cumulative and trend context
-         * @description Answers "is today normal", not "what happened today". Every metric arrives with the comparisons already made, so that the dashboard, a briefing and a Telegram digest all quote the same figure rather than each re-deriving it.
+         * One period's work metrics with prior-period, baseline, cumulative and trend context
+         * @description Answers "is this normal", not "what happened". Every metric arrives with the comparisons already made, so that the dashboard, a briefing and a Telegram digest all quote the same figure rather than each re-deriving it.
+         *
+         *     One shape at three horizons: pass any day inside the period and the server resolves it. A day is compared with yesterday and the median of prior same-weekdays; a week with last week and the median of prior weeks; a month likewise. `cumulative` always quotes the enclosing period, so a day reports its week, a week its month, a month its year.
          *
          *     The baseline is the **median of prior same-weekdays** — a Tuesday against Tuesdays. A rolling seven-day mean would fold weekends into a working-day baseline, and a mean of any window lets one fourteen-hour day distort a month.
          *
-         *     On a **live day every comparison is clipped to the same elapsed time of day**: at 08:30, `prev_day` is yesterday at 08:30. Comparing a partial day against complete ones would report a collapse every morning. `as_of` carries how far the day was measured, and is null once the day is complete.
+         *     On a **live period every comparison is clipped to the same elapsed offset**: at 08:30 on a Wednesday, `prev_day` is yesterday at 08:30, and for a week it is last week up to Wednesday morning. Comparing a partial period against complete ones would report a collapse until its final day. `as_of` carries how far it was measured, and is null once the period is complete.
          *
          *     **Absent is not zero.** `baseline` is null when too few prior same-weekdays had collection coverage, and a weekday with no data is excluded from the samples rather than averaged in as a zero.
          */
         get: {
             parameters: {
                 query: {
-                    /** @description Local calendar day (YYYY-MM-DD). Windows are resolved in COACH_TZ. */
+                    /** @description Any local day inside the period of interest (YYYY-MM-DD). Windows are resolved in COACH_TZ. */
                     date: string;
+                    /** @description Horizon. The server resolves the containing period, so the client can pass any day within it. */
+                    period?: "day" | "week" | "month";
                 };
                 header?: never;
                 path?: never;
@@ -26788,13 +26792,19 @@ export interface components {
             }[];
         };
         JournalOverview: {
+            /** @description First day of the period described — not necessarily the date asked for */
             date: string;
-            /** @description How far a live day was measured; null once the day is complete */
+            /** @enum {string} */
+            period: "day" | "week" | "month";
+            /** @description Exclusive end of the period */
+            until: string;
+            /** @description How far a live period was measured; null once it is complete */
             as_of: string | null;
-            /** @description 0 = Sunday */
+            /** @description 0 = Sunday. Only meaningful when period is day. */
             weekday: number;
             baseline: {
-                window_same_weekdays: number;
+                /** @description Prior periods sampled — same-weekdays for a day */
+                window: number;
                 min_samples: number;
                 /** @enum {string} */
                 statistic: "median";
@@ -26816,15 +26826,21 @@ export interface components {
                     truncated: boolean;
                 } | null;
                 cumulative: {
-                    week_to_date: number;
-                    month_to_date: number;
+                    /** @description e.g. "week to date" — the enclosing period a day/week/month is quoted against */
+                    label: string;
+                    value: number;
                 };
                 /** @description Oldest first, ending with value; null = no collection coverage that day, which is not a zero */
                 series: (number | null)[];
-                hourly: {
-                    /** @description Running total at each hour boundary; length is how far the day has run */
+                profile: {
+                    /**
+                     * @description Boundary granularity — hours within a day, days within a week or month
+                     * @enum {string}
+                     */
+                    step: "hour" | "day";
+                    /** @description Running total at each step; length is how far the period has run */
                     cumulative: number[];
-                    /** @description Median shape across the same sample days, always a full day — where a normal day gets to */
+                    /** @description Median shape across the sample periods, always a whole period — where a normal one gets to */
                     baseline: number[] | null;
                 };
             }[];

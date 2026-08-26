@@ -108,18 +108,30 @@ export class JournalMetricRail {
    * the day; they do not need to be told four times.
    */
   protected readonly qualifier = computed(() => {
+    const overview = this.overview();
+    const noun = overview?.period ?? 'day';
     const asOf = this.asOf();
-    if (!asOf) return 'against yesterday and a typical day';
-    const time = new Date(asOf).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    return `against the same point yesterday and on a typical day — measured to ${time}`;
+    if (!asOf) return `against the previous ${noun} and a typical one`;
+    const stamp = new Date(asOf).toLocaleString('en-GB', {
+      weekday: noun === 'day' ? undefined : 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    return `against the same point in the previous ${noun} and in a typical one — measured to ${stamp}`;
   });
 
-  protected readonly previousLabel = computed(() => 'yesterday');
+  /** "yesterday" for a day, "last week" for a week — the payload names the horizon. */
+  protected readonly previousLabel = computed(() => {
+    switch (this.overview()?.period) {
+      case 'week': return 'last week';
+      case 'month': return 'last month';
+      default: return 'yesterday';
+    }
+  });
 
   protected readonly tiles = computed<RailTile[]>(() => {
     const overview = this.overview();
-    const weekday = overview ? WEEKDAY_SHORT[overview.weekday] : null;
-    const baselineLabel = weekday ? `typical ${weekday}` : 'typical';
+    const baselineLabel = baselineLabelFor(overview);
 
     return RAIL.map(spec => {
       const metric = metricByKey(overview ?? undefined, spec.key);
@@ -145,11 +157,26 @@ export class JournalMetricRail {
         baselineNote: dormant ? null
           : metric && !metric.baseline ? `no ${baselineLabel} yet · needs ${min}`
           : null,
+        // Label comes from the payload — a day quotes its week, a week its
+        // month — so the horizon never has to be re-derived here.
         cumulative: metric && !dormant
-          ? `week to date · ${formatMetric(metric.cumulative.week_to_date, spec.unit)}`
+          ? `${metric.cumulative.label} · ${formatMetric(metric.cumulative.value, spec.unit)}`
           : '',
         series: dormant ? [] : metric?.series ?? [],
       };
     });
   });
+}
+
+/**
+ * What the baseline is called at this horizon.
+ *
+ * A day is judged against the same weekday — "typical Tue" — because the
+ * baseline samples are same-weekdays. A week or month is judged against its
+ * own kind, so the weekday would be meaningless.
+ */
+function baselineLabelFor(overview: { period: string; weekday: number } | null): string {
+  if (!overview) return 'typical';
+  if (overview.period !== 'day') return `typical ${overview.period}`;
+  return `typical ${WEEKDAY_SHORT[overview.weekday]}`;
 }

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import type { JournalOverview } from '@domain/journal/overview';
+import type { JournalOverview, OverviewPeriod } from '@domain/journal/overview';
 import { environment } from '../../../../environments/environment';
 
 /** The three states read differently on screen, so they are named, not inferred. */
@@ -33,39 +33,42 @@ export class JournalOverviewService {
     return s.status === 'ready' ? s.data : null;
   });
 
-  /** The date currently held, so repeat loads for the same day are cheap. */
+  /** The window currently held, so repeat loads for the same one are cheap. */
   private loaded: string | null = null;
   private inFlight: string | null = null;
 
   /**
    * Loads one day's comparisons into the shared state.
    *
-   * @param date - Local day key (YYYY-MM-DD)
-   * @param force - Refetch even when this date is already held; the live day's
-   *   poll passes true, a date change does not need to
+   * @param date - Any local day inside the period (YYYY-MM-DD)
+   * @param period - Horizon; the server resolves the containing period
+   * @param force - Refetch even when this window is already held; the live
+   *   period's poll passes true, a navigation does not need to
    */
-  async load(date: string, force = false): Promise<void> {
-    if (this.inFlight === date) return;
-    if (!force && this.loaded === date) return;
+  async load(date: string, period: OverviewPeriod = 'day', force = false): Promise<void> {
+    const key = `${period}:${date}`;
+    if (this.inFlight === key) return;
+    if (!force && this.loaded === key) return;
 
-    // Only blank the panel when moving to a different day. A poll that cleared
-    // it would flicker the whole rail once a minute for no new information.
-    if (this.loaded !== date) this._state.set({ status: 'pending' });
+    // Only blank the panel when moving to a different window. A poll that
+    // cleared it would flicker the whole rail once a minute for no new
+    // information.
+    if (this.loaded !== key) this._state.set({ status: 'pending' });
 
-    this.inFlight = date;
+    this.inFlight = key;
     try {
       const data = await firstValueFrom(
         this.http.get<JournalOverview>(
           `${environment.dashboardApiUrl}/api/journal/overview`,
-          { params: { date } },
+          { params: { date, period } },
         ),
       );
       this._state.set({ status: 'ready', data });
-      this.loaded = date;
+      this.loaded = key;
     } catch {
       // A failed poll keeps the figures already on screen: stale numbers with
       // a known timestamp beat an empty panel.
-      if (this.loaded !== date) this._state.set({ status: 'failed' });
+      if (this.loaded !== key) this._state.set({ status: 'failed' });
     } finally {
       this.inFlight = null;
     }

@@ -13,6 +13,7 @@ import { isLiveDay } from '@shared/utils/datetime.utils';
 import {
   type DayKey,
   formatDayLong,
+  dayKeyFromDate,
   formatMonthLong,
   isDayKey,
   isMonthKey,
@@ -79,37 +80,37 @@ interface ApiTelemetryEvents {
       [key]="key()"
     />
 
-    @if (isDay()) {
-      <app-ui-stack gap="lg">
-        <!-- Metrics first, then the shape that produced them: the numbers are
-             the finding, the chart is why. -->
-        <app-journal-metric-rail />
-        <app-journal-day-shape />
+    <app-ui-stack gap="lg">
+      <!-- The same two sections at every horizon. The segmented control moves
+           the time window; it does not change what the page is. Both read one
+           payload whose comparisons are resolved server-side, so a week is the
+           same question as a day asked over more of it. -->
+      <app-journal-metric-rail />
+      <app-journal-day-shape />
 
-        <!-- What the numbers were made of — outcomes, not activity. -->
+      @if (isDay()) {
+        <!-- Day-only because both read the day-stream, which is day-keyed by
+             construction: "what landed" and "what else happened" are questions
+             about a day, not a month. -->
         <app-journal-work-realised [date]="safeKey()" />
-
-        <!-- Half the weight of the rail above, which is the editorial position
-             made structural rather than argued in a comment. -->
         <app-journal-support-strips [date]="safeKey()" />
 
         <!-- Last, not first. The prose is good, but the data above is now
              self-narrating, and leading with someone else's summary of the day
              undercuts the point of showing the day. -->
         <app-journal-report-section [date]="safeKey()" />
-      </app-ui-stack>
-    } @else {
-      <!-- The summary stays mounted across the load: tearing it down on every
-           period change would re-fetch its nutrition/training feeds too. -->
-      @if (loading()) {
-        <app-ui-loading-state message="Pulling the period's data…" />
+      } @else {
+        @if (loading()) {
+          <app-ui-loading-state message="Pulling the period's data…" />
+        }
+        <!-- What a single day cannot answer: the per-day trend, and a way in. -->
+        <app-journal-period-summary
+          [granularity]="periodGranularity()"
+          [key]="safeKey()"
+          [youtubeEvents]="rangeYoutube()"
+        />
       }
-      <app-journal-period-summary
-        [granularity]="periodGranularity()"
-        [key]="safeKey()"
-        [youtubeEvents]="rangeYoutube()"
-      />
-    }
+    </app-ui-stack>
     </app-ui-page>
   `,
 })
@@ -138,6 +139,20 @@ export class JournalOverviewPage {
   });
 
   protected readonly isDay = computed(() => this.granularity() === 'day');
+
+  /**
+   * A plain day inside the viewed period. The endpoint resolves the containing
+   * week or month itself, so the client never has to know that weeks are
+   * Monday-anchored — it just names a day it is interested in.
+   */
+  private readonly overviewDate = computed(() => {
+    const key = this.safeKey();
+    switch (this.granularity()) {
+      case 'day': return key;
+      case 'week': return dayKeyFromDate(weekStartFromKey(key));
+      case 'month': return `${key}-01`;
+    }
+  });
   /** Narrowed for the period summary, which is week/month only. */
   protected readonly periodGranularity = computed(() =>
     this.granularity() === 'month' ? 'month' as const : 'week' as const);
@@ -190,11 +205,11 @@ export class JournalOverviewPage {
     effect(() => {
       const g = this.granularity();
       const k = this.safeKey();
+      // The page owns this fetch, not the sections — the rail and the shape
+      // chart read one payload and would otherwise request it twice.
+      void this.overview.load(this.overviewDate(), g);
       if (g === 'day') {
         void this.journal.loadDay(k);
-        // The page owns this fetch, not the sections — the rail and the shape
-        // chart read one payload and would otherwise request it twice.
-        void this.overview.load(k);
         void this.dayStream.load(k);
       } else {
         void this.journal.loadWork(g, k);
@@ -211,11 +226,12 @@ export class JournalOverviewPage {
           void this.journal.loadDay(k);
           // force: the comparisons move with the clock even when nothing new
           // has been logged, because every one of them is time-truncated.
-          void this.overview.load(k, true);
+          void this.overview.load(k, 'day', true);
           void this.dayStream.load(k, true);
         }
       } else {
         void this.journal.loadWork(g, k);
+        void this.overview.load(this.overviewDate(), g, true);
       }
     });
   }

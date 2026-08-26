@@ -11,6 +11,7 @@ import type { components } from '../api-types.generated';
 export type JournalOverview = components['schemas']['JournalOverview'];
 
 export type OverviewMetric = JournalOverview['metrics'][number];
+export type OverviewPeriod = JournalOverview['period'];
 export type MetricKey = OverviewMetric['key'];
 
 /** Lookup by key — the rail wants named metrics, the payload is an array. */

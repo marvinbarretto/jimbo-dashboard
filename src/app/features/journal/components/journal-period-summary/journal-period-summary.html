@@ -7,15 +7,6 @@
     <app-ui-checklist [items]="routineItems()" />
   </div>
 
-  <div class="period-summary__stats">
-    <app-ui-stat-card label="Desk time" [value]="formatMinutes(deskMinutes())" [detail]="pomos() + ' pomos'" />
-    <app-ui-stat-card label="Commits" [value]="commits().toString()" />
-    <app-ui-stat-card label="Projects" [value]="projectCount().toString()" detail="worked" />
-    <app-ui-stat-card label="Active days" [value]="activeDays().toString()" [detail]="'of ' + days().length" />
-    <app-ui-stat-card label="Jimbo" [value]="jimboCostLabel()" [detail]="jimboDetail()" />
-    <app-ui-stat-card label="YouTube" [value]="formatMinutes(youtubeMinutes())" [detail]="youtubeDetail()" />
-  </div>
-
   <!-- The one thing a day view can't answer: is this going up or down.
        Work only — protein and training volume moved to Body, which renders
        them range-aware already and was showing the same charts twice. -->

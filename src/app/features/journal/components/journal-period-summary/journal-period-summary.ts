@@ -4,7 +4,6 @@ import { RouterLink } from '@angular/router';
 import { catchError, of, switchMap } from 'rxjs';
 import { UiBarChart } from '@shared/components/ui-bar-chart/ui-bar-chart';
 import { UiChecklist, type UiChecklistItem } from '@shared/components/ui-checklist/ui-checklist';
-import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { formatMinutes, pluralise } from '@shared/utils/datetime.utils';
 import {
   type DayKey,
@@ -59,20 +58,24 @@ const ROUTINE: readonly {
 ];
 
 /**
- * Overview's week and month view: work totals across the period, plus the
- * per-day trend a single day can't show.
+ * Overview's week and month drill-in: the per-day trend, and a way into a
+ * single day.
+ *
+ * No longer a summary. The metric rail above now runs at every horizon, so the
+ * totals this used to restate are stated once, with their baselines, by the
+ * same components the day view uses. What is left is the pair of things a
+ * period genuinely adds and a day cannot: shape across its days, and a route
+ * back down into one of them.
  *
  * It began as a parallel implementation of the old day summary and drifted
  * into a second copy of Body — protein meters, a macros donut, training
  * volume, all of which Body's own week and month views already render from
- * range endpoints. Those are gone from here; Overview is work-first at every
- * horizon, as the day view already is.
+ * range endpoints. Those went first; the duplicated totals followed once the
+ * endpoint became period-aware.
  *
- * Still the odd one out, and knowingly so: day now leads with metrics that
- * carry their own baselines while this leads with bare totals, because the
- * comparison endpoint is day-keyed. Making it period-aware is the change that
- * would let one set of components serve all three horizons and delete this
- * component outright.
+ * The routine checklist is the last thing here that is not work, and it
+ * survives only because Body's week and month views have no routine section to
+ * receive it yet.
  *
  * Work evidence comes from the shared work bundle the page already loads;
  * agent runs are a range endpoint fetched on window change (not polled — this
@@ -81,7 +84,7 @@ const ROUTINE: readonly {
  */
 @Component({
   selector: 'app-journal-period-summary',
-  imports: [RouterLink, UiBarChart, UiChecklist, UiStatCard],
+  imports: [RouterLink, UiBarChart, UiChecklist],
   templateUrl: './journal-period-summary.html',
   styleUrls: ['./journal-period-summary.scss', '../../journal-sections.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
