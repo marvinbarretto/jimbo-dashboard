@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.191](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.190...v0.0.191) (2026-08-26)
+
+
+### Features
+
+* **fleet:** raise standing conditions in the notification bar ([732e4be](https://github.com/marvinbarretto/jimbo-dashboard/commit/732e4be704ad3ec50b12225406645e14acee381f))
+
 ### [0.0.190](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.189...v0.0.190) (2026-08-25)
 
 
