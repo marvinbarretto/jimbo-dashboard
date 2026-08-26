@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.197](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.196...v0.0.197) (2026-08-26)
+
+
+### Bug Fixes
+
+* **fleet:** read a gated worker as working, not missing ([6d4cc8b](https://github.com/marvinbarretto/jimbo-dashboard/commit/6d4cc8bc25e85f2f7ba201bec4c6fd56f142382f))
+
 ### [0.0.196](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.195...v0.0.196) (2026-08-26)
 
 
