@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.193](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.192...v0.0.193) (2026-08-26)
+
+
+### Features
+
+* **journal:** make Overview one page at every horizon ([0545608](https://github.com/marvinbarretto/jimbo-dashboard/commit/054560845961962dbc7dcaa2333e0bd19260f5f9))
+
 ### [0.0.192](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.191...v0.0.192) (2026-08-26)
 
 
