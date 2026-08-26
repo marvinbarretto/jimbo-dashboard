@@ -63,6 +63,9 @@ export class PipelineControlPage {
   readonly scope = this.pipeline.scope;
   readonly scopeProjects = this.pipeline.scopeProjects;
   readonly autonomousProjects = this.pipeline.autonomousProjects;
+  readonly commissionEnabled = this.pipeline.commissionEnabled;
+  readonly commissionTickMinutes = this.pipeline.commissionTickMinutes;
+  readonly commissionScheduled = this.pipeline.commissionScheduled;
   readonly projectlessTypes = this.pipeline.projectlessTypes;
   readonly deepreadOff = this.pipeline.deepreadOff;
   readonly projectlessExcluded = this.pipeline.projectlessExcluded;
@@ -132,6 +135,36 @@ export class PipelineControlPage {
     },
   ];
 
+  /**
+   * Commission levers. Kept as their own list rather than folded into `scalars`
+   * because those are all grooming-lane settings, and the two lanes are
+   * deliberately separate gates — grooming writes vault rows, commissioning
+   * writes code.
+   */
+  readonly commissionScalars: readonly ScalarLever[] = [
+    {
+      label: 'Tick every (min)',
+      blurb: 'How often ready work is proposed. Zero means the lane never runs.',
+      key: PIPELINE_KEYS.commissionTickMinutes,
+      value: this.pipeline.commissionTickMinutes,
+      min: 0,
+    },
+    {
+      label: 'Commissions per tick',
+      blurb: 'Items handed to an agent on each tick.',
+      key: PIPELINE_KEYS.commissionPerTick,
+      value: this.pipeline.commissionPerTick,
+      min: 0,
+    },
+    {
+      label: 'Review queue cap',
+      blurb: 'In-flight plus awaiting-review. The lane stops here until you review.',
+      key: PIPELINE_KEYS.commissionConcurrencyCap,
+      value: this.pipeline.commissionConcurrencyCap,
+      min: 0,
+    },
+  ];
+
   /** Total items the pump can admit per tick — the honest headline number. */
   readonly entryThroughput = computed(
     () => this.pipeline.intakePerTick() + this.pipeline.deepreadPerTick(),
@@ -165,6 +198,10 @@ export class PipelineControlPage {
 
   onToggleEnabled(next: boolean): void {
     void this.pipeline.save(PIPELINE_KEYS.enabled, next);
+  }
+
+  onToggleCommissionEnabled(next: boolean): void {
+    void this.pipeline.save(PIPELINE_KEYS.commissionEnabled, next);
   }
 
   onSetScope(next: 'all' | 'priority_1_only'): void {

@@ -216,6 +216,67 @@
       </div>
     </app-ui-section>
 
+    <app-ui-section
+      title="Commissioning"
+      meta="pipeline.commission_*"
+      [collapsible]="false">
+      <div class="pipeline__master">
+        <div class="pipeline__master-copy">
+          <span
+            class="pipeline__master-state"
+            [class.pipeline__master-state--on]="commissionScheduled()">
+            {{ commissionScheduled() ? 'Commissioning running' : 'Commissioning stopped' }}
+          </span>
+          <span class="pipeline__blurb">
+            The tick proposes ready work; the worker executes it. Both are needed — a lane
+            switched on with no tick interval never runs, however open everything else looks.
+          </span>
+        </div>
+        <app-ui-toggle
+          label="Commissioning enabled"
+          [checked]="commissionEnabled()"
+          [disabled]="isSaving(keys.commissionEnabled)"
+          (changed)="onToggleCommissionEnabled($event)" />
+      </div>
+
+      @if (commissionEnabled() && commissionTickMinutes() === 0) {
+        <p class="pipeline__warn" role="note">
+          Commissioning is on but <strong>no tick is scheduled</strong>, so nothing is ever
+          proposed and the lane cannot ship. Set an interval below to start it.
+        </p>
+      } @else if (commissionScheduled()) {
+        <p class="pipeline__blurb">
+          Running every <strong>{{ commissionTickMinutes() }}</strong> min.
+        </p>
+      }
+
+      <ul class="pipeline__scalars">
+        @for (lever of commissionScalars; track lever.key) {
+          <li class="pipeline__scalar" data-testid="pipeline-scalar" [attr.data-key]="lever.key">
+            <div class="pipeline__scalar-copy">
+              <span class="pipeline__scalar-label">{{ lever.label }}</span>
+              <span class="pipeline__blurb">{{ lever.blurb }}</span>
+            </div>
+            <div class="pipeline__stepper">
+              <app-ui-button
+                size="sm"
+                variant="ghost"
+                [ariaLabel]="'Decrease ' + lever.label"
+                [disabled]="isSaving(lever.key) || lever.value() <= lever.min"
+                (pressed)="onStep(lever.key, lever.value(), -1, lever.min)">−</app-ui-button>
+              <span class="pipeline__value">{{ lever.value() }}</span>
+              <app-ui-button
+                size="sm"
+                variant="ghost"
+                [ariaLabel]="'Increase ' + lever.label"
+                [disabled]="isSaving(lever.key)"
+                (pressed)="onStep(lever.key, lever.value(), 1, lever.min)">+</app-ui-button>
+            </div>
+          </li>
+        }
+      </ul>
+    </app-ui-section>
+
     <!-- Priority scope + limits --------------------------------------- -->
     <app-ui-section title="Priority scope" meta="pipeline.scope" [collapsible]="false">
       <div class="pipeline__chips">

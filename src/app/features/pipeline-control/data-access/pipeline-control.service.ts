@@ -38,6 +38,10 @@ export const PIPELINE_KEYS = {
   scopeProjects: 'pipeline.scope_projects',
   scopeIncludeProjectlessTypes: 'pipeline.scope_include_projectless_types',
   autonomousProjects: 'pipeline.autonomous_projects',
+  commissionEnabled: 'pipeline.commission_enabled',
+  commissionConcurrencyCap: 'pipeline.commission_concurrency_cap',
+  commissionPerTick: 'pipeline.commission_items_per_tick',
+  commissionTickMinutes: 'pipeline.commission_tick_minutes',
   concurrencyCap: 'pipeline.concurrency_cap',
   intakePerTick: 'pipeline.intake_items_per_tick',
   deepreadPerTick: 'pipeline.deepread_items_per_tick',
@@ -62,6 +66,12 @@ const DEFAULTS = {
   decomposePerTick: 1,
   staleMinutes: 20,
   maxRetries: 2,
+  commissionEnabled: false,
+  commissionConcurrencyCap: 1,
+  commissionPerTick: 1,
+  // Zero, matching the registry fallback: an unset schedule means the tick has
+  // never been turned on, which is not the same as one running every 0 minutes.
+  commissionTickMinutes: 0,
 };
 
 /**
@@ -115,6 +125,29 @@ export class PipelineControlService {
   );
   readonly projectlessTypes = computed(() =>
     parseStringArray(this.raw(PIPELINE_KEYS.scopeIncludeProjectlessTypes)),
+  );
+
+  readonly commissionEnabled = computed(
+    () => this.raw(PIPELINE_KEYS.commissionEnabled) === 'true',
+  );
+  readonly commissionConcurrencyCap = computed(() =>
+    parseInt10(this.raw(PIPELINE_KEYS.commissionConcurrencyCap), DEFAULTS.commissionConcurrencyCap),
+  );
+  readonly commissionPerTick = computed(() =>
+    parseInt10(this.raw(PIPELINE_KEYS.commissionPerTick), DEFAULTS.commissionPerTick),
+  );
+  readonly commissionTickMinutes = computed(() =>
+    parseInt10(this.raw(PIPELINE_KEYS.commissionTickMinutes), DEFAULTS.commissionTickMinutes),
+  );
+
+  /**
+   * The commission lane runs only if BOTH the master switch is on AND a tick
+   * interval is set. Measured 2026-08-26: `commission_enabled` read `true` for
+   * weeks while nothing scheduled the tick, so the lane took 112 items and
+   * opened zero pull requests. Reporting the switch alone repeats that lie.
+   */
+  readonly commissionScheduled = computed(
+    () => this.commissionEnabled() && this.commissionTickMinutes() > 0,
   );
 
   readonly concurrencyCap = computed(() =>
