@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.195](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.194...v0.0.195) (2026-08-26)
+
+
+### Features
+
+* **fleet:** honour a declared suspension in health and alerts ([c24ec1a](https://github.com/marvinbarretto/jimbo-dashboard/commit/c24ec1a73fe621666ae32d2e13685b90bf0949c9))
+
+
+### Code Refactoring
+
+* **journal:** drop routine from the period view ([65c96f6](https://github.com/marvinbarretto/jimbo-dashboard/commit/65c96f66f5dcaee6c20ab17275dccc19679dc1c1))
+
 ### [0.0.194](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.193...v0.0.194) (2026-08-26)
 
 
