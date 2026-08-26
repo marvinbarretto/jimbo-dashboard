@@ -57,20 +57,51 @@ export function workerRows(workers: readonly FleetWorker[], now: Date): HealthRo
   return workers.map(w => {
     const mins = minutesSince(w.checked_at, now);
     const cooling = w.status === 'cooldown' || w.next_poll_at !== null;
-    const tone: HealthTone = cooling || mins === null ? 'ok'
+    const suspended = activeSuspension(w, now);
+
+    // A suspension changes the expectation; it does not hide the row. The
+    // worker is still listed, still shows how long it has been quiet, and
+    // still says when it is due back — it simply stops reading as a fault,
+    // because being down is what was predicted.
+    const tone: HealthTone = suspended || cooling || mins === null ? 'ok'
       : mins >= WORKER_LOST_MIN ? 'alert'
       : mins >= WORKER_LATE_MIN ? 'warn'
       : 'ok';
+
     return {
       id: `worker-${w.id}`,
       label: `${w.id}${w.machine ? ` · ${w.machine}` : ''}`,
-      detail: mins === null
-        ? 'never checked in'
-        : `${w.status ?? 'unknown'} · last seen ${formatAge(mins)} ago`,
-      expectation: cooling ? 'cooling down' : `every ${WORKER_LATE_MIN}m`,
+      detail: suspended
+        ? `${suspended.reason} · quiet ${mins === null ? 'throughout' : formatAge(mins)}`
+        : mins === null
+          ? 'never checked in'
+          : `${w.status ?? 'unknown'} · last seen ${formatAge(mins)} ago`,
+      expectation: suspended
+        ? `back ${formatUntil(suspended.until, now)}`
+        : cooling ? 'cooling down'
+        : `every ${WORKER_LATE_MIN}m`,
       tone,
     };
   });
+}
+
+/** The suspension if it is still in force — a lapsed one is no suspension. */
+export function activeSuspension(
+  worker: FleetWorker,
+  now: Date,
+): { reason: string; until: string } | null {
+  const suspended = worker.suspended ?? null;
+  if (!suspended) return null;
+  const until = Date.parse(suspended.until);
+  return Number.isFinite(until) && until > now.getTime() ? suspended : null;
+}
+
+/** "back in 9 days" / "back tomorrow" — an expiry a reader can act on. */
+function formatUntil(until: string, now: Date): string {
+  const days = Math.round((Date.parse(until) - now.getTime()) / 86_400_000);
+  if (days <= 0) return 'imminently';
+  if (days === 1) return 'tomorrow';
+  return `in ${days} days`;
 }
 
 /** Accepted but unstarted work per executor — what a stalled worker leaves behind. */
@@ -109,19 +140,30 @@ export function healthAlerts(
   const rows: HealthRow[] = [];
   const byWorker = new Map(workerRows(workers, now).map(r => [r.id, r]));
 
+  const suspensions = new Map(
+    workers.map(w => [w.id, activeSuspension(w, now)] as const),
+  );
+
   for (const [executor, count] of backlogByExecutor(queue)) {
     if (count === 0) continue;
+    const suspension = suspensions.get(executor) ?? null;
     // An unknown executor cannot be vouched for, so a backlog behind one is
     // treated as stalled rather than assumed healthy.
     const idle = (byWorker.get(`worker-${executor}`)?.tone ?? 'alert') !== 'ok';
+
     rows.push({
       id: `backlog-${executor}`,
       label: `${executor} has ${count} job${count === 1 ? '' : 's'} waiting`,
-      detail: idle
-        ? 'and the worker is overdue a check-in — nothing is picking them up'
-        : 'accepted but not started',
-      expectation: 'drains continuously',
-      tone: idle ? 'alert' : 'warn',
+      // Still shown while suspended, deliberately. Knowing how much has piled
+      // up is the useful part; the only thing that changes is that it is no
+      // longer a surprise.
+      detail: suspension
+        ? `piling up while suspended — ${suspension.reason}`
+        : idle
+          ? 'and the worker is overdue a check-in — nothing is picking them up'
+          : 'accepted but not started',
+      expectation: suspension ? 'expected to accumulate' : 'drains continuously',
+      tone: suspension ? 'ok' : idle ? 'alert' : 'warn',
     });
   }
 
@@ -212,6 +254,10 @@ export function healthNotifications(
   const byWorker = new Map(workerRows(workers, now).map(r => [r.id, r]));
 
   for (const w of workers) {
+    // Suspended workers never reach the bar. The Jimbo panel still lists them,
+    // which is the distinction that keeps this honest: declared outages are
+    // visible where you go to look, and absent where you are interrupted.
+    if (activeSuspension(w, now)) continue;
     const tone = byWorker.get(`worker-${w.id}`)?.tone;
     if (tone !== 'alert') continue;
     const mins = minutesSince(w.checked_at, now);
@@ -229,7 +275,8 @@ export function healthNotifications(
   for (const [executor, count] of backlogByExecutor(queue)) {
     if (count === 0) continue;
     // Only when nothing is picking the work up. A backlog behind a healthy
-    // worker is a busy queue, and a busy queue is not an emergency.
+    // worker is a busy queue, and one behind a suspended worker is exactly
+    // what was predicted — neither is an emergency.
     if ((byWorker.get(`worker-${executor}`)?.tone ?? 'alert') === 'ok') continue;
     rows.push({
       id: `health-backlog-${executor}`,

@@ -23479,6 +23479,11 @@ export interface components {
                 status: string | null;
                 checked_at: string | null;
                 next_poll_at: string | null;
+                /** @default null */
+                suspended: {
+                    reason: string;
+                    until: string;
+                } | null;
             }[];
             now: {
                 id: string;

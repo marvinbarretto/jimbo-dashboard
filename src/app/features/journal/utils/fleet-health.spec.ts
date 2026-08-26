@@ -9,7 +9,8 @@ const NOW = new Date('2026-08-25T23:37:00Z');
 const agoMin = (m: number) => new Date(NOW.getTime() - m * 60_000).toISOString();
 
 const worker = (p: Partial<FleetWorker> & { id: string }): FleetWorker => ({
-  machine: 'm2', status: 'polling', checked_at: agoMin(1), next_poll_at: null, ...p,
+  machine: 'm2', status: 'polling', checked_at: agoMin(1), next_poll_at: null,
+  suspended: null, ...p,
 });
 
 const depth = (executor: string, status: string, count: number): FleetQueueDepth =>
@@ -205,5 +206,53 @@ describe('healthNotifications', () => {
     expect(rows.length).toBeGreaterThan(0);
     expect(rows.every(r => r.dismissible === false)).toBe(true);
     expect(rows.every(r => r.standingHint !== null)).toBe(true);
+  });
+});
+
+// Boris's machine is off for a week. Every hour of that would otherwise be an
+// alert saying nothing is picking the work up — true, already known, and
+// exactly the noise that teaches a reader to ignore the panel.
+describe('suspension', () => {
+  const suspended = (untilMin: number, reason = 'M2 off') =>
+    worker({
+      id: 'boris',
+      checked_at: agoMin(600),
+      suspended: { reason, until: new Date(NOW.getTime() + untilMin * 60_000).toISOString() },
+    });
+
+  it('calms a worker that was expected to be down', () => {
+    const row = workerRows([suspended(60 * 24 * 9)], NOW)[0];
+    expect(row.tone).toBe('ok');
+    expect(row.expectation).toBe('back in 9 days');
+    // Still reports how long it has been quiet — declared, not hidden.
+    expect(row.detail).toContain('M2 off');
+    expect(row.detail).toContain('10h');
+  });
+
+  // The expiry is the load-bearing part: an open-ended mute is how a fleet
+  // ends up with no alarms at all.
+  it('alerts again once the suspension lapses', () => {
+    const row = workerRows([suspended(-1)], NOW)[0];
+    expect(row.tone).toBe('alert');
+  });
+
+  it('treats the backlog as expected accumulation, still visible', () => {
+    const rows = healthAlerts([suspended(60 * 24 * 9)], [depth('boris', 'proposed', 21)], [], [], NOW);
+    const backlog = rows.find(r => r.id === 'backlog-boris')!;
+
+    expect(backlog.tone).toBe('ok');
+    expect(backlog.label).toContain('21 jobs waiting');
+    expect(backlog.expectation).toBe('expected to accumulate');
+  });
+
+  // Visible where you go to look; absent where you are interrupted.
+  it('never reaches the notification bar', () => {
+    const rows = healthNotifications([suspended(60 * 24 * 9)], [depth('boris', 'proposed', 21)], [], NOW);
+    expect(rows).toEqual([]);
+  });
+
+  it('reaches the bar again once it lapses', () => {
+    const rows = healthNotifications([suspended(-1)], [depth('boris', 'proposed', 21)], [], NOW);
+    expect(rows.length).toBeGreaterThan(0);
   });
 });
