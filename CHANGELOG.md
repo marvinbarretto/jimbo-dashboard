@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.192](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.191...v0.0.192) (2026-08-26)
+
+
+### Bug Fixes
+
+* **journal:** break sparklines on gaps, and stop duplicating Body ([582e5ad](https://github.com/marvinbarretto/jimbo-dashboard/commit/582e5adcfb4a962758e5fbf797cc0fd6e0065f67))
+
 ### [0.0.191](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.190...v0.0.191) (2026-08-26)
 
 
