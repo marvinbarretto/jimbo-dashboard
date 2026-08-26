@@ -1,12 +1,4 @@
 <section class="period-summary">
-  <div class="period-summary__routine">
-    <header class="period-summary__head">
-      <span class="period-summary__label">Routine — days hit</span>
-      <span class="period-summary__progress">{{ elapsedCount() }} of {{ days().length }} days</span>
-    </header>
-    <app-ui-checklist [items]="routineItems()" />
-  </div>
-
   <!-- The one thing a day view can't answer: is this going up or down.
        Work only — protein and training volume moved to Body, which renders
        them range-aware already and was showing the same charts twice. -->
