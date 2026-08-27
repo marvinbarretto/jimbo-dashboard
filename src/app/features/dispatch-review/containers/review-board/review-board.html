@@ -7,6 +7,46 @@
     </div>
   </app-ui-page-header>
 
+  @if (pressure(); as p) {
+    <app-ui-card class="review-gauge" data-testid="review-pressure">
+      <app-ui-stack gap="sm">
+        <app-ui-progress-meter
+          label="Commission capacity held by review"
+          [current]="p.inFlight"
+          [target]="p.cap"
+          unit="slots" />
+
+        <div class="review-gauge__stats">
+          <app-ui-stat-card
+            label="Awaiting you"
+            [value]="p.awaiting.toString()"
+            [detail]="p.blocked ? 'nothing new can start' : p.slotsFree + ' slots free'"
+            [status]="capacityStatus()" />
+
+          <app-ui-stat-card
+            label="Longest wait"
+            [value]="p.oldestWaitDays === null ? '—' : p.oldestWaitDays + 'd'"
+            detail="since the work completed"
+            [status]="waitStatus()" />
+
+          <app-ui-stat-card
+            label="Blocked on CI"
+            [value]="p.blockedOnCi.toString()"
+            detail="failing PRs — needs rework, not review"
+            [status]="p.blockedOnCi > 0 ? 'warn' : 'neutral'" />
+        </div>
+
+        @if (p.blocked) {
+          <p class="review-gauge__note" role="status">
+            The commission lane is stopped. Unreviewed work counts against the
+            concurrency cap, so nothing new is commissioned until you clear
+            something here.
+          </p>
+        }
+      </app-ui-stack>
+    </app-ui-card>
+  }
+
   @if (isLoading()) {
     <app-ui-empty-state message="Loading…" />
   } @else if (items().length === 0) {
@@ -23,6 +63,11 @@
               <span class="review-card__title">{{ item.title ?? '(untitled)' }}</span>
               @if (item.prState) {
                 <app-ui-badge tone="info">PR {{ item.prState }}</app-ui-badge>
+                @if (item.prChecks === 'passing') {
+                  <app-ui-badge tone="success">CI green</app-ui-badge>
+                } @else if (item.prChecks === 'pending') {
+                  <app-ui-badge tone="neutral">CI running</app-ui-badge>
+                }
               } @else {
                 <app-ui-badge tone="neutral">doc / no PR</app-ui-badge>
               }

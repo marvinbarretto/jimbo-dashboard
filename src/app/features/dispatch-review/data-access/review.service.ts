@@ -3,6 +3,7 @@
 // work (PR or doc) lands here and never reaches `done` until Marvin approves.
 //
 //   GET  /api/dispatch/awaiting-review   -> { items, total }
+//   GET  /api/dispatch/review/pressure   -> the gauge (see ReviewPressure)
 //   POST /api/dispatch/review/approve    -> { note_id }   (→ note done)
 //   POST /api/dispatch/review/send-back  -> { note_id, reason }  (→ needs_rework)
 
@@ -24,7 +25,39 @@ interface ApiReviewItem {
   result_summary: string | null;
   pr_url: string | null;
   pr_state: string | null;
+  pr_checks: string | null;
   completed_at: string | null;
+}
+
+/**
+ * Wire shape of the review gauge.
+ *
+ * Unreviewed items count against pipeline.commission_concurrency_cap, so this
+ * queue throttles the whole commission lane: at slots_free = 0 nothing new is
+ * commissioned however healthy grooming looks upstream. Measured 2026-08-27 the
+ * lane had been sitting at 9 of 10 with no surface anywhere, which read as
+ * "execution stopped" rather than "the brake is on".
+ */
+interface ApiReviewPressure {
+  awaiting: number;
+  in_flight: number;
+  cap: number;
+  slots_free: number;
+  oldest_wait_days: number | null;
+  blocked: boolean;
+  blocked_on_ci: number;
+}
+
+export interface ReviewPressure {
+  awaiting: number;
+  inFlight: number;
+  cap: number;
+  slotsFree: number;
+  oldestWaitDays: number | null;
+  /** No new work can be commissioned until something here is cleared. */
+  blocked: boolean;
+  /** Completed commissions held out of the queue because their PR is red. */
+  blockedOnCi: number;
 }
 
 /** Dashboard row. `id` (= note_id) is the stable key for optimistic removal. */
@@ -45,6 +78,8 @@ export interface ReviewItem {
   resultSummary: string | null;
   prUrl: string | null;
   prState: string | null;
+  /** 'passing' | 'pending' | null. Never 'failing' — red work never reaches here. */
+  prChecks: string | null;
   completedAt: string | null;
 }
 
@@ -61,6 +96,7 @@ function toReviewItem(r: ApiReviewItem): ReviewItem {
     resultSummary: r.result_summary,
     prUrl: r.pr_url,
     prState: r.pr_state,
+    prChecks: r.pr_checks,
     completedAt: r.completed_at,
   };
 }
@@ -73,9 +109,11 @@ export class ReviewService {
 
   private readonly _items = signal<ReviewItem[]>([]);
   private readonly _loading = signal(true);
+  private readonly _pressure = signal<ReviewPressure | null>(null);
 
   readonly items = this._items.asReadonly();
   readonly isLoading = this._loading.asReadonly();
+  readonly pressure = this._pressure.asReadonly();
 
   constructor() {
     this.load();
@@ -95,6 +133,29 @@ export class ReviewService {
           this.toast.error('Failed to load the review queue.');
         },
       });
+    this.loadPressure();
+  }
+
+  /**
+   * Loaded separately from the list because it counts things the list cannot
+   * show: running dispatches, and work held back by red CI.
+   *
+   * A failure here leaves the gauge null rather than showing zeros — an
+   * unmeasured queue must not read as an empty one.
+   */
+  private loadPressure(): void {
+    this.http.get<ApiReviewPressure>(`${this.base}/review/pressure`).subscribe({
+      next: (p) => this._pressure.set({
+        awaiting: p.awaiting,
+        inFlight: p.in_flight,
+        cap: p.cap,
+        slotsFree: p.slots_free,
+        oldestWaitDays: p.oldest_wait_days,
+        blocked: p.blocked,
+        blockedOnCi: p.blocked_on_ci,
+      }),
+      error: () => this._pressure.set(null),
+    });
   }
 
   /** Approve → note marked done. Optimistically drops the card. */
@@ -104,6 +165,9 @@ export class ReviewService {
       request: this.http.post(`${this.base}/review/approve`, { note_id: item.noteId }),
       errorMessage: 'Approve failed — card restored.',
     });
+    // Clearing an item frees a commission slot, so the gauge is stale the moment
+    // the card leaves.
+    this.loadPressure();
   }
 
   /** Send back → note reset to needs_rework with a reason. Optimistically drops the card. */
@@ -113,5 +177,6 @@ export class ReviewService {
       request: this.http.post(`${this.base}/review/send-back`, { note_id: item.noteId, reason }),
       errorMessage: 'Send-back failed — card restored.',
     });
+    this.loadPressure();
   }
 }

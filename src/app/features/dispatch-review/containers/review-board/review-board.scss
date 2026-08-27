@@ -49,3 +49,21 @@
     margin-top: 0.25rem;
   }
 }
+
+// The commission lane's brake, made visible. Unreviewed items occupy slots
+// against the concurrency cap, so this queue paces execution — measured
+// 2026-08-27 it had been sitting at 9 of 10 with no surface anywhere.
+.review-gauge {
+  &__stats {
+    display: grid;
+    gap: var(--space-sm, 0.75rem);
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  }
+
+  &__note {
+    margin: 0;
+    font-size: var(--font-size-sm, 0.875rem);
+    line-height: 1.5;
+    color: var(--color-text-muted, #6b7280);
+  }
+}
