@@ -1,0 +1,145 @@
+:host {
+  display: block;
+}
+
+.review-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem 1.1rem;
+  background: var(--color-surface, #0d1520);
+  border: 1px solid var(--color-border, #1f394c);
+  border-radius: 6px;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  // The seq and title are the route into the item itself, so they must be a
+  // real button — a styled span is invisible to the keyboard.
+  &__open {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover .review-card__title,
+    &:focus-visible .review-card__title {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-border-strong, #3dd6ff);
+      outline-offset: 3px;
+      border-radius: 2px;
+    }
+  }
+
+  &__seq {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-muted, #94a3b8);
+  }
+
+  &__title {
+    font-weight: 600;
+    color: var(--color-text, inherit);
+  }
+
+  &__meta {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    margin: -0.35rem 0 0;
+    font-size: 0.85rem;
+    color: var(--color-text-muted, #94a3b8);
+  }
+
+  // Prominent because inspecting the artifact is the review. Styled as its own
+  // surface rather than a text link so it reads as "go here first".
+  &__deliverable {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--color-border-strong, #3dd6ff);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--color-border-strong, #3dd6ff) 10%, transparent);
+    text-decoration: none;
+    color: var(--color-text, inherit);
+
+    &:hover, &:focus-visible {
+      background: color-mix(in srgb, var(--color-border-strong, #3dd6ff) 18%, transparent);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-border-strong, #3dd6ff);
+      outline-offset: 2px;
+    }
+  }
+
+  &__deliverable-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  &__deliverable-detail {
+    font-size: 0.85rem;
+    color: var(--color-text-muted, #94a3b8);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  // Small enough to stay out of the content's way, but a real heading so the
+  // brief and the claim are distinguishable to a screen reader.
+  &__label {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted, #94a3b8);
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.15rem;
+  }
+
+  &__context {
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--color-accent, #60a5fa);
+    cursor: pointer;
+
+    &:hover, &:focus-visible { text-decoration: underline; }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-border-strong, #3dd6ff);
+      outline-offset: 3px;
+      border-radius: 2px;
+    }
+  }
+}

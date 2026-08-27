@@ -164,10 +164,14 @@ export class ReviewService {
       prior: item,
       request: this.http.post(`${this.base}/review/approve`, { note_id: item.noteId }),
       errorMessage: 'Approve failed — card restored.',
+      // The card vanishing is ambiguous on its own — it looks the same as a
+      // filter changing. Name what happened and to which item, and say the slot
+      // is back, because freeing capacity is the point of clearing this queue.
+      onSuccess: () => {
+        this.toast.success(`${this.label(item)} approved and marked done — one commission slot freed.`);
+        this.loadPressure();
+      },
     });
-    // Clearing an item frees a commission slot, so the gauge is stale the moment
-    // the card leaves.
-    this.loadPressure();
   }
 
   /** Send back → note reset to needs_rework with a reason. Optimistically drops the card. */
@@ -176,7 +180,15 @@ export class ReviewService {
       prior: item,
       request: this.http.post(`${this.base}/review/send-back`, { note_id: item.noteId, reason }),
       errorMessage: 'Send-back failed — card restored.',
+      onSuccess: () => {
+        this.toast.info(`${this.label(item)} sent back for rework.`);
+        this.loadPressure();
+      },
     });
-    this.loadPressure();
+  }
+
+  /** "#2603" when there is a seq, else the title — never an opaque note id. */
+  private label(item: ReviewItem): string {
+    return item.seq ? `#${item.seq}` : (item.title ?? 'Item');
   }
 }

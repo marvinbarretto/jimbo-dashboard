@@ -6,9 +6,8 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiCard } from '@shared/components/ui-card/ui-card';
 import { UiButton } from '@shared/components/ui-button/ui-button';
-import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
-import { UiProse } from '@shared/components/ui-prose/ui-prose';
+import { ReviewCard } from '../../components/review-card/review-card';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiProgressMeter } from '@shared/components/ui-progress-meter/ui-progress-meter';
 import { ReviewService, type ReviewItem } from '../../data-access/review.service';
@@ -16,8 +15,8 @@ import { ReviewService, type ReviewItem } from '../../data-access/review.service
 @Component({
   selector: 'app-review-board',
   imports: [
-    UiStack, UiPageHeader, UiCard, UiButton, UiBadge, UiEmptyState, UiProse,
-    UiStatCard, UiProgressMeter,
+    UiStack, UiPageHeader, UiCard, UiButton, UiEmptyState,
+    UiStatCard, UiProgressMeter, ReviewCard,
   ],
   templateUrl: './review-board.html',
   styleUrl: './review-board.scss',

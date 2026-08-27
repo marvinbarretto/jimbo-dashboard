@@ -1,0 +1,60 @@
+<article class="review-card">
+  <header class="review-card__head">
+    <button
+      type="button"
+      class="review-card__open"
+      (click)="openItem.emit()"
+      [attr.aria-label]="'Open vault item ' + seqLabel() + ': ' + (item().title ?? 'untitled')">
+      <span class="review-card__seq">{{ seqLabel() }}</span>
+      <span class="review-card__title">{{ item().title ?? '(untitled)' }}</span>
+    </button>
+
+    @if (item().prState) {
+      <app-ui-badge tone="info">PR {{ item().prState }}</app-ui-badge>
+      @if (item().prChecks === 'passing') {
+        <app-ui-badge tone="success">CI green</app-ui-badge>
+      } @else if (item().prChecks === 'pending') {
+        <app-ui-badge tone="neutral">CI running</app-ui-badge>
+      }
+    }
+  </header>
+
+  <p class="review-card__meta">
+    <span>by {{ item().assignedTo ?? 'unknown' }}</span>
+    @if (item().skill) { <span>· {{ item().skill }}</span> }
+  </p>
+
+  <!--
+    The artifact sits above the argument on purpose: you open the thing, then
+    read what was asked for, then read what the agent claims. Burying a PR link
+    in the summary prose made "look at the work" the hardest step of a review.
+  -->
+  @if (item().prUrl; as url) {
+    <a class="review-card__deliverable" [href]="url" target="_blank" rel="noopener">
+      <span class="review-card__deliverable-label">Open pull request</span>
+      <span class="review-card__deliverable-detail">{{ prLabel() }} ↗</span>
+    </a>
+  }
+
+  @if (item().acceptanceCriteria; as ac) {
+    <section class="review-card__block">
+      <h3 class="review-card__label">Asked for</h3>
+      <app-ui-prose [text]="ac" />
+    </section>
+  }
+
+  @if (item().resultSummary; as summary) {
+    <section class="review-card__block">
+      <h3 class="review-card__label">{{ agent() }} says</h3>
+      <app-ui-prose [text]="summary" />
+    </section>
+  }
+
+  <footer class="review-card__actions">
+    <app-ui-button variant="primary" size="sm" (pressed)="approve.emit()">Approve</app-ui-button>
+    <app-ui-button variant="ghost" size="sm" (pressed)="sendBack.emit()">Send back</app-ui-button>
+    <button type="button" class="review-card__context" (click)="openItem.emit()">
+      Open item for context
+    </button>
+  </footer>
+</article>
