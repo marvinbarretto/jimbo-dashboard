@@ -20,7 +20,7 @@
           <app-ui-stat-card
             label="Awaiting you"
             [value]="p.awaiting.toString()"
-            [detail]="p.blocked ? 'nothing new can start' : p.slotsFree + ' slots free'"
+            [detail]="slotsDetail()"
             [status]="capacityStatus()" />
 
           <app-ui-stat-card

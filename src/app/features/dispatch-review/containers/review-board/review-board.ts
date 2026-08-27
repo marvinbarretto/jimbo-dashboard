@@ -45,6 +45,14 @@ export class ReviewBoard {
     return p.slotsFree <= 2 ? 'warn' : 'neutral';
   });
 
+  /** "1 slot free", not "1 slots free". */
+  readonly slotsDetail = computed(() => {
+    const p = this.pressure();
+    if (!p) return null;
+    if (p.blocked) return 'nothing new can start';
+    return p.slotsFree === 1 ? '1 slot free' : `${p.slotsFree} slots free`;
+  });
+
   readonly waitStatus = computed<'neutral' | 'warn' | 'alert'>(() => {
     const days = this.pressure()?.oldestWaitDays ?? null;
     if (days === null) return 'neutral';
