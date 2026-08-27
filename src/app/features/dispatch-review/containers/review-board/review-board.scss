@@ -14,6 +14,68 @@
     flex-wrap: wrap;
   }
 
+  // The seq + title are the way through to the item itself, so they have to be
+  // a real button — a styled span would be invisible to the keyboard.
+  &__open {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover .review-card__title,
+    &:focus-visible .review-card__title {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-border-strong, #3dd6ff);
+      outline-offset: 3px;
+      border-radius: 2px;
+    }
+  }
+
+  &__block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  // Small enough to stay out of the way of the content it names, but a real
+  // heading so the two panels are distinguishable to a screen reader.
+  &__label {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted, #94a3b8);
+  }
+
+  &__context {
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--color-accent, #60a5fa);
+    cursor: pointer;
+
+    &:hover, &:focus-visible { text-decoration: underline; }
+    &:focus-visible {
+      outline: 2px solid var(--color-border-strong, #3dd6ff);
+      outline-offset: 3px;
+      border-radius: 2px;
+    }
+  }
+
   &__seq {
     font-variant-numeric: tabular-nums;
     color: var(--color-text-muted, #94a3b8);
@@ -45,6 +107,7 @@
 
   &__actions {
     display: flex;
+    align-items: center;
     gap: 0.5rem;
     margin-top: 0.25rem;
   }
@@ -65,5 +128,9 @@
     font-size: var(--font-size-sm, 0.875rem);
     line-height: 1.5;
     color: var(--color-text-muted, #6b7280);
+
+    &--alert {
+      color: var(--color-danger, #f87171);
+    }
   }
 }

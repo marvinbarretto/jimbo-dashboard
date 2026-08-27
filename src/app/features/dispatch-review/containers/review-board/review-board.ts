@@ -1,4 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { withVaultDetailModal } from '@shared/kanban/detail-modal';
+import { swapDetailSeq } from '@shared/kanban/detail-nav';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiCard } from '@shared/components/ui-card/ui-card';
@@ -19,10 +22,28 @@ import { ReviewService, type ReviewItem } from '../../data-access/review.service
   templateUrl: './review-board.html',
   styleUrl: './review-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'page-bleed' },
+  // No `page-bleed`. That mode zeroes the shell's gutter for pages that own
+  // their own edges — sidebar shells, kanban boards, edge-to-edge canvases.
+  // This is a read-and-decide document page, so it wants the standard gutter
+  // and to stay aligned with the header chrome above it.
 })
 export class ReviewBoard {
   private readonly service = inject(ReviewService);
+  private readonly router = inject(Router);
+
+  constructor() {
+    // `?detail=<seq>` ↔ the vault-item modal. Approving is a judgement about a
+    // vault item, and the card can only ever carry the agent's account of it —
+    // this is the way through to the item's own body, thread and activity.
+    withVaultDetailModal();
+  }
+
+  /** Open the vault item behind a card. */
+  openItem(seq: string | null): void {
+    const n = Number(seq);
+    if (seq === null || Number.isNaN(n)) return;
+    swapDetailSeq(this.router, n);
+  }
 
   readonly items = this.service.items;
   readonly isLoading = this.service.isLoading;
@@ -45,12 +66,18 @@ export class ReviewBoard {
     return p.slotsFree <= 2 ? 'warn' : 'neutral';
   });
 
-  /** "1 slot free", not "1 slots free". */
+  /**
+   * Capacity headroom, phrased for the meter rather than for the "awaiting you"
+   * count — free slots are a fact about the lane, not about Marvin, and reading
+   * as a sub-label of his own queue made it sound like a personal target.
+   * Null while there is comfortable headroom: a gauge that always shouts stops
+   * being read.
+   */
   readonly slotsDetail = computed(() => {
     const p = this.pressure();
-    if (!p) return null;
-    if (p.blocked) return 'nothing new can start';
-    return p.slotsFree === 1 ? '1 slot free' : `${p.slotsFree} slots free`;
+    if (!p || p.blocked || p.slotsFree > 2) return null;
+    const n = p.slotsFree;
+    return `${n === 1 ? '1 slot' : `${n} slots`} free — new work stops when this fills`;
   });
 
   readonly waitStatus = computed<'neutral' | 'warn' | 'alert'>(() => {

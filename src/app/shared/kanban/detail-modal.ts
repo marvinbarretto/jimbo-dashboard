@@ -5,6 +5,7 @@ import { Dialog, type DialogRef } from '@angular/cdk/dialog';
 import { distinctUntilChanged, map } from 'rxjs';
 import { VaultItemDetailDialog } from '@features/vault-items/containers/vault-item-detail-dialog/vault-item-detail-dialog';
 import type { VaultItemDialogData } from '@features/vault-items/dialog/vault-item-dialog-mode';
+import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
 
 // Re-export so callers that only need navigation helpers can import from
 // detail-modal without pulling in VaultItemDetailDialog. The canonical
@@ -31,6 +32,13 @@ export { swapDetailSeq, closeDetail } from './detail-nav';
 // one line; nothing else changes about how they read or write the URL.
 export function withVaultDetailModal(): void {
   const dialog = inject(Dialog);
+  // The dialog body resolves its item from the in-memory vault collection, so
+  // it renders "Item not found." on any page that never loaded one. That was
+  // invisible while every caller was a kanban board holding the full set; the
+  // review board deep-links straight to a seq it has never seen. ensureBySeq is
+  // the same one-item fast path /vault-items/:seq uses, and no-ops when the row
+  // is already present — so boards are unaffected.
+  const vaultItems = inject(VaultItemsService);
   const route = inject(ActivatedRoute);
   const router = inject(Router);
   const destroyRef = inject(DestroyRef);
@@ -72,6 +80,8 @@ export function withVaultDetailModal(): void {
       ref = null;
       r.close();
     }
+
+    vaultItems.ensureBySeq(seq);
 
     const opened: DialogRef<unknown> = dialog.open<unknown, VaultItemDialogData>(
       VaultItemDetailDialog,
