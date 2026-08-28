@@ -1,0 +1,177 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Pipeline funnel — prototype</title>
+<style>
+  :root{
+    --bg:#0b1017; --surface:#0f1621; --border:#22303f;
+    --text:#dbe6f2; --muted:#7f93a8; --danger:#e2687a;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:2rem;background:var(--bg);color:var(--text);font-size:14px}
+  h1{font-size:1.15rem;margin:0 0 .3rem}
+  .sub{color:var(--muted);margin:0 0 2rem;font-size:.84rem;max-width:60rem;line-height:1.55}
+  .wrap{border:1px solid var(--border);border-radius:10px;background:var(--surface);
+        padding:1.5rem 1.5rem .5rem;max-width:74rem}
+
+  /* Controls column and funnel share one row grid, so a phase's knobs sit
+     level with the part of the funnel they govern. */
+  .rig{display:grid;grid-template-columns:20rem 1fr;gap:0}
+  .rows{display:flex;flex-direction:column}
+  .row{display:flex;flex-direction:column;justify-content:center;
+       padding:0 1.25rem 0 0;border-top:1px solid var(--border)}
+  .row:first-child{border-top:none}
+  .row__name{font-weight:700;font-size:.95rem;display:flex;align-items:center;gap:.5rem}
+  .row__ord{width:1.3rem;height:1.3rem;border-radius:50%;border:1px solid var(--border);
+            display:inline-flex;align-items:center;justify-content:center;
+            font-size:.68rem;color:var(--muted);flex-shrink:0}
+  .row__why{margin:.35rem 0 .55rem;font-size:.75rem;color:var(--muted);line-height:1.5}
+  .row__why b{color:var(--text)}
+  .ctl{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+  .ctl button{font:inherit;font-size:.8rem;width:1.7rem;height:1.7rem;border-radius:5px;
+              border:1px solid var(--border);background:#16202c;color:var(--text);cursor:pointer}
+  .ctl b{font-size:1.05rem;min-width:1.6rem;text-align:center;font-variant-numeric:tabular-nums}
+  .ctl .unit{font-size:.72rem;color:var(--muted)}
+  .chip{font-size:.7rem;padding:.2rem .5rem;border-radius:99px;border:1px solid var(--border);
+        background:#16202c;color:var(--muted);cursor:pointer}
+  .chip--on{color:var(--text);border-color:currentColor}
+  .tag{font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:var(--danger);
+       border:1px solid var(--danger);border-radius:99px;padding:.1rem .45rem}
+
+  .count{font-variant-numeric:tabular-nums;font-weight:700}
+  .count--zero{color:var(--danger)}
+  svg{display:block;width:100%}
+  .lbl{font-size:9px;fill:#0b1017;font-weight:700;paint-order:stroke;
+       stroke:rgba(255,255,255,.5);stroke-width:2px}
+  .edge{font-size:10px;fill:var(--muted)}
+  .foot{color:var(--muted);font-size:.75rem;line-height:1.6;padding:1rem 0 1.25rem;max-width:60rem}
+</style>
+
+<h1>Pipeline funnel</h1>
+<p class="sub">
+  Second attempt, built to the sketch. One continuous vessel top to bottom — <b>the
+  narrowing is the attrition</b>. Each project keeps its colour, so you watch which ones
+  get cut at which gate. Controls sit level with the phase they govern.
+  Real production numbers, tonight.
+</p>
+
+<div class="wrap">
+  <div class="rig">
+    <div class="rows" id="rows"></div>
+    <svg id="funnel" viewBox="0 0 520 640" preserveAspectRatio="none" aria-hidden="true"></svg>
+  </div>
+
+  <p class="foot">
+    Width is <b>√count</b>, not count — at true scale the 62 that survive project scope would be
+    5% of the mouth and the rest invisible. Exact numbers stay in the left column; the shape
+    carries proportion only.
+  </p>
+</div>
+
+<script>
+// ── Real data, production 2026-08-24 ───────────────────────────────
+const PROJECTS = [
+  ['admin', 378, '#8c8c8c'], ['jimbo', 341, '#6e56cf'], ['localshout', 131, '#c47a8f'],
+  ['watchdog', 94, '#5f7d8c'], ['fringe-2026', 78, '#c47ac4'], ['reinvent-me', 54, '#c4a4c4'],
+  ['(none)', 51, '#3a4a5c'], ['gym-app', 38, '#a4c4c4'], ['spoonscount', 33, '#c4a47a'],
+  ['collectr', 20, '#a4c47a'], ['munro-bagger', 17, '#7ac47a'], ['film-planner', 15, '#7ac4a4'],
+  ['try-something-new', 10, '#c4c47a'], ['festival-discovery', 10, '#8a6fb0'],
+  ['others', 27, '#2b3a4a'],
+];
+const IN_SCOPE = { 'reinvent-me': 54, 'pmq-bingo': 8 };   // 62 total
+
+// Each phase: what enters, what leaves, and which projects survive it.
+const PHASES = [
+  {
+    name: 'Captured', ord: 1, inN: 1216, outN: 1216,
+    why: '<b>1,216</b> notes sit ungroomed. 31% <b>admin</b>, 28% <b>jimbo</b> — mostly your own capture, not project work.',
+    survive: null,
+    ctl: `<span class="unit">no gate — everything lands here</span>`,
+  },
+  {
+    name: 'Project scope', ord: 2, inN: 1216, outN: 62,
+    why: 'Only notes in the selected projects may enter. Removes <b>1,154</b>.',
+    survive: IN_SCOPE,
+    ctl: `<span class="chip chip--on" style="color:#7ac4c4">pmq-bingo</span>
+          <span class="chip chip--on" style="color:#c4a4c4">reinvent-me</span>
+          <span class="chip">+ 17 more</span>`,
+  },
+  {
+    name: 'Routed to an agent', ord: 3, inN: 62, outN: 0,
+    why: 'A note assigned to <b>jimbo</b> is unrouted — there is no executor to groom it <i>for</i>. <b>This is the gate that is actually shut.</b>',
+    survive: {},
+    ctl: `<span class="tag">shut</span> <span class="unit">vault-orchestrate routes 15 / 120 min</span>`,
+  },
+  {
+    name: 'Intake', ord: 4, inN: 0, outN: 0,
+    why: 'Nothing reaches it. Capacity would be 48/day.',
+    survive: {},
+    ctl: `<div class="ctl"><button>−</button><b>1</b><button>+</button><span class="unit">per tick</span></div>`,
+  },
+  {
+    name: 'Classify → Decompose', ord: 5, inN: 0, outN: 0,
+    why: 'Separately, <b>246</b> notes are already past the gate and still draining at 48/day — scope gates entry only. About 6 days of work in hand, then empty.',
+    survive: {},
+    ctl: `<div class="ctl"><button>−</button><b>1</b><button>+</button><span class="unit">per tick</span></div>`,
+  },
+];
+
+// ── Geometry ───────────────────────────────────────────────────────
+const W = 520, ROW_H = 128, CX = W / 2, MAX_HALF = 236;
+const TOTAL = PROJECTS.reduce((a, [, n]) => a + n, 0);
+const scale = n => (n <= 0 ? 0 : MAX_HALF * Math.sqrt(n / TOTAL));
+
+/** Composition at a boundary: full mix, a filtered subset, or nothing. */
+function mixAt(survive) {
+  if (survive === null) return PROJECTS.map(([k, n, c]) => [k, n, c]);
+  return PROJECTS
+    .map(([k, n, c]) => [k, survive[k] ?? 0, c])
+    .filter(([, n]) => n > 0)
+    .concat(survive['pmq-bingo'] ? [['pmq-bingo', survive['pmq-bingo'], '#7ac4c4']] : []);
+}
+
+const svg = [];
+PHASES.forEach((p, i) => {
+  const yT = i * ROW_H, yB = yT + ROW_H;
+  const hT = scale(p.inN), hB = scale(p.outN);
+  const topMix = mixAt(i === 0 ? null : PHASES[i - 1].survive);
+  const botMix = mixAt(p.survive);
+  const topTotal = topMix.reduce((a, [, n]) => a + n, 0) || 1;
+  const botTotal = botMix.reduce((a, [, n]) => a + n, 0) || 1;
+
+  // Slice each project as a quad from its share of the top edge to its share
+  // of the bottom edge. A project absent below tapers to a point — which is
+  // the whole reason for drawing it this way rather than as stacked bars.
+  let cT = 0, cB = 0;
+  topMix.forEach(([key, n, colour]) => {
+    const x1 = CX - hT + (cT / topTotal) * 2 * hT;
+    const x2 = CX - hT + ((cT + n) / topTotal) * 2 * hT;
+    cT += n;
+    const bn = (botMix.find(([k]) => k === key) || [, 0])[1];
+    const x3 = CX - hB + ((cB + bn) / botTotal) * 2 * hB;
+    const x4 = CX - hB + (cB / botTotal) * 2 * hB;
+    cB += bn;
+    const dead = bn === 0;
+    svg.push(`<polygon points="${x1},${yT} ${x2},${yT} ${x3},${yB} ${x4},${yB}"
+      fill="${colour}" opacity="${dead ? 0.34 : 0.95}"><title>${key}: ${n}</title></polygon>`);
+    if (n / topTotal > 0.07 && hT > 40) {
+      svg.push(`<text class="lbl" x="${(x1 + x2) / 2}" y="${yT + 13}" text-anchor="middle">${key}</text>`);
+    }
+  });
+
+  svg.push(`<line x1="0" y1="${yB}" x2="${W}" y2="${yB}" stroke="#22303f"/>`);
+  svg.push(`<text class="edge" x="${CX + hB + 8}" y="${yB - 4}">${p.outN.toLocaleString()}</text>`);
+});
+document.getElementById('funnel').innerHTML = svg.join('');
+document.getElementById('funnel').setAttribute('viewBox', `0 0 ${W} ${PHASES.length * ROW_H}`);
+
+document.getElementById('rows').innerHTML = PHASES.map(p => `
+  <div class="row" style="height:${ROW_H}px">
+    <div class="row__name">
+      <span class="row__ord">${p.ord}</span>${p.name}
+      <span class="count ${p.outN === 0 ? 'count--zero' : ''}" style="margin-left:auto">${p.outN.toLocaleString()}</span>
+    </div>
+    <p class="row__why">${p.why}</p>
+    <div class="ctl">${p.ctl}</div>
+  </div>`).join('');
+</script>

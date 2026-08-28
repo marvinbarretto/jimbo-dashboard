@@ -1,0 +1,213 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Pipeline — what happens next</title>
+<style>
+  :root{--bg:#0b1017;--pan:#0f1621;--ln:#22303f;--sub:#18222e;--tx:#dbe6f2;--mu:#7f93a8;
+        --red:#e2687a;--ok:#57c99a;--am:#d9a441;--vi:#8f7ae6;
+        font-family:ui-monospace,"SF Mono",Menlo,monospace}
+  *{box-sizing:border-box}
+  body{margin:0;padding:2rem 2rem 5rem;background:var(--bg);color:var(--tx);font-size:13px}
+  h1{font-size:1.15rem;margin:0 0 .3rem}
+  .lede{color:var(--mu);max-width:62rem;line-height:1.6;margin:0 0 1.5rem;font-size:.8rem}
+  .col{max-width:80rem}
+  section{border:1px solid var(--ln);border-radius:10px;background:var(--pan);margin-bottom:1.25rem;overflow:hidden}
+  .hd{padding:.7rem 1rem;border-bottom:1px solid var(--ln);background:#0d141d;
+      display:flex;align-items:baseline;gap:.6rem}
+  .hd h2{font-size:.8rem;margin:0;letter-spacing:.06em;text-transform:uppercase}
+  .hd small{color:var(--mu);font-size:.7rem}
+  .hd .n{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:700}
+
+  /* problems */
+  .prob{display:grid;grid-template-columns:auto 1fr auto;gap:.9rem;padding:.85rem 1rem;
+        border-bottom:1px solid var(--sub);align-items:start}
+  .prob:last-child{border-bottom:none}
+  .sev{font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;padding:.16rem .45rem;
+       border-radius:99px;border:1px solid currentColor;white-space:nowrap;margin-top:.1rem}
+  .s-hi{color:var(--red)} .s-md{color:var(--am)} .s-lo{color:var(--mu)}
+  .prob b{display:block;margin-bottom:.25rem}
+  .prob p{margin:0;font-size:.76rem;color:var(--mu);line-height:1.55}
+  .prob .fix{font-size:.7rem;color:var(--vi);white-space:nowrap;border:1px solid var(--ln);
+             border-radius:6px;padding:.25rem .5rem;background:#0c121a;cursor:pointer}
+
+  /* rows */
+  .r{display:grid;gap:.7rem;padding:.55rem 1rem;border-bottom:1px solid var(--sub);
+     align-items:center;font-variant-numeric:tabular-nums}
+  .r:last-child{border-bottom:none}
+  .r-next{grid-template-columns:1.5rem 1fr 3rem 4rem 5rem}
+  .r-run {grid-template-columns:1fr 9rem 5rem 6rem 5rem}
+  .r-fin {grid-template-columns:9rem 5rem 1fr 4rem}
+  .r .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .r .id{color:var(--mu);font-size:.68rem}
+  .pos{color:var(--mu);font-size:.7rem;text-align:center}
+  .pri{font-size:.66rem;padding:.1rem .35rem;border-radius:4px;border:1px solid var(--ln);color:var(--am)}
+  .age{color:var(--mu);font-size:.72rem;text-align:right}
+  .st{font-size:.62rem;letter-spacing:.05em;text-transform:uppercase;text-align:right}
+  .st-run{color:var(--ok)} .st-app{color:var(--am)} .st-fail{color:var(--red)} .st-done{color:var(--mu)}
+  .zomb{color:var(--red);font-weight:700}
+  .why{padding:.75rem 1rem;font-size:.74rem;color:var(--mu);line-height:1.6;background:#0c1119;
+       border-bottom:1px solid var(--sub)}
+  .why b{color:var(--tx)}
+  .empty{padding:1rem;font-size:.78rem;color:var(--red);line-height:1.6}
+  .empty b{color:var(--tx)}
+  code{background:#16202c;padding:.05rem .28rem;border-radius:3px}
+  .up{padding:.8rem 1rem;font-size:.76rem;line-height:1.9;color:var(--mu)}
+  .up b{color:var(--tx)} .up .n{color:var(--vi);font-weight:700}
+  .up .x{color:var(--red);font-weight:700}
+</style>
+
+<h1>What happens next</h1>
+<p class="lede">
+  Read from the front of the queue backwards. What the pump will pick up next and <b>why that
+  one</b>; what is running right now; what just finished and how it went — then back upstream to
+  where it all came from. Problems first, because they are the reason to look.
+  Real production data.
+</p>
+
+<div class="col">
+
+<section>
+  <div class="hd"><h2>Problems</h2><small>detected from live state</small><span class="n"><span style="color:var(--ok)">1 fixed</span> <span style="color:var(--red)">· 2 open</span></span></div>
+  <div class="prob" style="background:rgba(87,201,154,.05)"><span class="sev" style="color:var(--ok)">fixed</span>
+    <div><b>Decompose was failing 7 of every 10 attempts</b>
+    <p><code>max_depth_below_epic</code> was <b>2</b>. Measured against the live tree, <b>264 of
+    371</b> classified notes sit at exactly depth 2 and <b>8</b> at depth 3 — so 73% of the
+    backlog could never produce subtasks. The agent proposed them anyway, got a 400 with no
+    recovery path, and the dispatch sat until the 20-minute reaper killed it. That is both the
+    78 failures and most of the 68 exhausted notes.</p>
+    <p style="margin-top:.4rem;color:var(--ok)">
+      <b>Raised to 4 at 23:04.</b> 272 notes unblocked. The 29 at depth 5 stay blocked — they
+      need re-parenting, not a higher cap. Revert with one setting write.</p></div>
+    <span class="fix" style="color:var(--ok)">watch next tick →</span></div>
+
+  <div class="prob"><span class="sev s-md">medium</span>
+    <div><b>The cap measures the wrong thing</b>
+    <p><code>vault-depth.ts</code> exists because <code>#3586</code> reached <b>381 descendants
+    across seven levels</b>. But depth is a proxy — what hurt was <i>total descendants</i>. A
+    depth cap blocks legitimate three-level work while still permitting a wide shallow explosion.
+    Capping descendants per epic would allow deep-but-narrow trees and still stop 381.</p></div>
+    <span class="fix">propose descendant cap →</span></div>
+
+  <div class="prob"><span class="sev s-hi">high</span>
+    <div><b>Two dispatches have been running for 25 days</b>
+    <p><code>triage/email-triage</code> on boris, started ~36,000 minutes ago, still
+    <code>running</code>. <code>stale_minutes</code> is 20 — but the reaper only covers
+    <code>flow='groom'</code>, so nothing ever reaps these.</p></div>
+    <span class="fix">extend reaper to all flows →</span></div>
+
+  <div class="prob"><span class="sev s-md">medium</span>
+    <div><b>Nothing is entering the pipeline</b>
+    <p>62 notes pass project scope; <b>0</b> are routed to an agent, so none can be groomed.
+    68 more have exhausted their retries and left with no record — most of them, on the evidence
+    above, killed by the depth cap rather than by anything wrong with the notes.</p></div>
+    <span class="fix">inspect routing →</span></div>
+</section>
+
+<section>
+  <div class="hd"><h2>Next to be dispatched</h2><small>decompose · in pump order</small><span class="n">6</span></div>
+  <div class="why">
+    Ordered by <b>effective priority, then age</b>. All six are <b>P1</b> and 19–24 days old.
+    Each has passed: <code>grooming_status=classified</code> · not blocked · not already started ·
+    <code>priority_confidence ≥ 0.6</code> · within depth cap.
+    <b>At 1 per tick this queue moves 1 note every 30 minutes.</b> Until 23:04 tonight roughly
+    70% of those attempts failed on depth; with the cap at 4 these six should now decompose
+    normally. <b>Unverified — the next tick is the test.</b>
+  </div>
+  <div id="next"></div>
+</section>
+
+<section>
+  <div class="hd"><h2>Nothing is next at these stages</h2><small>and why</small></div>
+  <div class="empty" id="blocked"></div>
+</section>
+
+<section>
+  <div class="hd"><h2>Running now</h2><small>live dispatches</small><span class="n">4</span></div>
+  <div id="run"></div>
+</section>
+
+<section>
+  <div class="hd"><h2>Just finished</h2><small>most recent first</small></div>
+  <div id="fin"></div>
+</section>
+
+<section>
+  <div class="hd"><h2>Upstream — where this comes from</h2><small>back to conception</small></div>
+  <div class="up" id="up"></div>
+</section>
+
+</div>
+
+<script>
+const NEXT=[
+ ['note_911ee321','Verify weekly schedule is live and old daily run is off',1,0,24],
+ ['note_9451aece','Implement read-pair-persist integration into interrogate',1,0,24],
+ ['note_ccd20a15','Verify duration capture consistency in new sessions',1,0,23],
+ ['note_37d39416','Propose implementation plan for injecting custody state',1,0,23],
+ ['note_12cca760','Design thread ID representation for interrogate_snapshot',1,0,20],
+ ['note_e02c888b','Implement tension persistence layer with CRUD and links',1,0,19],
+];
+document.getElementById('next').innerHTML=NEXT.map((r,i)=>`
+  <div class="r r-next">
+    <span class="pos">${i+1}</span>
+    <span class="t">${r[1]}<span class="id"> · ${r[0]}</span></span>
+    <span><span class="pri">P${r[2]}</span></span>
+    <span class="age">${r[3]} retries</span>
+    <span class="age">${r[4]}d old</span>
+  </div>`).join('');
+
+document.getElementById('blocked').innerHTML=`
+  <b>Intake · Deep read · Classify — nothing queued.</b><br>
+  1,217 notes sit ungroomed. 1,155 are excluded by project scope; the remaining <b>62 are in
+  scope but unrouted</b> — assigned to <code>jimbo</code>, which means no executor has been
+  chosen, so the pump will not groom them. <code>vault-orchestrate</code> routes 15 per 120 min
+  and has routed none of these.<br><br>
+  <b>Deep read</b> is separately set to 0 per tick — off, not slow.`;
+
+const RUN=[
+ ['dispatch/vault-decompose','note_9e3fc443','jeffrey','approved',25,0],
+ ['dispatch/vault-decompose','note_a4af4dc3','jeffrey','running',7,0],
+ ['triage/email-triage','note_6897573b','boris','running',36055,1],
+ ['triage/email-triage','note_6897573b','boris','running',36296,1],
+];
+const mins=m=> m>1440 ? `${(m/1440).toFixed(0)}d` : m>60 ? `${(m/60).toFixed(1)}h` : `${m}m`;
+document.getElementById('run').innerHTML=RUN.map(r=>`
+  <div class="r r-run">
+    <span class="t">${r[0]}<span class="id"> · ${r[1]}</span></span>
+    <span class="id">${r[2]}</span>
+    <span class="st st-${r[3]==='running'?'run':'app'}">${r[3]}</span>
+    <span class="age ${r[5]?'zomb':''}">${mins(r[4])}${r[5]?' ⚠':''}</span>
+    <span class="age">${r[5]?'never reaped':'ok'}</span>
+  </div>`).join('');
+
+const FIN=[
+ ['dispatch/vault-decompose','failed','DECOMPOSITION_TOO_DEEP — note sits 2 levels below epic',68],
+ ['dispatch/vault-decompose','failed','reaper: timeout',85],
+ ['dispatch/vault-decompose','failed','reaper: timeout',115],
+ ['briefing/evening-ledger','completed','evening ledger posted + delivered (analysis 276)',168],
+ ['dispatch/vault-decompose','failed','DECOMPOSITION_TOO_DEEP — note sits 2 levels below epic',174],
+ ['think/assertion-scan','completed','cross-checked every promising cross-source angle found',184],
+];
+document.getElementById('fin').innerHTML=FIN.map(r=>`
+  <div class="r r-fin">
+    <span class="t id">${r[0]}</span>
+    <span class="st st-${r[1]==='failed'?'fail':'done'}">${r[1]}</span>
+    <span class="t" style="color:${r[1]==='failed'?'var(--red)':'var(--mu)'}">${r[2]}</span>
+    <span class="age">${mins(r[3])} ago</span>
+  </div>`).join('');
+
+document.getElementById('up').innerHTML=`
+  <span class="n">6</span> notes queued at decompose
+  &nbsp;←&nbsp; drawn from <span class="n">371</span> classified
+  &nbsp;←&nbsp; produced by classify, which ran <span class="n">99×</span> this week and
+  <span class="x">0×</span> today
+  &nbsp;←&nbsp; fed by intake, <span class="n">92×</span> this week, <span class="x">0×</span> today
+  <br>
+  &nbsp;←&nbsp; which draws from <span class="n">62</span> notes that pass project scope
+  &nbsp;←&nbsp; <span class="x">of which 0 are routed</span> — the chain stops here
+  &nbsp;←&nbsp; out of <span class="n">1,217</span> captured and ungroomed
+  &nbsp;←&nbsp; arriving from Google Tasks, email, GitHub and manual capture.
+  <br><br>
+  <b>So: the 6 notes about to be worked are the tail of a queue that is no longer being
+  refilled.</b> When the 371 classified notes are gone, the pipeline runs dry unless routing
+  starts passing something.`;
+</script>

@@ -1,0 +1,192 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Pipeline — capture to done</title>
+<style>
+  :root{
+    --bg:#0b1017; --surface:#0f1621; --panel:#0c121a; --border:#22303f;
+    --text:#dbe6f2; --muted:#7f93a8; --danger:#e2687a; --ok:#57c99a; --warn:#d9a441;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:2rem 2rem 6rem;background:var(--bg);color:var(--text);font-size:14px}
+  h1{font-size:1.2rem;margin:0 0 .3rem}
+  .sub{color:var(--muted);margin:0 0 2rem;font-size:.84rem;max-width:62rem;line-height:1.6}
+  .wrap{max-width:78rem;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+
+  .rig{display:grid;grid-template-columns:1fr 300px}
+  .col-l{padding:0}
+  .col-r{position:relative;border-left:1px solid var(--border)}
+  .funnel{position:sticky;top:0}
+
+  .group{font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+         padding:1.1rem 1.5rem .4rem;border-top:1px solid var(--border);background:#0d141d}
+  .group:first-child{border-top:none}
+
+  .stage{display:flex;flex-direction:column;justify-content:center;
+         padding:1rem 1.5rem;border-top:1px solid #18222e}
+  .stage__hd{display:flex;align-items:center;gap:.6rem}
+  .ord{width:1.45rem;height:1.45rem;border-radius:50%;border:1px solid var(--border);
+       display:inline-flex;align-items:center;justify-content:center;font-size:.66rem;
+       color:var(--muted);flex-shrink:0}
+  .nm{font-weight:700}
+  .num{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:700;font-size:1.2rem}
+  .num--zero{color:var(--danger)} .num--ok{color:var(--ok)}
+  .of{font-size:.68rem;color:var(--muted);font-weight:400;margin-left:.35rem}
+  .does{margin:.4rem 0 .65rem;font-size:.78rem;color:var(--muted);line-height:1.55;max-width:46rem}
+  .does b{color:var(--text)}
+  .knobs{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
+  .knob{display:inline-flex;align-items:center;gap:.35rem;border:1px solid var(--border);
+        border-radius:7px;padding:.25rem .45rem;background:var(--panel)}
+  .knob label{font-size:.66rem;color:var(--muted)}
+  .knob button{font:inherit;font-size:.78rem;width:1.4rem;height:1.4rem;border-radius:4px;
+               border:1px solid var(--border);background:#16202c;color:var(--text);cursor:pointer}
+  .knob button:hover{border-color:var(--muted)}
+  .knob b{min-width:1.3rem;text-align:center;font-variant-numeric:tabular-nums}
+  .chip{font-size:.68rem;padding:.22rem .55rem;border-radius:99px;border:1px solid var(--border);
+        background:var(--panel);color:var(--muted);cursor:pointer;user-select:none}
+  .chip--on{color:var(--text)}
+  .sw{display:inline-flex;align-items:center;gap:.4rem;font-size:.68rem;color:var(--muted);cursor:pointer}
+  .sw i{width:1.9rem;height:1.05rem;border-radius:99px;background:#1b2836;position:relative;transition:background .15s}
+  .sw i::after{content:'';position:absolute;top:2px;left:2px;width:.75rem;height:.75rem;border-radius:50%;
+               background:var(--muted);transition:transform .15s,background .15s}
+  .sw--on i{background:rgba(87,201,154,.3)} .sw--on i::after{transform:translateX(.85rem);background:var(--ok)}
+  .ro{font-size:.66rem;color:var(--muted);border:1px dashed var(--border);border-radius:7px;padding:.25rem .5rem}
+  .tag{font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;padding:.12rem .45rem;
+       border-radius:99px;border:1px solid currentColor}
+  .tag--shut{color:var(--danger)} .tag--off{color:var(--muted)} .tag--you{color:var(--warn)}
+  .leak{margin:.55rem 0 0;font-size:.72rem;color:var(--danger)}
+  .foot{color:var(--muted);font-size:.74rem;line-height:1.7;padding:1.25rem 1.5rem;border-top:1px solid var(--border)}
+  svg{display:block;width:100%}
+  .edge{font-size:9px;fill:var(--muted)}
+</style>
+
+<h1>Pipeline — capture to production done</h1>
+<p class="sub">
+  Every gate a note passes between being captured and being done, with the knobs that
+  govern each one. <b>Real production numbers, tonight.</b> Scrolls as far as the flow goes.
+  The funnel on the right tracks the same stages — width is √count so the thin end stays visible.
+</p>
+
+<div class="wrap">
+  <div class="rig">
+    <div class="col-l" id="rows"></div>
+    <div class="col-r"><div class="funnel"><svg id="fn" preserveAspectRatio="none"></svg></div></div>
+  </div>
+  <p class="foot">
+    <b>8 notes reached done in the last 7 days</b> — about 1.1/day, against 1,217 waiting to
+    start. Every per-tick knob above is a ceiling, not a rate: the binding constraints are
+    routing (nothing is routed) and autonomous scope (10 of 641 ready notes qualify).
+  </p>
+</div>
+
+<script>
+const S = [
+  { g:'Capture' },
+  { ord:1, nm:'Arrives', n:1217, does:'Google Tasks, email, GitHub issues and manual capture all land as vault notes. Nothing is filtered here — this is the mouth.',
+    knobs:[{t:'chip',l:'Tasks: 1 list',on:1},{t:'chip',l:'Email gate: 9 blocked senders',on:1},{t:'chip',l:'URL auto-triage',on:0}] },
+
+  { g:'Route — who should do it' },
+  { ord:2, nm:'Routed to an agent', n:0, of:1217, shut:1,
+    does:'A note assigned to <b>jimbo</b> is unrouted — there is no executor to groom it <i>for</i>. <b>vault-orchestrate</b> dispositions the backlog with judgement. <b>This is the gate that is actually shut.</b>',
+    knobs:[{t:'ro',l:'orchestrator = jimbo'},{t:'ro',l:'15 items / 120 min'},{t:'tag',l:'shut',k:'shut'}] },
+
+  { g:'Groom — entry gates' },
+  { ord:3, nm:'Project scope', n:62, of:1217,
+    does:'Only notes in the selected projects may enter grooming. A note with <b>no project</b> can never match — unless its type is admitted below.',
+    knobs:[{t:'chip',l:'pmq-bingo',on:1},{t:'chip',l:'reinvent-me',on:1},{t:'chip',l:'+17 more',on:0},{t:'chip',l:'projectless: spike',on:0}] },
+  { ord:4, nm:'Priority scope', n:62, of:62,
+    does:'Optionally restrict to P1 and unranked only. Currently open to all priorities.',
+    knobs:[{t:'chip',l:'all priorities',on:1},{t:'chip',l:'P1 + unranked',on:0}] },
+
+  { g:'Groom — the four stages' },
+  { ord:5, nm:'Intake', n:0, of:62, does:'First read of an ungroomed note. Absorbs deep-read’s queue while that stage is off.', knobs:[{t:'step',l:'per tick',v:1}] },
+  { ord:6, nm:'Deep read', n:0, of:0, off:1, does:'Follows and reads a note’s source URL. <b>Off</b> — not slow.', knobs:[{t:'step',l:'per tick',v:0},{t:'tag',l:'off',k:'off'}] },
+  { ord:7, nm:'Classify', n:1, of:1, does:'Types and ranks what intake produced.', knobs:[{t:'step',l:'per tick',v:1}] },
+  { ord:8, nm:'Decompose', n:371, of:371,
+    does:'Breaks a classified note into work. Needs priority confidence ≥ 0.6 and respects max epic depth.',
+    knobs:[{t:'step',l:'per tick',v:1},{t:'step',l:'max depth',v:2},{t:'ro',l:'confidence ≥ 0.6 (fixed)'}] },
+  { ord:9, nm:'Groomer capacity', n:1, of:3,
+    does:'Shared across all four stages. Dispatches idle past <b>stale</b> are reaped and retried; past <b>max retries</b> they stop being selected — silently.',
+    knobs:[{t:'step',l:'concurrency',v:3},{t:'step',l:'stale min',v:20},{t:'step',l:'max retries',v:2},{t:'ro',l:'groomer = jeffrey'}],
+    leak:'68 notes have exhausted their retries and left the flow with no record.' },
+
+  { g:'Ready — could be worked' },
+  { ord:10, nm:'Ready', n:641, ok:1, does:'Acceptance criteria parsed, nothing blocking. This is the pool real work is drawn from.', knobs:[{t:'ro',l:'gate: ACs present + not blocked'}] },
+
+  { g:'Commission — hand to an agent' },
+  { ord:11, nm:'Autonomous projects', n:10, of:641,
+    does:'Only ready work in these projects may be handed to an agent. <b>A separate gate from grooming scope</b> — widening one without the other does nothing.',
+    knobs:[{t:'chip',l:'pmq-bingo',on:1},{t:'chip',l:'+18 more',on:0},{t:'sw',l:'commissioning',on:1}] },
+  { ord:12, nm:'Commission tick', n:2, of:10,
+    does:'Picks up ready work and creates a dispatch. Unaccepted work counts against the cap, so an unreviewed pile stops new work being commissioned.',
+    knobs:[{t:'step',l:'per tick',v:1},{t:'step',l:'concurrency',v:10}] },
+
+  { g:'Build — the agent works' },
+  { ord:13, nm:'Agent execution', n:2, does:'commission-worker wakes every 120 min, runs code / pr-from-issue, opens a PR.', knobs:[{t:'ro',l:'every 120 min'},{t:'ro',l:'workers: boris · jeffrey · kipper · steward'}] },
+  { ord:14, nm:'CI + auto-merge', n:null, does:'<b>test-and-build</b> must go green, then the PR merges itself. Nobody reviews it.', knobs:[{t:'ro',l:'gate: CI green'}] },
+  { ord:15, nm:'Merge webhook → done', n:8, ok:1, does:'Merge marks the note done. <b>8 in the last 7 days.</b>', knobs:[{t:'ro',l:'automatic'}] },
+
+  { g:'Ship — your gate' },
+  { ord:16, nm:'Deploy', n:null, does:'Manual <b>npm run deploy</b>. Deliberately yours — a steering moment, not a gate on the agent.', knobs:[{t:'tag',l:'you',k:'you'},{t:'ro',l:'manual'}] },
+];
+
+// ── left column ────────────────────────────────────────────────────
+const knobHtml = k => ({
+  step: `<span class="knob"><label>${k.l}</label><button data-d="-1">−</button><b>${k.v}</b><button data-d="1">+</button></span>`,
+  chip: `<span class="chip ${k.on?'chip--on':''}">${k.l}</span>`,
+  sw:   `<span class="sw ${k.on?'sw--on':''}"><i></i>${k.l}</span>`,
+  ro:   `<span class="ro">${k.l}</span>`,
+  tag:  `<span class="tag tag--${k.k}">${k.l}</span>`,
+}[k.t]);
+
+document.getElementById('rows').innerHTML = S.map(s => s.g
+  ? `<div class="group">${s.g}</div>`
+  : `<div class="stage" data-h>
+       <div class="stage__hd">
+         <span class="ord">${s.ord}</span><span class="nm">${s.nm}</span>
+         ${s.n === null ? '' : `<span class="num ${s.n===0?'num--zero':s.ok?'num--ok':''}">${s.n.toLocaleString()}${s.of!==undefined?`<span class="of">of ${s.of.toLocaleString()}</span>`:''}</span>`}
+       </div>
+       <p class="does">${s.does}</p>
+       <div class="knobs">${(s.knobs||[]).map(knobHtml).join('')}</div>
+       ${s.leak?`<p class="leak">↘ ${s.leak}</p>`:''}
+     </div>`).join('');
+
+// Steppers respond so the shape of the interaction is visible.
+document.addEventListener('click', e => {
+  const b = e.target.closest('.knob button'); if (!b) return;
+  const v = b.parentElement.querySelector('b');
+  v.textContent = Math.max(0, +v.textContent + +b.dataset.d);
+});
+document.addEventListener('click', e => {
+  const c = e.target.closest('.chip'); if (c) c.classList.toggle('chip--on');
+  const s = e.target.closest('.sw');   if (s) s.classList.toggle('sw--on');
+});
+
+// ── funnel, aligned row-for-row with the stages ────────────────────
+requestAnimationFrame(() => {
+  const rows = [...document.querySelectorAll('.stage')];
+  const counts = S.filter(s => !s.g).map(s => s.n === null ? null : s.n);
+  let last = 1217;
+  const series = counts.map(n => (n === null ? last : (last = n)));
+  const MAXN = Math.max(...series), W = 300, CX = W/2, HALF = 132;
+  const sc = n => n <= 0 ? 1.5 : HALF * Math.sqrt(n / MAXN);
+
+  const top = rows[0].getBoundingClientRect().top;
+  const H = rows.at(-1).getBoundingClientRect().bottom - top;
+  const out = [];
+  rows.forEach((r, i) => {
+    const b = r.getBoundingClientRect();
+    const y1 = b.top - top, y2 = b.bottom - top;
+    const w1 = sc(i === 0 ? series[0] : series[i-1]), w2 = sc(series[i]);
+    const dead = series[i] === 0;
+    out.push(`<polygon points="${CX-w1},${y1} ${CX+w1},${y1} ${CX+w2},${y2} ${CX-w2},${y2}"
+      fill="${dead ? '#e2687a' : '#6e56cf'}" opacity="${dead ? .22 : .5}"/>`);
+    out.push(`<line x1="${CX-w2}" y1="${y2}" x2="${CX+w2}" y2="${y2}" stroke="#22303f"/>`);
+    out.push(`<text class="edge" x="${CX+w2+7}" y="${y2-3}">${series[i].toLocaleString()}</text>`);
+  });
+  const fn = document.getElementById('fn');
+  fn.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  fn.style.height = H + 'px';
+  fn.innerHTML = out.join('');
+});
+</script>

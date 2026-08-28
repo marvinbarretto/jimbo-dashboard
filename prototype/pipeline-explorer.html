@@ -1,0 +1,331 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Pipeline explorer</title>
+<style>
+  :root{
+    --bg:#0b1017;--surface:#0f1621;--panel:#0c121a;--border:#22303f;--line:#18222e;
+    --text:#dbe6f2;--muted:#7f93a8;--danger:#e2687a;--ok:#57c99a;--warn:#d9a441;--accent:#6e56cf;
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:2rem 2rem 6rem;background:var(--bg);color:var(--text);font-size:14px}
+  h1{font-size:1.2rem;margin:0 0 .3rem}
+  .sub{color:var(--muted);margin:0 0 1.5rem;font-size:.83rem;max-width:64rem;line-height:1.6}
+  .wrap{max-width:78rem;border:1px solid var(--border);border-radius:12px;background:var(--surface);overflow:hidden}
+  .flowrig{display:grid;grid-template-columns:84px 1fr}
+  .chan{position:relative;border-right:1px solid var(--line);background:#090d13}
+  .chan svg{position:absolute;inset:0;width:100%;height:100%}
+  /* Motion only where fluid actually moves — a still channel means a stopped one. */
+  @keyframes drift{to{transform:translateY(var(--d))}}
+  .bub{animation:drift var(--t) linear infinite}
+  @media (prefers-reduced-motion:reduce){ .bub{animation:none} }
+  .keyline{display:flex;gap:1.1rem;flex-wrap:wrap;padding:.7rem 1.25rem;border-top:1px solid var(--border);
+           background:#0d141d;font-size:.66rem;color:var(--muted)}
+  .keyline span{display:inline-flex;align-items:center;gap:.35rem}
+  .keyline i{width:14px;height:8px;border-radius:2px;display:inline-block}
+
+  /* ── done strip ─────────────────────────────────────────── */
+  .done{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);background:#0d141d}
+  .done div{padding:1rem 1.25rem;border-left:1px solid var(--line)}
+  .done div:first-child{border-left:none}
+  .done dt{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 .3rem}
+  .done dd{margin:0;font-size:1.7rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+  .done dd small{font-size:.7rem;color:var(--muted);font-weight:400;margin-left:.4rem}
+  .zero{color:var(--danger)}
+
+  .group{font-size:.63rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+         padding:.9rem 1.25rem .35rem;background:#0d141d;border-top:1px solid var(--border)}
+
+  /* ── accordion ──────────────────────────────────────────── */
+  details{border-top:1px solid var(--line)}
+  details[open]{background:#0c1119}
+  summary{list-style:none;cursor:pointer;padding:.85rem 1.25rem;display:grid;
+          grid-template-columns:1.5rem 1fr auto 5.5rem 6.5rem;gap:.75rem;align-items:center}
+  summary::-webkit-details-marker{display:none}
+  summary:hover{background:#111925}
+  .ord{width:1.5rem;height:1.5rem;border-radius:50%;border:1px solid var(--border);
+       display:flex;align-items:center;justify-content:center;font-size:.66rem;color:var(--muted)}
+  .nm{font-weight:700}
+  .nm em{display:block;font-style:normal;font-size:.72rem;color:var(--muted);font-weight:400;margin-top:.15rem}
+  .cnt{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.15rem;text-align:right}
+  .cnt small{display:block;font-size:.62rem;color:var(--muted);font-weight:400}
+  .bars{display:flex;align-items:flex-end;gap:2px;height:26px}
+  .bars i{width:6px;background:var(--accent);border-radius:1px;min-height:2px;opacity:.75}
+  .bars i.f{background:var(--danger)}
+  .pill{font-size:.6rem;letter-spacing:.05em;text-transform:uppercase;padding:.15rem .45rem;
+        border-radius:99px;border:1px solid currentColor;justify-self:end;white-space:nowrap}
+  .p-shut{color:var(--danger)} .p-ok{color:var(--ok)} .p-off{color:var(--muted)}
+  .p-warn{color:var(--warn)} .p-you{color:var(--warn)}
+
+  .body{padding:.25rem 1.25rem 1.35rem 3.5rem;display:grid;gap:1rem}
+  .blk h4{margin:0 0 .5rem;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .knobs{display:flex;gap:.45rem;flex-wrap:wrap;align-items:center}
+  .knob{display:inline-flex;align-items:center;gap:.35rem;border:1px solid var(--border);
+        border-radius:7px;padding:.25rem .45rem;background:var(--panel)}
+  .knob label{font-size:.66rem;color:var(--muted)}
+  .knob button{font:inherit;font-size:.78rem;width:1.4rem;height:1.4rem;border-radius:4px;
+               border:1px solid var(--border);background:#16202c;color:var(--text);cursor:pointer}
+  .knob b{min-width:1.3rem;text-align:center;font-variant-numeric:tabular-nums}
+  .chip{font-size:.68rem;padding:.22rem .55rem;border-radius:99px;border:1px solid var(--border);
+        background:var(--panel);color:var(--muted);cursor:pointer;user-select:none}
+  .chip--on{color:var(--text);border-color:currentColor}
+  .ro{font-size:.66rem;color:var(--muted);border:1px dashed var(--border);border-radius:7px;padding:.25rem .5rem}
+  table{width:100%;border-collapse:collapse;font-size:.75rem}
+  th{text-align:left;font-weight:600;color:var(--muted);font-size:.62rem;letter-spacing:.06em;
+     text-transform:uppercase;padding:.3rem .5rem .3rem 0}
+  td{padding:.3rem .5rem .3rem 0;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+  td.skill{font-family:inherit;color:var(--text)}
+  .bad{color:var(--danger);font-weight:700}
+  .warnbox{border:1px solid var(--danger);border-radius:8px;padding:.6rem .8rem;font-size:.76rem;line-height:1.55}
+  .greybox{border:1px dashed var(--border);border-radius:8px;padding:.6rem .8rem;font-size:.74rem;
+           line-height:1.55;color:var(--muted)}
+  .foot{padding:1.1rem 1.25rem;border-top:1px solid var(--border);color:var(--muted);font-size:.74rem;line-height:1.7}
+  code{background:#16202c;padding:.05rem .3rem;border-radius:3px}
+</style>
+
+<h1>Pipeline explorer</h1>
+<p class="sub">
+  Every stage from capture to deploy. Click a row to open it: the knobs that govern it, the
+  skills that run there, and what it actually did today, yesterday and this week.
+  <b>All numbers pulled from production tonight.</b>
+</p>
+
+<div class="wrap">
+  <dl class="done" id="done"></dl>
+  <div class="flowrig">
+    <div class="chan"><svg id="chan" preserveAspectRatio="none"></svg></div>
+    <div id="stages"></div>
+  </div>
+  <div class="keyline">
+    <span><i style="background:#6e56cf"></i>flowing</span>
+    <span><i style="background:#3f5068"></i>pooled — waiting, not moving</span>
+    <span><i style="background:#e2687a"></i>hard stop — gate passes nothing</span>
+    <span><i style="background:transparent;border:1px dashed #2b3a4a"></i>dry — nothing arrives</span>
+  </div>
+  <p class="foot" id="foot"></p>
+</div>
+
+<script>
+// ── real production data, 2026-08-24 ───────────────────────────────
+const DONE = { today:0, yday:7, week:8, fortnight:12 };
+const DONE_SERIES = [0,0,0,1,0,7,0]; // 18→24 Aug
+
+const STAGES = [
+ {g:'Capture'},
+ {ord:1,nm:'Arrives',sub:'Google Tasks · email · GitHub · manual',n:1217,lbl:'ungroomed',
+  knobs:[{t:'chip',l:'Tasks: 1 list',on:1},{t:'chip',l:'Email gate: 9 blocked',on:1},{t:'chip',l:'URL auto-triage',on:0}],
+  skills:[], act:[], note:'No gate here — this is the mouth. 31% admin, 28% jimbo: mostly your own capture, not project work.'},
+
+ {g:'Route — who should do it'},
+ {ord:2,nm:'Routed to an agent',sub:'vault-orchestrate',n:0,of:1217,pill:['shut','p-shut'],
+  knobs:[{t:'ro',l:'orchestrator = jimbo'},{t:'ro',l:'15 items / 120 min'}],
+  skills:[['vault-orchestrate','fold','—','—','—','—']],
+  warn:'<b>This is the gate that is actually shut.</b> A note assigned to <code>jimbo</code> is unrouted — there is no executor to groom it <i>for</i>. All 62 notes that pass project scope die here.'},
+
+ {g:'Groom — entry gates'},
+ {ord:3,nm:'Project scope',sub:'pipeline.scope_projects',n:62,of:1217,
+  knobs:[{t:'chip',l:'pmq-bingo',on:1},{t:'chip',l:'reinvent-me',on:1},{t:'chip',l:'+17 more',on:0},{t:'chip',l:'projectless: spike',on:0}],
+  skills:[],note:'Removes 1,154. A note with no project can never match unless its type is admitted.'},
+ {ord:4,nm:'Priority scope',sub:'pipeline.scope',n:62,of:62,
+  knobs:[{t:'chip',l:'all priorities',on:1},{t:'chip',l:'P1 + unranked only',on:0}],skills:[]},
+
+ {g:'Groom — the four stages'},
+ {ord:5,nm:'Intake',sub:'first read of an ungroomed note',n:0,of:62,
+  knobs:[{t:'step',l:'per tick',v:1}],
+  skills:[['dispatch/intake-quality','groom',0,0,92,0,'37s']],
+  note:'92 ran this week, none today — consistent with nothing being eligible to enter.'},
+ {ord:6,nm:'Deep read',sub:'follows a note’s source URL',n:0,of:0,pill:['off','p-off'],
+  knobs:[{t:'step',l:'per tick',v:0}],
+  skills:[['dispatch/vault-deep-read','groom',0,0,0,0,'—']],
+  note:'Off, not slow. While it is 0 intake absorbs its candidates.'},
+ {ord:7,nm:'Classify',sub:'types and ranks',n:1,of:1,
+  knobs:[{t:'step',l:'per tick',v:1}],
+  skills:[['dispatch/vault-classify','groom',0,0,99,0,'43s']]},
+ {ord:8,nm:'Decompose',sub:'breaks a note into work',n:371,of:371,pill:['70% failing','p-shut'],
+  knobs:[{t:'step',l:'per tick',v:1},{t:'step',l:'max depth below epic',v:2},{t:'ro',l:'confidence ≥ 0.6 (fixed)'}],
+  skills:[['dispatch/vault-decompose','groom',44,41,112,78,'115s']],
+  warn:'<b>78 of 112 dispatches failed this week</b> — and every one for the same reason: <code>DECOMPOSITION_TOO_DEEP — note sits 2 levels below epic (limit 2)</code>. The pump keeps selecting notes the submit gate then refuses. It ran <b>44 times today</b> and produced almost nothing.'},
+ {ord:9,nm:'Groomer capacity',sub:'shared across the four stages',n:1,of:3,
+  knobs:[{t:'step',l:'concurrency',v:3},{t:'step',l:'stale min',v:20},{t:'step',l:'max retries',v:2},{t:'ro',l:'groomer = jeffrey'}],
+  skills:[],
+  warn:'<b>68 notes have exhausted their retries</b> and left the flow with no record anywhere. Most are likely the depth failures above, retried to death.'},
+
+ {g:'Ready'},
+ {ord:10,nm:'Ready',sub:'ACs parsed, nothing blocking',n:641,pill:['pool','p-ok'],
+  knobs:[{t:'ro',l:'gate: ACs present + not blocked'}],skills:[]},
+
+ {g:'Commission — hand to an agent'},
+ {ord:11,nm:'Autonomous projects',sub:'pipeline.autonomous_projects',n:10,of:641,pill:['631 excluded','p-warn'],
+  knobs:[{t:'chip',l:'pmq-bingo',on:1},{t:'chip',l:'+18 more',on:0},{t:'chip',l:'commissioning enabled',on:1}],
+  skills:[],
+  warn:'A <b>separate gate</b> from grooming scope. 631 ready notes can never be commissioned. This — not the per-tick knobs — is what caps output.'},
+ {ord:12,nm:'Commission tick',sub:'creates a dispatch from ready work',n:2,of:10,
+  knobs:[{t:'step',l:'per tick',v:1},{t:'step',l:'concurrency',v:10}],
+  skills:[['(commission)','commission',0,0,1,1,'—']],
+  note:'1 commission dispatch this week, and it failed. Unaccepted work counts against the cap.'},
+
+ {g:'Build'},
+ {ord:13,nm:'Agent execution',sub:'commission-worker → PR',n:2,
+  knobs:[{t:'ro',l:'every 120 min'},{t:'ro',l:'boris · jeffrey · kipper · steward'}],
+  skills:[['code/pr-from-issue','fold','—','—','—','—','—'],['code/doc-refresh','fold',0,1,1,0,'—']]},
+ {ord:14,nm:'CI + auto-merge',sub:'test-and-build must be green',
+  knobs:[{t:'ro',l:'gate: CI green'}],skills:[],note:'Nobody reviews it. Green merges itself.'},
+ {ord:15,nm:'Merge → done',sub:'webhook marks the note done',n:8,pill:['8 this week','p-ok'],
+  knobs:[{t:'ro',l:'automatic'}],skills:[]},
+
+ {g:'Ship — your gate'},
+ {ord:16,nm:'Deploy',sub:'npm run deploy',pill:['you','p-you'],
+  knobs:[{t:'ro',l:'manual'}],skills:[],note:'Deliberately yours — a steering moment, not a gate on the agent.'},
+];
+
+// ── render ─────────────────────────────────────────────────────────
+const bars = s => `<span class="bars">${DONE_SERIES.map(v=>`<i style="height:${Math.max(2,v/7*26)}px"></i>`).join('')}</span>`;
+
+document.getElementById('done').innerHTML = `
+  <div><dt>Done today</dt><dd class="${DONE.today?'':'zero'}">${DONE.today}</dd></div>
+  <div><dt>Yesterday</dt><dd>${DONE.yday}</dd></div>
+  <div><dt>This week</dt><dd>${DONE.week}<small>~1.1 / day</small></dd></div>
+  <div><dt>Last 14 days</dt><dd>${DONE.fortnight}${bars()}</dd></div>`;
+
+const knob = k => ({
+  step:`<span class="knob"><label>${k.l}</label><button data-d="-1">−</button><b>${k.v}</b><button data-d="1">+</button></span>`,
+  chip:`<span class="chip ${k.on?'chip--on':''}">${k.l}</span>`,
+  ro:`<span class="ro">${k.l}</span>`,
+}[k.t]);
+
+document.getElementById('stages').innerHTML = STAGES.map(s => {
+  if (s.g) return `<div class="group">${s.g}</div>`;
+  const act = s.skills.length ? `
+    <div class="blk"><h4>Skills &amp; activity</h4>
+      <table><tr><th>skill</th><th>flow</th><th>today</th><th>yday</th><th>7d</th><th>failed</th><th>avg</th></tr>
+      ${s.skills.map(r=>`<tr><td class="skill">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td>
+        <td>${r[4]}</td><td class="${+r[5]>0?'bad':''}">${r[5]}</td><td>${r[6]}</td></tr>`).join('')}
+      </table></div>` : '';
+  return `<details>
+    <summary>
+      <span class="ord">${s.ord}</span>
+      <span class="nm">${s.nm}<em>${s.sub||''}</em></span>
+      <span></span>
+      <span class="cnt">${s.n===undefined?'—':s.n.toLocaleString()}${s.of!==undefined?`<small>of ${s.of.toLocaleString()}</small>`:s.lbl?`<small>${s.lbl}</small>`:''}</span>
+      ${s.pill?`<span class="pill ${s.pill[1]}">${s.pill[0]}</span>`:'<span></span>'}
+    </summary>
+    <div class="body">
+      ${s.warn?`<div class="warnbox">${s.warn}</div>`:''}
+      ${s.note?`<div class="blk"><p style="margin:0;font-size:.78rem;color:var(--muted);line-height:1.55">${s.note}</p></div>`:''}
+      <div class="blk"><h4>Knobs</h4><div class="knobs">${s.knobs.map(knob).join('')}</div></div>
+      ${act}
+      <div class="blk"><h4>Cost</h4><div class="greybox">
+        <b>Not measured.</b> The <code>runs</code> table holds 995 rows totalling $5.91, but it
+        stopped receiving writes on <b>2026-04-17</b> — four months ago. No per-stage cost exists
+        for any current activity. Showing an estimate here would be inventing one.
+      </div></div>
+    </div></details>`;
+}).join('');
+
+document.getElementById('foot').innerHTML =
+  `<b>0 done today, 7 yesterday, 8 this week</b> — against 1,217 waiting to start. The per-tick
+   knobs are ceilings nowhere near being hit. The three things actually capping output are
+   <b>routing</b> (nothing is routed), <b>autonomous scope</b> (10 of 641 ready), and
+   <b>decompose failing 70% of the time</b> on a depth limit.`;
+
+// ── flow channel ───────────────────────────────────────────────────
+// Volume at each stage and what leaves it. `fed:false` marks a pocket that is
+// NOT supplied from above — work that entered before the gate upstream shut.
+// Drawing it as connected flow would be the prettier lie.
+const FLOW = {
+  1:{vol:1217,out:1217,fed:true},
+  2:{vol:1217,out:0,   fed:true,  stop:'routing'},
+  3:{vol:0,   out:0,   fed:false},
+  4:{vol:0,   out:0,   fed:false},
+  5:{vol:0,   out:0,   fed:false},
+  6:{vol:0,   out:0,   fed:false},
+  7:{vol:1,   out:1,   fed:false},
+  8:{vol:371, out:33,  fed:false, leak:68},
+  9:{vol:371, out:33,  fed:false},
+  10:{vol:641,out:641, fed:false},
+  11:{vol:641,out:10,  fed:true,  stop:'autonomous scope'},
+  12:{vol:10, out:2,   fed:true},
+  13:{vol:2,  out:2,   fed:true},
+  14:{vol:2,  out:2,   fed:true},
+  15:{vol:8,  out:8,   fed:true},
+  16:{vol:8,  out:0,   fed:true,  stop:'manual deploy', you:true},
+};
+
+function drawChannel(){
+  const rows=[...document.querySelectorAll('details')];
+  if(!rows.length) return;
+  const host=document.querySelector('.chan');
+  const top=host.getBoundingClientRect().top;
+  const H=host.getBoundingClientRect().height;
+  const W=84, CX=W/2, MAXW=30;
+  const MAX=1217;
+  const w=n=> n<=0 ? 0 : Math.max(2.5, MAXW*Math.sqrt(n/MAX));
+  const out=[];
+
+  rows.forEach((r,i)=>{
+    const f=FLOW[i+1]; if(!f) return;
+    const b=r.getBoundingClientRect();
+    const y1=b.top-top, y2=b.bottom-top;
+    const wa=w(f.vol), wb=w(f.out);
+
+    if(f.vol<=0){
+      out.push(`<rect x="${CX-3}" y="${y1}" width="6" height="${y2-y1}" fill="none"
+        stroke="#2b3a4a" stroke-dasharray="3 4"/>`);
+      return;
+    }
+
+    const moving=f.out>0;
+    // Pooled fluid reads cooler and flatter than flowing fluid.
+    const fill=moving?'#6e56cf':'#3f5068';
+    if(f.stop){
+      // Fluid backs up: parallel walls, no taper, then a hard bar.
+      out.push(`<rect x="${CX-wa}" y="${y1}" width="${wa*2}" height="${y2-y1-7}"
+        fill="${fill}" opacity=".82"/>`);
+      const barCol=f.you?'#d9a441':'#e2687a';
+      out.push(`<rect x="${CX-wa-7}" y="${y2-7}" width="${wa*2+14}" height="4" rx="1" fill="${barCol}"/>`);
+      out.push(`<text x="${CX}" y="${y2+11}" text-anchor="middle" font-size="7.5"
+        fill="${barCol}" font-family="ui-monospace,monospace">${f.out} pass</text>`);
+      if(f.out>0){
+        out.push(`<rect x="${CX-w(f.out)}" y="${y2-3}" width="${w(f.out)*2}" height="3" fill="${barCol}" opacity=".6"/>`);
+      }
+    } else {
+      out.push(`<polygon points="${CX-wa},${y1} ${CX+wa},${y1} ${CX+wb},${y2} ${CX-wb},${y2}"
+        fill="${fill}" opacity="${f.fed?.82:.5}"/>`);
+      if(!f.fed){
+        out.push(`<line x1="${CX-wa-6}" y1="${y1}" x2="${CX+wa+6}" y2="${y1}"
+          stroke="#2b3a4a" stroke-dasharray="2 3"/>`);
+      }
+    }
+
+    // Bubbles = movement. Only drawn where something actually leaves.
+    if(moving && (y2-y1)>50){
+      const dur=Math.max(1.6, 7-Math.log10(f.out+1)*2).toFixed(1);
+      for(let k=0;k<3;k++){
+        const off=(y2-y1)/3*k;
+        out.push(`<circle class="bub" cx="${CX+(k-1)*Math.min(6,wa*0.5)}" cy="${y1+off}" r="1.9"
+          fill="#cfd8ff" opacity=".55" style="--d:${(y2-y1).toFixed(0)}px;--t:${dur}s;
+          animation-delay:${(k*-0.6).toFixed(1)}s"/>`);
+      }
+    }
+    if(f.leak){
+      out.push(`<path d="M${CX+wa},${y2-24} l14,10" stroke="#e2687a" stroke-width="1.4" fill="none"/>`);
+      out.push(`<text x="${CX+wa+4}" y="${y2-4}" font-size="7" fill="#e2687a"
+        font-family="ui-monospace,monospace">-${f.leak}</text>`);
+    }
+  });
+
+  const svg=document.getElementById('chan');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML=out.join('');
+}
+requestAnimationFrame(drawChannel);
+addEventListener('resize', drawChannel);
+document.addEventListener('toggle', drawChannel, true);
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('.knob button');
+  if (b){ e.preventDefault(); const v=b.parentElement.querySelector('b');
+          v.textContent = Math.max(0, +v.textContent + +b.dataset.d); }
+  const c = e.target.closest('.chip'); if (c){ e.preventDefault(); c.classList.toggle('chip--on'); }
+});
+</script>

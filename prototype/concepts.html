@@ -1,0 +1,189 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Three ways to show this</title>
+<style>
+  :root{--bg:#0b1017;--pan:#0f1621;--ln:#22303f;--tx:#dbe6f2;--mu:#7f93a8;
+        --red:#e2687a;--ok:#57c99a;--am:#d9a441;--vi:#6e56cf;
+        font-family:ui-monospace,"SF Mono",Menlo,monospace}
+  *{box-sizing:border-box}
+  body{margin:0;padding:2rem;background:var(--bg);color:var(--tx);font-size:13px}
+  h1{font-size:1.15rem;margin:0 0 .3rem}
+  .lede{color:var(--mu);max-width:62rem;line-height:1.6;margin:0 0 2rem;font-size:.82rem}
+  h2{font-size:.95rem;margin:0 0 .2rem}
+  .cap{color:var(--mu);font-size:.76rem;line-height:1.55;margin:0 0 1.1rem;max-width:60rem}
+  section{border:1px solid var(--ln);border-radius:10px;background:var(--pan);
+          padding:1.4rem;margin-bottom:1.75rem;max-width:76rem}
+  .tag{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);
+       border:1px solid var(--ln);border-radius:99px;padding:.12rem .5rem;margin-left:.5rem;vertical-align:middle}
+
+  /* A — stock & flow */
+  .sf{display:flex;flex-direction:column;align-items:center;gap:0}
+  .stock{width:100%;max-width:34rem;border:1px solid var(--ln);border-radius:6px;background:#0c121a;
+         padding:.7rem 1rem;display:flex;align-items:baseline;gap:.7rem}
+  .stock b{font-size:1.5rem;font-variant-numeric:tabular-nums}
+  .stock span{color:var(--mu);font-size:.75rem}
+  .stock .grow{margin-left:auto;font-size:.7rem}
+  .valve{display:flex;align-items:center;gap:.6rem;padding:.5rem 0;font-size:.75rem}
+  .valve .bar{width:120px;height:5px;background:#1b2836;border-radius:3px;overflow:hidden}
+  .valve .bar i{display:block;height:100%;background:var(--vi)}
+  .pipe{width:2px;height:14px;background:var(--ln)}
+  .shut{color:var(--red);font-weight:700}
+  .knob{display:inline-flex;align-items:center;gap:.3rem;border:1px solid var(--ln);border-radius:6px;
+        padding:.15rem .35rem;background:#0c121a}
+  .knob button{font:inherit;width:1.25rem;height:1.25rem;border-radius:3px;border:1px solid var(--ln);
+               background:#16202c;color:var(--tx);cursor:pointer;font-size:.72rem}
+  .knob b{min-width:1.1rem;text-align:center}
+
+  /* B — sankey of fates */
+  .fate{margin-bottom:1.4rem}
+  .fate h3{font-size:.8rem;margin:0 0 .5rem;font-weight:700}
+  .fate h3 small{color:var(--mu);font-weight:400}
+  .fbar{display:flex;height:34px;border-radius:4px;overflow:hidden;border:1px solid var(--ln)}
+  .fbar div{display:flex;align-items:center;justify-content:center;font-size:.68rem;
+            color:#0b1017;font-weight:700;overflow:hidden;white-space:nowrap}
+  .flegend{display:flex;gap:1.1rem;flex-wrap:wrap;margin-top:.4rem;font-size:.68rem;color:var(--mu)}
+  .flegend i{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:.3rem;vertical-align:-1px}
+
+  /* C — queue table */
+  table{width:100%;border-collapse:collapse;font-size:.76rem}
+  th{text-align:right;color:var(--mu);font-size:.62rem;letter-spacing:.07em;text-transform:uppercase;
+     padding:.4rem .6rem;border-bottom:1px solid var(--ln)}
+  th:first-child,td:first-child{text-align:left}
+  td{text-align:right;padding:.45rem .6rem;border-bottom:1px solid #18222e;font-variant-numeric:tabular-nums}
+  tr.dead td{color:var(--red)}
+  tr.warn td{color:var(--am)}
+  .never{font-weight:700}
+  .note{margin-top:.9rem;font-size:.72rem;color:var(--mu);line-height:1.6}
+</style>
+
+<h1>Three ways to show the same pipeline</h1>
+<p class="lede">
+  The problem with the last version: it rendered <b>three different kinds of number identically</b> —
+  a gate pass-rate (62 of 1,217), a stock sitting still (641), and a concurrency meter (2 of 10).
+  Each of these concepts picks one idea and commits to it. Real production numbers throughout.
+</p>
+
+<!-- ─────────────────────────────────────────────── A -->
+<section>
+  <h2>A · Stock &amp; flow<span class="tag">system dynamics</span></h2>
+  <p class="cap">
+    Boxes are <b>stocks</b> (things sitting still). Between them are <b>valves</b> carrying a
+    <b>rate</b> — items per day — with the knob that sets its ceiling. Answers “how many are in,
+    and how fast are they moving” by never conflating the two.
+  </p>
+  <div class="sf" id="sf"></div>
+</section>
+
+<!-- ─────────────────────────────────────────────── B -->
+<section>
+  <h2>B · Where everything went<span class="tag">mass conserved</span></h2>
+  <p class="cap">
+    Fixes “how can we see 0 after 1,217”. Every item that doesn’t proceed goes somewhere
+    <b>visible</b> — excluded by a named gate, failed, exhausted, or still waiting. Each bar sums
+    to its input, so nothing vanishes between rows.
+  </p>
+  <div id="fates"></div>
+</section>
+
+<!-- ─────────────────────────────────────────────── C -->
+<section>
+  <h2>C · Queue metrics<span class="tag">Little’s Law</span></h2>
+  <p class="cap">
+    No picture at all. Work in progress, the rate in, the rate out, and therefore how long a note
+    entering now would wait. Ugly and the most informative of the three.
+  </p>
+  <table id="q"></table>
+  <p class="note" id="qnote"></p>
+</section>
+
+<script>
+// ── real data, production 2026-08-24 (7-day rates) ────────────────
+const R = {
+  routed:      {in:0,    out:0,    cap:'15 / 120 min'},
+  intake:      {in:13.1, out:13.1, cap:1},
+  classify:    {in:14.1, out:14.1, cap:1},
+  decompose:   {attempt:16, ok:4.7, fail:11.1, cap:1},
+  commission:  {in:0.14, out:0.14, cap:1},
+  done:        {rate:1.14},
+};
+
+// A ── stock & flow ────────────────────────────────────────────────
+const SF = [
+  {stock:'Ungroomed', n:1217, grow:'static — nothing in, nothing out'},
+  {valve:'Project scope', rate:0, ceil:null, pct:5, shut:false,
+   sub:'62 of 1,217 qualify (5%)', knob:'chips'},
+  {valve:'Routed to an agent', rate:0, ceil:'15 / 120 min', pct:0, shut:true,
+   sub:'0 of 62 routed — the binding constraint'},
+  {stock:'In grooming', n:372, grow:'draining, not refilling'},
+  {valve:'Decompose', rate:4.7, ceil:1, pct:29, shut:false,
+   sub:'16/day attempted · 11.1/day fail on depth limit', knob:'step'},
+  {stock:'Ready', n:641, grow:'+0/day in, −1.1/day out'},
+  {valve:'Autonomous scope', rate:0.14, ceil:null, pct:1.6, shut:false,
+   sub:'10 of 641 qualify (1.6%)', knob:'chips'},
+  {valve:'Commission', rate:0.14, ceil:1, pct:14, shut:false, sub:'2 in flight of 10 cap', knob:'step'},
+  {stock:'Done', n:8, grow:'1.14 / day'},
+];
+document.getElementById('sf').innerHTML = SF.map(r => r.stock ? `
+  <div class="stock"><b>${r.n.toLocaleString()}</b><span>${r.stock}</span>
+    <span class="grow">${r.grow}</span></div>` : `
+  <div class="pipe"></div>
+  <div class="valve">
+    <span style="min-width:11rem">${r.shut?'<span class="shut">✕ '+r.valve+'</span>':r.valve}</span>
+    <span class="bar"><i style="width:${r.pct}%"></i></span>
+    <b style="min-width:4.5rem;text-align:right">${r.rate}/day</b>
+    ${r.knob==='step'?`<span class="knob"><button data-d="-1">−</button><b>${r.ceil}</b><button data-d="1">+</button></span>`:''}
+    ${r.knob==='chips'?`<span class="knob"><b style="font-size:.7rem">edit projects</b></span>`:''}
+    ${r.ceil&&r.knob!=='step'?`<span style="color:var(--mu)">${r.ceil}</span>`:''}
+    <span style="color:var(--mu)">${r.sub}</span>
+  </div>
+  <div class="pipe"></div>`).join('');
+
+// B ── fates ───────────────────────────────────────────────────────
+const FATES = [
+  {t:'1,217 ungroomed notes', s:'where each one currently sits', parts:[
+    ['excluded — not in scope', 1155, '#3a4a5c'],
+    ['held — in scope, unrouted', 62, '#e2687a'],
+    ['passed', 0, '#57c99a']]},
+  {t:'112 decompose attempts this week', s:'the busiest thing in the system', parts:[
+    ['failed — DECOMPOSITION_TOO_DEEP', 78, '#e2687a'],
+    ['completed', 33, '#57c99a'],
+    ['still queued', 1, '#3a4a5c']]},
+  {t:'641 ready notes', s:'work that could be done right now', parts:[
+    ['excluded — project not autonomous', 631, '#3a4a5c'],
+    ['eligible to commission', 10, '#57c99a']]},
+  {t:'68 notes that left the system', s:'no record of these anywhere', parts:[
+    ['exhausted — retried to death', 68, '#e2687a']]},
+];
+document.getElementById('fates').innerHTML = FATES.map(f => {
+  const tot = f.parts.reduce((a,[,n])=>a+n,0) || 1;
+  return `<div class="fate"><h3>${f.t} <small>— ${f.s}</small></h3>
+    <div class="fbar">${f.parts.filter(([,n])=>n>0).map(([l,n,c])=>
+      `<div style="width:${n/tot*100}%;background:${c}" title="${l}: ${n}">${n/tot>0.09?n:''}</div>`).join('')}</div>
+    <div class="flegend">${f.parts.map(([l,n,c])=>`<span><i style="background:${c}"></i>${l} — <b>${n}</b></span>`).join('')}</div>
+  </div>`;
+}).join('');
+
+// C ── queue metrics ───────────────────────────────────────────────
+const Q = [
+  ['Ungroomed',      1217, 0,    0,    'never',  'dead'],
+  ['In grooming',    372,  0,    4.7,  '79 d',   'warn'],
+  ['Ready',          641,  0,    1.14, '562 d',  'warn'],
+  ['Commissioned',   2,    0.14, 0.14, '14 d',   ''],
+  ['Done (7d)',      8,    1.14, 1.14, '—',      ''],
+];
+document.getElementById('q').innerHTML = `
+  <tr><th>stage</th><th>WIP</th><th>in / day</th><th>out / day</th><th>wait for a note entering now</th></tr>
+  ${Q.map(([n,w,i,o,t,cls])=>`<tr class="${cls}"><td>${n}</td><td>${w.toLocaleString()}</td>
+    <td>${i}</td><td>${o}</td><td class="${t==='never'?'never':''}">${t}</td></tr>`).join('')}`;
+document.getElementById('qnote').innerHTML =
+  `Wait = WIP ÷ throughput. A note captured today enters a queue of <b>1,217</b> with an outflow of
+   <b>zero</b>, so it never starts. Even past the gate, the <b>641</b> ready notes clear at
+   <b>1.14/day</b> — <b>562 days</b>. Raising any per-tick knob changes none of these numbers,
+   because no stage is running at its ceiling.`;
+
+document.addEventListener('click', e=>{
+  const b=e.target.closest('.knob button'); if(!b) return;
+  const v=b.parentElement.querySelector('b');
+  v.textContent=Math.max(0,+v.textContent + +b.dataset.d);
+});
+</script>

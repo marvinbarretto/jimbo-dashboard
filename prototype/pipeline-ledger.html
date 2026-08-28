@@ -1,0 +1,178 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Pipeline ledger — 1,217 → 8</title>
+<style>
+  :root{--bg:#0b1017;--pan:#0f1621;--ln:#22303f;--sub:#18222e;--tx:#dbe6f2;--mu:#7f93a8;
+        --red:#e2687a;--ok:#57c99a;--am:#d9a441;--vi:#8f7ae6;
+        font-family:ui-monospace,"SF Mono",Menlo,monospace}
+  *{box-sizing:border-box}
+  body{margin:0;padding:2rem 2rem 5rem;background:var(--bg);color:var(--tx);font-size:13px}
+  h1{font-size:1.15rem;margin:0 0 .3rem}
+  .lede{color:var(--mu);max-width:64rem;line-height:1.6;margin:0 0 1.5rem;font-size:.8rem}
+
+  .hero{display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;border:1px solid var(--ln);
+        border-radius:10px;background:var(--pan);padding:1rem 1.25rem;margin-bottom:1.5rem;max-width:80rem}
+  .hero b{font-size:1.9rem;font-variant-numeric:tabular-nums;line-height:1}
+  .hero .arrow{color:var(--mu);font-size:1.2rem}
+  .hero small{display:block;color:var(--mu);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;margin-top:.2rem}
+  .hero .pc{margin-left:auto;text-align:right;color:var(--red)}
+
+  .ledger{border:1px solid var(--ln);border-radius:10px;background:var(--pan);overflow:hidden;max-width:80rem}
+  .hd,.row{display:grid;grid-template-columns:1.4rem 17rem 5.5rem 5.5rem 5rem 6rem 1fr;
+           gap:.6rem;align-items:center;padding:.5rem .9rem}
+  .hd{font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);
+      border-bottom:1px solid var(--ln);background:#0d141d}
+  .hd span:nth-child(n+3):nth-child(-n+6){text-align:right}
+  .row{border-bottom:1px solid var(--sub);font-variant-numeric:tabular-nums}
+  .row>span:nth-child(n+3):nth-child(-n+6){text-align:right}
+
+  .r-stock{background:#0c121a}
+  .r-stock .lbl{font-weight:700;font-size:.95rem}
+  .r-stock .wip{font-weight:700;font-size:1.15rem}
+  .r-gate .lbl,.r-stage .lbl,.r-loss .lbl{padding-left:1rem;color:var(--mu)}
+  .r-gate .lbl b,.r-stage .lbl b{color:var(--tx);font-weight:600}
+  .r-loss{color:var(--red)}
+  .r-loss .lbl{color:var(--red)}
+  .r-shut{background:rgba(226,104,122,.07)}
+  .mark{font-size:.85rem;text-align:center}
+  .m-stock{color:var(--vi)} .m-gate{color:var(--am)} .m-loss{color:var(--red)} .m-stage{color:var(--mu)}
+
+  .rem{font-weight:700}
+  .rem--zero{color:var(--red)}
+  .pass{font-size:.72rem}
+  .pass--zero{color:var(--red);font-weight:700}
+  .never{color:var(--red);font-weight:700}
+  .dim{color:var(--mu)}
+
+  .ctl{display:flex;gap:.3rem;flex-wrap:wrap;align-items:center}
+  .step{display:inline-flex;align-items:center;gap:.25rem;border:1px solid var(--ln);border-radius:5px;
+        padding:.1rem .25rem;background:#0c121a}
+  .step label{font-size:.62rem;color:var(--mu)}
+  .step button{font:inherit;width:1.15rem;height:1.15rem;border-radius:3px;border:1px solid var(--ln);
+               background:#16202c;color:var(--tx);cursor:pointer;font-size:.7rem;line-height:1}
+  .step b{min-width:1rem;text-align:center;font-size:.75rem}
+  .chip{font-size:.64rem;padding:.14rem .4rem;border-radius:99px;border:1px solid var(--ln);
+        background:#0c121a;color:var(--mu);cursor:pointer;user-select:none}
+  .chip--on{color:var(--tx);border-color:currentColor}
+  .ro{font-size:.62rem;color:var(--mu);border:1px dashed var(--ln);border-radius:5px;padding:.12rem .35rem}
+  .sect{padding:.75rem .9rem .3rem;font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;
+        color:var(--mu);background:#0d141d;border-bottom:1px solid var(--sub);border-top:1px solid var(--ln)}
+  .foot{padding:1rem 1.1rem;color:var(--mu);font-size:.74rem;line-height:1.75;border-top:1px solid var(--ln)}
+  code{background:#16202c;padding:.05rem .28rem;border-radius:3px}
+</style>
+
+<h1>Pipeline ledger — how 1,217 becomes 8</h1>
+<p class="lede">
+  Read top to bottom; the <b>remaining</b> column only ever falls. Every drop is attributed to a
+  named gate you can control, or a named loss. Stocks are what is sitting still; stages carry a
+  rate. Real production numbers, 7-day rates.
+</p>
+
+<div class="hero">
+  <div><b>1,217</b><small>captured, waiting</small></div>
+  <span class="arrow">→</span>
+  <div><b>0</b><small>entering the pipeline</small></div>
+  <span class="arrow">→</span>
+  <div><b>641</b><small>ready (historic)</small></div>
+  <span class="arrow">→</span>
+  <div><b class="ok" style="color:var(--ok)">8</b><small>done in 7 days</small></div>
+  <div class="pc"><b>0.7%</b><small>ready → done, per week</small></div>
+</div>
+
+<div class="ledger">
+  <div class="hd">
+    <span></span><span>stage / gate</span><span>WIP</span><span>in / day</span>
+    <span>out / day</span><span>wait</span><span>what you control</span>
+  </div>
+  <div id="rows"></div>
+  <p class="foot" id="foot"></p>
+</div>
+
+<script>
+const step=(l,v)=>`<span class="step"><label>${l}</label><button data-d="-1">−</button><b>${v}</b><button data-d="1">+</button></span>`;
+const chip=(l,on)=>`<span class="chip ${on?'chip--on':''}">${l}</span>`;
+const ro  = l   =>`<span class="ro">${l}</span>`;
+
+const L=[
+ {sect:'Capture — everything lands here'},
+ {k:'stock',lbl:'Ungroomed',wip:1217,in:'~10',out:0,wait:'never',rem:1217,
+  ctl:[ro('Tasks: 1 list'),ro('email gate'),ro('GitHub webhook')]},
+
+ {sect:'Entry gates — applied together, in one query'},
+ {k:'gate',lbl:'<b>Project scope</b> — note must be in a selected project',pass:'5%',rem:62,drop:-1155,
+  ctl:[chip('pmq-bingo',1),chip('reinvent-me',1),chip('+17',0),chip('projectless: spike',0)]},
+ {k:'gate',lbl:'<b>Priority scope</b> — optionally P1 + unranked only',pass:'100%',rem:62,drop:0,
+  ctl:[chip('all priorities',1),chip('P1 + unranked',0)]},
+ {k:'gate',lbl:'<b>Routed to an agent</b> — assigned_to must not be jimbo',pass:'0%',rem:0,drop:-62,shut:1,
+  ctl:[ro('vault-orchestrate · 15 per 120 min'),ro('orchestrator = jimbo')]},
+ {k:'loss',lbl:'✕ nothing proceeds — 62 held, unrouted',rem:0},
+
+ {sect:'Grooming — 372 already inside, not being refilled'},
+ {k:'stock',lbl:'In grooming',wip:372,in:0,out:4.7,wait:'79 d',rem:372,
+  ctl:[step('concurrency',3),step('stale min',20),step('max retries',2),ro('groomer = jeffrey')]},
+ {k:'stage',lbl:'<b>Intake</b> — first read',in:13.1,out:13.1,wip:'—',wait:'',ctl:[step('per tick',1),ro('ceiling 48/day')],dim:'0 today'},
+ {k:'stage',lbl:'<b>Deep read</b> — follows source URL',in:0,out:0,wip:'—',ctl:[step('per tick',0),ro('OFF')],dim:'off, not slow'},
+ {k:'stage',lbl:'<b>Classify</b> — types and ranks',in:14.1,out:14.1,wip:1,ctl:[step('per tick',1)],dim:'0 today'},
+ {k:'stage',lbl:'<b>Decompose</b> — breaks into work',in:16,out:4.7,wip:371,ctl:[step('per tick',1),step('max depth',2),ro('confidence ≥ 0.6 fixed')],dim:'44 today'},
+ {k:'loss',lbl:'✕ 11.1 / day fail — <code>DECOMPOSITION_TOO_DEEP</code> (78 this week)'},
+ {k:'loss',lbl:'✕ 68 notes exhausted their retries and left with no record'},
+
+ {sect:'Ready — the pool real work is drawn from'},
+ {k:'stock',lbl:'Ready',wip:641,in:0,out:1.14,wait:'562 d',rem:641,ctl:[ro('gate: ACs parsed + not blocked')]},
+
+ {sect:'Commission — a second, separate scope'},
+ {k:'gate',lbl:'<b>Autonomous projects</b> — separate from grooming scope',pass:'1.6%',rem:10,drop:-631,
+  ctl:[chip('pmq-bingo',1),chip('+18',0),chip('commissioning on',1)]},
+ {k:'gate',lbl:'<b>Commission capacity</b> — unaccepted work holds a slot',pass:'20%',rem:2,drop:-8,
+  ctl:[step('per tick',1),step('concurrency',10)]},
+
+ {sect:'Build — the agent works, unreviewed'},
+ {k:'stage',lbl:'<b>Agent execution</b> — commission-worker → PR',wip:2,in:0.14,out:0.14,wait:'14 d',
+  ctl:[ro('every 120 min'),ro('boris · jeffrey · kipper · steward')]},
+ {k:'gate',lbl:'<b>CI test-and-build</b> — green merges itself, nobody reviews',pass:'—',rem:2,
+  ctl:[ro('gate: CI green')]},
+ {k:'stock',lbl:'Done',wip:8,in:1.14,out:'—',wait:'—',rem:8,ok:1,ctl:[ro('merge webhook, automatic')]},
+
+ {sect:'Ship — your gate, deliberately'},
+ {k:'gate',lbl:'<b>Deploy</b> — manual npm run deploy',pass:'you',rem:8,ctl:[ro('manual · a steering moment')]},
+];
+
+const MARK={stock:'▬',gate:'⟩',stage:'·',loss:'✕'};
+document.getElementById('rows').innerHTML=L.map(r=>{
+  if(r.sect) return `<div class="sect">${r.sect}</div>`;
+  const cells=[
+    `<span class="mark m-${r.k}">${MARK[r.k]}</span>`,
+    `<span class="lbl">${r.lbl}</span>`,
+    `<span class="wip">${r.wip!==undefined?(typeof r.wip==='number'?r.wip.toLocaleString():r.wip):''}</span>`,
+    `<span class="dim">${r.in!==undefined?r.in:''}</span>`,
+    `<span>${r.out!==undefined?r.out:''}</span>`,
+    `<span class="${r.wait==='never'?'never':'dim'}">${r.wait||''}</span>`,
+    `<span class="ctl">${(r.ctl||[]).join('')}${r.dim?`<span class="ro">${r.dim}</span>`:''}</span>`,
+  ];
+  // Gates show their attrition where WIP would be.
+  if(r.k==='gate'){
+    cells[2]=`<span class="pass ${r.pass==='0%'?'pass--zero':''}">${r.pass} pass</span>`;
+    cells[3]=`<span class="${r.drop?'r-loss':''}" style="color:${r.drop?'var(--red)':'inherit'}">${r.drop?r.drop.toLocaleString():''}</span>`;
+    cells[4]=`<span class="rem ${r.rem===0?'rem--zero':''}">${r.rem!==undefined?r.rem.toLocaleString():''}</span>`;
+    cells[5]='<span class="dim">remain</span>';
+  }
+  return `<div class="row r-${r.k} ${r.shut?'r-shut':''}">${cells.join('')}</div>`;
+}).join('');
+
+document.getElementById('foot').innerHTML=`
+  <b>Two gates do all the damage, and neither is a per-tick knob.</b>
+  Project scope removes 1,155 of 1,217; routing removes the remaining 62 — so
+  <b>nothing at all enters the pipeline</b>. Further down, autonomous scope removes 631 of 641
+  ready notes. Meanwhile decompose runs <b>44 times a day</b> and fails 70% of them on a depth
+  limit, leaking 68 notes out of the system entirely.
+  <br><br>
+  Every <code>per tick</code> control above is a <b>ceiling nowhere near being hit</b>. Raising
+  them changes nothing. The three levers that would actually move the number are
+  <b>routing</b>, <b>autonomous scope</b>, and <b>max depth</b>.`;
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.step button');
+  if(b){const v=b.parentElement.querySelector('b');v.textContent=Math.max(0,+v.textContent + +b.dataset.d);}
+  const c=e.target.closest('.chip'); if(c) c.classList.toggle('chip--on');
+});
+</script>
