@@ -28,15 +28,58 @@
     The artifact sits above the argument on purpose: you open the thing, then
     read what was asked for, then read what the agent claims. Burying a PR link
     in the summary prose made "look at the work" the hardest step of a review.
+
+    Until 2026-08-28 this rendered only for `prUrl`, so 7 of the 9 live items
+    showed no link at all — a cairn post or a file path stayed buried in the
+    summary. It now takes any artifact, and says plainly when there is none.
   -->
-  @if (item().prUrl; as url) {
-    <a class="review-card__deliverable" [href]="url" target="_blank" rel="noopener">
-      <span class="review-card__deliverable-label">Open pull request</span>
-      <span class="review-card__deliverable-detail">{{ prLabel() }} ↗</span>
+  @if (item().artifactUrl; as url) {
+    <a
+      class="review-card__deliverable"
+      [attr.data-source]="item().artifactSource"
+      [href]="url"
+      target="_blank"
+      rel="noopener">
+      <span class="review-card__deliverable-label">{{ artifactLabel() }}</span>
+      <span class="review-card__deliverable-detail">{{ artifactDetail() }} ↗</span>
     </a>
+  } @else {
+    <!--
+      Not a missing field — a missing deliverable. Approving here means taking
+      the agent's word for it, so the card says that outright rather than
+      quietly rendering nothing and looking like an ordinary review.
+    -->
+    <p class="review-card__no-artifact" data-testid="review-card-no-artifact">
+      <strong>No artifact linked.</strong>
+      There is nothing to open — approving this means trusting
+      {{ agent() }}'s account of itself.
+    </p>
   }
 
-  @if (item().acceptanceCriteria; as ac) {
+  <!--
+    A checklist, not a count. "5 criteria could not be checked mechanically" is a
+    shrug; the five criteria with the machine's work already marked off is a
+    ten-second read. Falls back to the raw block before the verifier has run.
+  -->
+  @if (item().criteria; as checks) {
+    <section class="review-card__block">
+      <h3 class="review-card__label">Asked for</h3>
+      <ul class="review-card__checks">
+        @for (c of checks; track c.criterion) {
+          <li class="review-card__check" [attr.data-verdict]="c.verdict">
+            <span class="review-card__mark" aria-hidden="true">{{ mark(c.verdict) }}</span>
+            <span class="review-card__check-text">
+              {{ c.criterion }}
+              @if (c.verdict !== 'unverifiable') {
+                <span class="review-card__check-note">{{ c.note }}</span>
+              }
+            </span>
+            <span class="review-card__sr">{{ spoken(c.verdict) }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+  } @else if (item().acceptanceCriteria; as ac) {
     <section class="review-card__block">
       <h3 class="review-card__label">Asked for</h3>
       <app-ui-prose [text]="ac" />

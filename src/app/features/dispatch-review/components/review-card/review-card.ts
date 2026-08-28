@@ -43,6 +43,44 @@ export class ReviewCard {
   /** The agent's own name for the "says" heading — never a bare "agent". */
   readonly agent = computed(() => this.item().assignedTo ?? 'The agent');
 
+  /**
+   * A PR is the deliverable; a summary-derived URL is only a link the agent
+   * mentioned, which may be a source it read rather than a thing it made. The
+   * label carries that difference so the card never overstates what it found.
+   */
+  readonly artifactLabel = computed(() =>
+    this.item().artifactSource === 'pr' ? 'Open pull request' : 'Open link from summary',
+  );
+
+  /** The PR's own name where we have one, otherwise the bare host. */
+  readonly artifactDetail = computed(() => {
+    if (this.item().artifactSource === 'pr') return this.prLabel() ?? 'pull request';
+    const url = this.item().artifactUrl;
+    if (!url) return '';
+    // A hostname is honest about what the reader is about to open; the full URL
+    // is unreadable at card width and the path rarely says more than the host.
+    const m = /^https?:\/\/([^/]+)/.exec(url);
+    return m ? m[1] : url;
+  });
+
+  /**
+   * Ticked when the verifier settled it, crossed when it actively failed, and
+   * an empty box when nobody has checked — which is a job for the reader, not a
+   * failure. An unchecked box must never look like a passed one.
+   */
+  mark(verdict: string): string {
+    if (verdict === 'met') return '✓';
+    if (verdict === 'not_met') return '✗';
+    return '☐';
+  }
+
+  /** The same three states in words, for anyone not reading the glyph. */
+  spoken(verdict: string): string {
+    if (verdict === 'met') return 'verified';
+    if (verdict === 'not_met') return 'failed';
+    return 'needs your check';
+  }
+
   readonly seqLabel = computed(() => {
     const seq = this.item().seq;
     return seq ? `#${seq}` : '—';

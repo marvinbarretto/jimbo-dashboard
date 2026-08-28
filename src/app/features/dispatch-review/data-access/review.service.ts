@@ -27,6 +27,9 @@ interface ApiReviewItem {
   pr_state: string | null;
   pr_checks: string | null;
   completed_at: string | null;
+  criteria: Array<{ criterion: string; verdict: string; note: string }> | null;
+  artifact_url: string | null;
+  artifact_source: 'pr' | 'summary' | null;
 }
 
 /**
@@ -81,6 +84,31 @@ export interface ReviewItem {
   /** 'passing' | 'pending' | null. Never 'failing' — red work never reaches here. */
   prChecks: string | null;
   completedAt: string | null;
+  /**
+   * Per-criterion state from the verifier, when it has run. Null before it has.
+   * Rendered as a checklist: what it settled is marked off, what it could not
+   * is left for a human — which is most of them, and correctly so.
+   */
+  criteria: ReviewCriterion[] | null;
+  /**
+   * The thing to open before deciding. Null means there is nothing to open and
+   * approving would be trusting the agent's account of itself — 5 of the 9
+   * items in the queue on 2026-08-28 were in that state.
+   */
+  artifactUrl: string | null;
+  /**
+   * 'pr' is the deliverable itself. 'summary' is a link scraped from the
+   * agent's prose and may be a source it read rather than a thing it made, so
+   * the card must label it as found-in-summary, never as verified.
+   */
+  artifactSource: 'pr' | 'summary' | null;
+}
+
+export interface ReviewCriterion {
+  criterion: string;
+  /** 'met' | 'not_met' | 'unverifiable'. */
+  verdict: string;
+  note: string;
 }
 
 function toReviewItem(r: ApiReviewItem): ReviewItem {
@@ -98,6 +126,9 @@ function toReviewItem(r: ApiReviewItem): ReviewItem {
     prState: r.pr_state,
     prChecks: r.pr_checks,
     completedAt: r.completed_at,
+    criteria: r.criteria ?? null,
+    artifactUrl: r.artifact_url ?? null,
+    artifactSource: r.artifact_source ?? null,
   };
 }
 
