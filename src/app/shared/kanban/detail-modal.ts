@@ -1,4 +1,4 @@
-import { DestroyRef, effect, inject } from '@angular/core';
+import { DestroyRef, effect, inject, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Dialog, type DialogRef } from '@angular/cdk/dialog';
@@ -58,9 +58,23 @@ export function withVaultDetailModal(): void {
 
   let ref: DialogRef<unknown> | null = null;
 
+  // Only `detailSeq` may drive this effect.
+  //
+  // Everything after the read is untracked because the body both reads and
+  // writes unrelated signals: `ensureBySeq` checks the item collection and the
+  // in-flight set, then adds to that same in-flight set. Tracked, that made the
+  // effect depend on a signal it immediately wrote — so it re-ran, closed the
+  // dialog it had just opened, and opened a second one. Dialog construction is
+  // inside the same guard: whatever the detail body reads on init must not
+  // become a reason to tear it down and rebuild it either, or a board refresh
+  // would drop the operator's open modal mid-read.
   effect(() => {
     const seq = detailSeq();
 
+    untracked(() => runFor(seq));
+  });
+
+  function runFor(seq: number | null): void {
     if (seq === null) {
       // URL cleared the param — make sure any open dialog closes.
       if (ref) {
@@ -115,7 +129,7 @@ export function withVaultDetailModal(): void {
         replaceUrl: true,
       });
     });
-  });
+  }
 
   // CDK Dialog attaches to the global overlay container on <body>, outside
   // the router-outlet tree — if the host component (board/detail page) is
