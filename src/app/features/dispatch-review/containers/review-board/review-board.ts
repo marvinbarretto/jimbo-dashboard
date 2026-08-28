@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { withVaultDetailModal } from '@shared/kanban/detail-modal';
 import { swapDetailSeq } from '@shared/kanban/detail-nav';
@@ -168,6 +168,31 @@ export class ReviewBoard {
       },
     ]).filter(g => g.items.length > 0);
   });
+
+  /**
+   * Every report in the queue that has something to file.
+   *
+   * The queue has never had a bulk anything: ten items, one decision each,
+   * and two thirds of them outputs rather than decisions. Filing them one at a
+   * time is the same click repeated, which is exactly the work a person should
+   * not be doing.
+   */
+  readonly fileableItems = computed(() => this.items().filter(i =>
+    i.verification?.kind === 'report' && !!(i.artifactUrl ?? i.artifactRef),
+  ));
+
+  /** Confirm before a bulk disposal — it is cheap to click and not undoable. */
+  readonly confirmingFileAll = signal(false);
+  toggleConfirmFileAll(): void { this.confirmingFileAll.update(v => !v); }
+
+  fileAll(): void {
+    this.confirmingFileAll.set(false);
+    for (const item of this.fileableItems()) this.service.file(item);
+  }
+
+  fileOutput(item: ReviewItem): void {
+    this.service.file(item);
+  }
 
   /** Re-run a dispatch whose PR went red. The only useful action on one. */
   retryHeld(held: HeldItem): void {

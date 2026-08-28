@@ -322,6 +322,24 @@ export class ReviewService {
       });
   }
 
+  /**
+   * File → the same terminal state as approve, by an explicitly different
+   * route. For an output rather than a decision: an audit, an analysis, a
+   * report. The server logs it as `review_filed` so the trail never blurs
+   * "someone checked this" with "someone put this away".
+   */
+  file(item: ReviewItem): void {
+    withOptimisticRemove(this._items, this.toast, {
+      prior: item,
+      request: this.http.post(`${this.base}/review/file`, { note_id: item.noteId }),
+      errorMessage: 'Filing failed — card restored.',
+      onSuccess: () => {
+        this.toast.success(`${this.label(item)} filed — output, not adjudicated. One commission slot freed.`);
+        this.loadPressure();
+      },
+    });
+  }
+
   /** Approve → note marked done. Optimistically drops the card. */
   approve(item: ReviewItem): void {
     withOptimisticRemove(this._items, this.toast, {

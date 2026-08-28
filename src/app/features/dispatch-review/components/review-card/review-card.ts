@@ -37,6 +37,7 @@ export class ReviewCard {
   readonly item = input.required<ReviewItem>();
 
   readonly approve = output<void>();
+  readonly fileOutput = output<void>();
   /** Carries the reason — sending work back without one is just a rejection. */
   readonly sendBack = output<string>();
   readonly openItem = output<void>();
@@ -127,6 +128,20 @@ export class ReviewCard {
    * is an answer to it, and the card has to say so.
    */
   readonly declined = computed(() => this.item().verification?.kind === 'declined');
+
+  /**
+   * An output to put away, not a deliverable to certify.
+   *
+   * `report` is the verifier's fallback kind — no PR, no doc, not a refusal —
+   * and two thirds of the queue is it. Filing is the honest disposal: same
+   * terminal state, logged as filed rather than approved, no claim that the
+   * acceptance criteria were met. Offered only when something exists to file;
+   * a report with no artifact at all is a different problem.
+   */
+  readonly fileable = computed(() =>
+    this.item().verification?.kind === 'report'
+    && !!(this.item().artifactUrl ?? this.item().artifactRef),
+  );
 
   /** The verifier never ran. Different from running and settling nothing. */
   readonly unverified = computed(() => this.item().verification === null);

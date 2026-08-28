@@ -205,6 +205,13 @@
       </app-ui-button>
       <app-ui-button variant="ghost" size="sm" (pressed)="approve.emit()">Approve anyway</app-ui-button>
       <app-ui-button variant="ghost" size="sm" (pressed)="toggleRejecting()">Send back</app-ui-button>
+    } @else if (fileable()) {
+      <!-- An audit or analysis: there is something to read, nothing to certify.
+           Filing is disposal, and says so — approving would claim the criteria
+           were checked, which for a report is a claim nobody made. -->
+      <app-ui-button variant="primary" size="sm" (pressed)="fileOutput.emit()">File it</app-ui-button>
+      <app-ui-button variant="ghost" size="sm" (pressed)="approve.emit()">Approve instead</app-ui-button>
+      <app-ui-button variant="ghost" size="sm" (pressed)="toggleRejecting()">Send back</app-ui-button>
     } @else {
       <app-ui-button variant="primary" size="sm" (pressed)="approve.emit()">Approve</app-ui-button>
       <app-ui-button variant="ghost" size="sm" (pressed)="toggleRejecting()">Send back</app-ui-button>

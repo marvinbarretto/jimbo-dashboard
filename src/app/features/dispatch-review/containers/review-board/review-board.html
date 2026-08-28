@@ -115,10 +115,29 @@
         [attr.data-group]="g.key">
         <app-ui-stack gap="md">
           <p class="review-group__cta">{{ g.meta }}</p>
+
+          <!-- Bulk disposal for the one group where the same click repeats.
+               Confirmed rather than immediate: cheap to hit, not undoable. -->
+          @if (g.key === 'check' && fileableItems().length > 1) {
+            <p class="review-bulk">
+              @if (confirmingFileAll()) {
+                <span class="review-bulk__ask">
+                  File {{ fileableItems().length }} reports — marks each done without certifying it?
+                </span>
+                <app-ui-button variant="primary" size="sm" (pressed)="fileAll()">Yes, file them</app-ui-button>
+                <app-ui-button variant="ghost" size="sm" (pressed)="toggleConfirmFileAll()">Cancel</app-ui-button>
+              } @else {
+                <app-ui-button variant="ghost" size="sm" (pressed)="toggleConfirmFileAll()">
+                  File all {{ fileableItems().length }} reports
+                </app-ui-button>
+              }
+            </p>
+          }
           @for (item of g.items; track item.id) {
             <app-review-card
               [item]="item"
               (approve)="approve(item)"
+              (fileOutput)="fileOutput(item)"
               (sendBack)="sendBack(item, $event)"
               (openItem)="openItem(item.seq)" />
           }
