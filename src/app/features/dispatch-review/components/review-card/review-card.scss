@@ -324,3 +324,69 @@
   &:hover { text-decoration: underline; }
   &:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 }
+
+// Ownership line: project chip + the epic it sits under, tinted by the
+// project's own colour token. Mirrors the vault modal's header grammar so the
+// two surfaces teach the same visual vocabulary.
+.review-card__belongs {
+  margin: 0 0 0.15rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+
+  &--orphan {
+    font-size: 0.75rem;
+    color: var(--color-warning);
+  }
+}
+
+// The project's stated purpose, folded away. Recessive on purpose — it is
+// context for the decision, never the decision itself.
+.review-card__why {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.4rem 0.6rem;
+  border-left: 2px solid color-mix(in srgb, var(--proj-tint, var(--color-border)) 60%, var(--color-border));
+  background: color-mix(in srgb, var(--proj-tint, var(--color-surface)) 8%, transparent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.review-card__why-toggle {
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  &:hover { color: var(--color-text); }
+  &:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+}
+
+.review-card__why-row {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.review-card__why-label {
+  display: inline-block;
+  min-width: 4.2rem;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+// A thin edge of the project's colour, so a scroll through the queue groups
+// visually without a heading per project.
+.review-card {
+  border-left: 3px solid color-mix(in srgb, var(--proj-tint, var(--color-border)) 70%, var(--color-border));
+}

@@ -31,6 +31,9 @@ interface ApiReviewItem {
   artifact_url: string | null;
   artifact_source: 'pr' | 'summary' | 'branch' | 'commit' | null;
   artifact_ref: string | null;
+  project: { id: string; display_name: string | null; color_token: string | null;
+             intent: string | null; success_criteria: string | null } | null;
+  epic: { seq: string | null; title: string | null } | null;
   verification: {
     kind: string;
     routing: string;
@@ -149,6 +152,21 @@ export interface ReviewItem {
    * different claims about the work.
    */
   verification: ReviewVerification | null;
+  /**
+   * What this work is FOR, as the project already states it. Null when the
+   * item belongs to no project — which is a routing problem, not a review.
+   */
+  project: ReviewProject | null;
+  /** The parent this sits under, so a subtask reads as part of something. */
+  epic: { seq: string | null; title: string | null } | null;
+}
+
+export interface ReviewProject {
+  id: string;
+  displayName: string | null;
+  colorToken: string | null;
+  intent: string | null;
+  successCriteria: string | null;
 }
 
 export interface ReviewVerification {
@@ -198,6 +216,16 @@ function toReviewItem(r: ApiReviewItem): ReviewItem {
     artifactUrl: r.artifact_url ?? null,
     artifactSource: r.artifact_source ?? null,
     artifactRef: r.artifact_ref ?? null,
+    project: r.project
+      ? {
+          id: r.project.id,
+          displayName: r.project.display_name,
+          colorToken: r.project.color_token,
+          intent: r.project.intent,
+          successCriteria: r.project.success_criteria,
+        }
+      : null,
+    epic: r.epic ?? null,
     verification: r.verification
       ? {
           kind: r.verification.kind,

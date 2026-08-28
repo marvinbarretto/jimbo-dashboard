@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, input, output, signal } f
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiProse } from '@shared/components/ui-prose/ui-prose';
+import { CardParentLink } from '@shared/components/card-parent-link/card-parent-link';
+import { EntityChip } from '@shared/components/entity-chip/entity-chip';
 import { relativeTime } from '@shared/utils/datetime.utils';
 import type { ReviewCriterion, ReviewItem } from '../../data-access/review.service';
 
@@ -19,11 +21,17 @@ export type CheckState = 'met' | 'failed' | 'your_read' | 'not_checked';
  */
 @Component({
   selector: 'app-review-card',
-  imports: [UiBadge, UiButton, UiProse],
+  imports: [UiBadge, UiButton, UiProse, CardParentLink, EntityChip],
   templateUrl: './review-card.html',
   styleUrl: './review-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { 'data-testid': 'review-card' },
+  host: {
+    'data-testid': 'review-card',
+    // Feeds card-parent-link and the card's own edge band, the same way the
+    // vault modal tints its header — so a queue of ten reads as four projects
+    // at a glance instead of ten undifferentiated boxes.
+    '[style.--proj-tint]': 'item().project?.colorToken ?? null',
+  },
 })
 export class ReviewCard {
   readonly item = input.required<ReviewItem>();
@@ -206,6 +214,33 @@ export class ReviewCard {
       case 'not_checked': return 'not checked';
     }
   }
+
+  /**
+   * The project's own statement of why this work exists.
+   *
+   * Not new schema — `intent` and `success_criteria` have been columns on
+   * projects all along and are populated for most active ones. The review card
+   * simply never joined them, so every row asked for a decision without ever
+   * saying what the decision was in service of.
+   */
+  readonly why = computed(() => {
+    const p = this.item().project;
+    if (!p) return null;
+    if (!p.intent && !p.successCriteria) return null;
+    return { intent: p.intent, success: p.successCriteria, name: p.displayName ?? p.id };
+  });
+
+  /** card-parent-link takes a number; the wire carries seq as a string. */
+  readonly epicSeq = computed(() => {
+    const raw = this.item().epic?.seq;
+    if (!raw) return null;
+    const n = Number(raw);
+    return Number.isNaN(n) ? null : n;
+  });
+
+  /** Open by default only where the reader is least equipped to decide. */
+  readonly whyOpen = signal(false);
+  toggleWhy(): void { this.whyOpen.update(v => !v); }
 
   readonly seqLabel = computed(() => {
     const seq = this.item().seq;

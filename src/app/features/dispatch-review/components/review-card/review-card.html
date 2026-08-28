@@ -1,4 +1,24 @@
 <article class="review-card" [class.review-card--declined]="declined()">
+  <!--
+    Project and epic first, tinted, the way the vault modal leads. Ten cards
+    with nothing but a title made the queue read as ten unrelated chores; the
+    colour band plus the parent line say "this is film-planner, under the
+    credits epic" before you read a word of the brief.
+  -->
+  @if (item().project; as proj) {
+    <p class="review-card__belongs">
+      <app-entity-chip type="project" [id]="proj.id" [label]="proj.displayName ?? proj.id" size="sm" />
+      @if (epicSeq(); as eseq) {
+        <app-card-parent-link [parentSeq]="eseq" [parentTitle]="item().epic?.title ?? ''" />
+      }
+    </p>
+  } @else {
+    <!-- Linked to no project at all. Not a review problem — a routing one. -->
+    <p class="review-card__belongs review-card__belongs--orphan">
+      No project — this work belongs to nothing, so there is no goal to judge it against.
+    </p>
+  }
+
   <header class="review-card__head">
     <button
       type="button"
@@ -117,6 +137,30 @@
            settled nothing" — and the two used to render identically. -->
       @if (unverified()) {
         <p class="review-card__unverified">Not verified — nothing has checked this delivery.</p>
+      }
+    </section>
+  }
+
+  <!--
+    "Why this exists", from the project's own record. Collapsed, because on a
+    good day you already know — but the 68-day items are 68 days old precisely
+    because their purpose had gone cold, and re-deriving it from the title was
+    the expensive part.
+  -->
+  @if (why(); as w) {
+    <section class="review-card__why">
+      <button type="button" class="review-card__why-toggle" (click)="toggleWhy()"
+              [attr.aria-expanded]="whyOpen()">
+        <span aria-hidden="true">{{ whyOpen() ? '▾' : '▸' }}</span>
+        Why this exists · {{ w.name }}
+      </button>
+      @if (whyOpen()) {
+        @if (w.intent) {
+          <p class="review-card__why-row"><span class="review-card__why-label">Intent</span>{{ w.intent }}</p>
+        }
+        @if (w.success) {
+          <p class="review-card__why-row"><span class="review-card__why-label">Success</span>{{ w.success }}</p>
+        }
       }
     </section>
   }
