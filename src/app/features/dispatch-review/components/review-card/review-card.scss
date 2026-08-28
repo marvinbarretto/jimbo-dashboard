@@ -11,6 +11,11 @@
   border: 1px solid var(--color-border, #1f394c);
   border-radius: 6px;
 
+  // A delivery the agent declined is not a review — mark the whole card, so a
+  // scroll past a long queue never lands on Approve for one of these by
+  // reflex.
+  &--declined { border-color: var(--color-danger); }
+
   &__head {
     display: flex;
     align-items: center;
@@ -111,6 +116,60 @@
     color: var(--color-text, inherit);
   }
 
+  // Named, but not openable. Reads as a fact about the delivery rather than a
+  // dead link, so it sits quieter than the no-artifact warning above it.
+  &__ref {
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+
+  &__ref-label {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.68rem;
+    color: var(--color-text-muted);
+  }
+
+  &__ref-value { font-family: var(--font-mono); }
+
+  &__ref-note {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  // The agent said it did not do the work. Louder than the missing-artifact
+  // notice: that one qualifies a review, this one says there is no delivery to
+  // review at all.
+  &__declined {
+    margin: 0;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--color-danger);
+    border-left: 3px solid var(--color-danger);
+    border-radius: 4px;
+    background: var(--color-danger-glow);
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  &__unverified {
+    margin: 0.4rem 0 0;
+    font-size: 0.8rem;
+    color: var(--color-warning);
+  }
+
+  &__wait {
+    &[data-tone='old']   { color: var(--color-warning); }
+    &[data-tone='stale'] { color: var(--color-danger); font-weight: 600; }
+  }
+
   &__deliverable-label {
     font-weight: 600;
     font-size: 0.9rem;
@@ -185,9 +244,15 @@
   font-size: 0.92rem;
   line-height: 1.45;
 
-  &[data-verdict='met'] .review-card__mark { color: var(--color-success, #4ade80); }
-  &[data-verdict='not_met'] .review-card__mark { color: var(--color-danger, #f87171); }
-  &[data-verdict='not_met'] .review-card__check-text { color: var(--color-danger, #f87171); }
+  &[data-state='met'] .review-card__mark { color: var(--color-success); }
+  &[data-state='failed'] .review-card__mark { color: var(--color-danger); }
+  &[data-state='failed'] .review-card__check-text { color: var(--color-danger); }
+
+  // A criterion the verifier could not reach is a gap in the checking, not in
+  // the work — warm, so it reads as "nobody looked" rather than "this failed".
+  // The subjective ones stay muted: an empty box against them is correct and
+  // final, and 74 of 92 live criteria are that, so shouting would be noise.
+  &[data-state='not_checked'] .review-card__mark { color: var(--color-warning); }
 }
 
 .review-card__mark {
@@ -214,4 +279,20 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
+}
+
+// Matches the awaiting-strip's send-back box, so the same action looks the
+// same in both places it appears.
+.review-card__reason {
+  flex: 1;
+  min-width: 14rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.3rem 0.5rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--color-text);
+
+  &:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 }

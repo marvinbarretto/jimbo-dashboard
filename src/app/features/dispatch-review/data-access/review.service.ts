@@ -29,7 +29,15 @@ interface ApiReviewItem {
   completed_at: string | null;
   criteria: Array<{ criterion: string; verdict: string; note: string }> | null;
   artifact_url: string | null;
-  artifact_source: 'pr' | 'summary' | null;
+  artifact_source: 'pr' | 'summary' | 'branch' | 'commit' | null;
+  artifact_ref: string | null;
+  verification: {
+    kind: string;
+    routing: string;
+    reason: string;
+    artifact_reachable: boolean;
+    verified_at: string | null;
+  } | null;
 }
 
 /**
@@ -49,6 +57,14 @@ interface ApiReviewPressure {
   oldest_wait_days: number | null;
   blocked: boolean;
   blocked_on_ci: number;
+  held_standing: number;
+  held: Array<{
+    seq: string | null;
+    note_id: string;
+    title: string | null;
+    pr_url: string | null;
+    reason: 'red_ci' | 'standing';
+  }>;
 }
 
 export interface ReviewPressure {
@@ -61,6 +77,19 @@ export interface ReviewPressure {
   blocked: boolean;
   /** Completed commissions held out of the queue because their PR is red. */
   blockedOnCi: number;
+  /** Standing anchors — recurring hooks that cannot be approved away. */
+  heldStanding: number;
+  /** The held rows themselves, so the counts above are reachable. */
+  held: readonly HeldItem[];
+}
+
+/** Finished work deliberately kept off the review list, and why. */
+export interface HeldItem {
+  seq: string | null;
+  noteId: string;
+  title: string | null;
+  prUrl: string | null;
+  reason: 'red_ci' | 'standing';
 }
 
 /** Dashboard row. `id` (= note_id) is the stable key for optimistic removal. */
@@ -101,11 +130,47 @@ export interface ReviewItem {
    * agent's prose and may be a source it read rather than a thing it made, so
    * the card must label it as found-in-summary, never as verified.
    */
-  artifactSource: 'pr' | 'summary' | null;
+  artifactSource: 'pr' | 'summary' | 'branch' | 'commit' | null;
+  /**
+   * A deliverable the agent named that is not openable — a branch or a commit.
+   * Shown as a labelled reference, never as a link: the repo is usually
+   * unknown, so a synthesised URL would 404 on exactly the cards that already
+   * ask for the most trust.
+   */
+  artifactRef: string | null;
+  /**
+   * What the verifier concluded overall, or null when it never ran.
+   *
+   * The null is load-bearing. "Verified, and every criterion needed a human"
+   * and "never verified" both render as blank tickboxes, and they are very
+   * different claims about the work.
+   */
+  verification: ReviewVerification | null;
+}
+
+export interface ReviewVerification {
+  /** 'shipped' | 'report' | 'already_satisfied' | 'declined' | … */
+  kind: string;
+  /** 'marvin' | 'question' | 'auto_stamp' — where the verifier would send it. */
+  routing: string;
+  reason: string;
+  artifactReachable: boolean;
+  verifiedAt: string | null;
 }
 
 export interface ReviewCriterion {
   criterion: string;
+  /**
+   * How this criterion could be settled at all: 'subjective', 'measurable',
+   * 'code_present', 'artifact_exists'.
+   *
+   * The difference that matters on the card. 74 of 92 recorded criteria are
+   * subjective — no mechanical check exists and none ever will, so an empty
+   * box against them is correct and final. A `code_present` one left
+   * unverifiable is the opposite: the machine tried and could not reach it.
+   * Optional because rows written before the field existed lack it.
+   */
+  kind?: string;
   /** 'met' | 'not_met' | 'unverifiable'. */
   verdict: string;
   note: string;
@@ -129,6 +194,16 @@ function toReviewItem(r: ApiReviewItem): ReviewItem {
     criteria: r.criteria ?? null,
     artifactUrl: r.artifact_url ?? null,
     artifactSource: r.artifact_source ?? null,
+    artifactRef: r.artifact_ref ?? null,
+    verification: r.verification
+      ? {
+          kind: r.verification.kind,
+          routing: r.verification.routing,
+          reason: r.verification.reason,
+          artifactReachable: r.verification.artifact_reachable,
+          verifiedAt: r.verification.verified_at,
+        }
+      : null,
   };
 }
 
@@ -184,6 +259,13 @@ export class ReviewService {
         oldestWaitDays: p.oldest_wait_days,
         blocked: p.blocked,
         blockedOnCi: p.blocked_on_ci,
+        // Tolerate the pre-deploy shape: an older API returns neither field,
+        // and a gauge that throws is worse than one that under-reports.
+        heldStanding: p.held_standing ?? 0,
+        held: (p.held ?? []).map(h => ({
+          seq: h.seq, noteId: h.note_id, title: h.title,
+          prUrl: h.pr_url, reason: h.reason,
+        })),
       }),
       error: () => this._pressure.set(null),
     });

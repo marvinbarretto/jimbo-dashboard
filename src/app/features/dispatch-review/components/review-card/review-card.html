@@ -1,4 +1,4 @@
-<article class="review-card">
+<article class="review-card" [class.review-card--declined]="declined()">
   <header class="review-card__head">
     <button
       type="button"
@@ -20,18 +20,33 @@
   </header>
 
   <p class="review-card__meta">
-    <span>by {{ item().assignedTo ?? 'unknown' }}</span>
+    <span>by {{ agent() }}</span>
     @if (item().skill) { <span>· {{ item().skill }}</span> }
+    <!-- Every card carries its own age now. The board's "longest wait 68d"
+         pointed at a list where no row said how old it was. -->
+    @if (waited(); as w) {
+      <span>· finished <span class="review-card__wait" [attr.data-tone]="waitTone()">{{ w }}</span></span>
+    }
   </p>
+
+  <!--
+    The agent said it did not do the work. The verifier already classified this
+    and routed it to `question`; nothing acts on that routing yet, so the item
+    arrives here looking like a deliverable. Approve and Send back are both
+    wrong answers to it, and the card says so before either is reachable.
+  -->
+  @if (declined(); as _) {
+    <p class="review-card__declined" data-testid="review-card-declined">
+      <strong>{{ agent() }} did not do this work.</strong>
+      {{ item().verification?.reason }} Neither approving nor sending back
+      answers it — open the item and settle what was actually being asked.
+    </p>
+  }
 
   <!--
     The artifact sits above the argument on purpose: you open the thing, then
     read what was asked for, then read what the agent claims. Burying a PR link
     in the summary prose made "look at the work" the hardest step of a review.
-
-    Until 2026-08-28 this rendered only for `prUrl`, so 7 of the 9 live items
-    showed no link at all — a cairn post or a file path stayed buried in the
-    summary. It now takes any artifact, and says plainly when there is none.
   -->
   @if (item().artifactUrl; as url) {
     <a
@@ -43,6 +58,17 @@
       <span class="review-card__deliverable-label">{{ artifactLabel() }}</span>
       <span class="review-card__deliverable-detail">{{ artifactDetail() }} ↗</span>
     </a>
+  } @else if (item().artifactRef; as ref) {
+    <!--
+      Named but not openable. Deliberately not a link: the repo behind most of
+      these is unknown, and a synthesised URL that 404s would overclaim on
+      exactly the cards that already ask for the most trust.
+    -->
+    <p class="review-card__ref" data-testid="review-card-ref">
+      <span class="review-card__ref-label">{{ refLabel() }}</span>
+      <code class="review-card__ref-value">{{ ref }}</code>
+      <span class="review-card__ref-note">named in the summary — not linkable from here</span>
+    </p>
   } @else {
     <!--
       Not a missing field — a missing deliverable. Approving here means taking
@@ -66,15 +92,19 @@
       <h3 class="review-card__label">Asked for</h3>
       <ul class="review-card__checks">
         @for (c of checks; track c.criterion) {
-          <li class="review-card__check" [attr.data-verdict]="c.verdict">
-            <span class="review-card__mark" aria-hidden="true">{{ mark(c.verdict) }}</span>
+          <li class="review-card__check" [attr.data-state]="state(c)">
+            <span class="review-card__mark" aria-hidden="true">{{ mark(c) }}</span>
             <span class="review-card__check-text">
               {{ c.criterion }}
-              @if (c.verdict !== 'unverifiable') {
-                <span class="review-card__check-note">{{ c.note }}</span>
-              }
+              <!--
+                The note used to be hidden precisely when the verdict was
+                unverifiable — which is every criterion in the live queue, so
+                the section rendered 29 blank boxes and said nothing at all.
+                It is the only content there is when nothing was settled.
+              -->
+              <span class="review-card__check-note">{{ c.note }}</span>
             </span>
-            <span class="review-card__sr">{{ spoken(c.verdict) }}</span>
+            <span class="review-card__sr">{{ spoken(c) }}</span>
           </li>
         }
       </ul>
@@ -83,6 +113,11 @@
     <section class="review-card__block">
       <h3 class="review-card__label">Asked for</h3>
       <app-ui-prose [text]="ac" />
+      <!-- No verifier row at all is a different claim from "verified, and it
+           settled nothing" — and the two used to render identically. -->
+      @if (unverified()) {
+        <p class="review-card__unverified">Not verified — nothing has checked this delivery.</p>
+      }
     </section>
   }
 
@@ -94,10 +129,30 @@
   }
 
   <footer class="review-card__actions">
-    <app-ui-button variant="primary" size="sm" (pressed)="approve.emit()">Approve</app-ui-button>
-    <app-ui-button variant="ghost" size="sm" (pressed)="sendBack.emit()">Send back</app-ui-button>
-    <button type="button" class="review-card__context" (click)="openItem.emit()">
-      Open item for context
-    </button>
+    @if (rejecting()) {
+      <!-- In place, not in a window.prompt: the reason is written against the
+           criteria above, and a native prompt covers them. -->
+      <input
+        class="review-card__reason"
+        type="text"
+        placeholder="What needs redoing?"
+        #reason
+        (keydown.enter)="submitSendBack(reason.value)" />
+      <app-ui-button variant="primary" size="sm" (pressed)="submitSendBack(reason.value)">
+        Send back
+      </app-ui-button>
+      <app-ui-button variant="ghost" size="sm" (pressed)="toggleRejecting()">Cancel</app-ui-button>
+    } @else {
+      <!-- On a declined delivery, Approve stops being the primary path: nothing
+           was delivered to approve. -->
+      <app-ui-button
+        [variant]="declined() ? 'ghost' : 'primary'"
+        size="sm"
+        (pressed)="approve.emit()">Approve</app-ui-button>
+      <app-ui-button variant="ghost" size="sm" (pressed)="toggleRejecting()">Send back</app-ui-button>
+      <button type="button" class="review-card__context" (click)="openItem.emit()">
+        Open item for context
+      </button>
+    }
   </footer>
 </article>
