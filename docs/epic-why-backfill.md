@@ -52,3 +52,60 @@ How we'd know it worked:
 | [#4948](https://jimbo.fourfoldmedia.uk/vault-items/4948) | jimbo | 2 | 2081c | has-AC | pipeline | Per-project agents that groom and execute their own backlog |
 
 _12 deficient, 17 to spot-check. `source=pipeline` means Jimbo made it — those are the ones you can't explain._
+
+---
+
+# Drafts for the three epics behind the current review queue
+
+Proposals only — **not written to the vault.** Composed from each epic's existing
+body, its children, and its project's `intent`. Marked where I am inferring
+rather than reading. Correct them, then they go on the epics.
+
+## #2815 · Data Enrichment — director, cast, decade filter (film-planner)
+
+The thinnest of the three: 77 characters, no acceptance criteria, and the parent
+of both PRs currently awaiting review.
+
+```
+## Why
+Who it's for: Marvin browsing his own watchlist, deciding what to watch tonight.
+What changes for them: you can narrow by era and see who made a film without
+  leaving the browser — the two axes people actually think in ("something 90s",
+  "the one by that director"), which today force a search elsewhere.
+How we'd know it worked: films get chosen from the collection browser instead of
+  abandoned to Google. Proxy: decade chips used in a session; director/cast shown
+  on ≥90% of films (the #2973 audit found 144/160 already have director data).
+```
+
+## #1865 · LocalShout — Weekly Digest (localshout)
+
+Body is already substantial; what is missing is acceptance criteria. 13 children.
+
+```
+## Why
+Who it's for: v1 Marvin, dogfooding. v2 the Watford locals who signed up and
+  went quiet.
+What changes for them: they hear what's on near them without opening the app —
+  the digest does the hunt, which is the whole product promise in one email.
+How we'd know it worked: Marvin still reads it weekly without forcing himself
+  (localshout's own success_criteria already says this); then open and click
+  rate on a real cohort rather than on himself.
+```
+
+## #2504 · Outreach to 3 agencies in existing orbit (reinvent-me)
+
+Body already argues the strategy well; it has no acceptance criteria and no
+statement of what success looks like.
+
+```
+## Why
+Who it's for: Marvin, looking for a first paid AI engagement.
+What changes for them (the agencies): they get someone who can answer their
+  clients' AI questions credibly on a day rate, without hiring for it.
+How we'd know it worked: 3 messages sent, ≥1 reply, ≥1 exploratory call. The
+  four children already map to exactly that sequence.
+```
+
+**Least confident in:** the measurement lines. Every one is a proxy I inferred —
+#2815's "≥90%" is a number I chose, not one you set. If the metric is wrong the
+rest is still useful; if the *audience* is wrong, the draft is wrong.
