@@ -79,6 +79,40 @@ export class ReviewBoard {
     return `${n === 1 ? '1 slot' : `${n} slots`} free — new work stops when this fills`;
   });
 
+  /**
+   * Finished work deliberately kept off the list: red CI and standing anchors.
+   * One tile, because from the operator's side they are the same fact — work
+   * that is done, is not reviewable, and needs something other than a decision.
+   */
+  readonly heldTotal = computed(() => {
+    const p = this.pressure();
+    return p ? p.blockedOnCi + p.heldStanding : 0;
+  });
+
+  readonly heldReasons = computed(() => {
+    const p = this.pressure();
+    if (!p) return '';
+    const parts: string[] = [];
+    if (p.blockedOnCi > 0) parts.push(`${p.blockedOnCi} on red CI`);
+    if (p.heldStanding > 0) parts.push(`${p.heldStanding} standing`);
+    return parts.join(', ');
+  });
+
+  /**
+   * What the meter's number is made of.
+   *
+   * The meter reads the lane (awaiting + running) and the tile beneath reads
+   * the queue (awaiting). With nothing running those are the same figure twice
+   * in the two loudest positions on the page, which reads as a redundancy
+   * rather than as two different facts.
+   */
+  readonly splitLabel = computed(() => {
+    const p = this.pressure();
+    if (!p) return '';
+    const running = Math.max(0, p.inFlight - p.awaiting);
+    return `${p.awaiting} awaiting your review · ${running} running · ${p.cap} slot cap`;
+  });
+
   readonly waitStatus = computed<'neutral' | 'warn' | 'alert'>(() => {
     const days = this.pressure()?.oldestWaitDays ?? null;
     if (days === null) return 'neutral';
@@ -94,10 +128,8 @@ export class ReviewBoard {
     this.service.approve(item);
   }
 
-  sendBack(item: ReviewItem): void {
-    const reason = window.prompt(`Send "${item.title ?? item.seq ?? 'this item'}" back — what needs reworking?`);
-    if (reason && reason.trim()) {
-      this.service.sendBack(item, reason.trim());
-    }
+  /** The card owns the reason box now, so this just forwards a validated one. */
+  sendBack(item: ReviewItem, reason: string): void {
+    this.service.sendBack(item, reason);
   }
 }

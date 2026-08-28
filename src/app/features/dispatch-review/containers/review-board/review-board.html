@@ -26,6 +26,12 @@
           </p>
         }
 
+        <!-- The meter counts the LANE (awaiting + running); the tile below
+             counts YOUR queue. With nothing running they are the same number,
+             and side by side that read as one figure printed twice. Splitting
+             it says which is which. -->
+        <p class="review-gauge__split">{{ splitLabel() }}</p>
+
         <div class="review-gauge__stats">
           <app-ui-stat-card
             label="Awaiting you"
@@ -39,11 +45,44 @@
             [status]="waitStatus()" />
 
           <app-ui-stat-card
-            label="Blocked on CI"
-            [value]="p.blockedOnCi.toString()"
-            detail="failing PRs — need rework, not review"
-            [status]="p.blockedOnCi > 0 ? 'warn' : 'neutral'" />
+            label="Held back"
+            [value]="heldTotal().toString()"
+            detail="finished, but not reviewable"
+            [status]="heldTotal() > 0 ? 'warn' : 'neutral'" />
         </div>
+
+        <!--
+          "Blocked on CI: 3" sat above a list of ten items, none of them
+          failing, with no route to the three. A count you cannot reach is
+          decoration — so the rows themselves are here, with what would clear
+          each one.
+        -->
+        @if (p.held.length) {
+          <details class="review-held" data-testid="review-held">
+            <summary class="review-held__summary">
+              {{ heldTotal() }} finished item{{ heldTotal() === 1 ? '' : 's' }} held out of this
+              queue — {{ heldReasons() }}
+            </summary>
+            <ul class="review-held__list">
+              @for (h of p.held; track h.noteId) {
+                <li class="review-held__row" [attr.data-reason]="h.reason">
+                  <button type="button" class="review-held__open" (click)="openItem(h.seq)">
+                    <span class="review-held__seq">{{ h.seq ? '#' + h.seq : '—' }}</span>
+                    <span class="review-held__title">{{ h.title ?? '(untitled)' }}</span>
+                  </button>
+                  <span class="review-held__why">
+                    {{ h.reason === 'red_ci'
+                      ? 'PR checks failing — re-commission, do not review'
+                      : 'standing anchor — a recurring hook, cannot be approved away' }}
+                  </span>
+                  @if (h.prUrl; as url) {
+                    <a class="review-held__pr" [href]="url" target="_blank" rel="noopener">PR ↗</a>
+                  }
+                </li>
+              }
+            </ul>
+          </details>
+        }
       </app-ui-stack>
     </app-ui-card>
   }
@@ -60,7 +99,7 @@
         <app-review-card
           [item]="item"
           (approve)="approve(item)"
-          (sendBack)="sendBack(item)"
+          (sendBack)="sendBack(item, $event)"
           (openItem)="openItem(item.seq)" />
       }
     </app-ui-stack>
