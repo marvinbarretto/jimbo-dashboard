@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.199](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.198...v0.0.199) (2026-08-28)
+
+
+### Bug Fixes
+
+* **detail-modal:** the dialog opened twice and closed the first one ([bb4d994](https://github.com/marvinbarretto/jimbo-dashboard/commit/bb4d994abd34a620c946b52e334167ce8988473e))
+
 ### [0.0.198](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.197...v0.0.198) (2026-08-28)
 
 
