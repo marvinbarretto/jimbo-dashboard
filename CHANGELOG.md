@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.198](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.197...v0.0.198) (2026-08-28)
+
+
+### Features
+
+* **pipeline-control:** surface the commission lane's real state ([8223c24](https://github.com/marvinbarretto/jimbo-dashboard/commit/8223c2496258af45730a1d12d314548c1d1098fc))
+* **review-card:** lead with the artifact, and name its absence ([2938542](https://github.com/marvinbarretto/jimbo-dashboard/commit/2938542fecf1efc2a821c093f34877680216cba7))
+* **review-card:** show what the verifier actually said ([653dacc](https://github.com/marvinbarretto/jimbo-dashboard/commit/653dacc9eda3396aa571de06e017c1e1b38461da))
+* **review:** bespoke review card, prominent PR link, and outcome toasts ([34e9305](https://github.com/marvinbarretto/jimbo-dashboard/commit/34e9305e958397fe658483b58ba1c90fcb13c490)), closes [#3163](https://github.com/marvinbarretto/jimbo-dashboard/issues/3163) [#628](https://github.com/marvinbarretto/jimbo-dashboard/issues/628) [#626](https://github.com/marvinbarretto/jimbo-dashboard/issues/626) [#627](https://github.com/marvinbarretto/jimbo-dashboard/issues/627)
+* **review:** give every row the action it actually needs ([ca88888](https://github.com/marvinbarretto/jimbo-dashboard/commit/ca888882229024794fbe4bbbbb24b3d7c02d57c2))
+* **review:** make the held-back work reachable, and stop printing 10 twice ([683bd97](https://github.com/marvinbarretto/jimbo-dashboard/commit/683bd97fd613593ded291c0ef0544f134cb7ae4a))
+* **review:** show the brief beside the agent's own summary ([0d3a910](https://github.com/marvinbarretto/jimbo-dashboard/commit/0d3a9104c7cd8c17426d47111b7f6248ee70b34c))
+* **review:** show the brief, open the item, and use the page gutter ([7418a5c](https://github.com/marvinbarretto/jimbo-dashboard/commit/7418a5c259c2e4c61dce36aca97f2f76c9510805))
+* **review:** show the commission brake on the review board ([8ada0d7](https://github.com/marvinbarretto/jimbo-dashboard/commit/8ada0d710df01ad0b7b3c8915594d3b6538823b7))
+
+
+### Bug Fixes
+
+* **review:** pluralise the free-slot count ([f22b449](https://github.com/marvinbarretto/jimbo-dashboard/commit/f22b449e603d4bcb4b39c68e97a2db3c901712ab))
+
 ### [0.0.197](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.196...v0.0.197) (2026-08-26)
 
 
