@@ -48,6 +48,7 @@ function review(over: Partial<ReviewWaiting> = {}): ReviewWaiting {
     title: 'Add a CONTRIBUTING note',
     skill: 'code/pr-from-issue',
     summary: 'Opened PR #28',
+    acceptanceCriteria: null,
     prUrl: 'https://github.com/marvinbarretto/pmq-bingo/pull/28',
     prState: 'open',
     completedAt: '2026-08-14T11:00:00.000Z',
