@@ -61,6 +61,7 @@ interface ApiReviewPressure {
   held: Array<{
     seq: string | null;
     note_id: string;
+    dispatch_id: string;
     title: string | null;
     pr_url: string | null;
     reason: 'red_ci' | 'standing';
@@ -87,6 +88,8 @@ export interface ReviewPressure {
 export interface HeldItem {
   seq: string | null;
   noteId: string;
+  /** What /api/dispatch/{id}/retry needs to re-run this. */
+  dispatchId: string;
   title: string | null;
   prUrl: string | null;
   reason: 'red_ci' | 'standing';
@@ -263,12 +266,32 @@ export class ReviewService {
         // and a gauge that throws is worse than one that under-reports.
         heldStanding: p.held_standing ?? 0,
         held: (p.held ?? []).map(h => ({
-          seq: h.seq, noteId: h.note_id, title: h.title,
+          seq: h.seq, noteId: h.note_id, dispatchId: h.dispatch_id, title: h.title,
           prUrl: h.pr_url, reason: h.reason,
         })),
       }),
       error: () => this._pressure.set(null),
     });
+  }
+
+  /**
+   * Re-run a dispatch whose PR went red.
+   *
+   * The only useful action on a held item: it is finished, it is not
+   * reviewable, and approving or sending it back would both be wrong. The
+   * server owns the state flip; we reload the gauge so the row leaves the held
+   * list once it is queued again.
+   */
+  retryHeld(held: HeldItem): void {
+    this.http
+      .post(`${this.base}/${encodeURIComponent(held.dispatchId)}/retry`, {})
+      .subscribe({
+        next: () => {
+          this.toast.success(`#${held.seq ?? held.noteId} queued to run again`);
+          this.load();
+        },
+        error: () => this.toast.error('Could not queue that dispatch for a retry.'),
+      });
   }
 
   /** Approve → note marked done. Optimistically drops the card. */

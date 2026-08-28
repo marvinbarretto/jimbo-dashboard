@@ -10,13 +10,23 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { ReviewCard } from '../../components/review-card/review-card';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { UiProgressMeter } from '@shared/components/ui-progress-meter/ui-progress-meter';
-import { ReviewService, type ReviewItem } from '../../data-access/review.service';
+import { UiSection } from '@shared/components/ui-section/ui-section';
+import { ReviewService, type HeldItem, type ReviewItem } from '../../data-access/review.service';
+
+/** One bucket of the queue, named by the action it needs. */
+interface ReviewGroup {
+  key: 'answer' | 'check' | 'trust';
+  title: string;
+  meta: string;
+  tone: 'alert' | 'default' | 'recede';
+  items: ReviewItem[];
+}
 
 @Component({
   selector: 'app-review-board',
   imports: [
     UiStack, UiPageHeader, UiCard, UiButton, UiEmptyState,
-    UiStatCard, UiProgressMeter, ReviewCard,
+    UiStatCard, UiProgressMeter, ReviewCard, UiSection,
   ],
   templateUrl: './review-board.html',
   styleUrl: './review-board.scss',
@@ -112,6 +122,57 @@ export class ReviewBoard {
     const running = Math.max(0, p.inFlight - p.awaiting);
     return `${p.awaiting} awaiting your review · ${running} running · ${p.cap} slot cap`;
   });
+
+  /**
+   * The queue, split by what each item actually asks of you.
+   *
+   * A flat list of ten cards with identical Approve / Send back buttons says
+   * every row is the same decision, and they are not: one is a delivery the
+   * agent declined to make, five have something you can open and check, and
+   * four can only be approved on trust. Ordered mis-filed → checkable →
+   * judgement, so the cheapest and most certain work comes before the work
+   * that needs the most of you.
+   */
+  readonly groups = computed<ReviewGroup[]>(() => {
+    const answer: ReviewItem[] = [];
+    const check:  ReviewItem[] = [];
+    const trust:  ReviewItem[] = [];
+
+    for (const item of this.items()) {
+      if (item.verification?.kind === 'declined') answer.push(item);
+      else if (item.artifactUrl) check.push(item);
+      else trust.push(item);
+    }
+
+    return ([
+      {
+        key: 'answer' as const,
+        title: 'Not a delivery',
+        meta: 'The agent reported it did not do the work. Neither button is an answer — open the item and settle what was being asked.',
+        tone: 'alert' as const,
+        items: answer,
+      },
+      {
+        key: 'check' as const,
+        title: 'Ready to check',
+        meta: 'There is something to open. Read the artifact against the criteria, then approve or send back.',
+        tone: 'default' as const,
+        items: check,
+      },
+      {
+        key: 'trust' as const,
+        title: 'Nothing to open',
+        meta: 'No artifact was linked. Approving these means taking the agent at its word — open the item for its thread and activity first.',
+        tone: 'recede' as const,
+        items: trust,
+      },
+    ]).filter(g => g.items.length > 0);
+  });
+
+  /** Re-run a dispatch whose PR went red. The only useful action on one. */
+  retryHeld(held: HeldItem): void {
+    this.service.retryHeld(held);
+  }
 
   readonly waitStatus = computed<'neutral' | 'warn' | 'alert'>(() => {
     const days = this.pressure()?.oldestWaitDays ?? null;

@@ -296,3 +296,31 @@
 
   &:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 }
+
+// Clamped rather than truncated: the prose is intact, just folded, so a long
+// account cannot push the next nine cards off the screen.
+.review-card__summary--clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  // The clamp cuts mid-sentence by design; the fade says so without a gradient
+  // that would fight the card background in either theme.
+  mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+}
+
+.review-card__more {
+  align-self: flex-start;
+  margin-top: 0.35rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--color-accent);
+  cursor: pointer;
+
+  &:hover { text-decoration: underline; }
+  &:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+}

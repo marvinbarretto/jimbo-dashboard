@@ -44,6 +44,29 @@ export class ReviewCard {
 
   toggleRejecting(): void { this.rejecting.update(v => !v); }
 
+  /**
+   * Long summaries are clamped until asked for.
+   *
+   * A declined delivery's summary is a full argument — seq 2860 runs to
+   * numbered options and pushes every other card off the screen. The prose is
+   * worth reading once you are on that item; it is not worth scrolling past
+   * nine times to reach the rest of the queue.
+   */
+  readonly summaryExpanded = signal(false);
+
+  /** Past this, the summary is an essay rather than a line. */
+  private static readonly CLAMP_OVER = 320;
+
+  readonly summaryClamped = computed(() =>
+    !this.summaryExpanded() && (this.item().resultSummary?.length ?? 0) > ReviewCard.CLAMP_OVER,
+  );
+
+  readonly canExpandSummary = computed(() =>
+    (this.item().resultSummary?.length ?? 0) > ReviewCard.CLAMP_OVER,
+  );
+
+  toggleSummary(): void { this.summaryExpanded.update(v => !v); }
+
   submitSendBack(reason: string): void {
     const trimmed = reason.trim();
     if (!trimmed) return;
@@ -99,6 +122,29 @@ export class ReviewCard {
 
   /** The verifier never ran. Different from running and settling nothing. */
   readonly unverified = computed(() => this.item().verification === null);
+
+  /**
+   * Which action this card actually leads with.
+   *
+   * Approve was the primary button on every row regardless of state, which
+   * made the fastest path through the queue the one that rubber-stamps it —
+   * on a gate whose whole job is to not be a rubber stamp. It stays primary
+   * only where there is something to check first:
+   *
+   *   'open'    the agent declined, or there is nothing linked to look at, so
+   *             the honest next step is the item itself
+   *   'approve' an artifact exists and has been put in front of you
+   */
+  readonly primaryAction = computed<'approve' | 'open'>(() => {
+    if (this.declined()) return 'open';
+    return this.item().artifactUrl ? 'approve' : 'open';
+  });
+
+  /** Says what opening is FOR, which differs by why we're sending you there. */
+  readonly openLabel = computed(() => {
+    if (this.declined()) return 'Open and settle';
+    return this.item().artifactUrl ? 'Open item for context' : 'Open item to judge';
+  });
 
   /**
    * A PR is the deliverable; a summary-derived URL is only a link the agent

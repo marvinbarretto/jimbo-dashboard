@@ -78,6 +78,13 @@
                   @if (h.prUrl; as url) {
                     <a class="review-held__pr" [href]="url" target="_blank" rel="noopener">PR ↗</a>
                   }
+                  <!-- Red work's only useful action: run it again. Standing
+                       anchors have no such action — they are not broken. -->
+                  @if (h.reason === 'red_ci') {
+                    <app-ui-button variant="ghost" size="sm" (pressed)="retryHeld(h)">
+                      Re-run
+                    </app-ui-button>
+                  }
                 </li>
               }
             </ul>
@@ -94,14 +101,29 @@
       title="Nothing awaiting review."
       message="Completed commission work lands here for approval before it's marked done." />
   } @else {
-    <app-ui-stack gap="md">
-      @for (item of items(); track item.id) {
-        <app-review-card
-          [item]="item"
-          (approve)="approve(item)"
-          (sendBack)="sendBack(item, $event)"
-          (openItem)="openItem(item.seq)" />
-      }
-    </app-ui-stack>
+    <!--
+      Grouped by what each row asks of you. Ten identical Approve / Send back
+      footers said every item was the same decision; one is work the agent
+      declined to do, some can be opened and checked, and the rest can only be
+      approved on trust. The group's own line states the action.
+    -->
+    @for (g of groups(); track g.key) {
+      <app-ui-section
+        [title]="g.title"
+        [meta]="g.items.length + (g.items.length === 1 ? ' item' : ' items')"
+        [tone]="g.tone"
+        [attr.data-group]="g.key">
+        <app-ui-stack gap="md">
+          <p class="review-group__cta">{{ g.meta }}</p>
+          @for (item of g.items; track item.id) {
+            <app-review-card
+              [item]="item"
+              (approve)="approve(item)"
+              (sendBack)="sendBack(item, $event)"
+              (openItem)="openItem(item.seq)" />
+          }
+        </app-ui-stack>
+      </app-ui-section>
+    }
   }
 </app-ui-stack>
