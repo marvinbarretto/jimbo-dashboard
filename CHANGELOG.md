@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.207](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.206...v0.0.207) (2026-08-29)
+
+
+### Bug Fixes
+
+* **vault-item:** a commission delivery reads "delivered", not "ran" ([f20a00f](https://github.com/marvinbarretto/jimbo-dashboard/commit/f20a00f2aae5586f275ac5795406704ccc92d0cf))
+
 ### [0.0.206](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.205...v0.0.206) (2026-08-29)
 
 
