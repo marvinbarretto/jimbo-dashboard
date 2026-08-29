@@ -436,3 +436,58 @@
   font-size: 0.8rem;
   color: var(--color-warning);
 }
+
+// Screenshots, at a size you can actually judge from — a thumbnail strip would
+// make you click every one, which is the friction this is meant to remove.
+// Scrolls sideways rather than stacking: three shots should not push the
+// decision buttons a screen away.
+.review-card__shots {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding-bottom: 0.3rem;
+}
+
+.review-card__shot {
+  margin: 0;
+  flex: 0 0 auto;
+  max-width: min(22rem, 80%);
+
+  // Uniform height, contained rather than cropped. These are almost always a
+  // before/after pair, and two shots at their natural sizes do not line up —
+  // which is exactly the comparison the section exists to make. Cropping would
+  // line them up by hiding the part that changed.
+  img {
+    display: block;
+    height: 11rem;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    object-position: top left;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+  }
+
+  figcaption {
+    margin-top: 0.25rem;
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+  }
+}
+
+.review-card__files {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.review-card__file {
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  color: var(--color-accent);
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}

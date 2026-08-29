@@ -103,6 +103,32 @@
   }
 
   <!--
+    What it looks like. A PR says the code changed; for a UI task the question
+    is what changed on screen, and until now the only way to answer it was to
+    check out the branch. Sits above the criteria because seeing the thing
+    should come before reading claims about it.
+  -->
+  @if (shots().length) {
+    <section class="review-card__shots" data-testid="review-card-shots">
+      @for (shot of shots(); track shot.url) {
+        <figure class="review-card__shot">
+          <a [href]="shot.url" target="_blank" rel="noopener">
+            <img [src]="shot.url" [alt]="shot.label" loading="lazy" />
+          </a>
+          <figcaption>{{ shot.label }}</figcaption>
+        </figure>
+      }
+    </section>
+  }
+  @if (otherArtifacts().length) {
+    <p class="review-card__files">
+      @for (a of otherArtifacts(); track a.url) {
+        <a class="review-card__file" [href]="a.url" target="_blank" rel="noopener">{{ a.label }} ↗</a>
+      }
+    </p>
+  }
+
+  <!--
     A checklist, not a count. "5 criteria could not be checked mechanically" is a
     shrug; the five criteria with the machine's work already marked off is a
     ten-second read. Falls back to the raw block before the verifier has run.

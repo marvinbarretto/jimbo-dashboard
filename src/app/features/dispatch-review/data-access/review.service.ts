@@ -31,6 +31,7 @@ interface ApiReviewItem {
   artifact_url: string | null;
   artifact_source: 'pr' | 'summary' | 'branch' | 'commit' | null;
   artifact_ref: string | null;
+  artifacts: Array<{ url: string; kind: 'image' | 'link'; label: string }>;
   project: { id: string; display_name: string | null; color_token: string | null;
              intent: string | null; success_criteria: string | null } | null;
   epic: { seq: string | null; title: string | null; why: string | null } | null;
@@ -151,6 +152,11 @@ export interface ReviewItem {
    * and "never verified" both render as blank tickboxes, and they are very
    * different claims about the work.
    */
+  /**
+   * What the delivery produced besides prose — screenshots above all. A PR
+   * says the code changed; it does not say what the change looks like.
+   */
+  artifacts: readonly DeliveryArtifact[];
   verification: ReviewVerification | null;
   /**
    * What this work is FOR, as the project already states it. Null when the
@@ -171,6 +177,13 @@ export interface ReviewProject {
   colorToken: string | null;
   intent: string | null;
   successCriteria: string | null;
+}
+
+export interface DeliveryArtifact {
+  url: string;
+  /** `image` renders inline; anything else is a labelled link. */
+  kind: 'image' | 'link';
+  label: string;
 }
 
 export interface ReviewVerification {
@@ -220,6 +233,7 @@ function toReviewItem(r: ApiReviewItem): ReviewItem {
     artifactUrl: r.artifact_url ?? null,
     artifactSource: r.artifact_source ?? null,
     artifactRef: r.artifact_ref ?? null,
+    artifacts: r.artifacts ?? [],
     project: r.project
       ? {
           id: r.project.id,

@@ -201,6 +201,10 @@ export class ReviewCard {
     return m ? m[1] : url;
   });
 
+  /** Screenshots first — they are the reason this section exists. */
+  readonly shots = computed(() => this.item().artifacts.filter(a => a.kind === 'image'));
+  readonly otherArtifacts = computed(() => this.item().artifacts.filter(a => a.kind !== 'image'));
+
   /** "Branch" / "Commit" — named by the agent, but not something we can open. */
   readonly refLabel = computed(() =>
     this.item().artifactSource === 'branch' ? 'Branch' : 'Commit',
