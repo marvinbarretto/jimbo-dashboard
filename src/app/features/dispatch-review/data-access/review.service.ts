@@ -344,6 +344,24 @@ export class ReviewService {
     });
   }
 
+  /**
+   * Bin → archive the note. For work whose purpose nobody can reconstruct.
+   *
+   * Archived, not deleted: the note, summary and artifact all survive, so the
+   * cost of being wrong is a search rather than the work.
+   */
+  bin(item: ReviewItem): void {
+    withOptimisticRemove(this._items, this.toast, {
+      prior: item,
+      request: this.http.post(`${this.base}/review/bin`, { note_id: item.noteId }),
+      errorMessage: 'Binning failed — card restored.',
+      onSuccess: () => {
+        this.toast.success(`${this.label(item)} binned — archived, not deleted. One commission slot freed.`);
+        this.loadPressure();
+      },
+    });
+  }
+
   /** Approve → note marked done. Optimistically drops the card. */
   approve(item: ReviewItem): void {
     withOptimisticRemove(this._items, this.toast, {

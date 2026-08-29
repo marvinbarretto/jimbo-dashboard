@@ -194,6 +194,10 @@ export class ReviewBoard {
     this.service.file(item);
   }
 
+  bin(item: ReviewItem): void {
+    this.service.bin(item);
+  }
+
   /** Re-run a dispatch whose PR went red. The only useful action on one. */
   retryHeld(held: HeldItem): void {
     this.service.retryHeld(held);

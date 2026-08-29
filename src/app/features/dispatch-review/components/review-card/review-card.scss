@@ -416,3 +416,23 @@
   &:hover { text-decoration: underline; }
   &:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 }
+
+// Quietest thing in the row. It is the right answer surprisingly often, but it
+// should never be the easiest one to hit by accident.
+.review-card__bin {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  &:hover { color: var(--color-danger); text-decoration: underline; }
+  &:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+}
+
+.review-card__bin-ask {
+  font-size: 0.8rem;
+  color: var(--color-warning);
+}

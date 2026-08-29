@@ -38,6 +38,7 @@ export class ReviewCard {
 
   readonly approve = output<void>();
   readonly fileOutput = output<void>();
+  readonly bin = output<void>();
   /** Carries the reason — sending work back without one is just a rejection. */
   readonly sendBack = output<string>();
   readonly openItem = output<void>();
@@ -54,6 +55,15 @@ export class ReviewCard {
   readonly rejecting = signal(false);
 
   toggleRejecting(): void { this.rejecting.update(v => !v); }
+
+  /**
+   * Binning is one click from a scroll, so it asks once. Archiving is
+   * reversible, but a card silently vanishing under the cursor is not the way
+   * to find that out.
+   */
+  readonly confirmingBin = signal(false);
+  toggleConfirmBin(): void { this.confirmingBin.update(v => !v); }
+  confirmBin(): void { this.confirmingBin.set(false); this.bin.emit(); }
 
   /**
    * Long summaries are clamped until asked for.
