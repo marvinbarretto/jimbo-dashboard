@@ -44,7 +44,10 @@ export class ActivityLogComponent {
     const filters = this.activeFilters();
     if (filters.has('all') || filters.size === 0) return this.events();
     return this.events().filter(e => {
-      if (filters.has('status')     && (e.type === 'grooming_status_changed' || e.type === 'rejected')) return true;
+      // A review decision is a status change — the terminal one. Grouping it
+      // with grooming moves means "status" answers "where has this got to",
+      // which is the question the filter is for.
+      if (filters.has('status')     && (e.type === 'grooming_status_changed' || e.type === 'rejected' || e.type === 'review_decided')) return true;
       if (filters.has('agent')      && e.type === 'agent_run_completed') return true;
       if (filters.has('assignment') && e.type === 'assigned') return true;
       if (filters.has('thread')     && e.type === 'thread_message_posted') return true;

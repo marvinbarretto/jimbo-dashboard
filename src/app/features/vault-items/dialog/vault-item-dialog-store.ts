@@ -21,6 +21,7 @@ import { ThreadService } from '../../thread/data-access/thread.service';
 import { ThreadCommands } from '../../thread/commands/thread-commands';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { computeReadiness, effectivePriority as computeEffectivePriority } from '@domain/vault/readiness';
+import { lifecycleState } from '@domain/vault/vault-item';
 import { computeNextAction } from '@domain/vault/next-action';
 import { actorId, projectId, vaultItemId, threadMessageId } from '@domain/ids';
 import { formatDatetime } from '@shared/utils/datetime.utils';
@@ -121,6 +122,27 @@ export class VaultItemDialogStore {
     const i = this.item();
     if (!i?.assigned_to) return undefined;
     return this.actorsService.getById(i.assigned_to);
+  });
+
+  /**
+   * The item's story is over — it was delivered and disposed of, or archived.
+   *
+   * The detail panel had no notion of this, so a task that had been dispatched,
+   * delivered, reviewed and filed still offered tickable acceptance criteria
+   * and a green "Ready to dispatch". Both invite an action on work that is
+   * finished, and the tickboxes in particular imply the criteria are still
+   * waiting on someone — when what actually satisfies them is a delivery
+   * nobody can tick into existence.
+   */
+  readonly isSettled = computed(() => {
+    const i = this.item();
+    return i ? lifecycleState(i) !== 'active' : false;
+  });
+
+  /** Which terminal state, so the panel can name it rather than just hide. */
+  readonly settledAs = computed(() => {
+    const i = this.item();
+    return i ? lifecycleState(i) : 'active';
   });
 
   readonly isGitHubItem = computed(() => this.item()?.source?.kind === 'github');

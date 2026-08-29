@@ -323,7 +323,16 @@
 
         <!-- Readiness is a dispatch concept — tasks only. Notes/bookmarks and
              epics don't get dispatched, so it would be a false signal on them. -->
-        @if (item.type === 'task' && !item.is_epic) {
+        <!-- Readiness is a dispatch concept — tasks only, and only while
+             dispatch is still ahead of the item. #2620 was dispatched,
+             delivered, reviewed and filed, and still read "Ready to dispatch";
+             the panel simply had no idea the execution half had happened. -->
+        @if (item.type === 'task' && !item.is_epic && store.isSettled()) {
+          <p class="v3__readiness">
+            <span class="v3__ready-dot v3__ready-dot--ok"></span>
+            {{ store.settledAs() === 'archived' ? 'Archived — no longer in flight' : 'Delivered and closed' }}
+          </p>
+        } @else if (item.type === 'task' && !item.is_epic) {
           <p class="v3__readiness">
             @if (store.readiness(); as r) {
               @if (r.verdict === 'ready') {
@@ -351,9 +360,11 @@
 
           <!-- readiness omitted here — it's the one-line verdict under the work;
                this panel is just "define done" (the AC checklist). -->
+          <!-- Read-only once the item is settled. A tickbox on a delivered and
+               filed task implies its criteria are still waiting on someone. -->
           <app-vault-item-delivery-block
             [criteria]="item.acceptance_criteria"
-            [editable]="true"
+            [editable]="!store.isSettled()"
             (criteriaChange)="store.updateCriteria($event)"
           />
         }

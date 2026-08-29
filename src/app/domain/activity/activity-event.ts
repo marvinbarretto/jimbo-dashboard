@@ -148,6 +148,27 @@ export interface RejectionEvent extends VaultEventBase {
   thread_message_id:  ThreadMessageId;
 }
 
+/**
+ * The operator's disposal of finished work — the end of an item's story, and
+ * the half of it the timeline could not tell.
+ *
+ * note_activity has carried these all along; the mapper simply had no case for
+ * them, so an item read as groomed and then abandoned when in fact it had been
+ * dispatched, delivered, reviewed and put away. #2620 showed a five-event
+ * history ending 71 days ago while its two most recent rows — the delivery,
+ * and Marvin filing it that morning — were dropped in the map.
+ *
+ * `filed` and `approved` both reach `done` and mean different things: one
+ * certifies the work, the other disposes of an output nobody needed to
+ * certify. The timeline has to keep them apart, since that distinction is
+ * exactly what the review gate exists to record.
+ */
+export interface ReviewDecidedEvent extends VaultEventBase {
+  type: 'review_decided';
+  disposition: 'approved' | 'filed' | 'binned' | 'sent_back';
+  reason: string | null;
+}
+
 export type VaultActivityEvent =
   | CreatedEvent
   | AssignedEvent
@@ -157,6 +178,7 @@ export type VaultActivityEvent =
   | GroomingStatusChangedEvent
   | ThreadMessagePostedEvent
   | AgentRunCompletedEvent
+  | ReviewDecidedEvent
   | RejectionEvent;
 
 // --- Project events ---

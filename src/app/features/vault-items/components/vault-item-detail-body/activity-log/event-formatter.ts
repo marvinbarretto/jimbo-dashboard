@@ -53,6 +53,18 @@ export function formatEvent(e: VaultActivityEvent): FormattedLine {
       return { ...base, actorId: e.actor_id, verb: threadVerb(e.message_kind), scrollToMessageId: e.message_id };
     case 'agent_run_completed':
       return { ...base, actorId: e.actor_id, verb: 'ran', summary: `— ${e.summary}` };
+    case 'review_decided': {
+      // "filed" and "approved" both end at done, and the difference is the
+      // whole point of the review gate: one certifies the work, the other
+      // disposes of an output nobody needed to certify.
+      const verb = {
+        approved:  'approved',
+        filed:     'filed',
+        binned:    'binned',
+        sent_back: 'sent back',
+      }[e.disposition];
+      return { ...base, actorId: e.actor_id, verb, summary: e.reason ? `— ${e.reason}` : '' };
+    }
     case 'rejected':
       return { ...base, actorId: e.actor_id, verb: 'rejected', target: e.to_owner, summary: `— ${e.reason}`, scrollToMessageId: e.thread_message_id };
   }

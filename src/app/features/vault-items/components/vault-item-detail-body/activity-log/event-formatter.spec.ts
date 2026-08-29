@@ -103,3 +103,35 @@ describe('formatEvent — standard line shape', () => {
     });
   });
 });
+
+/**
+ * The execution half of an item's life. Every one of these actions has always
+ * been written to note_activity; the mapper had no case for them, so a
+ * delivered-and-filed item read as groomed and then abandoned — #2620 showed a
+ * history ending 71 days ago while its two newest rows were the delivery and
+ * Marvin filing it that morning.
+ */
+describe('formatEvent — review decisions', () => {
+  const base = {
+    id: activityId('a1'),
+    at: '2026-08-29T11:46:43Z',
+    vault_item_id: vaultItemId('note_x'),
+    actor_id: actorId('marvin'),
+  } as const;
+
+  it('keeps filed and approved distinguishable', () => {
+    const filed = formatEvent({ ...base, type: 'review_decided', disposition: 'filed', reason: 'output, not a decision' });
+    const approved = formatEvent({ ...base, type: 'review_decided', disposition: 'approved', reason: null });
+
+    expect(filed.verb).toBe('filed');
+    expect(filed.summary).toContain('output, not a decision');
+    expect(approved.verb).toBe('approved');
+    // Both end at done; the review gate exists to record which one happened.
+    expect(filed.verb).not.toBe(approved.verb);
+  });
+
+  it('names the other two dispositions', () => {
+    expect(formatEvent({ ...base, type: 'review_decided', disposition: 'binned', reason: null }).verb).toBe('binned');
+    expect(formatEvent({ ...base, type: 'review_decided', disposition: 'sent_back', reason: null }).verb).toBe('sent back');
+  });
+});

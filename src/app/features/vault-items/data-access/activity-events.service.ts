@@ -122,6 +122,27 @@ function toVaultEvent(row: ApiNoteActivity): VaultActivityEvent | null {
       return agentRun(base, 'dispatch/vault-decompose', row);
     case 'submitted_analysis':
       return agentRun(base, 'dispatch/vault-analyse', row);
+    // The execution half of an item's life, which the timeline could not tell.
+    // Every one of these has always been in note_activity; there was simply no
+    // case for them, so a delivered-and-filed item read as groomed and then
+    // abandoned. #2620's two most recent rows — the delivery, and Marvin
+    // filing it — were both dropped here.
+    // These rows carry no `reason` — the prose lives on the dispatch as
+    // result_summary, which note_activity does not join. Without a fallback the
+    // line renders as a bare "ran", which for the delivery that put the item in
+    // front of Marvin is the least informative moment in the timeline.
+    case 'commission_completed':
+      return agentRun(base, 'commission', row, 'delivered the commissioned work');
+    case 'recon_completed':
+      return agentRun(base, 'recon', row, 'finished a recon pass');
+    case 'review_approved':
+      return { ...base, type: 'review_decided', disposition: 'approved', reason: row.reason };
+    case 'review_filed':
+      return { ...base, type: 'review_decided', disposition: 'filed', reason: row.reason };
+    case 'review_binned':
+      return { ...base, type: 'review_decided', disposition: 'binned', reason: row.reason };
+    case 'review_sent_back':
+      return { ...base, type: 'review_decided', disposition: 'sent_back', reason: row.reason };
     case 'completion_changed':
       return {
         ...base, type: 'completion_changed',
@@ -173,7 +194,7 @@ type EventBase = {
 // Adapt a grooming submit audit row into an agent_run_completed event. `summary`
 // carries the disposition (e.g. "deep-read: ask — …"); model/dispatch come from
 // the row's context blob when present.
-function agentRun(base: EventBase, skill: string, row: ApiNoteActivity): VaultActivityEvent {
+function agentRun(base: EventBase, skill: string, row: ApiNoteActivity, fallbackSummary = ''): VaultActivityEvent {
   // context arrives as a JSON string from the API (see ApiNoteActivity) — parse
   // it to read the dispatch id / model and the joined cost rollup (context._run).
   const ctx = parseContext(row.context);
@@ -186,7 +207,7 @@ function agentRun(base: EventBase, skill: string, row: ApiNoteActivity): VaultAc
     skill_id: skillId(skill),
     dispatch_id: did != null ? dispatchId(String(did)) : null,
     outcome: 'success',
-    summary: row.reason ?? '',
+    summary: row.reason ?? fallbackSummary,
     decisions: null,
     reasoning: null,
     from_status: null,
