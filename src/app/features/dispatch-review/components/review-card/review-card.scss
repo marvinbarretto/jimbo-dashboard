@@ -390,3 +390,29 @@
 .review-card {
   border-left: 3px solid color-mix(in srgb, var(--proj-tint, var(--color-border)) 70%, var(--color-border));
 }
+
+// The absence, named. Warm rather than red: nothing has failed — but deciding
+// against a goal nobody stated is the thing this card exists to prevent.
+.review-card__why-missing {
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  border-left: 2px solid var(--color-warning);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: color-mix(in srgb, var(--color-warning) 7%, transparent);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.review-card__why-fix {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--color-accent);
+  cursor: pointer;
+
+  &:hover { text-decoration: underline; }
+  &:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+}

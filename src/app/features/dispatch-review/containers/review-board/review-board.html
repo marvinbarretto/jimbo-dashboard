@@ -139,7 +139,8 @@
               (approve)="approve(item)"
               (fileOutput)="fileOutput(item)"
               (sendBack)="sendBack(item, $event)"
-              (openItem)="openItem(item.seq)" />
+              (openItem)="openItem(item.seq)"
+              (openEpic)="openItem(item.epic?.seq ?? null)" />
           }
         </app-ui-stack>
       </app-ui-section>

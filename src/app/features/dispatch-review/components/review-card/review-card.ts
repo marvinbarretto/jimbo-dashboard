@@ -41,6 +41,8 @@ export class ReviewCard {
   /** Carries the reason — sending work back without one is just a rejection. */
   readonly sendBack = output<string>();
   readonly openItem = output<void>();
+  /** Open the EPIC, to give it the Why it is missing. */
+  readonly openEpic = output<void>();
 
   /**
    * Whether the send-back reason box is open.
@@ -231,19 +233,14 @@ export class ReviewCard {
   }
 
   /**
-   * The project's own statement of why this work exists.
+   * Why this line of work exists, from the epic that owns it.
    *
-   * Not new schema — `intent` and `success_criteria` have been columns on
-   * projects all along and are populated for most active ones. The review card
-   * simply never joined them, so every row asked for a decision without ever
-   * saying what the decision was in service of.
+   * Was the PROJECT's intent, which answered a question Marvin never asks — he
+   * always knows what a project is for. The uncertainty is one level down: does
+   * THIS feature help, who for, how would we tell. Null here is not a blank to
+   * be filled with something else; it is the finding.
    */
-  readonly why = computed(() => {
-    const p = this.item().project;
-    if (!p) return null;
-    if (!p.intent && !p.successCriteria) return null;
-    return { intent: p.intent, success: p.successCriteria, name: p.displayName ?? p.id };
-  });
+  readonly why = computed(() => this.item().epic?.why ?? null);
 
   /** card-parent-link takes a number; the wire carries seq as a string. */
   readonly epicSeq = computed(() => {

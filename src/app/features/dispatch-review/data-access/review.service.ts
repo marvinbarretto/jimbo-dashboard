@@ -33,7 +33,7 @@ interface ApiReviewItem {
   artifact_ref: string | null;
   project: { id: string; display_name: string | null; color_token: string | null;
              intent: string | null; success_criteria: string | null } | null;
-  epic: { seq: string | null; title: string | null } | null;
+  epic: { seq: string | null; title: string | null; why: string | null } | null;
   verification: {
     kind: string;
     routing: string;
@@ -157,8 +157,12 @@ export interface ReviewItem {
    * item belongs to no project — which is a routing problem, not a review.
    */
   project: ReviewProject | null;
-  /** The parent this sits under, so a subtask reads as part of something. */
-  epic: { seq: string | null; title: string | null } | null;
+  /**
+   * The parent this sits under. `why` is the epic's own `## Why` block, and
+   * null means nobody has said why this line of work exists — which the card
+   * shows as the gap it is, rather than substituting the project's intent.
+   */
+  epic: { seq: string | null; title: string | null; why: string | null } | null;
 }
 
 export interface ReviewProject {

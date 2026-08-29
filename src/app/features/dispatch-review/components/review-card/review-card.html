@@ -142,27 +142,31 @@
   }
 
   <!--
-    "Why this exists", from the project's own record. Collapsed, because on a
-    good day you already know — but the 68-day items are 68 days old precisely
-    because their purpose had gone cold, and re-deriving it from the title was
-    the expensive part.
+    Why this line of work exists, from the epic that owns it.
+    Its absence is the finding, not a blank to fill with the project's intent —
+    that answers "what is this project for", which Marvin never needs asking.
   -->
   @if (why(); as w) {
     <section class="review-card__why">
       <button type="button" class="review-card__why-toggle" (click)="toggleWhy()"
               [attr.aria-expanded]="whyOpen()">
         <span aria-hidden="true">{{ whyOpen() ? '▾' : '▸' }}</span>
-        Why this exists · {{ w.name }}
+        Why this exists · epic #{{ item().epic?.seq }}
       </button>
       @if (whyOpen()) {
-        @if (w.intent) {
-          <p class="review-card__why-row"><span class="review-card__why-label">Intent</span>{{ w.intent }}</p>
-        }
-        @if (w.success) {
-          <p class="review-card__why-row"><span class="review-card__why-label">Success</span>{{ w.success }}</p>
-        }
+        <p class="review-card__why-row">{{ w }}</p>
       }
     </section>
+  } @else if (item().epic; as epic) {
+    <!-- Named, with the way to fix it. Deciding without this is the "I don't
+         know why this epic even exists" problem, and it is one click away. -->
+    <p class="review-card__why-missing" data-testid="review-card-no-why">
+      Epic #{{ epic.seq }} doesn't say why it exists — so there's no stated goal
+      to judge this against.
+      <button type="button" class="review-card__why-fix" (click)="openEpic.emit()">
+        Say why →
+      </button>
+    </p>
   }
 
   @if (item().resultSummary; as summary) {
