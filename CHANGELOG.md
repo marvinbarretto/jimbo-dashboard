@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.206](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.205...v0.0.206) (2026-08-29)
+
+
+### Bug Fixes
+
+* **vault-item:** the delivery line still rendered as a bare "ran" ([94c774b](https://github.com/marvinbarretto/jimbo-dashboard/commit/94c774b20ec3c9930c451b5eb134d382d280075b))
+
 ### [0.0.205](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.204...v0.0.205) (2026-08-29)
 
 
