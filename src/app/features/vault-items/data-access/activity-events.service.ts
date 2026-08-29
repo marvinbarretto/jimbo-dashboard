@@ -207,7 +207,10 @@ function agentRun(base: EventBase, skill: string, row: ApiNoteActivity, fallback
     skill_id: skillId(skill),
     dispatch_id: did != null ? dispatchId(String(did)) : null,
     outcome: 'success',
-    summary: row.reason ?? fallbackSummary,
+    // `||` not `??`: commission_completed rows carry reason as an EMPTY STRING
+    // rather than null, so the nullish fallback never fired and the delivery
+    // still rendered as a bare "ran".
+    summary: row.reason || fallbackSummary,
     decisions: null,
     reasoning: null,
     from_status: null,
