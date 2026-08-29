@@ -51,8 +51,17 @@ export function formatEvent(e: VaultActivityEvent): FormattedLine {
       return { ...base, actorId: e.actor_id, verb: 'unarchived', summary: e.note ? `— ${e.note}` : '' };
     case 'thread_message_posted':
       return { ...base, actorId: e.actor_id, verb: threadVerb(e.message_kind), scrollToMessageId: e.message_id };
-    case 'agent_run_completed':
-      return { ...base, actorId: e.actor_id, verb: 'ran', summary: `— ${e.summary}` };
+    case 'agent_run_completed': {
+      // Compact mode hides agent-run summaries (see event-line.html) because
+      // grooming passes are chatty. That makes the VERB the only compact-visible
+      // part — and "ran" is the wrong word for the delivery that put the item in
+      // front of Marvin. That moment is a milestone in the item's story, not
+      // another pass over it.
+      const verb = e.skill_id === 'commission' ? 'delivered'
+        : e.skill_id === 'recon' ? 'scouted'
+        : 'ran';
+      return { ...base, actorId: e.actor_id, verb, summary: `— ${e.summary}` };
+    }
     case 'review_decided': {
       // "filed" and "approved" both end at done, and the difference is the
       // whole point of the review gate: one certifies the work, the other
