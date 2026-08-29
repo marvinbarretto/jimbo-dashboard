@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.203](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.202...v0.0.203) (2026-08-29)
+
+
+### Features
+
+* **review-card:** bin it — the disposal the queue was missing ([3f589bc](https://github.com/marvinbarretto/jimbo-dashboard/commit/3f589bca90587021491b912d80eba5fefe873ecd))
+
 ### [0.0.202](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.201...v0.0.202) (2026-08-29)
 
 
