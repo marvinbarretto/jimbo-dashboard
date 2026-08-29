@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.202](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.201...v0.0.202) (2026-08-29)
+
+
+### Bug Fixes
+
+* **review-card:** show the EPIC's why, or name that there isn't one ([92d1f81](https://github.com/marvinbarretto/jimbo-dashboard/commit/92d1f818f8265e22cfb9a4ad4e6e5d9eba980630)), closes [#2812](https://github.com/marvinbarretto/jimbo-dashboard/issues/2812)
+
 ### [0.0.201](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.200...v0.0.201) (2026-08-28)
 
 
