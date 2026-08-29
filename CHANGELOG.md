@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.205](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.204...v0.0.205) (2026-08-29)
+
+
+### Bug Fixes
+
+* **vault-item:** the timeline stopped at grooming and never told the rest ([745e833](https://github.com/marvinbarretto/jimbo-dashboard/commit/745e83398ea4422f60b3473369bae3e4334d958b)), closes [#2620](https://github.com/marvinbarretto/jimbo-dashboard/issues/2620)
+
 ### [0.0.204](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.203...v0.0.204) (2026-08-29)
 
 
