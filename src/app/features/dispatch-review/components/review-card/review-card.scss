@@ -491,3 +491,11 @@
 
   &:hover { text-decoration: underline; }
 }
+
+// Says the PR is the real gate. Quiet — it removes a worry rather than adding
+// one, and a loud note here would compete with the artifact link above it.
+.review-card__pr-note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}

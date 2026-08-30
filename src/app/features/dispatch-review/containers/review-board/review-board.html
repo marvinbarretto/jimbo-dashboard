@@ -122,13 +122,14 @@
             <p class="review-bulk">
               @if (confirmingFileAll()) {
                 <span class="review-bulk__ask">
-                  File {{ fileableItems().length }} reports — marks each done without certifying it?
+                  Mark {{ fileableItems().length }} reports done without reviewing them?
+                  Each stays in the vault; none is certified against its criteria.
                 </span>
-                <app-ui-button variant="primary" size="sm" (pressed)="fileAll()">Yes, file them</app-ui-button>
+                <app-ui-button variant="primary" size="sm" (pressed)="fileAll()">Yes, mark them done</app-ui-button>
                 <app-ui-button variant="ghost" size="sm" (pressed)="toggleConfirmFileAll()">Cancel</app-ui-button>
               } @else {
                 <app-ui-button variant="ghost" size="sm" (pressed)="toggleConfirmFileAll()">
-                  File all {{ fileableItems().length }} reports
+                  Mark all {{ fileableItems().length }} done — unreviewed
                 </app-ui-button>
               }
             </p>

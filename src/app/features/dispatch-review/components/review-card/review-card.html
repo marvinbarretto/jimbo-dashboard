@@ -103,6 +103,18 @@
   }
 
   <!--
+    A merged PR already closes the item: the GitHub webhook sets pr_state and
+    marks the note done, with an hourly reconciler behind it for the deliveries
+    GitHub drops. Approving here as well is not harmful, just redundant — and
+    not knowing that is how you end up doing both, or neither.
+  -->
+  @if (item().prState === 'open') {
+    <p class="review-card__pr-note">
+      Merging the PR closes this item automatically — you don't need to approve here too.
+    </p>
+  }
+
+  <!--
     What it looks like. A PR says the code changed; for a UI task the question
     is what changed on screen, and until now the only way to answer it was to
     check out the branch. Sits above the criteria because seeing the thing
@@ -190,7 +202,7 @@
       Epic #{{ epic.seq }} doesn't say why it exists — so there's no stated goal
       to judge this against.
       <button type="button" class="review-card__why-fix" (click)="openEpic.emit()">
-        Say why →
+        Open epic →
       </button>
     </p>
   }
@@ -247,8 +259,12 @@
       <!-- An audit or analysis: there is something to read, nothing to certify.
            Filing is disposal, and says so — approving would claim the criteria
            were checked, which for a report is a claim nobody made. -->
-      <app-ui-button variant="primary" size="sm" (pressed)="fileOutput.emit()">File it</app-ui-button>
-      <app-ui-button variant="ghost" size="sm" (pressed)="approve.emit()">Approve instead</app-ui-button>
+      <!-- Names the state it reaches and what it is NOT doing. "File it"
+           implied filing INTO something; nothing moves anywhere. -->
+      <app-ui-button variant="primary" size="sm" (pressed)="fileOutput.emit()">
+        Mark done — unreviewed
+      </app-ui-button>
+      <app-ui-button variant="ghost" size="sm" (pressed)="approve.emit()">Approve</app-ui-button>
       <app-ui-button variant="ghost" size="sm" (pressed)="toggleRejecting()">Send back</app-ui-button>
       <button type="button" class="review-card__archive" (click)="toggleConfirmArchive()">Archive</button>
     } @else {
