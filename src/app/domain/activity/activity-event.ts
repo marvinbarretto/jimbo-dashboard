@@ -158,14 +158,14 @@ export interface RejectionEvent extends VaultEventBase {
  * history ending 71 days ago while its two most recent rows — the delivery,
  * and Marvin filing it that morning — were dropped in the map.
  *
- * `filed` and `approved` both reach `done` and mean different things: one
+ * `done_unreviewed` and `approved` both reach `done` and mean different things: one
  * certifies the work, the other disposes of an output nobody needed to
  * certify. The timeline has to keep them apart, since that distinction is
  * exactly what the review gate exists to record.
  */
 export interface ReviewDecidedEvent extends VaultEventBase {
   type: 'review_decided';
-  disposition: 'approved' | 'filed' | 'archived' | 'sent_back';
+  disposition: 'approved' | 'done_unreviewed' | 'archived' | 'sent_back';
   reason: string | null;
 }
 

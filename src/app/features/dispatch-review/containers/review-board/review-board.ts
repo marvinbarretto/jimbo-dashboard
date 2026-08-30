@@ -177,21 +177,21 @@ export class ReviewBoard {
    * time is the same click repeated, which is exactly the work a person should
    * not be doing.
    */
-  readonly fileableItems = computed(() => this.items().filter(i =>
+  readonly unreviewableItems = computed(() => this.items().filter(i =>
     i.verification?.kind === 'report' && !!(i.artifactUrl ?? i.artifactRef),
   ));
 
   /** Confirm before a bulk disposal — it is cheap to click and not undoable. */
-  readonly confirmingFileAll = signal(false);
-  toggleConfirmFileAll(): void { this.confirmingFileAll.update(v => !v); }
+  readonly confirmingMarkAll = signal(false);
+  toggleConfirmMarkAll(): void { this.confirmingMarkAll.update(v => !v); }
 
-  fileAll(): void {
-    this.confirmingFileAll.set(false);
-    for (const item of this.fileableItems()) this.service.file(item);
+  markAllDoneUnreviewed(): void {
+    this.confirmingMarkAll.set(false);
+    for (const item of this.unreviewableItems()) this.service.markDoneUnreviewed(item);
   }
 
-  fileOutput(item: ReviewItem): void {
-    this.service.file(item);
+  markDoneUnreviewed(item: ReviewItem): void {
+    this.service.markDoneUnreviewed(item);
   }
 
   archive(item: ReviewItem): void {

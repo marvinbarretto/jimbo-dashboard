@@ -78,11 +78,12 @@
                   @if (h.prUrl; as url) {
                     <a class="review-held__pr" [href]="url" target="_blank" rel="noopener">PR ↗</a>
                   }
-                  <!-- Red work's only useful action: run it again. Standing
-                       anchors have no such action — they are not broken. -->
+                  <!-- Red work's only useful action. Called retry, matching the
+                       card action and POST /api/dispatch/{id}/retry — one word
+                       for one act. Standing anchors get none; they aren't broken. -->
                   @if (h.reason === 'red_ci') {
                     <app-ui-button variant="ghost" size="sm" (pressed)="retryHeld(h)">
-                      Re-run
+                      Retry
                     </app-ui-button>
                   }
                 </li>
@@ -118,18 +119,18 @@
 
           <!-- Bulk disposal for the one group where the same click repeats.
                Confirmed rather than immediate: cheap to hit, not undoable. -->
-          @if (g.key === 'check' && fileableItems().length > 1) {
+          @if (g.key === 'check' && unreviewableItems().length > 1) {
             <p class="review-bulk">
-              @if (confirmingFileAll()) {
+              @if (confirmingMarkAll()) {
                 <span class="review-bulk__ask">
-                  Mark {{ fileableItems().length }} reports done without reviewing them?
+                  Mark {{ unreviewableItems().length }} reports done without reviewing them?
                   Each stays in the vault; none is certified against its criteria.
                 </span>
-                <app-ui-button variant="primary" size="sm" (pressed)="fileAll()">Yes, mark them done</app-ui-button>
-                <app-ui-button variant="ghost" size="sm" (pressed)="toggleConfirmFileAll()">Cancel</app-ui-button>
+                <app-ui-button variant="primary" size="sm" (pressed)="markAllDoneUnreviewed()">Yes, mark them done</app-ui-button>
+                <app-ui-button variant="ghost" size="sm" (pressed)="toggleConfirmMarkAll()">Cancel</app-ui-button>
               } @else {
-                <app-ui-button variant="ghost" size="sm" (pressed)="toggleConfirmFileAll()">
-                  Mark all {{ fileableItems().length }} done — unreviewed
+                <app-ui-button variant="ghost" size="sm" (pressed)="toggleConfirmMarkAll()">
+                  Mark all {{ unreviewableItems().length }} done — unreviewed
                 </app-ui-button>
               }
             </p>
@@ -138,7 +139,7 @@
             <app-review-card
               [item]="item"
               (approve)="approve(item)"
-              (fileOutput)="fileOutput(item)"
+              (markDoneUnreviewed)="markDoneUnreviewed(item)"
               (archive)="archive(item)"
               (sendBack)="sendBack(item, $event)"
               (openItem)="openItem(item.seq)"

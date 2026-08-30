@@ -37,7 +37,7 @@ export class ReviewCard {
   readonly item = input.required<ReviewItem>();
 
   readonly approve = output<void>();
-  readonly fileOutput = output<void>();
+  readonly markDoneUnreviewed = output<void>();
   readonly archive = output<void>();
   /** Carries the reason — sending work back without one is just a rejection. */
   readonly sendBack = output<string>();
@@ -149,7 +149,7 @@ export class ReviewCard {
    * acceptance criteria were met. Offered only when something exists to file;
    * a report with no artifact at all is a different problem.
    */
-  readonly fileable = computed(() =>
+  readonly canMarkDoneUnreviewed = computed(() =>
     this.item().verification?.kind === 'report'
     && !!(this.item().artifactUrl ?? this.item().artifactRef),
   );

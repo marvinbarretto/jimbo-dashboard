@@ -255,13 +255,13 @@
       <app-ui-button variant="ghost" size="sm" (pressed)="approve.emit()">Approve anyway</app-ui-button>
       <app-ui-button variant="ghost" size="sm" (pressed)="toggleRejecting()">Send back</app-ui-button>
       <button type="button" class="review-card__archive" (click)="toggleConfirmArchive()">Archive</button>
-    } @else if (fileable()) {
+    } @else if (canMarkDoneUnreviewed()) {
       <!-- An audit or analysis: there is something to read, nothing to certify.
            Filing is disposal, and says so — approving would claim the criteria
            were checked, which for a report is a claim nobody made. -->
       <!-- Names the state it reaches and what it is NOT doing. "File it"
            implied filing INTO something; nothing moves anywhere. -->
-      <app-ui-button variant="primary" size="sm" (pressed)="fileOutput.emit()">
+      <app-ui-button variant="primary" size="sm" (pressed)="markDoneUnreviewed.emit()">
         Mark done — unreviewed
       </app-ui-button>
       <app-ui-button variant="ghost" size="sm" (pressed)="approve.emit()">Approve</app-ui-button>

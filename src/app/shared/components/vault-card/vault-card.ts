@@ -55,7 +55,7 @@ export interface CardAction {
 // the underlying icon never touches these factories.
 function groomingActions(ctx: GroomingCardContext): CardAction[] {
   const status = ctx.item.grooming_status;
-  const archive: CardAction = { key: 'archive', label: 'archive', variant: 'neutral', icon: 'archive'  };
+  const archive: CardAction = { key: 'archive', label: 'archive', variant: 'neutral', icon: 'archive'  };  // status='archived', reversible
   const assign:  CardAction = { key: 'assign',  label: 'assign',  variant: 'neutral'                   };
   // Delete is for "shouldn't have existed" rows — only offered in the pre-
   // dispatch funnel where investment is low. Once an item is decomposed or
@@ -107,7 +107,10 @@ function dispatchActions(ctx: DispatchCardContext): CardAction[] {
     ];
   }
   if (status === 'completed') {
-    return [{ key: 'dismiss', label: 'dismiss', variant: 'neutral' }];
+    // "dismiss" read as hiding a card. It is a hard DELETE of the
+    // dispatch_queue row — and with no FK from delivery_verifications, it
+    // silently orphans that row's verdict. Named for what it destroys.
+    return [{ key: 'dismiss', label: 'delete run', variant: 'danger' }];
   }
   // approved / dispatching / running — passive, system-managed.
   return [];

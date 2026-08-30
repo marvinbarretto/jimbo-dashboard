@@ -1,5 +1,5 @@
 <form class="resolve-form" [formGroup]="form" (ngSubmit)="submit()">
-  <h3 class="resolve-form__title">Resolve and archive</h3>
+  <h3 class="resolve-form__title">Archive with a note</h3>
 
   <label class="resolve-form__field">
     <span class="resolve-form__label">What happened? (≥ 12 chars, supports markdown)</span>
@@ -17,7 +17,7 @@
   <div class="resolve-form__actions">
     <button type="button" class="resolve-form__cancel" (click)="cancel()">Cancel</button>
     <button type="submit" class="resolve-form__submit" [disabled]="form.invalid">
-      Resolve and archive
+      Archive with a note
     </button>
   </div>
 </form>

@@ -119,11 +119,11 @@ describe('formatEvent — review decisions', () => {
     actor_id: actorId('marvin'),
   } as const;
 
-  it('keeps filed and approved distinguishable', () => {
-    const filed = formatEvent({ ...base, type: 'review_decided', disposition: 'filed', reason: 'output, not a decision' });
+  it('keeps done-unreviewed and approved distinguishable', () => {
+    const filed = formatEvent({ ...base, type: 'review_decided', disposition: 'done_unreviewed', reason: 'output, not a decision' });
     const approved = formatEvent({ ...base, type: 'review_decided', disposition: 'approved', reason: null });
 
-    expect(filed.verb).toBe('filed');
+    expect(filed.verb).toBe('marked done, unreviewed');
     expect(filed.summary).toContain('output, not a decision');
     expect(approved.verb).toBe('approved');
     // Both end at done; the review gate exists to record which one happened.

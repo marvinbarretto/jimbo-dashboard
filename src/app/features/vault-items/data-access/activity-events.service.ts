@@ -137,8 +137,8 @@ function toVaultEvent(row: ApiNoteActivity): VaultActivityEvent | null {
       return agentRun(base, 'recon', row, 'finished a recon pass');
     case 'review_approved':
       return { ...base, type: 'review_decided', disposition: 'approved', reason: row.reason };
-    case 'review_filed':
-      return { ...base, type: 'review_decided', disposition: 'filed', reason: row.reason };
+    case 'review_done_unreviewed':
+      return { ...base, type: 'review_decided', disposition: 'done_unreviewed', reason: row.reason };
     case 'review_archived':
       return { ...base, type: 'review_decided', disposition: 'archived', reason: row.reason };
     case 'review_sent_back':

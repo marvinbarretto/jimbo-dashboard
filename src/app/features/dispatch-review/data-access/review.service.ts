@@ -333,7 +333,7 @@ export class ReviewService {
       .post(`${this.base}/${encodeURIComponent(held.dispatchId)}/retry`, {})
       .subscribe({
         next: () => {
-          this.toast.success(`#${held.seq ?? held.noteId} queued to run again`);
+          this.toast.success(`#${held.seq ?? held.noteId} queued for retry`);
           this.load();
         },
         error: () => this.toast.error('Could not queue that dispatch for a retry.'),
@@ -346,13 +346,13 @@ export class ReviewService {
    * report. The server logs it as `review_filed` so the trail never blurs
    * "someone checked this" with "someone put this away".
    */
-  file(item: ReviewItem): void {
+  markDoneUnreviewed(item: ReviewItem): void {
     withOptimisticRemove(this._items, this.toast, {
       prior: item,
-      request: this.http.post(`${this.base}/review/file`, { note_id: item.noteId }),
-      errorMessage: 'Filing failed — card restored.',
+      request: this.http.post(`${this.base}/review/done-unreviewed`, { note_id: item.noteId }),
+      errorMessage: 'Could not mark it done — card restored.',
       onSuccess: () => {
-        this.toast.success(`${this.label(item)} filed — output, not adjudicated. One commission slot freed.`);
+        this.toast.success(`${this.label(item)} marked done, unreviewed — not certified against its criteria. One commission slot freed.`);
         this.loadPressure();
       },
     });
