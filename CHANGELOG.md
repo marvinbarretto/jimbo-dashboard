@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.208](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.207...v0.0.208) (2026-08-30)
+
+
+### Features
+
+* **vault-item:** give an epic's purpose a section of its own ([ee1e84b](https://github.com/marvinbarretto/jimbo-dashboard/commit/ee1e84b33efd874d70a178e0260b481dacedd2e9))
+
 ### [0.0.207](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.206...v0.0.207) (2026-08-29)
 
 
