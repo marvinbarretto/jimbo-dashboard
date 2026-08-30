@@ -321,6 +321,33 @@
           (bodyChange)="store.updateBody($event)"
         />
 
+        <!--
+          An epic's purpose, given a section of its own.
+          A subtask inherits its why and cannot restate it, so this is the only
+          place the question "does this line of work help, and how would we
+          tell" can be answered. Kept next to the body because that is where it
+          is written — a `## Why` block, convention not column.
+        -->
+        @if (item.is_epic) {
+          <section class="v3__epic-why" [class.v3__epic-why--missing]="!store.epicWhy()">
+            <h3 class="v3__epic-why-label">Why this epic exists</h3>
+            @if (store.epicWhy(); as why) {
+              <p class="v3__epic-why-text">{{ why }}</p>
+            } @else {
+              <p class="v3__epic-why-empty">
+                Not stated. Every card under this epic asks you to judge work
+                against a goal nobody has written down. Add a
+                <code>## Why</code> block to the body above:
+              </p>
+              <ul class="v3__epic-why-prompts">
+                @for (prompt of store.epicWhyPrompts; track prompt) {
+                  <li>{{ prompt }}:</li>
+                }
+              </ul>
+            }
+          </section>
+        }
+
         <!-- Readiness is a dispatch concept — tasks only. Notes/bookmarks and
              epics don't get dispatched, so it would be a false signal on them. -->
         <!-- Readiness is a dispatch concept — tasks only, and only while

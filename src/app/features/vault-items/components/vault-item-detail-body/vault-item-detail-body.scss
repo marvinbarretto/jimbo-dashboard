@@ -559,3 +559,54 @@
   color: var(--color-danger, #ef4444);
 }
 
+
+// An epic's purpose. Warm-bordered when absent, because "nobody has said why
+// this exists" is a finding about the work, not a missing form field.
+.v3__epic-why {
+  margin-top: 0.9rem;
+  padding: 0.6rem 0.8rem;
+  border-left: 2px solid var(--color-border);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+
+  &--missing {
+    border-left-color: var(--color-warning);
+    background: color-mix(in srgb, var(--color-warning) 6%, transparent);
+  }
+}
+
+.v3__epic-why-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.v3__epic-why-text {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.v3__epic-why-empty {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-text);
+  }
+}
+
+.v3__epic-why-prompts {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}

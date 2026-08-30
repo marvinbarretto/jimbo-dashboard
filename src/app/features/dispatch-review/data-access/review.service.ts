@@ -29,7 +29,7 @@ interface ApiReviewItem {
   completed_at: string | null;
   criteria: Array<{ criterion: string; verdict: string; note: string }> | null;
   artifact_url: string | null;
-  artifact_source: 'pr' | 'summary' | 'branch' | 'commit' | null;
+  artifact_source: 'pr' | 'summary' | 'branch' | 'commit' | 'file' | null;
   artifact_ref: string | null;
   artifacts: Array<{ url: string; kind: 'image' | 'link'; label: string }>;
   project: { id: string; display_name: string | null; color_token: string | null;
@@ -137,7 +137,7 @@ export interface ReviewItem {
    * agent's prose and may be a source it read rather than a thing it made, so
    * the card must label it as found-in-summary, never as verified.
    */
-  artifactSource: 'pr' | 'summary' | 'branch' | 'commit' | null;
+  artifactSource: 'pr' | 'summary' | 'branch' | 'commit' | 'file' | null;
   /**
    * A deliverable the agent named that is not openable — a branch or a commit.
    * Shown as a labelled reference, never as a link: the repo is usually

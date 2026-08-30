@@ -175,11 +175,15 @@ export class ReviewCard {
     return this.item().artifactUrl ? 'approve' : 'open';
   });
 
-  /** Says what opening is FOR, which differs by why we're sending you there. */
-  readonly openLabel = computed(() => {
-    if (this.declined()) return 'Open and settle';
-    return this.item().artifactUrl ? 'Open item for context' : 'Open item to judge';
-  });
+  /**
+   * Names what the button OPENS, never what it achieves.
+   *
+   * It said "Open item to judge" on a card whose deliverable was a markdown
+   * file the modal does not contain — promising the artifact and opening the
+   * brief. A label that oversells the destination is worse than a plain one:
+   * you click expecting the work and get its paperwork.
+   */
+  readonly openLabel = computed(() => this.declined() ? 'Open and settle' : 'Open item');
 
   /**
    * A PR is the deliverable; a summary-derived URL is only a link the agent
@@ -205,10 +209,14 @@ export class ReviewCard {
   readonly shots = computed(() => this.item().artifacts.filter(a => a.kind === 'image'));
   readonly otherArtifacts = computed(() => this.item().artifacts.filter(a => a.kind !== 'image'));
 
-  /** "Branch" / "Commit" — named by the agent, but not something we can open. */
-  readonly refLabel = computed(() =>
-    this.item().artifactSource === 'branch' ? 'Branch' : 'Commit',
-  );
+  /** Named by the agent, but not something this card can open. */
+  readonly refLabel = computed(() => {
+    switch (this.item().artifactSource) {
+      case 'branch': return 'Branch';
+      case 'commit': return 'Commit';
+      default:       return 'File';
+    }
+  });
 
   /**
    * Four states, not three.

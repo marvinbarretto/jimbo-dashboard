@@ -22,6 +22,7 @@ import { ThreadCommands } from '../../thread/commands/thread-commands';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { computeReadiness, effectivePriority as computeEffectivePriority } from '@domain/vault/readiness';
 import { lifecycleState } from '@domain/vault/vault-item';
+import { epicWhy, EPIC_WHY_PROMPTS } from '@domain/vault/epic-why';
 import { computeNextAction } from '@domain/vault/next-action';
 import { actorId, projectId, vaultItemId, threadMessageId } from '@domain/ids';
 import { formatDatetime } from '@shared/utils/datetime.utils';
@@ -144,6 +145,18 @@ export class VaultItemDialogStore {
     const i = this.item();
     return i ? lifecycleState(i) : 'active';
   });
+
+  /**
+   * Why this epic exists, from its own `## Why` block.
+   *
+   * Epics are where the purpose of a line of work has to live — a subtask
+   * inherits it and cannot restate it. Null is the finding, not a blank: 20 of
+   * the 29 epics with live children were made by the pipeline, and those are
+   * precisely the ones Marvin cannot explain when a review card asks him to
+   * judge their children.
+   */
+  readonly epicWhy = computed(() => epicWhy(this.item()?.body));
+  readonly epicWhyPrompts = EPIC_WHY_PROMPTS;
 
   readonly isGitHubItem = computed(() => this.item()?.source?.kind === 'github');
   readonly isManual = computed(() => this.item()?.source?.kind === 'manual');
