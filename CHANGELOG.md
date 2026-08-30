@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.210](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.209...v0.0.210) (2026-08-30)
+
+
+### Code Refactoring
+
+* **review:** every button names the state it reaches ([e99f296](https://github.com/marvinbarretto/jimbo-dashboard/commit/e99f2968e4df9fa8e7bcf2dbf47eec906e7a462d))
+
 ### [0.0.209](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.208...v0.0.209) (2026-08-30)
 
 
