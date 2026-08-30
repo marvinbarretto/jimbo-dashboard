@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.213](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.212...v0.0.213) (2026-08-30)
+
+
+### Bug Fixes
+
+* **vault-item:** 3,099 status changes were missing from every timeline ([b6f4bbf](https://github.com/marvinbarretto/jimbo-dashboard/commit/b6f4bbf1ad2db2c60c37d11a4e49f9d9d6511b7f))
+
 ### [0.0.212](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.211...v0.0.212) (2026-08-30)
 
 
