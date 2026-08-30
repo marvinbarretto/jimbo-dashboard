@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.211](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.210...v0.0.211) (2026-08-30)
+
+
+### Code Refactoring
+
+* one verb per act, aligned across UI, API and audit trail ([115e847](https://github.com/marvinbarretto/jimbo-dashboard/commit/115e84789566dc369a8420e520fbbaa28c2567ee))
+
 ### [0.0.210](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.209...v0.0.210) (2026-08-30)
 
 
