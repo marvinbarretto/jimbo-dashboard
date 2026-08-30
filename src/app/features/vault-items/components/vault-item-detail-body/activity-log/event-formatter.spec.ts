@@ -135,3 +135,30 @@ describe('formatEvent — review decisions', () => {
     expect(formatEvent({ ...base, type: 'review_decided', disposition: 'sent_back', reason: null }).verb).toBe('sent back');
   });
 });
+
+/**
+ * The server writes `status_changed` on every status transition — 3,099 rows,
+ * none of which reached a timeline, because the mapper only knew about a
+ * `completion_changed` event the dashboard invents optimistically and the API
+ * has never written once.
+ */
+describe('formatEvent — done and reopened', () => {
+  const b = {
+    id: activityId('c1'),
+    at: '2026-08-30T12:00:00Z',
+    vault_item_id: vaultItemId('note_y'),
+    actor_id: actorId('marvin'),
+  } as const;
+
+  it('says "marked done", matching the button and the state name', () => {
+    const line = formatEvent({ ...b, type: 'completion_changed', from: 'active', to: 'done', note: null });
+    // Not "completed": done is what the button, the status column and the
+    // review dispositions all call it. A synonym makes one act look like two.
+    expect(line.verb).toBe('marked done');
+  });
+
+  it('names the reverse', () => {
+    expect(formatEvent({ ...b, type: 'completion_changed', from: 'done', to: null, note: null }).verb)
+      .toBe('reopened');
+  });
+});

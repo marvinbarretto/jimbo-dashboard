@@ -143,6 +143,28 @@ function toVaultEvent(row: ApiNoteActivity): VaultActivityEvent | null {
       return { ...base, type: 'review_decided', disposition: 'archived', reason: row.reason };
     case 'review_sent_back':
       return { ...base, type: 'review_decided', disposition: 'sent_back', reason: row.reason };
+    // The status transition the SERVER actually writes — 3,099 rows, and not
+    // one of them reached a timeline. `completion_changed` below is a
+    // dashboard-only optimistic event with zero rows in the table, so the case
+    // that existed could never fire from the API: marking an item done wrote
+    // an audit row the item's own history then refused to show.
+    //
+    // Mapped onto the events that already render, so archive/unarchive/done
+    // read the same whichever path set them.
+    case 'status_changed': {
+      const to = row.to_value;
+      if (to === 'archived') return { ...base, type: 'archived', archived_at: row.ts, note: row.reason };
+      if (row.from_value === 'archived' && to !== 'archived') {
+        return { ...base, type: 'unarchived', note: row.reason };
+      }
+      if (to === 'done' || to === 'active') {
+        return {
+          ...base, type: 'completion_changed',
+          from: row.from_value, to: to === 'done' ? 'done' : null, note: row.reason,
+        };
+      }
+      return null;
+    }
     case 'completion_changed':
       return {
         ...base, type: 'completion_changed',

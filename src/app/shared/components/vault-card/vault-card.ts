@@ -116,6 +116,11 @@ function dispatchActions(ctx: DispatchCardContext): CardAction[] {
   return [];
 }
 
+// A human closing their own work. Deliberately NOT a review disposition:
+// nobody is certifying an agent's delivery, so it writes status_changed
+// (active → done) rather than review_approved. Same terminal state, different
+// act, and the trail keeps them apart — which is the same reason approve and
+// mark-done-unreviewed stayed separate.
 function manualActions(_ctx: ManualCardContext): CardAction[] {
   return [{ key: 'markDone', label: 'mark done', variant: 'primary', icon: 'mark-done' }];
 }

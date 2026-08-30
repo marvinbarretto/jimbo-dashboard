@@ -44,7 +44,10 @@ export function formatEvent(e: VaultActivityEvent): FormattedLine {
       };
     }
     case 'completion_changed':
-      return { ...base, actorId: e.actor_id, verb: e.to ? 'completed' : 'reopened', summary: e.note ? `— ${e.note}` : '' };
+      // "marked done", not "completed": done is the state's name everywhere
+      // else — the button, the status column, the review dispositions — and a
+      // timeline that invents a synonym makes the same act look like two.
+      return { ...base, actorId: e.actor_id, verb: e.to ? 'marked done' : 'reopened', summary: e.note ? `— ${e.note}` : '' };
     case 'archived':
       return { ...base, actorId: e.actor_id, verb: 'archived', summary: e.note ? `— ${e.note}` : '' };
     case 'unarchived':
