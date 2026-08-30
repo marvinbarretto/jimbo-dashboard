@@ -165,7 +165,7 @@ export interface RejectionEvent extends VaultEventBase {
  */
 export interface ReviewDecidedEvent extends VaultEventBase {
   type: 'review_decided';
-  disposition: 'approved' | 'filed' | 'binned' | 'sent_back';
+  disposition: 'approved' | 'filed' | 'archived' | 'sent_back';
   reason: string | null;
 }
 

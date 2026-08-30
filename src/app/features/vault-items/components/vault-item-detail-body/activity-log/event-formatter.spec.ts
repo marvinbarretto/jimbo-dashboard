@@ -131,7 +131,7 @@ describe('formatEvent — review decisions', () => {
   });
 
   it('names the other two dispositions', () => {
-    expect(formatEvent({ ...base, type: 'review_decided', disposition: 'binned', reason: null }).verb).toBe('binned');
+    expect(formatEvent({ ...base, type: 'review_decided', disposition: 'archived', reason: null }).verb).toBe('archived');
     expect(formatEvent({ ...base, type: 'review_decided', disposition: 'sent_back', reason: null }).verb).toBe('sent back');
   });
 });

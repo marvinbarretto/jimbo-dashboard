@@ -161,8 +161,8 @@ export class ReviewBoard {
       },
       {
         key: 'trust' as const,
-        title: 'Nothing to open',
-        meta: 'No artifact was linked. Approving these means taking the agent at its word — open the item for its thread and activity first.',
+        title: 'Nothing to open from here',
+        meta: 'Nothing this card can open. Some name a file, branch or commit you would have to go and find; the rest offer only the agent\'s own account. Approving means taking that account at its word.',
         tone: 'recede' as const,
         items: trust,
       },
@@ -194,8 +194,8 @@ export class ReviewBoard {
     this.service.file(item);
   }
 
-  bin(item: ReviewItem): void {
-    this.service.bin(item);
+  archive(item: ReviewItem): void {
+    this.service.archive(item);
   }
 
   /** Re-run a dispatch whose PR went red. The only useful action on one. */

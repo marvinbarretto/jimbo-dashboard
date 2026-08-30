@@ -69,7 +69,7 @@ export function formatEvent(e: VaultActivityEvent): FormattedLine {
       const verb = {
         approved:  'approved',
         filed:     'filed',
-        binned:    'binned',
+        archived:  'archived',
         sent_back: 'sent back',
       }[e.disposition];
       return { ...base, actorId: e.actor_id, verb, summary: e.reason ? `— ${e.reason}` : '' };

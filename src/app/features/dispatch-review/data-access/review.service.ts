@@ -359,18 +359,20 @@ export class ReviewService {
   }
 
   /**
-   * Bin → archive the note. For work whose purpose nobody can reconstruct.
+   * Archive the note. For work whose purpose nobody can reconstruct.
    *
-   * Archived, not deleted: the note, summary and artifact all survive, so the
-   * cost of being wrong is a search rather than the work.
+   * Archive, and the word is exact — a real DELETE on vault notes exists and
+   * removes the row. This does not: the note, summary and artifact all
+   * survive and it can be unarchived, so the cost of being wrong is a search
+   * rather than the work.
    */
-  bin(item: ReviewItem): void {
+  archive(item: ReviewItem): void {
     withOptimisticRemove(this._items, this.toast, {
       prior: item,
-      request: this.http.post(`${this.base}/review/bin`, { note_id: item.noteId }),
-      errorMessage: 'Binning failed — card restored.',
+      request: this.http.post(`${this.base}/review/archive`, { note_id: item.noteId }),
+      errorMessage: 'Archiving failed — card restored.',
       onSuccess: () => {
-        this.toast.success(`${this.label(item)} binned — archived, not deleted. One commission slot freed.`);
+        this.toast.success(`${this.label(item)} archived — not deleted, and reversible. One commission slot freed.`);
         this.loadPressure();
       },
     });

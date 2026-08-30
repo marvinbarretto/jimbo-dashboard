@@ -419,7 +419,7 @@
 
 // Quietest thing in the row. It is the right answer surprisingly often, but it
 // should never be the easiest one to hit by accident.
-.review-card__bin {
+.review-card__archive {
   background: none;
   border: 0;
   padding: 0;
@@ -432,7 +432,7 @@
   &:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 }
 
-.review-card__bin-ask {
+.review-card__archive-ask {
   font-size: 0.8rem;
   color: var(--color-warning);
 }
