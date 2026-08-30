@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.212](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.211...v0.0.212) (2026-08-30)
+
+
+### Bug Fixes
+
+* **execution:** dismiss hides a run instead of destroying it ([9da3261](https://github.com/marvinbarretto/jimbo-dashboard/commit/9da326185049383c4c9200ff6111190e99cf524f))
+
 ### [0.0.211](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.210...v0.0.211) (2026-08-30)
 
 
