@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.209](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.208...v0.0.209) (2026-08-30)
+
+
+### Code Refactoring
+
+* **review:** archive, not "bin" — delete is a real thing here ([76d94a5](https://github.com/marvinbarretto/jimbo-dashboard/commit/76d94a5110e7325cef331692b3af410af7284712))
+
 ### [0.0.208](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.207...v0.0.208) (2026-08-30)
 
 
