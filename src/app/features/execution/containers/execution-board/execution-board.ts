@@ -498,7 +498,7 @@ export class ExecutionBoard {
   onClearCompleted(): void {
     const count = this.doneCommissionCount();
     if (count === 0) return;
-    if (!window.confirm(`Dismiss all ${count} completed commissions? This cannot be undone.`)) return;
+    if (!window.confirm(`Dismiss all ${count} completed commissions? They are hidden, not deleted — the runs and their verdicts are kept.`)) return;
     this.dispatchCommands.clearCompleted();
   }
 

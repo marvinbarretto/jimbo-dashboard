@@ -192,41 +192,46 @@ export class DispatchService {
   }
 
   /**
-   * Hard-delete a single dispatch row. Backed by `DELETE /api/dispatch/{id}`
-   * which gates on terminal status server-side; the dashboard refuses early
-   * here to keep the optimistic remove from flickering on rows the API will
-   * refuse anyway. costs.dispatch_id cascades to NULL on the server side so
-   * accounting history survives.
+   * Hide a finished run from the board, keeping the row.
+   *
+   * Was `DELETE /api/dispatch/{id}` — a hard delete behind a button labelled
+   * "dismiss". With no foreign key from delivery_verifications that silently
+   * orphaned the run's verdict, and it destroyed the record of an attempt the
+   * pipeline made. Now POST /{id}/dismiss, the same soft hide the
+   * notification bar has always used, so the word means one thing.
+   *
+   * The real DELETE still exists on the API for rows that genuinely should
+   * not have been written; nothing in the dashboard calls it.
    */
-  delete(id: DispatchId): void {
+  dismiss(id: DispatchId): void {
     const prior = this.getById(id);
     if (!prior) return;
     if (!(TERMINAL_STATUSES as readonly string[]).includes(prior.status)) {
-      this.toast.error(`Can't delete a ${prior.status.replace('_', ' ')} dispatch`);
+      this.toast.error(`Can't dismiss a ${prior.status.replace('_', ' ')} dispatch`);
       return;
     }
 
     withOptimisticRemove(this._entries, this.toast, {
       prior,
-      request: this.http.delete<void>(
-        `${environment.dashboardApiUrl}/api/dispatch/${encodeURIComponent(id)}`,
+      request: this.http.post<void>(
+        `${environment.dashboardApiUrl}/api/dispatch/${encodeURIComponent(id)}/dismiss`, {},
       ),
-      errorMessage: 'Delete failed — entry restored',
+      errorMessage: 'Dismiss failed — entry restored',
       seedMode: isSeedMode(),
-      onSuccess: () => this.toast.success('Dispatch dismissed'),
+      onSuccess: () => this.toast.success('Run hidden — the record is kept'),
     });
   }
 
   /**
-   * Bulk-delete every entry whose status is in the requested terminal set.
-   * Used by column-level "dismiss all" gestures (e.g. clear the COMPLETED
-   * column). Optimistic with rollback: locally filtered first, server
-   * confirms the count.
+   * Bulk-hide every entry whose status is in the requested terminal set.
+   * Used by column-level "dismiss all" gestures. Was a bulk DELETE, which
+   * destroyed the record of every run in a column — and the verifier verdicts
+   * pointing at them, which have no foreign key to stop it.
    *
    * Statuses outside the terminal set are dropped at the boundary; the
    * server filters again as defence in depth.
    */
-  clearTerminal(statuses: readonly TerminalStatus[]): void {
+  dismissTerminal(statuses: readonly TerminalStatus[]): void {
     const filteredStatuses = statuses.filter(s => (TERMINAL_STATUSES as readonly string[]).includes(s));
     if (filteredStatuses.length === 0) return;
 
@@ -235,7 +240,7 @@ export class DispatchService {
 
     if (isSeedMode()) {
       this._entries.update(es => es.filter(e => !(filteredStatuses as readonly string[]).includes(e.status)));
-      this.toast.success(`Cleared ${targets.length}`);
+      this.toast.success(`${targets.length} hidden`);
       return;
     }
 
@@ -243,15 +248,15 @@ export class DispatchService {
     this._entries.update(es => es.filter(e => !(filteredStatuses as readonly string[]).includes(e.status)));
 
     this.http
-      .post<{ deleted: number }>(
-        `${environment.dashboardApiUrl}/api/dispatch/clear-terminal`,
+      .post<{ dismissed: number }>(
+        `${environment.dashboardApiUrl}/api/dispatch/dismiss-terminal`,
         { statuses: filteredStatuses },
       )
       .subscribe({
-        next: (res) => this.toast.success(`Cleared ${res.deleted}`),
+        next: (res) => this.toast.success(`${res.dismissed} hidden — the records are kept`),
         error: () => {
           this._entries.set(prior);
-          this.toast.error('Bulk clear failed — entries restored');
+          this.toast.error('Bulk dismiss failed — entries restored');
         },
       });
   }

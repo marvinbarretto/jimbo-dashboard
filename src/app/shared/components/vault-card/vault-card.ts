@@ -107,10 +107,10 @@ function dispatchActions(ctx: DispatchCardContext): CardAction[] {
     ];
   }
   if (status === 'completed') {
-    // "dismiss" read as hiding a card. It is a hard DELETE of the
-    // dispatch_queue row — and with no FK from delivery_verifications, it
-    // silently orphans that row's verdict. Named for what it destroys.
-    return [{ key: 'dismiss', label: 'delete run', variant: 'danger' }];
+    // Hides the run and keeps the row — POST /dispatch/{id}/dismiss, the same
+    // soft hide the notification bar uses. It used to be a hard DELETE behind
+    // this label, which is why it briefly read "delete run".
+    return [{ key: 'dismiss', label: 'dismiss', variant: 'neutral' }];
   }
   // approved / dispatching / running — passive, system-managed.
   return [];

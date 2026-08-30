@@ -87,7 +87,7 @@ describe('DispatchCommands (seed mode)', () => {
       commands.dismiss(entry.id);
 
       expect(dispatch.entries()).toHaveLength(beforeCount);
-      expect(lastErrorToast()).toMatch(/can't delete/i);
+      expect(lastErrorToast()).toMatch(/can't dismiss/i);
     });
 
     it('is a no-op for an unknown id', () => {

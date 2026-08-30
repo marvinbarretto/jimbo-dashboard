@@ -26,7 +26,7 @@ export class DispatchCommands {
    * operator wants the underlying task gone too (typical for FAILED rows).
    */
   dismiss(id: DispatchId): void {
-    this.dispatch.delete(id);
+    this.dispatch.dismiss(id);
   }
 
   /**
@@ -36,12 +36,12 @@ export class DispatchCommands {
    *      board too, not just here)
    *   2. Delete the dispatch row (clears the stale failure entry)
    *
-   * Order matters: archive first so if the dispatch delete fails we still
-   * have the vault item out of view. Dispatch delete is the cosmetic cleanup.
+   * Order matters: archive first so if the dismiss fails we still have the
+   * vault item out of view. Hiding the run is the cosmetic half.
    */
   archiveTaskAndDismiss(entry: DispatchQueueEntry): void {
     this.vaultCommands.archive(entry.task_id);
-    this.dispatch.delete(entry.id);
+    this.dispatch.dismiss(entry.id);
   }
 
   /**
@@ -51,7 +51,7 @@ export class DispatchCommands {
    * stay in their current grooming state.
    */
   clearCompleted(): void {
-    this.dispatch.clearTerminal(['completed']);
+    this.dispatch.dismissTerminal(['completed']);
   }
 
   /**
@@ -60,6 +60,6 @@ export class DispatchCommands {
    * per-card archive action when they want the task gone too.
    */
   clearFailed(): void {
-    this.dispatch.clearTerminal(['failed']);
+    this.dispatch.dismissTerminal(['failed']);
   }
 }
