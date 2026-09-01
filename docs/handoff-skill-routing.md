@@ -12,11 +12,11 @@ Paste the block below to start. Everything under it is the evidence behind it.
 >
 > Four things to work on, roughly in this order:
 >
-> 1. **Get to the bottom of the LLM budget.** I don't have a clear picture of
->    what spends money and what doesn't. Some of it is now verified (below);
->    the OpenRouter key reports `usage $59.18 / limit $10` and calls still
->    succeed, which doesn't parse. Establish the real picture across all three
->    engines before anything else assumes one.
+> 1. ~~**Get to the bottom of the LLM budget.**~~ **DONE 2026-09-01** — see
+>    `docs/architecture/llm-billing-surfaces.md`. `usage` is lifetime, `limit`
+>    is a weekly cap; no paradox. Real signal: **$5.00 left of $220** on one
+>    shared OpenRouter account, ~$2–3/mo burn. Bulk jobs go via `claude -p`
+>    on Max from here, not `chatCompletion`.
 > 2. **Acceptance-criteria quality.** 199 of the 585 routable items have
 >    criteria no cold agent can score ("clearly organised", "works correctly").
 >    That is what stands between "dispatchable" and "comes back good". This
@@ -48,46 +48,72 @@ jimbo-api `1932cbd`..`5ae210a`, hub `b455165`.
 | `scripts/backfill-skills.ts` | the one-time routing migration, dry-run by default |
 | `vault-decompose` SKILL.md | rewritten to mirror the gate; every example verified against the real `checkLegibility` |
 
-## The budget picture — verified vs unknown
+## The budget picture — SETTLED 2026-09-01
 
-This is the item to settle first, because two of tonight's decisions rested on
-assumptions about it.
+Full write-up, with per-key figures and re-measure commands:
+**`docs/architecture/llm-billing-surfaces.md`**. The short version:
 
-**VERIFIED tonight (not inherited from memory):**
+**The `usage $59.18 / limit $10` paradox was never a paradox.** `usage` is
+*lifetime* spend on the key; `limit` is a **weekly** cap (`limit_reset:
+"weekly"`), and `limit_remaining` is the enforcement signal. On both keys
+`usage_weekly + limit_remaining == limit` exactly. Calls succeed because the
+weekly window is barely touched.
 
-- Dispatch work runs `claude -p` on the **Claude Max subscription — flat, no
-  marginal cash**. Confirmed three ways: `boris/worker/claude-runner.ts:29`
-  literally execs `claude -p --model … --output-format json`; there is no
-  `ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN` or `~/.claude/.credentials.json`
-  anywhere (so it is keychain/subscription auth); and the m4 worker run on
-  2026-08-30 completed two haiku dispatches with no Anthropic key in its env.
-- Therefore **the `costs` table's `provider='anthropic' / dispatch_turn` rows are
-  notional token estimates, not spend.** Any "this run cost $X" figure derived
-  from them is effort, not money. `decompose-cohort.sh` says so in its header.
-- `chatCompletion()` in `src/services/ai-models.ts` is hardwired to OpenRouter
-  (`process.env.OPENROUTER_API_KEY`). Tier `fast` = `google/gemini-2.5-flash`.
-  Every caller of it is real metered spend.
+**The real signal is account-level, and nothing watches it:**
 
-**UNKNOWN / needs investigation:**
+```
+OpenRouter account:  credits 220.00 / usage 215.00  →  $5.00 LEFT
+combined burn:       $2.14–3.30 / month  →  ~7 weeks to 2.5 months
+```
 
-- `GET https://openrouter.ai/api/v1/auth/key` reports **`usage $59.18 / limit $10`**
-  and calls still succeed. That does not parse — either `limit` is not a hard cap,
-  or it means something other than what it looks like. Establish what these fields
-  actually mean before treating either as a budget signal.
-- There are **at least three billing surfaces** and they are routinely confused:
-  1. Claude Max (flat) — all Boris/jeffrey/kipper dispatch
-  2. OpenRouter via jimbo-api's key — every `chatCompletion` caller
-  3. Hermes crons — their own key in `~/.hermes/.env`, plus a ChatGPT/Codex
-     subscription that is flat and does NOT hit OpenRouter
-  The "~£5/month budget" belongs to (2) and (3), never to (1).
-- `costs` telemetry is **sparse and unreliable**: 1 row across 5 dispatches on
-  2026-08-30. Do not compute per-run cost or duration from it; use
-  `dispatch_queue` timestamps instead.
+$3.30/mo is the account delta across two independent readings (usage 210.98 on
+2026-07-26 → 215.00 today, 37d) — but that window opens on the day of the codex
+flip, so it carries the tail of the old regime. $2.14/mo (`usage_monthly`,
+trailing-30d) is the better forward number. Neither is precise; both say the
+same thing — months, not weeks-to-a-crisis, but nothing is watching it.
 
-**A choice worth revisiting:** `backfill-skills.ts` routes via OpenRouter
-(`chatCompletion`) because that was the ready-made in-process path — 585 items,
-$0.15. It could have run flat through `claude -p`. Trivial here; the same reflex
-on the AC pass and future bulk jobs is worth fixing first.
+**Both OpenRouter keys draw on that one balance** — jimbo-api ($0.23/mo) and
+hermes ($1.91/mo) are different keys, same account, same pot. The earlier
+framing of them as separate budgets was wrong. The ~£5/mo target covers both
+and is comfortably met.
+
+**Most of the fleet is already flat, so zero hurts less than assumed.** 30 of
+32 active hermes crons carry an explicit per-job `provider: openai-codex` and
+cost nothing. At $0 only `commission-worker` and `model-bakeoff` stop, plus
+jimbo-api's `fast`/`balanced`/`powerful` tiers 402 down to the free chain.
+(`fallback_providers: []` is true but misleading — there's no *automatic*
+failover, yet the flat engine is already the pinned **primary** almost
+everywhere.)
+
+**The one cheap lever:** `commission-worker` runs **every 2h on `provider: null`**
+— inheriting `model.default` = deepseek via OpenRouter, i.e. on the meter by
+accident, and a large share of hermes' $1.91/mo. Pinning it to `openai-codex` in
+`~/.hermes/cron/jobs.json` would leave a weekly bakeoff as the only metered
+hermes **cron** traffic. Not done — production change on a third-party agent, so
+it's your call.
+
+**Interactive hermes stays on the meter regardless.** Telegram/Discord sessions
+inherit `model.default` too; per-job pinning doesn't touch them. Today's
+`usage_daily` $0.186 (≈$5.6/mo annualised) vs trailing-30d $1.91 says the burn is
+bursty in a way 12 cron runs can't explain — that's interactive traffic.
+
+**A fourth surface is unquantified**: hermes' `OPENAI_API_KEY` (TTS, Whisper,
+image-gen) is real metered OpenAI spend outside the OpenRouter pot.
+
+**Operating rule that falls out of this — carry it into the AC pass:** bulk jobs
+run through `claude -p` on Max (flat), not `chatCompletion` (metered).
+`backfill-skills.ts` cost $0.15 via OpenRouter; trivial alone, wrong reflex with
+$5 of headroom, and the AC rewrite is bigger in both directions.
+
+**Two questions only Marvin can answer:** is auto-topup on (the difference
+between "stops in ~10 weeks" and "card gets charged")? and what does the OpenAI
+key actually cost? Neither is readable from here.
+
+Also found, both safe to delete: `GOOGLE_AI_API_KEY` in `/opt/jimbo-api.env`
+has zero consumers anywhere (jimbo-api, dashboard, hub/boris, hermes), and
+`~/.hermes/systemd.env` holds a stale copy of the *jimbo-api* OpenRouter key
+that the live gateway does not use.
+
 
 ## Where the vault actually stands
 
@@ -216,3 +242,20 @@ it; m2 fails it twice and dies.
   for a backlog you want to route rather than multiply.
 - **No regex classifier.** Measured: "Write integration test" is code, "Write the
   outreach template" is prose. The verb carries no signal.
+- **No static heuristic detects AC scorability.** Three attempts, three measured
+  failures, 2026-09-01:
+  1. *verb classifier* — the verb doesn't say whether work is code or prose;
+  2. *the `ac.unfalsifiable` word list* — weak BOTH ways. False positives: seq
+     3763 trips on "correctly" while naming "116 services, 64 routes"; seq 3979
+     trips on "78 correctly-skipped sessions", where the word describes existing
+     data. False negatives: seq 4099 "Backward compatibility approach explained"
+     and seq 4581 "Formatting consistent" are unscorable and trip nothing;
+  3. *anchor-rescue* (don't reject a soft word when the criterion names something
+     checkable) — over all 3,073 criteria it "rescued" 47, but the path pattern
+     was matching slash-separated prose: "Complexity/accuracy tradeoffs clearly
+     stated", "How to run/invoke extraction logic clearly documented". ~2 of 8
+     sampled rescues were real.
+
+  The judge is the agent in the groom loop, not the regex. The gate's job is to
+  nudge. Do not attempt a fourth variant — narrowing to backticks-only is the
+  same mistake again.
