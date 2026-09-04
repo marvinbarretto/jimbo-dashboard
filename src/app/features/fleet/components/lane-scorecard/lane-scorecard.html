@@ -1,0 +1,65 @@
+@if (lastError()) {
+  <app-ui-empty-state [message]="'Lane rates unavailable — ' + lastError()" />
+} @else if (rows().length === 0) {
+  <app-ui-empty-state message="No lane data yet." />
+} @else {
+  <div class="scorecard">
+    @for (row of rows(); track row.lane.lane) {
+      <app-ui-card tone="soft" [compact]="true">
+        <div class="scorecard__row">
+          <div class="scorecard__head">
+            <span class="scorecard__lane">{{ row.lane.lane }}</span>
+            <!-- The gate is not decoration. A gated lane's zero is intent;
+                 rendering it the same as an open lane's zero is the failure
+                 this endpoint exists to prevent. -->
+            <app-ui-badge [tone]="gateTone(row.lane)"
+              [title]="row.lane.gate.reason ?? 'No valve is restricting this lane.'">
+              valves: {{ row.lane.gate.state }}
+            </app-ui-badge>
+            <app-ui-badge [tone]="verdictTone(row.verdict)">{{ verdictLabel(row.verdict) }}</app-ui-badge>
+          </div>
+
+          <p class="scorecard__desc">{{ row.lane.description }}</p>
+
+          <div class="scorecard__metrics">
+            <span class="scorecard__metric" [attr.title]="metricTitle(row.lane.totals.intake)">
+              <em>{{ metric(row.lane.totals.intake) }}</em> in
+            </span>
+            <span class="scorecard__metric" [attr.title]="metricTitle(row.lane.totals.started)">
+              <em>{{ metric(row.lane.totals.started) }}</em> started
+            </span>
+            <span class="scorecard__metric" [attr.title]="metricTitle(row.lane.totals.output)">
+              <em>{{ metric(row.lane.totals.output) }}</em> out
+            </span>
+            <span class="scorecard__metric" [attr.title]="metricTitle(row.lane.totals.wip)">
+              <em>{{ metric(row.lane.totals.wip) }}</em> wip
+            </span>
+            <span class="scorecard__metric" [attr.title]="metricTitle(row.lane.totals.conversion)">
+              <em>{{ metric(row.lane.totals.conversion, 'percent') }}</em> conversion
+            </span>
+            <span class="scorecard__metric" [attr.title]="metricTitle(row.lane.totals.lead_time_weeks)">
+              <em>{{ metric(row.lane.totals.lead_time_weeks, 'weeks') }}</em> lead time
+            </span>
+          </div>
+
+          <!-- Says what "out" counts, because the obvious column is the wrong
+               one: dispatch completed fires when the agent exits. -->
+          <p class="scorecard__hint">
+            over {{ windowWeeks() }}w · out = {{ row.lane.output_event }}
+            @if (row.lane.gate.reason) { · {{ row.lane.gate.reason }} }
+          </p>
+        </div>
+      </app-ui-card>
+    }
+  </div>
+
+  @if (warnings().length > 0) {
+    <!-- Verbatim from the API. These carry their own denominators, and
+         paraphrasing them loses exactly the part that makes them actionable. -->
+    <ul class="scorecard__warnings">
+      @for (warning of warnings(); track warning) {
+        <li>{{ warning }}</li>
+      }
+    </ul>
+  }
+}

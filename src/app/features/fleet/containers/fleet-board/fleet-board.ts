@@ -3,7 +3,7 @@
 // worker-side token burn (trailing 5h), recent completions with model +
 // token telemetry, and fold cadence.
 
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
@@ -13,6 +13,8 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 import { UiRefreshControl } from '@shared/components/ui-refresh-control/ui-refresh-control';
 import { UiStatCard } from '@shared/components/ui-stat-card/ui-stat-card';
 import { JobChip } from '@shared/components/job-chip/job-chip';
+import { LaneScorecard } from '../../components/lane-scorecard/lane-scorecard';
+import { UiFilterPills, type UiFilterPillOption } from '@shared/components/ui-filter-pills/ui-filter-pills';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { FleetService } from '../../data-access/fleet.service';
 import { HermesService } from '../../../hermes/data-access/hermes.service';
@@ -65,6 +67,7 @@ const FOLD_STALE_MS = 3 * 24 * 60 * 60_000;
   imports: [
     UiStack, UiPageHeader, UiCard, UiBadge, UiEmptyState,
     UiRefreshControl, UiStatCard, RelativeTimePipe, RouterLink, JobChip,
+    LaneScorecard, UiFilterPills,
   ],
   templateUrl: './fleet-board.html',
   styleUrl: './fleet-board.scss',
@@ -110,6 +113,21 @@ export class FleetBoard {
   refresh(): void {
     void this.service.refresh();
   }
+
+  /**
+   * Dot tone for the hermes strip.
+   *
+   * Red is reserved for `failing` — a job that is enabled, scheduled, and
+   * errored on a recent run. A paused job carrying a six-week-old error goes
+   * amber with its date instead. This page spent 42 days showing a red badge
+   * for two paused jobs, which is how a reader learns to ignore the only red
+   * indicator it has.
+   */
+  readonly hermesTone = computed<HeartbeatTone>(() => {
+    if (this.hermes.failingCount() > 0) return 'stale';
+    if (this.hermes.staleErrorCount() > 0) return 'quiet';
+    return 'live';
+  });
 
   // Queue rows keyed per lane: one tile per executor with its per-status counts.
   readonly lanes = computed(() => {
@@ -171,6 +189,42 @@ export class FleetBoard {
       incompleteness visible instead of silently understating it. */
   readonly unpricedBurnModels = computed(() =>
     [...new Set(this.service.burn().filter(r => r.estimated_cost === null).map(r => r.model))]);
+
+  // ── Recent completions: filter by flow ───────────────────────────────────
+  // 16 of the last 20 rows are jeffrey's groom runs, so the commissions — the
+  // ones that actually ship — are pushed off the bottom of the list by volume
+  // rather than by being less interesting.
+
+  /** Flows the user has pinned. Empty = show everything, not show nothing. */
+  private readonly _flowFilter = signal<readonly string[]>([]);
+  readonly flowFilter = this._flowFilter.asReadonly();
+
+  /** Distinct flows present in the current window, with their row counts. */
+  readonly flowOptions = computed<UiFilterPillOption[]>(() => {
+    const counts = new Map<string, number>();
+    for (const row of this.service.recent()) {
+      counts.set(row.flow, (counts.get(row.flow) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([value, count]) => ({ value, label: value, count }));
+  });
+
+  readonly filteredRecent = computed(() => {
+    const active = this._flowFilter();
+    if (active.length === 0) return this.service.recent();
+    const set = new Set(active);
+    return this.service.recent().filter(row => set.has(row.flow));
+  });
+
+  toggleFlow(flow: string): void {
+    this._flowFilter.update(active =>
+      active.includes(flow) ? active.filter(f => f !== flow) : [...active, flow]);
+  }
+
+  clearFlowFilter(): void {
+    this._flowFilter.set([]);
+  }
 
   formatTokens(v: number): string {
     if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;

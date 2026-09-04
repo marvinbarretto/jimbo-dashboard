@@ -1,0 +1,62 @@
+.scorecard {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.scorecard__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.scorecard__head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.scorecard__lane {
+  font-weight: 650;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+}
+
+.scorecard__desc {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.scorecard__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.9rem;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.scorecard__metric em {
+  font-style: normal;
+  font-weight: 650;
+  font-family: var(--font-mono);
+  color: var(--color-text);
+}
+
+.scorecard__hint {
+  margin: 0;
+  font-size: 0.65rem;
+  color: var(--color-text-soft);
+}
+
+.scorecard__warnings {
+  margin: 0.6rem 0 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--color-warning);
+}

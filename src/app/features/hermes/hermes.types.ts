@@ -1,8 +1,19 @@
+/**
+ * Derived server-side (jimbo-api `classifyJobHealth`), not from `last_status`.
+ *
+ * `last_status` alone cannot answer "is this broken now?" — a paused job holds
+ * whatever status it carried into the pause forever, which is how a July
+ * OpenRouter 402 on mood-checkin-tick rendered as a live failure for 42 days.
+ * `failing` is the only value that earns red.
+ */
+export type HermesJobHealth = 'failing' | 'stale_error' | 'paused' | 'disabled' | 'ok';
+
 export interface HermesJob {
   id: string;
   name: string;
   state: string;
   enabled: boolean;
+  health: HermesJobHealth;
   schedule_display: string | null;
   paused_at: string | null;
   paused_reason: string | null;
@@ -52,6 +63,7 @@ export interface HermesSnapshot {
   total: number;
   paused_count: number;
   failing_count: number;
+  stale_error_count: number;
   source: string;
   last_modified: string | null;
   read_at: string;

@@ -145,18 +145,30 @@
         <app-ui-card tone="soft" [compact]="true">
           <div class="fleet-worker">
             <span class="fleet-worker__dot"
-              [class]="'fleet-worker__dot--' + (hermes.failingCount() > 0 ? 'stale' : 'live')"></span>
+              [class]="'fleet-worker__dot--' + hermesTone()"></span>
             <div class="fleet-worker__body">
               <span class="fleet-worker__name">hermes</span>
               <span class="fleet-worker__meta">
                 vps · {{ hermes.activeCount() }} active · {{ hermes.pausedCount() }} paused
+                @if (hermes.disabledCount() > 0) {
+                  · {{ hermes.disabledCount() }} disabled
+                }
                 @if (hermes.failingCount() > 0) {
                   · {{ hermes.failingCount() }} failing
+                }
+                <!-- The date is the point: an undated amber badge is just a
+                     quieter version of the red one you learned to ignore. -->
+                @if (hermes.oldestStaleError(); as stale) {
+                  · {{ hermes.staleErrorCount() }} stale
+                  {{ hermes.staleErrorCount() === 1 ? 'error' : 'errors' }}
+                  (oldest {{ stale.name }}, {{ stale.paused_at ?? stale.last_run_at | relativeTime }})
                 }
               </span>
             </div>
             @if (hermes.failingCount() > 0) {
               <app-ui-badge tone="danger">failing</app-ui-badge>
+            } @else if (hermes.staleErrorCount() > 0) {
+              <app-ui-badge tone="warning" title="Carrying an error, but not running — paused, or no longer being retried">stale error</app-ui-badge>
             } @else {
               <app-ui-badge tone="neutral">ambient lane</app-ui-badge>
             }
@@ -181,6 +193,14 @@
         }
       </div>
     }
+  </section>
+
+  <!-- Lane rates: what each lane takes in and what it ships -->
+  <section>
+    <h2 class="fleet__section-title">
+      Lanes <span class="fleet__section-hint">intake vs output per lane — a gated lane's zero is intent, an open lane's zero is not</span>
+    </h2>
+    <app-lane-scorecard />
   </section>
 
   <!-- Worker burn, trailing 5h -->
@@ -269,6 +289,20 @@
     @if (recent().length === 0) {
       <app-ui-empty-state message="No completed or failed dispatches yet." />
     } @else {
+      @if (flowOptions().length > 1) {
+        <div class="fleet__filter-row">
+          <app-ui-filter-pills
+            [options]="flowOptions()"
+            [active]="flowFilter()"
+            ariaLabel="Filter completions by flow"
+            (toggled)="toggleFlow($event)" />
+          @if (flowFilter().length > 0) {
+            <button type="button" class="fleet__filter-clear" (click)="clearFlowFilter()">
+              clear ({{ filteredRecent().length }} of {{ recent().length }})
+            </button>
+          }
+        </div>
+      }
       <div class="fleet__table-wrap">
         <table class="fleet__table">
           <thead>
@@ -278,7 +312,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (row of recent(); track row.id) {
+            @for (row of filteredRecent(); track row.id) {
               <tr [class.fleet__row--failed]="row.status === 'failed'">
                 <td>{{ row.id }}</td>
                 <td class="fleet__mono" [title]="row.task_id">{{ row.skill ?? '—' }}</td>

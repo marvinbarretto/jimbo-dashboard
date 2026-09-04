@@ -34,9 +34,30 @@ export class HermesService {
 
   readonly jobs = computed(() => this.snapshot()?.jobs ?? []);
   readonly total = computed(() => this.snapshot()?.total ?? 0);
-  readonly activeCount = computed(() => this.jobs().filter(j => j.state === 'scheduled' || j.state === 'running').length);
+  // `enabled` is joined in deliberately: state and enabled genuinely disagree.
+  // vault-analyse reads `state: scheduled, enabled: false` and was counted as
+  // active here while never firing.
+  readonly activeCount = computed(() =>
+    this.jobs().filter(j => j.enabled && (j.state === 'scheduled' || j.state === 'running')).length);
   readonly pausedCount = computed(() => this.snapshot()?.paused_count ?? 0);
   readonly failingCount = computed(() => this.snapshot()?.failing_count ?? 0);
+  // Errors that are real but not live — a paused job holding one, or one the
+  // scheduler has stopped retrying. Counted apart from failingCount so the
+  // page can show them without spending its red badge on them.
+  readonly staleErrorCount = computed(() => this.snapshot()?.stale_error_count ?? 0);
+  readonly disabledCount = computed(() => this.jobs().filter(j => j.health === 'disabled').length);
+  readonly failingJobs = computed(() => this.jobs().filter(j => j.health === 'failing'));
+  readonly staleErrorJobs = computed(() => this.jobs().filter(j => j.health === 'stale_error'));
+
+  /**
+   * Oldest stale error still on the books, for "since <date>" copy.
+   *
+   * The date is the point: an undated amber badge is just a quieter version of
+   * the red one that trained you to ignore it.
+   */
+  readonly oldestStaleError = computed((): HermesJob | null =>
+    [...this.staleErrorJobs()]
+      .sort((a, b) => Date.parse(a.paused_at ?? a.last_run_at ?? '') - Date.parse(b.paused_at ?? b.last_run_at ?? ''))[0] ?? null);
   readonly runningJobs = computed(() => this.jobs().filter(j => j.state === 'running'));
   readonly lastSync = computed(() => this.snapshot()?.read_at ?? null);
 

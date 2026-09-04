@@ -221,3 +221,24 @@
   &--completed { color: var(--color-success); }
   &--failed { color: var(--color-danger); }
 }
+
+.fleet__filter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+}
+
+.fleet__filter-clear {
+  font: inherit;
+  font-size: 0.7rem;
+  background: none;
+  border: none;
+  padding: 0.22rem 0.2rem;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  text-decoration: underline;
+
+  &:hover { color: var(--color-text); }
+}
