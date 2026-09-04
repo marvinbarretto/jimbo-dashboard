@@ -183,6 +183,16 @@ export interface VaultItem {
   tags:                string[];
   acceptance_criteria: AcceptanceCriterion[];
 
+  // The skill grooming picked to run this leaf, and where the orchestrator has
+  // parked it. Both were already on the API and read by nothing here, which is
+  // why the board could not show why an item was stuck: `suggested_skills: null`
+  // is the entire reason an item sits "ready but unroutable" (the pump declines
+  // rather than guessing), and `route: 'deferred'` is the saturation valve
+  // parking it. Surfaced 2026-09-04 so both become columns instead of a
+  // read-only strip above the board.
+  suggested_skills:    string | null;
+  route:               string;
+
   grooming_status:     GroomingStatus;
 
   // Two sources, kept separate. `effective_priority` is derived (manual ?? ai).
@@ -306,8 +316,12 @@ export interface LiveMessageEmbed {
   body_excerpt: string;
 }
 
+// `suggested_skills` and `route` are excluded alongside the server-assigned
+// fields: both are pipeline state, written by grooming and the orchestrator,
+// never by whoever is creating the item. A create form that had to supply them
+// would be inventing a routing decision nobody has made yet.
 export type CreateVaultItemPayload =
-  Omit<VaultItem, 'id' | 'seq' | 'archived_at' | 'created_at'>;
+  Omit<VaultItem, 'id' | 'seq' | 'archived_at' | 'created_at' | 'suggested_skills' | 'route'>;
 
 export type UpdateVaultItemPayload =
   Partial<Omit<VaultItem, 'id' | 'seq' | 'created_at'>>;

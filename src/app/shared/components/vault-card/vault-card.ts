@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { KanbanCardLinkDirective } from '@shared/kanban/card-link.directive';
@@ -15,10 +15,12 @@ import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { BlockerBadge } from '@shared/components/blocker-badge/blocker-badge';
 import { EpicBadge } from '@shared/components/epic-badge/epic-badge';
 import { DispatchStatusBadge } from '@shared/components/dispatch-status-badge/dispatch-status-badge';
+import { CommissionStagePill } from '@shared/components/commission-stage-pill/commission-stage-pill';
+import { DispatchHistoryList } from '@features/execution/components/dispatch-history-list/dispatch-history-list';
 import { CardCallout, type CalloutVariant } from '@shared/components/card-callout/card-callout';
 import { EpicRollup } from '@shared/components/epic-rollup/epic-rollup';
 import { ItemHeader } from '@shared/components/item-header/item-header';
-import { effectivePriority, ageInDays, isStuck, staleNorm, ancientNorm } from '@domain/vault';
+import { effectivePriority, ageInDays, isStuck, staleNorm, ancientNorm, isDone } from '@domain/vault';
 import type { ActorId, VaultItemId } from '@domain/ids';
 import type { IconName } from '@shared/components/app-icon/icon-registry';
 import type {
@@ -47,6 +49,13 @@ export interface CardAction {
   readonly label:   string;
   readonly variant: ActionVariant;
   readonly icon?:   IconName;
+}
+
+/** A board-supplied marker shown in the card's head row. See `VaultCard.flags`. */
+export interface CardFlag {
+  readonly label: string;
+  /** `blocked` = this card cannot move; `awaiting` = an agent is stalled on it. */
+  readonly kind:  'blocked' | 'awaiting';
 }
 
 // Grooming actions — keyed off grooming_status. The matrix is small enough
@@ -147,6 +156,8 @@ function actionsFor(ctx: CardContext): CardAction[] {
     BlockerBadge,
     EpicBadge,
     DispatchStatusBadge,
+    CommissionStagePill,
+    DispatchHistoryList,
     CardCallout,
     EpicRollup,
     ItemHeader,
@@ -170,10 +181,42 @@ function actionsFor(ctx: CardContext): CardAction[] {
     '[class.vault-card--github]':     "sourceClass() === 'github'",
     '[class.vault-card--pr-comment]': "sourceClass() === 'pr-comment'",
     '[class.vault-card--agent]':      "sourceClass() === 'agent'",
+    '[class.vault-card--compact]':    'compact()',
   },
 })
 export class VaultCard {
   readonly context = input.required<CardContext>();
+
+  /**
+   * How much of the card to render.
+   *
+   * `compact` drops everything the header already says and everything that is
+   * a filter rather than a scan signal. Measured on the execution board,
+   * 2026-09-04: a default card stacks nine elements and renders the priority
+   * badge and the owner avatar *twice* — once in `app-item-header`, once in the
+   * body — so ~40% of its height carries no information. At 979 items in Ready
+   * that is the difference between scanning and scrolling.
+   *
+   * Opt-in rather than the new default: the grooming board is the only other
+   * consumer, it shows far fewer cards at once, and it uses the pickers and the
+   * source line that compact hides.
+   */
+  readonly density = input<'default' | 'compact'>('default');
+  protected readonly compact = computed(() => this.density() === 'compact');
+
+  /**
+   * Board-level markers rendered inside the card's head row.
+   *
+   * These are states the *board* knows and the card does not — "blocking an
+   * agent", a blocker label — and they used to render as siblings floating
+   * above the card. Marvin, 2026-09-04: "this feels strange having 'blocking an
+   * agent' outside the card". A label describing a card that is not part of it
+   * reads like a separate object, and it cost a whole row per flagged item.
+   */
+  readonly flags = input<readonly CardFlag[]>([]);
+
+  /** Expander state for a commission's ×N dispatch history. */
+  protected readonly historyOpen = signal(false);
 
   // Options for the inline backfill pickers. Supply empty arrays (or just omit)
   // when the card shouldn't offer the picker — e.g. dispatch rows, or kinds
@@ -291,7 +334,7 @@ export class VaultCard {
 
   protected readonly seq = computed(() => {
     const ctx = this.context();
-    if (ctx.kind === 'dispatch') return ctx.item?.seq ?? null;
+    if (ctx.kind === 'dispatch') return ctx.item?.seq ?? ctx.taskSeq ?? null;
     return ctx.item.seq;
   });
 
@@ -307,7 +350,7 @@ export class VaultCard {
 
   protected readonly title = computed(() => {
     const ctx = this.context();
-    if (ctx.kind === 'dispatch') return ctx.item?.title ?? `task #${ctx.entry.task_id}`;
+    if (ctx.kind === 'dispatch') return ctx.item?.title ?? ctx.taskTitle ?? `task #${ctx.entry.task_id}`;
     return ctx.item.title;
   });
 
@@ -350,6 +393,33 @@ export class VaultCard {
     return ctx.kind === 'manual' ? ctx : null;
   });
 
+  /**
+   * The skill grooming chose for this item, for cards that aren't dispatched yet.
+   *
+   * Stored as a comma-joined string server-side; only the first is the one that
+   * would run, so showing more would imply a choice nobody has made.
+   */
+  protected readonly suggestedSkill = computed<string | null>(() => {
+    const ctx = this.context();
+    const raw = ctx.kind === 'manual' ? ctx.item.suggested_skills
+      : ctx.kind === 'grooming' ? ctx.item.suggested_skills
+      : null;
+    return raw?.split(',')[0]?.trim() || null;
+  });
+
+  /**
+   * Whether to show the skill badge at all.
+   *
+   * Suppressed once the item is finished: the skill decides whether something
+   * can be picked up, so on a Done card `no skill` is an amber warning about a
+   * decision that no longer needs making.
+   */
+  protected readonly showSkill = computed(() => {
+    const ctx = this.context();
+    if (ctx.kind !== 'manual' && ctx.kind !== 'grooming') return false;
+    return !isDone(ctx.item);
+  });
+
   protected readonly calloutKind = computed<CalloutVariant | null>(() => {
     const ctx = this.context();
     if (ctx.kind === 'grooming') return calloutKindFor(ctx);
@@ -380,7 +450,15 @@ export class VaultCard {
 
   // Single source of truth for which buttons render. To change the action set
   // for a state, edit groomingActions / dispatchActions / manualActions above.
-  protected readonly actions = computed<readonly CardAction[]>(() => actionsFor(this.context()));
+  // `mark done` is dropped in compact: the lanes are drag targets, so dragging a
+  // card to Done already says it, and a button restating a gesture costs a row on
+  // every card. Agent-side actions (dismiss, approve) survive — those cards are
+  // system-driven and not draggable, so the button is the only way to act.
+  // Marvin, 2026-09-04: "mark done is unnecessary, i can drag it to done column".
+  protected readonly actions = computed<readonly CardAction[]>(() => {
+    const all = actionsFor(this.context());
+    return this.compact() ? all.filter(a => a.key !== 'markDone') : all;
+  });
 
   // Source attribution display — agent sources show an avatar inline.
   protected sourceLabel(ctx: GroomingCardContext | ManualCardContext): string | null {

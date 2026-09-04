@@ -61,6 +61,7 @@ const fakeItem = (overrides: Partial<VaultItem> = {}): VaultItem => ({
   assigned_to: wellKnownActorId('marvin'),
   tags: [],
   acceptance_criteria: [],
+  suggested_skills: null, route: 'unrouted',
   grooming_status: 'ungroomed',
   ai_priority: null,
   manual_priority: null,

@@ -264,6 +264,7 @@ export class VaultItemsService {
       type, category: null,
       assigned_to: this.currentActorId, tags: [],
       acceptance_criteria: [],
+      suggested_skills: null, route: 'unrouted',
       grooming_status: groomingStatus,
       ai_priority: null, manual_priority: input.manual_priority ?? null,
       ai_rationale: null, priority_confidence: null,
@@ -366,7 +367,13 @@ export class VaultItemsService {
   create(payload: CreateVaultItemPayload): void {
     const now = new Date().toISOString();
     const tempId = vaultItemId(crypto.randomUUID());
-    const optimistic: VaultItem = { ...payload, id: tempId, seq: -1, archived_at: null, created_at: now };
+    // Routing state is excluded from CreateVaultItemPayload (grooming and the
+    // orchestrator own it), so the optimistic row states what the server will
+    // return for a brand-new item: no skill chosen, not yet routed.
+    const optimistic: VaultItem = {
+      ...payload, id: tempId, seq: -1, archived_at: null, created_at: now,
+      suggested_skills: null, route: 'unrouted',
+    };
 
     if (isSeedMode()) {
       // No server to assign a real seq — keep the temp row, emit the event.
@@ -793,6 +800,7 @@ export class VaultItemsService {
       assigned_to: draft.assignee?.id ?? this.currentActorId,
       tags: dedupeStrings(draft.tags),
       acceptance_criteria: [],
+      suggested_skills: null, route: 'unrouted',
       grooming_status: isManual ? 'ready' : 'ungroomed',
       ai_priority: null,
       manual_priority: null,
@@ -1133,6 +1141,8 @@ function toVaultItem(a: ApiVaultItem): VaultItem {
     category,
     assigned_to: a.assigned_to === 'unassigned' ? null : actorId(a.assigned_to),
     tags: a.tags,
+    suggested_skills: a.suggested_skills ?? null,
+    route: a.route,
     // Production stores acceptance_criteria as free text. Round-trip with the
     // outbound serializer (toApiUpdateBody) which joins with '\n' — split here
     // so multi-criterion edits survive reload. `done` state is still lost

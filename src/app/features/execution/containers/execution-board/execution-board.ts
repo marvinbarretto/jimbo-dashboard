@@ -11,9 +11,9 @@ import { ProjectsService } from '@features/projects/data-access/projects.service
 import { ActorsService } from '@features/actors/data-access/actors.service';
 import { type CommissionItem, type CommissionStage } from '@domain/dispatch';
 import type { VaultItemId } from '@domain/ids';
-import { VaultCard, type ActionKey } from '@shared/components/vault-card/vault-card';
-import { CommissionCard, type CommissionAction } from '@features/execution/components/commission-card/commission-card';
-import type { CardContext, ManualCardContext, ProjectRef, SourceLabel } from '@shared/components/vault-card/card-context';
+import { VaultCard, type ActionKey, type CardFlag } from '@shared/components/vault-card/vault-card';
+import type { CommissionAction } from '@features/execution/components/commission-card/commission-card';
+import type { CardContext, ManualCardContext, DispatchCardContext, ProjectRef, SourceLabel } from '@shared/components/vault-card/card-context';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
 import { BoardCreateBar } from '@shared/components/board-create-bar/board-create-bar';
@@ -40,7 +40,6 @@ import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
 import { VaultTypesService } from '@features/vault-items/data-access/vault-types.service';
 import { AwaitingService } from '@features/awaiting/data-access/awaiting.service';
 import { AwaitingStrip } from '@features/awaiting/containers/awaiting-strip/awaiting-strip';
-import { GatesStrip } from '@features/execution/components/gates-strip/gates-strip';
 import { withLiveBoardUpdates } from '@features/execution/live/board-live';
 
 // The board collapsed from "Ready + 8 commission-stage columns" into three
@@ -55,31 +54,63 @@ import { withLiveBoardUpdates } from '@features/execution/live/board-live';
 //                 approved/running/pr_open)
 //   done        — finished (manual: completed; agent: merged/completed, plus the
 //                 terminal-negative failed/rejected, which carry a red pill)
-type BoardLane = 'ready' | 'in_progress' | 'done';
-const LANE_ORDER: readonly BoardLane[] = ['ready', 'in_progress', 'done'];
+//
+// 2026-09-04: three more lanes. The original collapse was right about the
+// *commission* stages — a card flashes through proposed/running/pr_open too fast
+// for a column to mean anything. These three are the opposite: items sit in them
+// for weeks (#2772 had been unroutable for 72 days), and until now they were
+// visible only as read-only counts in the gates strip above the board, which is
+// to say the board could not show you anything stuck *before* dispatch — which
+// was nearly everything.
+//   deferred    — the orchestrator parked it while the grooming gate is
+//                 saturated. Sitting patiently is the valve working, not a
+//                 fault, so this lane is collapsed by default and carries no
+//                 alarm colour. Marvin, 2026-09-04: "the other items just sit
+//                 patiently - its not a problem and shouldnt be thought of as
+//                 one".
+type BoardLane = 'waiting_on_you' | 'ready' | 'in_progress' | 'review' | 'done' | 'deferred';
+const LANE_ORDER: readonly BoardLane[] = [
+  'waiting_on_you', 'ready', 'in_progress', 'review', 'done', 'deferred',
+];
 
 const LANE_LABELS: Record<BoardLane, string> = {
-  ready:       'Ready',
-  in_progress: 'In Progress',
-  done:        'Done',
+  waiting_on_you: 'Waiting on you',
+  ready:          'Ready',
+  in_progress:    'In Progress',
+  review:         'Review',
+  done:           'Done',
+  deferred:       'Deferred',
 };
 
 const LANE_EMPTY: Record<BoardLane, string> = {
-  ready:       'Nothing ready',
-  in_progress: 'Nothing in progress',
-  done:        'Nothing done',
+  waiting_on_you: 'Nobody is waiting on you',
+  ready:          'Nothing ready',
+  in_progress:    'Nothing in progress',
+  review:         'Nothing to review',
+  done:           'Nothing done',
+  deferred:       'Nothing parked',
 };
 
 // Map a commission's stage onto a lane. Agent cards are system-driven: their lane
 // follows the dispatch, so they're not draggable.
-function laneForStage(stage: CommissionStage): BoardLane {
+//
+// `noteStillActive` decides Review. The API's universal review gate never
+// auto-sets a note to `done` on completion (services/dispatch.ts): a finished
+// commission leaves the note `active`, and that pair — completed dispatch,
+// active note — IS the review queue. It back-pressures deliberately, because
+// every unreviewed item holds a commission slot until Marvin approves or sends
+// it back, so the review rate throttles the whole execution lane.
+function laneForStage(stage: CommissionStage, noteStillActive: boolean): BoardLane {
   switch (stage) {
-    case 'proposed':  return 'ready';        // awaiting operator approval
-    case 'approved':
+    // `approved` means greenlit and queued, NOT started — measured 2026-09-04,
+    // JIM-4950 sat approved for 90 minutes with `started_at` still null. Calling
+    // that In Progress told Marvin an agent was working when none had claimed it.
+    case 'proposed':
+    case 'approved':  return 'ready';
     case 'running':
-    case 'pr_open':   return 'in_progress';  // greenlit and moving
+    case 'pr_open':   return 'in_progress';
+    case 'completed': return noteStillActive ? 'review' : 'done';
     case 'merged':
-    case 'completed':
     case 'failed':
     case 'rejected':  return 'done';         // terminal (failed/rejected = red pill)
   }
@@ -88,9 +119,24 @@ function laneForStage(stage: CommissionStage): BoardLane {
 // Map a manual (human-track) item onto a lane from its own state. started_at is
 // the only thing distinguishing Ready from In Progress for a human task — the
 // vault status model has no native "in progress".
-function laneForManual(item: VaultItem): BoardLane {
+//
+// `awaiting` is passed in because it lives on the board (AwaitingService), not on
+// the item. It matters here: an item an agent picked up, worked, and handed back
+// HAS been started — leaving it in Ready implies nobody has touched it, when in
+// fact it is mid-flight and stalled on Marvin. Marvin, 2026-09-04: "if a vault
+// item has been started, and then handed back then its in progress".
+function laneForManual(item: VaultItem, awaiting = false): BoardLane {
   if (isDone(item))      return 'done';
   if (item.started_at)   return 'in_progress';
+  // Handbacks get their own lane rather than sharing In Progress. Measured
+  // 2026-09-04: 307 of them, which drowned the single actively-running
+  // commission. They are also the only lane Marvin alone can clear — an agent
+  // asked a question and cannot proceed until he answers.
+  if (awaiting)          return 'waiting_on_you';
+  // Checked before `unroutable` so a parked item reads as parked rather than as
+  // a routing failure — deferral is a decision the orchestrator made, missing
+  // skill is a decision nobody made.
+  if (item.route === 'deferred') return 'deferred';
   return 'ready';
 }
 
@@ -125,7 +171,8 @@ interface FacetSkip { skipOwner?: boolean; skipProject?: boolean; skipPriority?:
 
 @Component({
   selector: 'app-execution-board',
-  imports: [VaultCard, CommissionCard, KanbanColumn, KanbanFilterBar, BoardCreateBar, UiButtonLink, AwaitingStrip, GatesStrip],
+  // GatesStrip omitted while <app-gates-strip> is commented out in the template.
+  imports: [VaultCard, KanbanColumn, KanbanFilterBar, BoardCreateBar, UiButtonLink, AwaitingStrip],
   templateUrl: './execution-board.html',
   styleUrl: './execution-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -161,7 +208,11 @@ export class ExecutionBoard {
   protected readonly drag = createKanbanDragState<VaultItemId, BoardLane>(
     id => {
       const item = this.vaultItemsService.getById(id);
-      return item ? laneForManual(item) : undefined;
+      if (!item) return undefined;
+      // Must pass `awaiting` too, or a handed-back card renders in In Progress
+      // while the drag state thinks it is in Ready — and the same-lane-drop
+      // refusal then fires on the wrong lane.
+      return laneForManual(item, this.awaitingService.awaitingNoteIds().has(item.id as string));
     },
   );
 
@@ -330,15 +381,17 @@ export class ExecutionBoard {
     const awaitingIds = this.awaitingService.awaitingNoteIds();
 
     for (const item of this.visibleManualItems()) {
+      const awaiting = awaitingIds.has(item.id as string);
+      const lane     = laneForManual(item, awaiting);
       const blockers = this.dependenciesService.blockersFor(item.id)();
-      const blocked  = laneForManual(item) === 'ready' && blockers.length > 0;
+      const blocked  = lane === 'ready' && blockers.length > 0;
       cards.push({
         kind:        'manual',
         item,
-        lane:        laneForManual(item),
+        lane,
         blocked,
         blockerLabel: blocked ? `blocked · #${blockers[0].blocker_seq}` : null,
-        awaiting:    awaitingIds.has(item.id as string),
+        awaiting,
         sort:        toSortableCard(item),
         doneAt:      item.completed_at,
       });
@@ -349,7 +402,11 @@ export class ExecutionBoard {
       cards.push({
         kind:      'commission',
         item:      c,
-        lane:      laneForStage(c.stage),
+        // No vault item loaded yet (the board's 5,000-row fetch is still in
+        // flight) means we cannot tell reviewed from unreviewed — treat it as
+        // still active, so a finished commission shows up for review rather
+        // than silently landing in Done.
+        lane:      laneForStage(c.stage, vi ? isActive(vi) : true),
         // A commission inherits its task's priority and identity, but its own
         // dispatch timestamp — the dispatch is what's moving, not the capture.
         sort: {
@@ -402,6 +459,23 @@ export class ExecutionBoard {
     return this.resolveProject(item.taskId as string);
   }
 
+  /**
+   * Board-known markers handed to the card so they render inside it.
+   *
+   * `awaiting` stays louder than `blocked` for the same reason it always was:
+   * blocked means this card waits on something else, awaiting means an agent
+   * waits on Marvin.
+   */
+  manualFlags(card: Extract<BoardCard, { kind: 'manual' }>): readonly CardFlag[] {
+    const flags: CardFlag[] = [];
+    if (card.blocked && card.blockerLabel) flags.push({ label: card.blockerLabel, kind: 'blocked' });
+    // "handed back" is the vocabulary the rest of the system already uses (the
+    // awaiting strip counts handbacks), and it names the event rather than
+    // editorialising about the card. Two words, and it says who acted.
+    if (card.awaiting) flags.push({ label: 'handed back', kind: 'awaiting' });
+    return flags;
+  }
+
   cardContextForManual(item: VaultItem): CardContext {
     const ctx: ManualCardContext = {
       kind: 'manual',
@@ -413,6 +487,39 @@ export class ExecutionBoard {
       lastActivityAt: item.latest_activity_at ?? item.created_at,
       sourceKind: item.source?.kind ?? null,
       sourceUrl: item.source?.url ?? null,
+    };
+    return ctx;
+  }
+
+  /**
+   * Dispatch context for a commission, so it renders through `app-vault-card`
+   * like everything else.
+   *
+   * The board ran two card components for the same job until 2026-09-04 —
+   * `app-commission-card` in In Progress/Done and `app-vault-card` everywhere
+   * else — which meant two headers, two title treatments and two action
+   * footers for cards sitting side by side. Marvin: "feels like we should only
+   * have 1". Everything commission-specific (stage pill, PR link, failure text,
+   * the xN history expander) moved onto the dispatch branch of the shared card.
+   */
+  cardContextForCommission(c: CommissionItem): CardContext {
+    const item = this.vaultItemsService.getById(c.taskId) ?? null;
+    const ctx: DispatchCardContext = {
+      kind: 'dispatch',
+      entry: c.latest,
+      item,
+      project: this.projectForCommission(c),
+      owner: c.executor,
+      skillDisplayName: null,
+      parentEpic: null,
+      // The entry carries no model — that lives on the activity event, which the
+      // board does not load. Null is honest here; the card omits the chip.
+      modelId: null,
+      genesis: null,
+      stage: c.stage,
+      history: c.history,
+      taskTitle: c.taskTitle,
+      taskSeq: c.taskSeq,
     };
     return ctx;
   }
@@ -472,6 +579,19 @@ export class ExecutionBoard {
 
   // --- mutations ----------------------------------------------------------
 
+  /**
+   * Bridge from the shared card's `ActionKey` to the commission actions.
+   *
+   * `dispatchActions()` in vault-card only ever emits retry / archive / dismiss
+   * for a dispatch card, which is exactly the CommissionAction set — but the
+   * types are separate unions, so the narrowing is explicit rather than a cast.
+   */
+  onCommissionCardAction(item: CommissionItem, key: ActionKey): void {
+    if (key === 'retry' || key === 'archive' || key === 'dismiss') {
+      this.onCommissionAction(item, key);
+    }
+  }
+
   onCommissionAction(item: CommissionItem, key: CommissionAction): void {
     const entry = item.latest;
     switch (key) {
@@ -529,6 +649,15 @@ export class ExecutionBoard {
       case 'ready':       this.commands.moveToReady(id); return;
       case 'in_progress': this.commands.startWork(id);   return;
       case 'done':        this.commands.complete(id);    return;
+      // Three lanes a drag cannot produce, each for its own reason:
+      //   deferred       — the orchestrator's saturation decision, not a gesture
+      //   waiting_on_you — set by an agent handing work back, not by Marvin
+      //   review         — reached by an agent completing a commission
+      // Silently doing nothing on drop is worse than refusing, so they are
+      // listed rather than falling through the switch.
+      case 'deferred':
+      case 'waiting_on_you':
+      case 'review':      return;
     }
   }
 

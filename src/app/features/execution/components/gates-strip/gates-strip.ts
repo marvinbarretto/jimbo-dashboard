@@ -111,9 +111,20 @@ export class GatesStrip {
    * hour-granular, so the fetch is the honest moment to measure them, and a
    * template that calls `Date.now()` re-measures on every change detection.
    */
+  // Gates the board now shows directly, removed 2026-09-04 and not coming back.
+  //   deferred   — a Deferred column
+  //   unroutable — the `no skill` badge on every card that lacks one
+  // A count card restating something you are already looking at is duplication.
+  // The three that remain (notifications, grooming, commission) are pump
+  // capacity against a threshold — valve state, not item state — which no
+  // column can express: nothing on a board says "212 against a limit of 40".
+  private static readonly DERIVABLE_FROM_BOARD = new Set(['unroutable', 'deferred']);
+
   protected readonly gates = computed<GateView[]>(() => {
     const now = Date.now();
-    return (this.res.value()?.items ?? []).map(g => ({
+    return (this.res.value()?.items ?? [])
+      .filter(g => !GatesStrip.DERIVABLE_FROM_BOARD.has(g.id))
+      .map(g => ({
       ...g,
       fillPct: g.threshold > 0 ? Math.min(100, (g.current / g.threshold) * 100) : 0,
       movedAge: g.last_moved_at ? age(g.last_moved_at, now) : null,

@@ -23,6 +23,7 @@ function baseItem(over: Partial<VaultItem>): VaultItem {
     seq: 1, title: 'sample', body: '',
     type: 'task', category: null,
     assigned_to: null, tags: [], acceptance_criteria: [],
+    suggested_skills: null, route: 'unrouted',
     grooming_status: 'ungroomed',
     ai_priority: null, manual_priority: null, ai_rationale: null,
     priority_confidence: null, actionability: null,

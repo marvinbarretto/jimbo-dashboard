@@ -1,13 +1,9 @@
 <div class="board">
+  <!-- No title or explainer. The nav says Execution and the columns say what the
+       board does; a paragraph restating both cost ~110px above the fold on every
+       visit. Marvin, 2026-09-04: "I just want to see the columns and the
+       filtering options". -->
   <header class="board__header">
-    <h1>Execution</h1>
-    <p class="board__hint">
-      One board for everything in flight — human and agent. <strong>Ready</strong> holds
-      whatever's waiting to be picked up (groomed-ready agent tasks + your own tasks,
-      no grooming required). Drag your cards into <strong>In Progress</strong> and
-      <strong>Done</strong>; agent cards move themselves and show their commission
-      stage as a pill. Sorted P0 → P3. Blocked cards are greyed until their blocker clears.
-    </p>
     <app-board-create-bar
       buttonLabel="New manual A-item"
       (create)="onCreateManualItem()"
@@ -43,7 +39,11 @@
   </header>
 
   <!-- Pinned above the lanes: the one thing the operator is watching for. -->
-  <app-gates-strip />
+  <!-- Hidden 2026-09-04 at Marvin's request while the columns prove themselves.
+       Two of its five cards (unroutable, deferred) became board state; the other
+       three are pump capacity, which no column can show. Restore by uncommenting
+       — the component and its filter are intact. -->
+  <!-- <app-gates-strip /> -->
   <app-awaiting-strip />
 
   <button
@@ -116,11 +116,13 @@
         >
           @for (card of lane.cards; track cardKey(card)) {
             @if (card.kind === 'commission') {
-              <app-commission-card
-                [item]="card.item"
-                [project]="projectForCommission(card.item)"
-                (open)="onOpenCommission(card.item)"
-                (action)="onCommissionAction(card.item, $event)" />
+              <!-- One card component for the whole board. Commission-specific
+                   detail (stage pill, PR link, failure text, xN history) lives
+                   on the dispatch branch of app-vault-card. -->
+              <app-vault-card
+                density="compact"
+                [context]="cardContextForCommission(card.item)"
+                (actionTriggered)="onCommissionCardAction(card.item, $event)" />
             } @else {
               <div
                 class="board__card-wrap"
@@ -130,15 +132,14 @@
                 (dragstart)="onCardDragStart($event, card.item)"
                 (dragend)="onCardDragEnd()"
               >
-                @if (card.blocked) {
-                  <span class="board__chip board__chip--blocked">{{ card.blockerLabel }}</span>
-                }
-                <!-- A card an agent is stalled behind must not read like one
-                     Marvin captured himself — that conflation is the defect. -->
-                @if (card.awaiting) {
-                  <span class="board__chip board__chip--awaiting">blocking an agent</span>
-                }
+                <!-- Flags go INSIDE the card now. A card an agent is stalled
+                     behind must not read like one Marvin captured himself —
+                     that conflation is the defect the marker exists to prevent,
+                     and it does that better in the head row than floating above
+                     the card as a separate object. -->
                 <app-vault-card
+                  density="compact"
+                  [flags]="manualFlags(card)"
                   [context]="cardContextForManual(card.item)"
                   (actionTriggered)="onManualAction(card.item, $event)" />
               </div>

@@ -1,5 +1,5 @@
 import type { VaultItem, GroomingStatus, SourceKind } from '@domain/vault';
-import type { DispatchQueueEntry } from '@domain/dispatch';
+import type { DispatchQueueEntry, CommissionStage } from '@domain/dispatch';
 import type { ThreadMessage } from '@domain/thread';
 import type { ActorId } from '@domain/ids';
 import type { ChildStatus } from '@shared/components/epic-rollup/epic-rollup';
@@ -74,6 +74,25 @@ export interface DispatchCardContext {
   readonly modelId:          string | null;
   // How the vault item came to exist. Item-level, not run-level.
   readonly genesis:          Genesis | null;
+
+  // ── Commission-view extras ──────────────────────────────────────────
+  // Present when this dispatch is rendered as a commission (the execution
+  // board's In Progress / Done lanes). They are what `app-commission-card`
+  // carried before it was folded into this component on 2026-09-04 — the board
+  // was running two card components for the same job, and Marvin asked for one.
+  //
+  // `stage` is derived (merged / pr_open / rejected …) and strictly richer than
+  // `entry.status`, so a commission keeps its stage pill rather than dropping to
+  // the raw dispatch badge.
+  readonly stage?:           CommissionStage;
+  /** Every commission dispatch for this item, newest-first. Drives the ×N expander. */
+  readonly history?:         readonly DispatchQueueEntry[];
+  // The dispatch row carries the task's title and handle, so a commission can
+  // name itself before the vault board (5,000 rows) has finished loading.
+  // Without these the card falls back to `task #note_6288da73` — the raw id —
+  // for the first seconds of every page load.
+  readonly taskTitle?:       string | null;
+  readonly taskSeq?:         number | null;
 }
 
 export interface ManualCardContext {

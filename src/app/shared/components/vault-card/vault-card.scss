@@ -322,3 +322,108 @@ a.vault-card__genesis:hover { background: color-mix(in srgb, var(--color-accent)
   &:hover { background: var(--color-surface-raised, var(--color-surface)); }
   &:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
 }
+
+// ── Compact density ──────────────────────────────────────────────────
+// Opt-in via `density="compact"`, used by the execution board where ~979
+// items sit in one column. The markup already drops the duplicated priority
+// badge, the duplicated owner avatar and the tag list (see vault-card.html);
+// this tightens what is left so the saving is vertical space rather than
+// whitespace.
+.vault-card--compact {
+  border-radius: 6px;
+}
+.vault-card--compact .vault-card__body {
+  padding: 0.3rem 0.5rem 0.35rem;
+  gap: 0.2rem;
+}
+.vault-card--compact .vault-card__title {
+  // Two lines is the point at which a title stops being scannable and starts
+  // being read. Clamp rather than truncate so the wrap still reads naturally.
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Board-supplied markers, inline in the head row. These previously rendered as
+// siblings floating above the card (.board__chip on the execution board), which
+// read as a separate object and cost a full row per flagged card. Colours match
+// the originals: `blocked` = this card waits on something; `awaiting` = louder,
+// because something else waits on YOU.
+.vault-card__flag {
+  font-size: 0.625rem;
+  line-height: 1;
+  padding: 0.15rem 0.3rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.vault-card__flag--blocked {
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning);
+}
+.vault-card__flag--awaiting {
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+  background: var(--color-danger-glow);
+}
+
+// "no skill" is the state that keeps an item out of the pump entirely, so it
+// reads as a warning rather than as muted metadata. Amber, not red: nothing is
+// broken — grooming simply hasn't chosen yet, and 59 items sat in exactly this
+// state on 2026-09-04 with no way to see it from the board.
+.vault-card__skill--none {
+  color: var(--color-warning);
+  border-left-color: var(--color-warning);
+  font-style: italic;
+}
+
+// The card clips its children (`overflow: hidden`, so app-item-header can bleed
+// edge-to-edge without a radius of its own). That also clipped the priority
+// dropdown, which is absolutely positioned inside the card — the panel rendered
+// but got cut at the card's bottom edge.
+//
+// `.ui-dropdown__panel` only exists in the DOM while a dropdown is open, so this
+// says exactly "stop clipping while something is open" and costs nothing the
+// rest of the time. The header keeps its own clip below so it still bleeds.
+.vault-card:has(.ui-dropdown__panel) {
+  overflow: visible;
+  // Lift the whole card above its siblings — z-index on the panel alone loses
+  // to the next card's stacking context.
+  position: relative;
+  z-index: 30;
+}
+.vault-card:has(.ui-dropdown__panel) app-item-header {
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  overflow: hidden;
+}
+
+// ── Commission detail, folded in from app-commission-card (2026-09-04) ──
+.vault-card__pr {
+  font-size: 0.65rem;
+  color: var(--color-accent);
+  align-self: flex-start;
+  text-decoration: none;
+}
+.vault-card__pr:hover { text-decoration: underline; }
+
+.vault-card__error {
+  font-size: 0.65rem;
+  color: var(--color-danger);
+  margin: 0;
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.vault-card__history {
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  padding: 0.1rem 0.3rem;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.vault-card__history--open { color: var(--color-text); }

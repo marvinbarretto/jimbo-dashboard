@@ -1,9 +1,13 @@
 <article class="vault-card" [class.vault-card--epic]="isEpic()">
 
+  <!-- Compact drops the header's priority: the body row below renders the same
+       value as an interactive dropdown, so showing it here too is duplication,
+       not emphasis. Owner stays, because compact hides the identity row that
+       would otherwise carry it. -->
   <app-item-header
     [projectName]="context().project?.display_name ?? 'No project'"
     [projectColor]="context().project?.color_token ?? null"
-    [priority]="priority()"
+    [priority]="compact() ? null : priority()"
     [owner]="context().owner"
     secondary="epic"
     [epicLabel]="epicHeaderLabel()" />
@@ -32,7 +36,14 @@
     }
 
     @if (dispatch(); as d) {
-      <app-dispatch-status-badge [status]="d.entry.status" />
+      <!-- `stage` is derived and richer than the raw dispatch status (merged,
+           pr_open, rejected …), so a commission keeps its stage pill. Cards from
+           the dispatch board carry no stage and fall back to the status badge. -->
+      @if (d.stage; as st) {
+        <app-commission-stage-pill [stage]="st" />
+      } @else {
+        <app-dispatch-status-badge [status]="d.entry.status" />
+      }
       @if (d.entry.retry_count > 0) {
         <span class="vault-card__retry" [attr.title]="'Attempt ' + (d.entry.retry_count + 1)">↻{{ d.entry.retry_count }}</span>
       }
@@ -86,6 +97,10 @@
       }
     }
 
+    @for (flag of flags(); track flag.label) {
+      <span class="vault-card__flag" [class]="'vault-card__flag--' + flag.kind">{{ flag.label }}</span>
+    }
+
     <span
       class="vault-card__age"
       [class.vault-card__age--stuck]="isStuck()"
@@ -110,7 +125,10 @@
     <span class="vault-card__title vault-card__title--missing">{{ title() }}</span>
   }
 
-  @if (tags().length > 0) {
+  <!-- Tags are a filter, not a scan signal — the board's filter bar already
+       offers them, and reading them off a card tells you nothing about whether
+       the item can move. -->
+  @if (!compact() && tags().length > 0) {
     <ul class="vault-card__tags" aria-label="Tags">
       @for (tag of tags(); track tag) {
         <li class="vault-card__tag">#{{ tag }}</li>
@@ -118,6 +136,7 @@
     </ul>
   }
 
+  @if (!compact()) {
   <div class="vault-card__identity">
     @if (grooming(); as g) {
       @if (actorOptions().length > 0) {
@@ -167,11 +186,43 @@
       <span class="vault-card__source">{{ s.text }}</span>
     }
   </div>
+  }
 
   @if (dispatch(); as d) {
+    @if (d.entry.pr_url; as pr) {
+      <a class="vault-card__pr" [href]="pr" target="_blank" rel="noopener"
+         (click)="$event.stopPropagation()">PR ↗</a>
+    }
+    @if (d.entry.status === 'failed' && d.entry.error; as err) {
+      <p class="vault-card__error">{{ err }}</p>
+    }
+    @if ((d.history?.length ?? 0) > 1) {
+      <button
+        type="button"
+        class="vault-card__history"
+        [class.vault-card__history--open]="historyOpen()"
+        [attr.aria-expanded]="historyOpen()"
+        [attr.title]="d.history!.length + ' commission dispatches'"
+        (click)="historyOpen.set(!historyOpen()); $event.stopPropagation()"
+      >×{{ d.history!.length }} {{ historyOpen() ? '▾' : '▸' }}</button>
+      @if (historyOpen()) {
+        <app-dispatch-history-list [history]="d.history!" />
+      }
+    }
     <span class="vault-card__skill" [attr.title]="d.entry.skill">
       {{ d.skillDisplayName ?? d.entry.skill }}
     </span>
+  } @else if (compact() && showSkill()) {
+    <!-- The skill decides whether an item can move at all: the pump declines to
+         dispatch a leaf with none rather than guessing, which is what "ready but
+         unroutable" means. Until now this only rendered for cards that had
+         already been dispatched — showing the skill exactly when it had stopped
+         mattering, and hiding it while the item was stuck waiting for one. -->
+    <span
+      class="vault-card__skill"
+      [class.vault-card__skill--none]="!suggestedSkill()"
+      [attr.title]="suggestedSkill() ?? 'No skill chosen — the pump will not dispatch this'"
+    >{{ suggestedSkill() ?? 'no skill' }}</span>
   }
 
   @if (calloutKind(); as kind) {

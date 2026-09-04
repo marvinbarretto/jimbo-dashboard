@@ -48,6 +48,7 @@ function makeItem(overrides: Partial<VaultItem> = {}): VaultItem {
     assigned_to: null,
     tags: [],
     acceptance_criteria: [],
+    suggested_skills: null, route: 'unrouted',
     grooming_status: 'classified',
     ai_priority: null,
     manual_priority: null,

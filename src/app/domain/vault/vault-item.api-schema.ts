@@ -53,6 +53,11 @@ export const ApiVaultItemSchema = z.object({
   actionability:        z.string().nullable(),
   assigned_to:          z.string().min(1),
   route:                z.string(),
+  // The skill grooming chose to run this leaf. Null is a deliberate abstain, and
+  // it is the whole reason the "Ready but unroutable" column exists: the pump
+  // declines to dispatch an item it cannot route rather than guessing. Optional
+  // with a null default so a pre-deploy API that omits the key still parses.
+  suggested_skills:     z.string().nullable().optional().default(null),
   tags:                 z.array(z.string()),
   ready:                z.boolean(),
   is_epic:              z.boolean(),

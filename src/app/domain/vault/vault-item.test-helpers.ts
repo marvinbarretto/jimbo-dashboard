@@ -75,6 +75,8 @@ export function buildVaultItem(overrides: VaultItemOverrides = {}): VaultItem {
     assigned_to:         null,
     tags:                [],
     acceptance_criteria: [],
+    suggested_skills:    null,
+    route:               'unrouted',
     grooming_status:     'ungroomed',
     ai_priority:         null,
     manual_priority:     null,
