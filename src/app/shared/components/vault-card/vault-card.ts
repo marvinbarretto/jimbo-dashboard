@@ -396,15 +396,15 @@ export class VaultCard {
   /**
    * The skill grooming chose for this item, for cards that aren't dispatched yet.
    *
-   * Stored as a comma-joined string server-side; only the first is the one that
-   * would run, so showing more would imply a choice nobody has made.
+   * The column is a text[]; the board projection returns element 1 — the one the
+   * dispatch query would actually run — so this is already a single skill id.
    */
   protected readonly suggestedSkill = computed<string | null>(() => {
     const ctx = this.context();
     const raw = ctx.kind === 'manual' ? ctx.item.suggested_skills
       : ctx.kind === 'grooming' ? ctx.item.suggested_skills
       : null;
-    return raw?.split(',')[0]?.trim() || null;
+    return raw?.trim() || null;
   });
 
   /**

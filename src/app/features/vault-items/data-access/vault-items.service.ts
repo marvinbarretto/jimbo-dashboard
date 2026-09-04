@@ -86,6 +86,13 @@ export class VaultItemsService {
       return;
     }
     this.http.get<unknown>(
+      // NOT view=card yet, deliberately. The endpoint supports it (43% smaller,
+      // measured over 2,163 production rows) but this one load feeds every
+      // surface, and two of them read fields view=card drops:
+      //   • vault-items-list builds its search index from `body`
+      //   • the grooming card's rationale callout reads `ai_rationale`
+      // Adopting it means the store holds thin rows and those surfaces hydrate
+      // what they need — a store-shape change, not a query-string change.
       `${environment.dashboardApiUrl}/api/vault/board?status=active&status=inbox&status=done&limit=5000`,
     ).subscribe({
       next: (raw) => {
