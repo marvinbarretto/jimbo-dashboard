@@ -163,6 +163,90 @@ function countByExecutor(
   return out;
 }
 
+/** The longest-running job an executor currently holds, if any. */
+function longestRunningFor(
+  executor: string,
+  running: readonly FleetRunning[],
+  now: Date,
+): { skill: string; mins: number | null } | null {
+  return running
+    .filter(j => (j.executor ?? 'unassigned') === executor)
+    .map(j => ({ skill: j.skill ?? j.flow, mins: minutesSince(j.started_at, now) }))
+    .sort((a, b) => (b.mins ?? 0) - (a.mins ?? 0))[0] ?? null;
+}
+
+/**
+ * Why an executor's queue is not moving, stated as an observation.
+ *
+ * "Nothing is picking them up" is the strongest claim this panel makes, and it
+ * used to be asserted from the heartbeat alone — a worker anything but `ok`
+ * with jobs queued was declared abandoned, and the reader was given no
+ * evidence to check that against. Two things were wrong with that.
+ *
+ * The first is a plain omission: a worker holding a job is picking work up,
+ * whatever its heartbeat says. The heartbeat updates when it polls, not when
+ * it claims, so a 30-minute dispatch reads as 30 minutes of silence — and the
+ * panel called that worker dead while it was visibly doing the work.
+ *
+ * The second is that even when the claim was right, it read as a diagnosis
+ * rather than a reading. So every branch now says what was actually seen — the
+ * job in flight, or how long the silence has run — and the reader can tell a
+ * worker between jobs from a worker that has stopped.
+ *
+ * @param executor - Executor owning the queue
+ * @param tone - The worker's own health tone; `ok` means checking in normally
+ * @param workers - Worker heartbeats
+ * @param running - Jobs currently marked running
+ * @param now - Reference time
+ * @returns A reason phrase, and whether the queue is genuinely abandoned
+ */
+function backlogReason(
+  executor: string,
+  tone: HealthTone,
+  workers: readonly FleetWorker[],
+  running: readonly FleetRunning[],
+  now: Date,
+): { reason: string; abandoned: boolean } {
+  const job = longestRunningFor(executor, running, now);
+  if (job) {
+    const age = job.mins === null ? null : formatAge(job.mins);
+    // Work in flight normally settles it — but only while it is still work. A
+    // job past the hang threshold holds the executor's slot without finishing,
+    // so the queue behind it is as stalled as one behind a dead worker.
+    // Calling that "running behind, not abandoned" would be exactly the kind
+    // of false reassurance this function exists to remove — and the reader
+    // cannot rely on the stuck-job row to correct it, since that row can be
+    // pushed past the bar's visible limit.
+    if (job.mins !== null && job.mins >= JOB_STUCK_HOURS * 60) {
+      return {
+        reason: `${job.skill} has been running ${age} and is hung — nothing else is being picked up`,
+        abandoned: true,
+      };
+    }
+    return {
+      reason: `busy on ${job.skill}${age === null ? '' : ` for ${age}`} — running behind, not abandoned`,
+      abandoned: false,
+    };
+  }
+
+  const worker = workers.find(w => w.id === executor) ?? null;
+  // An unknown executor cannot be vouched for: nobody has claimed the queue.
+  if (!worker) return { reason: `no worker named ${executor} is reporting`, abandoned: true };
+
+  const quiet = minutesSince(worker.checked_at, now);
+  const since = quiet === null ? 'has never checked in' : `last check-in ${formatAge(quiet)} ago`;
+  if (tone === 'ok') return { reason: `accepted but not started — ${since}`, abandoned: false };
+
+  // The worker's own status is quoted even though nothing is running, because
+  // the contradiction is the diagnosis: "executing" with an empty run list is
+  // a worker whose job was reaped out from under it and which has not come
+  // back to poll.
+  return {
+    reason: `nothing running and ${since} (${worker.status ?? 'status unknown'}) — nothing is picking them up`,
+    abandoned: true,
+  };
+}
+
 /**
  * Everything currently wrong, loudest first.
  *
@@ -197,7 +281,8 @@ export function healthAlerts(
     const suspension = suspensions.get(executor) ?? null;
     // An unknown executor cannot be vouched for, so a backlog behind one is
     // treated as stalled rather than assumed healthy.
-    const idle = (byWorker.get(`worker-${executor}`)?.tone ?? 'alert') !== 'ok';
+    const tone = byWorker.get(`worker-${executor}`)?.tone ?? 'alert';
+    const { reason, abandoned } = backlogReason(executor, tone, workers, running, now);
 
     rows.push({
       id: `backlog-${executor}`,
@@ -205,13 +290,9 @@ export function healthAlerts(
       // Still shown while suspended, deliberately. Knowing how much has piled
       // up is the useful part; the only thing that changes is that it is no
       // longer a surprise.
-      detail: suspension
-        ? `piling up while suspended — ${suspension.reason}`
-        : idle
-          ? 'and the worker is overdue a check-in — nothing is picking them up'
-          : 'accepted but not started',
+      detail: suspension ? `piling up while suspended — ${suspension.reason}` : reason,
       expectation: suspension ? 'expected to accumulate' : 'drains continuously',
-      tone: suspension ? 'ok' : idle ? 'alert' : 'warn',
+      tone: suspension ? 'ok' : abandoned ? 'alert' : 'warn',
     });
   }
 
@@ -333,19 +414,25 @@ export function healthNotifications(
 
   for (const [executor, count] of backlogByExecutor(queue)) {
     if (count === 0) continue;
-    // Only when nothing is picking the work up. A backlog behind a healthy
-    // worker is a busy queue, and one behind a suspended worker is exactly
-    // what was predicted — neither is an emergency.
-    if ((byWorker.get(`worker-${executor}`)?.tone ?? 'alert') === 'ok') continue;
+    // A backlog behind a healthy worker is a busy queue, and one behind a
+    // suspended worker is exactly what was predicted — neither is an emergency.
+    const tone = byWorker.get(`worker-${executor}`)?.tone ?? 'alert';
+    if (tone === 'ok') continue;
+    const { reason, abandoned } = backlogReason(executor, tone, workers, running, now);
     rows.push({
       id: `health-backlog-${executor}`,
       source: 'Fleet',
-      message: `${count} job${count === 1 ? '' : 's'} waiting on ${executor} and nothing is picking them up`,
-      tone: 'danger',
+      message: `${count} job${count === 1 ? '' : 's'} waiting on ${executor} — ${reason}`,
+      // Only an abandoned queue is an outage. A queue behind a worker that is
+      // late but still holding work is running behind, and colouring that the
+      // same red as a dead worker is what made the bar unreadable.
+      tone: abandoned ? 'danger' : 'warning',
       href: '/fleet',
       count,
       dismissible: false,
-      standingHint: 'Clears when the queue starts draining',
+      standingHint: abandoned
+        ? 'Clears when a worker picks the queue up again'
+        : 'Clears when the queue starts draining',
     });
   }
 

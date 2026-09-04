@@ -189,6 +189,36 @@ describe('healthNotifications', () => {
     expect(stalled.some(r => r.message.includes('21 jobs waiting on boris'))).toBe(true);
   });
 
+  // The heartbeat updates on poll, not on claim, so a worker part-way through
+  // a 30-minute dispatch looks silent. Calling that "nothing is picking them
+  // up" accused a worker of being dead while it was visibly doing the work.
+  it('never claims a queue is abandoned while the worker holds a job', () => {
+    const rows = healthNotifications(
+      [worker({ id: 'jeffrey', checked_at: agoMin(36) })],
+      [depth('jeffrey', 'approved', 3)],
+      [running({ id: '1', executor: 'jeffrey', skill: 'dispatch/vault-decompose', started_at: agoMin(32) })],
+      NOW);
+
+    const backlog = rows.find(r => r.id === 'health-backlog-jeffrey')!;
+    expect(backlog.message).toBe(
+      '3 jobs waiting on jeffrey — busy on dispatch/vault-decompose for 32m — running behind, not abandoned');
+    expect(backlog.tone).toBe('warning');
+  });
+
+  // The claim survives where it is true — but it now carries the reading it
+  // was drawn from, so "dead worker" and "worker between jobs" stop looking
+  // identical to the reader.
+  it('shows the evidence behind an abandoned queue rather than only the verdict', () => {
+    const rows = healthNotifications(
+      [worker({ id: 'boris', checked_at: agoMin(91) })],
+      [depth('boris', 'approved', 1)], [], NOW);
+
+    const backlog = rows.find(r => r.id === 'health-backlog-boris')!;
+    expect(backlog.message).toBe(
+      '1 job waiting on boris — nothing running and last check-in 1h 31m ago (polling) — nothing is picking them up');
+    expect(backlog.tone).toBe('danger');
+  });
+
   // Six stuck dispatches are one problem. Six rows would bury everything else.
   it('collapses every hung job into a single row', () => {
     const rows = healthNotifications([], [], [
@@ -219,6 +249,10 @@ describe('healthNotifications', () => {
     expect(rows.length).toBeGreaterThan(0);
     expect(rows.every(r => r.dismissible === false)).toBe(true);
     expect(rows.every(r => r.standingHint !== null)).toBe(true);
+    // A 10h job is not "busy". It holds the slot, so the queue behind it is
+    // stalled — and the backlog row must not reassure while the stuck-job row
+    // does the alarming, since that row can be scrolled out of the bar.
+    expect(rows.find(r => r.id === 'health-backlog-boris')!.message).toContain('is hung');
   });
 });
 
