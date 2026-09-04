@@ -166,17 +166,46 @@ describe('VaultItemsService.createWithRelations (HTTP mode)', () => {
     service = TestBed.inject(VaultItemsService);
     http = TestBed.inject(HttpTestingController);
 
-    // Constructor fires the phase-1 board GET (active/inbox/done); flushing a
-    // valid response triggers the phase-2 archive GET — flush both empty.
+    // Constructor fires exactly ONE board GET (active/inbox/done). The archive
+    // is no longer chained onto it — it costs 5.3 MB against production and only
+    // vault-items-list renders archived rows, so it is opt-in via
+    // ensureArchived(). See the archive-loading block below.
     const boardReq = http.expectOne(req => req.url.includes('/api/vault/board'));
     boardReq.flush({ items: [], total: 0, limit: 5000 });
-    const archiveReq = http.expectOne(req => req.url.includes('/api/vault/board'));
-    archiveReq.flush({ items: [], total: 0, limit: 5000 });
   });
 
   afterEach(() => {
     http.verify();
     resetSeedModeCache();
+  });
+
+  // ── Archive loading is opt-in ────────────────────────────────────────
+  // It used to fire behind every initial load: 5.3 MB over 11.2s measured
+  // against production 2026-09-04, on top of the 7.7 MB the page already blocks
+  // on — paid by every board that filters archived rows out before render.
+  // `http.verify()` in afterEach is what proves the initial load stays single.
+
+  it('does not fetch the archive on initial load', () => {
+    // beforeEach already flushed the one board GET. Any second request here
+    // would fail http.verify() in afterEach.
+    expect(service.isArchiveLoading()).toBe(false);
+  });
+
+  it('fetches the archive when a surface asks for it', () => {
+    service.ensureArchived();
+    const req = http.expectOne(r => r.url.includes('status=archived'));
+    req.flush({ items: [], total: 0, limit: 5000 });
+    expect(service.isArchiveLoading()).toBe(false);
+  });
+
+  it('does not refetch the archive once it has landed', () => {
+    service.ensureArchived();
+    http.expectOne(r => r.url.includes('status=archived'))
+      .flush({ items: [], total: 0, limit: 5000 });
+
+    // A component may call this from an effect, so repeat calls must be free.
+    service.ensureArchived();
+    service.ensureArchived();
   });
 
   it('posts the note body with title, type, source, and assigned_to', () => {
@@ -394,10 +423,9 @@ describe('VaultItemsService mutations (HTTP mode, withOptimistic-backed)', () =>
     http = TestBed.inject(HttpTestingController);
     toast = TestBed.inject(ToastService);
 
+    // One board GET only — the archive is opt-in via ensureArchived().
     const boardReq = http.expectOne(r => r.url.includes('/api/vault/board'));
     boardReq.flush({ items, total: items.length, limit: 5000 });
-    const archiveReq = http.expectOne(r => r.url.includes('/api/vault/board'));
-    archiveReq.flush({ items: [], total: 0, limit: 5000 });
   }
 
   function lastErrorToast(): string | undefined {

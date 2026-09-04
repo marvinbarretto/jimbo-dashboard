@@ -52,7 +52,14 @@ export class VaultItemsList {
   private readonly router = inject(Router);
   private readonly doc = inject(DOCUMENT);
 
-  constructor() { withVaultDetailModal(); }
+  constructor() {
+    withVaultDetailModal();
+    // This is the only surface that renders archived rows, so it is the only one
+    // that pays for them. The service used to fetch the archive behind every
+    // initial load — 5.3 MB / 11.2s against production — for boards that filter
+    // it out before render.
+    this.vaultItemsService.ensureArchived();
+  }
 
   readonly isLoading = this.vaultItemsService.isLoading;
   readonly archiveLoading = this.vaultItemsService.isArchiveLoading;

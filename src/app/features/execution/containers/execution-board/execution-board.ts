@@ -469,10 +469,10 @@ export class ExecutionBoard {
   manualFlags(card: Extract<BoardCard, { kind: 'manual' }>): readonly CardFlag[] {
     const flags: CardFlag[] = [];
     if (card.blocked && card.blockerLabel) flags.push({ label: card.blockerLabel, kind: 'blocked' });
-    // "handed back" is the vocabulary the rest of the system already uses (the
-    // awaiting strip counts handbacks), and it names the event rather than
-    // editorialising about the card. Two words, and it says who acted.
-    if (card.awaiting) flags.push({ label: 'handed back', kind: 'awaiting' });
+    // The column already says "Waiting on you", so the pill only needs to say
+    // the card cannot move. "handed back" described the event that caused it,
+    // which is one word of history the reader does not need twice.
+    if (card.awaiting) flags.push({ label: 'blocked', kind: 'awaiting' });
     return flags;
   }
 
