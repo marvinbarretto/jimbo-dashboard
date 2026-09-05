@@ -406,24 +406,3 @@ a.vault-card__genesis:hover { background: color-mix(in srgb, var(--color-accent)
   text-decoration: none;
 }
 .vault-card__pr:hover { text-decoration: underline; }
-
-.vault-card__error {
-  font-size: 0.65rem;
-  color: var(--color-danger);
-  margin: 0;
-  font-family: var(--font-mono);
-  overflow-wrap: anywhere;
-}
-
-.vault-card__history {
-  font-size: 0.65rem;
-  font-family: var(--font-mono);
-  color: var(--color-text-muted);
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 3px;
-  padding: 0.1rem 0.3rem;
-  cursor: pointer;
-  align-self: flex-start;
-}
-.vault-card__history--open { color: var(--color-text); }

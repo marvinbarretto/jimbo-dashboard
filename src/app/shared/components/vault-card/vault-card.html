@@ -36,14 +36,15 @@
     }
 
     @if (dispatch(); as d) {
-      <!-- `stage` is derived and richer than the raw dispatch status (merged,
-           pr_open, rejected …), so a commission keeps its stage pill. Cards from
-           the dispatch board carry no stage and fall back to the status badge. -->
-      @if (d.stage; as st) {
-        <app-commission-stage-pill [stage]="st" />
-      } @else {
-        <app-dispatch-status-badge [status]="d.entry.status" />
-      }
+      <!-- No stage pill. The pill reported the AGENT PROCESS's exit code and the
+           board read it as the item's status: on 2026-09-05 all seven cards in
+           Review wore an identical green COMPLETED, covering one merged PR, one
+           research deliverable, three runs that stopped because a prerequisite
+           did not exist, one that never got its prompt, and one that abandoned
+           mid-run waiting on a Chromium download. The lane already says where
+           the item is, and the definition of done says when it is finished —
+           a second, louder, wrong answer beside them is what we removed.
+           Attempt count stays: it is a count, not a verdict. -->
       @if (d.entry.retry_count > 0) {
         <span class="vault-card__retry" [attr.title]="'Attempt ' + (d.entry.retry_count + 1)">↻{{ d.entry.retry_count }}</span>
       }
@@ -193,22 +194,10 @@
       <a class="vault-card__pr" [href]="pr" target="_blank" rel="noopener"
          (click)="$event.stopPropagation()">PR ↗</a>
     }
-    @if (d.entry.status === 'failed' && d.entry.error; as err) {
-      <p class="vault-card__error">{{ err }}</p>
-    }
-    @if ((d.history?.length ?? 0) > 1) {
-      <button
-        type="button"
-        class="vault-card__history"
-        [class.vault-card__history--open]="historyOpen()"
-        [attr.aria-expanded]="historyOpen()"
-        [attr.title]="d.history!.length + ' commission dispatches'"
-        (click)="historyOpen.set(!historyOpen()); $event.stopPropagation()"
-      >×{{ d.history!.length }} {{ historyOpen() ? '▾' : '▸' }}</button>
-      @if (historyOpen()) {
-        <app-dispatch-history-list [history]="d.history!" />
-      }
-    }
+    <!-- Error text, result prose and the per-run history drill-down have moved
+         to the item's detail view. A kanban card's job is to say where the item
+         is; what an agent wrote about a run is detail, and detail read off a
+         card is detail nobody can act on. -->
     <span class="vault-card__skill" [attr.title]="d.entry.skill">
       {{ d.skillDisplayName ?? d.entry.skill }}
     </span>
@@ -247,16 +236,6 @@
       @case ('rationale') {
         @if (grooming()?.item?.ai_rationale; as rationale) {
           <app-card-callout variant="rationale" [label]="'rationale · ' + ((grooming()?.item?.priority_confidence ?? 0) | number:'1.2-2') + ' conf'">{{ rationale }}</app-card-callout>
-        }
-      }
-      @case ('result') {
-        @if (dispatch()?.entry?.result_summary; as r) {
-          <app-card-callout variant="result" label="result">{{ r }}</app-card-callout>
-        }
-      }
-      @case ('error') {
-        @if (dispatch()?.entry?.error; as err) {
-          <app-card-callout variant="error" label="error">{{ err }}</app-card-callout>
         }
       }
     }

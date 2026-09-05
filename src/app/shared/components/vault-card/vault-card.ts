@@ -14,9 +14,6 @@ import type { Actor } from '@domain/actors';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { BlockerBadge } from '@shared/components/blocker-badge/blocker-badge';
 import { EpicBadge } from '@shared/components/epic-badge/epic-badge';
-import { DispatchStatusBadge } from '@shared/components/dispatch-status-badge/dispatch-status-badge';
-import { CommissionStagePill } from '@shared/components/commission-stage-pill/commission-stage-pill';
-import { DispatchHistoryList } from '@features/execution/components/dispatch-history-list/dispatch-history-list';
 import { CardCallout, type CalloutVariant } from '@shared/components/card-callout/card-callout';
 import { EpicRollup } from '@shared/components/epic-rollup/epic-rollup';
 import { ItemHeader } from '@shared/components/item-header/item-header';
@@ -155,9 +152,6 @@ function actionsFor(ctx: CardContext): CardAction[] {
     UiDropdown,
     BlockerBadge,
     EpicBadge,
-    DispatchStatusBadge,
-    CommissionStagePill,
-    DispatchHistoryList,
     CardCallout,
     EpicRollup,
     ItemHeader,
@@ -214,9 +208,6 @@ export class VaultCard {
    * reads like a separate object, and it cost a whole row per flagged item.
    */
   readonly flags = input<readonly CardFlag[]>([]);
-
-  /** Expander state for a commission's ×N dispatch history. */
-  protected readonly historyOpen = signal(false);
 
   // Options for the inline backfill pickers. Supply empty arrays (or just omit)
   // when the card shouldn't offer the picker — e.g. dispatch rows, or kinds
@@ -420,15 +411,13 @@ export class VaultCard {
     return !isDone(ctx.item);
   });
 
+  // Grooming callouts only. A dispatch context used to raise `result`/`error`
+  // here, which put an agent's free-text run summary on the face of a kanban
+  // card — the longest thing on the board, unreadable at card width, and the
+  // only place it existed. It now lives in the item's detail view instead.
   protected readonly calloutKind = computed<CalloutVariant | null>(() => {
     const ctx = this.context();
-    if (ctx.kind === 'grooming') return calloutKindFor(ctx);
-    if (ctx.kind === 'dispatch') {
-      const status = ctx.entry.status;
-      if (status === 'failed' && ctx.entry.error) return 'error';
-      if (status === 'completed' && ctx.entry.result_summary) return 'result';
-    }
-    return null;
+    return ctx.kind === 'grooming' ? calloutKindFor(ctx) : null;
   });
 
   protected readonly stuckDays = computed(() => {
