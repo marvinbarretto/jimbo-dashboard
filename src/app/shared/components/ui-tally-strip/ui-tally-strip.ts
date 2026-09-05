@@ -34,7 +34,7 @@ import { tallyTicks, type TallySize, type TallyVariant } from './tally';
         class="tally__tick"
         [class.tally__tick--gap]="tick.gap"
         [class.tally__tick--empty]="!tick.filled"
-        [style.background]="tick.filled ? mix(tick.tintShare) : null"
+        [style.background]="tick.background"
       ></i>
     }
     @if (overflowing()) {
@@ -83,9 +83,25 @@ export class UiTallyStrip {
   /** Word for one unit in the derived label. */
   readonly unit = input<string>('day');
 
-  protected readonly ticks = computed(() =>
-    tallyTicks(this.days(), this.cap(), this.groupBy(), this.showEmpty()),
-  );
+  /** Plural of `unit` — a naive +'s' is wrong for "pass", "match", "box". */
+  readonly unitPlural = input<string | null>(null);
+
+  /**
+   * Ticks with their colour already resolved.
+   *
+   * The mix is built here rather than in the binding because a card can carry
+   * 30 of these and a board can carry hundreds of cards: a method call in the
+   * template re-runs on every change-detection pass, while a computed only
+   * re-runs when one of its inputs actually changes.
+   */
+  protected readonly ticks = computed(() => {
+    const tint = this.tint();
+    const alarm = this.alarm();
+    return tallyTicks(this.days(), this.cap(), this.groupBy(), this.showEmpty()).map(t => ({
+      ...t,
+      background: t.filled ? `color-mix(in oklch, ${tint} ${t.tintShare}%, ${alarm})` : null,
+    }));
+  });
 
   protected readonly overflowing = computed(() => Math.floor(this.days()) > this.cap());
 
@@ -99,14 +115,7 @@ export class UiTallyStrip {
     if (explicit) return explicit;
     const n = Math.floor(this.days());
     const u = this.unit();
-    return `${n} ${n === 1 ? u : u + 's'}, ${this.cap()}-${u} cap`;
+    const plural = this.unitPlural() ?? `${u}s`;
+    return `${n} ${n === 1 ? u : plural}, ${this.cap()}-${u} cap`;
   });
-
-  /**
-   * Built here rather than in CSS because `color-mix()` needs a literal
-   * percentage — a `calc()` inside the percentage slot is not portable.
-   */
-  protected mix(share: number): string {
-    return `color-mix(in oklch, ${this.tint()} ${share}%, ${this.alarm()})`;
-  }
 }

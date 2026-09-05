@@ -22,6 +22,7 @@ import { effectivePriority, ageInDays, staleNorm, ancientNorm, isDone } from '@d
 import type { ActorId, VaultItemId } from '@domain/ids';
 import type { IconName } from '@shared/components/app-icon/icon-registry';
 import type {
+  SourceLabel,
   CardContext,
   GroomingCardContext,
   DispatchCardContext,
@@ -177,28 +178,10 @@ function actionsFor(ctx: CardContext): CardAction[] {
     '[class.vault-card--github]':     "sourceClass() === 'github'",
     '[class.vault-card--pr-comment]': "sourceClass() === 'pr-comment'",
     '[class.vault-card--agent]':      "sourceClass() === 'agent'",
-    '[class.vault-card--compact]':    'compact()',
   },
 })
 export class VaultCard {
   readonly context = input.required<CardContext>();
-
-  /**
-   * How much of the card to render.
-   *
-   * `compact` drops everything the header already says and everything that is
-   * a filter rather than a scan signal. Measured on the execution board,
-   * 2026-09-04: a default card stacks nine elements and renders the priority
-   * badge and the owner avatar *twice* — once in `app-item-header`, once in the
-   * body — so ~40% of its height carries no information. At 979 items in Ready
-   * that is the difference between scanning and scrolling.
-   *
-   * Opt-in rather than the new default: the grooming board is the only other
-   * consumer, it shows far fewer cards at once, and it uses the pickers and the
-   * source line that compact hides.
-   */
-  readonly density = input<'default' | 'compact'>('default');
-  protected readonly compact = computed(() => this.density() === 'compact');
 
   /**
    * Board-level markers rendered inside the card's head row.
@@ -371,15 +354,6 @@ export class VaultCard {
     return ctx.item.title;
   });
 
-  // Topic tags surfaced under the title. Triage-rule: tags are topic-only,
-  // never source/author/channel, so they're rendered as a flat monochrome row
-  // with a `#` prefix and no per-tag colour.
-  protected readonly tags = computed<readonly string[]>(() => {
-    const ctx = this.context();
-    if (ctx.kind === 'dispatch') return ctx.item?.tags ?? [];
-    return ctx.item.tags ?? [];
-  });
-
   protected readonly isEpic = computed(() => {
     const ctx = this.context();
     return ctx.kind !== 'dispatch' && ctx.item.is_epic;
@@ -452,13 +426,25 @@ export class VaultCard {
   });
 
   /**
+   * Where this item came from, for either card kind that has one.
+   *
+   * The template used to read `grooming()?.source` directly, so the execution
+   * board built a source label per manual card that could never render. One
+   * accessor, both kinds, and the dead work becomes visible work.
+   */
+  protected readonly sourceLine = computed<SourceLabel | null>(() => {
+    const ctx = this.context();
+    return ctx.kind === 'dispatch' ? null : ctx.source;
+  });
+
+  /**
    * Whether the reassignment dropdown has anywhere to go.
    *
    * The owner avatar itself moved into the band, so without a picker this row
    * would be a second copy of what the band already says.
    */
   protected readonly reassignable = computed(
-    () => this.grooming() !== null && this.actorOptions().length > 0,
+    () => this.context().kind !== 'dispatch' && this.actorOptions().length > 0,
   );
 
   /** Whether the meta row carries anything — it is omitted rather than empty. */
@@ -485,20 +471,17 @@ export class VaultCard {
 
   // Single source of truth for which buttons render. To change the action set
   // for a state, edit groomingActions / dispatchActions / manualActions above.
-  // `mark done` is dropped in compact: the lanes are drag targets, so dragging a
-  // card to Done already says it, and a button restating a gesture costs a row on
-  // every card. Agent-side actions (dismiss, approve) survive — those cards are
-  // system-driven and not draggable, so the button is the only way to act.
+  //
+  // `mark done` is dropped everywhere: manual lanes are drag targets, so
+  // dragging a card to Done already says it, and a button restating a gesture
+  // costs a row on every card. It used to be dropped only under compact, which
+  // meant the same card carried the button on one board and not the other.
   // Marvin, 2026-09-04: "mark done is unnecessary, i can drag it to done column".
-  protected readonly actions = computed<readonly CardAction[]>(() => {
-    const all = actionsFor(this.context());
-    return this.compact() ? all.filter(a => a.key !== 'markDone') : all;
-  });
-
-  // Source attribution display — agent sources show an avatar inline.
-  protected sourceLabel(ctx: GroomingCardContext | ManualCardContext): string | null {
-    return ctx.source?.text ?? null;
-  }
+  // Agent-side actions (dismiss, approve) survive — those cards are system-
+  // driven and not draggable, so the button is the only way to act.
+  protected readonly actions = computed<readonly CardAction[]>(
+    () => actionsFor(this.context()).filter(a => a.key !== 'markDone'),
+  );
 
   // Dispatch runtime string — "queued 3m ago" / "5m elapsed" / "ran 47s" / etc.
   private dispatchRuntimeLabel(ctx: DispatchCardContext): string {

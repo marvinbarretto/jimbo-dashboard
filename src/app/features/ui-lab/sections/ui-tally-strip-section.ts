@@ -101,7 +101,7 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
           <div class="tally-lab__rows">
             <div class="tally-lab__row">
               <span class="tally-lab__n">4&times;</span>
-              <app-ui-tally-strip [days]="4" [cap]="10" [groupBy]="5" size="md" unit="pass" [tint]="jimbo" />
+              <app-ui-tally-strip [days]="4" [cap]="10" [groupBy]="5" size="md" unit="pass" unitPlural="passes" [tint]="jimbo" />
               <span class="tally-lab__say">same primitive, different meaning — the cap sets the scale</span>
             </div>
           </div>

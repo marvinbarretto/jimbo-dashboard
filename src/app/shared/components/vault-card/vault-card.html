@@ -17,7 +17,7 @@
     [seqLabel]="seqLabel()"
     [owner]="context().owner"
     [fade]="fadeVal()"
-    secondary="epic"
+    secondary="both"
     [timeText]="ageLabel()"
     [epicLabel]="epicHeaderLabel()"
     [epicSeq]="context().parentEpic?.seq ?? null">
@@ -29,7 +29,11 @@
           <app-priority-badge [priority]="priority()!" />
         }
       } @else {
-        <app-ui-dropdown #priorityDrop ariaHaspopup="listbox" ariaLabel="Set priority">
+        <!-- floating: the panel now lives inside app-item-header, which clips to
+                 keep the band's radius while a dropdown is open. Promoting the
+                 panel to the viewport is what stops the header cropping it to a
+                 ~22px band. -->
+            <app-ui-dropdown #priorityDrop [floating]="true" ariaHaspopup="listbox" ariaLabel="Set priority">
           @if (priority() !== null) {
             <app-priority-badge trigger [priority]="priority()!" />
           } @else {
@@ -80,17 +84,6 @@
       <span class="vault-card__title vault-card__title--missing">{{ title() }}</span>
     }
   </p>
-
-  <!-- Tags are a filter, not a scan signal — the board's filter bar already
-       offers them, and reading them off a card tells you nothing about whether
-       the item can move. -->
-  @if (!compact() && tags().length > 0) {
-    <ul class="vault-card__tags" aria-label="Tags">
-      @for (tag of tags(); track tag) {
-        <li class="vault-card__tag">#{{ tag }}</li>
-      }
-    </ul>
-  }
 
   @if (isEpic() && grooming()?.childRollup; as children) {
     <div class="vault-card__rollup">
@@ -163,28 +156,27 @@
 
   <!-- Reassignment surface. Only rendered where the board offers actor options:
        the owner itself is in the band, so without a picker this row would be a
-       second copy of what the band already says. -->
-  @if (!compact() && reassignable()) {
+       second copy of what the band already says. The source line rides along
+       when there is a picker, and stands alone when there is not. -->
+  @if (reassignable()) {
     <div class="vault-card__identity">
-      @if (grooming(); as g) {
-        <app-ui-dropdown #ownerDrop ariaHaspopup="listbox" ariaLabel="Reassign">
-          @if (g.owner) {
-            <app-actor-avatar trigger [actor]="g.owner" size="md" />
-          } @else {
-            <span trigger class="vault-card__unassigned">unassigned</span>
+      <app-ui-dropdown #ownerDrop ariaHaspopup="listbox" ariaLabel="Reassign">
+        @if (context().owner; as owner) {
+          <app-actor-avatar trigger [actor]="owner" size="md" />
+        } @else {
+          <span trigger class="vault-card__unassigned">unassigned</span>
+        }
+        <div panel role="listbox" class="vault-card__priority-panel">
+          @for (a of actorOptions(); track a.id) {
+            <button role="option" class="vault-card__priority-option"
+                    (click)="assign.emit(a.id); ownerDrop.close()">
+              &#64;{{ a.id }}
+            </button>
           }
-          <div panel role="listbox" class="vault-card__priority-panel">
-            @for (a of actorOptions(); track a.id) {
-              <button role="option" class="vault-card__priority-option"
-                      (click)="assign.emit(a.id); ownerDrop.close()">
-                &#64;{{ a.id }}
-              </button>
-            }
-          </div>
-        </app-ui-dropdown>
-      }
+        </div>
+      </app-ui-dropdown>
 
-      @if (grooming()?.source; as s) {
+      @if (sourceLine(); as s) {
         <span class="vault-card__source">
           {{ s.text }}
           @if (s.actorId) {
@@ -193,17 +185,13 @@
         </span>
       }
     </div>
-  } @else if (!compact() && !reassignable()) {
-    @if (grooming()?.source; as s) {
-      <span class="vault-card__source">
-        {{ s.text }}
-        @if (s.actorId) {
-          <app-actor-avatar [actor]="s.actorId" size="sm" />
-        }
-      </span>
-    } @else if (manual()?.source; as s) {
-      <span class="vault-card__source">{{ s.text }}</span>
-    }
+  } @else if (sourceLine(); as s) {
+    <span class="vault-card__source">
+      {{ s.text }}
+      @if (s.actorId) {
+        <app-actor-avatar [actor]="s.actorId" size="sm" />
+      }
+    </span>
   }
 
   @if (calloutKind(); as kind) {

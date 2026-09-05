@@ -6,7 +6,12 @@ import { ProjectAvatar } from '@shared/components/project-avatar/project-avatar'
 import { ActorAvatar } from '@shared/components/actor-avatar/actor-avatar';
 import { PriorityBadge } from '@shared/components/priority-badge/priority-badge';
 
-export type ItemHeaderSecondary = 'time' | 'epic' | 'none';
+// 'both' exists because the vault card wants the clock in the identity row AND
+// the epic chip beneath it. Kept as an explicit value rather than letting a set
+// timeText imply it: block-card's queue variant passes both a time and an epic
+// label and has always shown only the epic, and that is not this card's call to
+// change.
+export type ItemHeaderSecondary = 'time' | 'epic' | 'both' | 'none';
 
 // Shared identity strip for both app-block-card (planner queue/calendar) and
 // app-vault-card (grooming/execution kanban) — one colour band carrying
@@ -43,7 +48,7 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'none';
         @if (seq() !== null) {
           <span class="item-header__seq">{{ seqLabel() ?? '#' + seq() }}</span>
         }
-        @if (timeText() && secondary() !== 'none') {
+        @if (timeText() && (secondary() === 'time' || secondary() === 'both')) {
           <span class="item-header__time">{{ timeText() }}</span>
         }
       </span>
@@ -76,7 +81,7 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'none';
         }
       </span>
     </span>
-    @if (epicLabel() && secondary() === 'epic') {
+    @if (epicLabel() && (secondary() === 'epic' || secondary() === 'both')) {
       <!-- A contained chip, sized to its text — not a second full-bleed strip.
            Linked when the parent's seq is known; plain text otherwise, which is
            what the planner passes. -->
