@@ -143,7 +143,20 @@ export interface DispatchQueueEntry {
   // consumers must fall back to result_summary until that lands.
   pr_state?:      PrState | null;
   pr_url?:        string | null;
+  /**
+   * Whether the PR's checks pass — 'passing' | 'failing' | 'pending', or null
+   * when nothing has been checked.
+   *
+   * Server-side this is load-bearing rather than decorative: the review queue
+   * excludes `failing` outright (`review-queue.ts`), so a red commission is
+   * held back from review while the board still renders it as ordinary work in
+   * flight. Null means "no reading", which must never be treated as failing.
+   */
+  pr_checks?:     PrChecks | null;
 }
+
+/** CI verdict for a commission's PR. Null/absent = never checked. */
+export type PrChecks = 'passing' | 'failing' | 'pending';
 
 // Dashboard rarely creates dispatches directly (hermes does that via pipeline-pump).
 // The one case where it does: operator-triggered retry of a failed dispatch.

@@ -36,6 +36,12 @@ export const ApiDispatchEntrySchema = z.object({
   // the wire boundary — the domain narrows flow/pr_state to open unions.
   pr_state:       z.string().nullable(),
   pr_url:         z.string().nullable(),
+  // CI verdict for the PR, refreshed hourly by jimbo-api's reconcilePrStates.
+  // The API has served this since 2026-08-27 and the dashboard dropped it here,
+  // so the board showed a confident PR link for commissions the review queue
+  // was holding back as `red_ci`. `nullish` because older rows predate it and
+  // "never checked" is not the same as "no PR".
+  pr_checks:      z.string().nullish(),
   retry_count:    z.number().int().nonnegative(),
   proposed_at:    z.string().nullable(),
   approved_at:    z.string().nullable(),

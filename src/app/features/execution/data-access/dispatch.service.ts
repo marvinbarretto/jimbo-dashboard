@@ -358,5 +358,6 @@ function toDispatchEntry(a: ApiDispatchEntry): DispatchQueueEntry {
     agent_type: a.agent_type,
     pr_state: a.pr_state,
     pr_url: a.pr_url,
+    pr_checks: (a.pr_checks ?? null) as DispatchQueueEntry['pr_checks'],
   };
 }

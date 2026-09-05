@@ -144,8 +144,19 @@
           <span class="vault-card__model" [attr.title]="'Model used for this run: ' + m">{{ m }}</span>
         }
         @if (d.entry.pr_url; as pr) {
-          <a class="vault-card__pr" [href]="pr" target="_blank" rel="noopener"
+          <!-- The PR link alone said "there is an artifact", never "the artifact
+               can ship". A failing commission is held out of the review queue
+               server-side (review-queue.ts) while the board rendered it as work
+               in flight — two surfaces disagreeing about the same row. -->
+          <a class="vault-card__pr"
+             [class.vault-card__pr--failing]="d.entry.pr_checks === 'failing'"
+             [class.vault-card__pr--pending]="d.entry.pr_checks === 'pending'"
+             [href]="pr" target="_blank" rel="noopener"
+             [attr.title]="prChecksTitle()"
              (click)="$event.stopPropagation()">PR ↗</a>
+          @if (d.entry.pr_checks === 'failing') {
+            <span class="vault-card__checks" [attr.title]="prChecksTitle()">checks failing</span>
+          }
         }
       } @else {
         <!-- Shown when grooming chose one, omitted when it did not. The absence

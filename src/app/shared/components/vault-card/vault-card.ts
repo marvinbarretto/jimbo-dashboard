@@ -404,6 +404,23 @@ export class VaultCard {
   // chip surfaces how the item came to exist (manual / auto-decomposed / etc);
   // the model line surfaces which model the executor picked for this run.
   protected readonly genesis = computed(() => this.dispatch()?.genesis ?? null);
+
+  /**
+   * Hover text for the PR link, keyed off the CI reading.
+   *
+   * Null ("never checked") deliberately reads as unknown rather than as fine:
+   * the server treats a missing reading as "do not block", and a card that
+   * claimed green on no evidence would be the same false confidence that let
+   * three broken PRs sit in the review queue on 2026-08-27.
+   */
+  protected readonly prChecksTitle = computed(() => {
+    switch (this.dispatch()?.entry.pr_checks) {
+      case 'failing': return 'CI failing — held out of the review queue until it goes green';
+      case 'pending': return 'CI still running';
+      case 'passing': return 'CI green';
+      default:        return 'CI not checked yet';
+    }
+  });
   protected readonly modelId = computed(() => this.dispatch()?.modelId ?? null);
   protected readonly manual = computed(() => {
     const ctx = this.context();
