@@ -56,6 +56,12 @@ export const ApiDispatchEntrySchema = z.object({
   // caller (keep what you had vs. it really is empty).
   task_title:     z.string().nullish(),
   task_seq:       z.union([z.number(), z.string()]).nullish(),
+  // Which model actually ran, and the sha of the SKILL.md it ran. Both were
+  // being served and silently dropped here (zod strips unknown keys), so the
+  // UI could not say that dispatch 5016's 20-second no-op was a haiku run of a
+  // skill whose prompt it could not read. `nullish` — older rows predate both.
+  completed_model: z.string().nullish(),
+  skill_version:   z.string().nullish(),
 });
 
 export type ApiDispatchEntry = z.infer<typeof ApiDispatchEntrySchema>;

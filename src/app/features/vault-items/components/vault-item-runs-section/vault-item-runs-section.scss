@@ -1,0 +1,115 @@
+:host { display: block; }
+
+.runs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.runs__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-left: 0.6rem;
+  border-left: 2px solid var(--color-border);
+}
+
+.runs__head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+// Flow is the one thing worth colour here: it separates the pipeline's own
+// bookkeeping (groom) from work someone commissioned, and the detail view mixes
+// both in one list.
+.runs__flow {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-text-muted) 15%, transparent);
+  color: var(--color-text-soft);
+}
+.runs__flow--commission {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  color: var(--color-accent);
+}
+
+.runs__skill {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--color-text);
+}
+
+// Deliberately quiet. It is an exit code, not a verdict, and styling it as a
+// status badge is what let a green COMPLETED stand in for "the work is done".
+.runs__status {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+}
+.runs__status--failed { color: var(--color-danger); }
+
+.runs__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+}
+.runs__retry { color: var(--color-warning); }
+.runs__sha   { opacity: 0.7; }
+
+.runs__summary {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--color-text-soft);
+  // Agents write multi-paragraph summaries with markdown-ish structure. Keep
+  // their line breaks — reflowing them into one block is what made this
+  // unreadable on the card.
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.runs__error {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: var(--color-danger);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.runs__silent {
+  margin: 0;
+  font-size: 0.7rem;
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+
+.runs__pr {
+  align-self: flex-start;
+  font-size: 0.7rem;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+.runs__pr:hover { text-decoration: underline; }
+.runs__checks { color: var(--color-text-muted); }
+
+.runs__state {
+  margin: 0 0 0.5rem;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+.runs__state--error { color: var(--color-danger); }

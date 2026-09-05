@@ -25,6 +25,7 @@ import { MentionDirective } from '@shared/mentions';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { ThreadView } from '../../../thread/components/thread-view/thread-view';
 import { ActivityLogComponent } from './activity-log/activity-log';
+import { VaultItemRunsSection } from '../vault-item-runs-section/vault-item-runs-section';
 import { RejectFormComponent, type RejectSubmission } from './reject-form/reject-form';
 import { ResolveFormComponent } from './resolve-form/resolve-form';
 import { VaultItemDeliveryBlock } from './vault-item-delivery-block/vault-item-delivery-block';
@@ -70,6 +71,7 @@ import type { CreateThreadMessagePayload } from '@domain/thread';
     RelativeTimePipe,
     ThreadView,
     ActivityLogComponent,
+    VaultItemRunsSection,
     RejectFormComponent,
     ResolveFormComponent,
     VaultItemDeliveryBlock,

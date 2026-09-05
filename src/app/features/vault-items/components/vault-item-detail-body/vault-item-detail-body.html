@@ -429,6 +429,12 @@
       <div class="v3__history-col">
         <div class="v3__lab">Activity</div>
         <app-activity-log [events]="store.events()" [actorLabel]="store.actorLabelFn" />
+
+        <!-- What the agents actually did and said. The activity log above records
+             that a dispatch happened; this records what came back. Sits under it
+             rather than beside it because it is the same question in more detail,
+             and collapsed by default because most items have no runs at all. -->
+        <app-vault-item-runs-section [noteId]="item.id" />
       </div>
       <div class="v3__history-col" id="v3-thread">
         <div class="v3__lab">Thread</div>

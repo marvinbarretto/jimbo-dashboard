@@ -1,0 +1,64 @@
+<app-ui-section title="Runs" [meta]="meta()" [expanded]="false">
+  @if (loading()) {
+    <p class="runs__state">loading…</p>
+  } @else if (failed()) {
+    <!-- Never let a fetch failure render as an empty history: "no runs" is a
+         claim about the item, and this is a claim about the network. -->
+    <p class="runs__state runs__state--error">
+      couldn’t load run history — the API didn’t answer, or answered in a shape
+      this page doesn’t know
+    </p>
+  } @else if (runs().length === 0) {
+    <app-ui-empty-state
+      title="Never dispatched"
+      message="No agent has run against this item — not a grooming pass, not a commission." />
+  } @else {
+    @if (truncated()) {
+      <p class="runs__state">showing the latest {{ runs().length }} of {{ total() }}</p>
+    }
+    <ol class="runs">
+      @for (run of runs(); track run.id) {
+        <li class="runs__row">
+          <div class="runs__head">
+            <span class="runs__flow runs__flow--{{ run.flow }}">{{ run.flow }}</span>
+            <span class="runs__skill">{{ run.skill ?? 'no skill' }}</span>
+            <!-- The raw status, named as what it is. It reports how the agent
+                 PROCESS exited, which is not the same question as whether the
+                 work got done — the summary below is what answers that. -->
+            <span class="runs__status runs__status--{{ run.status }}" title="how the agent process exited">
+              exited {{ run.status }}
+            </span>
+          </div>
+
+          <div class="runs__meta">
+            <time [attr.datetime]="run.created_at">{{ run.created_at | date:'MMM d, HH:mm' }}</time>
+            @if (elapsed(run); as took) { <span>· ran {{ took }}</span> }
+            @if (run.executor) { <span>· {{ run.executor }}</span> }
+            @if (run.completed_model) { <span>· {{ run.completed_model }}</span> }
+            @if (skillVersion(run); as v) { <span class="runs__sha" title="sha of the SKILL.md that ran">· {{ v }}</span> }
+            @if (run.retry_count > 0) { <span class="runs__retry">· attempt {{ run.retry_count + 1 }}</span> }
+          </div>
+
+          <!-- In full. This is the only place it exists in the UI, and the
+               difference between "opened PR #23" and "blocked, no code change
+               was warranted" is usually several sentences in. -->
+          @if (run.result_summary) {
+            <p class="runs__summary">{{ run.result_summary }}</p>
+          }
+          @if (run.error_message) {
+            <p class="runs__error">{{ run.error_message }}</p>
+          }
+          @if (!run.result_summary && !run.error_message) {
+            <p class="runs__silent">the run recorded nothing</p>
+          }
+
+          @if (run.pr_url) {
+            <a class="runs__pr" [href]="run.pr_url" target="_blank" rel="noopener noreferrer">
+              view PR ↗@if (run.pr_checks) { <span class="runs__checks">· CI {{ run.pr_checks }}</span> }
+            </a>
+          }
+        </li>
+      }
+    </ol>
+  }
+</app-ui-section>
