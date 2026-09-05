@@ -215,6 +215,11 @@ a.vault-card__genesis:hover { background: color-mix(in srgb, var(--color-accent)
   &:hover { color: var(--color-text); }
 }
 
+.vault-card__owner {
+  display: inline-flex;
+  align-items: center;
+}
+
 .vault-card__identity {
   display: flex;
   align-items: center;

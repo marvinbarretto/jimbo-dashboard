@@ -1,3 +1,11 @@
+// IBM Plex Sans — self-hosted (@fontsource), latin subset, the three weights
+// the UI actually sets. Not a CDN link: the dashboard runs behind app auth on
+// a VPS and the service worker caches it, so a third-party request would be the
+// one asset that needs the open internet to render text.
+@use '@fontsource/ibm-plex-sans/latin-400.css';
+@use '@fontsource/ibm-plex-sans/latin-500.css';
+@use '@fontsource/ibm-plex-sans/latin-600.css';
+
 // CDK overlay prebuilt — required for Dialog backdrop, panel positioning,
 // scroll lock. Without this the modal renders with no styles applied.
 @use '@angular/cdk/overlay-prebuilt.css';
@@ -59,7 +67,11 @@ router-outlet + * {
   --color-accent-glow: color-mix(in srgb, var(--color-accent) 30%, transparent);
   --color-danger-glow: color-mix(in srgb, var(--color-danger) 28%, transparent);
 
-  --font-sans: system-ui, -apple-system, sans-serif;
+  // Plex Sans is the app's prose face — humanist, wider than the system UI
+  // font, and it is what the card titles were designed in. The system stack
+  // stays as the fallback so text renders identically-positioned before the
+  // woff2 lands (font-display: swap).
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'SF Mono', 'Fira Code', monospace;
 
   --radius: 2px;

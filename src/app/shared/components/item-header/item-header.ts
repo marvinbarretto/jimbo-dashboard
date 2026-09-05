@@ -61,9 +61,13 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'both' | 'none';
             <app-priority-badge [priority]="priority()!" />
           }
         </ng-content>
-        @if (owner()) {
-          <app-actor-avatar [actor]="owner()!" variant="filled" size="sm" />
-        }
+        <!-- Projected for the same reason as priority: the card owns
+             reassignment, this strip owns the glance. -->
+        <ng-content select="[owner]">
+          @if (owner()) {
+            <app-actor-avatar [actor]="owner()!" variant="filled" size="sm" />
+          }
+        </ng-content>
         @if (showLock()) {
           <button type="button" class="item-header__lock" (click)="onLockClick($event)" aria-label="toggle lock">
             @if (locked()) {
@@ -90,10 +94,11 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'both' | 'none';
         <a
           class="item-header__epic item-header__epic--link"
           [routerLink]="['/vault-items', epicSeq()]"
+          [attr.title]="epicLabel()"
           (click)="$event.stopPropagation()"
           >{{ epicLabel() }}</a>
       } @else {
-        <span class="item-header__epic">{{ epicLabel() }}</span>
+        <span class="item-header__epic" [attr.title]="epicLabel()">{{ epicLabel() }}</span>
       }
     }
   `,
@@ -104,7 +109,7 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'both' | 'none';
       align-items: stretch;
       gap: 0.15rem;
       padding: 0.3rem 0.6rem;
-      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+      font-family: var(--font-sans);
       font-size: 0.64rem;
       font-weight: 700;
     }
@@ -120,6 +125,10 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'both' | 'none';
        out. Ringed so it still reads as a disc when band and token match. */
     .item-header__pav--held {
       display: inline-flex;
+      /* Zero the inline strut: without it the host box is taller than the 1rem
+         avatar inside it, and the ring traces that taller box — which rendered
+         as a pair of brackets either side of the initial rather than a ring. */
+      line-height: 0;
       border-radius: 25%;
       box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--color-bg) 55%, transparent);
     }
@@ -168,7 +177,7 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'both' | 'none';
          text on a near-black wash and read as dark on dark. */
       background: var(--color-bg);
       color: var(--color-text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+      font-family: var(--font-sans);
       font-size: 0.6rem;
       font-weight: 600;
       text-decoration: none;

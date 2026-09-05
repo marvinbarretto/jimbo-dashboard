@@ -42,6 +42,31 @@
         </app-ui-dropdown>
       }
     </span>
+
+    <!-- Reassignment happens on the owner itself, in the band. It used to be a
+         separate row under the title carrying a second copy of the same avatar
+         and a caret — the duplication the fold removed everywhere else. -->
+    <span owner class="vault-card__owner">
+      @if (reassignable()) {
+        <app-ui-dropdown #ownerDrop ariaHaspopup="listbox" ariaLabel="Reassign" [floating]="true">
+          @if (context().owner; as o) {
+            <app-actor-avatar trigger [actor]="o" variant="filled" size="sm" />
+          } @else {
+            <span trigger class="vault-card__unassigned">unassigned</span>
+          }
+          <div panel role="listbox" class="vault-card__priority-panel">
+            @for (a of actorOptions(); track a.id) {
+              <button role="option" class="vault-card__priority-option"
+                      (click)="assign.emit(a.id); ownerDrop.close()">
+                &#64;{{ a.id }}
+              </button>
+            }
+          </div>
+        </app-ui-dropdown>
+      } @else if (context().owner; as o) {
+        <app-actor-avatar [actor]="o" variant="filled" size="sm" />
+      }
+    </span>
   </app-item-header>
 
   <!-- One tick per quiet day, tinted out of the project colour and spent by the
@@ -155,38 +180,7 @@
     </div>
   }
 
-  <!-- Reassignment surface. Only rendered where the board offers actor options:
-       the owner itself is in the band, so without a picker this row would be a
-       second copy of what the band already says. The source line rides along
-       when there is a picker, and stands alone when there is not. -->
-  @if (reassignable()) {
-    <div class="vault-card__identity">
-      <app-ui-dropdown #ownerDrop ariaHaspopup="listbox" ariaLabel="Reassign">
-        @if (context().owner; as owner) {
-          <app-actor-avatar trigger [actor]="owner" size="md" />
-        } @else {
-          <span trigger class="vault-card__unassigned">unassigned</span>
-        }
-        <div panel role="listbox" class="vault-card__priority-panel">
-          @for (a of actorOptions(); track a.id) {
-            <button role="option" class="vault-card__priority-option"
-                    (click)="assign.emit(a.id); ownerDrop.close()">
-              &#64;{{ a.id }}
-            </button>
-          }
-        </div>
-      </app-ui-dropdown>
-
-      @if (sourceLine(); as s) {
-        <span class="vault-card__source">
-          {{ s.text }}
-          @if (s.actorId) {
-            <app-actor-avatar [actor]="s.actorId" size="sm" />
-          }
-        </span>
-      }
-    </div>
-  } @else if (sourceLine(); as s) {
+  @if (sourceLine(); as s) {
     <span class="vault-card__source">
       {{ s.text }}
       @if (s.actorId) {

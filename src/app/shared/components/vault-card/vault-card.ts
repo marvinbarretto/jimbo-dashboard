@@ -35,9 +35,12 @@ import { calloutKindFor } from './card-context';
 // reshuffle a button: edit the per-kind helper below — that's the whole API.
 // The template just iterates `actions()` and dispatches via `onAction(key)`.
 
+// No 'assign': the button rendered on every ungroomed card and did nothing —
+// `onAction` returned early for it because reassignment has always belonged to
+// the owner dropdown, which now lives in the band where the owner is.
 export type ActionKey =
   | 'answer' | 'approve' | 'reject' | 'decompose'
-  | 'archive' | 'delete' | 'assign' | 'retry' | 'dismiss' | 'markDone' | 'demote';
+  | 'archive' | 'delete' | 'retry' | 'dismiss' | 'markDone' | 'demote';
 
 export type ActionVariant = 'primary' | 'danger' | 'warn' | 'neutral';
 
@@ -64,7 +67,6 @@ export interface CardFlag {
 function groomingActions(ctx: GroomingCardContext): CardAction[] {
   const status = ctx.item.grooming_status;
   const archive: CardAction = { key: 'archive', label: 'archive', variant: 'neutral', icon: 'archive'  };  // status='archived', reversible
-  const assign:  CardAction = { key: 'assign',  label: 'assign',  variant: 'neutral'                   };
   // Delete is for "shouldn't have existed" rows — only offered in the pre-
   // dispatch funnel where investment is low. Once an item is decomposed or
   // ready, the audit trail is worth more than the row, so archive only.
@@ -91,7 +93,7 @@ function groomingActions(ctx: GroomingCardContext): CardAction[] {
       ];
     case 'ungroomed':
     case 'intake_complete':
-      return [{ key: 'demote', label: '→ note', variant: 'neutral', icon: 'demote' }, archive, assign, del];
+      return [{ key: 'demote', label: '→ note', variant: 'neutral', icon: 'demote' }, archive, del];
     case 'needs_rework':
       return [archive, del];
     case 'intake_rejected':
@@ -499,7 +501,6 @@ export class VaultCard {
   // directly. Adding a new ActionKey only requires extending the switch here.
   protected onAction(key: ActionKey, event: Event): void {
     event.stopPropagation();
-    if (key === 'assign') return; // handled by actor avatar dropdown
     this.actionTriggered.emit(key);
   }
 }
