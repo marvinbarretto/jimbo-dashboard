@@ -12,6 +12,7 @@
     [fade]="fadeVal()"
     secondary="both"
     [timeText]="ageLabel()"
+    [live]="isRunning()"
     [epicLabel]="epicHeaderLabel()"
     [epicSeq]="context().parentEpic?.seq ?? null">
     <!-- Always projected, so the slot's fallback badge stays for block-card.

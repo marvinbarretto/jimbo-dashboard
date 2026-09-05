@@ -50,6 +50,11 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'both' | 'none';
           <span class="item-header__seq">{{ seqLabel() ?? '#' + seq() }}</span>
         }
         @if (timeText() && (secondary() === 'time' || secondary() === 'both')) {
+          <!-- Decorative: the elapsed text carries the meaning, the dot only
+               says that number is still moving. -->
+          @if (live()) {
+            <span class="item-header__pulse" aria-hidden="true"></span>
+          }
           <span class="item-header__time">{{ timeText() }}</span>
         }
       </span>
@@ -151,6 +156,26 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'both' | 'none';
       white-space: nowrap;
       flex-shrink: 0;
     }
+    /* currentColor, so it inherits the band's own foreground and stays legible
+       at every stage of the drain without picking a colour that has to work
+       against a project token. */
+    .item-header__pulse {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+      animation: item-header-pulse 1.4s ease-in-out infinite;
+    }
+    /* Named for this component: @keyframes are global by name, and the hermes
+       pages already own pulse-dot with a different colour and box-shadow. */
+    @keyframes item-header-pulse {
+      0%, 100% { opacity: 1;    transform: scale(1);   }
+      50%      { opacity: 0.35; transform: scale(0.8); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .item-header__pulse { animation: none; opacity: 0.85; }
+    }
     .item-header__time {
       font-size: 0.6rem;
       font-weight: 500;
@@ -225,6 +250,16 @@ export class ItemHeader {
    * survives even at the ancient end.
    */
   readonly fade = input(0);
+
+  /**
+   * Whether the time beside it is still counting.
+   *
+   * Deliberately a property of the clock rather than of the lane: a board column
+   * called "In Progress" can hold work that finished days ago (a commission
+   * whose PR is open has a completed run and a live pull request), and a dot
+   * blinking over that is the same false motion as showing the run's duration.
+   */
+  readonly live = input(false);
   readonly showLock = input(false);
   readonly locked = input(false);
   readonly showRemove = input(false);

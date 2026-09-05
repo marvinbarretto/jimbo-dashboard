@@ -32,6 +32,38 @@ import { UiStack } from '@shared/components/ui-stack/ui-stack';
             [showLock]="true" />
         </div>
 
+        <p class="ui-lab__support-copy">
+          <b>[live]="true"</b> — a clock that is still counting. Bound to the commission
+          stage, never to the lane: an "In Progress" column also holds work whose run
+          finished days ago and whose PR is waiting on a human, and a dot blinking over
+          that is false motion. Stops on its own when the run ends.
+        </p>
+        <div style="max-width: 300px;">
+          <app-item-header
+            projectName="LocalShout"
+            projectColor="#7a7ac4"
+            [seq]="3155"
+            seqLabel="LOC-3155"
+            [priority]="1"
+            [owner]="actorId('boris')"
+            secondary="both"
+            timeText="21m elapsed"
+            [live]="true" />
+        </div>
+
+        <p class="ui-lab__support-copy">The same card once the run is over — same clock slot, no pulse.</p>
+        <div style="max-width: 300px;">
+          <app-item-header
+            projectName="LocalShout"
+            projectColor="#7a7ac4"
+            [seq]="3155"
+            seqLabel="LOC-3155"
+            [priority]="1"
+            [owner]="actorId('boris')"
+            secondary="both"
+            timeText="PR open 10d" />
+        </div>
+
         <p class="ui-lab__support-copy"><b>secondary="epic"</b>, truncated — block-card queue variant, or vault-card</p>
         <div style="max-width: 300px;">
           <app-item-header

@@ -421,6 +421,25 @@ export class VaultCard {
    * stage pill was. Null is silence too — never checked is not the same as fine,
    * but it is not evidence of trouble either.
    */
+  /**
+   * Whether an executor is working on this right now.
+   *
+   * Keyed off the stage, not the lane. In Progress holds both a `running`
+   * commission and a `pr_open` one whose run finished days ago — measured
+   * 2026-09-05, three of them had been static for ten days — so a pulse on the
+   * lane would restate the motion this card stopped claiming when the clock
+   * switched from the run's duration to how long the PR has waited.
+   *
+   * No hung-run cutoff: the reaper's budget is a server-side setting the
+   * dashboard is not told, and picking a number here would be a guess that
+   * drifts from the real one.
+   */
+  protected readonly isRunning = computed(() => {
+    const d = this.dispatch();
+    if (!d) return false;
+    return d.stage ? d.stage === 'running' : d.entry.status === 'running';
+  });
+
   protected readonly driftLabel = computed<string | null>(() => {
     const d = this.dispatch()?.entry;
     if (!d?.pr_url) return null;
