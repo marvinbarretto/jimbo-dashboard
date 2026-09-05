@@ -1,12 +1,5 @@
 <article class="vault-card" [class.vault-card--epic]="isEpic()">
 
-  <!-- One tick per quiet day, tinted out of the project colour and spent by the
-       30-day cap. Sits above the band because it is a property of the whole
-       card, not of the identity strip. Absent entirely on a fresh item. -->
-  @if (tallyDays() > 0) {
-    <app-ui-tally-strip class="vault-card__tally" [days]="tallyDays()" />
-  }
-
   <!-- The band carries the whole identity: project, handle, clock, priority,
        owner, and the parent epic on its own chip row. Everything here used to
        render a second time in a head row below it. -->
@@ -29,11 +22,10 @@
           <app-priority-badge [priority]="priority()!" />
         }
       } @else {
-        <!-- floating: the panel now lives inside app-item-header, which clips to
-                 keep the band's radius while a dropdown is open. Promoting the
-                 panel to the viewport is what stops the header cropping it to a
-                 ~22px band. -->
-            <app-ui-dropdown #priorityDrop [floating]="true" ariaHaspopup="listbox" ariaLabel="Set priority">
+        <!-- floating: the panel lives inside app-item-header, which clips to keep
+             the band's radius while a dropdown is open. Promoting the panel to
+             the viewport is what stops the header cropping it to a ~22px band. -->
+        <app-ui-dropdown #priorityDrop [floating]="true" ariaHaspopup="listbox" ariaLabel="Set priority">
           @if (priority() !== null) {
             <app-priority-badge trigger [priority]="priority()!" />
           } @else {
@@ -51,6 +43,15 @@
       }
     </span>
   </app-item-header>
+
+  <!-- One tick per quiet day, tinted out of the project colour and spent by the
+       30-day cap. Sits flush under the band, attached to the identity strip it
+       measures: floated above the band it read as a stray dashed rule with a
+       dark gap over a bright strip, which is not what a mark means. Absent
+       entirely on a fresh item. -->
+  @if (tallyDays() > 0) {
+    <app-ui-tally-strip class="vault-card__tally" [days]="tallyDays()" />
+  }
 
   @if (!context().project && projectTrigger(); as t) {
     <input

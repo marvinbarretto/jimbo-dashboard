@@ -122,19 +122,25 @@
   display: inline-flex;
   align-items: center;
 
+  // Same language as the epic chip: the app's ground punched into the band, so
+  // the control reads as pressable in both themes and against a band at any
+  // stage of its drain. The badge's own colour supplies the contrast.
   > app-ui-dropdown,
   > app-priority-badge {
     padding: 0 0.2rem;
     border-radius: var(--radius);
-    background: color-mix(in srgb, var(--color-black) 72%, transparent);
+    background: var(--color-bg);
   }
 
-  > app-ui-dropdown:hover { background: var(--color-black); }
+  > app-ui-dropdown:hover { background: var(--color-surface-soft); }
 }
 
-// Full-bleed along the card's top edge, above the band.
+// Flush to the card's left edge, directly under the band. No padding: the ticks
+// start where the band starts, so the strip reads as that band's own measure
+// rather than as a rule floating in the body's gutter.
 .vault-card__tally {
-  padding: 0.3rem 0.5rem 0;
+  display: block;
+  padding: 0;
 }
 
 .vault-card__retry {

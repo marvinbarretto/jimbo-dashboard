@@ -34,6 +34,7 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'both' | 'none';
     // is dark in the light theme and light in the dark one, so the band's
     // --color-bg text stays legible at every fade in both.
     '[style.background]': 'bandColor()',
+    '[style.color]': 'bandText()',
   },
   template: `
     <span class="item-header__main">
@@ -103,7 +104,6 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'both' | 'none';
       align-items: stretch;
       gap: 0.15rem;
       padding: 0.3rem 0.6rem;
-      color: var(--color-bg);
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
       font-size: 0.64rem;
       font-weight: 700;
@@ -156,11 +156,18 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'both' | 'none';
        rather than as an extension of the identity row. */
     .item-header__epic {
       align-self: flex-start;
-      max-width: 100%;
+      /* Capped rather than free to fill: an ellipsised epic title runs the full
+         card width, and a full-width box under the identity row reads as a
+         second band — the exact thing this chip replaced. */
+      max-width: min(100%, 26ch);
       padding: 0 0.3rem;
       border-radius: var(--radius);
-      background: color-mix(in srgb, var(--color-black) 78%, transparent);
-      color: color-mix(in srgb, var(--color-bg) 78%, var(--color-text));
+      /* The app's own base contrast pair — ground and the text that sits on it
+         — so the chip is a hole punched in the band and stays legible in both
+         themes without a literal anywhere. The previous mix put --color-bg-ish
+         text on a near-black wash and read as dark on dark. */
+      background: var(--color-bg);
+      color: var(--color-text);
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
       font-size: 0.6rem;
       font-weight: 600;
@@ -171,8 +178,7 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'both' | 'none';
       min-width: 0;
     }
     .item-header__epic--link:hover {
-      background: var(--color-black);
-      color: var(--color-text);
+      background: var(--color-surface-soft);
       text-decoration: underline;
     }
     .item-header__lock, .item-header__remove {
@@ -218,12 +224,38 @@ export class ItemHeader {
   readonly locked = input(false);
   readonly showRemove = input(false);
 
+  /**
+   * The band, draining into the card it sits on.
+   *
+   * It drained toward --color-text-muted, which is a LIGHTER colour than a
+   * project token in the dark theme — so an old card's band got brighter and
+   * the stalest cards on the board were the loudest things on it, which is the
+   * opposite of what the mechanism is for. Draining toward --color-surface
+   * recedes in both themes by construction: the band dissolves into the card
+   * rather than toward some third colour.
+   */
   protected readonly bandColor = computed(() => {
     const base = this.projectColor() ?? 'var(--color-border)';
-    const f = Math.min(1, Math.max(0, this.fade()));
+    const f = this.clampedFade();
     if (f === 0) return base;
-    return `color-mix(in oklch, ${base}, var(--color-text-muted) ${Math.round(f * 82)}%)`;
+    return `color-mix(in oklch, ${base}, var(--color-surface) ${Math.round(f * 82)}%)`;
   });
+
+  /**
+   * The band's text, tracking the band underneath it.
+   *
+   * A fresh band is a saturated project colour and takes --color-bg; a fully
+   * drained one is essentially --color-surface and takes --color-text. Moving
+   * the foreground along with the background keeps the pair legible at every
+   * age, in both themes, instead of only at the ends.
+   */
+  protected readonly bandText = computed(() => {
+    const f = this.clampedFade();
+    if (f === 0) return 'var(--color-bg)';
+    return `color-mix(in srgb, var(--color-bg), var(--color-text) ${Math.round(f * 100)}%)`;
+  });
+
+  private readonly clampedFade = computed(() => Math.min(1, Math.max(0, this.fade())));
 
   // Outlined against an undrained band (the token is the ground behind it, so a
   // fill would vanish); filled once the band starts draining, which is what
