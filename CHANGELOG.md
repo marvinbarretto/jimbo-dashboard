@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.217](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.216...v0.0.217) (2026-09-05)
+
+
+### Features
+
+* **execution:** the board stops hiding CI verdicts it is already sent ([a9e70c1](https://github.com/marvinbarretto/jimbo-dashboard/commit/a9e70c16379e6b770bc0ff187e2fd9fd9809b06d)), closes [#626](https://github.com/marvinbarretto/jimbo-dashboard/issues/626)
+* **fleet:** answer "is this normal?" on Right Now and give burn a baseline ([01909aa](https://github.com/marvinbarretto/jimbo-dashboard/commit/01909aae22dff7f5aac7c03e022e88257f7eb3a8))
+* **fleet:** separate hermes states, add lane scorecard, filter completions by flow ([8c88584](https://github.com/marvinbarretto/jimbo-dashboard/commit/8c88584f020da0f8facbe9d1f353f8d8af95c455))
+* **fleet:** show machines, and stop counting one outage four times ([b273ed3](https://github.com/marvinbarretto/jimbo-dashboard/commit/b273ed3f334a6fd3fba368babbd69aae57c5bad5))
+* **item-header:** drainable band, epic chip, projected priority slot ([93562db](https://github.com/marvinbarretto/jimbo-dashboard/commit/93562dbc0ce33716420046c91731799c95696fd8))
+* **ui-tally-strip:** countable days, tinted from the project and spent by the cap ([758116e](https://github.com/marvinbarretto/jimbo-dashboard/commit/758116e5f1438eadb0ea6d95d10cb8011444a184))
+* **vault-card:** fold the identity into the band, set the title as prose ([f2cbb4a](https://github.com/marvinbarretto/jimbo-dashboard/commit/f2cbb4a9d76a4a7ea2aa1fe5d585b6d1ec71bc13))
+* **vault-card:** IBM Plex Sans, reassign in the band, and the assign button that never worked ([fd741b4](https://github.com/marvinbarretto/jimbo-dashboard/commit/fd741b459a222094bd5ef440f84cc3c6de4011b0))
+* **vault-items:** a Runs section, so what the agents said is readable somewhere ([468278a](https://github.com/marvinbarretto/jimbo-dashboard/commit/468278a92b923d84ea77136cc84dc6fe150a0f88))
+
+
+### Bug Fixes
+
+* **execution-board:** stop dropping the epic the card asks for ([3cbbe88](https://github.com/marvinbarretto/jimbo-dashboard/commit/3cbbe889f79d8256be1058f1ece76d10316419e8)), closes [#4645](https://github.com/marvinbarretto/jimbo-dashboard/issues/4645) [#4948](https://github.com/marvinbarretto/jimbo-dashboard/issues/4948)
+* **execution:** grooming chatter was evicting every commission from the board ([7a39666](https://github.com/marvinbarretto/jimbo-dashboard/commit/7a396667ca03f52d4401e28d55da80f8c3e8ca2d))
+* **execution:** the live feed was refilling the store with the rows the load excluded ([e048361](https://github.com/marvinbarretto/jimbo-dashboard/commit/e0483613a5bdcb2925b9adec06b842373a5bf61b))
+* **execution:** the skill badge was reading a field the board never sent ([9a62aec](https://github.com/marvinbarretto/jimbo-dashboard/commit/9a62aec7738c83f31133667ec46ee6b40a5b8294))
+* **item-header:** stale cards were getting louder, not quieter ([0d4daf8](https://github.com/marvinbarretto/jimbo-dashboard/commit/0d4daf811b2734ff1533a1b9060872d8c2b34ae0))
+* **item-header:** the epic label wraps in full, never truncates ([dd0db69](https://github.com/marvinbarretto/jimbo-dashboard/commit/dd0db692ce102c709e1ce7da86406faf6d1c7293))
+* **journal:** stop calling a busy worker's queue abandoned ([c25541c](https://github.com/marvinbarretto/jimbo-dashboard/commit/c25541c539780f04577d798b4e6f2fb7b0fab784))
+* **vault-card:** a waiting commission reports waiting, not how long the agent took ([41d9d88](https://github.com/marvinbarretto/jimbo-dashboard/commit/41d9d88454411ff47db9aa4bb5563e94ff1b045d)), closes [#626](https://github.com/marvinbarretto/jimbo-dashboard/issues/626)
+
+
+### Performance Improvements
+
+* **vault:** stop fetching the archive on every board load ([f657916](https://github.com/marvinbarretto/jimbo-dashboard/commit/f657916769793d4e245b5a924c247bef59396931))
+
+
+### Code Refactoring
+
+* **execution-board:** precompute card views, wire the priority it rendered ([6ab5bc0](https://github.com/marvinbarretto/jimbo-dashboard/commit/6ab5bc07ec410bb4db4563f687456f73d321ecec))
+* **vault-card:** one card, no density, and the review fixes it needed ([14e5673](https://github.com/marvinbarretto/jimbo-dashboard/commit/14e56739f507899ea817b733680bda4adf117648))
+* **vault-card:** the board says where an item is, not what an agent wrote ([758fa97](https://github.com/marvinbarretto/jimbo-dashboard/commit/758fa9790823a50eb60c04bcfeee8c35e380c802)), closes [#23](https://github.com/marvinbarretto/jimbo-dashboard/issues/23)
+
 ### [0.0.216](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.215...v0.0.216) (2026-09-04)
 
 
