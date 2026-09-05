@@ -268,6 +268,27 @@ describe('DispatchService.refreshOne — tolerates the un-joined single-row shap
     expect(entry.task_seq).toBe(99);
   });
 
+  // The live feed fires dispatch.stage_changed for EVERY flow and refreshOne
+  // inserts what it finds. The bulk load asks for commissions only, so an
+  // unguarded insert would refill the store with the grooming rows the load
+  // deliberately excluded — 93% of stream traffic — and `window.loaded` would
+  // climb past `total`.
+  it('will not let a groom-flow row in through the live-update path', () => {
+    service.refreshOne(dispatchId('7'));
+    http
+      .expectOne(r => r.url.endsWith('/api/dispatch/7'))
+      .flush(fakeEntry({ id: 7, flow: 'groom' }));
+    expect(service.getById(dispatchId('7'))).toBeUndefined();
+
+    // Same path, same insert, commission flow — proves the guard discriminates
+    // on flow rather than just refusing every live insert.
+    service.refreshOne(dispatchId('8'));
+    http
+      .expectOne(r => r.url.endsWith('/api/dispatch/8'))
+      .flush(fakeEntry({ id: 8, flow: 'commission' }));
+    expect(service.getById(dispatchId('8'))).toBeDefined();
+  });
+
   it('takes an explicit null over the prior value — absent is not empty', () => {
     service.refreshOne(dispatchId('7'));
     http

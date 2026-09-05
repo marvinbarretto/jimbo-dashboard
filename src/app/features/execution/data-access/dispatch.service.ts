@@ -133,7 +133,15 @@ export class DispatchService {
           // `removed` rows are filtered out of the bulk load too — keeping the
           // rule in one shape means a removal arriving live behaves the same as
           // one that was already removed at page load.
-          if (result.data.status === 'removed') {
+          //
+          // Same reasoning for flow. The bulk load asks for `flow=commission`,
+          // but the live feed fires `dispatch.stage_changed` for every flow and
+          // this is an insert-if-absent. 93% of stream traffic is grooming, so
+          // without this the store would refill with exactly the rows the load
+          // excluded: no phantom cards (groupCommissions drops them) but
+          // `window.loaded` would climb past `total` and the truncation banner
+          // would start lying about how much the board can see.
+          if (result.data.status === 'removed' || fresh.flow !== 'commission') {
             return entries.filter(e => e.id !== fresh.id);
           }
           return entries.some(e => e.id === fresh.id)
