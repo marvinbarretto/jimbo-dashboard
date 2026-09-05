@@ -1,0 +1,58 @@
+// Ticks are set in px, not rem: this is a countable mark, and a countable mark
+// that reflows with the root font size stops lining up with its neighbours.
+:host.tally {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  line-height: 0;
+}
+
+.tally__tick {
+  display: block;
+  width: 5px;
+  height: var(--tally-tick-h, 2px);
+  background: var(--tally-tint);
+}
+
+// The wider gap that makes groups countable without counting.
+.tally__tick--gap {
+  margin-left: 3px;
+}
+
+// Runway. Shorter and unmixed, so it reads as track rather than as a quiet tick.
+// max() keeps it visible at the 2px size, where a flat -2px would zero it out.
+.tally__tick--empty {
+  height: max(1px, calc(var(--tally-tick-h, 2px) - 1px));
+  background: color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.tally__over {
+  width: auto;
+  height: auto;
+  margin-left: 4px;
+  background: none;
+  color: var(--color-danger);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+:host.tally--sm { --tally-tick-h: 2px; }
+:host.tally--md { --tally-tick-h: 4px; }
+:host.tally--lg { --tally-tick-h: 6px; }
+
+// Full strip. The bloom is what makes "as bad as this gets" readable across a
+// lane without reading any single card.
+:host.tally--maxed {
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--color-danger) 55%, transparent));
+}
+
+:host.tally--bleed {
+  gap: 0;
+
+  .tally__tick {
+    width: auto;
+    flex: 1;
+    margin-left: 0;
+  }
+}

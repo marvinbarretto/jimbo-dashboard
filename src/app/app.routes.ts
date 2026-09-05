@@ -224,6 +224,7 @@ const desktopRoutes: Routes = [
       { path: 'actor-chip',              loadComponent: () => import('./features/ui-lab/sections/actor-chip-section').then(m => m.ActorChipSection) },
       { path: 'vault-chip',              loadComponent: () => import('./features/ui-lab/sections/vault-chip-section').then(m => m.VaultChipSection) },
       { path: 'job-chip',                loadComponent: () => import('./features/ui-lab/sections/job-chip-section').then(m => m.JobChipSection) },
+      { path: 'ui-tally-strip',          loadComponent: () => import('./features/ui-lab/sections/ui-tally-strip-section').then(m => m.UiTallyStripSection) },
       { path: 'epic-rollup',             loadComponent: () => import('./features/ui-lab/sections/epic-rollup-section').then(m => m.EpicRollupSection) },
       { path: 'card-parent-link',        loadComponent: () => import('./features/ui-lab/sections/card-parent-link-section').then(m => m.CardParentLinkSection) },
       { path: 'card-callout',            loadComponent: () => import('./features/ui-lab/sections/card-callout-section').then(m => m.CardCalloutSection) },
