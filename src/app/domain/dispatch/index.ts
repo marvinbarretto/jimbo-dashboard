@@ -19,6 +19,7 @@ export type {
   ApiFleetStats,
   FleetQueueDepth,
   FleetWorker,
+  FleetMachine,
   FleetCompletion,
   FleetBurnRow,
   FleetFold,

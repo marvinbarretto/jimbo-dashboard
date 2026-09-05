@@ -15,6 +15,7 @@ function stats(failures: FleetFailure[]): ApiFleetStats {
     generated_at: '2026-08-24T14:00:00Z',
     queue: [],
     workers: [],
+    machines: [],
     recent: [],
     burn_5h: [],
     folds: [],

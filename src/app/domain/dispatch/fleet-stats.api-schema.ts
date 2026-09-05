@@ -114,10 +114,29 @@ export const ApiFleetStuckNoteSchema = z.object({
   grooming_started_at: z.string().nullable(),
 });
 
+// A machine the workers run on, rolled up server-side from their heartbeats.
+// Derived, not stored: every worker already reports which machine it is on.
+export const ApiFleetMachineSchema = z.object({
+  id:            z.string(),
+  // Most recent word from any worker on it. null = none has ever spoken.
+  // A dead machine reports nothing at all, so absence is the signal.
+  last_seen_at:  z.string().nullable(),
+  workers:       z.array(z.string()),
+  // True only when EVERY worker on it has gone silent. One dead worker beside
+  // live ones leaves its machine fresh — that is the distinction the page
+  // could not draw during the 2026-09-04 outage.
+  stale:         z.boolean(),
+  stale_after_minutes: z.number().int(),
+  suspended:     z.boolean(),
+});
+
 export const ApiFleetStatsSchema = z.object({
   generated_at: z.string(),
   queue:        z.array(ApiFleetQueueDepthSchema),
   workers:      z.array(ApiFleetWorkerSchema),
+  // Optional-with-default: landed 2026-09-05, and a dashboard newer than the
+  // API must render an empty strip rather than take the page down.
+  machines:     z.array(ApiFleetMachineSchema).optional().default([]),
   recent:       z.array(ApiFleetCompletionSchema),
   burn_5h:      z.array(ApiFleetBurnRowSchema),
   folds:        z.array(ApiFleetFoldSchema),
@@ -132,6 +151,7 @@ export const ApiFleetStatsSchema = z.object({
 export type ApiFleetStats = z.infer<typeof ApiFleetStatsSchema>;
 export type FleetQueueDepth = z.infer<typeof ApiFleetQueueDepthSchema>;
 export type FleetWorker = z.infer<typeof ApiFleetWorkerSchema>;
+export type FleetMachine = z.infer<typeof ApiFleetMachineSchema>;
 export type FleetCompletion = z.infer<typeof ApiFleetCompletionSchema>;
 export type FleetBurnRow = z.infer<typeof ApiFleetBurnRowSchema>;
 export type FleetFold = z.infer<typeof ApiFleetFoldSchema>;

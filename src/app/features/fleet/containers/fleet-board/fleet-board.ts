@@ -18,7 +18,7 @@ import { UiFilterPills, type UiFilterPillOption } from '@shared/components/ui-fi
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { FleetService } from '../../data-access/fleet.service';
 import { HermesService } from '../../../hermes/data-access/hermes.service';
-import type { FleetWorker } from '@domain/dispatch';
+import type { FleetMachine, FleetWorker } from '@domain/dispatch';
 
 // Heartbeat freshness thresholds, per worker temperament. Boris (M2) is an
 // always-on daemon polling every 30–60s — silence past a few minutes means
@@ -85,6 +85,7 @@ export class FleetBoard {
   readonly lastError = this.service.lastError;
   readonly lastFetch = this.service.lastFetch;
   readonly workers = this.service.workers;
+  readonly machines = this.service.machines;
   readonly recent = this.service.recent;
   readonly folds = this.service.folds;
   readonly now = this.service.now;
@@ -171,6 +172,41 @@ export class FleetBoard {
 
   workerTone(worker: FleetWorker): HeartbeatTone {
     return this.workerTones().get(worker.id) ?? 'unknown';
+  }
+
+  /** Machines the API has told us are unreachable. */
+  readonly staleMachines = computed(() => this.machines().filter(m => m.stale));
+
+  private readonly machineById = computed(() =>
+    new Map(this.machines().map(m => [m.id, m])));
+
+  /**
+   * Whether this worker's silence is already explained by its machine.
+   *
+   * Without this the outage reads as four alarms — three silent workers and a
+   * stale machine — when it is one fact. The machine card owns it; the workers
+   * on it defer.
+   */
+  workerCoveredByMachine(worker: FleetWorker): boolean {
+    if (!worker.machine) return false;
+    return this.machineById().get(worker.machine)?.stale === true;
+  }
+
+  /**
+   * The inverse, and the more useful half: this worker is silent while the box
+   * it runs on is demonstrably up, so the worker is the thing that is wrong.
+   */
+  workerIsAloneInSilence(worker: FleetWorker): boolean {
+    const tone = this.workerTone(worker);
+    if (tone !== 'stale' && tone !== 'unknown') return false;
+    if (!worker.machine) return false;
+    const machine = this.machineById().get(worker.machine);
+    return machine !== undefined && !machine.stale;
+  }
+
+  machineTone(machine: FleetMachine): HeartbeatTone {
+    if (machine.suspended) return 'quiet';
+    return machine.stale ? 'stale' : 'live';
   }
 
   foldIsStale(lastEnqueuedAt: string | null): boolean {

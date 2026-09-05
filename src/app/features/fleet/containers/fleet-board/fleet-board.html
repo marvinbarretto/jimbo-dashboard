@@ -110,6 +110,56 @@
     }
   </section>
 
+  <!-- Machines: the boxes the workers run on -->
+  @if (machines().length > 0) {
+    <section>
+      <h2 class="fleet__section-title">
+        Machines <span class="fleet__section-hint">a machine is stale only when every worker on it has gone quiet — one silent worker below a live machine is the worker's fault</span>
+      </h2>
+      <div class="fleet__worker-grid">
+        @for (machine of machines(); track machine.id) {
+          <app-ui-card tone="soft" [compact]="true">
+            <div class="fleet-worker">
+              <span class="fleet-worker__dot" [class]="'fleet-worker__dot--' + machineTone(machine)"></span>
+              <div class="fleet-worker__body">
+                <span class="fleet-worker__name">{{ machine.id }}</span>
+                <span class="fleet-worker__meta">
+                  {{ machine.workers.length }}
+                  {{ machine.workers.length === 1 ? 'worker' : 'workers' }}
+                  @if (machine.last_seen_at; as seen) {
+                    · last spoke <span [title]="seen">{{ seen | relativeTime }}</span>
+                  } @else {
+                    · never spoken
+                  }
+                </span>
+              </div>
+              @if (machine.suspended) {
+                <app-ui-badge tone="neutral">suspended</app-ui-badge>
+              } @else if (machine.stale) {
+                <app-ui-badge tone="danger"
+                  [title]="'Silent past ' + machine.stale_after_minutes + ' minutes — every worker on this machine has stopped reporting'">
+                  unreachable
+                </app-ui-badge>
+              }
+            </div>
+          </app-ui-card>
+        }
+      </div>
+      @if (staleMachines().length > 0) {
+        <!-- Say the consequence, not just the state: this is the sentence the
+             page could not produce on 2026-09-04. -->
+        <p class="fleet__section-hint">
+          @for (machine of staleMachines(); track machine.id) {
+            {{ machine.id }} has not spoken since
+            {{ machine.last_seen_at ? (machine.last_seen_at | relativeTime) : 'ever' }} —
+            its {{ machine.workers.length }} {{ machine.workers.length === 1 ? 'worker is' : 'workers are' }}
+            silent because the machine is, not because {{ machine.workers.length === 1 ? 'it' : 'they' }} crashed.
+          }
+        </p>
+      }
+    </section>
+  }
+
   <!-- Workers -->
   <section>
     <h2 class="fleet__section-title">Workers</h2>
@@ -133,6 +183,19 @@
               <app-ui-badge tone="neutral">throttled</app-ui-badge>
             } @else if (workerTone(worker) === 'quiet' && worker.id === 'kipper') {
               <app-ui-badge tone="neutral">napping</app-ui-badge>
+            } @else if (workerIsAloneInSilence(worker)) {
+              <!-- The machine is demonstrably up and this worker is not
+                   reporting, so the worker is the fault and the page says so
+                   rather than leaving the reader to guess. -->
+              <app-ui-badge tone="danger" [title]="worker.machine + ' is up — its other workers are still checking in'">
+                stopped
+              </app-ui-badge>
+            } @else if (workerCoveredByMachine(worker)) {
+              <!-- Already accounted for by the machine card above. Repeating it
+                   here would turn one outage into four alarms. -->
+              <app-ui-badge tone="neutral" [title]="worker.machine + ' is unreachable — see Machines'">
+                {{ worker.machine }} down
+              </app-ui-badge>
             } @else if (workerTone(worker) === 'stale' || workerTone(worker) === 'unknown') {
               <app-ui-badge tone="danger">silent</app-ui-badge>
             }
