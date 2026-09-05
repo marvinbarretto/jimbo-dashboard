@@ -38,27 +38,7 @@
 
 // Small inline status pill the board owns (vs the commission card's own stage
 // pill). Currently only the blocked marker — sits above the card body.
-.board__chip {
-  display: inline-block;
-  margin-bottom: 0.25rem;
-  padding: 0.05rem 0.4rem;
-  border-radius: 4px;
-  font-size: 0.65rem;
-  font-family: var(--font-mono);
-  letter-spacing: 0.02em;
-}
-.board__chip--blocked {
-  color: var(--color-warning);
-  border: 1px solid var(--color-warning);
-}
 
-// Deliberately louder than --blocked: "blocked" means this card is waiting on
-// something else, "awaiting" means something else is waiting on YOU.
-.board__chip--awaiting {
-  color: var(--color-danger);
-  border: 1px solid var(--color-danger);
-  background: var(--color-danger-glow);
-}
 
 // Column-header sweep button — projected into the kanban-column header via
 // `[col-header-action]`. Small, secondary affordance; the per-card dismiss is

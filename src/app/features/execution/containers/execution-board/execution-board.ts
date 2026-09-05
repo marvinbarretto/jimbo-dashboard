@@ -13,6 +13,7 @@ import { type CommissionItem, type CommissionStage } from '@domain/dispatch';
 import type { VaultItemId } from '@domain/ids';
 import { VaultCard, type ActionKey, type CardFlag } from '@shared/components/vault-card/vault-card';
 import type { CommissionAction } from '@features/execution/components/commission-card/commission-card';
+import type { Priority } from '@domain/vault/vault-item';
 import type { CardContext, ManualCardContext, DispatchCardContext, ParentEpicRef, ProjectRef, SourceLabel } from '@shared/components/vault-card/card-context';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
@@ -146,13 +147,19 @@ function laneForManual(item: VaultItem, awaiting = false): BoardLane {
 // projection — a commission has no vault item of its own, so this is what lets
 // both kinds share one comparator with the grooming board.
 type BoardCard =
-  | { readonly kind: 'commission'; readonly item: CommissionItem; readonly lane: BoardLane; readonly sort: SortableCard; readonly doneAt: string | null }
+  | {
+      readonly kind: 'commission'; readonly item: CommissionItem; readonly lane: BoardLane;
+      readonly sort: SortableCard; readonly doneAt: string | null;
+      readonly context: CardContext;
+    }
   | {
       readonly kind: 'manual'; readonly item: VaultItem; readonly lane: BoardLane;
       readonly blocked: boolean; readonly blockerLabel: string | null;
       /** An agent handed this back and is stalled behind it — not Marvin's own capture. */
       readonly awaiting: boolean;
       readonly sort: SortableCard; readonly doneAt: string | null;
+      readonly context: CardContext;
+      readonly flags: readonly CardFlag[];
     };
 
 interface LaneView {
@@ -163,6 +170,28 @@ interface LaneView {
   cards:      readonly BoardCard[];
   /** Cards the lane holds before the cap. Drives the header ratio + show-more. */
   total:      number;
+}
+
+/**
+ * Board-known markers handed to the card so they render inside it.
+ *
+ * `awaiting` stays louder than `blocked` for the same reason it always was:
+ * blocked means this card waits on something else, awaiting means an agent
+ * waits on Marvin. Pure and module-level so the lane builder can bake it into
+ * the card view rather than the template calling it per change detection.
+ */
+function manualFlags(
+  blocked: boolean,
+  blockerLabel: string | null,
+  awaiting: boolean,
+): readonly CardFlag[] {
+  const flags: CardFlag[] = [];
+  if (blocked && blockerLabel) flags.push({ label: blockerLabel, kind: 'blocked' });
+  // The column already says "Waiting on you", so the pill only needs to say
+  // the card cannot move. "handed back" described the event that caused it,
+  // which is one word of history the reader does not need twice.
+  if (awaiting) flags.push({ label: 'blocked', kind: 'awaiting' });
+  return flags;
 }
 
 // Which facets a count should ignore (so a facet's own selection doesn't collapse
@@ -385,15 +414,18 @@ export class ExecutionBoard {
       const lane     = laneForManual(item, awaiting);
       const blockers = this.dependenciesService.blockersFor(item.id)();
       const blocked  = lane === 'ready' && blockers.length > 0;
+      const blockerLabel = blocked ? `blocked · #${blockers[0].blocker_seq}` : null;
       cards.push({
         kind:        'manual',
         item,
         lane,
         blocked,
-        blockerLabel: blocked ? `blocked · #${blockers[0].blocker_seq}` : null,
+        blockerLabel,
         awaiting,
         sort:        toSortableCard(item),
         doneAt:      item.completed_at,
+        context:     this.cardContextForManual(item),
+        flags:       manualFlags(blocked, blockerLabel, awaiting),
       });
     }
 
@@ -421,6 +453,7 @@ export class ExecutionBoard {
         // created_at so every done/terminal card still gets a housekeeping
         // reference point for auto-clear.
         doneAt:    c.latest.completed_at ?? c.latest.started_at ?? c.latest.created_at,
+        context:   this.cardContextForCommission(c),
       });
     }
 
@@ -457,23 +490,6 @@ export class ExecutionBoard {
 
   projectForCommission(item: CommissionItem): ProjectRef | null {
     return this.resolveProject(item.taskId as string);
-  }
-
-  /**
-   * Board-known markers handed to the card so they render inside it.
-   *
-   * `awaiting` stays louder than `blocked` for the same reason it always was:
-   * blocked means this card waits on something else, awaiting means an agent
-   * waits on Marvin.
-   */
-  manualFlags(card: Extract<BoardCard, { kind: 'manual' }>): readonly CardFlag[] {
-    const flags: CardFlag[] = [];
-    if (card.blocked && card.blockerLabel) flags.push({ label: card.blockerLabel, kind: 'blocked' });
-    // The column already says "Waiting on you", so the pill only needs to say
-    // the card cannot move. "handed back" described the event that caused it,
-    // which is one word of history the reader does not need twice.
-    if (card.awaiting) flags.push({ label: 'blocked', kind: 'awaiting' });
-    return flags;
   }
 
   cardContextForManual(item: VaultItem): CardContext {
@@ -585,13 +601,29 @@ export class ExecutionBoard {
   private sourceLabelFor(item: VaultItem): SourceLabel | null {
     const src = item.source;
     if (!src) return null;
-    if (src.kind === 'agent')      return { text: `by @${src.ref}`, actorId: src.ref };
+    // display_name, not the raw ref — the same resolution the grooming board
+    // does. This label never rendered until the card's source line stopped
+    // being grooming-only, so the difference was invisible rather than absent.
+    if (src.kind === 'agent') {
+      const actor = this.actorsService.getById(src.ref);
+      return { text: `by @${actor?.display_name ?? src.ref}`, actorId: src.ref };
+    }
     if (src.kind === 'manual')     return { text: 'manual', actorId: null };
     if (src.kind === 'pr-comment') return { text: 'via PR comment', actorId: null };
     return { text: `via ${src.kind}`, actorId: null };
   }
 
   // --- mutations ----------------------------------------------------------
+
+  /**
+   * The band's priority dropdown, wired.
+   *
+   * It has rendered on this board's manual cards since the card gained it, with
+   * nothing bound to the output — so choosing a priority silently did nothing.
+   */
+  onPriorityChange(item: VaultItem, priority: Priority | null): void {
+    this.vaultItemsService.update(item.id, { manual_priority: priority });
+  }
 
   /**
    * Bridge from the shared card's `ActionKey` to the commission actions.

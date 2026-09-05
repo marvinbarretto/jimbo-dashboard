@@ -118,11 +118,15 @@
             @if (card.kind === 'commission') {
               <!-- One card component for the whole board. Commission-specific
                    detail (stage pill, PR link, failure text, xN history) lives
-                   on the dispatch branch of app-vault-card. -->
-              <app-vault-card
-                density="compact"
-                [context]="cardContextForCommission(card.item)"
-                (actionTriggered)="onCommissionCardAction(card.item, $event)" />
+                   on the dispatch branch of app-vault-card. Wrapped like the
+                   manual cards — undraggable, but the wrapper is what sets the
+                   lane's rhythm, and without it commissions sat tighter than
+                   their neighbours in the same column. -->
+              <div class="board__card-wrap">
+                <app-vault-card
+                  [context]="card.context"
+                  (actionTriggered)="onCommissionCardAction(card.item, $event)" />
+              </div>
             } @else {
               <div
                 class="board__card-wrap"
@@ -134,13 +138,15 @@
               >
                 <!-- Flags go INSIDE the card now. A card an agent is stalled
                      behind must not read like one Marvin captured himself —
-                     that conflation is the defect the marker exists to prevent,
-                     and it does that better in the head row than floating above
-                     the card as a separate object. -->
+                     that conflation is the defect the marker exists to prevent.
+                     Context and flags are precomputed on the lane view: a
+                     method call here rebuilds them on every change detection
+                     and hands the card a new object each time, which defeats
+                     its OnPush. -->
                 <app-vault-card
-                  density="compact"
-                  [flags]="manualFlags(card)"
-                  [context]="cardContextForManual(card.item)"
+                  [flags]="card.flags"
+                  [context]="card.context"
+                  (priorityChange)="onPriorityChange(card.item, $event)"
                   (actionTriggered)="onManualAction(card.item, $event)" />
               </div>
             }
