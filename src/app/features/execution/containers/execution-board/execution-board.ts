@@ -13,7 +13,7 @@ import { type CommissionItem, type CommissionStage } from '@domain/dispatch';
 import type { VaultItemId } from '@domain/ids';
 import { VaultCard, type ActionKey, type CardFlag } from '@shared/components/vault-card/vault-card';
 import type { CommissionAction } from '@features/execution/components/commission-card/commission-card';
-import type { CardContext, ManualCardContext, DispatchCardContext, ProjectRef, SourceLabel } from '@shared/components/vault-card/card-context';
+import type { CardContext, ManualCardContext, DispatchCardContext, ParentEpicRef, ProjectRef, SourceLabel } from '@shared/components/vault-card/card-context';
 import { KanbanColumn } from '@shared/components/kanban-column/kanban-column';
 import { KanbanFilterBar, type FilterGroup } from '@shared/components/kanban-filter-bar/kanban-filter-bar';
 import { BoardCreateBar } from '@shared/components/board-create-bar/board-create-bar';
@@ -482,7 +482,7 @@ export class ExecutionBoard {
       item,
       project: this.resolveProject(item.id as string),
       owner: item.assigned_to ?? null,
-      parentEpic: null,
+      parentEpic: this.parentRef(item.parent_id),
       source: this.sourceLabelFor(item),
       lastActivityAt: item.latest_activity_at ?? item.created_at,
       sourceKind: item.source?.kind ?? null,
@@ -511,7 +511,7 @@ export class ExecutionBoard {
       project: this.projectForCommission(c),
       owner: c.executor,
       skillDisplayName: null,
-      parentEpic: null,
+      parentEpic: this.parentRef(item?.parent_id ?? null),
       // The entry carries no model — that lives on the activity event, which the
       // board does not load. Null is honest here; the card omits the chip.
       modelId: null,
@@ -532,6 +532,20 @@ export class ExecutionBoard {
   private isHumanOwned(item: VaultItem): boolean {
     if (!item.assigned_to) return false;
     return this.actorsService.getById(item.assigned_to)?.kind === 'human';
+  }
+
+  /**
+   * The card's parent, for the band's epic chip.
+   *
+   * This board passed null here since the chip's slot existed, so an item whose
+   * parent IS an epic — most of them — rendered as though it had none. Mirrors
+   * the grooming board's `parentRef`; `getById` is a lookup on a memoized map,
+   * so this stays cheap enough for a method the template calls per card.
+   */
+  private parentRef(parentId: string | null): ParentEpicRef | null {
+    if (!parentId) return null;
+    const parent = this.vaultItemsService.getById(parentId as VaultItemId);
+    return parent ? { seq: parent.seq, title: parent.title } : null;
   }
 
   private resolveProject(id: string): ProjectRef | null {
