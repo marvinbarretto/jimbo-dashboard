@@ -11,6 +11,7 @@ import type { Project } from '@domain/projects';
 import type { VaultItem, SourceKind } from '@domain/vault';
 import type { Priority } from '@domain/vault/vault-item';
 import type { Actor } from '@domain/actors';
+import type { CommissionStage } from '@domain/dispatch';
 import { CURRENT_ACTOR_ID } from '@domain/actors';
 import { BlockerBadge } from '@shared/components/blocker-badge/blocker-badge';
 import { EpicBadge } from '@shared/components/epic-badge/epic-badge';
@@ -108,6 +109,20 @@ function groomingActions(ctx: GroomingCardContext): CardAction[] {
   }
 }
 
+/**
+ * Whether the commission itself is finished — as opposed to the agent's run.
+ *
+ * `pr_open` is the case that matters: the executor exits `completed` the moment
+ * it pushes a PR, while the commission stays live for however long that PR
+ * waits for a human. Reading the run's exit code as the item's state is the
+ * same conflation the stage pill was removed for, and it was still driving the
+ * clock and the dismiss button.
+ */
+function stageIsSettled(stage: CommissionStage | undefined): boolean {
+  if (!stage) return true;    // no stage supplied ⇒ plain dispatch row, status rules
+  return stage === 'merged' || stage === 'failed' || stage === 'rejected' || stage === 'completed';
+}
+
 function dispatchActions(ctx: DispatchCardContext): CardAction[] {
   const status = ctx.entry.status;
   if (status === 'failed') {
@@ -116,10 +131,12 @@ function dispatchActions(ctx: DispatchCardContext): CardAction[] {
       { key: 'archive', label: 'archive', variant: 'neutral', icon: 'archive' },
     ];
   }
-  if (status === 'completed') {
-    // Hides the run and keeps the row — POST /dispatch/{id}/dismiss, the same
-    // soft hide the notification bar uses. It used to be a hard DELETE behind
-    // this label, which is why it briefly read "delete run".
+  // Hides the run and keeps the row — POST /dispatch/{id}/dismiss, the same
+  // soft hide the notification bar uses. Gated on the STAGE, not the run: a
+  // `pr_open` commission has a completed run and a live pull request, and the
+  // board was offering to hide it. Measured 2026-09-05: LOC-3155 sat in In
+  // Progress with a dismiss button, a PR open ten days, and failing checks.
+  if (status === 'completed' && stageIsSettled(ctx.stage)) {
     return [{ key: 'dismiss', label: 'dismiss', variant: 'neutral' }];
   }
   // approved / dispatching / running — passive, system-managed.
@@ -321,7 +338,14 @@ export class VaultCard {
    */
   protected readonly tallyDays = computed(() => {
     const ctx = this.context();
-    if (ctx.kind === 'dispatch') return 0;
+    if (ctx.kind === 'dispatch') {
+      // A dispatch row is ephemeral workflow and carries no tally — except at
+      // `pr_open`, where it is the longest-lived thing on the board: the run is
+      // over and the commission is waiting on a human. Ten days of that looked
+      // exactly like ten minutes of it.
+      if (ctx.stage !== 'pr_open' || !ctx.entry.completed_at) return 0;
+      return Math.max(0, Math.floor(ageInDays(ctx.entry.completed_at)));
+    }
     const ref = ctx.lastActivityAt ?? ctx.item.created_at;
     return Math.max(0, Math.floor(ageInDays(ref)));
   });
@@ -488,6 +512,13 @@ export class VaultCard {
   // Dispatch runtime string — "queued 3m ago" / "5m elapsed" / "ran 47s" / etc.
   private dispatchRuntimeLabel(ctx: DispatchCardContext): string {
     const d = ctx.entry;
+    // A live commission reports how long it has been waiting, not how long the
+    // agent took. "ran 9m 18s" on a card that has not moved in ten days is the
+    // wrong fact: the run's duration is history the moment the PR opens, and
+    // the lane it sits in claims something is happening.
+    if (ctx.stage === 'pr_open' && d.completed_at) {
+      return `PR open ${formatAgeShort(d.completed_at)}`;
+    }
     switch (d.status) {
       case 'approved':    return `queued ${deltaFromNow(d.created_at)} ago`;
       case 'dispatching': return 'claiming…';
