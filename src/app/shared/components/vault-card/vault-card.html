@@ -1,16 +1,52 @@
 <article class="vault-card" [class.vault-card--epic]="isEpic()">
 
-  <!-- Compact drops the header's priority: the body row below renders the same
-       value as an interactive dropdown, so showing it here too is duplication,
-       not emphasis. Owner stays, because compact hides the identity row that
-       would otherwise carry it. -->
+  <!-- One tick per quiet day, tinted out of the project colour and spent by the
+       30-day cap. Sits above the band because it is a property of the whole
+       card, not of the identity strip. Absent entirely on a fresh item. -->
+  @if (tallyDays() > 0) {
+    <app-ui-tally-strip class="vault-card__tally" [days]="tallyDays()" />
+  }
+
+  <!-- The band carries the whole identity: project, handle, clock, priority,
+       owner, and the parent epic on its own chip row. Everything here used to
+       render a second time in a head row below it. -->
   <app-item-header
     [projectName]="context().project?.display_name ?? 'No project'"
     [projectColor]="context().project?.color_token ?? null"
-    [priority]="compact() ? null : priority()"
+    [seq]="seq()"
+    [seqLabel]="seqLabel()"
     [owner]="context().owner"
+    [fade]="fadeVal()"
     secondary="epic"
-    [epicLabel]="epicHeaderLabel()" />
+    [timeText]="ageLabel()"
+    [epicLabel]="epicHeaderLabel()"
+    [epicSeq]="context().parentEpic?.seq ?? null">
+    <!-- Always projected, so the slot's fallback badge stays for block-card.
+         Priority is an editing surface here, not a label. -->
+    <span priority class="vault-card__pri">
+      @if (dispatch()) {
+        @if (priority() !== null) {
+          <app-priority-badge [priority]="priority()!" />
+        }
+      } @else {
+        <app-ui-dropdown #priorityDrop ariaHaspopup="listbox" ariaLabel="Set priority">
+          @if (priority() !== null) {
+            <app-priority-badge trigger [priority]="priority()!" />
+          } @else {
+            <span trigger class="vault-card__priority-empty">P?</span>
+          }
+          <div panel role="listbox" class="vault-card__priority-panel">
+            @for (opt of priorityOptions; track opt.label) {
+              <button role="option" class="vault-card__priority-option"
+                      (click)="priorityChange.emit(opt.value); priorityDrop.close()">
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+        </app-ui-dropdown>
+      }
+    </span>
+  </app-item-header>
 
   @if (!context().project && projectTrigger(); as t) {
     <input
@@ -30,101 +66,20 @@
   }
 
   <div class="vault-card__body">
-  <header class="vault-card__head">
-    @if (seq() !== null) {
-      <a class="vault-card__seq" [routerLink]="['/vault-items', seq()]">{{ seqLabel() }}</a>
-    }
 
-    @if (dispatch(); as d) {
-      <!-- No stage pill. The pill reported the AGENT PROCESS's exit code and the
-           board read it as the item's status: on 2026-09-05 all seven cards in
-           Review wore an identical green COMPLETED, covering one merged PR, one
-           research deliverable, three runs that stopped because a prerequisite
-           did not exist, one that never got its prompt, and one that abandoned
-           mid-run waiting on a Chromium download. The lane already says where
-           the item is, and the definition of done says when it is finished —
-           a second, louder, wrong answer beside them is what we removed.
-           Attempt count stays: it is a count, not a verdict. -->
-      @if (d.entry.retry_count > 0) {
-        <span class="vault-card__retry" [attr.title]="'Attempt ' + (d.entry.retry_count + 1)">↻{{ d.entry.retry_count }}</span>
-      }
-      @if (genesis(); as g) {
-        @if (g.parentSeq != null) {
-          <a class="vault-card__genesis"
-             [class.vault-card__genesis--manual]="g.kind === 'manual'"
-             [class.vault-card__genesis--auto]="g.kind === 'auto'"
-             [class.vault-card__genesis--github]="g.kind === 'github'"
-             [class.vault-card__genesis--external]="g.kind === 'external'"
-             [routerLink]="['/vault-items', g.parentSeq]"
-             [attr.title]="'Genesis: ' + g.label">
-            {{ g.label }}
-          </a>
-        } @else {
-          <span class="vault-card__genesis"
-                [class.vault-card__genesis--manual]="g.kind === 'manual'"
-                [class.vault-card__genesis--auto]="g.kind === 'auto'"
-                [class.vault-card__genesis--github]="g.kind === 'github'"
-                [class.vault-card__genesis--external]="g.kind === 'external'"
-                [attr.title]="'Genesis: ' + g.label">
-            {{ g.label }}
-          </span>
-        }
-      }
-    } @else {
-      <app-ui-dropdown #priorityDrop ariaHaspopup="listbox" ariaLabel="Set priority">
-        @if (priority() !== null) {
-          <app-priority-badge trigger [priority]="priority()!" />
-        } @else {
-          <span trigger class="vault-card__priority-empty">P?</span>
-        }
-        <div panel role="listbox" class="vault-card__priority-panel">
-          @for (opt of priorityOptions; track opt.label) {
-            <button role="option" class="vault-card__priority-option"
-                    (click)="priorityChange.emit(opt.value); priorityDrop.close()">
-              {{ opt.label }}
-            </button>
-          }
-        </div>
-      </app-ui-dropdown>
-      @if (isEpic()) {
-        <app-epic-badge [count]="(grooming()?.childRollup?.length ?? 0)" />
-      }
-      @if (grooming(); as g) {
-        @if (g.openQuestionsCount > 0) {
-          <a [appKanbanCardLink]="seq()!" style="display:contents">
-            <app-blocker-badge [count]="g.openQuestionsCount" />
-          </a>
-        }
-      }
-    }
-
+  <!-- Board flags read as part of the sentence rather than as badges parked in
+       a row of their own: "BLOCKED Day checks answerable on /m/today" is one
+       thing to read, and it costs no row. -->
+  <p class="vault-card__title-row">
     @for (flag of flags(); track flag.label) {
       <span class="vault-card__flag" [class]="'vault-card__flag--' + flag.kind">{{ flag.label }}</span>
     }
-
-    <span
-      class="vault-card__age"
-      [class.vault-card__age--stuck]="isStuck()"
-      [attr.title]="isStuck() ? stuckDays() + 'd in this column · stuck' : null"
-    >{{ ageLabel() }}</span>
-
-    @if (sourceClass() === 'github' && sourceUrl()) {
-      <a class="vault-card__github-link"
-         [href]="sourceUrl()"
-         target="_blank"
-         rel="noopener noreferrer"
-         title="View on GitHub"
-         (click)="$event.stopPropagation()">
-        <app-icon name="github" [size]="12" />
-      </a>
+    @if (seq() !== null) {
+      <a class="vault-card__title" [appKanbanCardLink]="seq()!">{{ title() }}</a>
+    } @else {
+      <span class="vault-card__title vault-card__title--missing">{{ title() }}</span>
     }
-  </header>
-
-  @if (seq() !== null) {
-    <a class="vault-card__title" [appKanbanCardLink]="seq()!">{{ title() }}</a>
-  } @else {
-    <span class="vault-card__title vault-card__title--missing">{{ title() }}</span>
-  }
+  </p>
 
   <!-- Tags are a filter, not a scan signal — the board's filter bar already
        offers them, and reading them off a card tells you nothing about whether
@@ -137,10 +92,81 @@
     </ul>
   }
 
-  @if (!compact()) {
-  <div class="vault-card__identity">
-    @if (grooming(); as g) {
-      @if (actorOptions().length > 0) {
+  @if (isEpic() && grooming()?.childRollup; as children) {
+    <div class="vault-card__rollup">
+      <app-epic-rollup [children]="children" />
+    </div>
+  }
+
+  <!-- Everything the band doesn't carry, on one line. The owner avatar is gone
+       from here — it lives in the band now — so this row only appears when it
+       has something of its own to say. -->
+  @if (metaRowVisible()) {
+    <div class="vault-card__meta">
+      @if (dispatch(); as d) {
+        <span class="vault-card__skill" [attr.title]="d.entry.skill">
+          {{ d.skillDisplayName ?? d.entry.skill }}
+        </span>
+        @if (d.entry.retry_count > 0) {
+          <span class="vault-card__retry" [attr.title]="'Attempt ' + (d.entry.retry_count + 1)">↻{{ d.entry.retry_count }}</span>
+        }
+        @if (genesis(); as g) {
+          @if (g.parentSeq != null) {
+            <a class="vault-card__genesis"
+               [class]="'vault-card__genesis vault-card__genesis--' + g.kind"
+               [routerLink]="['/vault-items', g.parentSeq]"
+               [attr.title]="'Genesis: ' + g.label">{{ g.label }}</a>
+          } @else {
+            <span [class]="'vault-card__genesis vault-card__genesis--' + g.kind"
+                  [attr.title]="'Genesis: ' + g.label">{{ g.label }}</span>
+          }
+        }
+        @if (modelId(); as m) {
+          <span class="vault-card__model" [attr.title]="'Model used for this run: ' + m">{{ m }}</span>
+        }
+        @if (d.entry.pr_url; as pr) {
+          <a class="vault-card__pr" [href]="pr" target="_blank" rel="noopener"
+             (click)="$event.stopPropagation()">PR ↗</a>
+        }
+      } @else {
+        <!-- Shown when grooming chose one, omitted when it did not. The absence
+             used to render as an amber "no skill", which fired on human-owned
+             cards where there is no pump and the warning is simply false; the
+             unroutable gate already lists the agent-owned ones by name. -->
+        @if (showSkill()) {
+          <span class="vault-card__skill" [attr.title]="suggestedSkill()">{{ suggestedSkill() }}</span>
+        }
+        @if (isEpic()) {
+          <app-epic-badge [count]="(grooming()?.childRollup?.length ?? 0)" />
+        }
+        @if (grooming(); as g) {
+          @if (g.openQuestionsCount > 0) {
+            <a [appKanbanCardLink]="seq()!" style="display:contents">
+              <app-blocker-badge [count]="g.openQuestionsCount" />
+            </a>
+          }
+        }
+      }
+
+      @if (sourceClass() === 'github' && sourceUrl()) {
+        <a class="vault-card__github-link"
+           [href]="sourceUrl()"
+           target="_blank"
+           rel="noopener noreferrer"
+           title="View on GitHub"
+           (click)="$event.stopPropagation()">
+          <app-icon name="github" [size]="12" />
+        </a>
+      }
+    </div>
+  }
+
+  <!-- Reassignment surface. Only rendered where the board offers actor options:
+       the owner itself is in the band, so without a picker this row would be a
+       second copy of what the band already says. -->
+  @if (!compact() && reassignable()) {
+    <div class="vault-card__identity">
+      @if (grooming(); as g) {
         <app-ui-dropdown #ownerDrop ariaHaspopup="listbox" ariaLabel="Reassign">
           @if (g.owner) {
             <app-actor-avatar trigger [actor]="g.owner" size="md" />
@@ -156,26 +182,18 @@
             }
           </div>
         </app-ui-dropdown>
-      } @else if (g.owner) {
-        <app-actor-avatar [actor]="g.owner" size="md" />
-      } @else {
-        <span class="vault-card__unassigned">unassigned</span>
       }
-    } @else if (manual(); as m) {
-      @if (m.owner) {
-        <app-actor-avatar [actor]="m.owner" size="md" />
-      } @else {
-        <span class="vault-card__unassigned">unassigned</span>
-      }
-    } @else if (dispatch(); as d) {
-      @if (d.owner) {
-        <app-actor-avatar [actor]="d.owner" size="md" />
-      }
-      @if (modelId(); as m) {
-        <span class="vault-card__model" [attr.title]="'Model used for this run: ' + m">{{ m }}</span>
-      }
-    }
 
+      @if (grooming()?.source; as s) {
+        <span class="vault-card__source">
+          {{ s.text }}
+          @if (s.actorId) {
+            <app-actor-avatar [actor]="s.actorId" size="sm" />
+          }
+        </span>
+      }
+    </div>
+  } @else if (!compact() && !reassignable()) {
     @if (grooming()?.source; as s) {
       <span class="vault-card__source">
         {{ s.text }}
@@ -186,32 +204,6 @@
     } @else if (manual()?.source; as s) {
       <span class="vault-card__source">{{ s.text }}</span>
     }
-  </div>
-  }
-
-  @if (dispatch(); as d) {
-    @if (d.entry.pr_url; as pr) {
-      <a class="vault-card__pr" [href]="pr" target="_blank" rel="noopener"
-         (click)="$event.stopPropagation()">PR ↗</a>
-    }
-    <!-- Error text, result prose and the per-run history drill-down have moved
-         to the item's detail view. A kanban card's job is to say where the item
-         is; what an agent wrote about a run is detail, and detail read off a
-         card is detail nobody can act on. -->
-    <span class="vault-card__skill" [attr.title]="d.entry.skill">
-      {{ d.skillDisplayName ?? d.entry.skill }}
-    </span>
-  } @else if (compact() && showSkill()) {
-    <!-- The skill decides whether an item can move at all: the pump declines to
-         dispatch a leaf with none rather than guessing, which is what "ready but
-         unroutable" means. Until now this only rendered for cards that had
-         already been dispatched — showing the skill exactly when it had stopped
-         mattering, and hiding it while the item was stuck waiting for one. -->
-    <span
-      class="vault-card__skill"
-      [class.vault-card__skill--none]="!suggestedSkill()"
-      [attr.title]="suggestedSkill() ?? 'No skill chosen — the pump will not dispatch this'"
-    >{{ suggestedSkill() ?? 'no skill' }}</span>
   }
 
   @if (calloutKind(); as kind) {
@@ -239,12 +231,6 @@
         }
       }
     }
-  }
-
-  @if (isEpic() && grooming()?.childRollup; as children) {
-    <div class="vault-card__rollup">
-      <app-epic-rollup [children]="children" />
-    </div>
   }
 
   @if (actions().length > 0) {

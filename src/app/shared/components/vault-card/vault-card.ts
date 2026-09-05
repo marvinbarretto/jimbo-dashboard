@@ -16,8 +16,9 @@ import { BlockerBadge } from '@shared/components/blocker-badge/blocker-badge';
 import { EpicBadge } from '@shared/components/epic-badge/epic-badge';
 import { CardCallout, type CalloutVariant } from '@shared/components/card-callout/card-callout';
 import { EpicRollup } from '@shared/components/epic-rollup/epic-rollup';
+import { UiTallyStrip } from '@shared/components/ui-tally-strip/ui-tally-strip';
 import { ItemHeader } from '@shared/components/item-header/item-header';
-import { effectivePriority, ageInDays, isStuck, staleNorm, ancientNorm, isDone } from '@domain/vault';
+import { effectivePriority, ageInDays, staleNorm, ancientNorm, isDone } from '@domain/vault';
 import type { ActorId, VaultItemId } from '@domain/ids';
 import type { IconName } from '@shared/components/app-icon/icon-registry';
 import type {
@@ -155,6 +156,7 @@ function actionsFor(ctx: CardContext): CardAction[] {
     CardCallout,
     EpicRollup,
     ItemHeader,
+    UiTallyStrip,
   ],
   templateUrl: './vault-card.html',
   styleUrl: './vault-card.scss',
@@ -264,12 +266,12 @@ export class VaultCard {
     return ctx.project?.color_token ?? null;
   });
 
-  // Feeds app-item-header's "epic" secondary slot — same "↳ #<seq> <title>"
-  // shape the old plain-text project-bar link used, just formatted for a
-  // non-interactive display span instead of a routerLink.
+  // Feeds app-item-header's epic chip. Just the title: the chip is a link to
+  // the parent, so the seq is reachable rather than recited, and the old "↳"
+  // was saying "belongs to" in a slot that already means it.
   protected readonly epicHeaderLabel = computed<string | null>(() => {
     const parent = this.context().parentEpic;
-    return parent ? `↳ #${parent.seq} ${parent.title}` : null;
+    return parent ? parent.title : null;
   });
 
   // ── Ownership ──────────────────────────────────────────────────────────────
@@ -313,6 +315,30 @@ export class VaultCard {
     const ctx = this.context();
     if (ctx.kind === 'dispatch') return 0;
     return ancientNorm(ctx.item, ctx.lastActivityAt);
+  });
+
+  /**
+   * How far the card has drained toward neutral, 0..1.
+   *
+   * The same sqrt(days / ANCIENT_DAYS) curve the old amber wash used for its
+   * hue — the discrimination is simply spent subtractively now. `staleNorm`
+   * saturates at seven days, which is why it drives nothing here: on a board
+   * where most cards are older than a week it had no range left to spend.
+   */
+  protected readonly fadeVal = computed(() => this.ancientNormVal());
+
+  /**
+   * Whole quiet days, for the tally strip.
+   *
+   * Dispatch rows are ephemeral workflow records rather than the long-lived
+   * item — the same reason they are treated as fresh by the staleness norms —
+   * so they carry no tally at all.
+   */
+  protected readonly tallyDays = computed(() => {
+    const ctx = this.context();
+    if (ctx.kind === 'dispatch') return 0;
+    const ref = ctx.lastActivityAt ?? ctx.item.created_at;
+    return Math.max(0, Math.floor(ageInDays(ref)));
   });
 
   protected readonly priorityOptions: readonly { label: string; value: Priority | null }[] = [
@@ -399,16 +425,21 @@ export class VaultCard {
   });
 
   /**
-   * Whether to show the skill badge at all.
+   * Whether the chosen skill is worth drawing.
    *
-   * Suppressed once the item is finished: the skill decides whether something
-   * can be picked up, so on a Done card `no skill` is an amber warning about a
-   * decision that no longer needs making.
+   * Only when there is one, and not once the item is finished — routing stops
+   * being a fact about the future at that point. The absence used to render as
+   * an amber "no skill" on every card without one, which fired hardest on
+   * human-owned items: the pump's refusal applies to agent-assigned leaves
+   * (`grooming-transition.ts`), and the pile of those already has a screen —
+   * `unroutableGate` lists them by name precisely so a stoppage cannot look
+   * like a working system. A card-level copy warned about the wrong cards and
+   * duplicated the right ones.
    */
   protected readonly showSkill = computed(() => {
     const ctx = this.context();
     if (ctx.kind !== 'manual' && ctx.kind !== 'grooming') return false;
-    return !isDone(ctx.item);
+    return !!this.suggestedSkill() && !isDone(ctx.item);
   });
 
   // Grooming callouts only. A dispatch context used to raise `result`/`error`
@@ -420,16 +451,31 @@ export class VaultCard {
     return ctx.kind === 'grooming' ? calloutKindFor(ctx) : null;
   });
 
-  protected readonly stuckDays = computed(() => {
-    const g = this.grooming();
-    if (!g) return 0;
-    return Math.floor(g.daysInColumn);
-  });
-  protected readonly isStuck = computed(() => {
-    const g = this.grooming();
-    return g ? isStuck(g.daysInColumn) : false;
+  /**
+   * Whether the reassignment dropdown has anywhere to go.
+   *
+   * The owner avatar itself moved into the band, so without a picker this row
+   * would be a second copy of what the band already says.
+   */
+  protected readonly reassignable = computed(
+    () => this.grooming() !== null && this.actorOptions().length > 0,
+  );
+
+  /** Whether the meta row carries anything — it is omitted rather than empty. */
+  protected readonly metaRowVisible = computed(() => {
+    const ctx = this.context();
+    if (ctx.kind === 'dispatch') return true;   // always carries at least the skill
+    if (this.showSkill()) return true;
+    if (this.isEpic()) return true;
+    if ((this.grooming()?.openQuestionsCount ?? 0) > 0) return true;
+    return this.sourceClass() === 'github' && !!this.sourceUrl();
   });
 
+  // The stuck pill is gone with the body's age span. It marked days-in-column
+  // crossing the staleness threshold — a different clock from the one the band
+  // and the tally now show (days since last activity), and there is nowhere on
+  // the card that means "how long has it sat in THIS lane". `daysInColumn` is
+  // still on the grooming context for whoever draws it next.
   protected readonly ageLabel = computed(() => {
     const ctx = this.context();
     if (ctx.kind === 'dispatch') return this.dispatchRuntimeLabel(ctx);

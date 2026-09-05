@@ -1,4 +1,8 @@
-@use 'staleness';
+// The amber staleness wash is gone from this card: staleNorm saturates at
+// seven days, so on a board where most items are older than that it had no
+// discrimination left to spend. Age is subtractive here instead — the card
+// drains toward the board's own ground while the tally counts the days — and
+// `_staleness.scss` stays put for the modules pages that still use it.
 
 .vault-card {
   background: var(--color-surface);
@@ -10,9 +14,14 @@
   font-family: var(--font-mono);
   position: relative;
 
-  // Amber wash + glow that intensifies with age. Reads --stale-norm and
-  // --ancient-norm from the host bindings; both default to 0 for fresh items.
-  @include staleness.gradient;
+  // Age drains the card toward the lane's ground. Reads --ancient-norm from the
+  // host binding (sqrt(days / 30)), which is 0 for a fresh item and for every
+  // dispatch row.
+  background: color-mix(
+    in srgb,
+    var(--color-surface),
+    var(--color-bg) calc(var(--ancient-norm, 0) * 55%)
+  );
 }
 .vault-card:hover {
   border-color: var(--color-border-strong);
@@ -92,7 +101,7 @@
   }
 }
 
-.vault-card__head {
+.vault-card__meta {
   display: flex;
   align-items: center;
   gap: 0.3rem;
@@ -100,12 +109,33 @@
   font-size: 0.65rem;
   color: var(--color-text-muted);
 }
-.vault-card__seq {
-  color: var(--color-text-muted);
-  font-weight: 500;
-  text-decoration: none;
+
+// Priority lives in the band now, on the project colour. It is still the
+// editing surface, so it has to keep reading as pressable against a ground
+// that is itself a strong colour: a near-black chip, the dropdown's own
+// chevron, and a hover that deepens rather than lightens.
+// The chip is painted on the child's host element rather than on the button
+// inside it: UiDropdown's trigger is view-encapsulated, so a selector from here
+// cannot reach it, and its transparent background lets the host's show through.
+// Scoped to the children so nothing renders when neither branch does.
+.vault-card__pri {
+  display: inline-flex;
+  align-items: center;
+
+  > app-ui-dropdown,
+  > app-priority-badge {
+    padding: 0 0.2rem;
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--color-black) 72%, transparent);
+  }
+
+  > app-ui-dropdown:hover { background: var(--color-black); }
 }
-.vault-card__seq:hover { text-decoration: underline; }
+
+// Full-bleed along the card's top edge, above the band.
+.vault-card__tally {
+  padding: 0.3rem 0.5rem 0;
+}
 
 .vault-card__retry {
   font-size: 0.6rem;
@@ -137,30 +167,17 @@
 }
 a.vault-card__genesis:hover { background: color-mix(in srgb, var(--color-accent) 18%, transparent); }
 
-.vault-card__age {
-  margin-left: auto;
-  font-size: 0.6rem;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-
-  // Stuck = age in current column exceeds the staleness threshold. We surface
-  // that here (single place for "Nd") instead of a separate pill so the head
-  // row doesn't show the same number twice.
-  &--stuck {
-    color: var(--color-warning);
-    padding: 0 0.3rem;
-    border: 1px solid color-mix(in srgb, var(--color-warning) 50%, var(--color-border));
-    background: color-mix(in srgb, var(--color-warning) 18%, transparent);
-    border-radius: var(--radius);
-  }
+.vault-card__title-row {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
 }
-
 .vault-card__title {
-  font-size: 0.8rem;
-  color: var(--color-text);
-  line-height: 1.4;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--color-text), var(--color-text-muted) calc(var(--ancient-norm, 0) * 70%));
   text-decoration: none;
-  display: block;
   word-wrap: break-word;
 }
 .vault-card__title:hover { color: var(--color-accent); }
@@ -345,17 +362,24 @@ a.vault-card__genesis:hover { background: color-mix(in srgb, var(--color-accent)
   overflow: hidden;
 }
 
-// Board-supplied markers, inline in the head row. These previously rendered as
-// siblings floating above the card (.board__chip on the execution board), which
-// read as a separate object and cost a full row per flagged card. Colours match
-// the originals: `blocked` = this card waits on something; `awaiting` = louder,
+// Board-supplied markers, now a prefix inside the title line rather than a
+// badge in a row of their own: "BLOCKED Day checks answerable on /m/today" is
+// one thing to read and costs no row. Mono against the sans title so the state
+// reads as a stamp on the sentence rather than as part of it. Colours match the
+// originals: `blocked` = this card waits on something; `awaiting` = louder,
 // because something else waits on YOU.
 .vault-card__flag {
-  font-size: 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.575rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   line-height: 1;
-  padding: 0.15rem 0.3rem;
+  padding: 0.1rem 0.25rem;
+  margin-right: 0.3rem;
   border-radius: 3px;
   white-space: nowrap;
+  vertical-align: 0.08em;
 }
 .vault-card__flag--blocked {
   color: var(--color-warning);
@@ -365,16 +389,6 @@ a.vault-card__genesis:hover { background: color-mix(in srgb, var(--color-accent)
   color: var(--color-danger);
   border: 1px solid var(--color-danger);
   background: var(--color-danger-glow);
-}
-
-// "no skill" is the state that keeps an item out of the pump entirely, so it
-// reads as a warning rather than as muted metadata. Amber, not red: nothing is
-// broken — grooming simply hasn't chosen yet, and 59 items sat in exactly this
-// state on 2026-09-04 with no way to see it from the board.
-.vault-card__skill--none {
-  color: var(--color-warning);
-  border-left-color: var(--color-warning);
-  font-style: italic;
 }
 
 // The card clips its children (`overflow: hidden`, so app-item-header can bleed
