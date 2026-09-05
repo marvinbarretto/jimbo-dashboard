@@ -413,6 +413,32 @@ export class VaultCard {
    * claimed green on no evidence would be the same false confidence that let
    * three broken PRs sit in the review queue on 2026-08-27.
    */
+  /**
+   * How far the PR has drifted from its base, when that is worth saying.
+   *
+   * `clean` renders nothing: the absence of a warning is the statement, and a
+   * green "level with master" chip on every healthy card is the noise the old
+   * stage pill was. Null is silence too — never checked is not the same as fine,
+   * but it is not evidence of trouble either.
+   */
+  protected readonly driftLabel = computed<string | null>(() => {
+    const d = this.dispatch()?.entry;
+    if (!d?.pr_url) return null;
+    if (d.pr_mergeable === 'dirty') return 'conflicts';
+    if (d.pr_mergeable === 'behind') {
+      const n = d.pr_behind_by ?? 0;
+      return n > 0 ? `behind ${n}` : 'behind';
+    }
+    return null;
+  });
+
+  protected readonly driftTitle = computed(() => {
+    const d = this.dispatch()?.entry;
+    if (d?.pr_mergeable === 'dirty') return 'Conflicts with the base branch — needs a human to resolve';
+    const n = d?.pr_behind_by ?? 0;
+    return `${n} commit(s) behind the base branch — needs a rebase before its checks mean anything`;
+  });
+
   protected readonly prChecksTitle = computed(() => {
     switch (this.dispatch()?.entry.pr_checks) {
       case 'failing': return 'CI failing — held out of the review queue until it goes green';

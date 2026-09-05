@@ -157,6 +157,12 @@
           @if (d.entry.pr_checks === 'failing') {
             <span class="vault-card__checks" [attr.title]="prChecksTitle()">checks failing</span>
           }
+          <!-- Drift is a separate fact from CI and needs a separate fix: behind
+               is a rebase, conflicted is a person. Both mean the same thing for
+               reading the card, though — this PR is not mergeable as it stands. -->
+          @if (driftLabel(); as drift) {
+            <span class="vault-card__drift" [attr.title]="driftTitle()">{{ drift }}</span>
+          }
         }
       } @else {
         <!-- Shown when grooming chose one, omitted when it did not. The absence

@@ -42,6 +42,11 @@ export const ApiDispatchEntrySchema = z.object({
   // was holding back as `red_ci`. `nullish` because older rows predate it and
   // "never checked" is not the same as "no PR".
   pr_checks:      z.string().nullish(),
+  // How far the PR has drifted from the branch it merges into, refreshed in the
+  // same reconciliation pass as pr_checks. Green checks on a PR four commits
+  // behind were run against a tree that no longer exists.
+  pr_mergeable:   z.string().nullish(),
+  pr_behind_by:   z.number().int().nonnegative().nullish(),
   retry_count:    z.number().int().nonnegative(),
   proposed_at:    z.string().nullable(),
   approved_at:    z.string().nullable(),

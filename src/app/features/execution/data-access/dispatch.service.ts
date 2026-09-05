@@ -359,5 +359,7 @@ function toDispatchEntry(a: ApiDispatchEntry): DispatchQueueEntry {
     pr_state: a.pr_state,
     pr_url: a.pr_url,
     pr_checks: (a.pr_checks ?? null) as DispatchQueueEntry['pr_checks'],
+    pr_mergeable: (a.pr_mergeable ?? null) as DispatchQueueEntry['pr_mergeable'],
+    pr_behind_by: a.pr_behind_by ?? null,
   };
 }

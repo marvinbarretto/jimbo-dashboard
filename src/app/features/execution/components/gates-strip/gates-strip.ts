@@ -111,14 +111,16 @@ export class GatesStrip {
    * hour-granular, so the fetch is the honest moment to measure them, and a
    * template that calls `Date.now()` re-measures on every change detection.
    */
-  // Gates the board now shows directly, removed 2026-09-04 and not coming back.
-  //   deferred   — a Deferred column
-  //   unroutable — the `no skill` badge on every card that lacks one
-  // A count card restating something you are already looking at is duplication.
-  // The three that remain (notifications, grooming, commission) are pump
-  // capacity against a threshold — valve state, not item state — which no
-  // column can express: nothing on a board says "212 against a limit of 40".
-  private static readonly DERIVABLE_FROM_BOARD = new Set(['unroutable', 'deferred']);
+  // Gates the board shows directly, so a count card would restate something you
+  // are already looking at: `deferred` has a column of its own.
+  //
+  // `unroutable` came off this list on 2026-09-05. It was excluded because every
+  // card without a skill wore a `no skill` badge — and that badge was removed
+  // the same day, on the argument that the pile already had a screen. It did
+  // not: this strip was filtering it out precisely because the card carried it,
+  // so removing one hid both. The strip is the better home anyway — the gate
+  // names the oldest items, which forty amber badges never did.
+  private static readonly DERIVABLE_FROM_BOARD = new Set(['deferred']);
 
   protected readonly gates = computed<GateView[]>(() => {
     const now = Date.now();

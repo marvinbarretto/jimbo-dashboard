@@ -403,6 +403,17 @@ a.vault-card__genesis:hover { background: color-mix(in srgb, var(--color-accent)
 .vault-card__pr--failing { color: var(--color-danger); }
 .vault-card__pr--pending { color: var(--color-warning); }
 
+// Amber rather than red: a PR behind its base is mechanical to fix, where a
+// failing build is broken work. Two different jobs, two different weights.
+.vault-card__drift {
+  font-size: 0.6rem;
+  color: var(--color-warning);
+  border: 1px solid color-mix(in srgb, var(--color-warning) 42%, transparent);
+  border-radius: var(--radius);
+  padding: 0 0.3rem;
+  white-space: nowrap;
+}
+
 .vault-card__checks {
   font-size: 0.6rem;
   color: var(--color-danger);

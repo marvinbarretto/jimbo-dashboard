@@ -153,7 +153,20 @@ export interface DispatchQueueEntry {
    * flight. Null means "no reading", which must never be treated as failing.
    */
   pr_checks?:     PrChecks | null;
+  /**
+   * Whether the PR still merges into its base — 'clean', 'behind' (needs a
+   * rebase), 'dirty' (conflicts), or null when never checked.
+   *
+   * Separate from `pr_checks` because the fixes are different jobs: behind is
+   * mechanical, dirty needs a human, failing needs the code changed.
+   */
+  pr_mergeable?:  PrMergeable | null;
+  /** Commits the base is ahead of this PR. 0 or null when level. */
+  pr_behind_by?:  number | null;
 }
+
+/** How a commission's PR sits against its base. Null/absent = never checked. */
+export type PrMergeable = 'clean' | 'behind' | 'dirty';
 
 /** CI verdict for a commission's PR. Null/absent = never checked. */
 export type PrChecks = 'passing' | 'failing' | 'pending';
