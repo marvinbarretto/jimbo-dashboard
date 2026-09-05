@@ -1839,6 +1839,96 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/conventions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the available convention docs
+         * @description Slugs only. An empty list means `docs/conventions/` is missing from the deploy — see the rsync list in `scripts/deploy.sh`.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Convention slugs, sorted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ConventionList"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/conventions/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get one convention doc as raw markdown
+         * @description The authored source of truth for the rule it covers. Skills fetch this rather than restating it — `item-creation.md` says why: two copies drift. `item-legibility` is the item shape contract (title, body, acceptance criteria, citations).
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Filename without the .md extension */
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The doc */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/markdown": string;
+                    };
+                };
+                /** @description No such convention doc */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/calendar/available": {
         parameters: {
             query?: never;
@@ -2704,7 +2794,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Board-shaped vault note list with embedded enrichments (project, counters, latest event/message) */
+        /** Board-shaped vault note list with embedded enrichments (project, counters, latest event/message). ?view=card omits fields no card renders. */
         get: {
             parameters: {
                 query?: {
@@ -2713,6 +2803,7 @@ export interface paths {
                     assigned_to?: string | string[];
                     id?: string | string[];
                     search?: string;
+                    view?: "full" | "card";
                     limit?: number;
                 };
                 header?: never;
@@ -2762,7 +2853,7 @@ export interface paths {
                     /** @description Filter by status (comma-separated for multiple) */
                     status?: string;
                     /** @description Sort field */
-                    sort?: "ai_priority" | "manual_priority" | "effective_priority" | "created_at" | "updated_at";
+                    sort?: "ai_priority" | "manual_priority" | "effective_priority" | "created_at" | "updated_at" | "due_at";
                     /** @description Sort order */
                     order?: "asc" | "desc";
                     /** @description Minimum priority (0-3: P0 is most urgent) */
@@ -6325,7 +6416,7 @@ export interface paths {
                     /** @description Filter to tasks linked to this project via vault_item_projects */
                     project_id?: string;
                     /** @description Filter by dispatch flow (groom / commission / recon) */
-                    flow?: "commission" | "recon" | "groom" | "fold";
+                    flow?: "commission" | "recon" | "groom" | "fold" | "build";
                     /** @description Filter by executor (e.g. boris, kipper) */
                     executor?: string;
                     /** @description Only rows completed at or after this ISO timestamp */
@@ -6449,6 +6540,228 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dispatch/review/pressure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * How much commission capacity is held by work awaiting review
+         * @description Unreviewed items count against pipeline.commission_concurrency_cap, so the review queue throttles the whole commission lane. At slots_free = 0 nothing new is commissioned however healthy grooming looks upstream. This is the gauge for that brake.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current review-queue pressure against the commission cap */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReviewPressure"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/awaiting-review/by-epic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Review queue grouped by epic, finished epics first */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Awaiting-review items grouped under their nearest epic ancestor */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            epics: components["schemas"]["AwaitingReviewEpic"][];
+                            total_items: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/review/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify completed commissions against their acceptance criteria
+         * @description The quality gate on the way out, mirroring intake-quality on the way in. Establishes what can be established mechanically — does the artifact open, is the cited commit real, are the code criteria present — and records a per-criterion verdict so "could not verify" stays visible as itself rather than folding into a pass. Auto-stamp is off by default: this runs in shadow mode and records what it would have approved.
+         */
+        post: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description What was verified */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            verified: number;
+                            records: components["schemas"]["VerificationRecord"][];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/deliveries/build": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record an autonomous build as a completed delivery, and verify it
+         * @description An autonomous end-to-end build — brief in, public URL out, no human step — creates no dispatch row on its own, so until 2026-09-03 it never reached the outbound gate and the only quality control was the agent judging its own work. This writes the row and runs the verifier inline, returning what the gate made of it. It records; it does not block a publish.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["BuildDeliveryBody"];
+                };
+            };
+            responses: {
+                /** @description The dispatch that was recorded, and its verification */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            dispatch_id: number;
+                            note_id: string;
+                            verification: components["schemas"]["VerificationRecord"] & unknown;
+                        };
+                    };
+                };
+                /** @description No vault note matched `task` */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/review/shadow-ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What the verifier would have approved but did not
+         * @description The evidence for deciding whether to let the verifier act. Every entry is a delivery it judged fully verified while auto-stamp was off. Reading this is the step between building the gate and trusting it.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deliveries the verifier would have stamped */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            records: components["schemas"]["VerificationRecord"][];
+                            total: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dispatch/review/approve": {
         parameters: {
             query?: never;
@@ -6473,6 +6786,114 @@ export interface paths {
             };
             responses: {
                 /** @description Approved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+                /** @description Note not found or not awaiting review */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/review/done-unreviewed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark the note done without certifying it against its criteria
+         * @description For a delivery that is a written output rather than a decision — an audit, an analysis, a report. Reaches the same terminal state as approve and is logged distinctly (`review_done_unreviewed`), because the operator is disposing of an output rather than certifying that acceptance criteria were met. Deliberately still an explicit action: the verifier will not auto-stamp work whose criteria nobody checked, and 'report' is its fallback bucket for anything unstructured, so doing this automatically would mark unclassified work done with nobody looking.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReviewApproveBody"];
+                };
+            };
+            responses: {
+                /** @description Marked done, unreviewed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            ok: boolean;
+                        };
+                    };
+                };
+                /** @description Note not found or not awaiting review */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/review/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Archive reviewed work whose purpose cannot be reconstructed
+         * @description The disposal for work whose purpose nobody can reconstruct. ARCHIVE, and the word is exact — DELETE /api/vault/notes/{id} exists and removes the row; this does not. The note, its summary and its artifact link all survive and it can be unarchived, so being wrong costs a search rather than the work. What it buys is the commission slot, which an unjudgeable item holds indefinitely otherwise.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReviewApproveBody"];
+                };
+            };
+            responses: {
+                /** @description Archived */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -7359,7 +7780,7 @@ export interface paths {
                     /** @description Comma-separated status filter */
                     status?: string;
                     /** @description Filter by dispatch flow (groom / commission / recon) */
-                    flow?: "commission" | "recon" | "groom" | "fold";
+                    flow?: "commission" | "recon" | "groom" | "fold" | "build";
                     /** @description Filter by executor (e.g. boris, kipper) */
                     executor?: string;
                     /** @description Only rows completed at or after this ISO timestamp */
@@ -7755,6 +8176,53 @@ export interface paths {
                     content: {
                         "application/json": {
                             deleted: number;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dispatch/dismiss-terminal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk-hide finished runs by status, keeping every row
+         * @description The bulk form of POST /{id}/dismiss. A board column's "dismiss all" used to call the bulk DELETE, so clearing a Done column destroyed the record of every run in it — along with the verifier verdicts pointing at them, which have no foreign key. Sets dismissed_at instead; status keeps saying what each run did.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        statuses: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Hidden */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            dismissed: number;
                         };
                     };
                 };
@@ -11272,7 +11740,7 @@ export interface paths {
                 query?: {
                     note_id?: string;
                     actor?: string;
-                    action?: "note_created" | "assigned" | "unassigned" | "priority_changed" | "priority_scored" | "grooming_status_changed" | "grooming_override_changed" | "status_changed" | "dispatch_started" | "submitted_analysis" | "submitted_decomposition" | "submitted_deepread" | "question_raised" | "question_answered" | "thread_message_posted" | "reassigned" | "feedback_reject" | "feedback_archive" | "feedback_accept" | "commission_completed" | "recon_completed" | "review_approved" | "review_sent_back" | "commit_linked";
+                    action?: "note_created" | "assigned" | "unassigned" | "priority_changed" | "priority_scored" | "actionability_changed" | "grooming_status_changed" | "grooming_override_changed" | "status_changed" | "dispatch_started" | "submitted_analysis" | "submitted_decomposition" | "submitted_deepread" | "question_raised" | "question_answered" | "thread_message_posted" | "reassigned" | "feedback_reject" | "feedback_archive" | "feedback_accept" | "commission_completed" | "recon_completed" | "review_approved" | "review_done_unreviewed" | "review_archived" | "review_sent_back" | "commit_linked";
                     /** @description ISO timestamp — return rows after this ts */
                     since?: string;
                     limit?: number;
@@ -16893,6 +17361,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/skills/routable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Skills grooming may route a decomposed leaf to
+         * @description The commissionable menu, without bodies. A leaf whose skill is absent stays on the `unroutable` gate: that is a legitimate "no skill fits this" answer, not an error, and those items are the backlog of skills worth building.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Routable skills, sorted by id */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["RoutableSkill"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/skills/{category}/{name}": {
         parameters: {
             query?: never;
@@ -21592,6 +22101,9 @@ export interface components {
             /** @description Expiration date (ISO 8601) */
             expires_at?: string | null;
         };
+        ConventionList: {
+            items: string[];
+        };
         CalendarAvailableSetting: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -23386,6 +23898,8 @@ export interface components {
             skill: string | null;
             /** @description JSON-encoded context blob passed to the skill at runtime. */
             skill_context: string | null;
+            /** @description First 12 hex of the sha256 of the SKILL.md that ran, stamped at claim. NULL on rows that predate version stamping. */
+            skill_version?: string | null;
             batch_id: string | null;
             /** @enum {string} */
             status: "proposed" | "approved" | "rejected" | "removed" | "dispatching" | "running" | "completed" | "failed";
@@ -23400,7 +23914,7 @@ export interface components {
             /** @description LLM model identifier that produced the completion (e.g. claude-opus-4-7, openrouter/anthropic/claude-3-5-sonnet). */
             completed_model: string | null;
             /** @enum {string} */
-            flow: "commission" | "recon" | "groom" | "fold";
+            flow: "commission" | "recon" | "groom" | "fold" | "build";
             issue_number: number | null;
             issue_repo: string | null;
             issue_title: string | null;
@@ -23421,12 +23935,145 @@ export interface components {
             seq: string | null;
             title: string | null;
             assigned_to: string | null;
+            /** @description What the work was commissioned to achieve. Sent so the result can be checked against the brief rather than against the agent's own account of itself — the review gate paces the whole commission lane, so it must not be a rubber stamp. */
+            acceptance_criteria: string | null;
             dispatch_id: string;
             skill: string | null;
             result_summary: string | null;
             pr_url: string | null;
             pr_state: string | null;
+            /** @description CI reading for the PR: 'passing', 'pending', or null when there is no reading. Never 'failing' — red work is held out of this queue entirely and counted in review pressure as blocked_on_ci. */
+            pr_checks: string | null;
             completed_at: string | null;
+            /** @description Per-criterion state from the delivery verifier, when it has run. Shown as a checklist rather than a count — the criteria themselves, with what the machine already settled marked off, is the review. */
+            criteria: {
+                criterion: string;
+                /** @description How the criterion could be settled: 'subjective' (no mechanical check exists), 'measurable', 'code_present', 'artifact_exists'. Measured 2026-08-28, 74 of 92 recorded criteria were subjective — so this is what separates "the verifier cannot check this, by nature" from "the verifier could not reach it". */
+                kind?: string;
+                verdict: string;
+                note: string;
+            }[] | null;
+            /** @description What the delivery verifier concluded, or null when it never ran on this item — a distinction the criteria list cannot carry, since 'verified, all criteria subjective' and 'never verified' both produce a column of blank tickboxes. kind='declined' with routing='question' means the agent reported it did NOT do the work: that is not a deliverable and approving it is meaningless, but it is returned rather than filtered so the work cannot vanish silently. */
+            verification: {
+                kind: string;
+                routing: string;
+                reason: string;
+                artifact_reachable: boolean;
+                verified_at: string | null;
+            } | null;
+            /** @description The thing to open before deciding — the card leads with it. The PR when there is one, otherwise the first URL found in result_summary. Null means there is nothing to open, and approving would be trusting the agent's account of itself. */
+            artifact_url: string | null;
+            /**
+             * @description Where the artifact came from, so the card can label it honestly. 'summary' is a link scraped from the agent's prose — it may be a source it read rather than a thing it made. 'branch' and 'commit' carry artifact_ref instead of artifact_url: named, but not openable.
+             * @enum {string|null}
+             */
+            artifact_source: "pr" | "summary" | "branch" | "commit" | "file" | null;
+            /** @description The primary project this work belongs to, with the why already recorded against it. intent and success_criteria are existing project columns — the review card could always say what was asked and what came back, never what any of it was FOR. Null means the item is linked to no project, which is a routing problem rather than a review. */
+            project: {
+                id: string;
+                display_name: string | null;
+                color_token: string | null;
+                intent: string | null;
+                success_criteria: string | null;
+            } | null;
+            /** @description The parent this sits under, so a subtask reads as part of something rather than as an isolated chore. */
+            epic: {
+                seq: string | null;
+                title: string | null;
+                /** @description The epic's own `## Why` block — who the work is for, what changes for them, how we would know. Null means nobody has said, and the card says so rather than substituting the project's intent, which answers a question the operator never asks. */
+                why: string | null;
+            } | null;
+            /** @description Everything else the delivery produced, parsed from result_artifacts — screenshots above all. A PR says the code changed; it does not say what the change LOOKS like, which for a UI task is the whole question. Workers may write a JSON array of urls, of {url, caption} objects, or plain prose containing urls. Only http(s) survives: a file:/// path from a worker's own machine renders as a broken image and implies evidence nobody could open. */
+            artifacts: {
+                url: string;
+                /** @enum {string} */
+                kind: "image" | "link";
+                label: string;
+            }[];
+            /** @description A deliverable the agent named that is not a URL — a branch or a commit SHA. Never synthesised into a link, because the repo is usually unknown and a link that 404s overclaims exactly where these cards already ask for too much trust. */
+            artifact_ref: string | null;
+        };
+        ReviewPressure: {
+            awaiting: number;
+            in_flight: number;
+            cap: number;
+            slots_free: number;
+            oldest_wait_days: number | null;
+            blocked: boolean;
+            /** @description Standing anchors excluded from the queue — a recurring skill's permanent hook, which cannot be approved away because approving destroys the hook. Counted so it stops reading as review backlog. */
+            held_standing: number;
+            /** @description The held-back items themselves, so the count is reachable. A page showing "3 blocked on CI" above ten passing items, with no route to the three, is a dead end. */
+            held: {
+                seq: string | null;
+                note_id: string;
+                dispatch_id: string;
+                title: string | null;
+                pr_url: string | null;
+                /** @enum {string} */
+                reason: "red_ci" | "standing";
+            }[];
+            /** @description Completed commissions held out of the review queue because their PR is failing checks. These need re-commissioning, not review. */
+            blocked_on_ci: number;
+        };
+        AwaitingReviewEpic: {
+            /** @description Null when the item has no epic ancestor — those are reviewed individually. */
+            epic_id: string | null;
+            epic_seq: number | null;
+            epic_title: string | null;
+            items: components["schemas"]["AwaitingReviewItem"][];
+            open_children: number;
+            /** @description True when approving this batch leaves the epic with nothing outstanding — the difference between signing off one more subtask and signing off a finished piece of work. */
+            epic_complete: boolean;
+        };
+        VerificationRecord: {
+            dispatch_id: number;
+            note_id: string;
+            seq: number | null;
+            title: string | null;
+            /** @description shipped | already_satisfied | report | declined. */
+            kind: string;
+            /** @description marvin | question | auto_stamp. */
+            routing: string;
+            reason: string;
+            criteria: components["schemas"]["VerificationCriterion"][];
+            artifact_reachable: boolean;
+            confirmed_commit: string | null;
+            /** @description What it would have done with auto-stamp on. Shadow mode is only auditable because this is recorded. */
+            would_auto_stamp: boolean;
+        };
+        VerificationCriterion: {
+            criterion: string;
+            /** @description How it could be settled: code_present, measurable, artifact_exists, subjective. */
+            kind: string;
+            /** @description met | not_met | unverifiable. 'unverifiable' is never a pass. */
+            verdict: string;
+            /** @description Why the verdict is what it is, in words the card shows verbatim. */
+            note: string;
+        };
+        BuildDeliveryBody: {
+            /** @description The vault item this build answers — note id or bare seq handle. */
+            task: string;
+            /**
+             * Format: uri
+             * @description The public URL the build published.
+             */
+            artifact_url: string;
+            /** @description The build's OWN repo, not the project's. */
+            repo_url?: string | null;
+            commit?: string | null;
+            /** @description What was asked for, verbatim. */
+            brief?: string | null;
+            started_at?: string | null;
+            /** @description What the deploy tool established itself, kept separate from the agent's own account of what it did. */
+            evidence?: {
+                observed?: {
+                    [key: string]: unknown;
+                };
+                reported?: {
+                    [key: string]: unknown;
+                };
+            };
+            executor?: string;
         };
         ReviewApproveBody: {
             note_id: string;
@@ -23492,6 +24139,9 @@ export interface components {
                     until: string;
                 } | null;
             }[];
+            /** @default [] */
+            machines: components["schemas"]["FleetMachine"][];
+            pulse?: components["schemas"]["FleetPulse"];
             now: {
                 id: string;
                 task_id: string;
@@ -23555,6 +24205,38 @@ export interface components {
                 runs_7d: number;
             }[];
         };
+        FleetMachine: {
+            /** @description Machine name as the workers report it, e.g. "m2". */
+            id: string;
+            /** @description Most recent heartbeat from any worker on this machine. null = none has ever spoken. A dead machine reports nothing at all, so absence is the signal. */
+            last_seen_at: string | null;
+            /** @description Worker ids running on it. */
+            workers: string[];
+            /** @description Every worker on it has been silent past stale_after_minutes. False while suspended — a declared outage is not an alarm. One dead worker beside live ones leaves the machine fresh, which is what makes a hung worker and a dead machine look different. */
+            stale: boolean;
+            /** @description The silence this machine is allowed, given its temperament. An always-on box and a laptop that sleeps by design do not share a threshold. */
+            stale_after_minutes: number;
+            /** @description Every worker on it is under a declared, time-boxed suspension. */
+            suspended: boolean;
+        };
+        /**
+         * @default {
+         *       "last_transition_at": null,
+         *       "oldest_proposed_at": null,
+         *       "last_completed_at": null,
+         *       "approved_waiting": 0
+         *     }
+         */
+        FleetPulse: {
+            /** @description Most recent movement of any kind in the queue — created, approved, started or completed. Gives the reader "unchanged for Xm", which is the difference between healthy idling and a dead pump. */
+            last_transition_at: string | null;
+            /** @description When the longest-waiting proposed item was enqueued. Proposed work legitimately waits for approval, so age alone is not a fault — it is the denominator for judging one. */
+            oldest_proposed_at: string | null;
+            /** @description When a dispatch last actually finished. Deliberately unbounded: this number matters most precisely when it is old, so a lookback window would hide the answer. */
+            last_completed_at: string | null;
+            /** @description Approved but not running. Unlike proposed work this was already cleared to go, so a non-zero count next to a still queue is the signal that something is jammed rather than idle. */
+            approved_waiting: number;
+        };
         AgentTypeConfig: {
             [key: string]: components["schemas"]["AgentTypeDefinition"];
         };
@@ -23600,7 +24282,7 @@ export interface components {
              * @default commission
              * @enum {string}
              */
-            flow: "commission" | "recon" | "groom" | "fold";
+            flow: "commission" | "recon" | "groom" | "fold" | "build";
             /**
              * @description Audit trail: what triggered the enqueue
              * @default pipeline-pump
@@ -23648,6 +24330,8 @@ export interface components {
             prompt?: string;
             /** @description Override dispatch repo */
             repo?: string;
+            /** @description First 12 hex of the sha256 of the SKILL.md the worker loaded. Lets a later query ask whether two runs executed the same program — a name alone cannot. */
+            skill_version?: string;
         };
         CompleteBody: {
             /** @description Dispatch queue item ID */
@@ -23658,6 +24342,10 @@ export interface components {
             result_artifacts?: string;
             /** @description Pull request URL */
             pr_url?: string;
+            /** @description URL of a document the worker published itself (a cairn post, a doc it wrote). Use this when the work produced a document rather than a PR. */
+            doc_url?: string;
+            /** @description Alias for doc_url. `skills/_shared/output-contract.md` tells document workers to report `report_url` — the value POST /api/reports returns — so both spellings are accepted and stored in doc_url. */
+            report_url?: string;
             /** @description Full research markdown — when present on recon completions, jimbo-api creates a Google Doc and links it in the notification. */
             research_body?: string;
             /** @description LLM model identifier that produced this completion (e.g. claude-opus-4-7, openrouter/anthropic/claude-3-5-sonnet). Required — provenance is recorded on the dispatch row. */
@@ -24770,13 +25458,18 @@ export interface components {
             subtasks: {
                 title: string;
                 body?: string;
+                /** @description Deprecated and ignored. Use suggested_skill. */
                 required_skills?: string[];
                 acceptance_criteria: string;
                 ai_priority_hint?: number;
+                /** @description HOW this leaf should be done — the skill the commission pump routes on, e.g. 'code/pr-from-issue'. Nothing in the grooming pipeline chose one, so 599 of 629 ready items carry none and the pump declines them rather than handing unclassified work to a researcher. Decompose is the moment to decide: it is already writing what the work IS, and the same read tells you how it should be done. Optional, so a skill that has not been taught to send it still submits — the item then lands on the `unroutable` gate rather than failing silently. */
+                suggested_skill?: string;
             }[];
             rationale: string;
             /** @description Acceptance criteria for the parent note. Required for it to reach ready. */
             acceptance_criteria?: string;
+            /** @description HOW the NOTE ITSELF should be done, for the atomic case. A zero-subtask submit promotes the note straight to ready as a leaf, and without this it arrives there with no skill and lands on the `unroutable` gate — which is exactly the state the 606 stranded items are already in, so re-grooming them would reproduce it. The per-subtask field only ever reaches children. Optional and validated against GET /api/skills/routable; omit it to abstain when no skill fits. */
+            suggested_skill?: string;
             /** @description Who the parent note should be assigned to. Defaults to marvin. */
             assigned_to?: string;
         };
@@ -24923,6 +25616,9 @@ export interface components {
             cap: number;
             per_tick: number;
             autonomous_projects: string[];
+            /** @description Ready candidates the pump declined because grooming chose no skill — it will not hand unclassified work to a researcher. Reported rather than skipped silently; also surfaced as the `unroutable` gate. */
+            unroutable: number;
+            unroutable_ids: string[];
         };
         StewardTickResult: {
             ts: string;
@@ -24954,7 +25650,7 @@ export interface components {
             from_actor: string;
             /** @description Who performed the handoff */
             actor: string;
-            action: ("note_created" | "assigned" | "unassigned" | "priority_changed" | "priority_scored" | "grooming_status_changed" | "grooming_override_changed" | "status_changed" | "dispatch_started" | "submitted_analysis" | "submitted_decomposition" | "submitted_deepread" | "question_raised" | "question_answered" | "thread_message_posted" | "reassigned" | "feedback_reject" | "feedback_archive" | "feedback_accept" | "commission_completed" | "recon_completed" | "review_approved" | "review_sent_back" | "commit_linked") | string;
+            action: ("note_created" | "assigned" | "unassigned" | "priority_changed" | "priority_scored" | "actionability_changed" | "grooming_status_changed" | "grooming_override_changed" | "status_changed" | "dispatch_started" | "submitted_analysis" | "submitted_decomposition" | "submitted_deepread" | "question_raised" | "question_answered" | "thread_message_posted" | "reassigned" | "feedback_reject" | "feedback_archive" | "feedback_accept" | "commission_completed" | "recon_completed" | "review_approved" | "review_done_unreviewed" | "review_archived" | "review_sent_back" | "commit_linked") | string;
             reason: string | null;
             priority: number | null;
         };
@@ -25102,6 +25798,7 @@ export interface components {
             total: number;
             paused_count: number;
             failing_count: number;
+            stale_error_count: number;
             source: string;
             last_modified: string | null;
             read_at: string;
@@ -25128,7 +25825,13 @@ export interface components {
             model: string | null;
             provider: string | null;
             created_at: string | null;
+            health: components["schemas"]["HermesJobHealth"];
         };
+        /**
+         * @description failing — enabled, scheduled, and its most recent run errored within ~2 of its own intervals. The only state that warrants red. stale_error — carries an error, but it is not live: the job is paused or disabled, or the scheduler has not retried in far longer than its cadence. Show the date. paused — deliberately stopped, no error. disabled — enabled=false while still reading state=scheduled (the vault-analyse case, invisible unless you join both fields). ok — ran, succeeded.
+         * @enum {string}
+         */
+        HermesJobHealth: "failing" | "stale_error" | "paused" | "disabled" | "ok";
         HermesRunsResponse: {
             jobId: string;
             runs: components["schemas"]["HermesRun"][];
@@ -26249,7 +26952,7 @@ export interface components {
         };
         Gate: {
             /** @enum {string} */
-            id: "notifications" | "grooming" | "commission" | "deferred";
+            id: "notifications" | "grooming" | "commission" | "unroutable" | "deferred";
             label: string;
             current: number;
             threshold: number;
@@ -26335,6 +27038,8 @@ export interface components {
             completes_dispatch?: boolean;
             /** @description Defaults to true; set false to keep the file but block dispatch */
             is_active?: boolean;
+            /** @description Grooming may route a decomposed leaf to this skill. Absent = false. */
+            routable?: boolean;
             /** @description Stored category, mirrors the directory under hub/skills/ */
             category?: string;
             /**
@@ -26372,6 +27077,11 @@ export interface components {
             failed: number;
             last_run_at: string | null;
         };
+        RoutableSkill: {
+            /** @description Slash-path id — becomes dispatch_queue.skill verbatim */
+            id: string;
+            description: string;
+        };
         SkillPatchBody: {
             name?: string;
             description?: string;
@@ -26382,6 +27092,7 @@ export interface components {
                 produces?: string[];
                 completes_dispatch?: boolean;
                 is_active?: boolean;
+                routable?: boolean;
                 potential?: number;
                 /** @enum {string} */
                 status?: "keep" | "refine" | "wire-ambient" | "shelve" | "infra";
@@ -26402,6 +27113,7 @@ export interface components {
                 produces?: string[];
                 completes_dispatch?: boolean;
                 is_active?: boolean;
+                routable?: boolean;
                 potential?: number;
                 /** @enum {string} */
                 status?: "keep" | "refine" | "wire-ambient" | "shelve" | "infra";
@@ -27239,6 +27951,27 @@ export interface components {
                 from: string | null;
                 to: string;
             }[];
+            /** @description PRs still open whose CI reading changed. A 'failing' entry has just left the review queue; a 'passing' one has just entered it. */
+            checks_updated: {
+                dispatch_id: number;
+                pr_url: string;
+                checks: string;
+            }[];
+            /** @description Vault notes closed or reopened as a consequence of the PR outcome found here. Repairing pr_state alone left the note untouched, so a merge discovered by reconciliation freed a review slot without ever marking the work done. */
+            notes_settled: {
+                note_id: string;
+                pr_url: string;
+                /** @enum {string} */
+                to: "done" | "ungroomed";
+            }[];
+            /** @description Pull requests found for dispatches that opened one but never recorded it. Located by the dispatch/<task_id> branch convention and the note's primary project repo, not by parsing the agent's summary. */
+            prs_recovered: {
+                dispatch_id: number;
+                pr_url: string;
+                state: string;
+            }[];
+            /** @description Dispatches asked about and stamped this pass, whether or not a PR was found. Each dispatch is asked at most once — most commissions legitimately have no PR. */
+            prs_looked_up: number;
             unreachable: {
                 dispatch_id: number;
                 pr_url: string;
