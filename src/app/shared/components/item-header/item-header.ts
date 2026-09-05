@@ -94,11 +94,10 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'both' | 'none';
         <a
           class="item-header__epic item-header__epic--link"
           [routerLink]="['/vault-items', epicSeq()]"
-          [attr.title]="epicLabel()"
           (click)="$event.stopPropagation()"
           >{{ epicLabel() }}</a>
       } @else {
-        <span class="item-header__epic" [attr.title]="epicLabel()">{{ epicLabel() }}</span>
+        <span class="item-header__epic">{{ epicLabel() }}</span>
       }
     }
   `,
@@ -161,30 +160,27 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'both' | 'none';
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    /* Sized to its text and self-aligned, so it reads as an object in the band
-       rather than as an extension of the identity row. */
+    /* Wraps rather than truncates: an epic title is the answer to "what is this
+       task FOR", and half of it answers nothing. It stays a chip — content-width
+       and self-aligned when short — and becomes a small block when long. */
     .item-header__epic {
       align-self: flex-start;
-      /* Capped rather than free to fill: an ellipsised epic title runs the full
-         card width, and a full-width box under the identity row reads as a
-         second band — the exact thing this chip replaced. */
-      max-width: min(100%, 26ch);
-      padding: 0 0.3rem;
+      max-width: 100%;
+      padding: 0.1rem 0.3rem;
       border-radius: var(--radius);
       /* The app's own base contrast pair — ground and the text that sits on it
          — so the chip is a hole punched in the band and stays legible in both
-         themes without a literal anywhere. The previous mix put --color-bg-ish
-         text on a near-black wash and read as dark on dark. */
+         themes without a literal anywhere. */
       background: var(--color-bg);
       color: var(--color-text);
       font-family: var(--font-sans);
       font-size: 0.6rem;
       font-weight: 600;
+      line-height: 1.3;
       text-decoration: none;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      min-width: 0;
+      /* Long words (a URL, a hyphenated identifier) break rather than push the
+         chip past the card's edge. */
+      overflow-wrap: anywhere;
     }
     .item-header__epic--link:hover {
       background: var(--color-surface-soft);
