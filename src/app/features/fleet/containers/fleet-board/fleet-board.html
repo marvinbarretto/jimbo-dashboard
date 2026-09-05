@@ -31,6 +31,24 @@
         }
       </span>
     </h2>
+    <!-- The "is this normal?" line. Counts alone cannot answer it, so this
+         states the queue's stillness and what last shipped, and lets the
+         reader judge against the evidence rather than a bare verdict. -->
+    @if (pulse(); as p) {
+      <p class="fleet__pulse">
+        @if (queueVerdict(); as verdict) {
+          <span class="fleet__pulse-verdict" [class]="'fleet__pulse-verdict--' + verdict.tone">{{ verdict.text }}</span>
+        }
+        @if (p.last_completed_at; as done) {
+          · last dispatch finished <span [title]="done">{{ done | relativeTime }}</span>
+        } @else {
+          · no dispatch has ever finished
+        }
+        @if (p.oldest_proposed_at; as oldest) {
+          · oldest proposed item waiting since <span [title]="oldest">{{ oldest | relativeTime }}</span>
+        }
+      </p>
+    }
     @if (now().length === 0) {
       <app-ui-empty-state message="Nothing running at this moment." />
     } @else {
@@ -277,6 +295,33 @@
       <app-ui-stat-card label="est. cost equiv." [value]="formatCost(burnTotals().estimated_cost)"
         detail="runs on subscription — $ shown as pressure proxy" />
     </div>
+    <!-- Trajectory. $7.81 over five hours is framed as a pressure proxy, and a
+         proxy with no baseline cannot indicate pressure — so give it today's
+         total, the daily mean it should be read against, and the month so far.
+         Same table as the 5h rollup, so this is like for like. -->
+    @if (costs.summary()) {
+      <div class="fleet__stat-grid">
+        <app-ui-stat-card label="today"
+          [value]="formatCost(costs.today()?.total ?? null)"
+          [detail]="costs.today() ? costs.today()!.count + ' priced calls' : null" />
+        <app-ui-stat-card label="daily mean"
+          [value]="formatCost(costs.dailyMean())"
+          [detail]="'over the last ' + costs.windowDays + ' days, today excluded'" />
+        <app-ui-stat-card label="month to date" [value]="formatCost(costs.monthlyCost())" />
+      </div>
+      <p class="fleet__section-hint">
+        {{ costs.windowDays }}-day line:
+        @for (day of costs.byDay(); track day.day) {
+          <span class="fleet__spark" [title]="day.day + ' — ' + formatCost(day.total) + ' over ' + day.count + ' calls'">{{ formatCost(day.total) }}</span>
+        }
+        @if (costs.unpriced() > 0) {
+          · {{ costs.unpriced() }} unpriced {{ costs.unpriced() === 1 ? 'row is' : 'rows are' }}
+          excluded, so each figure is a floor
+        }
+      </p>
+    } @else if (costs.lastError(); as err) {
+      <p class="fleet__section-hint">cost trajectory unavailable — {{ err }}</p>
+    }
     @if (unpricedBurnModels().length > 0) {
       <!-- The total silently excludes these, so say so rather than let it read
            as complete. Usually means turns were recorded under a tier alias

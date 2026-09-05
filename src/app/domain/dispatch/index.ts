@@ -20,6 +20,7 @@ export type {
   FleetQueueDepth,
   FleetWorker,
   FleetMachine,
+  FleetPulse,
   FleetCompletion,
   FleetBurnRow,
   FleetFold,

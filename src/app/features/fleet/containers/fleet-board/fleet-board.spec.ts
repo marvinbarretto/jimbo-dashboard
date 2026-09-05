@@ -21,10 +21,15 @@ function machine(id: string, stale: boolean, workers: string[], lastSeen: string
   return { id, last_seen_at: lastSeen, workers, stale, stale_after_minutes: id === 'm4' ? 1440 : 10, suspended: false };
 }
 
+function pulse(overrides: Partial<ApiFleetStats['pulse']> = {}): ApiFleetStats['pulse'] {
+  return { last_transition_at: null, oldest_proposed_at: null, last_completed_at: null, approved_waiting: 0, ...overrides };
+}
+
 function stats(workers: FleetWorker[], machines: FleetMachine[]): ApiFleetStats {
   return {
     generated_at: new Date(NOW).toISOString(),
     queue: [], workers, machines, recent: [], burn_5h: [], folds: [],
+    pulse: pulse(),
     now: [], failures_24h: [], stuck_notes: [], last_pipeline_enqueue_at: null,
   };
 }
@@ -117,5 +122,63 @@ describe('FleetBoard — attributing silence to the right thing', () => {
 
     expect(board.machines()).toEqual([]);
     expect(board.workerCoveredByMachine(board.workers()[0])).toBe(false);
+  });
+});
+
+describe('FleetBoard.queueVerdict — idling or jammed', () => {
+  let board: FleetBoard;
+  let http: HttpTestingController;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection(), provideHttpClient(), provideHttpClientTesting()],
+    });
+    board = TestBed.runInInjectionContext(() => new FleetBoard());
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    http.match(() => true).forEach(req => req.flush({}));
+    http.verify();
+    vi.useRealTimers();
+  });
+
+  async function loadPulse(p: ApiFleetStats['pulse']): Promise<void> {
+    const body = { ...stats([], []), pulse: p };
+    http.expectOne(req => req.url.endsWith('/api/dispatch/stats')).flush(body);
+    await vi.advanceTimersByTimeAsync(0);
+  }
+
+  it('calls a still queue idle when nothing has been approved', () => {
+    // Proposed work is supposed to sit until approved, so 23 proposed and
+    // nothing running is not evidence of anything being wrong.
+    return loadPulse(pulse({ approved_waiting: 0, last_transition_at: agoMin(300) })).then(() => {
+      expect(board.queueVerdict()!.tone).toBe('neutral');
+      expect(board.queueVerdict()!.text).toContain('idle, not stuck');
+    });
+  });
+
+  it('calls it a jam when approved work has sat past two commission ticks', async () => {
+    await loadPulse(pulse({ approved_waiting: 4, last_transition_at: agoMin(5 * 60) }));
+
+    expect(board.queueVerdict()!.tone).toBe('danger');
+    expect(board.queueVerdict()!.text).toContain('4 approved and waiting');
+    expect(board.queueVerdict()!.text).toContain('this is a jam');
+  });
+
+  it('does not cry jam over one missed tick', async () => {
+    await loadPulse(pulse({ approved_waiting: 2, last_transition_at: agoMin(90) }));
+
+    expect(board.queueVerdict()!.tone).toBe('neutral');
+    expect(board.queueVerdict()!.text).toContain('last movement 1h 30m ago');
+  });
+
+  it('flags approved work with no recorded movement at all', async () => {
+    await loadPulse(pulse({ approved_waiting: 3, last_transition_at: null }));
+
+    expect(board.queueVerdict()!.tone).toBe('warning');
+    expect(board.queueVerdict()!.text).toContain('no recorded movement at all');
   });
 });

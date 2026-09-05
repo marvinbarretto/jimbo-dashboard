@@ -130,6 +130,18 @@ export const ApiFleetMachineSchema = z.object({
   suspended:     z.boolean(),
 });
 
+// Whether a quiet queue is idling or jammed — the question "Nothing running ·
+// 23 proposed" could not answer.
+export const ApiFleetPulseSchema = z.object({
+  last_transition_at: z.string().nullable(),
+  oldest_proposed_at: z.string().nullable(),
+  // Unbounded on the API side: this matters most when it is old.
+  last_completed_at:  z.string().nullable(),
+  // Approved but not running. Proposed work waits for approval by design;
+  // approved work was already cleared, so this is the jammed-vs-idle signal.
+  approved_waiting:   z.number().int(),
+});
+
 export const ApiFleetStatsSchema = z.object({
   generated_at: z.string(),
   queue:        z.array(ApiFleetQueueDepthSchema),
@@ -137,6 +149,9 @@ export const ApiFleetStatsSchema = z.object({
   // Optional-with-default: landed 2026-09-05, and a dashboard newer than the
   // API must render an empty strip rather than take the page down.
   machines:     z.array(ApiFleetMachineSchema).optional().default([]),
+  pulse:        ApiFleetPulseSchema.optional().default({
+    last_transition_at: null, oldest_proposed_at: null, last_completed_at: null, approved_waiting: 0,
+  }),
   recent:       z.array(ApiFleetCompletionSchema),
   burn_5h:      z.array(ApiFleetBurnRowSchema),
   folds:        z.array(ApiFleetFoldSchema),
@@ -152,6 +167,7 @@ export type ApiFleetStats = z.infer<typeof ApiFleetStatsSchema>;
 export type FleetQueueDepth = z.infer<typeof ApiFleetQueueDepthSchema>;
 export type FleetWorker = z.infer<typeof ApiFleetWorkerSchema>;
 export type FleetMachine = z.infer<typeof ApiFleetMachineSchema>;
+export type FleetPulse = z.infer<typeof ApiFleetPulseSchema>;
 export type FleetCompletion = z.infer<typeof ApiFleetCompletionSchema>;
 export type FleetBurnRow = z.infer<typeof ApiFleetBurnRowSchema>;
 export type FleetFold = z.infer<typeof ApiFleetFoldSchema>;

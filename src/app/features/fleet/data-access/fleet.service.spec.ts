@@ -16,6 +16,7 @@ function stats(failures: FleetFailure[]): ApiFleetStats {
     queue: [],
     workers: [],
     machines: [],
+    pulse: { last_transition_at: null, oldest_proposed_at: null, last_completed_at: null, approved_waiting: 0 },
     recent: [],
     burn_5h: [],
     folds: [],

@@ -17,6 +17,7 @@ import { LaneScorecard } from '../../components/lane-scorecard/lane-scorecard';
 import { UiFilterPills, type UiFilterPillOption } from '@shared/components/ui-filter-pills/ui-filter-pills';
 import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { FleetService } from '../../data-access/fleet.service';
+import { CostsService } from '../../data-access/costs.service';
 import { HermesService } from '../../../hermes/data-access/hermes.service';
 import type { FleetMachine, FleetWorker } from '@domain/dispatch';
 
@@ -62,6 +63,11 @@ export function heartbeatTone(worker: FleetWorker, nowMs: number): HeartbeatTone
 // this board exists to close).
 const FOLD_STALE_MS = 3 * 24 * 60 * 60_000;
 
+// Two commission ticks (the lane runs every 120 min). One missed tick is a
+// blip; approved work still sitting after two is something failing to pick it
+// up, which is the case the queue counts alone cannot show.
+const QUEUE_JAM_MS = 2 * 120 * 60_000;
+
 @Component({
   selector: 'app-fleet-board',
   imports: [
@@ -80,12 +86,15 @@ export class FleetBoard {
   // models). Summarised here so one page carries the whole division of
   // labour; the /hermes page has the full control room.
   readonly hermes = inject(HermesService);
+  // The baseline the 5h burn figure had nothing to be judged against.
+  readonly costs = inject(CostsService);
 
   readonly loading = this.service.loading;
   readonly lastError = this.service.lastError;
   readonly lastFetch = this.service.lastFetch;
   readonly workers = this.service.workers;
   readonly machines = this.service.machines;
+  readonly pulse = this.service.pulse;
   readonly recent = this.service.recent;
   readonly folds = this.service.folds;
   readonly now = this.service.now;
@@ -109,6 +118,7 @@ export class FleetBoard {
 
   constructor() {
     this.service.start();
+    this.costs.start();
   }
 
   refresh(): void {
@@ -129,6 +139,52 @@ export class FleetBoard {
     if (this.hermes.staleErrorCount() > 0) return 'quiet';
     return 'live';
   });
+
+  /**
+   * Is a still queue idling or jammed?
+   *
+   * "Nothing running · 23 proposed" reads identically in both cases, which is
+   * the complaint this answers. The discriminator is `approved_waiting`:
+   * proposed work is *supposed* to sit until it is approved, so its age proves
+   * nothing, but approved work was already cleared to run. Approved work
+   * sitting still past two commission ticks is a jam.
+   *
+   * Reported as an observation with its evidence, not as a bare verdict — the
+   * reader can check "unchanged for 47m, 4 approved" and disagree.
+   */
+  readonly queueVerdict = computed<{ tone: 'neutral' | 'warning' | 'danger'; text: string } | null>(() => {
+    this.lastFetch();
+    const pulse = this.pulse();
+    if (!pulse) return null;
+
+    const stillFor = pulse.last_transition_at
+      ? Date.now() - Date.parse(pulse.last_transition_at)
+      : null;
+
+    if (pulse.approved_waiting === 0) {
+      // Nothing has been cleared to run, so a quiet queue is just a quiet
+      // queue. Say so rather than leave the reader to wonder.
+      return { tone: 'neutral', text: 'nothing approved is waiting — a still queue here is idle, not stuck' };
+    }
+    if (stillFor === null) {
+      return { tone: 'warning', text: `${pulse.approved_waiting} approved and waiting, and the queue has no recorded movement at all` };
+    }
+    if (stillFor > QUEUE_JAM_MS) {
+      return {
+        tone: 'danger',
+        text: `${pulse.approved_waiting} approved and waiting, nothing has moved for ${this.formatDuration(stillFor)} — this is a jam, not idling`,
+      };
+    }
+    return { tone: 'neutral', text: `${pulse.approved_waiting} approved and waiting, last movement ${this.formatDuration(stillFor)} ago` };
+  });
+
+  /** Coarse duration for prose — "47m", "3h 10m". */
+  formatDuration(ms: number): string {
+    const mins = Math.floor(ms / 60_000);
+    if (mins < 60) return `${mins}m`;
+    const hours = Math.floor(mins / 60);
+    return hours < 24 ? `${hours}h ${mins % 60}m` : `${Math.floor(hours / 24)}d ${hours % 24}h`;
+  }
 
   // Queue rows keyed per lane: one tile per executor with its per-status counts.
   readonly lanes = computed(() => {

@@ -37,6 +37,7 @@ export class FleetService {
   readonly queue = computed(() => this._stats()?.queue ?? []);
   readonly workers = computed(() => this._stats()?.workers ?? []);
   readonly machines = computed(() => this._stats()?.machines ?? []);
+  readonly pulse = computed(() => this._stats()?.pulse ?? null);
   readonly recent = computed(() => this._stats()?.recent ?? []);
   readonly burn = computed(() => this._stats()?.burn_5h ?? []);
   readonly folds = computed(() => this._stats()?.folds ?? []);
