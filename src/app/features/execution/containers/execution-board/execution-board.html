@@ -116,12 +116,13 @@
         >
           @for (card of lane.cards; track cardKey(card)) {
             @if (card.kind === 'commission') {
-              <!-- One card component for the whole board. Commission-specific
-                   detail (stage pill, PR link, failure text, xN history) lives
-                   on the dispatch branch of app-vault-card. Wrapped like the
-                   manual cards — undraggable, but the wrapper is what sets the
-                   lane's rhythm, and without it commissions sat tighter than
-                   their neighbours in the same column. -->
+              <!-- One card component for the whole board. The dispatch branch
+                   of app-vault-card carries what is left of the commission
+                   detail — skill, PR link, attempt count; the run's own words
+                   moved to the item's Runs section. Wrapped like the manual
+                   cards — undraggable, but the wrapper is what sets the lane's
+                   rhythm, and without it commissions sat tighter than their
+                   neighbours in the same column. -->
               <div class="board__card-wrap">
                 <app-vault-card
                   [context]="card.context"

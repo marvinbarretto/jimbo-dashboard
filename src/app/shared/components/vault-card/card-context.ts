@@ -82,11 +82,11 @@ export interface DispatchCardContext {
   // was running two card components for the same job, and Marvin asked for one.
   //
   // `stage` is derived (merged / pr_open / rejected …) and strictly richer than
-  // `entry.status`, so a commission keeps its stage pill rather than dropping to
-  // the raw dispatch badge.
+  // `entry.status`. It no longer draws a pill — the card stopped reporting an
+  // agent process's exit code as the item's status on 2026-09-05 — but the card
+  // still reads it to decide what a *time* on the card means: once a PR is open
+  // the run's duration is history, not progress.
   readonly stage?:           CommissionStage;
-  /** Every commission dispatch for this item, newest-first. Drives the ×N expander. */
-  readonly history?:         readonly DispatchQueueEntry[];
   // The dispatch row carries the task's title and handle, so a commission can
   // name itself before the vault board (5,000 rows) has finished loading.
   // Without these the card falls back to `task #note_6288da73` — the raw id —

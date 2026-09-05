@@ -515,8 +515,14 @@ export class ExecutionBoard {
    * `app-commission-card` in In Progress/Done and `app-vault-card` everywhere
    * else — which meant two headers, two title treatments and two action
    * footers for cards sitting side by side. Marvin: "feels like we should only
-   * have 1". Everything commission-specific (stage pill, PR link, failure text,
-   * the xN history expander) moved onto the dispatch branch of the shared card.
+   * have 1". The commission-specific detail moved onto the dispatch branch of
+   * the shared card.
+   *
+   * Most of it has since moved off again. The stage pill, the run summary, the
+   * error text and the xN history expander were removed on 2026-09-05 — a board
+   * says where an item is, and what an agent wrote about a run is detail. That
+   * detail now lives in the item's Runs section, which reads the full history
+   * from the API rather than the board's commission-only window.
    */
   cardContextForCommission(c: CommissionItem): CardContext {
     const item = this.vaultItemsService.getById(c.taskId) ?? null;
@@ -533,7 +539,6 @@ export class ExecutionBoard {
       modelId: null,
       genesis: null,
       stage: c.stage,
-      history: c.history,
       taskTitle: c.taskTitle,
       taskSeq: c.taskSeq,
     };
