@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import type { Priority } from '@domain/vault/vault-item';
 import type { ActorId } from '@domain/ids';
 import { ProjectAvatar } from '@shared/components/project-avatar/project-avatar';
@@ -21,66 +22,101 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'none';
 @Component({
   selector: 'app-item-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ProjectAvatar, ActorAvatar, PriorityBadge],
+  imports: [RouterLink, ProjectAvatar, ActorAvatar, PriorityBadge],
   host: {
     class: 'item-header',
-    '[style.background]': "projectColor() ?? 'var(--color-border)'",
+    // Drains toward --color-text-muted rather than a literal grey: that token
+    // is dark in the light theme and light in the dark one, so the band's
+    // --color-bg text stays legible at every fade in both.
+    '[style.background]': 'bandColor()',
   },
   template: `
-    <span class="item-header__left">
-      <app-project-avatar [name]="projectName()" color="var(--color-bg)" variant="outlined" size="sm" />
-      @if (seq() !== null) {
-        <span class="item-header__seq">#{{ seq() }}</span>
-      }
-      @switch (secondary()) {
-        @case ('time') {
-          @if (timeText()) {
-            <span class="item-header__time">{{ timeText() }}</span>
-          }
+    <span class="item-header__main">
+      <span class="item-header__left">
+        <app-project-avatar
+          class="item-header__pav"
+          [class.item-header__pav--held]="fade() > 0"
+          [name]="projectName()"
+          [color]="avatarColor()"
+          [variant]="avatarVariant()"
+          size="sm" />
+        @if (seq() !== null) {
+          <span class="item-header__seq">{{ seqLabel() ?? '#' + seq() }}</span>
         }
-        @case ('epic') {
-          @if (epicLabel()) {
-            <span class="item-header__epic">{{ epicLabel() }}</span>
-          }
+        @if (timeText() && secondary() !== 'none') {
+          <span class="item-header__time">{{ timeText() }}</span>
         }
-      }
-    </span>
-    <span class="item-header__right">
-      @if (priority() !== null) {
-        <app-priority-badge [priority]="priority()!" />
-      }
-      @if (owner()) {
-        <app-actor-avatar [actor]="owner()!" variant="filled" size="sm" />
-      }
-      @if (showLock()) {
-        <button type="button" class="item-header__lock" (click)="onLockClick($event)" aria-label="toggle lock">
-          @if (locked()) {
-            🔒
-          } @else {
-            <svg viewBox="0 0 10 16" width="10" height="16" fill="currentColor">
-              <circle cx="2.5" cy="2.5" r="1.4" /><circle cx="7.5" cy="2.5" r="1.4" />
-              <circle cx="2.5" cy="8" r="1.4" /><circle cx="7.5" cy="8" r="1.4" />
-              <circle cx="2.5" cy="13.5" r="1.4" /><circle cx="7.5" cy="13.5" r="1.4" />
-            </svg>
+      </span>
+      <span class="item-header__right">
+        <!-- Projected so a consumer can supply an interactive control. The
+             fallback keeps every existing caller on the display badge. -->
+        <ng-content select="[priority]">
+          @if (priority() !== null) {
+            <app-priority-badge [priority]="priority()!" />
           }
-        </button>
-      }
-      @if (showRemove()) {
-        <button type="button" class="item-header__remove" (click)="onRemoveClick($event)" aria-label="remove">×</button>
-      }
+        </ng-content>
+        @if (owner()) {
+          <app-actor-avatar [actor]="owner()!" variant="filled" size="sm" />
+        }
+        @if (showLock()) {
+          <button type="button" class="item-header__lock" (click)="onLockClick($event)" aria-label="toggle lock">
+            @if (locked()) {
+              🔒
+            } @else {
+              <svg viewBox="0 0 10 16" width="10" height="16" fill="currentColor">
+                <circle cx="2.5" cy="2.5" r="1.4" /><circle cx="7.5" cy="2.5" r="1.4" />
+                <circle cx="2.5" cy="8" r="1.4" /><circle cx="7.5" cy="8" r="1.4" />
+                <circle cx="2.5" cy="13.5" r="1.4" /><circle cx="7.5" cy="13.5" r="1.4" />
+              </svg>
+            }
+          </button>
+        }
+        @if (showRemove()) {
+          <button type="button" class="item-header__remove" (click)="onRemoveClick($event)" aria-label="remove">×</button>
+        }
+      </span>
     </span>
+    @if (epicLabel() && secondary() === 'epic') {
+      <!-- A contained chip, sized to its text — not a second full-bleed strip.
+           Linked when the parent's seq is known; plain text otherwise, which is
+           what the planner passes. -->
+      @if (epicSeq() !== null) {
+        <a
+          class="item-header__epic item-header__epic--link"
+          [routerLink]="['/vault-items', epicSeq()]"
+          (click)="$event.stopPropagation()"
+          >{{ epicLabel() }}</a>
+      } @else {
+        <span class="item-header__epic">{{ epicLabel() }}</span>
+      }
+    }
   `,
   styles: [`
     :host.item-header {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.4rem;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.15rem;
       padding: 0.3rem 0.6rem;
       color: var(--color-bg);
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
       font-size: 0.64rem;
       font-weight: 700;
+    }
+    .item-header__main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.4rem;
+      min-width: 0;
+    }
+    /* The project initial is the one mark that must survive the drain: it is
+       what keeps a mixed board scannable by project once the band has greyed
+       out. Ringed so it still reads as a disc when band and token match. */
+    .item-header__pav--held {
+      display: inline-flex;
+      border-radius: 25%;
+      box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--color-bg) 55%, transparent);
     }
     .item-header__left, .item-header__right {
       display: flex;
@@ -111,13 +147,28 @@ export type ItemHeaderSecondary = 'time' | 'epic' | 'none';
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    /* Sized to its text and self-aligned, so it reads as an object in the band
+       rather than as an extension of the identity row. */
     .item-header__epic {
-      font-size: 0.62rem;
-      opacity: 0.9;
+      align-self: flex-start;
+      max-width: 100%;
+      padding: 0 0.3rem;
+      border-radius: var(--radius);
+      background: color-mix(in srgb, var(--color-black) 78%, transparent);
+      color: color-mix(in srgb, var(--color-bg) 78%, var(--color-text));
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+      font-size: 0.6rem;
+      font-weight: 600;
+      text-decoration: none;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       min-width: 0;
+    }
+    .item-header__epic--link:hover {
+      background: var(--color-black);
+      color: var(--color-text);
+      text-decoration: underline;
     }
     .item-header__lock, .item-header__remove {
       width: 18px; height: 18px;
@@ -146,9 +197,36 @@ export class ItemHeader {
   readonly secondary = input<ItemHeaderSecondary>('none');
   readonly timeText = input<string | null>(null);
   readonly epicLabel = input<string | null>(null);
+  /** Parent epic's seq. When set, the epic chip links to it. */
+  readonly epicSeq = input<number | null>(null);
+  /** Operator-facing handle for the seq — e.g. `JIM-4650`. Falls back to `#4650`. */
+  readonly seqLabel = input<string | null>(null);
+  /**
+   * How far the band has drained toward neutral, 0..1.
+   *
+   * Staleness on the card family is subtractive: fresh work keeps its project
+   * colour and old work loses it. Capped below 1 so a trace of the project hue
+   * survives even at the ancient end.
+   */
+  readonly fade = input(0);
   readonly showLock = input(false);
   readonly locked = input(false);
   readonly showRemove = input(false);
+
+  protected readonly bandColor = computed(() => {
+    const base = this.projectColor() ?? 'var(--color-border)';
+    const f = Math.min(1, Math.max(0, this.fade()));
+    if (f === 0) return base;
+    return `color-mix(in oklch, ${base}, var(--color-text-muted) ${Math.round(f * 82)}%)`;
+  });
+
+  // Outlined against an undrained band (the token is the ground behind it, so a
+  // fill would vanish); filled once the band starts draining, which is what
+  // holds the project colour on an old card.
+  protected readonly avatarVariant = computed(() => (this.fade() > 0 ? 'filled' : 'outlined'));
+  protected readonly avatarColor = computed(() =>
+    this.fade() > 0 ? (this.projectColor() ?? 'var(--color-border)') : 'var(--color-bg)',
+  );
 
   readonly lockToggle = output<void>();
   readonly remove = output<void>();
