@@ -52,6 +52,7 @@ describe('DispatchService.retry (HTTP mode)', () => {
   let service: DispatchService;
   let http: HttpTestingController;
   let toast: ToastService;
+  let initUrl: string;
 
   beforeEach(() => {
     // Force HTTP mode (no ?seed=1) so retry actually fires the PATCH.
@@ -73,6 +74,7 @@ describe('DispatchService.retry (HTTP mode)', () => {
     // Drain the constructor-time GET. Tests override the fixture by
     // re-flushing in their own setup if they need different rows.
     const initReq = http.expectOne(r => r.url.includes('/api/dispatch/queue'));
+    initUrl = initReq.request.urlWithParams;
     initReq.flush({ items: [fakeEntry()], total: 1 });
   });
 
@@ -89,6 +91,16 @@ describe('DispatchService.retry (HTTP mode)', () => {
     const ok = toast.toasts().filter(t => t.tone === 'success');
     return ok[ok.length - 1]?.message;
   }
+
+  // The 100-row cap is applied by the API BEFORE groupCommissions drops the
+  // other flows, so an unfiltered request spends the whole budget on grooming
+  // passes the board never draws. Measured 2026-09-05: 93 groom / 3 recon /
+  // 3 fold / 1 commission in the newest 100 rows, which silently emptied the
+  // Review lane. Pin the filter so it cannot be dropped again.
+  it('asks the API for commission flow only, so grooming rows cannot eat the window', () => {
+    expect(initUrl).toContain('flow=commission');
+    expect(initUrl).toContain('limit=100');
+  });
 
   it('carries commission-flow fields through the mapper on load (flow/agent_type set, no-PR → null)', () => {
     // beforeEach already loaded the default fixture: flow=commission, agent_type=

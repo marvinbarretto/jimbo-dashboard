@@ -27,12 +27,12 @@
       }
     </span>
 
-    <!-- Agent cards come entirely from the newest slice of the dispatch table
-         (the API caps a page at 100). An operator reading "nothing in progress"
-         off a keyhole deserves to be told it is one. -->
+    <!-- Agent cards come entirely from the newest slice of the COMMISSION
+         history (the API caps a page at 100). An operator reading "nothing in
+         progress" off a keyhole deserves to be told it is one. -->
     @if (dispatchWindow().truncated) {
       <span class="board__window">
-        agent cards cover the latest {{ dispatchWindow().loaded }} dispatches of
+        agent cards cover the latest {{ dispatchWindow().loaded }} commissions of
         {{ dispatchWindow().total }}
       </span>
     }

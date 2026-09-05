@@ -38,9 +38,12 @@ export class DispatchService {
   readonly isLoading = this._loading.asReadonly();
 
   /**
-   * How much of the dispatch table the board is actually looking at. Agent
+   * How much of the COMMISSION history the board is actually looking at. Agent
    * cards derive entirely from this window, so a board that renders one
-   * commission out of thousands of rows has to be able to say so.
+   * commission out of hundreds has to be able to say so. `total` counts
+   * commissions only (the request filters `flow=commission`), not all dispatch
+   * rows — the unfiltered figure counted grooming passes the board never draws
+   * and so read as alarming truncation when almost nothing was missing.
    */
   readonly window = computed(() => ({
     loaded: this._entries().length,
@@ -67,7 +70,16 @@ export class DispatchService {
     // columns). Map at the service boundary to the dashboard's narrower
     // DispatchQueueEntry shape.
     // jimbo-api caps `limit` at 100 — sending more gets a 400 from zod validation.
-    this.http.get<unknown>(`${this.url}?limit=100`).subscribe({
+    //
+    // `flow=commission` is filtered SERVER-side because groupCommissions drops
+    // every other flow anyway, and the 100-row cap is applied before that filter.
+    // Measured 2026-09-05: the newest 100 unfiltered rows were 93 groom / 3 recon
+    // / 3 fold / **1 commission**, spanning 15 hours — so the board had silently
+    // dropped 7 of the 8 commissions it showed that morning. Nothing had been
+    // reviewed; grooming chatter had pushed them out of the window. Filtering
+    // server-side spends the whole budget on rows the board can actually render
+    // (294 commissions total vs 5,054 dispatch rows).
+    this.http.get<unknown>(`${this.url}?limit=100&flow=commission`).subscribe({
       next: (raw) => {
         const result = ApiDispatchesResponseSchema.safeParse(raw);
         if (!result.success) {
