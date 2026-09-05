@@ -1,9 +1,10 @@
-import { Component, ChangeDetectionStrategy, input, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, signal, computed, inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import type { VaultActivityEvent } from '@domain/activity/activity-event';
 import { UiFilterPills, type UiFilterPillOption } from '@shared/components/ui-filter-pills/ui-filter-pills';
 import { UiSegmented, type UiSegmentedOption } from '@shared/components/ui-segmented/ui-segmented';
 import { EventLineComponent } from './event-line/event-line';
-import { loadVerbosity, saveVerbosity, type VerbosityLevel } from './verbosity';
+import { loadVerbosity, saveVerbosity, type VerbosityLevel, type VerbosityStore } from './verbosity';
 
 type FilterKey = 'all' | 'status' | 'agent' | 'assignment' | 'thread';
 
@@ -32,7 +33,13 @@ export class ActivityLogComponent {
   readonly events     = input.required<readonly VaultActivityEvent[]>();
   readonly actorLabel = input<(id: string) => string>(a => a);
 
-  readonly verbosity     = signal<VerbosityLevel>(loadVerbosity());
+  // Storage via DOCUMENT rather than the bare global, matching ThemeService.
+  // `defaultView` is null outside a browser, which the verbosity helpers take
+  // as "no storage" instead of throwing.
+  private readonly store: VerbosityStore =
+    inject(DOCUMENT).defaultView?.localStorage ?? null;
+
+  readonly verbosity     = signal<VerbosityLevel>(loadVerbosity(this.store));
   readonly activeFilters = signal<Set<FilterKey>>(new Set(['all']));
 
   readonly verbosityOptions = VERBOSITY_OPTIONS;
@@ -58,7 +65,7 @@ export class ActivityLogComponent {
   setVerbosity(v: string): void {
     const level = v as VerbosityLevel;
     this.verbosity.set(level);
-    saveVerbosity(level);
+    saveVerbosity(this.store, level);
   }
 
   toggleFilter(key: string): void {
