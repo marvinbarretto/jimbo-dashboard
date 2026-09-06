@@ -2783,6 +2783,15 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
+                /** @description The note's current state does not permit the requested move */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
             };
         };
         trace?: never;
@@ -3080,6 +3089,15 @@ export interface paths {
                 };
                 /** @description Note not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description The note's current state does not permit the requested move */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -6413,6 +6431,8 @@ export interface paths {
                     status?: string;
                     /** @description Filter by batch ID */
                     batch_id?: string;
+                    /** @description Filter to runs against one vault note (e.g. note_9ca3ba8b). Without it a caller wanting one item’s history has to page the whole table and filter client-side, which cannot tell "never dispatched" from "dispatched beyond the page". */
+                    task_id?: string;
                     /** @description Filter to tasks linked to this project via vault_item_projects */
                     project_id?: string;
                     /** @description Filter by dispatch flow (groom / commission / recon) */
@@ -16390,7 +16410,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Composed project state — brief, beliefs, epics, dispatch, proposals, activity, WIP counters */
+        /** Composed project state — brief, beliefs, epics, dispatch, proposals, activity, delivery, WIP counters */
         get: {
             parameters: {
                 query?: never;
@@ -26834,6 +26854,7 @@ export interface components {
                 repo: string;
                 open: number;
             } | null;
+            delivery: components["schemas"]["ProjectStateDelivery"];
             agenda: {
                 note_id: string;
                 updated_at: string;
@@ -26844,6 +26865,35 @@ export interface components {
                 in_flight_dispatches: number;
                 stale_epics: number;
             };
+        };
+        ProjectStateDelivery: {
+            repo: string | null;
+            latest_tag: string | null;
+            /** @description Commits on the default branch since latest_tag. Meaningless when latest_tag is null. */
+            unshipped: number;
+            open_prs: components["schemas"]["ProjectStateDeliveryPr"][];
+            /** @description Open PRs whose checks failed — with auto-merge these never land and never shout */
+            failing: number;
+            /** @description Open PRs set to merge themselves once checks pass */
+            auto_merge: number;
+            /** @description Non-null ⇒ every count in this block is UNMEASURED, not zero. Render the state, not the number. */
+            error: string | null;
+        } | null;
+        ProjectStateDeliveryPr: {
+            number: number;
+            title: string;
+            url: string;
+            /**
+             * @description Rolled-up check state. 'none' = no CI configured, which is not a pass.
+             * @enum {string}
+             */
+            ci: "passing" | "failing" | "pending" | "none";
+            /** @description Set to merge itself once checks pass */
+            auto_merge: boolean;
+            age_days: number;
+            /** @description Vault item the PR came from, via the dispatch/<note_id> branch */
+            note_seq: number | null;
+            draft: boolean;
         };
         ListGithubIssuesResponse: {
             repo: string;
@@ -26887,11 +26937,6 @@ export interface components {
              * @enum {string}
              */
             kind: "human" | "agent" | "system";
-            /**
-             * @description Where the actor's work runs. Null for humans.
-             * @enum {string|null}
-             */
-            runtime: "ollama" | "anthropic" | "openrouter" | "hermes" | null;
             description: string | null;
             is_active: boolean;
             /** @description ISO 8601 timestamp */
@@ -26911,11 +26956,6 @@ export interface components {
              * @enum {string}
              */
             kind: "human" | "agent" | "system";
-            /**
-             * @description Where the actor's work runs. Null for humans.
-             * @enum {string|null}
-             */
-            runtime: "ollama" | "anthropic" | "openrouter" | "hermes" | null;
             description?: string | null;
             is_active: boolean;
         };
@@ -26926,11 +26966,6 @@ export interface components {
              * @enum {string}
              */
             kind?: "human" | "agent" | "system";
-            /**
-             * @description Where the actor's work runs. Null for humans.
-             * @enum {string|null}
-             */
-            runtime?: "ollama" | "anthropic" | "openrouter" | "hermes" | null;
             description?: string | null;
             is_active?: boolean;
         };
@@ -26952,7 +26987,7 @@ export interface components {
         };
         Gate: {
             /** @enum {string} */
-            id: "notifications" | "grooming" | "commission" | "unroutable" | "deferred";
+            id: "notifications" | "grooming" | "commission" | "unroutable" | "deferred" | "unshippable";
             label: string;
             current: number;
             threshold: number;
