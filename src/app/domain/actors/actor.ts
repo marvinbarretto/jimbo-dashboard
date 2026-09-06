@@ -4,7 +4,7 @@ import type { SkillCapability } from '../capability';
 // An actor is anyone or anything that can take an action on a vault item.
 // Today that's marvin (human), kipper (local llm), boris (hosted llm), jimbo (orchestrator).
 // Tomorrow it might be a second human, a different local model, a scheduled cron.
-// The shape is deliberately minimal — identity + routing hint, nothing operational.
+// The shape is deliberately minimal — identity, nothing operational.
 // Live status (is kipper reachable right now?) belongs elsewhere, not on the identity row.
 //
 // Convention for system-originated events: `jimbo` is the actor of record.
@@ -16,16 +16,15 @@ import type { SkillCapability } from '../capability';
 
 export type ActorKind = 'human' | 'agent' | 'system';
 
-// Where the actor's work actually runs. Null for humans.
-// 'hermes' covers the orchestrator itself; agents hosted inside hermes inherit its runtime.
-export type ActorRuntime = 'ollama' | 'anthropic' | 'openrouter' | 'hermes' | null;
-
 export interface Actor {
   id: ActorId;                  // slug: 'marvin', 'kipper', 'boris', 'jimbo'
   display_name: string;
   kind: ActorKind;
-  runtime: ActorRuntime;
-  description: string | null;   // free text: what this actor does, constraints, quirks
+  // Free text: what this actor does, where it runs, constraints, quirks. This is
+  // the only place that says where the work happens — a single `runtime` enum was
+  // dropped 2026-09-06 because an actor can hold lanes on more than one machine,
+  // and the fleet page derives machines and liveness from heartbeats anyway.
+  description: string | null;
   is_active: boolean;
   // High-level capability declaration. Dispatch is allowed when
   // serves ⊇ skill.requires. A claim, not a derivation — operator-maintained,

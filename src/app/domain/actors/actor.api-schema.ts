@@ -7,9 +7,9 @@
 //   real id), .parse() throws and we surface the problem instead of letting
 //   it propagate as a "valid" branded ActorId.
 //
-// We narrow at the boundary: the schema rejects unknown `kind` / `runtime`
-// values rather than coercing them. This is the inverse of the old
-// narrowKind/narrowRuntime helpers, which silently accepted bad data.
+// We narrow at the boundary: the schema rejects unknown `kind` values rather
+// than coercing them. This is the inverse of the old narrowKind helper, which
+// silently accepted bad data.
 import { z } from 'zod';
 import { ALL_CAPABILITIES } from '../capability';
 
@@ -19,7 +19,6 @@ export const ApiActorSchema = z.object({
   id:           z.string().min(1),
   display_name: z.string().min(1),
   kind:         z.enum(['human', 'agent', 'system']),
-  runtime:      z.enum(['ollama', 'anthropic', 'openrouter', 'hermes']).nullable(),
   description:  z.string().nullable(),
   is_active:    z.boolean(),
   // The API may not yet return `serves`. Defaulting to [] at parse time

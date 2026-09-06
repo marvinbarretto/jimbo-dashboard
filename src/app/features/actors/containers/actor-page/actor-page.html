@@ -7,9 +7,6 @@
         {{ a.display_name }}
         <app-ui-badge [tone]="activeTone(a.is_active)">{{ activeLabel(a.is_active) }}</app-ui-badge>
         <app-ui-badge [tone]="kindTone(a.kind)">{{ a.kind }}</app-ui-badge>
-        @if (a.runtime) {
-          <app-ui-badge tone="neutral" [subtle]="true">{{ a.runtime }}</app-ui-badge>
-        }
       </h1>
 
       <app-ui-cluster uiPageHeaderActions gap="xs">
@@ -93,7 +90,6 @@
       <app-ui-meta-list>
         <dt>ID</dt><dd><code>{{ a.id }}</code></dd>
         <dt>Kind</dt><dd>{{ a.kind }}</dd>
-        <dt>Runtime</dt><dd>{{ a.runtime ?? '—' }}</dd>
         <dt>Created</dt><dd>{{ a.created_at | datetime }}</dd>
         <dt>Updated</dt><dd>{{ a.updated_at | datetime }}</dd>
       </app-ui-meta-list>

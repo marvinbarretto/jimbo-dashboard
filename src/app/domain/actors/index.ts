@@ -1,4 +1,4 @@
-export type { Actor, ActorKind, ActorRuntime, CreateActorPayload, UpdateActorPayload } from './actor';
+export type { Actor, ActorKind, CreateActorPayload, UpdateActorPayload } from './actor';
 export { CURRENT_ACTOR_ID } from './current-actor';
 export type {
   ActorSkill,

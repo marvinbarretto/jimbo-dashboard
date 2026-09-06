@@ -1,7 +1,7 @@
 // Reads + mutates actors via dashboard-api at /dashboard-api/api/actors
-// (jimbo_pg-backed). Migration 0003 added runtime/description/is_active to the
-// table; the API now returns them so the synthesis layer that used to infer
-// runtime from id is gone.
+// (jimbo_pg-backed). Migration 0003 added description/is_active to the table;
+// the API returns them, so the old synthesis layer that guessed fields from the
+// actor id is gone.
 
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -115,8 +115,8 @@ export class ActorsService {
 }
 
 // ── API response adaptation ────────────────────────────────────────────────
-// Shape comes from ApiActorSchema (Zod). The old narrowKind / narrowRuntime /
-// narrowServes helpers were silent coercers — they accepted bad data and
+// Shape comes from ApiActorSchema (Zod). The old narrowKind / narrowServes
+// helpers were silent coercers — they accepted bad data and
 // substituted defaults. The schema now refuses to parse bad enums, so this
 // adapter is a thin brand-and-pass.
 
@@ -125,7 +125,6 @@ function toActor(a: ApiActor): Actor {
     id: actorId(a.id),
     display_name: a.display_name,
     kind: a.kind,
-    runtime: a.runtime,
     description: a.description,
     is_active: a.is_active,
     serves: a.serves,

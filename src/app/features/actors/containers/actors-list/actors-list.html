@@ -10,7 +10,6 @@
         <th>ID</th>
         <th>Display name</th>
         <th>Kind</th>
-        <th>Runtime</th>
         <th>Active</th>
         <th></th>
       </tr>
@@ -25,7 +24,6 @@
           <td>
             <span [class]="'kind kind--' + actor.kind">{{ actor.kind }}</span>
           </td>
-          <td>{{ actor.runtime ?? '—' }}</td>
           <td>
             <span [class]="actor.is_active ? 'status status--active' : 'status status--inactive'">
               {{ actor.is_active ? 'active' : 'inactive' }}

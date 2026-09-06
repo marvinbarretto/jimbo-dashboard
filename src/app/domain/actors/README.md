@@ -14,12 +14,12 @@ An actor is an identity. Humans, agents, and the orchestrator itself all live in
 
 Current roster (illustrative):
 
-| id       | kind         | runtime    | description                                                                 |
-|----------|--------------|------------|-----------------------------------------------------------------------------|
-| `marvin` | human        | `null`     | the operator                                                                |
-| `ralph`  | agent        | `ollama`   | local 7B-class model on 24GB RAM. Classification, reassigns, AC drafts      |
-| `boris`  | agent        | `anthropic`| VPS-hosted loop, polls every 5 min, picks its own Sonnet-class model        |
-| `jimbo`  | agent        | `hermes`   | hermes orchestrator. Telegram-facing. Coordinates the ceremony              |
+| id       | kind         | description                                                                 |
+|----------|--------------|-----------------------------------------------------------------------------|
+| `marvin` | human        | the operator                                                                |
+| `ralph`  | agent        | local 7B-class model on 24GB RAM. Classification, reassigns, AC drafts      |
+| `boris`  | agent        | VPS-hosted loop, polls every 5 min, picks its own Sonnet-class model        |
+| `jimbo`  | agent        | hermes orchestrator. Telegram-facing. Coordinates the ceremony              |
 
 ## What an actor is *not*
 
@@ -34,6 +34,7 @@ Kept deliberately thin. Fields that got considered and dropped:
 - `availability` (`always_on` / `sometimes_on` / `on_demand`) — conflates intent with live status. Ralph's availability at 3am depends on whether the laptop is open, not on a column value. Put this in a status projection if it earns its keep.
 - `cost_tier` (`free` / `paid`) — cost is a property of the model used for a specific run, recorded on the activity event. Duplicating it here would drift.
 - `capabilities_summary` — a future `actor_skills` junction will carry this as structured data. The `description` field handles the human-readable version in the meantime.
+- `runtime` (`ollama` / `anthropic` / `openrouter` / `hermes`) — existed until 2026-09-06, read by nothing, written only by the admin form. One enum slot cannot describe an actor that holds lanes on two machines (jimbo runs in Hermes on the VPS *and* on the M2), and the fleet page already derives machines, lanes and liveness from live heartbeats — better information, and not hand-maintained. Where the work runs is now prose in `description`.
 
 Every field here passes the test: *does a future row reference this actor by ID care about it?* If yes, it stays. If no, it moves.
 
@@ -48,7 +49,6 @@ erDiagram
         ActorId id PK
         string display_name
         string kind "human | agent | system"
-        string runtime "ollama | anthropic | openrouter | hermes | null"
         string description
         boolean is_active
         string created_at

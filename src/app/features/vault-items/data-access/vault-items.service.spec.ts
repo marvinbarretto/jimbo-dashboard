@@ -125,7 +125,6 @@ describe('VaultItemsService.createWithRelations (HTTP mode)', () => {
     id: actorId(id),
     display_name: id,
     kind: 'human',
-    runtime: null,
     description: null,
     is_active: true,
     serves: [],

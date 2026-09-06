@@ -5,7 +5,7 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { ActorsService } from '../../data-access/actors.service';
 import { actorId } from '@domain/ids';
-import type { ActorKind, ActorRuntime } from '@domain/actors';
+import type { ActorKind } from '@domain/actors';
 import { ALL_CAPABILITIES, CAPABILITY_LABELS, type SkillCapability } from '@domain/capability';
 import { UiButton } from '@shared/components/ui-button/ui-button';
 import { UiButtonLink } from '@shared/components/ui-button-link/ui-button-link';
@@ -29,14 +29,6 @@ export class ActorForm {
   readonly isEdit = computed(() => !!this.id());
 
   readonly kinds: ActorKind[] = ['human', 'agent', 'system'];
-  // Null sentinel as empty string — coerced at submit boundary.
-  readonly runtimes: Array<{ label: string; value: ActorRuntime }> = [
-    { label: '—', value: null },
-    { label: 'ollama', value: 'ollama' },
-    { label: 'anthropic', value: 'anthropic' },
-    { label: 'openrouter', value: 'openrouter' },
-    { label: 'hermes', value: 'hermes' },
-  ];
 
   readonly capabilityOptions = ALL_CAPABILITIES;
   readonly capabilityLabel = (c: SkillCapability) => CAPABILITY_LABELS[c];
@@ -45,7 +37,6 @@ export class ActorForm {
     id:           ['', [Validators.required, Validators.pattern(/^[a-z][a-z0-9-]*$/)]],
     display_name: ['', Validators.required],
     kind:         ['human' as ActorKind, Validators.required],
-    runtime:      ['' as string],   // empty string represents null at submit
     description:  [null as string | null],
     is_active:    [true],
     serves:       new FormArray(ALL_CAPABILITIES.map(() => new FormControl(false, { nonNullable: true }))),
@@ -65,7 +56,6 @@ export class ActorForm {
           id:           actor.id,
           display_name: actor.display_name,
           kind:         actor.kind,
-          runtime:      actor.runtime ?? '',
           description:  actor.description,
           is_active:    actor.is_active,
         });
@@ -90,8 +80,6 @@ export class ActorForm {
       id:           actorId(v.id),
       display_name: v.display_name,
       kind:         v.kind,
-      // Coerce empty string sentinel back to null.
-      runtime:      (v.runtime || null) as ActorRuntime,
       description:  v.description,
       is_active:    v.is_active,
       serves,

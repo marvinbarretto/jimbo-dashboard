@@ -28,7 +28,6 @@ const BORIS: Actor = {
   id: wellKnownActorId('boris'),
   display_name: 'boris',
   kind: 'agent',
-  runtime: 'anthropic',
   description: null,
   is_active: true,
   serves: [],

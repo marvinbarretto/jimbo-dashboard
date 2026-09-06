@@ -34,15 +34,6 @@
     </div>
 
     <div class="field">
-      <label for="runtime">Runtime</label>
-      <select id="runtime" formControlName="runtime">
-        @for (r of runtimes; track r.value) {
-          <option [value]="r.value ?? ''">{{ r.label }}</option>
-        }
-      </select>
-    </div>
-
-    <div class="field">
       <label for="description">Description</label>
       <textarea id="description" formControlName="description" rows="4"></textarea>
     </div>
