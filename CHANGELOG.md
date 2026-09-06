@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.218](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.217...v0.0.218) (2026-09-06)
+
+
+### Features
+
+* add delivery & autonomy section to the project page ([d9f265b](https://github.com/marvinbarretto/jimbo-dashboard/commit/d9f265b054483d43b0bd11f9724f4b3ceec46f46))
+* **execution:** show whether a PR still applies, and restore the pile the card stopped naming ([114e5a9](https://github.com/marvinbarretto/jimbo-dashboard/commit/114e5a9529d8554de4c8bc67d4df68e0a99a3dce))
+* **grooming:** a live pump rail where the stopped clock used to be ([df7b4f4](https://github.com/marvinbarretto/jimbo-dashboard/commit/df7b4f4471b2016be8d12e3b6a82e52ba69a4619))
+* **grooming:** name the population behind every number on the rail ([c9c11cb](https://github.com/marvinbarretto/jimbo-dashboard/commit/c9c11cb7cbedf32740ed75ea2f5d31b697756ae7))
+* **item-header:** a pulse on the clock, for a run that is actually running ([bd035ca](https://github.com/marvinbarretto/jimbo-dashboard/commit/bd035ca486d6da216f44dd3d79cbd32558a5f8f8))
+
+
+### Bug Fixes
+
+* **activity-log:** reach storage through DOCUMENT, so verbosity is testable ([fa4aede](https://github.com/marvinbarretto/jimbo-dashboard/commit/fa4aede4a4209ffac8cebecb02832e408e8f6535))
+* **grooming:** the idle line keeps time ([fb93ec1](https://github.com/marvinbarretto/jimbo-dashboard/commit/fb93ec18bb64874a039da2d4b1d79b5fe58a1c14))
+* **projects:** say what the autonomy control actually does ([511e2ec](https://github.com/marvinbarretto/jimbo-dashboard/commit/511e2ec45bc8ec971a7ef0aa5a429f3356a7f640))
+
+
+### Code Refactoring
+
+* drop actor runtime from the dashboard ([5032206](https://github.com/marvinbarretto/jimbo-dashboard/commit/503220698a665b6b2520821f9bd9f7a22bed70a0))
+* **grooming:** the pump rail is a container, not a component ([821235b](https://github.com/marvinbarretto/jimbo-dashboard/commit/821235b1acf380f34982c47c61314c2b7c6de1a4))
+
 ### [0.0.217](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.216...v0.0.217) (2026-09-05)
 
 
