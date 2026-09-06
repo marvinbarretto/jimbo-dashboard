@@ -4,7 +4,7 @@ import { take } from 'rxjs';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
 import { VaultItemCommands } from '@features/vault-items/commands/vault-item-commands';
 import { GroomingCommands } from '@features/grooming/commands/grooming-commands';
-import { GroomingPumpRail } from '../../components/grooming-pump-rail/grooming-pump-rail';
+import { GroomingPumpRail } from '../grooming-pump-rail/grooming-pump-rail';
 import { ActorsService } from '@features/actors/data-access/actors.service';
 import { ProjectsService } from '@features/projects/data-access/projects.service';
 import { VaultItemProjectsService } from '@features/vault-items/data-access/vault-item-projects.service';

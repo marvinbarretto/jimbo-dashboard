@@ -22,6 +22,12 @@ import {
  * Everything here is composed from services that already existed:
  * PipelineControlService (the `pipeline.*` settings + per-stage queue depth)
  * and FleetService (the 30s dispatch/stats poll). No new endpoints.
+ *
+ * Lives under containers/ rather than components/ because it owns its own
+ * fetches, polling and writes — VAULT-COMMANDS-001 exempts containers for
+ * exactly that reason, and the alternative (the board injecting two more
+ * services and passing a dozen inputs down) would put pump concerns in a
+ * 700-line board that has nothing to do with them.
  */
 
 /** The pump's own stage→skill table — SKILLS in jimbo-api pipeline-pump.ts. */
