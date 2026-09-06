@@ -39,6 +39,19 @@ const STAGE_LABELS: Record<string, string> = {
   decompose: 'decompose',
 };
 
+/**
+ * The grooming_status each stage reads its candidates from — selectCandidates()
+ * in pipeline-pump.ts. Named on the rail because it is the join between these
+ * depths and the columns below: `intake` and `deep read` both read `ungroomed`,
+ * which is why the same 1652 appears twice and is not a duplicate.
+ */
+const STAGE_READS: Record<string, string> = {
+  intake: 'ungroomed',
+  deepread: 'ungroomed',
+  classify: 'intake_complete',
+  decompose: 'classified',
+};
+
 /** Matches `pipeline-pump` cron cadence — the source of ticks_per_day. */
 const TICK_MINUTES = 30;
 
@@ -59,6 +72,8 @@ const IDLE_TICK_MS = 30_000;
 interface StageView {
   readonly id: string;
   readonly label: string;
+  /** The grooming_status this stage draws from. */
+  readonly reads: string;
   readonly key: PipelineKey;
   readonly perTick: number;
   readonly eligible: number | null;
@@ -222,6 +237,7 @@ export class GroomingPumpRail {
       return {
         id,
         label: STAGE_LABELS[id],
+        reads: STAGE_READS[id],
         key: keys[id],
         perTick: perTick[id],
         eligible: q?.eligible ?? null,
@@ -237,6 +253,19 @@ export class GroomingPumpRail {
   protected readonly throughputPerDay = computed(() =>
     this.stages().reduce((sum, s) => sum + s.perDay, 0),
   );
+
+  /**
+   * What the next tick will actually admit — min(per-tick, eligible) per stage.
+   * The per-tick numbers are a ceiling, not a promise: a stage with a wide valve
+   * and nothing eligible contributes nothing, and that is the difference between
+   * "throttled" and "starved" that a row of settings alone cannot show.
+   */
+  protected readonly nextTick = computed(() => {
+    const parts = this.stages()
+      .map(s => ({ label: s.label, n: Math.min(s.perTick, s.eligible ?? 0) }))
+      .filter(s => s.n > 0);
+    return { parts, total: parts.reduce((sum, s) => sum + s.n, 0) };
+  });
 
   protected isSaving(key: PipelineKey): boolean {
     return this.savingKey() === key;

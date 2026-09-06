@@ -11,17 +11,24 @@
     <span class="rail__verdict">{{ verdict().label }}</span>
 
     <span class="rail__meta">
+      <span class="rail__key">groomer</span>
       {{ groomer() }}
       @if (worker(); as w) {
         · {{ w.status }}
       } @else {
-        · <span class="rail__bad">absent</span>
+        · <span class="rail__bad">no such worker</span>
       }
     </span>
 
-    <span class="rail__meta">tick {{ tickMinutes }}m · {{ ticksPerDay() }}/day</span>
+    <span class="rail__meta">
+      <span class="rail__key">tick</span>
+      every {{ tickMinutes }}m · {{ ticksPerDay() }} a day
+    </span>
 
-    <span class="rail__meta">last enqueue {{ lastEnqueueAgo() }}</span>
+    <span class="rail__meta">
+      <span class="rail__key">last enqueue</span>
+      {{ lastEnqueueAgo() }}
+    </span>
 
     <a class="rail__link" [routerLink]="['/config', 'pipeline']">all valves →</a>
   </header>
@@ -32,12 +39,16 @@
         <!-- Decorative: the clock beside it carries the meaning; the dot only
              says that number is still moving. -->
         <span class="rail__dot" aria-hidden="true"></span>
+        <span class="rail__key">in flight</span>
         <span class="rail__run-stage">{{ run.stage }}</span>
         <span class="rail__run-title">{{ run.title }}</span>
-        <span class="rail__run-clock">{{ run.elapsed }}</span>
+        <span class="rail__run-clock">running {{ run.elapsed }}</span>
       </li>
     } @empty {
-      <li class="rail__run rail__run--idle">nothing in flight · last run {{ lastRunAgo() }}</li>
+      <li class="rail__run rail__run--idle">
+        <span class="rail__key">in flight</span>
+        nothing · last groom run finished {{ lastRunAgo() }}
+      </li>
     }
   </ul>
 
@@ -45,14 +56,23 @@
   <ol class="rail__stages">
     @for (stage of stages(); track stage.id) {
       <li class="rail__stage" [class.rail__stage--off]="stage.off" [attr.data-stage]="stage.id">
-        <span class="rail__stage-label">{{ stage.label }}</span>
+        <span class="rail__stage-head">
+          <span class="rail__stage-label">{{ stage.label }}</span>
+          <span class="rail__stage-reads">reads {{ stage.reads }}</span>
+        </span>
 
         <span class="rail__depth">
           @if (stage.eligible !== null) {
-            <strong [class.rail__depth--zero]="stage.eligible === 0">{{ stage.eligible }}</strong>
-            <span class="rail__depth-of">of {{ stage.atStatus }}</span>
+            <span class="rail__depth-part">
+              <strong [class.rail__depth--zero]="stage.eligible === 0">{{ stage.eligible }}</strong>
+              <span class="rail__key">eligible now</span>
+            </span>
+            <span class="rail__depth-part">
+              <strong class="rail__depth-total">{{ stage.atStatus }}</strong>
+              <span class="rail__key">at this status</span>
+            </span>
           } @else {
-            <span class="rail__depth-of">depth unknown</span>
+            <span class="rail__key">queue depth unavailable</span>
           }
         </span>
 
@@ -68,14 +88,15 @@
             [attr.aria-label]="'Increase ' + stage.label + ' per tick'"
             [disabled]="isSaving(stage.key)"
             (click)="onStep(stage.key, stage.perTick, 1)">+</button>
+          <span class="rail__key">per tick</span>
         </span>
 
         <span class="rail__rate">
           @if (stage.off) {
             <!-- A zero in a row of numbers reads as a throttle. It is a switch. -->
-            off — never runs
+            off — this stage never runs
           } @else {
-            {{ stage.perDay }}/day
+            ceiling {{ stage.perDay }}/day
             @if (stage.drainDays; as days) {
               · ~{{ days }}d to clear
             }
@@ -85,32 +106,56 @@
     }
   </ol>
 
+  <!-- The two denominators on this page are different populations, and the
+       board columns below are a third. Say so rather than let them argue. -->
+  <p class="rail__legend">
+    <strong>eligible now</strong> = would be admitted on the next tick under the current
+    scope and gates. <strong>at this status</strong> = every note parked at that
+    grooming_status, whatever its lifecycle — intake and deep read both read
+    <code>ungroomed</code>, so they show the same total. The columns below count something
+    narrower again: active, actionable, non-epic items that pass your current filters. All
+    three are correct; they are not the same population.
+  </p>
+
+  <p class="rail__next">
+    <span class="rail__key">next tick admits</span>
+    @if (nextTick().total > 0) {
+      {{ nextTick().total }} —
+      @for (part of nextTick().parts; track part.label) {
+        {{ part.n }} {{ part.label }}@if (!$last) {, }
+      }
+    } @else {
+      nothing — every open stage has an empty eligible queue
+    }
+  </p>
+
   <!-- Band 3 — the rhythm, and anything that broke -->
   <footer class="rail__foot">
     <ul class="rail__recent">
+      <li class="rail__key">recent groom runs</li>
       @for (run of recent(); track run.id) {
         <li class="rail__completion" [class.rail__completion--failed]="run.failed">
           <span class="rail__run-stage">{{ run.stage }}</span>
-          <span class="rail__completion-meta" [title]="run.at">
-            {{ run.duration }} · {{ run.model }} · {{ run.cost }} · {{ run.ago }}
+          <span class="rail__completion-meta" [title]="'finished ' + run.at">
+            took {{ run.duration }} · {{ run.model }} · {{ run.cost }} · {{ run.ago }}
           </span>
         </li>
       } @empty {
-        <li class="rail__completion rail__completion--idle">no groom runs in the recent window</li>
+        <li class="rail__completion rail__completion--idle">none in the reported window</li>
       }
     </ul>
 
     @if (failures().length || stuck().length) {
       <p class="rail__alerts" role="note">
         @if (failures().length) {
-          <span class="rail__bad">{{ failures().length }} failed</span>
+          <span class="rail__bad">{{ failures().length }} failed in 24h</span>
           @if (failures()[0].error_message; as msg) {
             <span class="rail__alert-detail">{{ msg }}</span>
           }
         }
         @if (stuck().length) {
           <span class="rail__bad">{{ stuck().length }} stuck</span>
-          <span class="rail__alert-detail">lock held with no dispatch behind it</span>
+          <span class="rail__alert-detail">grooming lock held with no dispatch behind it</span>
         }
       </p>
     }

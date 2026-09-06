@@ -48,6 +48,17 @@
   font-weight: 600;
 }
 
+/* Every number on this rail is a different population. The label is not
+   decoration — it is the only thing that stops two correct totals reading as a
+   contradiction. */
+.rail__key {
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
 .rail__link {
   margin-left: auto;
   color: var(--color-text-muted);
@@ -127,37 +138,61 @@
 
 .rail__stage {
   display: flex;
-  align-items: center;
-  gap: 0.45rem;
+  flex-direction: column;
+  gap: 0.2rem;
   min-width: 0;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.rail__stage-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.rail__stage-reads {
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
 }
 
 .rail__stage--off { opacity: 0.55; }
 
 .rail__stage-label {
-  min-width: 5.5rem;
   color: var(--color-text);
   font-weight: 600;
 }
 
 .rail__depth {
   display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.rail__depth-part {
+  display: inline-flex;
   align-items: baseline;
   gap: 0.25rem;
-  font-variant-numeric: tabular-nums;
 
   strong { color: var(--color-warning); }
 }
 
+/* The bigger number is the less actionable one — it must not out-shout the
+   eligible count next to it. */
+.rail__depth-total { color: var(--color-text-soft) !important; }
+
 /* Nothing eligible is not a small number, it is a closed door. */
 .rail__depth--zero { color: var(--color-text-muted) !important; }
-
-.rail__depth-of { color: var(--color-text-muted); }
 
 .rail__stepper {
   display: inline-flex;
   align-items: center;
   gap: 0.1rem;
+
+  .rail__key { margin-left: 0.25rem; }
 
   button {
     width: 1.1rem;
@@ -188,10 +223,33 @@
 }
 
 .rail__rate {
-  margin-left: auto;
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+}
+
+.rail__legend {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  line-height: 1.5;
+
+  strong { color: var(--color-text-soft); }
+
+  code {
+    padding: 0 0.15rem;
+    border-radius: 3px;
+    background: var(--color-surface-soft);
+  }
+}
+
+.rail__next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 0;
+  color: var(--color-text-soft);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Band 3: rhythm ─────────────────────────────────────────────── */

@@ -12,7 +12,7 @@
     <span class="col__label">{{ label() }}</span>
     <!-- Under a render cap the header reports shown-of-total. The total is the
          honest number; hiding it would make a capped column read as a short one. -->
-    <span class="col__count">
+    <span class="col__count" [title]="countHint()">
       {{ count() }}@if (hidden() > 0) {<span class="col__count-total">/{{ total() }}</span>}
     </span>
     <!-- Optional projected control (e.g. "dismiss all" sweep). Default

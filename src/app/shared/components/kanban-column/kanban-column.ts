@@ -42,6 +42,15 @@ export class KanbanColumn {
   // Cards held back by the render cap. 0 when the board is uncapped.
   readonly hidden = computed(() => Math.max(0, (this.total() ?? this.count()) - this.count()));
 
+  // "25/690" is two numbers with no stated population, and on the grooming board
+  // it sits beside a pump depth counting a different one. Spell it out on hover
+  // rather than widen every column header on every board.
+  readonly countHint = computed(() =>
+    this.hidden() > 0
+      ? `Showing ${this.count()} of ${this.total()} cards in this column`
+      : `${this.count()} card${this.count() === 1 ? '' : 's'} in this column`,
+  );
+
   onDragOver(event: DragEvent): void {
     if (this.dropDisabled()) return;
     this.dragover.emit(event);
