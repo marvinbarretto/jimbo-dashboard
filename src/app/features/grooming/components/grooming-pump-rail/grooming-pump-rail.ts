@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { UiTimestamp } from '@shared/components/ui-timestamp/ui-timestamp';
+import { formatDatetime } from '@shared/utils/datetime.utils';
 import { UiToggle } from '@shared/components/ui-toggle/ui-toggle';
 import { FleetService } from '@features/fleet/data-access/fleet.service';
 import {
@@ -45,6 +45,17 @@ const TICK_MINUTES = 30;
 /** Groom completions worth showing: enough to read a rhythm, not a log. */
 const RECENT_LIMIT = 6;
 
+/** The clock while a run is in flight — the elapsed number is per-second. */
+const LIVE_TICK_MS = 1_000;
+
+/**
+ * The clock while nothing runs. Idle is the normal state — the pump ticks every
+ * 30 minutes and a run lasts about a minute — so "last run 24m ago" is what this
+ * band shows almost always, and it has to keep moving or the rail is exactly as
+ * static as the strip it replaced.
+ */
+const IDLE_TICK_MS = 30_000;
+
 interface StageView {
   readonly id: string;
   readonly label: string;
@@ -67,7 +78,8 @@ interface RunView {
 interface CompletionView {
   readonly id: string;
   readonly stage: string;
-  readonly at: string | null;
+  readonly ago: string;
+  readonly at: string;
   readonly duration: string;
   readonly model: string;
   readonly cost: string;
@@ -78,7 +90,7 @@ type Tone = 'off' | 'working' | 'idle' | 'alert';
 
 @Component({
   selector: 'app-grooming-pump-rail',
-  imports: [RouterLink, UiTimestamp, UiToggle],
+  imports: [RouterLink, UiToggle],
   templateUrl: './grooming-pump-rail.html',
   styleUrl: './grooming-pump-rail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -95,10 +107,9 @@ export class GroomingPumpRail {
   protected readonly enabled = this.pipeline.enabled;
   protected readonly savingKey = this.pipeline.savingKey;
   protected readonly ticksPerDay = this.pipeline.ticksPerDay;
-  protected readonly lastEnqueueAt = this.fleet.lastPipelineEnqueueAt;
   protected readonly groomer = this.pipeline.groomer;
 
-  /** Ticks only while something is running — see the effect in the constructor. */
+  /** Every relative time on this rail derives from here — see the constructor. */
   private readonly clock = signal(Date.now());
 
   constructor() {
@@ -107,8 +118,14 @@ export class GroomingPumpRail {
     this.fleet.start();
 
     effect(onCleanup => {
-      if (this.runningRows().length === 0) return;
-      const handle = setInterval(() => this.clock.set(Date.now()), 1000);
+      const live = this.runningRows().length > 0;
+      // Re-set on the transition too: the clock has been advancing every 30s, so
+      // a run that appears mid-interval would otherwise render 0s and then jump.
+      this.clock.set(Date.now());
+      const handle = setInterval(
+        () => this.clock.set(Date.now()),
+        live ? LIVE_TICK_MS : IDLE_TICK_MS,
+      );
       onCleanup(() => clearInterval(handle));
     });
 
@@ -140,7 +157,8 @@ export class GroomingPumpRail {
     this.groomCompletions().slice(0, RECENT_LIMIT).map(r => ({
       id: r.id,
       stage: stageLabelOf(r.skill),
-      at: r.completed_at,
+      ago: ago(r.completed_at, this.clock()),
+      at: formatDatetime(r.completed_at),
       duration: r.started_at && r.completed_at
         ? elapsed(r.started_at, Date.parse(r.completed_at))
         : '—',
@@ -158,8 +176,13 @@ export class GroomingPumpRail {
   /** Notes holding a grooming lock with no dispatch behind it. */
   protected readonly stuck = computed(() => this.fleet.stuckNotes());
 
-  protected readonly lastCompletedAt = computed(
+  private readonly lastCompletedAt = computed(
     () => this.groomCompletions()[0]?.completed_at ?? null,
+  );
+
+  protected readonly lastRunAgo = computed(() => ago(this.lastCompletedAt(), this.clock()));
+  protected readonly lastEnqueueAgo = computed(() =>
+    ago(this.fleet.lastPipelineEnqueueAt(), this.clock()),
   );
 
   /**
@@ -232,6 +255,21 @@ export class GroomingPumpRail {
 function stageLabelOf(skill: string | null): string {
   const stage = skill ? STAGE_SKILLS[skill] : undefined;
   return stage ? STAGE_LABELS[stage] : (skill ?? 'unknown');
+}
+
+/**
+ * relativeTime() takes its own Date.now(), so a pure pipe over an unchanged
+ * string never re-renders — which is precisely how a band goes stale while
+ * looking live. Deriving it from a passed `now` makes the dependency explicit
+ * (and testable without a fake clock).
+ */
+function ago(iso: string | null, now: number): string {
+  if (!iso) return 'never';
+  const abs = Math.max(0, now - Date.parse(iso));
+  if (abs < 60_000) return 'just now';
+  if (abs < 3_600_000) return `${Math.round(abs / 60_000)}m ago`;
+  if (abs < 86_400_000) return `${Math.round(abs / 3_600_000)}h ago`;
+  return `${Math.round(abs / 86_400_000)}d ago`;
 }
 
 /** "1m 12s" — a running clock, not a rounded "~1m". */

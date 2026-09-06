@@ -21,9 +21,7 @@
 
     <span class="rail__meta">tick {{ tickMinutes }}m · {{ ticksPerDay() }}/day</span>
 
-    @if (lastEnqueueAt(); as at) {
-      <span class="rail__meta">last enqueue <app-ui-timestamp [value]="at" /></span>
-    }
+    <span class="rail__meta">last enqueue {{ lastEnqueueAgo() }}</span>
 
     <a class="rail__link" [routerLink]="['/config', 'pipeline']">all valves →</a>
   </header>
@@ -39,12 +37,7 @@
         <span class="rail__run-clock">{{ run.elapsed }}</span>
       </li>
     } @empty {
-      <li class="rail__run rail__run--idle">
-        nothing in flight
-        @if (lastCompletedAt(); as at) {
-          · last run <app-ui-timestamp [value]="at" />
-        }
-      </li>
+      <li class="rail__run rail__run--idle">nothing in flight · last run {{ lastRunAgo() }}</li>
     }
   </ul>
 
@@ -98,8 +91,9 @@
       @for (run of recent(); track run.id) {
         <li class="rail__completion" [class.rail__completion--failed]="run.failed">
           <span class="rail__run-stage">{{ run.stage }}</span>
-          <span class="rail__completion-meta">{{ run.duration }} · {{ run.model }} · {{ run.cost }}</span>
-          <app-ui-timestamp [value]="run.at" />
+          <span class="rail__completion-meta" [title]="run.at">
+            {{ run.duration }} · {{ run.model }} · {{ run.cost }} · {{ run.ago }}
+          </span>
         </li>
       } @empty {
         <li class="rail__completion rail__completion--idle">no groom runs in the recent window</li>
