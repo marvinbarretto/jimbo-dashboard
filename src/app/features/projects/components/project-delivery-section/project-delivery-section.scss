@@ -1,0 +1,149 @@
+// Two-column declared/live grid. The visual job is narrow: make an
+// undeclared boundary and an unmeasured one look *different from each other*
+// and different from a real value — a uniform grey would restore exactly the
+// ambiguity the widget exists to remove.
+//
+// Spacing uses the page's --s-* scale, inherited from .project-landing.
+
+.delivery {
+  &__grid {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    border: 1px solid var(--color-border);
+  }
+
+  &__head,
+  &__row {
+    display: grid;
+    grid-template-columns: minmax(6rem, 0.7fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--s-3, 0.75rem);
+    padding: var(--s-2, 0.5rem) var(--s-3, 0.75rem);
+    align-items: start;
+  }
+
+  &__head {
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__row + &__row {
+    border-top: 1px solid var(--color-border);
+  }
+
+  // The one row that should draw the eye. A red PR does not announce itself
+  // anywhere else — with auto-merge on it just silently never lands.
+  &__row--alert {
+    border-left: 3px solid var(--color-danger);
+    background: color-mix(in srgb, var(--color-danger) 7%, transparent);
+  }
+
+  &__boundary {
+    margin: 0;
+    color: var(--project-accent, var(--color-accent));
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  &__cell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1, 0.25rem);
+    margin: 0;
+    min-width: 0;
+  }
+
+  &__value {
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+  }
+
+  // "not declared" is a fact about the model, not a missing value — italic and
+  // muted so it never reads as a real setting, but present enough not to look
+  // like an empty cell.
+  &__cell--not-declared &__value {
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+
+  // Unmeasured is the more dangerous state of the two: something IS modelled
+  // here and we simply could not see it. Dashed underline marks the blank
+  // instrument.
+  &__cell--unmeasured &__value {
+    color: var(--color-warning);
+    text-decoration: underline dashed;
+    text-underline-offset: 0.2em;
+  }
+
+  &__hint {
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    line-height: 1.35;
+  }
+
+  &__note {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+
+    &--unmeasured {
+      color: var(--color-warning);
+    }
+  }
+
+  // ── Open PRs ──────────────────────────────────────────────────────
+  &__prs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1, 0.25rem);
+  }
+
+  &__pr {
+    padding: var(--s-1, 0.25rem) var(--s-2, 0.5rem);
+    border-left: 3px solid transparent;
+    font-size: 0.8rem;
+  }
+
+  &__pr--alert {
+    border-left-color: var(--color-danger);
+    background: color-mix(in srgb, var(--color-danger) 7%, transparent);
+  }
+
+  &__pr-link {
+    color: var(--project-accent, var(--color-accent));
+    font-weight: 700;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
+
+  &__pr-title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  &__pr-age {
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 40rem) {
+  .delivery__head {
+    display: none;
+  }
+
+  .delivery__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -42,6 +42,7 @@ import { ProjectBriefField } from '../../components/project-brief-field/project-
 import { ProjectBriefBulletField } from '../../components/project-brief-bullet-field/project-brief-bullet-field';
 import { ProjectConstraintsSection } from '../../components/project-constraints-section/project-constraints-section';
 import { ProjectOperatingContextSection } from '../../components/project-operating-context-section/project-operating-context-section';
+import { ProjectDeliverySection } from '../../components/project-delivery-section/project-delivery-section';
 import { VaultChip } from '@shared/components/vault-chip/vault-chip';
 import { briefActorProjectTrigger, briefVaultItemTrigger } from '../../util/brief-mention-triggers';
 import type { Priority, VaultItem } from '@domain/vault/vault-item';
@@ -143,6 +144,7 @@ interface ProjectActivityItem {
     ProjectBriefBulletField,
     ProjectConstraintsSection,
     ProjectOperatingContextSection,
+    ProjectDeliverySection,
     ActorChip,
     UiDataTable,
     UiDropdown,

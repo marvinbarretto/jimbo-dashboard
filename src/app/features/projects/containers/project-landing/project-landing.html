@@ -132,6 +132,13 @@
           </app-ui-section>
         }
 
+        <!-- Delivery & autonomy — the four boundaries autonomous work crosses
+             (commission → merge → review → promote), declared policy against
+             live fact. Sits between in-flight work and the issue backlog
+             because that is where a red PR or an unshipped tag belongs.
+             Self-gated to projects with a codebase. -->
+        <app-project-delivery-section [project]="p" />
+
         <!-- GitHub issues — open issues on this project's repo, with vault sync
              status. GitHub stays the feature backlog; this just gives visibility
              and a one-click way to bring an issue into the jimbo pipeline. -->

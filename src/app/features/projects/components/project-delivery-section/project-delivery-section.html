@@ -1,0 +1,72 @@
+@if (isRelevant()) {
+  <app-ui-section
+    title="Delivery &amp; autonomy"
+    [meta]="meta()"
+    [collapsible]="true"
+    [expanded]="expanded()"
+    (toggled)="toggle()"
+  >
+    <app-ui-stack gap="md">
+      @if (isLoading()) {
+        <p class="delivery__note">Reading project state…</p>
+      } @else if (loadFailed()) {
+        <p class="delivery__note delivery__note--unmeasured">
+          Project state unavailable — these boundaries are unmeasured, not clear.
+        </p>
+      } @else {
+        <dl class="delivery__grid">
+          <div class="delivery__head" aria-hidden="true">
+            <span class="delivery__head-cell">Boundary</span>
+            <span class="delivery__head-cell">Declared</span>
+            <span class="delivery__head-cell">Live</span>
+          </div>
+          @for (row of rows(); track row.boundary) {
+            <div class="delivery__row" [class.delivery__row--alert]="row.alert">
+              <dt class="delivery__boundary">{{ row.boundary }}</dt>
+              <dd class="delivery__cell delivery__cell--{{ row.declared.state }}">
+                <span class="delivery__value">{{ row.declared.text }}</span>
+                @if (row.declared.hint; as hint) {
+                  <span class="delivery__hint">{{ hint }}</span>
+                }
+              </dd>
+              <dd class="delivery__cell delivery__cell--{{ row.live.state }}">
+                <span class="delivery__value">{{ row.live.text }}</span>
+                @if (row.live.hint; as hint) {
+                  <span class="delivery__hint">{{ hint }}</span>
+                }
+              </dd>
+            </div>
+          }
+        </dl>
+
+        @if (prs().length > 0) {
+          <ul class="delivery__prs">
+            @for (pr of prs(); track pr.number) {
+              <li class="delivery__pr" [class.delivery__pr--alert]="pr.ci === 'failing'">
+                <app-ui-cluster gap="xs" align="center">
+                  <a class="delivery__pr-link" [href]="pr.url" target="_blank" rel="noopener">
+                    #{{ pr.number }}
+                  </a>
+                  <span class="delivery__pr-title">{{ pr.title }}</span>
+                  <app-ui-badge [tone]="ciTone(pr)">{{ ciLabel(pr) }}</app-ui-badge>
+                  @if (pr.auto_merge) {
+                    <!-- Worth naming next to a red check: auto-merge is exactly
+                         why a failing PR never lands and never complains. -->
+                    <app-ui-badge tone="info" [subtle]="true">auto-merge</app-ui-badge>
+                  }
+                  @if (pr.draft) {
+                    <app-ui-badge tone="neutral" [subtle]="true">draft</app-ui-badge>
+                  }
+                  @if (pr.note_seq !== null) {
+                    <app-ui-badge tone="accent" [subtle]="true">#{{ pr.note_seq }}</app-ui-badge>
+                  }
+                  <span class="delivery__pr-age">{{ pr.age_days }}d</span>
+                </app-ui-cluster>
+              </li>
+            }
+          </ul>
+        }
+      }
+    </app-ui-stack>
+  </app-ui-section>
+}
