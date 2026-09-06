@@ -1,0 +1,249 @@
+/* One band, four rows, no stat cards. The strip this replaced spent ~130px of
+   vertical space on four numbers; this spends about the same on the pump's
+   whole state, so the board below it doesn't move down. */
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-text-muted);
+  border-radius: 8px;
+  background: var(--color-surface);
+  font-size: 0.75rem;
+}
+
+/* The left edge is the whole verdict at a glance — colour is the only thing
+   read from across the room, so it carries the state and nothing else does. */
+.rail[data-tone='working'] { border-left-color: var(--color-accent); }
+.rail[data-tone='idle']    { border-left-color: var(--color-success); }
+.rail[data-tone='alert']   { border-left-color: var(--color-danger); }
+.rail[data-tone='off']     { border-left-color: var(--color-text-muted); }
+
+/* ── Band 1: liveness ───────────────────────────────────────────── */
+
+.rail__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.rail__verdict {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.rail[data-tone='off'] .rail__verdict { color: var(--color-text-muted); }
+.rail[data-tone='alert'] .rail__verdict { color: var(--color-danger); }
+
+.rail__meta {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rail__bad {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.rail__link {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  text-decoration: none;
+
+  &:hover { color: var(--color-accent); }
+}
+
+.rail__now {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rail__run {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.rail__run--idle { color: var(--color-text-muted); }
+
+.rail__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  flex-shrink: 0;
+  animation: rail-pulse 1.4s ease-in-out infinite;
+}
+
+/* Named for this component: @keyframes are global by name, and item-header and
+   the hermes pages already own theirs. */
+@keyframes rail-pulse {
+  0%, 100% { opacity: 1;    transform: scale(1);   }
+  50%      { opacity: 0.35; transform: scale(0.8); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail__dot { animation: none; opacity: 0.85; }
+}
+
+.rail__run-stage {
+  min-width: 5.5rem;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.rail__run-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text);
+}
+
+.rail__run-clock {
+  margin-left: auto;
+  color: var(--color-text-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Band 2: stages ─────────────────────────────────────────────── */
+
+.rail__stages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.4rem 0 0;
+  border-top: 1px solid var(--color-border);
+  list-style: none;
+}
+
+.rail__stage {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.rail__stage--off { opacity: 0.55; }
+
+.rail__stage-label {
+  min-width: 5.5rem;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.rail__depth {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  font-variant-numeric: tabular-nums;
+
+  strong { color: var(--color-warning); }
+}
+
+/* Nothing eligible is not a small number, it is a closed door. */
+.rail__depth--zero { color: var(--color-text-muted) !important; }
+
+.rail__depth-of { color: var(--color-text-muted); }
+
+.rail__stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+
+  button {
+    width: 1.1rem;
+    height: 1.1rem;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    &:disabled { opacity: 0.35; cursor: not-allowed; }
+  }
+}
+
+.rail__per-tick {
+  min-width: 1rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.rail__rate {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ── Band 3: rhythm ─────────────────────────────────────────────── */
+
+.rail__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.rail__recent {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-muted);
+}
+
+.rail__completion {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.rail__completion .rail__run-stage {
+  min-width: 0;
+  color: var(--color-text-soft);
+  font-weight: 500;
+}
+
+.rail__completion--failed .rail__run-stage { color: var(--color-danger); }
+
+.rail__completion--idle { color: var(--color-text-muted); }
+
+.rail__alerts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 0 0 0 auto;
+}
+
+.rail__alert-detail {
+  overflow: hidden;
+  max-width: 28rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text-muted);
+}

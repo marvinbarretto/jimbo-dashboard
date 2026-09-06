@@ -1,0 +1,124 @@
+<section class="rail" [attr.data-tone]="verdict().tone">
+
+  <!-- Band 1 — is it alive, and what is it holding right now -->
+  <header class="rail__head">
+    <app-ui-toggle
+      label="Grooming pump"
+      [checked]="enabled()"
+      [disabled]="isSaving(keys.enabled)"
+      (changed)="onToggleEnabled($event)" />
+
+    <span class="rail__verdict">{{ verdict().label }}</span>
+
+    <span class="rail__meta">
+      {{ groomer() }}
+      @if (worker(); as w) {
+        · {{ w.status }}
+      } @else {
+        · <span class="rail__bad">absent</span>
+      }
+    </span>
+
+    <span class="rail__meta">tick {{ tickMinutes }}m · {{ ticksPerDay() }}/day</span>
+
+    @if (lastEnqueueAt(); as at) {
+      <span class="rail__meta">last enqueue <app-ui-timestamp [value]="at" /></span>
+    }
+
+    <a class="rail__link" [routerLink]="['/config', 'pipeline']">all valves →</a>
+  </header>
+
+  <ul class="rail__now">
+    @for (run of liveRuns(); track run.id) {
+      <li class="rail__run">
+        <!-- Decorative: the clock beside it carries the meaning; the dot only
+             says that number is still moving. -->
+        <span class="rail__dot" aria-hidden="true"></span>
+        <span class="rail__run-stage">{{ run.stage }}</span>
+        <span class="rail__run-title">{{ run.title }}</span>
+        <span class="rail__run-clock">{{ run.elapsed }}</span>
+      </li>
+    } @empty {
+      <li class="rail__run rail__run--idle">
+        nothing in flight
+        @if (lastCompletedAt(); as at) {
+          · last run <app-ui-timestamp [value]="at" />
+        }
+      </li>
+    }
+  </ul>
+
+  <!-- Band 2 — the four valves that decide all of the above -->
+  <ol class="rail__stages">
+    @for (stage of stages(); track stage.id) {
+      <li class="rail__stage" [class.rail__stage--off]="stage.off" [attr.data-stage]="stage.id">
+        <span class="rail__stage-label">{{ stage.label }}</span>
+
+        <span class="rail__depth">
+          @if (stage.eligible !== null) {
+            <strong [class.rail__depth--zero]="stage.eligible === 0">{{ stage.eligible }}</strong>
+            <span class="rail__depth-of">of {{ stage.atStatus }}</span>
+          } @else {
+            <span class="rail__depth-of">depth unknown</span>
+          }
+        </span>
+
+        <span class="rail__stepper">
+          <button
+            type="button"
+            [attr.aria-label]="'Decrease ' + stage.label + ' per tick'"
+            [disabled]="isSaving(stage.key) || stage.perTick <= 0"
+            (click)="onStep(stage.key, stage.perTick, -1)">−</button>
+          <span class="rail__per-tick">{{ stage.perTick }}</span>
+          <button
+            type="button"
+            [attr.aria-label]="'Increase ' + stage.label + ' per tick'"
+            [disabled]="isSaving(stage.key)"
+            (click)="onStep(stage.key, stage.perTick, 1)">+</button>
+        </span>
+
+        <span class="rail__rate">
+          @if (stage.off) {
+            <!-- A zero in a row of numbers reads as a throttle. It is a switch. -->
+            off — never runs
+          } @else {
+            {{ stage.perDay }}/day
+            @if (stage.drainDays; as days) {
+              · ~{{ days }}d to clear
+            }
+          }
+        </span>
+      </li>
+    }
+  </ol>
+
+  <!-- Band 3 — the rhythm, and anything that broke -->
+  <footer class="rail__foot">
+    <ul class="rail__recent">
+      @for (run of recent(); track run.id) {
+        <li class="rail__completion" [class.rail__completion--failed]="run.failed">
+          <span class="rail__run-stage">{{ run.stage }}</span>
+          <span class="rail__completion-meta">{{ run.duration }} · {{ run.model }} · {{ run.cost }}</span>
+          <app-ui-timestamp [value]="run.at" />
+        </li>
+      } @empty {
+        <li class="rail__completion rail__completion--idle">no groom runs in the recent window</li>
+      }
+    </ul>
+
+    @if (failures().length || stuck().length) {
+      <p class="rail__alerts" role="note">
+        @if (failures().length) {
+          <span class="rail__bad">{{ failures().length }} failed</span>
+          @if (failures()[0].error_message; as msg) {
+            <span class="rail__alert-detail">{{ msg }}</span>
+          }
+        }
+        @if (stuck().length) {
+          <span class="rail__bad">{{ stuck().length }} stuck</span>
+          <span class="rail__alert-detail">lock held with no dispatch behind it</span>
+        }
+      </p>
+    }
+  </footer>
+</section>

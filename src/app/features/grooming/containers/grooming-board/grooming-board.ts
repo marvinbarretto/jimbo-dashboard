@@ -4,7 +4,7 @@ import { take } from 'rxjs';
 import { VaultItemsService } from '@features/vault-items/data-access/vault-items.service';
 import { VaultItemCommands } from '@features/vault-items/commands/vault-item-commands';
 import { GroomingCommands } from '@features/grooming/commands/grooming-commands';
-import { GroomingHealthStrip } from '../../components/grooming-health-strip/grooming-health-strip';
+import { GroomingPumpRail } from '../../components/grooming-pump-rail/grooming-pump-rail';
 import { ActorsService } from '@features/actors/data-access/actors.service';
 import { ProjectsService } from '@features/projects/data-access/projects.service';
 import { VaultItemProjectsService } from '@features/vault-items/data-access/vault-item-projects.service';
@@ -90,7 +90,7 @@ interface ColumnView {
 
 @Component({
   selector: 'app-grooming-board',
-  imports: [VaultCard, KanbanColumn, KanbanFilterBar, UiButtonLink, GroomingHealthStrip],
+  imports: [VaultCard, KanbanColumn, KanbanFilterBar, UiButtonLink, GroomingPumpRail],
   templateUrl: './grooming-board.html',
   styleUrl: './grooming-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
