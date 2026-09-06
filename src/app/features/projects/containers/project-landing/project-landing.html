@@ -611,7 +611,7 @@
         </app-ui-section>
 
         <app-ui-section title="Brief — autonomy" [collapsible]="false">
-          <p class="autonomy__caption">Boris / Kipper policy for this project</p>
+          <p class="autonomy__caption">Approval policy for commissioned work</p>
           <div class="autonomy" role="radiogroup" aria-label="Autonomy level">
             @for (opt of autonomyOptions; track opt.value) {
               <label class="autonomy__row" [class.autonomy__row--selected]="(p.autonomy_level ?? '') === opt.value">
@@ -631,6 +631,11 @@
               </label>
             }
           </div>
+          <p class="autonomy__scope">
+            Read by manually enqueued dispatches only. The automatic commission
+            pump does not consult this — it is scoped by the global
+            <code>pipeline.autonomous_projects</code> valve instead.
+          </p>
         </app-ui-section>
       </app-ui-stack>
     </div>

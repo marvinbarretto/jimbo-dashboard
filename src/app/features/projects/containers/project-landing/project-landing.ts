@@ -624,11 +624,17 @@ export class ProjectLanding {
 
   // Autonomy level governs how much Boris/Kipper may do without a human in the
   // loop on tasks under this project. Null = inherit global default.
+  // Hints state what the value ACTUALLY causes, not what the word suggests.
+  // The only check in the codebase is `autonomy_level !== 'ship'`
+  // (jimbo-api dispatch.ts, the enqueueDispatch autonomy gate), so unset,
+  // 'none' and 'propose' are indistinguishable at runtime — and saying
+  // otherwise turns this radio group into four controls, three of which do
+  // nothing. See docs/architecture/autonomy-and-stewardship.md.
   readonly autonomyOptions: readonly { value: ProjectAutonomyLevel | ''; label: string; hint: string }[] = [
-    { value: '',        label: 'Default (inherit)', hint: 'No project-specific policy — use the global dispatch default.' },
-    { value: 'none',    label: 'None — read-only',  hint: 'Agents may inspect but must not write.' },
-    { value: 'propose', label: 'Propose',           hint: 'Agents prepare changes; a human approves.' },
-    { value: 'ship',    label: 'Ship',              hint: 'Agents may land changes directly.' },
+    { value: '',        label: 'Default (inherit)', hint: 'No project policy set. Behaves as Propose.' },
+    { value: 'none',    label: 'None — read-only',  hint: 'Not enforced today — behaves as Propose. Kept for intent, not effect.' },
+    { value: 'propose', label: 'Propose',           hint: 'A commission lands as “proposed” and waits for your approval.' },
+    { value: 'ship',    label: 'Ship',              hint: 'A commission skips approval and enters the queue directly.' },
   ];
 
   patchAutonomy(id: string, value: string): void {

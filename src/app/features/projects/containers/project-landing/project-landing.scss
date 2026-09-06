@@ -692,6 +692,21 @@
     font-size: 0.78rem;
     line-height: 1.4;
   }
+
+  // The scope caveat sits BELOW the options, not in each hint: it applies to
+  // the whole control, and repeating it four times would bury the difference
+  // between the options in boilerplate.
+  &__scope {
+    margin: var(--s-3) 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.76rem;
+    line-height: 1.5;
+
+    code {
+      font-size: 0.95em;
+      word-break: break-word;
+    }
+  }
 }
 
 .hint {
