@@ -102,6 +102,23 @@
             }
           }
         </span>
+
+        <!-- Flow, not just depth. A queue's depth is a photograph of a river:
+             intake showed "~Xd to clear" for weeks while decompose filled it
+             six times faster than intake emptied it. -->
+        @if (stage.netFlow !== null) {
+          <span class="rail__flow" [class.rail__flow--growing]="stage.netFlow > 0">
+            <span class="rail__key">7d flow</span>
+            <span class="rail__flow-nums">+{{ stage.arrived }} in / −{{ stage.cleared }} out</span>
+            @if (stage.netFlow > 0) {
+              <strong>growing by {{ stage.netFlow }} a week</strong>
+            } @else if (stage.netFlow < 0) {
+              <strong>draining {{ -stage.netFlow }} a week</strong>
+            } @else {
+              <strong>holding level</strong>
+            }
+          </span>
+        }
       </li>
     }
   </ol>
@@ -109,6 +126,9 @@
   <!-- The two denominators on this page are different populations, and the
        board columns below are a third. Say so rather than let them argue. -->
   <p class="rail__legend">
+    <strong>7d flow</strong> counts what arrived at a stage against what it moved on, so a
+    queue that is filling faster than it empties says so instead of showing a drain estimate
+    that assumes nothing new arrives.
     <strong>eligible now</strong> = would be admitted on the next tick under the current
     scope and gates. <strong>at this status</strong> = every note parked at that
     grooming_status, whatever its lifecycle — intake and deep read both read

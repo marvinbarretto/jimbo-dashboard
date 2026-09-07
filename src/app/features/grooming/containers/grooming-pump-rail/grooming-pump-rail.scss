@@ -305,3 +305,20 @@
   text-overflow: ellipsis;
   color: var(--color-text-muted);
 }
+
+// Flow reads alongside the rate, but a growing queue has to be legible at a
+// glance — it is the state that makes the drain estimate above meaningless.
+.rail__flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #667);
+
+  strong { font-weight: 600; }
+}
+
+.rail__flow-nums { font-variant-numeric: tabular-nums; }
+
+.rail__flow--growing strong { color: var(--danger, #8f3a2c); }

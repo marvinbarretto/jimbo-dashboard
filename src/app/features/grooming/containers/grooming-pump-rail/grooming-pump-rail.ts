@@ -86,6 +86,10 @@ interface StageView {
   readonly atStatus: number | null;
   readonly perDay: number;
   readonly drainDays: number | null;
+  /** Arrivals minus clearances over 7d. Positive means the queue is growing. */
+  readonly netFlow: number | null;
+  readonly arrived: number | null;
+  readonly cleared: number | null;
   readonly off: boolean;
 }
 
@@ -250,6 +254,9 @@ export class GroomingPumpRail {
         atStatus: q?.at_status ?? null,
         perDay: perTick[id] * this.ticksPerDay(),
         drainDays: this.pipeline.drainDays(id),
+        netFlow: this.pipeline.netFlow7d(id),
+        arrived: q?.arrived_7d ?? null,
+        cleared: q?.cleared_7d ?? null,
         off: perTick[id] <= 0,
       };
     });

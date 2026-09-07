@@ -47,6 +47,24 @@ describe('PipelineControlService', () => {
       .flush({ ts: '2026-08-24T00:00:00Z', stages: [], ticks_per_day: 48 });
   }
 
+  /** init(), but with a real stage queue so flow/drain can be exercised. */
+  async function initWithQueue(stage: Record<string, unknown>): Promise<void> {
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        PipelineControlService,
+      ],
+    });
+    service = TestBed.inject(PipelineControlService);
+    http = TestBed.inject(HttpTestingController);
+    http.expectOne(url).flush({});
+    http.expectOne(`${environment.dashboardApiUrl}/api/pipeline/queue`)
+      .flush({ ts: '2026-09-07T00:00:00Z', stages: [stage], ticks_per_day: 48 });
+    await Promise.resolve();
+  }
+
   afterEach(() => {
     try {
       http.verify();
@@ -157,6 +175,46 @@ describe('PipelineControlService', () => {
       expect(service.error()).toContain(PIPELINE_KEYS.enabled);
       expect(service.enabled()).toBe(false);
       expect(service.savingKey()).toBeNull();
+    });
+  });
+
+  // The drain estimate used to be eligible / per_day, which assumes nothing new
+  // arrives. Measured 2026-09-07: intake cleared 44 items in ten days while
+  // decompose created 275, so the queue grew by 231 while the rail displayed a
+  // finite, shrinking-looking number.
+  describe('queue flow', () => {
+    it('reports a growing queue as growing', async () => {
+      await initWithQueue({ stage: 'intake', at_status: 317, eligible: 317, per_tick: 1, arrived_7d: 190, cleared_7d: 30 });
+      expect(service.netFlow7d('intake')).toBe(160);
+    });
+
+    it('refuses a drain estimate while more arrives than leaves', async () => {
+      await initWithQueue({ stage: 'intake', at_status: 317, eligible: 317, per_tick: 1, arrived_7d: 190, cleared_7d: 30 });
+      expect(service.drainDays('intake')).toBeNull();
+    });
+
+    it('gives no drain estimate for a queue holding exactly level', async () => {
+      await initWithQueue({ stage: 'intake', at_status: 100, eligible: 100, per_tick: 1, arrived_7d: 50, cleared_7d: 50 });
+      expect(service.netFlow7d('intake')).toBe(0);
+      expect(service.drainDays('intake')).toBeNull();
+    });
+
+    // net -35/week = 5/day, so 70 eligible takes 14 days — the per-tick ceiling
+    // (48/day) would have claimed 2.
+    it('estimates the drain from observed flow, not the per-tick ceiling', async () => {
+      await initWithQueue({ stage: 'intake', at_status: 70, eligible: 70, per_tick: 1, arrived_7d: 5, cleared_7d: 40 });
+      expect(service.drainDays('intake')).toBe(14);
+    });
+
+    it('falls back to the per-tick ceiling when the API sends no flow data', async () => {
+      await initWithQueue({ stage: 'intake', at_status: 96, eligible: 96, per_tick: 1 });
+      expect(service.netFlow7d('intake')).toBeNull();
+      expect(service.drainDays('intake')).toBe(2); // 96 eligible / 48 per day
+    });
+
+    it('has nothing to drain when the queue is empty', async () => {
+      await initWithQueue({ stage: 'intake', at_status: 0, eligible: 0, per_tick: 1, arrived_7d: 0, cleared_7d: 0 });
+      expect(service.drainDays('intake')).toBeNull();
     });
   });
 });

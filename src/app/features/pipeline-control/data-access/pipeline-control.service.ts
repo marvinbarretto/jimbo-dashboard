@@ -23,6 +23,10 @@ export interface StageQueue {
   /** What the pump would actually admit right now. */
   eligible: number;
   per_tick: number;
+  /** Arrived at this stage in the last 7 days. */
+  arrived_7d: number;
+  /** Moved on by this stage in the last 7 days. */
+  cleared_7d: number;
 }
 
 export interface PipelineQueue {
@@ -219,10 +223,40 @@ export class PipelineControlService {
    * rate is 0 (never drains) or there is nothing waiting — both of which are
    * states a number would misrepresent as progress.
    */
+  /**
+   * Net weekly flow: arrivals minus clearances. Positive means the queue grew.
+   *
+   * Null when the API predates these fields, so an older payload renders no
+   * claim rather than a confident zero.
+   */
+  netFlow7d(stage: string): number | null {
+    const q = this.queueFor(stage);
+    if (!q || q.arrived_7d == null || q.cleared_7d == null) return null;
+    return q.arrived_7d - q.cleared_7d;
+  }
+
+  /**
+   * Days to clear the queue — or null when it is not draining at all.
+   *
+   * This used to be eligible / per_day, which assumes nothing new arrives.
+   * Measured 2026-09-07: intake cleared 44 items in ten days while decompose
+   * created 275, so the queue grew by 231 while this method returned a finite,
+   * shrinking-looking number. A stage taking in more than it clears has no
+   * drain time, and the honest answer is to say so rather than divide.
+   *
+   * Where flow data exists it beats the per-tick ceiling, because the ceiling
+   * is what the valve permits and the flow is what actually happened.
+   */
   drainDays(stage: string): number | null {
     const q = this.queueFor(stage);
-    const perDay = (q?.per_tick ?? 0) * this.ticksPerDay();
-    if (!q || q.eligible === 0 || perDay <= 0) return null;
+    if (!q || q.eligible === 0) return null;
+
+    const net = this.netFlow7d(stage);
+    if (net !== null && net >= 0) return null;      // growing or static: no drain
+    if (net !== null) return Math.ceil(q.eligible / (-net / 7));
+
+    const perDay = (q.per_tick ?? 0) * this.ticksPerDay();
+    if (perDay <= 0) return null;
     return Math.ceil(q.eligible / perDay);
   }
 
