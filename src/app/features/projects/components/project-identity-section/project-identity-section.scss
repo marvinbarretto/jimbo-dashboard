@@ -1,0 +1,183 @@
+// Zone 1 — identity. The only block on the page that gets reading space.
+//
+// Everything below it lives inside a bordered UiSection; this one deliberately
+// does not. It sits directly on the page ground and closes with a heavy accent
+// rule, so the eye reads "this is the project" before it reads "these are its
+// sections". That contrast is the whole hierarchy device — no eyebrow labels,
+// no extra chrome.
+//
+// Spacing tokens (--s-*) come from .project-landing on the container; the
+// fallbacks keep this readable if it is ever mounted on its own.
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4, 1rem);
+  padding-bottom: var(--s-4, 1rem);
+  border-bottom: 3px solid var(--project-accent, var(--color-accent));
+
+  &__desc {
+    display: block;
+    width: 100%;
+    margin: 0;
+    max-width: 68ch;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    color: var(--color-text);
+  }
+
+  // ── Provenance strip ──────────────────────────────────────────────
+  &__provenance {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-2, 0.5rem);
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+
+    a {
+      color: var(--project-accent, var(--color-accent));
+    }
+  }
+
+  &__sep {
+    color: var(--color-border);
+  }
+
+  &__unowned {
+    font-style: italic;
+  }
+
+  &__code,
+  &__sha {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.72rem;
+    padding: 0.02rem 0.25rem;
+    background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  }
+
+  &__synced {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+
+    // Amber, not red: the copy is probably still correct — what is broken is
+    // the mechanism that keeps it so.
+    &--overdue {
+      color: color-mix(in srgb, var(--color-warning) 85%, var(--color-text));
+    }
+  }
+
+  // ── Purpose grid ──────────────────────────────────────────────────
+  // Intent leads at a real reading measure; personas and success criteria
+  // stack beside it. Below 60rem they fall into one column in source order,
+  // which is already the right reading order.
+  &__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: var(--s-5, 1.5rem);
+    align-items: start;
+  }
+
+  &__lead {
+    min-width: 0;
+    max-width: 70ch;
+  }
+
+  &__side {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4, 1rem);
+  }
+
+  // Intent is the sentence that answers "why does this exist" — it reads at
+  // body size, not at the 0.83rem the rest of the page uses for data.
+  &__lead ::ng-deep .ui-checklist__text {
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  // ── Blocker / scope band ──────────────────────────────────────────
+  &__now {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--s-5, 1.5rem);
+    align-items: start;
+  }
+
+  // A set blocker earns a left rule; an empty one stays a plain field, because
+  // "nothing is blocking this" is a real and common answer, not an omission.
+  &__blocker {
+    min-width: 0;
+
+    &--set {
+      border-left: 3px solid var(--color-warning, #f59e0b);
+      padding-left: var(--s-3, 0.75rem);
+    }
+  }
+
+  // ── Raw current_state fold ────────────────────────────────────────
+  &__state {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2, 0.5rem);
+    min-width: 0;
+  }
+
+  &__state-toggle {
+    align-self: flex-start;
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+
+    &::before {
+      content: '▸';
+      display: inline-block;
+      margin-right: 0.4rem;
+      transition: transform 80ms linear;
+    }
+
+    &[aria-expanded='true']::before {
+      transform: rotate(90deg);
+    }
+
+    &:hover { color: var(--color-text); }
+
+    &:focus-visible {
+      outline: 2px solid var(--project-accent, var(--color-accent));
+      outline-offset: 2px;
+    }
+  }
+
+  // ── Scale sentence ────────────────────────────────────────────────
+  // Where the old Items / Active / Done / Epics / Focus / Sessions tiles went.
+  // They describe how big the project is, which is worth knowing and is not
+  // worth the top of the page.
+  &__scale {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (max-width: 60rem) {
+  .identity {
+    &__grid,
+    &__now {
+      grid-template-columns: 1fr;
+      gap: var(--s-4, 1rem);
+    }
+  }
+}

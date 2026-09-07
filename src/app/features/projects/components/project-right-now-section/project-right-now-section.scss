@@ -1,0 +1,145 @@
+// Zone 2 — the page's numbers.
+//
+// The other half of the page's boldness (identity has the words). Figures set
+// in tabular mono at display size, separated by hairlines rather than boxed
+// into cards — a card per number would make four peers again, which is the
+// pattern this page is trying to leave behind.
+
+.right-now {
+  &__figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+
+  &__figure {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: var(--s-3, 0.75rem) var(--s-4, 1rem);
+    border-left: 1px solid var(--color-border);
+    min-width: 0;
+
+    &:first-child { border-left: 0; }
+
+    // The one figure that can be a problem rather than a workload.
+    &--alert {
+      background: color-mix(in srgb, var(--color-danger) 7%, transparent);
+    }
+  }
+
+  &__count {
+    font-family: var(--font-mono, monospace);
+    font-size: 1.9rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: var(--color-text);
+
+    // A measured zero is a real answer and should look calm, not absent.
+    &--zero {
+      color: var(--color-text-muted);
+      font-weight: 400;
+    }
+  }
+
+  &__figure--alert &__count {
+    color: color-mix(in srgb, var(--color-danger) 80%, var(--color-text));
+  }
+
+  // Never a dash and never a 0: an instrument that did not report says so.
+  &__unmeasured {
+    font-size: 0.85rem;
+    line-height: 1.9rem;
+    font-style: italic;
+    color: var(--color-text-muted);
+  }
+
+  &__label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-text-muted);
+  }
+
+  &__clear {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  &__note {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+  }
+
+  // ── Rows ──────────────────────────────────────────────────────────
+  &__list {
+    --proj-tint: var(--project-accent, var(--color-accent));
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2, 0.5rem);
+    padding: var(--s-2, 0.5rem) 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.83rem;
+
+    &:last-child { border-bottom: none; }
+  }
+
+  &__status {
+    flex-shrink: 0;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.1rem 0.4rem;
+
+    &--proposed {
+      background: color-mix(in srgb, var(--color-warning, #f59e0b) 15%, transparent);
+      color: color-mix(in srgb, var(--color-warning, #f59e0b) 75%, var(--color-text));
+    }
+
+    &--running {
+      background: color-mix(in srgb, var(--color-success, #22c55e) 15%, transparent);
+      color: color-mix(in srgb, var(--color-success, #22c55e) 70%, var(--color-text));
+    }
+
+    &--approved {
+      background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+      color: color-mix(in srgb, var(--color-accent) 70%, var(--color-text));
+    }
+  }
+
+  &__title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-text);
+  }
+
+  &__actor {
+    flex-shrink: 0;
+    font-size: 0.74rem;
+    color: var(--color-text-muted);
+  }
+
+  &__when {
+    flex-shrink: 0;
+    margin-left: auto;
+    font-size: 0.74rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+}

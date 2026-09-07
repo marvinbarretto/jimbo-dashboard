@@ -1,5 +1,9 @@
 @if (isRelevant()) {
-  <app-ui-section title="Brief — operating context" [collapsible]="true">
+  <app-ui-section
+    title="Operating context"
+    [collapsible]="true"
+    [expanded]="expanded()"
+    (toggled)="toggle()">
     <app-ui-stack gap="md">
       <app-project-brief-field
         label="Entry points"

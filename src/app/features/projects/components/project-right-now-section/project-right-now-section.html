@@ -1,0 +1,97 @@
+<app-ui-section title="Right now" [meta]="meta()" [collapsible]="false">
+  <app-ui-stack gap="md">
+    <div class="right-now__figures">
+      @for (f of figures(); track f.key) {
+        <div class="right-now__figure" [class.right-now__figure--alert]="f.alert">
+          @if (f.unmeasured) {
+            <span class="right-now__unmeasured">unmeasured</span>
+          } @else {
+            <span
+              class="right-now__count"
+              [class.right-now__count--zero]="f.count === 0">{{ f.count }}</span>
+          }
+          <span class="right-now__label">{{ f.label }}</span>
+        </div>
+      }
+    </div>
+
+    @if (allClear()) {
+      <p class="right-now__clear">Nothing is waiting on you here.</p>
+    }
+
+    @if (anyUnmeasured()) {
+      <p class="right-now__note">
+        One of these reads did not answer — those figures are unknown, not clear.
+      </p>
+    }
+
+    <!-- Overdue tasks and system-flagged `assertion` items: things that need a
+         decision now, not reference material to muse over. -->
+    @if (attentionItems().length > 0) {
+      <ul class="right-now__list" aria-label="Items needing a decision">
+        @for (item of attentionItems(); track item.id) {
+          <li class="right-now__item">
+            <app-ui-badge [tone]="isFlagged(item) ? 'warning' : 'danger'" [subtle]="true">
+              {{ isFlagged(item) ? 'flagged' : 'overdue' }}
+            </app-ui-badge>
+            <app-vault-chip
+              [kind]="item.parent_id ? 'subtask' : 'task'"
+              [itemType]="item.type"
+              size="sm"
+              [seq]="item.seq"
+              [title]="item.title" />
+            <span class="right-now__when">
+              @if (item.due_at) {
+                due {{ item.due_at | relativeTime }}
+              } @else {
+                {{ item.created_at | relativeTime }}
+              }
+            </span>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (proposedTasks().length > 0) {
+      <ul class="right-now__list" aria-label="Commissions awaiting approval">
+        @for (task of proposedTasks(); track task.id) {
+          <li class="right-now__item">
+            <span class="right-now__status right-now__status--proposed">proposed</span>
+            <span class="right-now__title">{{ task.task_title ?? task.task_id }}</span>
+            @if (task.executor) {
+              <span class="right-now__actor">&#64;{{ task.executor }}</span>
+            }
+            @if (taskWhen(task); as when) {
+              <span class="right-now__when">{{ when | relativeTime }}</span>
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    @if (inFlightTasks().length > 0) {
+      <ul class="right-now__list" aria-label="Dispatches in flight">
+        @for (task of inFlightTasks(); track task.id) {
+          <li class="right-now__item">
+            <span class="right-now__status right-now__status--{{ task.status }}">{{ task.status }}</span>
+            <span class="right-now__title">{{ task.task_title ?? task.task_id }}</span>
+            @if (task.executor) {
+              <span class="right-now__actor">&#64;{{ task.executor }}</span>
+            }
+            @if (taskWhen(task); as when) {
+              <span class="right-now__when">{{ when | relativeTime }}</span>
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    @if (pendingProposals() > 0) {
+      <p class="right-now__note">
+        {{ pendingProposals() }} belief
+        {{ pendingProposals() === 1 ? 'proposal is' : 'proposals are' }}
+        waiting on a yes or no. Answer them from Telegram or the beliefs page.
+      </p>
+    }
+  </app-ui-stack>
+</app-ui-section>

@@ -1,0 +1,39 @@
+<app-ui-section
+  title="Autonomy"
+  [meta]="meta()"
+  [collapsible]="true"
+  [expanded]="expanded()"
+  (toggled)="toggle()">
+  <p class="autonomy__caption">Approval policy for commissioned work</p>
+
+  <!-- Plain div + labels, not <fieldset>/<legend>: the latter renders badly
+       inside flex/grid containers. -->
+  <div class="autonomy" role="radiogroup" aria-label="Autonomy level">
+    @for (opt of options; track opt.value) {
+      <label class="autonomy__row" [class.autonomy__row--selected]="current() === opt.value">
+        <input
+          type="radio"
+          class="autonomy__input"
+          name="autonomy_level"
+          [value]="opt.value"
+          [checked]="current() === opt.value"
+          [disabled]="isRepoSynced()"
+          (change)="select(opt.value)"
+        />
+        <span class="autonomy__body">
+          <strong class="autonomy__label">{{ opt.label }}</strong>
+          <span class="autonomy__hint">{{ opt.hint }}</span>
+        </span>
+      </label>
+    }
+  </div>
+
+  <!-- The caveat sits below the options, not in each hint: it applies to the
+       whole control, and repeating it four times would bury the difference
+       between the options in boilerplate. -->
+  <p class="autonomy__scope">
+    Read by manually enqueued dispatches only. The automatic commission pump
+    does not consult this — it is scoped by the global
+    <code>pipeline.autonomous_projects</code> valve instead.
+  </p>
+</app-ui-section>

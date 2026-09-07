@@ -29,20 +29,20 @@ import { RelativeTimePipe } from '@shared/pipes/relative-time.pipe';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { UiDropdown } from '@shared/components/ui-dropdown/ui-dropdown';
 import { rankEpicCandidates, type EpicCandidate } from '@domain/vault/epic-candidates';
-import { isSyncOverdue } from '@domain/projects/manifest-sync';
 import { ProjectsService } from '../../data-access/projects.service';
 import { ProjectActivityEventsService } from '../../data-access/project-activity-events.service';
 import { ActorsService } from '../../../actors/data-access/actors.service';
 import { VaultItemsService } from '../../../vault-items/data-access/vault-items.service';
 import { VaultItemProjectsService } from '../../../vault-items/data-access/vault-item-projects.service';
 import { FocusSessionsService } from '../../../pomo/data-access/focus-sessions.service';
-import { ProjectStatTile } from '../../components/project-stat-tile/project-stat-tile';
 import { ProjectFocusSessionRow } from '../../components/project-focus-session-row/project-focus-session-row';
 import { ProjectBriefField } from '../../components/project-brief-field/project-brief-field';
-import { ProjectBriefBulletField } from '../../components/project-brief-bullet-field/project-brief-bullet-field';
 import { ProjectConstraintsSection } from '../../components/project-constraints-section/project-constraints-section';
 import { ProjectOperatingContextSection } from '../../components/project-operating-context-section/project-operating-context-section';
 import { ProjectDeliverySection } from '../../components/project-delivery-section/project-delivery-section';
+import { ProjectIdentitySection, type ProjectScale } from '../../components/project-identity-section/project-identity-section';
+import { ProjectRightNowSection, type DispatchTask } from '../../components/project-right-now-section/project-right-now-section';
+import { ProjectAutonomySection } from '../../components/project-autonomy-section/project-autonomy-section';
 import { VaultChip } from '@shared/components/vault-chip/vault-chip';
 import { briefActorProjectTrigger, briefVaultItemTrigger } from '../../util/brief-mention-triggers';
 import type { Priority, VaultItem } from '@domain/vault/vault-item';
@@ -52,6 +52,7 @@ import { PriorityBadge } from '@shared/components/priority-badge/priority-badge'
 import type { ProjectActivityEvent } from '@domain/activity/activity-event';
 import type { ActorId } from '@domain/ids';
 import type { ProjectAutonomyLevel, UpdateProjectPayload } from '@domain/projects';
+import { hasCodebase } from '@domain/projects';
 
 // Epic + its child items, split into outstanding (active) and done. The
 // landing page renders one block per epic so contributors can see at a glance
@@ -72,19 +73,11 @@ interface ProjectUnderstanding {
   last_updated: string | null;
 }
 
-interface DispatchTask {
-  id: number;
-  task_id: string;
-  task_title: string | null;
-  task_seq: number | null;
-  status: string;
-  executor: string | null;
-  skill: string | null;
-  flow: string;
-  started_at: string | null;
-  approved_at: string | null;
-  result_summary: string | null;
-}
+// How far back the focus-session read goes. Declared as a constant because
+// the number is rendered next to the totals it bounds — an undeclared
+// denominator turns "0 sessions" into something that reads as idleness rather
+// than as a window that happened to be empty.
+const FOCUS_WINDOW_DAYS = 30;
 
 // Filter dimension ids for the GitHub issues panel — page-scoped, not shared
 // with the vault-item filter-groups (@shared/kanban/filter-groups), since
@@ -118,8 +111,23 @@ interface ProjectActivityItem {
   reason: string | null;
 }
 
-// Project landing page — the home for a project. Two-column layout on
-// desktop: epics/items dominate the left, brief + facts pinned on the right.
+// Project landing page — the home for a project.
+//
+// Ranked, not tiled. The page used to be ~16 peer sections in two columns:
+// purpose, personas and success criteria sat at the BOTTOM of the right-hand
+// column, below Facts, while six vault counters (Items / Active / Done /
+// Epics / Focus / Sessions) led the page without answering what was happening
+// on it. It reads top-down now, in six zones:
+//
+//   1 Identity   — what this project is (was: bottom of the aside)
+//   2 Right now  — what needs a person today (was: six vault stat tiles)
+//   3 Delivery   — may agents act, and what has shipped
+//   4 Work       — epics, issues, loose items, repos
+//   5 Memory     — what already happened here (collapsed)
+//   6 Reference  — lookups (collapsed)
+//
+// Nothing was removed. The counters that led the page now read as a sentence
+// under Identity, and every section that existed is still here, ranked.
 @Component({
   selector: 'app-project-landing',
   imports: [
@@ -137,14 +145,15 @@ interface ProjectActivityItem {
     UiStack,
     RelativeTimePipe,
     MarkdownPipe,
-    ProjectStatTile,
     VaultChip,
     ProjectFocusSessionRow,
     ProjectBriefField,
-    ProjectBriefBulletField,
     ProjectConstraintsSection,
     ProjectOperatingContextSection,
     ProjectDeliverySection,
+    ProjectIdentitySection,
+    ProjectRightNowSection,
+    ProjectAutonomySection,
     ActorChip,
     UiDataTable,
     UiDropdown,
@@ -178,29 +187,6 @@ export class ProjectLanding {
 
   readonly project = computed(() => this.projects.getById(this.id() ?? ''));
 
-  // Repo-owned when a manifest sync has stamped synced_at. The operating fields
-  // the sync writes (intent, entry_points, conventions_url, footguns,
-  // out_of_scope, autonomy) then render read-only — the repo is the source of
-  // truth. Manifest-less projects keep full inline-edit.
-  readonly isRepoSynced = computed(() => !!this.project()?.synced_at);
-
-  /**
-   * True when the manifest sweep hasn't run within its schedule.
-   *
-   * Deliberately NOT "synced_at is old". A six-week-old copy of a manifest
-   * nobody has edited in six months is perfectly current; elapsed time is not
-   * staleness. What this catches is the failure that actually occurred — the
-   * launchd agent died on a PATH fault and failed silently ten times while the
-   * page cheerfully reported "6 weeks ago" as though that were fine.
-   *
-   * Drift (the repo moved but we haven't re-synced) is deliberately NOT claimed
-   * here: nothing observes the repo between sweeps — the GitHub webhook handles
-   * issues and pull_request, not push — so asserting freshness we cannot see
-   * would be worse than admitting the bound. Within the window, "up to 72h
-   * behind" is the honest guarantee; healthchecks.io alerts independently.
-   */
-  readonly syncOverdue = computed(() => isSyncOverdue(this.project()?.synced_at, Date.now()));
-
   // httpResource — signal-based; re-fetches whenever the route id changes.
   // experimental API (Angular 19.2+) — no stability concern at Angular 21.
   readonly understandingResource = httpResource<ProjectUnderstanding>(() => {
@@ -210,6 +196,13 @@ export class ProjectLanding {
   });
 
   readonly understanding = this.understandingResource.value;
+
+  /**
+   * Structured beliefs exist to render. `current_state` stores the same
+   * markdown raw, so the identity block folds the raw field away when this is
+   * true rather than showing a store and its rendering side by side.
+   */
+  readonly hasStructuredBeliefs = computed(() => (this.understanding()?.sections?.length ?? 0) > 0);
 
   // Beliefs flagged {open:true} OR containing unconfirmed/open keywords.
   // These surface as a callout at the top of the Understanding section.
@@ -224,13 +217,42 @@ export class ProjectLanding {
     });
   });
 
+  // One read covers both halves of "is an agent mid-flight here" and "is one
+  // waiting on me" — the queue endpoint takes a status set, so asking twice
+  // would only create a window where the two disagree.
   readonly dispatchResource = httpResource<{ items: DispatchTask[]; total: number }>(() => {
     const id = this.id();
     if (!id) return undefined;
-    return `/api/dispatch/queue?status=running,approved&project_id=${id}&limit=10`;
+    return `/api/dispatch/queue?status=proposed,approved,running&project_id=${id}&limit=20`;
   });
 
-  readonly inFlightTasks = computed(() => this.dispatchResource.value()?.items ?? []);
+  private readonly dispatchItems = computed(() => this.dispatchResource.value()?.items ?? []);
+
+  readonly proposedTasks = computed(() => this.dispatchItems().filter(t => t.status === 'proposed'));
+  readonly inFlightTasks = computed(() =>
+    this.dispatchItems().filter(t => t.status === 'approved' || t.status === 'running'));
+
+  /**
+   * The queue read has not answered — loading, or it failed. Passed down so
+   * "Right now" can say "unmeasured" instead of 0: a zero from a request that
+   * never returned reads as an all-clear, which is the one thing it never is.
+   */
+  readonly dispatchUnmeasured = computed(() =>
+    this.dispatchResource.isLoading() || this.dispatchResource.error() != null);
+
+  // Belief proposals the steward raised against this project's understanding,
+  // sitting unanswered. They expire, so an unanswered one is a decision lost
+  // rather than a decision deferred.
+  readonly proposalsResource = httpResource<{ id: string }[]>(() => {
+    const id = this.id();
+    if (!id) return undefined;
+    return `/api/understanding-proposals?status=pending&project_id=${id}`;
+  });
+
+  readonly pendingProposals = computed(() => this.proposalsResource.value()?.length ?? 0);
+
+  readonly proposalsUnmeasured = computed(() =>
+    this.proposalsResource.isLoading() || this.proposalsResource.error() != null);
 
   // Open GitHub issues for this project's repo, annotated with vault sync
   // status — surfaces the backlog GitHub already owns without reinventing it,
@@ -448,7 +470,7 @@ export class ProjectLanding {
   readonly attentionItems = computed<readonly VaultItem[]>(() => {
     const now = Date.now();
     return this.items()
-      .filter(i => isActive(i) && (this.isFlagged(i) || (i.due_at !== null && new Date(i.due_at).getTime() < now)))
+      .filter(i => isActive(i) && (this.isFlagged(i) || this.isOverdue(i, now)))
       .sort((a, b) => {
         // Overdue-longest first; undated (flagged) items sort after dated
         // ones, newest-created first among themselves.
@@ -463,18 +485,26 @@ export class ProjectLanding {
     return (item.type as string) === 'assertion';
   }
 
-  isOverdue(item: VaultItem): boolean {
-    return item.due_at !== null && new Date(item.due_at).getTime() < Date.now();
+  isOverdue(item: VaultItem, now = Date.now()): boolean {
+    return item.due_at !== null && new Date(item.due_at).getTime() < now;
   }
 
+  /**
+   * Every session for this project inside the loaded window — NOT a page of
+   * them. The old version sliced to 8 here and then summed the slice, so the
+   * "Focus" and "Sessions" tiles silently capped at 8 while labelled "last 30
+   * days". The window is declared alongside the number now (see `scale`).
+   */
   readonly sessionsForProject = computed(() => {
     const p = this.project();
     if (!p) return [];
     return this.sessions.recent()
       .filter(s => s.project_id === p.id)
-      .sort((a, b) => b.started_at.localeCompare(a.started_at))
-      .slice(0, 8);
+      .sort((a, b) => b.started_at.localeCompare(a.started_at));
   });
+
+  /** The slice actually rendered as rows; the counts above are the full set. */
+  readonly recentSessions = computed(() => this.sessionsForProject().slice(0, 8));
 
   readonly events = computed(() => {
     const p = this.project();
@@ -483,14 +513,70 @@ export class ProjectLanding {
 
   readonly recentEvents = computed(() => this.events().slice(0, 10));
 
-  // Total focus minutes across the visible recent window. Used as a stat tile
-  // — surfaces "is this project actually getting time?" without needing the
-  // pomo reports page.
+  // Total focus minutes across FOCUS_WINDOW_DAYS — "is this project actually
+  // getting time?" without opening the pomo reports page.
   readonly focusMinutes = computed(() => {
     const total = this.sessionsForProject().reduce((acc, s) => {
       return acc + (s.actual_seconds ?? s.planned_seconds);
     }, 0);
     return Math.round(total / 60);
+  });
+
+  /**
+   * Where the six stat tiles went.
+   *
+   * Items / Active / Done / Epics / Focus / Sessions were the page's headline
+   * numbers and answered none of the questions a project page is opened to
+   * answer. They still say something worth knowing — how big this thing is —
+   * so they read as a sentence beneath the identity block instead.
+   */
+  readonly scale = computed<ProjectScale>(() => ({
+    items:  this.items().length,
+    active: this.activeItems().length,
+    done:   this.doneItems().length,
+    epics:  this.epicItems().length,
+    focusMinutes: this.focusMinutes(),
+    sessions: this.sessionsForProject().length,
+    focusWindowDays: FOCUS_WINDOW_DAYS,
+  }));
+
+  /**
+   * Whether the Work zone applies at all. A travel-planning or life-admin
+   * project with no linked items and no codebase has no epics, no issues, no
+   * loose items and no repos — four empty shells say less than one sentence
+   * admitting there is nothing tracked here yet.
+   */
+  readonly hasWork = computed(() => {
+    const p = this.project();
+    return this.items().length > 0 || (!!p && hasCodebase(p));
+  });
+
+  // ── Section expand state ──────────────────────────────────────────
+  // UiSection is controlled: it renders `expanded` and emits `toggled`, and
+  // does nothing on its own. Every collapsible section on this page was bound
+  // to neither, so "collapsible" ones could not actually be collapsed and
+  // Understanding — the one passing [expanded]="false" — could never be
+  // opened at all. One map, one toggle, so the ranking below the fold is a
+  // default rather than a wall.
+  private readonly _open = signal<Readonly<Record<string, boolean>>>({
+    epics: true, github: true, unassigned: true, repos: true,
+    understanding: false, activity: false, focus: false, done: false,
+    resources: false, facts: false, criteria: false,
+  });
+
+  isOpen(key: string): boolean {
+    return this._open()[key] ?? false;
+  }
+
+  toggleSection(key: string): void {
+    this._open.update(m => ({ ...m, [key]: !(m[key] ?? false) }));
+  }
+
+  /** Focus totals with their window attached — see FOCUS_WINDOW_DAYS. */
+  readonly focusMeta = computed<string>(() => {
+    const n = this.sessionsForProject().length;
+    if (n === 0) return `none in the last ${FOCUS_WINDOW_DAYS} days`;
+    return `${this.focusMinutes()}m across ${n} session${n === 1 ? '' : 's'} in the last ${FOCUS_WINDOW_DAYS} days`;
   });
 
   // Mention triggers shared by every brief textarea. Plain-text inline
@@ -589,7 +675,7 @@ export class ProjectLanding {
     withVaultDetailModal();
 
     // Recent focus sessions aren't loaded by default; this view needs them.
-    this.sessions.loadRecent(30);
+    this.sessions.loadRecent(FOCUS_WINDOW_DAYS);
 
     effect(() => {
       const p = this.project();
@@ -622,23 +708,7 @@ export class ProjectLanding {
     }
   }
 
-  // Autonomy level governs how much Boris/Kipper may do without a human in the
-  // loop on tasks under this project. Null = inherit global default.
-  // Hints state what the value ACTUALLY causes, not what the word suggests.
-  // The only check in the codebase is `autonomy_level !== 'ship'`
-  // (jimbo-api dispatch.ts, the enqueueDispatch autonomy gate), so unset,
-  // 'none' and 'propose' are indistinguishable at runtime — and saying
-  // otherwise turns this radio group into four controls, three of which do
-  // nothing. See docs/architecture/autonomy-and-stewardship.md.
-  readonly autonomyOptions: readonly { value: ProjectAutonomyLevel | ''; label: string; hint: string }[] = [
-    { value: '',        label: 'Default (inherit)', hint: 'No project policy set. Behaves as Propose.' },
-    { value: 'none',    label: 'None — read-only',  hint: 'Not enforced today — behaves as Propose. Kept for intent, not effect.' },
-    { value: 'propose', label: 'Propose',           hint: 'A commission lands as “proposed” and waits for your approval.' },
-    { value: 'ship',    label: 'Ship',              hint: 'A commission skips approval and enters the queue directly.' },
-  ];
-
-  patchAutonomy(id: string, value: string): void {
-    const next = value === '' ? null : (value as ProjectAutonomyLevel);
+  patchAutonomy(id: string, next: ProjectAutonomyLevel | null): void {
     this.projects.update(id, { autonomy_level: next });
   }
 

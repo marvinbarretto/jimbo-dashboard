@@ -25,125 +25,164 @@
       </app-ui-cluster>
     </app-ui-page-header>
 
-    <!-- ── Description (full width) ───────────────────────────────────── -->
-    <app-ui-inline-edit
-      class="project-landing__desc"
-      [value]="p.description ?? ''"
-      kind="textarea"
-      placeholder="Add a description…"
-      ariaLabel="Edit description"
-      [rows]="2"
-      (saved)="patch(p.id, { description: $event || null })"
+    <!-- ══ 1. Identity ══════════════════════════════════════════════════
+         What this project is. Intent, personas and success criteria used to
+         be the last things on the page, below Facts and below the resources.
+         They lead it now — same fields, same edit affordances, moved. -->
+    <app-project-identity-section
+      [project]="p"
+      [triggers]="briefTriggers"
+      [scale]="scale()"
+      [hasStructuredBeliefs]="hasStructuredBeliefs()"
+      (saved)="patch(p.id, $event)"
     />
 
-    <!-- ── Stats row (full width) ─────────────────────────────────────── -->
-    <div class="project-landing__stats">
-      <app-project-stat-tile label="Items" [value]="items().length" />
-      <app-project-stat-tile label="Active" [value]="activeItems().length" />
-      <app-project-stat-tile label="Done" [value]="doneItems().length" />
-      <app-project-stat-tile label="Epics" [value]="epicItems().length" />
-      <app-project-stat-tile label="Focus" [value]="focusMinutes() + 'm'" hint="last 30 days" />
-      <app-project-stat-tile label="Sessions" [value]="sessionsForProject().length" hint="last 30 days" />
-    </div>
+    <!-- ══ 2. Right now ═════════════════════════════════════════════════
+         What replaced the six vault stat tiles: the four things that can be
+         waiting on a person today. -->
+    <app-project-right-now-section
+      [attentionItems]="attentionItems()"
+      [proposedTasks]="proposedTasks()"
+      [inFlightTasks]="inFlightTasks()"
+      [pendingProposals]="pendingProposals()"
+      [dispatchUnmeasured]="dispatchUnmeasured()"
+      [proposalsUnmeasured]="proposalsUnmeasured()"
+    />
 
-    <!-- ── Two-column body ────────────────────────────────────────────── -->
-    <div class="project-landing__body">
-      <!-- LEFT column: work surface ─────────────────────────────────── -->
-      <app-ui-stack class="project-landing__main" gap="lg">
+    <!-- ══ 3. Delivery & autonomy ═══════════════════════════════════════
+         "May agents act here" and "what actually shipped" answer each other,
+         and used to sit at opposite ends of the page. Delivery self-gates to
+         projects with a codebase; the policy control applies to any project,
+         so it stays — folded shut where there is no codebase. -->
+    <app-ui-stack gap="md">
+      <app-project-delivery-section [project]="p" />
+      <app-project-autonomy-section [project]="p" (changed)="patchAutonomy(p.id, $event)" />
+    </app-ui-stack>
 
-        <!-- Attention: overdue tasks + system-flagged `assertion` items —
-             things that need a decision now, not reference material to muse
-             over. Leads the page on purpose. -->
-        @if (attentionItems().length > 0) {
-          <app-ui-section [title]="'Attention (' + attentionItems().length + ')'" [collapsible]="false">
-            <ul class="attention__list">
-              @for (item of attentionItems(); track item.id) {
-                <li class="attention__item">
-                  <app-ui-badge [tone]="isFlagged(item) ? 'warning' : 'danger'" [subtle]="true">
-                    {{ isFlagged(item) ? 'flagged' : 'overdue' }}
-                  </app-ui-badge>
-                  <app-vault-chip
-                    [kind]="item.parent_id ? 'subtask' : 'task'"
-                    [itemType]="item.type"
-                    size="sm"
-                    [seq]="item.seq"
-                    [title]="item.title" />
-                  <span class="attention__meta">
-                    @if (item.due_at) {
-                      due {{ item.due_at | relativeTime }}
-                    } @else {
-                      {{ item.created_at | relativeTime }}
-                    }
-                  </span>
-                </li>
-              }
-            </ul>
-          </app-ui-section>
-        }
+    <!-- ══ 4. Work ══════════════════════════════════════════════════════ -->
+    @if (hasWork()) {
+      <app-ui-stack gap="lg">
+        <!-- Cell templates for both item tables. Hoisted above the sections
+             that use them so they resolve regardless of section order. -->
+        <ng-template #chipCell let-context>
+          <span class="chip-cell">
+            <app-vault-chip
+              [kind]="context.row.original.parent_id ? 'subtask' : 'task'"
+              [itemType]="context.row.original.type"
+              size="sm"
+              [seq]="context.row.original.seq"
+              [title]="context.row.original.title"
+            />
+          </span>
+        </ng-template>
 
-        <!-- Member repos (multi-repo projects). Synced from each repo's
-             docs/repo.md; one operating card per codebase. -->
-        @if (p.repos?.length) {
-          <app-ui-section [title]="'Repos (' + (p.repos?.length ?? 0) + ')'" [collapsible]="false">
-            <app-ui-stack gap="md">
-              @for (r of (p.repos ?? []); track r.repo) {
-                <app-ui-card tone="soft" [compact]="true">
-                  <div class="repo-card">
-                    <div class="repo-card__head">
-                      <code class="repo-card__name">{{ r.repo }}</code>
-                      @if (r.autonomy_level) {
-                        <app-ui-badge tone="neutral" [subtle]="true">{{ r.autonomy_level }}</app-ui-badge>
-                      }
-                      @if (r.conventions_url) {
-                        <a class="repo-card__link" [href]="r.conventions_url" target="_blank" rel="noopener">conventions ↗</a>
-                      }
+        <ng-template #priorityCell let-context>
+          @if (context.getValue() !== null) {
+            <app-priority-badge [priority]="context.getValue()" />
+          } @else {
+            <span class="hint">unset</span>
+          }
+        </ng-template>
+
+        <ng-template #relativeCell let-context>
+          <span class="unassigned-table__when" [attr.title]="context.getValue()">
+            {{ context.getValue() | relativeTime }}
+          </span>
+        </ng-template>
+
+        <ng-template #adoptCell let-context>
+          @if (projectEpics().length > 0) {
+            <!-- floating: the table scrolls on x and the page clips on x, so
+                 a normally-positioned panel is cropped inside the cell. -->
+            <app-ui-dropdown [floating]="true" ariaHaspopup="menu" ariaLabel="File under an epic" #adopt>
+              <span trigger class="adopt__trigger">
+                @if (adoptionCandidates().get(context.row.original.id); as ranked) {
+                  {{ ranked.length > 0 ? 'Suggested (' + ranked.length + ')' : 'Choose…' }}
+                } @else { Choose… }
+              </span>
+              <div panel class="adopt__menu" role="menu">
+                @for (c of adoptionCandidates().get(context.row.original.id) ?? []; track c.epic.id) {
+                  <button type="button" role="menuitem" class="adopt__item adopt__item--ranked"
+                    (click)="fileUnder(context.row.original, c.epic); adopt.close()">
+                    #{{ c.epic.seq }} {{ c.epic.title }}
+                    <small>{{ c.reasons.join(' · ') }}</small>
+                  </button>
+                }
+                @for (e of otherEpicsFor().get(context.row.original.id) ?? []; track e.id) {
+                  <button type="button" role="menuitem" class="adopt__item"
+                    (click)="fileUnder(context.row.original, e); adopt.close()">
+                    #{{ e.seq }} {{ e.title }}
+                  </button>
+                }
+              </div>
+            </app-ui-dropdown>
+          }
+        </ng-template>
+
+        <!-- Epics with their child items -->
+        <app-ui-section
+          [title]="'Epics (' + epicGroups().length + ')'"
+          [collapsible]="true"
+          [expanded]="isOpen('epics')"
+          (toggled)="toggleSection('epics')">
+          @if (epicGroups().length === 0) {
+            <app-ui-empty-state message="No epics in this project yet. Mark a vault item as `is_epic` to elevate it here." />
+          } @else {
+            <app-ui-stack gap="lg">
+              @for (group of epicGroups(); track group.epic.id) {
+                <section class="epic-group">
+                  <header class="epic-group__header">
+                    <app-vault-chip
+                      kind="epic"
+                      [seq]="group.epic.seq"
+                      [title]="group.epic.title"
+                    />
+                    <span class="epic-group__progress" aria-label="children done count">
+                      {{ childrenDoneCount(group) }}/{{ childrenTotalCount(group) }}
+                    </span>
+                  </header>
+
+                  @if (group.outstanding.length > 0) {
+                    <div class="epic-group__table">
+                      <app-ui-data-table
+                        ariaLabel="Outstanding items under epic"
+                        [columns]="itemColumns"
+                        [data]="group.outstanding"
+                        emptyTitle=""
+                        emptyMessage="" />
                     </div>
-                    @if (r.role) { <p class="repo-card__role">{{ r.role }}</p> }
-                    @if (r.entry_points) {
-                      <p class="repo-card__field"><span class="repo-card__label">Entry points</span> {{ r.entry_points }}</p>
-                    }
-                    @if (r.footguns) {
-                      <details class="repo-card__footguns">
-                        <summary>Footguns</summary>
-                        <div class="markdown-body" [innerHTML]="r.footguns | markdown"></div>
-                      </details>
-                    }
-                  </div>
-                </app-ui-card>
+                  } @else {
+                    <p class="epic-group__empty">No outstanding items under this epic.</p>
+                  }
+
+                  @if (group.done.length > 0) {
+                    <details class="epic-group__done">
+                      <summary>{{ group.done.length }} done</summary>
+                      <div class="epic-group__table">
+                        <app-ui-data-table
+                          ariaLabel="Done items under epic"
+                          [columns]="itemColumns"
+                          [data]="group.done"
+                          emptyTitle=""
+                          emptyMessage="" />
+                      </div>
+                    </details>
+                  }
+                </section>
               }
             </app-ui-stack>
-          </app-ui-section>
-        }
-
-        <!-- In-flight dispatch tasks — running or approved for this project -->
-        @if (inFlightTasks().length > 0) {
-          <app-ui-section [title]="'In flight (' + inFlightTasks().length + ')'" [collapsible]="true" [expanded]="true">
-            <ul class="inflight__list">
-              @for (task of inFlightTasks(); track task.id) {
-                <li class="inflight__item">
-                  <span class="inflight__status inflight__status--{{ task.status }}">{{ task.status }}</span>
-                  <span class="inflight__title">{{ task.task_title ?? task.task_id }}</span>
-                  @if (task.executor) {
-                    <span class="inflight__actor">@{{ task.executor }}</span>
-                  }
-                </li>
-              }
-            </ul>
-          </app-ui-section>
-        }
-
-        <!-- Delivery & autonomy — the four boundaries autonomous work crosses
-             (commission → merge → review → promote), declared policy against
-             live fact. Sits between in-flight work and the issue backlog
-             because that is where a red PR or an unshipped tag belongs.
-             Self-gated to projects with a codebase. -->
-        <app-project-delivery-section [project]="p" />
+          }
+        </app-ui-section>
 
         <!-- GitHub issues — open issues on this project's repo, with vault sync
              status. GitHub stays the feature backlog; this just gives visibility
              and a one-click way to bring an issue into the jimbo pipeline. -->
         @if (p.repo_url) {
-          <app-ui-section [title]="'GitHub issues (' + visibleGithubIssues().length + ' of ' + githubIssues().length + ')'" [collapsible]="true" [expanded]="true">
+          <app-ui-section
+            [title]="'GitHub issues (' + visibleGithubIssues().length + ' of ' + githubIssues().length + ')'"
+            [collapsible]="true"
+            [expanded]="isOpen('github')"
+            (toggled)="toggleSection('github')">
             @if (githubIssues().length === 0) {
               <app-ui-empty-state message="No open issues on this repo." />
             } @else {
@@ -188,87 +227,12 @@
           </app-ui-section>
         }
 
-        <!-- Epics with their child items -->
-        <app-ui-section title="Epics" [collapsible]="false">
-          @if (epicGroups().length === 0) {
-            <app-ui-empty-state message="No epics in this project yet. Mark a vault item as `is_epic` to elevate it here." />
-          } @else {
-            <app-ui-stack gap="lg">
-              @for (group of epicGroups(); track group.epic.id) {
-                <section class="epic-group">
-                  <header class="epic-group__header">
-                    <app-vault-chip
-                      kind="epic"
-                      [seq]="group.epic.seq"
-                      [title]="group.epic.title"
-                    />
-                    <span class="epic-group__progress" aria-label="children done count">
-                      {{ childrenDoneCount(group) }}/{{ childrenTotalCount(group) }}
-                    </span>
-                  </header>
-
-
-                  @if (group.outstanding.length > 0) {
-                    <div class="epic-group__table">
-                      <app-ui-data-table
-                        ariaLabel="Outstanding items under epic"
-                        [columns]="itemColumns"
-                        [data]="group.outstanding"
-                        emptyTitle=""
-                        emptyMessage="" />
-                    </div>
-                  } @else {
-                    <p class="epic-group__empty">No outstanding items under this epic.</p>
-                  }
-
-                  @if (group.done.length > 0) {
-                    <details class="epic-group__done">
-                      <summary>{{ group.done.length }} done</summary>
-                      <div class="epic-group__table">
-                        <app-ui-data-table
-                          ariaLabel="Done items under epic"
-                          [columns]="itemColumns"
-                          [data]="group.done"
-                          emptyTitle=""
-                          emptyMessage="" />
-                      </div>
-                    </details>
-                  }
-                </section>
-              }
-            </app-ui-stack>
-          }
-        </app-ui-section>
-
-        <!-- Constraints: rules agents apply when planning/pricing work on
-             this project. Same feature as the global /constraints page,
-             scoped to just this project's own sections. -->
-        <app-project-constraints-section [projectId]="p.id" />
-
-        <!-- Project activity — note_activity rows for vault notes linked to this project -->
-        <app-ui-section title="Project activity" [collapsible]="true">
-          @if (projectActivity().length === 0) {
-            <app-ui-empty-state message="No activity on project notes yet." />
-          } @else {
-            <app-ui-card tone="soft" [compact]="true">
-              <ul class="project-landing__activity">
-                @for (item of projectActivity(); track item.id) {
-                  <li class="project-landing__activity-row">
-                    <span class="project-landing__activity-actor">@{{ item.actor }}</span>
-                    <span class="project-landing__activity-desc">{{ activityDesc(item) }}</span>
-                    @if (item.note_title) {
-                      <span class="project-landing__activity-note" [title]="item.note_id">· {{ item.note_title }}</span>
-                    }
-                    <span class="project-landing__activity-when">· {{ item.ts | relativeTime }}</span>
-                  </li>
-                }
-              </ul>
-            </app-ui-card>
-          }
-        </app-ui-section>
-
         <!-- Items not under any epic this project owns -->
-        <app-ui-section [title]="'Unassigned items (' + unassignedActive().length + ')'" [collapsible]="false">
+        <app-ui-section
+          [title]="'Unassigned items (' + unassignedActive().length + ')'"
+          [collapsible]="true"
+          [expanded]="isOpen('unassigned')"
+          (toggled)="toggleSection('unassigned')">
           <!-- Adoption used to be impossible from any screen — the only parent
                control in the app was a raw UUID text box — which is most of why
                these pile up. Candidates are ranked, but "leave unparented" is a
@@ -286,359 +250,277 @@
               emptyTitle="No unassigned items"
               emptyMessage="Every active item is grouped under an epic." />
           </div>
-
-          <ng-template #adoptCell let-context>
-            @if (projectEpics().length > 0) {
-              <!-- floating: the table scrolls on x and the page clips on x, so
-                   a normally-positioned panel is cropped inside the cell. -->
-              <app-ui-dropdown [floating]="true" ariaHaspopup="menu" ariaLabel="File under an epic" #adopt>
-                <span trigger class="adopt__trigger">
-                  @if (adoptionCandidates().get(context.row.original.id); as ranked) {
-                    {{ ranked.length > 0 ? 'Suggested (' + ranked.length + ')' : 'Choose…' }}
-                  } @else { Choose… }
-                </span>
-                <div panel class="adopt__menu" role="menu">
-                  @for (c of adoptionCandidates().get(context.row.original.id) ?? []; track c.epic.id) {
-                    <button type="button" role="menuitem" class="adopt__item adopt__item--ranked"
-                      (click)="fileUnder(context.row.original, c.epic); adopt.close()">
-                      #{{ c.epic.seq }} {{ c.epic.title }}
-                      <small>{{ c.reasons.join(' · ') }}</small>
-                    </button>
-                  }
-                  @for (e of otherEpicsFor().get(context.row.original.id) ?? []; track e.id) {
-                    <button type="button" role="menuitem" class="adopt__item"
-                      (click)="fileUnder(context.row.original, e); adopt.close()">
-                      #{{ e.seq }} {{ e.title }}
-                    </button>
-                  }
-                </div>
-              </app-ui-dropdown>
-            }
-          </ng-template>
-
-          <ng-template #chipCell let-context>
-            <span class="chip-cell">
-              <app-vault-chip
-                [kind]="context.row.original.parent_id ? 'subtask' : 'task'"
-                [itemType]="context.row.original.type"
-                size="sm"
-                [seq]="context.row.original.seq"
-                [title]="context.row.original.title"
-              />
-            </span>
-          </ng-template>
-
-          <ng-template #priorityCell let-context>
-            @if (context.getValue() !== null) {
-              <app-priority-badge [priority]="context.getValue()" />
-            } @else {
-              <span class="hint">—</span>
-            }
-          </ng-template>
-
-          <ng-template #relativeCell let-context>
-            <span class="unassigned-table__when" [attr.title]="context.getValue()">
-              {{ context.getValue() | relativeTime }}
-            </span>
-          </ng-template>
         </app-ui-section>
 
-        <!-- Recently completed (collapsed) -->
-        @if (doneItems().length > 0) {
-          <app-ui-section title="Done" [collapsible]="true">
-            <ul class="chip-list">
-              @for (item of doneItems(); track item.id) {
-                <li>
-                  <app-vault-chip
-                    kind="task"
-                    [itemType]="item.type"
-                    [seq]="item.seq"
-                    [title]="item.title"
-                  />
-                </li>
+        <!-- Member repos (multi-repo projects). Synced from each repo's
+             docs/repo.md; one operating card per codebase. -->
+        @if (p.repos?.length) {
+          <app-ui-section
+            [title]="'Repos (' + (p.repos?.length ?? 0) + ')'"
+            [collapsible]="true"
+            [expanded]="isOpen('repos')"
+            (toggled)="toggleSection('repos')">
+            <app-ui-stack gap="md">
+              @for (r of (p.repos ?? []); track r.repo) {
+                <app-ui-card tone="soft" [compact]="true">
+                  <div class="repo-card">
+                    <div class="repo-card__head">
+                      <code class="repo-card__name">{{ r.repo }}</code>
+                      @if (r.autonomy_level) {
+                        <app-ui-badge tone="neutral" [subtle]="true">{{ r.autonomy_level }}</app-ui-badge>
+                      }
+                      @if (r.conventions_url) {
+                        <a class="repo-card__link" [href]="r.conventions_url" target="_blank" rel="noopener">conventions ↗</a>
+                      }
+                    </div>
+                    @if (r.role) { <p class="repo-card__role">{{ r.role }}</p> }
+                    @if (r.entry_points) {
+                      <p class="repo-card__field"><span class="repo-card__label">Entry points</span> {{ r.entry_points }}</p>
+                    }
+                    @if (r.footguns) {
+                      <details class="repo-card__footguns">
+                        <summary>Footguns</summary>
+                        <div class="markdown-body" [innerHTML]="r.footguns | markdown"></div>
+                      </details>
+                    }
+                  </div>
+                </app-ui-card>
               }
-            </ul>
+            </app-ui-stack>
           </app-ui-section>
         }
+      </app-ui-stack>
+    } @else {
+      <app-ui-empty-state
+        title="No work tracked here yet"
+        message="Nothing is linked to this project and it has no codebase, so there are no epics, issues or loose items to show. Link a vault item to it and this fills in." />
+    }
 
-        <!-- Focus sessions -->
-        <app-ui-section title="Recent focus sessions" [collapsible]="true">
-          @if (sessionsForProject().length === 0) {
-            <app-ui-empty-state message="No focus sessions in the last 30 days." />
-          } @else {
-            <app-ui-card tone="soft" [compact]="true">
-              <ul class="project-landing__list">
-                @for (s of sessionsForProject(); track s.id) {
-                  <li><app-project-focus-session-row [session]="s" /></li>
+    <!-- ══ 5. Memory ════════════════════════════════════════════════════
+         What has already happened here. Collapsed by default: this is the
+         record, consulted deliberately, not checked on every visit. -->
+    <h2 class="project-landing__zone">Memory</h2>
+    <app-ui-stack class="project-landing__quiet" gap="sm">
+      <!-- Understanding: belief blocks synthesised from recons + working doc. -->
+      @if (understanding(); as u) {
+        <app-ui-section
+          title="Understanding"
+          tone="recede"
+          [collapsible]="true"
+          [expanded]="isOpen('understanding')"
+          (toggled)="toggleSection('understanding')">
+          @if (u.working_doc_url) {
+            <p class="understanding__doc-link">
+              Working doc: <a [href]="u.working_doc_url" target="_blank" rel="noopener">open</a>
+            </p>
+          }
+          @if (openBeliefs().length > 0) {
+            <div class="open-flags">
+              <p class="open-flags__label">Open questions</p>
+              <ul class="open-flags__list">
+                @for (b of openBeliefs(); track b.id) {
+                  <li class="open-flags__item">
+                    <code class="belief__id">{{ b.id }}</code>
+                    <span class="open-flags__text">{{ b.text }}</span>
+                  </li>
                 }
               </ul>
-            </app-ui-card>
+            </div>
+          }
+          @if (u.sections.length === 0) {
+            <p class="understanding__empty">No beliefs yet. Run the synthesise-understanding skill post-recon to populate.</p>
+          } @else {
+            <div class="belief-grid">
+              @for (section of u.sections; track section.letter) {
+                <div class="belief-section">
+                  <h3 class="belief-section__heading">
+                    <span class="belief-section__letter">{{ section.letter }}</span>
+                    {{ section.name }}
+                  </h3>
+                  <ul class="belief-section__list">
+                    @for (belief of section.beliefs; track belief.id) {
+                      <li class="belief" [class.belief--corrected]="beliefTag(belief, 'corrected')">
+                        <code class="belief__id">{{ belief.id }}</code>
+                        <span class="belief__text">{{ belief.text }}</span>
+                        @if (beliefTag(belief, 'corrected'); as correctedDate) {
+                          <span class="belief__badge belief__badge--corrected" [title]="'Corrected ' + correctedDate">corrected</span>
+                        }
+                        @if (beliefTag(belief, 'expires'); as expiresDate) {
+                          <span class="belief__badge belief__badge--expires" [title]="'Expires ' + expiresDate">exp {{ expiresDate }}</span>
+                        }
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+            </div>
+          }
+          @if (u.last_updated) {
+            <p class="understanding__updated">Last updated {{ u.last_updated }}</p>
           }
         </app-ui-section>
+      }
 
-        <!-- Understanding: belief blocks synthesised from recons + working doc.
-             Demoted below the day-to-day monitoring sections — this is
-             reference/narrative material, refreshed only by a recon pass,
-             not something to check on every visit. -->
-        @if (understanding(); as u) {
-          <app-ui-section title="Understanding" [collapsible]="true" [expanded]="false">
-            @if (u.working_doc_url) {
-              <p class="understanding__doc-link">
-                Working doc: <a [href]="u.working_doc_url" target="_blank" rel="noopener">open</a>
-              </p>
-            }
-            @if (openBeliefs().length > 0) {
-              <div class="open-flags">
-                <p class="open-flags__label">Open questions</p>
-                <ul class="open-flags__list">
-                  @for (b of openBeliefs(); track b.id) {
-                    <li class="open-flags__item">
-                      <code class="belief__id">{{ b.id }}</code>
-                      <span class="open-flags__text">{{ b.text }}</span>
-                    </li>
-                  }
-                </ul>
-              </div>
-            }
-            @if (u.sections.length === 0) {
-              <p class="understanding__empty">No beliefs yet. Run the synthesise-understanding skill post-recon to populate.</p>
-            } @else {
-              <div class="belief-grid">
-                @for (section of u.sections; track section.letter) {
-                  <div class="belief-section">
-                    <h3 class="belief-section__heading">
-                      <span class="belief-section__letter">{{ section.letter }}</span>
-                      {{ section.name }}
-                    </h3>
-                    <ul class="belief-section__list">
-                      @for (belief of section.beliefs; track belief.id) {
-                        <li class="belief" [class.belief--corrected]="beliefTag(belief, 'corrected')">
-                          <code class="belief__id">{{ belief.id }}</code>
-                          <span class="belief__text">{{ belief.text }}</span>
-                          @if (beliefTag(belief, 'corrected'); as correctedDate) {
-                            <span class="belief__badge belief__badge--corrected" [title]="'Corrected ' + correctedDate">corrected</span>
-                          }
-                          @if (beliefTag(belief, 'expires'); as expiresDate) {
-                            <span class="belief__badge belief__badge--expires" [title]="'Expires ' + expiresDate">exp {{ expiresDate }}</span>
-                          }
-                        </li>
-                      }
-                    </ul>
-                  </div>
+      <!-- Project activity — note_activity rows for vault notes linked here -->
+      <app-ui-section
+        [title]="'Project activity (' + projectActivity().length + ')'"
+        tone="recede"
+        [collapsible]="true"
+        [expanded]="isOpen('activity')"
+        (toggled)="toggleSection('activity')">
+        @if (projectActivity().length === 0) {
+          <app-ui-empty-state message="No activity on project notes yet." />
+        } @else {
+          <ul class="project-landing__activity">
+            @for (item of projectActivity(); track item.id) {
+              <li class="project-landing__activity-row">
+                <span class="project-landing__activity-actor">&#64;{{ item.actor }}</span>
+                <span class="project-landing__activity-desc">{{ activityDesc(item) }}</span>
+                @if (item.note_title) {
+                  <span class="project-landing__activity-note" [title]="item.note_id">· {{ item.note_title }}</span>
                 }
-              </div>
+                <span class="project-landing__activity-when">· {{ item.ts | relativeTime }}</span>
+              </li>
             }
-            @if (u.last_updated) {
-              <p class="understanding__updated">Last updated {{ u.last_updated }}</p>
+          </ul>
+        }
+      </app-ui-section>
+
+      <!-- Focus sessions. The header carries the Focus + Sessions numbers that
+           used to be two stat tiles, with the window they are measured over. -->
+      <app-ui-section
+        title="Focus sessions"
+        [meta]="focusMeta()"
+        tone="recede"
+        [collapsible]="true"
+        [expanded]="isOpen('focus')"
+        (toggled)="toggleSection('focus')">
+        @if (recentSessions().length === 0) {
+          <app-ui-empty-state message="No focus sessions in the last 30 days." />
+        } @else {
+          <ul class="project-landing__list">
+            @for (s of recentSessions(); track s.id) {
+              <li><app-project-focus-session-row [session]="s" /></li>
             }
-          </app-ui-section>
+          </ul>
         }
+      </app-ui-section>
 
-        @if (p.criteria) {
-          <app-ui-section title="Criteria (legacy)" [collapsible]="true">
-            <app-ui-card tone="soft" [compact]="true">
-              <div class="markdown-body" [innerHTML]="p.criteria | markdown"></div>
-            </app-ui-card>
-          </app-ui-section>
-        }
-      </app-ui-stack>
-
-      <!-- RIGHT column: brief + facts ─────────────────────────────── -->
-      <app-ui-stack class="project-landing__aside" gap="lg">
-
-        <!-- Repo-synced notice: operating fields are mirrored from docs/project.md,
-             so they render read-only here. Edit happens in the repo. -->
-        @if (isRepoSynced()) {
-          <app-ui-card tone="soft" [compact]="true">
-            <p class="project-landing__synced" [class.project-landing__synced--overdue]="syncOverdue()">
-              <span aria-hidden="true">{{ syncOverdue() ? '⚠️' : '🔒' }}</span>
-              Operating fields synced from repo
-              @if (p.synced_commit) {
-                <!-- Provenance, not freshness: nothing watches the repo between
-                     sweeps, so this says where a value came from, not whether
-                     it is current. An odd `intent` is traceable to a commit. -->
-                · <code class="project-landing__sha">{{ p.synced_commit.slice(0, 7) }}</code>
-              }
-              · {{ p.synced_at | relativeTime }}
-              @if (syncOverdue()) {
-                <!-- The failure that actually happened: the launchd sweep died
-                     on a PATH fault and failed silently for five weeks while
-                     this line just read "6 weeks ago" and looked normal. Age
-                     alone is not staleness — an overdue SWEEP is. -->
-                <strong> — sweep overdue, these may be behind the repo</strong>
-              }
-              @if (p.conventions_url) {
-                · <a [href]="p.conventions_url" target="_blank" rel="noopener">edit in repo</a>
-              } @else if (p.repo_url) {
-                · <a [href]="p.repo_url" target="_blank" rel="noopener">open repo</a>
-              }
-            </p>
-          </app-ui-card>
-        }
-
-        <!-- Facts panel: status / owner / repo / created -->
-        <app-ui-section title="Facts" [collapsible]="false">
-          <app-ui-card tone="soft" [compact]="true">
-            <dl class="project-landing__facts">
-              <dt>Status</dt>
-              <dd>
-                <app-ui-badge [tone]="statusTone(p.status)">{{ p.status }}</app-ui-badge>
-                <app-ui-badge tone="neutral" [subtle]="true">{{ p.kind }}</app-ui-badge>
-              </dd>
-              <dt>Owner</dt>
-              <dd>
-                @if (p.owner_actor_id) {
-                  <app-actor-chip [actor]="p.owner_actor_id" size="sm" />
-                } @else {
-                  <span class="hint">unowned</span>
-                }
-              </dd>
-              @if (p.repo_url || (p.repos && p.repos.length > 0)) {
-                <dt>Repo</dt>
-                <dd>
-                  <app-ui-inline-edit
-                    [value]="p.repo_url ?? ''"
-                    placeholder="Add repo URL…"
-                    ariaLabel="Edit repo URL"
-                    (saved)="patch(p.id, { repo_url: $event || null })"
-                  />
-                </dd>
-              }
-              <dt>Created</dt>
-              <dd>{{ p.created_at | relativeTime }}</dd>
-            </dl>
-          </app-ui-card>
-        </app-ui-section>
-
-        <!-- Project brief: chunky textareas with @ / ~ typeahead -->
-        <app-ui-section title="Brief — purpose" [collapsible]="false">
-          <app-ui-stack gap="md">
-            <app-project-brief-bullet-field
-              label="Intent"
-              [value]="p.intent"
-              placeholder="+ add a point (Enter)"
-              [triggers]="briefTriggers"
-              [readonly]="isRepoSynced()"
-              (saved)="patch(p.id, { intent: $event })"
-            />
-            <!-- One bullet = one persona, so each is independently editable and
-                 removable. Was a raw textarea while its siblings were already
-                 checklists, which made a persona the only brief entry you had to
-                 edit by retyping a block. Tasks cite these by wording, so
-                 editing one must not disturb the others. -->
-            <app-project-brief-bullet-field
-              label="Personas"
-              [value]="p.personas"
-              placeholder="+ add a persona (Enter)"
-              hint="A named person with enough context to argue with — not a role or a segment."
-              [triggers]="briefTriggers"
-              (saved)="patch(p.id, { personas: $event })"
-            />
-            <app-project-brief-bullet-field
-              label="Success criteria"
-              [value]="p.success_criteria"
-              placeholder="+ add a criterion (Enter)"
-              [triggers]="briefTriggers"
-              (saved)="patch(p.id, { success_criteria: $event })"
-            />
-            <app-project-brief-field
-              label="Out of scope"
-              [value]="p.out_of_scope"
-              placeholder="Explicit exclusions"
-              [rows]="3"
-              [triggers]="briefTriggers"
-              [readonly]="isRepoSynced()"
-              (saved)="patch(p.id, { out_of_scope: $event })"
-            />
-          </app-ui-stack>
-        </app-ui-section>
-
-        <!-- current_state stores the belief markdown — collapse when structured
-             beliefs are rendered above so the raw store doesn't confuse. -->
-        <app-ui-section
-          title="Brief — state"
-          [collapsible]="true"
-          [expanded]="!(understanding()?.sections?.length)">
-          <app-ui-stack gap="md">
-            <app-project-brief-field
-              label="Current state"
-              [value]="p.current_state"
-              placeholder="Where things are now"
-              [rows]="4"
-              [triggers]="briefTriggers"
-              (saved)="patch(p.id, { current_state: $event })"
-            />
-            <app-project-brief-field
-              label="Current blocker"
-              [value]="p.current_blocker"
-              placeholder="What's stopping forward motion"
-              [rows]="2"
-              [triggers]="briefTriggers"
-              (saved)="patch(p.id, { current_blocker: $event })"
-            />
-          </app-ui-stack>
-        </app-ui-section>
-
-        <app-project-operating-context-section
-          [project]="p"
-          [triggers]="briefTriggers"
-          (saved)="patch(p.id, $event)"
-        />
-
-        <!-- Resources/checklists apply to any project, code or not — a travel
-             project wants hostel/flight links here just as much as a repo
-             wants docs links. Kept separate from operating-context, which is
-             gated to projects that actually have a codebase. -->
-        <app-ui-section title="Brief — resources" [collapsible]="true">
-          <app-ui-stack gap="md">
-            <app-project-brief-field
-              label="Key resources"
-              [value]="p.key_resources"
-              placeholder="Links, docs, references"
-              [rows]="4"
-              [triggers]="briefTriggers"
-              (saved)="patch(p.id, { key_resources: $event })"
-            />
-            <app-project-brief-field
-              label="Common tasks"
-              [value]="p.common_tasks"
-              placeholder="Templated/recurring actions (e.g. add a new X, check Y)"
-              [rows]="4"
-              [triggers]="briefTriggers"
-              (saved)="patch(p.id, { common_tasks: $event })"
-            />
-          </app-ui-stack>
-        </app-ui-section>
-
-        <app-ui-section title="Brief — autonomy" [collapsible]="false">
-          <p class="autonomy__caption">Approval policy for commissioned work</p>
-          <div class="autonomy" role="radiogroup" aria-label="Autonomy level">
-            @for (opt of autonomyOptions; track opt.value) {
-              <label class="autonomy__row" [class.autonomy__row--selected]="(p.autonomy_level ?? '') === opt.value">
-                <input
-                  type="radio"
-                  class="autonomy__input"
-                  name="autonomy_level"
-                  [value]="opt.value"
-                  [checked]="(p.autonomy_level ?? '') === opt.value"
-                  [disabled]="isRepoSynced()"
-                  (change)="patchAutonomy(p.id, opt.value)"
+      <!-- Completed items -->
+      <app-ui-section
+        [title]="'Done (' + doneItems().length + ')'"
+        tone="recede"
+        [collapsible]="true"
+        [expanded]="isOpen('done')"
+        (toggled)="toggleSection('done')">
+        @if (doneItems().length === 0) {
+          <app-ui-empty-state message="Nothing has been completed on this project yet." />
+        } @else {
+          <ul class="chip-list">
+            @for (item of doneItems(); track item.id) {
+              <li>
+                <app-vault-chip
+                  kind="task"
+                  [itemType]="item.type"
+                  [seq]="item.seq"
+                  [title]="item.title"
                 />
-                <span class="autonomy__body">
-                  <strong class="autonomy__label">{{ opt.label }}</strong>
-                  <span class="autonomy__hint">{{ opt.hint }}</span>
-                </span>
-              </label>
+              </li>
             }
-          </div>
-          <p class="autonomy__scope">
-            Read by manually enqueued dispatches only. The automatic commission
-            pump does not consult this — it is scoped by the global
-            <code>pipeline.autonomous_projects</code> valve instead.
-          </p>
+          </ul>
+        }
+      </app-ui-section>
+    </app-ui-stack>
+
+    <!-- ══ 6. Reference ═════════════════════════════════════════════════
+         Looked up, not monitored. Collapsed by default. -->
+    <h2 class="project-landing__zone">Reference</h2>
+    <app-ui-stack class="project-landing__quiet" gap="sm">
+      <!-- Resources/checklists apply to any project, code or not — a travel
+           project wants hostel/flight links here just as much as a repo wants
+           docs links. Kept separate from operating context, which is gated to
+           projects that actually have a codebase. -->
+      <app-ui-section
+        title="Resources"
+        tone="recede"
+        [collapsible]="true"
+        [expanded]="isOpen('resources')"
+        (toggled)="toggleSection('resources')">
+        <app-ui-stack gap="md">
+          <app-project-brief-field
+            label="Key resources"
+            [value]="p.key_resources"
+            placeholder="Links, docs, references"
+            [rows]="4"
+            [triggers]="briefTriggers"
+            (saved)="patch(p.id, { key_resources: $event })"
+          />
+          <app-project-brief-field
+            label="Common tasks"
+            [value]="p.common_tasks"
+            placeholder="Templated/recurring actions (e.g. add a new X, check Y)"
+            [rows]="4"
+            [triggers]="briefTriggers"
+            (saved)="patch(p.id, { common_tasks: $event })"
+          />
+        </app-ui-stack>
+      </app-ui-section>
+
+      <app-project-operating-context-section
+        [project]="p"
+        [triggers]="briefTriggers"
+        (saved)="patch(p.id, $event)"
+      />
+
+      <!-- Constraints: rules agents apply when planning/pricing work on this
+           project. Same feature as the global /constraints page, scoped here. -->
+      <app-project-constraints-section [projectId]="p.id" />
+
+      <app-ui-section
+        title="Facts"
+        tone="recede"
+        [collapsible]="true"
+        [expanded]="isOpen('facts')"
+        (toggled)="toggleSection('facts')">
+        <dl class="project-landing__facts">
+          <dt>Status</dt>
+          <dd>
+            <app-ui-badge [tone]="statusTone(p.status)">{{ p.status }}</app-ui-badge>
+            <app-ui-badge tone="neutral" [subtle]="true">{{ p.kind }}</app-ui-badge>
+          </dd>
+          <dt>Owner</dt>
+          <dd>
+            @if (p.owner_actor_id) {
+              <app-actor-chip [actor]="p.owner_actor_id" size="sm" />
+            } @else {
+              <span class="hint">unowned</span>
+            }
+          </dd>
+          <dt>Repo</dt>
+          <dd>
+            <app-ui-inline-edit
+              [value]="p.repo_url ?? ''"
+              placeholder="Add repo URL…"
+              ariaLabel="Edit repo URL"
+              (saved)="patch(p.id, { repo_url: $event || null })"
+            />
+          </dd>
+          <dt>Created</dt>
+          <dd>{{ p.created_at | relativeTime }}</dd>
+        </dl>
+      </app-ui-section>
+
+      @if (p.criteria) {
+        <app-ui-section
+          title="Criteria (legacy)"
+          tone="recede"
+          [collapsible]="true"
+          [expanded]="isOpen('criteria')"
+          (toggled)="toggleSection('criteria')">
+          <div class="markdown-body" [innerHTML]="p.criteria | markdown"></div>
         </app-ui-section>
-      </app-ui-stack>
-    </div>
+      }
+    </app-ui-stack>
   </app-ui-stack>
 } @else {
   <app-ui-empty-state title="Project not found" message="The requested project could not be found." />

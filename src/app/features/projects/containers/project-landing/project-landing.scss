@@ -49,42 +49,34 @@
     min-width: 0;
   }
 
-  &__desc {
-    display: block;
-    width: 100%;
-    margin: 0;
-    color: var(--color-text-muted);
-    font-size: 0.95rem;
-  }
-
-  // ── Stats row ─────────────────────────────────────────────────────
-  &__stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  // ── Zone labels ───────────────────────────────────────────────────
+  // The only structural labels on the page, and they appear only where the
+  // page stops asking for anything: everything under "Memory" is a record,
+  // everything under "Reference" is a lookup. Zones 1-4 carry no label
+  // because their rank is already legible from weight and density.
+  &__zone {
+    display: flex;
+    align-items: center;
     gap: var(--s-3);
+    margin: var(--s-4) 0 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+
+    &::after {
+      content: '';
+      flex: 1 1 auto;
+      height: 1px;
+      background: var(--color-border);
+    }
   }
 
-  // ── Two-column body ───────────────────────────────────────────────
-  &__body {
-    display: grid;
-    grid-template-columns: minmax(0, 1.55fr) minmax(20rem, 1fr);
-    gap: var(--s-5);
-    align-items: start;
-  }
-
-  &__main, &__aside {
-    min-width: 0;
-  }
-
-  &__aside {
-    position: sticky;
-    top: var(--s-4);
-    max-height: calc(100vh - var(--s-6));
-    overflow-y: auto;
-
-    // Subtle hairline on the inner side to visually anchor the brief column.
-    border-left: 1px solid var(--color-border);
-    padding-left: var(--s-5);
+  // Receded zones sit closer to the page ground and tighter together — a
+  // stack of shut headers, not a stack of panels.
+  &__quiet {
+    opacity: 0.92;
   }
 
   // ── Section title accent strip ─────────────────────────────────────
@@ -106,18 +98,15 @@
     }
   }
 
-  // ── Facts panel ───────────────────────────────────────────────────
-  // `auto` on the label column so values stay on one line.
-  &__synced {
-    margin: 0;
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
-
-    a {
-      color: var(--project-accent, var(--color-accent));
-    }
+  // Memory and Reference get a hairline instead of a full accent bar. Same
+  // device, quieter — the strip is how this page says "rank".
+  &__quiet ::ng-deep .ui-section__title::before {
+    width: 1px;
+    background: var(--color-border);
   }
 
+  // ── Facts panel ───────────────────────────────────────────────────
+  // `auto` on the label column so values stay on one line.
   &__facts {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -178,16 +167,6 @@
   &__activity-actor { font-weight: 600; color: var(--color-text); }
   &__activity-desc, &__activity-when, &__activity-note { color: var(--color-text-muted); }
 
-  &__criteria {
-    margin: 0;
-    padding: var(--s-3);
-    background: var(--color-surface-soft);
-    border: 1px solid var(--color-border);
-    white-space: pre-wrap;
-    word-break: break-word;
-    font-size: 0.875rem;
-    line-height: 1.6;
-  }
 }
 
 // ── Understanding / belief blocks ─────────────────────────────────────
@@ -324,93 +303,6 @@
   &__text {
     color: var(--color-text);
     min-width: 0;
-  }
-}
-
-// ── In-flight dispatch tasks ───────────────────────────────────────────
-.attention {
-  &__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-1);
-  }
-
-  &__item {
-    display: flex;
-    align-items: center;
-    gap: var(--s-2);
-    padding: var(--s-2) 0;
-    border-bottom: 1px solid var(--color-border);
-    font-size: 0.83rem;
-
-    &:last-child { border-bottom: none; }
-  }
-
-  &__meta {
-    flex-shrink: 0;
-    margin-left: auto;
-    font-size: 0.74rem;
-    color: var(--color-text-muted);
-    white-space: nowrap;
-  }
-}
-
-.inflight {
-  &__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-1);
-  }
-
-  &__item {
-    display: flex;
-    align-items: center;
-    gap: var(--s-2);
-    padding: var(--s-2) 0;
-    border-bottom: 1px solid var(--color-border);
-    font-size: 0.83rem;
-
-    &:last-child { border-bottom: none; }
-  }
-
-  &__status {
-    flex-shrink: 0;
-    font-size: 0.62rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 0.1rem 0.4rem;
-
-    &--running {
-      background: color-mix(in srgb, var(--color-success, #22c55e) 15%, transparent);
-      color: color-mix(in srgb, var(--color-success, #22c55e) 70%, var(--color-text));
-    }
-
-    &--approved {
-      background: color-mix(in srgb, var(--color-accent) 15%, transparent);
-      color: color-mix(in srgb, var(--color-accent) 70%, var(--color-text));
-    }
-  }
-
-  &__title {
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--color-text);
-  }
-
-  &__actor {
-    flex-shrink: 0;
-    font-size: 0.74rem;
-    color: var(--color-text-muted);
   }
 }
 
@@ -627,112 +519,8 @@
   }
 }
 
-// ── Autonomy radios ───────────────────────────────────────────────────
-// Plain div + label rows (not <fieldset>/<legend>, which renders weirdly
-// inside flex/grid). Grid keeps radio and label tightly aligned so there's
-// no dead horizontal space.
-.autonomy {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-
-  &__caption {
-    margin: 0 0 var(--s-2);
-    font-size: 0.74rem;
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  &__row {
-    display: grid;
-    grid-template-columns: 1.1rem 1fr;
-    align-items: start;
-    gap: var(--s-3);
-    cursor: pointer;
-    padding: var(--s-2) var(--s-3);
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    transition: border-color 80ms linear, background 80ms linear;
-
-    &:hover {
-      border-color: color-mix(in srgb, var(--color-text) 25%, var(--color-border));
-    }
-
-    &--selected {
-      border-color: var(--project-accent, var(--color-accent));
-      background: color-mix(in srgb, var(--project-accent, var(--color-accent)) 10%, transparent);
-    }
-
-    &:focus-within {
-      outline: 2px solid var(--project-accent, var(--color-accent));
-      outline-offset: -1px;
-    }
-  }
-
-  &__input {
-    margin: 0.2rem 0 0;
-    accent-color: var(--project-accent, var(--color-accent));
-  }
-
-  &__body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    min-width: 0;
-  }
-
-  &__label {
-    font-size: 0.88rem;
-    color: var(--color-text);
-  }
-
-  &__hint {
-    color: var(--color-text-muted);
-    font-size: 0.78rem;
-    line-height: 1.4;
-  }
-
-  // The scope caveat sits BELOW the options, not in each hint: it applies to
-  // the whole control, and repeating it four times would bury the difference
-  // between the options in boilerplate.
-  &__scope {
-    margin: var(--s-3) 0 0;
-    color: var(--color-text-muted);
-    font-size: 0.76rem;
-    line-height: 1.5;
-
-    code {
-      font-size: 0.95em;
-      word-break: break-word;
-    }
-  }
-}
-
 .hint {
   color: var(--color-text-muted);
-}
-
-// ── Stat tiles: kill rounding within this scope ───────────────────────
-::ng-deep .project-stat-tile {
-  border-radius: 0 !important;
-}
-
-// ── Responsive ────────────────────────────────────────────────────────
-@media (max-width: 1024px) {
-  .project-landing {
-    &__body {
-      grid-template-columns: 1fr;
-    }
-
-    &__aside {
-      position: static;
-      max-height: none;
-      overflow: visible;
-      border-left: none;
-      padding-left: 0;
-    }
-  }
 }
 
 .repo-card {
@@ -834,19 +622,4 @@
 // them from the full epic list below, which is deliberately still offered.
 .adopt__item--ranked {
   border-left: 2px solid var(--color-accent);
-}
-
-// Sweep-overdue state on the repo-sync notice. Amber, not red: the copy is
-// probably still correct — what's broken is the mechanism that keeps it so.
-.project-landing__synced--overdue {
-  color: color-mix(in srgb, var(--color-warning) 85%, var(--color-text));
-
-  strong { font-weight: 700; }
-}
-
-.project-landing__sha {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.72rem;
-  padding: 0.02rem 0.25rem;
-  background: color-mix(in srgb, var(--color-text) 6%, transparent);
 }

@@ -1,0 +1,81 @@
+// ── Autonomy radios ───────────────────────────────────────────────────
+// Plain div + label rows (not <fieldset>/<legend>, which renders weirdly
+// inside flex/grid). Grid keeps radio and label tightly aligned so there's
+// no dead horizontal space.
+.autonomy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+
+  &__caption {
+    margin: 0 0 var(--s-2);
+    font-size: 0.74rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 1.1rem 1fr;
+    align-items: start;
+    gap: var(--s-3);
+    cursor: pointer;
+    padding: var(--s-2) var(--s-3);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    transition: border-color 80ms linear, background 80ms linear;
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--color-text) 25%, var(--color-border));
+    }
+
+    &--selected {
+      border-color: var(--project-accent, var(--color-accent));
+      background: color-mix(in srgb, var(--project-accent, var(--color-accent)) 10%, transparent);
+    }
+
+    &:focus-within {
+      outline: 2px solid var(--project-accent, var(--color-accent));
+      outline-offset: -1px;
+    }
+  }
+
+  &__input {
+    margin: 0.2rem 0 0;
+    accent-color: var(--project-accent, var(--color-accent));
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  &__label {
+    font-size: 0.88rem;
+    color: var(--color-text);
+  }
+
+  &__hint {
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+
+  // The scope caveat sits BELOW the options, not in each hint: it applies to
+  // the whole control, and repeating it four times would bury the difference
+  // between the options in boilerplate.
+  &__scope {
+    margin: var(--s-3) 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.76rem;
+    line-height: 1.5;
+
+    code {
+      font-size: 0.95em;
+      word-break: break-word;
+    }
+  }
+}

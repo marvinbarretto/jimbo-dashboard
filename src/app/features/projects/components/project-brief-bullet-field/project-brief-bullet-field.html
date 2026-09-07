@@ -6,7 +6,7 @@
     [checkable]="false"
     [triggers]="triggers()"
     [appendPlaceholder]="placeholder()"
-    emptyMessage="Nothing yet."
+    [emptyMessage]="emptyMessage()"
     (edited)="onEdited($event)"
     (removed)="onRemoved($event)"
     (appended)="onAppended($event)"

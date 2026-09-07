@@ -1,0 +1,140 @@
+<section class="identity" aria-label="What this project is">
+  <app-ui-inline-edit
+    class="identity__desc"
+    [value]="project().description ?? ''"
+    kind="textarea"
+    placeholder="Add a one-line description…"
+    ariaLabel="Edit description"
+    [rows]="2"
+    (saved)="saved.emit({ description: $event || null })"
+  />
+
+  <!-- Provenance, not freshness. Owner and created date used to live in the
+       Facts panel at the top of the aside; the panel is reference material,
+       but who owns a project is part of what it is. -->
+  <p class="identity__provenance">
+    @if (project().owner_actor_id; as owner) {
+      <app-actor-chip [actor]="owner" size="sm" />
+    } @else {
+      <span class="identity__unowned">Unowned</span>
+    }
+    <span class="identity__sep" aria-hidden="true">·</span>
+    <span>created {{ project().created_at | relativeTime }}</span>
+    @if (project().short_code; as code) {
+      <span class="identity__sep" aria-hidden="true">·</span>
+      <code class="identity__code">{{ code }}</code>
+    }
+    @if (isRepoSynced()) {
+      <span class="identity__sep" aria-hidden="true">·</span>
+      <span
+        class="identity__synced"
+        [class.identity__synced--overdue]="syncOverdue()">
+        <span aria-hidden="true">{{ syncOverdue() ? '⚠️' : '🔒' }}</span>
+        operating fields synced from repo
+        @if (project().synced_commit; as sha) {
+          <code class="identity__sha">{{ sha.slice(0, 7) }}</code>
+        }
+        {{ project().synced_at | relativeTime }}
+        @if (syncOverdue()) {
+          <!-- The failure that actually happened: the launchd sweep died on a
+               PATH fault and failed silently for five weeks while this line
+               read "6 weeks ago" and looked normal. Age is not staleness; an
+               overdue sweep is. -->
+          <strong>— sweep overdue, these may be behind the repo</strong>
+        }
+        @if (project().conventions_url; as url) {
+          <a [href]="url" target="_blank" rel="noopener">edit in repo</a>
+        } @else if (project().repo_url; as url) {
+          <a [href]="url" target="_blank" rel="noopener">open repo</a>
+        }
+      </span>
+    }
+  </p>
+
+  <div class="identity__grid">
+    <div class="identity__lead">
+      <app-project-brief-bullet-field
+        label="Intent"
+        [value]="project().intent"
+        placeholder="+ add a point (Enter)"
+        emptyMessage="Intent not declared — what is this project for?"
+        [triggers]="triggers()"
+        [readonly]="isRepoSynced()"
+        (saved)="saved.emit({ intent: $event })"
+      />
+    </div>
+
+    <div class="identity__side">
+      <!-- One bullet = one persona, so each is independently editable and
+           removable. Tasks cite these by wording, so editing one must not
+           disturb the others. -->
+      <app-project-brief-bullet-field
+        label="Personas"
+        [value]="project().personas"
+        placeholder="+ add a persona (Enter)"
+        emptyMessage="No personas named yet."
+        hint="A named person with enough context to argue with — not a role or a segment."
+        [triggers]="triggers()"
+        (saved)="saved.emit({ personas: $event })"
+      />
+      <app-project-brief-bullet-field
+        label="Success criteria"
+        [value]="project().success_criteria"
+        placeholder="+ add a criterion (Enter)"
+        emptyMessage="Success not defined yet — nothing here says when this is done."
+        [triggers]="triggers()"
+        (saved)="saved.emit({ success_criteria: $event })"
+      />
+    </div>
+  </div>
+
+  <div class="identity__now">
+    <!-- The blocker gets its own band when it is set: it is the one identity
+         field that is a live claim about today rather than a standing one. -->
+    <div class="identity__blocker" [class.identity__blocker--set]="hasBlocker()">
+      <app-project-brief-field
+        label="Current blocker"
+        [value]="project().current_blocker"
+        placeholder="What's stopping forward motion — leave empty if nothing is"
+        [rows]="2"
+        [triggers]="triggers()"
+        (saved)="saved.emit({ current_blocker: $event })"
+      />
+    </div>
+
+    <app-project-brief-field
+      label="Out of scope"
+      [value]="project().out_of_scope"
+      placeholder="Explicit exclusions"
+      [rows]="2"
+      [triggers]="triggers()"
+      [readonly]="isRepoSynced()"
+      (saved)="saved.emit({ out_of_scope: $event })"
+    />
+  </div>
+
+  <div class="identity__state">
+    @if (hasStructuredBeliefs()) {
+      <button
+        type="button"
+        class="identity__state-toggle"
+        [attr.aria-expanded]="stateOpen()"
+        (click)="toggleState()">
+        Current state (raw)
+      </button>
+    }
+    @if (stateOpen()) {
+      <app-project-brief-field
+        label="Current state"
+        [value]="project().current_state"
+        placeholder="Where things are now"
+        [rows]="4"
+        [hint]="hasStructuredBeliefs() ? 'The belief store behind Understanding, below. Edit here; read it there.' : null"
+        [triggers]="triggers()"
+        (saved)="saved.emit({ current_state: $event })"
+      />
+    }
+  </div>
+
+  <p class="identity__scale">{{ scaleLine() }}</p>
+</section>

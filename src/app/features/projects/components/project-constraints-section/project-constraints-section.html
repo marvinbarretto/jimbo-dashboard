@@ -1,7 +1,8 @@
 <app-ui-section
   [title]="'Constraints (' + activeCount() + ' of ' + totalCount() + ')'"
   [collapsible]="true"
-  [expanded]="true">
+  [expanded]="expanded()"
+  (toggled)="toggleSection()">
   @if (isLoading()) {
     <app-ui-loading-state message="Loading constraints…" />
   } @else if (error(); as e) {

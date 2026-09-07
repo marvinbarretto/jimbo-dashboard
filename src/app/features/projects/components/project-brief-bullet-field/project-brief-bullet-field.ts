@@ -25,6 +25,10 @@ export class ProjectBriefBulletField {
   readonly value       = input<string | null>(null);
   readonly placeholder = input<string>('+ add item (Enter)');
   readonly hint        = input<string | null>(null);
+  // Field-specific absence copy. A brief field with nothing in it must say
+  // what is missing ("Intent not declared") rather than render an empty box
+  // that reads as a value of nothing.
+  readonly emptyMessage = input<string>('Nothing yet.');
   readonly triggers    = input<MentionTrigger[]>([]);
   readonly readonly    = input<boolean>(false);
 

@@ -33,6 +33,15 @@ export class ProjectConstraintsSection {
   readonly activeCount = this.service.activeCount;
   readonly totalCount = this.service.totalCount;
 
+  // UiSection is controlled; binding only [expanded]="true" made this section
+  // nominally collapsible and permanently open. Starts closed — constraints
+  // are a rule set you consult or amend, not a status you check.
+  readonly expanded = signal(false);
+
+  toggleSection(): void {
+    this.expanded.update(v => !v);
+  }
+
   /** Draft text per section id — each section has its own add box. */
   readonly drafts = signal<Record<number, string>>({});
 

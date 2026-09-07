@@ -120,7 +120,7 @@ describe('ProjectLanding', () => {
   let vault: FakeVaultItemsService;
   let sessions: FakeFocusSessions;
 
-  async function setup(id: string) {
+  async function setup(id: string, bodies: Record<string, object> = {}) {
     vault = new FakeVaultItemsService();
     sessions = new FakeFocusSessions();
 
@@ -153,11 +153,15 @@ describe('ProjectLanding', () => {
     component = fixture.componentInstance;
 
     // ProjectLanding issues httpResource() reads on init (understanding /
-    // dispatch / activity) that the fakes don't serve. Flush them so
-    // whenStable() doesn't hang on perpetually-pending requests.
+    // dispatch / proposals / activity) that the fakes don't serve. Seed the
+    // ones a test cares about, then flush the rest so whenStable() doesn't
+    // hang on perpetually-pending requests.
     const httpMock = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
-    httpMock.match(() => true).forEach((req) => req.flush(null));
+    for (const req of httpMock.match(() => true)) {
+      const seeded = Object.entries(bodies).find(([fragment]) => req.request.url.includes(fragment));
+      req.flush(seeded ? seeded[1] : null);
+    }
 
     await fixture.whenStable();
   }
@@ -204,5 +208,94 @@ describe('ProjectLanding', () => {
   it('triggers loadRecent on construction', async () => {
     await setup('localshout');
     expect(sessions.loadRecent).toHaveBeenCalled();
+  });
+
+  // The focus tiles used to sum a list already sliced to 8 while claiming to
+  // cover 30 days. The counts read the whole window now; only the rendered
+  // rows are a slice.
+  it('focus totals cover the whole window, not the rendered slice', async () => {
+    await setup('localshout');
+    sessions.setRecent(
+      Array.from({ length: 10 }, (_, i) =>
+        makeSession({
+          id: focusSessionId(`aaaaaaaa-aaaa-aaaa-aaaa-00000000000${i}`.slice(0, 36)),
+          started_at: `2025-02-0${(i % 9) + 1}T10:00:00Z`,
+          actual_seconds: 600,
+        }),
+      ),
+    );
+    expect(component.sessionsForProject().length).toBe(10);
+    expect(component.focusMinutes()).toBe(100);
+    expect(component.recentSessions().length).toBe(8);
+  });
+
+  it('scale() carries every former stat tile plus its window', async () => {
+    await setup('localshout');
+    vault.setItems([
+      makeItem({ id: vaultItemId('22222222-2222-2222-2222-222222222222'), seq: 2 }),
+      makeItem({ id: vaultItemId('33333333-3333-3333-3333-333333333333'), seq: 3, completed_at: '2025-01-05T00:00:00Z' }),
+      makeItem({ id: vaultItemId('44444444-4444-4444-4444-444444444444'), seq: 4, is_epic: true }),
+    ]);
+    expect(component.scale()).toEqual({
+      items: 3,
+      active: 2,
+      done: 1,
+      epics: 1,
+      focusMinutes: 0,
+      sessions: 0,
+      focusWindowDays: 30,
+    });
+  });
+
+  it('splits one dispatch read into proposals and in-flight work', async () => {
+    await setup('localshout', {
+      '/api/dispatch/queue': {
+        items: [
+          { id: 1, task_id: 'note_a', status: 'proposed', executor: 'boris', flow: 'commission' },
+          { id: 2, task_id: 'note_b', status: 'running',  executor: 'boris', flow: 'commission' },
+          { id: 3, task_id: 'note_c', status: 'approved', executor: 'boris', flow: 'commission' },
+        ],
+        total: 3,
+      },
+    });
+    expect(component.proposedTasks().map(t => t.id)).toEqual([1]);
+    expect(component.inFlightTasks().map(t => t.id)).toEqual([2, 3]);
+    expect(component.dispatchUnmeasured()).toBe(false);
+  });
+
+  it('counts pending belief proposals', async () => {
+    await setup('localshout', {
+      '/api/understanding-proposals': [{ id: 'p1' }, { id: 'p2' }],
+    });
+    expect(component.pendingProposals()).toBe(2);
+    expect(component.proposalsUnmeasured()).toBe(false);
+  });
+
+  // A project with nothing linked and no codebase has no epics, issues, loose
+  // items or repos — the Work zone says so once instead of four times.
+  it('hasWork() is false with no items and no codebase', async () => {
+    await setup('localshout');
+    expect(component.hasWork()).toBe(false);
+    vault.setItems([makeItem({ seq: 9 })]);
+    expect(component.hasWork()).toBe(true);
+  });
+
+  // UiSection is controlled: without this state, "collapsible" sections could
+  // not be collapsed and [expanded]="false" ones could never be opened.
+  it('section expand state is a default, not a wall', async () => {
+    await setup('localshout');
+    expect(component.isOpen('epics')).toBe(true);
+    expect(component.isOpen('understanding')).toBe(false);
+
+    component.toggleSection('understanding');
+    expect(component.isOpen('understanding')).toBe(true);
+
+    component.toggleSection('epics');
+    expect(component.isOpen('epics')).toBe(false);
+  });
+
+  it('focusMeta declares the window even when the window is empty', async () => {
+    await setup('localshout');
+    expect(component.focusMeta()).toBe('none in the last 30 days');
   });
 });

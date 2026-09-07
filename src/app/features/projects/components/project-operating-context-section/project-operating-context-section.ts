@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { UiSection } from '@shared/components/ui-section/ui-section';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import type { MentionTrigger } from '@shared/mentions';
@@ -30,4 +30,14 @@ export class ProjectOperatingContextSection {
   // Repo-synced projects mirror these fields from docs/project.md — read-only
   // here, same rule the parent page applies to the rest of the brief.
   readonly fieldsReadonly = computed(() => !!this.project().synced_at);
+
+  // UiSection is controlled — it renders `expanded` and emits `toggled`, and
+  // flips nothing itself. Without this the section was nominally collapsible
+  // and permanently open. Starts closed: it is reference material, read when
+  // you are about to touch the codebase, not on every visit.
+  readonly expanded = signal(false);
+
+  toggle(): void {
+    this.expanded.update(v => !v);
+  }
 }
