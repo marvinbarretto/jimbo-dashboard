@@ -70,42 +70,42 @@
     }
   }
 
-  // ── Purpose grid ──────────────────────────────────────────────────
-  // Intent leads at a real reading measure; personas and success criteria
-  // stack beside it. Below 60rem they fall into one column in source order,
-  // which is already the right reading order.
-  &__grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-    gap: var(--s-5, 1.5rem);
-    align-items: start;
-  }
-
-  &__lead {
+  // ── Purpose ───────────────────────────────────────────────────────
+  // Intent alone on its first row, capped at a reading measure; the pairs
+  // that run long sit beneath it. Below 60rem the pairs fall into one column
+  // in source order, which is already the right reading order.
+  &__intent {
     min-width: 0;
     max-width: 70ch;
   }
 
-  &__side {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--s-4, 1rem);
-  }
-
-  // Intent is the sentence that answers "why does this exist" — it reads at
-  // body size, not at the 0.83rem the rest of the page uses for data.
-  &__lead ::ng-deep .ui-checklist__text {
-    font-size: 0.95rem;
-    line-height: 1.55;
-  }
-
-  // ── Blocker / scope band ──────────────────────────────────────────
-  &__now {
+  &__pair {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: var(--s-5, 1.5rem);
     align-items: start;
+
+    > * { min-width: 0; }
+  }
+
+  // Intent is the sentence that answers "why does this exist" — it reads at
+  // body size, not at the 0.83rem the rest of the page uses for data.
+  &__intent ::ng-deep .ui-checklist__text {
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  // UiChecklist paints its empty message in a hard-coded red-on-pink error
+  // box. That is the wrong register here: a travel project with no personas
+  // has not failed at anything, and three red boxes at the top of the page
+  // would read as breakage. Scoped override, not an edit to the primitive —
+  // its other callers may well want the alarm.
+  ::ng-deep .ui-checklist__empty {
+    background: transparent;
+    border: 1px dashed var(--color-border);
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    font-style: italic;
   }
 
   // A set blocker earns a left rule; an empty one stays a plain field, because
@@ -173,11 +173,8 @@
 }
 
 @media (max-width: 60rem) {
-  .identity {
-    &__grid,
-    &__now {
-      grid-template-columns: 1fr;
-      gap: var(--s-4, 1rem);
-    }
+  .identity__pair {
+    grid-template-columns: 1fr;
+    gap: var(--s-4, 1rem);
   }
 }

@@ -51,51 +51,52 @@
     }
   </p>
 
-  <div class="identity__grid">
-    <div class="identity__lead">
-      <app-project-brief-bullet-field
-        label="Intent"
-        [value]="project().intent"
-        placeholder="+ add a point (Enter)"
-        emptyMessage="Intent not declared — what is this project for?"
-        [triggers]="triggers()"
-        [readonly]="isRepoSynced()"
-        (saved)="saved.emit({ intent: $event })"
-      />
-    </div>
-
-    <div class="identity__side">
-      <!-- One bullet = one persona, so each is independently editable and
-           removable. Tasks cite these by wording, so editing one must not
-           disturb the others. -->
-      <app-project-brief-bullet-field
-        label="Personas"
-        [value]="project().personas"
-        placeholder="+ add a persona (Enter)"
-        emptyMessage="No personas named yet."
-        hint="A named person with enough context to argue with — not a role or a segment."
-        [triggers]="triggers()"
-        (saved)="saved.emit({ personas: $event })"
-      />
-      <app-project-brief-bullet-field
-        label="Success criteria"
-        [value]="project().success_criteria"
-        placeholder="+ add a criterion (Enter)"
-        emptyMessage="Success not defined yet — nothing here says when this is done."
-        [triggers]="triggers()"
-        (saved)="saved.emit({ success_criteria: $event })"
-      />
-    </div>
+  <!-- Intent takes its own row at a reading measure. Personas and success
+       criteria run long and intent runs short, so setting them beside each
+       other left a column of dead space under every project's intent. -->
+  <div class="identity__intent">
+    <app-project-brief-bullet-field
+      label="Intent"
+      [value]="project().intent"
+      placeholder="+ add a point (Enter)"
+      emptyMessage="Intent not declared — what is this project for?"
+      [triggers]="triggers()"
+      [readonly]="isRepoSynced()"
+      (saved)="saved.emit({ intent: $event })"
+    />
   </div>
 
-  <div class="identity__now">
+  <div class="identity__pair">
+    <!-- One bullet = one persona, so each is independently editable and
+         removable. Tasks cite these by wording, so editing one must not
+         disturb the others. -->
+    <app-project-brief-bullet-field
+      label="Personas"
+      [value]="project().personas"
+      placeholder="+ add a persona (Enter)"
+      emptyMessage="No personas named yet."
+      hint="A named person with enough context to argue with — not a role or a segment."
+      [triggers]="triggers()"
+      (saved)="saved.emit({ personas: $event })"
+    />
+    <app-project-brief-bullet-field
+      label="Success criteria"
+      [value]="project().success_criteria"
+      placeholder="+ add a criterion (Enter)"
+      emptyMessage="Success not defined yet — nothing here says when this is done."
+      [triggers]="triggers()"
+      (saved)="saved.emit({ success_criteria: $event })"
+    />
+  </div>
+
+  <div class="identity__pair">
     <!-- The blocker gets its own band when it is set: it is the one identity
          field that is a live claim about today rather than a standing one. -->
     <div class="identity__blocker" [class.identity__blocker--set]="hasBlocker()">
       <app-project-brief-field
         label="Current blocker"
         [value]="project().current_blocker"
-        placeholder="What's stopping forward motion — leave empty if nothing is"
+        placeholder="What's stopping forward motion"
         [rows]="2"
         [triggers]="triggers()"
         (saved)="saved.emit({ current_blocker: $event })"
