@@ -732,6 +732,7 @@ export class ProjectLanding {
   activityDesc(item: ProjectActivityItem): string {
     switch (item.action) {
       case 'note_created':        return `${item.to_value ?? 'note'} created`;
+      case 'note_recurred':       return 'same alert fired again';
       case 'status_changed':      return `status → ${item.to_value ?? '?'}`;
       case 'dispatch_started':    return 'dispatch started';
       case 'commission_completed': return `commission completed${item.reason ? ` · ${item.reason}` : ''}`;
