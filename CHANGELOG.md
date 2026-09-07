@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.219](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.218...v0.0.219) (2026-09-07)
+
+
+### Features
+
+* **grooming:** show queue flow, so a growing queue stops reading as a draining one ([c7f1820](https://github.com/marvinbarretto/jimbo-dashboard/commit/c7f18200a7e0f543908c96367518132159ada7d3))
+
 ### [0.0.218](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.217...v0.0.218) (2026-09-06)
 
 
