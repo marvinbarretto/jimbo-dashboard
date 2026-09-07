@@ -20,8 +20,11 @@
     }
 
     @if (anyUnmeasured()) {
+      <!-- True whether the read is still in flight or came back failed. The
+           panel cannot tell those apart from here, and "did not answer" would
+           be a false claim during the first second of every page load. -->
       <p class="right-now__note">
-        One of these reads did not answer — those figures are unknown, not clear.
+        Figures marked unmeasured have no reading yet — unknown, not clear.
       </p>
     }
 
