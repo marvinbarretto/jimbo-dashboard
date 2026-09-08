@@ -1,16 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
-import { TableShell } from '@shared/components/table-shell/table-shell';
-import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
+import { ChangeDetectionStrategy, Component, TemplateRef, computed, input, viewChild } from '@angular/core';
+import { type CellContext, createColumnHelper, type ColumnDef } from '@tanstack/angular-table';
+import { UiDataTable } from '@shared/components/ui-data-table/ui-data-table';
 import { VaultChip } from '@shared/components/vault-chip/vault-chip';
 import { formatDuration } from '@shared/utils/datetime.utils';
 import type { GroomingRun, RunOutcome } from '../../data-access/grooming-report.service';
 
 /**
- * Every grooming pass today, newest first, each row opening onto the model's
- * full reasoning.
+ * Every grooming pass today: sortable, and each row opens onto the model's full
+ * reasoning.
  *
- * A row has to answer two questions: what was attempted, and what came of it.
- * The dispatch record alone answers neither — `result_summary` reads
+ * A row has to answer two questions — what was attempted, and what came of it —
+ * and the dispatch record answers neither. `result_summary` reads
  * "intake-quality: clear, passed", which restates the skill name and says
  * nothing about what was read or what moved. Both columns below come from
  * note_activity, joined in the service:
@@ -27,235 +27,145 @@ import type { GroomingRun, RunOutcome } from '../../data-access/grooming-report.
  * When nothing matched, the cell says "no change recorded" — a page that
  * explains what happened must not invent a transition.
  *
- * Expansion follows the ui-lab "Expandable Rows Inline" pattern (TableShell,
- * whole row as the trigger, one open at a time). The rationale runs to a
- * paragraph per field: more than a cell can hold, and more than a tooltip
- * should ask anyone to read while holding a mouse still. The cost is the column
- * sorting the TanStack version had — the table is chronological, and the funnel
- * above filters it by stage.
- *
- * `wait` is enqueue→pickup and `run` is pickup→finish. Split because they fail
- * differently: a long wait is a saturated groomer, a long run is a slow skill.
+ * Sorting matters most on `wait`, which is why this went back to ui-data-table
+ * after a stint on the plain-table pattern. On 2026-09-08, three of 45 passes
+ * waited ~17 HOURS between enqueue and pickup while the median waited seconds
+ * — three orders of magnitude of spread, invisible in a chronological list and
+ * one click away when the column sorts. `run` is the duller twin (26–82s), but
+ * they fail differently and are worth splitting: a long wait is a queue that
+ * is not being served, a long run is a slow skill.
  */
 @Component({
   selector: 'app-grooming-runs-table',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TableShell, UiEmptyState, VaultChip],
+  imports: [UiDataTable, VaultChip],
   host: { 'data-testid': 'grooming-runs-table' },
   template: `
-    @if (rows().length === 0) {
-      <app-ui-empty-state title="No grooming passes yet today" [message]="emptyMessage()" />
-    } @else {
-      <app-table-shell>
-        <table class="runs" aria-label="Grooming passes">
-          <thead>
-            <tr>
-              <th scope="col" class="runs__c-when">Finished</th>
-              <th scope="col" class="runs__c-stage">Stage</th>
-              <th scope="col" class="runs__c-note">Note</th>
-              <th scope="col" class="runs__c-read">Read as</th>
-              <th scope="col" class="runs__c-result">Result</th>
-              <th scope="col" class="runs__c-num">Wait</th>
-              <th scope="col" class="runs__c-num">Run</th>
-              <th scope="col" class="runs__c-by">By</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (run of rows(); track run.id) {
-              <tr
-                class="runs__row"
-                [class.runs__row--open]="expandedId() === run.id"
-                tabindex="0"
-                role="button"
-                [attr.aria-expanded]="expandedId() === run.id"
-                data-testid="runs-row"
-                [attr.data-stage]="run.stage"
-                (click)="toggle(run.id)"
-                (keydown.enter)="toggle(run.id)"
-                (keydown.space)="toggle(run.id); $event.preventDefault()">
-                <td class="runs__c-when">
-                  <span class="runs__caret" aria-hidden="true">{{ expandedId() === run.id ? '▾' : '▸' }}</span>
-                  {{ timeOfDay(run.completedAt) }}
-                </td>
-                <td class="runs__c-stage">{{ run.stage }}</td>
+    <ng-template #noteCell let-ctx>
+      <!-- The chip is a link and owns its own click. Without stopping
+           propagation, opening a note also toggles the row it sits in, leaving
+           a stray panel behind every drill-through. -->
+      <span (click)="$event.stopPropagation()">
+        @if (ctx.row.original.seq; as seq) {
+          <app-vault-chip
+            kind="task"
+            [seq]="seq"
+            [title]="ctx.row.original.title"
+            [href]="'/vault-items?detail=' + seq"
+            size="sm" />
+        } @else {
+          <span class="runs__muted">{{ ctx.row.original.noteId }}</span>
+        }
+      </span>
+    </ng-template>
 
-                <!-- The chip is a link and owns its own click. Without stopping
-                     propagation, opening a note would also toggle the row it
-                     sits in, leaving a stray panel behind every drill-through. -->
-                <td class="runs__c-note" (click)="$event.stopPropagation()">
-                  @if (run.seq; as seq) {
-                    <app-vault-chip
-                      kind="task"
-                      [seq]="seq"
-                      [title]="run.title"
-                      [href]="'/vault-items?detail=' + seq"
-                      size="sm" />
-                  } @else {
-                    <span class="runs__muted">{{ run.noteId }}</span>
-                  }
-                </td>
+    <ng-template #readAsCell let-ctx>
+      @if (readAs(ctx.row.original); as read) {
+        <span class="runs__read">{{ read.text }}</span>
+        @if (read.isFallback) {
+          <span class="runs__fallback">title</span>
+        }
+      } @else {
+        <span class="runs__muted">—</span>
+      }
+    </ng-template>
 
-                <td class="runs__c-read">
-                  @if (readAs(run); as read) {
-                    <span class="runs__read">{{ read.text }}</span>
-                    @if (read.isFallback) {
-                      <span class="runs__fallback">title</span>
-                    }
-                  } @else {
-                    <span class="runs__muted">—</span>
-                  }
-                </td>
+    <ng-template #resultCell let-ctx>
+      @if (ctx.row.original.status === 'failed') {
+        <span class="runs__failed">failed</span>
+      } @else if (ctx.row.original.outcome; as o) {
+        @if (o.toStatus) {
+          <span class="runs__move" [class.runs__move--rejected]="o.toStatus === 'intake_rejected'">
+            <span class="runs__from">{{ o.fromStatus }}</span>
+            <span class="runs__arrow" aria-hidden="true">→</span>
+            <span class="runs__to">{{ o.toStatus }}</span>
+          </span>
+        }
+        <span class="runs__detail">{{ verdictLine(o) }}</span>
+        @if (o.reassignedTo) {
+          <span class="runs__detail runs__detail--move">handed to {{ o.reassignedTo }}</span>
+        }
+      } @else {
+        <span class="runs__muted">no change recorded</span>
+      }
+    </ng-template>
 
-                <td class="runs__c-result">
-                  @if (run.status === 'failed') {
-                    <span class="runs__failed">failed</span>
-                  } @else if (run.outcome; as o) {
-                    @if (o.toStatus) {
-                      <span class="runs__move" [class.runs__move--rejected]="o.toStatus === 'intake_rejected'">
-                        <span class="runs__from">{{ o.fromStatus }}</span>
-                        <span class="runs__arrow" aria-hidden="true">→</span>
-                        <span class="runs__to">{{ o.toStatus }}</span>
-                      </span>
-                    }
-                    <span class="runs__detail">{{ verdictLine(o) }}</span>
-                    @if (o.reassignedTo) {
-                      <span class="runs__detail runs__detail--move">handed to {{ o.reassignedTo }}</span>
-                    }
-                  } @else {
-                    <span class="runs__muted">no change recorded</span>
-                  }
-                </td>
+    <!-- The opened panel. Context is the GroomingRun itself. -->
+    <ng-template #rowDetailTpl let-run>
+      <div class="runs__panel">
+        @if (run.status === 'failed') {
+          <section class="runs__field runs__field--error">
+            <h4>Failed</h4>
+            <p>{{ run.error ?? 'No error message was recorded.' }}</p>
+          </section>
+        }
 
-                <td class="runs__c-num">{{ duration(run.waitSeconds) }}</td>
-                <td class="runs__c-num">{{ duration(run.runSeconds) }}</td>
-                <td class="runs__c-by">{{ run.executor }}</td>
-              </tr>
+        @if (run.outcome; as o) {
+          @if (o.readAs) {
+            <section class="runs__field">
+              <h4>What it read this as</h4>
+              <p>{{ o.readAs }}</p>
+            </section>
+          }
+          @if (o.whyVerdict) {
+            <section class="runs__field">
+              <h4>Why it ruled that way</h4>
+              <p>{{ o.whyVerdict }}</p>
+            </section>
+          }
+          @if (o.inferredDone) {
+            <section class="runs__field">
+              <h4>What “done” looks like</h4>
+              <p>{{ o.inferredDone }}</p>
+            </section>
+          }
+          @if (!o.readAs && !o.whyVerdict && !o.inferredDone) {
+            <section class="runs__field">
+              <h4>No reasoning recorded</h4>
+              <p>
+                The {{ run.stage }} pass writes a verdict but no rationale — only intake records
+                what it made of the item. What this pass changed is in <strong>Result</strong>.
+              </p>
+            </section>
+          }
+        } @else if (run.status !== 'failed') {
+          <section class="runs__field">
+            <h4>No change recorded</h4>
+            <p>
+              This pass completed, but no matching note_activity row was found — so what it
+              changed is not being guessed at here.
+            </p>
+          </section>
+        }
 
-              @if (expandedId() === run.id) {
-                <tr class="runs__expanded">
-                  <td colspan="8">
-                    <div class="runs__panel">
-                      @if (run.status === 'failed') {
-                        <section class="runs__field runs__field--error">
-                          <h4>Failed</h4>
-                          <p>{{ run.error ?? 'No error message was recorded.' }}</p>
-                        </section>
-                      }
+        <dl class="runs__facts">
+          <div><dt>Skill</dt><dd>{{ run.skill }}</dd></div>
+          <div><dt>Model</dt><dd>{{ modelShort(run.model) }}</dd></div>
+          @if (run.outcome?.reassignedTo) {
+            <div>
+              <dt>Reassigned</dt>
+              <dd>{{ run.outcome?.reassignedFrom ?? '—' }} → {{ run.outcome?.reassignedTo }}</dd>
+            </div>
+          }
+          @if (run.retryCount > 0) {
+            <div><dt>Retries</dt><dd>{{ run.retryCount }}</dd></div>
+          }
+          <div><dt>Waited</dt><dd>{{ duration(run.waitSeconds) }}</dd></div>
+          <div><dt>Ran for</dt><dd>{{ duration(run.runSeconds) }}</dd></div>
+        </dl>
+      </div>
+    </ng-template>
 
-                      @if (run.outcome; as o) {
-                        @if (o.readAs) {
-                          <section class="runs__field">
-                            <h4>What it read this as</h4>
-                            <p>{{ o.readAs }}</p>
-                          </section>
-                        }
-                        @if (o.whyVerdict) {
-                          <section class="runs__field">
-                            <h4>Why it ruled that way</h4>
-                            <p>{{ o.whyVerdict }}</p>
-                          </section>
-                        }
-                        @if (o.inferredDone) {
-                          <section class="runs__field">
-                            <h4>What “done” looks like</h4>
-                            <p>{{ o.inferredDone }}</p>
-                          </section>
-                        }
-                        @if (!o.readAs && !o.whyVerdict && !o.inferredDone) {
-                          <section class="runs__field">
-                            <h4>No reasoning recorded</h4>
-                            <p>
-                              The {{ run.stage }} pass writes a verdict but no rationale — only
-                              intake records what it made of the item. What this pass changed is
-                              in <strong>Result</strong>.
-                            </p>
-                          </section>
-                        }
-                      } @else if (run.status !== 'failed') {
-                        <section class="runs__field">
-                          <h4>No change recorded</h4>
-                          <p>
-                            This pass completed, but no matching note_activity row was found — so
-                            what it changed is not being guessed at here.
-                          </p>
-                        </section>
-                      }
-
-                      <dl class="runs__facts">
-                        <div><dt>Skill</dt><dd>{{ run.skill }}</dd></div>
-                        <div><dt>Model</dt><dd>{{ modelShort(run.model) }}</dd></div>
-                        @if (run.outcome?.reassignedTo) {
-                          <div>
-                            <dt>Reassigned</dt>
-                            <dd>{{ run.outcome?.reassignedFrom ?? '—' }} → {{ run.outcome?.reassignedTo }}</dd>
-                          </div>
-                        }
-                        @if (run.retryCount > 0) {
-                          <div><dt>Retries</dt><dd>{{ run.retryCount }}</dd></div>
-                        }
-                        <div><dt>Waited</dt><dd>{{ duration(run.waitSeconds) }}</dd></div>
-                        <div><dt>Ran for</dt><dd>{{ duration(run.runSeconds) }}</dd></div>
-                      </dl>
-                    </div>
-                  </td>
-                </tr>
-              }
-            }
-          </tbody>
-        </table>
-      </app-table-shell>
-    }
+    <app-ui-data-table
+      [data]="rows()"
+      [columns]="columns"
+      [rowDetail]="rowDetailTpl"
+      ariaLabel="Grooming passes"
+      emptyTitle="No grooming passes yet today"
+      [emptyMessage]="emptyMessage()" />
   `,
   styles: [`
     :host { display: block; }
-
-    .runs {
-      width: 100%;
-      min-width: 60rem;
-      border-collapse: collapse;
-      font-size: 0.74rem;
-    }
-
-    .runs th, .runs td {
-      padding: 0.45rem 0.6rem;
-      text-align: left;
-      vertical-align: top;
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .runs thead th {
-      position: sticky;
-      top: 0;
-      z-index: 1;
-      background: var(--color-surface-soft);
-      font-weight: 400;
-      font-size: 0.62rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--color-text-muted);
-      white-space: nowrap;
-    }
-
-    .runs__row { cursor: pointer; }
-    .runs__row:hover { background: color-mix(in srgb, var(--color-accent) 5%, transparent); }
-    .runs__row:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
-    .runs__row--open { background: color-mix(in srgb, var(--color-accent) 8%, transparent); }
-    .runs__row--open td { border-bottom-color: transparent; }
-
-    .runs__caret {
-      display: inline-block;
-      width: 0.7rem;
-      color: var(--color-text-muted);
-      font-size: 0.6rem;
-    }
-
-    .runs__c-when   { width: 6.5rem; white-space: nowrap; font-family: var(--font-mono); }
-    .runs__c-stage  { width: 6rem; white-space: nowrap; }
-    .runs__c-note   { width: 15rem; }
-    .runs__c-read   { width: 26rem; }
-    .runs__c-result { width: 14rem; }
-    .runs__c-num    { width: 4rem; text-align: right; white-space: nowrap; font-family: var(--font-mono); }
-    .runs__c-by     { width: 5rem; white-space: nowrap; }
 
     .runs__muted { color: var(--color-text-muted); font-style: italic; }
     .runs__failed { color: var(--color-danger); }
@@ -268,6 +178,7 @@ import type { GroomingRun, RunOutcome } from '../../data-access/grooming-report.
       -webkit-box-orient: vertical;
       overflow: hidden;
       line-height: 1.4;
+      font-size: 0.74rem;
     }
 
     .runs__fallback {
@@ -305,18 +216,13 @@ import type { GroomingRun, RunOutcome } from '../../data-access/grooming-report.
 
     /* ── the opened panel ───────────────────────────────────────────── */
 
-    .runs__expanded td {
-      background: color-mix(in srgb, var(--color-surface-soft) 92%, var(--color-bg));
-      padding-top: 0;
-    }
-
     .runs__panel {
       display: grid;
       gap: 0.85rem;
-      padding: 0.3rem 0 0.7rem 1.3rem;
+      padding: 0.3rem 0 0.8rem 1.3rem;
       margin-left: 0.35rem;
       border-left: 2px solid var(--color-accent);
-      max-width: 68ch;
+      max-width: 74ch;
     }
 
     .runs__field h4 {
@@ -369,15 +275,19 @@ export class GroomingRunsTable {
   /** Null shows every stage. */
   readonly stageFilter = input<string | null>(null);
 
-  /** One open at a time — the panel runs to several paragraphs, and a handful
-   *  open at once turns the table back into the wall of text it replaced.
-   *  Matches the ui-lab "Expandable Rows Inline" pattern. */
-  protected readonly expandedId = signal<string | null>(null);
+  private readonly columnHelper = createColumnHelper<GroomingRun>();
+
+  private readonly noteCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<GroomingRun, unknown> }>>('noteCell');
+  private readonly readAsCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<GroomingRun, unknown> }>>('readAsCell');
+  private readonly resultCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<GroomingRun, unknown> }>>('resultCell');
 
   protected readonly rows = computed(() => {
     const stage = this.stageFilter();
     const all = this.runs();
-    return stage ? all.filter(r => r.stage === stage) : all;
+    return stage ? all.filter(r => r.stage === stage) : [...all];
   });
 
   protected readonly emptyMessage = computed(() =>
@@ -386,9 +296,63 @@ export class GroomingRunsTable {
       : 'The pump ticks every 30 minutes. Nothing has completed since midnight.',
   );
 
-  protected toggle(id: string): void {
-    this.expandedId.update(current => (current === id ? null : id));
-  }
+  // Every column carries an explicit `size`: ui-data-table writes
+  // header.getSize() straight into style.width and TanStack defaults to 150px,
+  // so leaving them unset gives eight equal columns and squeezes the two that
+  // carry the explanation.
+  protected readonly columns: ColumnDef<GroomingRun, any>[] = [
+    this.columnHelper.accessor(row => row.completedAt ?? '', {
+      id: 'when',
+      header: 'Finished',
+      size: 92,
+      cell: ctx => this.timeOfDay(ctx.getValue()),
+      sortingFn: 'alphanumeric',
+    }),
+    this.columnHelper.accessor(row => row.stage, {
+      id: 'stage',
+      header: 'Stage',
+      size: 88,
+      sortingFn: 'alphanumeric',
+    }),
+    this.columnHelper.accessor(row => row.seq ?? 0, {
+      id: 'note',
+      header: 'Note',
+      size: 210,
+      cell: () => this.noteCell(),
+    }),
+    this.columnHelper.accessor(row => this.readAs(row)?.text ?? '', {
+      id: 'readAs',
+      header: 'Read as',
+      size: 400,
+      cell: () => this.readAsCell(),
+    }),
+    this.columnHelper.accessor(row => row.outcome?.toStatus ?? '', {
+      id: 'result',
+      header: 'Result',
+      size: 210,
+      cell: () => this.resultCell(),
+    }),
+    // Sorts on the raw seconds, not the rendered "~17h" — a lexical sort would
+    // put ~2s after ~17h and quietly hide the outlier this column exists for.
+    this.columnHelper.accessor(row => row.waitSeconds ?? -1, {
+      id: 'wait',
+      header: 'Wait',
+      size: 70,
+      cell: ctx => this.duration(ctx.row.original.waitSeconds),
+    }),
+    this.columnHelper.accessor(row => row.runSeconds ?? -1, {
+      id: 'run',
+      header: 'Run',
+      size: 70,
+      cell: ctx => this.duration(ctx.row.original.runSeconds),
+    }),
+    this.columnHelper.accessor(row => row.executor ?? '', {
+      id: 'executor',
+      header: 'By',
+      size: 80,
+      sortingFn: 'alphanumeric',
+    }),
+  ];
 
   /** What the pass understood the item to be. Only intake records one, so the
    *  other stages fall back to the note's title — flagged, so a reader never
@@ -417,7 +381,7 @@ export class GroomingRunsTable {
   }
 
   /** Everything here is from today, so the date would be noise on every row. */
-  protected timeOfDay(iso: string | null): string {
+  protected timeOfDay(iso: string): string {
     if (!iso) return '—';
     const d = new Date(iso);
     return Number.isNaN(d.getTime())

@@ -205,6 +205,7 @@ const desktopRoutes: Routes = [
       { path: 'project-brief-bullet-field', loadComponent: () => import('./features/ui-lab/sections/project-brief-bullet-field-section').then(m => m.ProjectBriefBulletFieldSection) },
       { path: 'mention-chip-strip',      loadComponent: () => import('./features/ui-lab/sections/mention-chip-strip-section').then(m => m.MentionChipStripSection) },
       { path: 'expandable-rows',         loadComponent: () => import('./features/ui-lab/sections/expandable-rows-section').then(m => m.ExpandableRowsSection) },
+      { path: 'sortable-expandable-table', loadComponent: () => import('./features/ui-lab/sections/sortable-expandable-table-section').then(m => m.SortableExpandableTableSection) },
       { path: 'refresh-control',         loadComponent: () => import('./features/ui-lab/sections/refresh-control-section').then(m => m.RefreshControlSection) },
       { path: 'side-panel-inspector',    loadComponent: () => import('./features/ui-lab/sections/side-panel-inspector-section').then(m => m.SidePanelInspectorSection) },
       { path: 'briefing-report',         loadComponent: () => import('./features/ui-lab/sections/briefing-report-section').then(m => m.BriefingReportSection) },

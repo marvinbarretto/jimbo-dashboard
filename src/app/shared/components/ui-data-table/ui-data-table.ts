@@ -1,11 +1,15 @@
-import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, TemplateRef, input, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import {
   createAngularTable,
   FlexRenderDirective,
   type Cell,
+  type ExpandedState,
   getCoreRowModel,
+  getExpandedRowModel,
   getSortedRowModel,
   type ColumnDef,
+  type Row,
   type RowData,
   type SortingState,
 } from '@tanstack/angular-table';
@@ -13,7 +17,7 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 
 @Component({
   selector: 'app-ui-data-table',
-  imports: [FlexRenderDirective, UiEmptyState],
+  imports: [FlexRenderDirective, NgTemplateOutlet, UiEmptyState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (data().length === 0) {
@@ -72,7 +76,17 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
 
           <tbody class="ui-data-table__body">
             @for (row of table().getRowModel().rows; track row.id) {
-              <tr class="ui-data-table__row" [class]="rowClassFor(row.original)">
+              <tr
+                class="ui-data-table__row"
+                [class]="rowClassFor(row.original)"
+                [class.ui-data-table__row--expandable]="!!rowDetail()"
+                [class.ui-data-table__row--open]="isOpen(row)"
+                [attr.tabindex]="rowDetail() ? 0 : null"
+                [attr.role]="rowDetail() ? 'button' : null"
+                [attr.aria-expanded]="rowDetail() ? isOpen(row) : null"
+                (click)="rowDetail() && toggle(row)"
+                (keydown.enter)="rowDetail() && toggle(row)"
+                (keydown.space)="rowDetail() && toggle(row); rowDetail() && $event.preventDefault()">
                 @for (cell of row.getVisibleCells(); track cell.id) {
                   <td class="ui-data-table__cell">
                     @if (hasCellTemplate(cell)) {
@@ -90,6 +104,18 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
                   </td>
                 }
               </tr>
+
+              @if (rowDetail(); as detail) {
+                @if (isOpen(row)) {
+                  <tr class="ui-data-table__detail-row">
+                    <td [attr.colspan]="row.getVisibleCells().length">
+                      <ng-container
+                        [ngTemplateOutlet]="detail"
+                        [ngTemplateOutletContext]="{ $implicit: row.original, row }" />
+                    </td>
+                  </tr>
+                }
+              }
             }
           </tbody>
         </table>
@@ -182,6 +208,28 @@ import { UiEmptyState } from '@shared/components/ui-empty-state/ui-empty-state';
     .ui-data-table__cell {
       vertical-align: middle;
     }
+
+    /* Expansion is opt-in: without a rowDetail template the row is not a
+       button, takes no focus, and looks exactly as it did before. */
+    .ui-data-table__row--expandable { cursor: pointer; }
+
+    .ui-data-table__row--expandable:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: -2px;
+    }
+
+    .ui-data-table__row--open {
+      background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    }
+
+    .ui-data-table__row--open .ui-data-table__cell {
+      border-bottom-color: transparent;
+    }
+
+    .ui-data-table__detail-row > td {
+      background: color-mix(in srgb, var(--color-surface-soft) 92%, var(--color-bg));
+      padding-top: 0;
+    }
   `],
 })
 export class UiDataTable<TData extends RowData> {
@@ -193,20 +241,64 @@ export class UiDataTable<TData extends RowData> {
   readonly emptyMessage = input('Nothing to display.');
   readonly rowClass = input<((row: TData) => string | null) | null>(null);
 
+  /**
+   * Optional detail panel. Supplying it makes every row clickable and renders
+   * the template in a full-width row underneath the open one; the context is
+   * `{ $implicit: <your row object>, row: <TanStack Row> }`.
+   *
+   * Opt-in on purpose. TanStack owns expansion (getExpandedRowModel), so this
+   * composes with sorting rather than fighting it — the previous choice was
+   * between a sortable table and an expandable one, and several tables want
+   * both. Consumers that pass nothing are untouched: no cursor, no tabindex,
+   * no role, no extra row.
+   */
+  readonly rowDetail = input<TemplateRef<unknown> | null>(null);
+
+  /**
+   * Whether opening one row closes the others. Accordion by default: a detail
+   * panel is usually a paragraph or more, and several open at once turns a
+   * table back into the wall of text it was meant to replace.
+   */
+  readonly multiExpand = input(false);
+
   private readonly sorting = signal<SortingState>([]);
+  private readonly expanded = signal<ExpandedState>({});
 
   readonly table = createAngularTable<TData>(() => ({
     data: [...this.data()],
     columns: this.columns(),
     state: {
       sorting: this.sorting(),
+      expanded: this.expanded(),
     },
     onSortingChange: updater => {
       this.sorting.set(typeof updater === 'function' ? updater(this.sorting()) : updater);
     },
+    onExpandedChange: updater => {
+      this.expanded.set(typeof updater === 'function' ? updater(this.expanded()) : updater);
+    },
+    // Every row can expand when a detail template is supplied; there is no
+    // sub-row hierarchy here, so `getCanExpand` is simply "is this feature on".
+    getRowCanExpand: () => !!this.rowDetail(),
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
   }));
+
+  isOpen(row: Row<TData>): boolean {
+    return row.getIsExpanded();
+  }
+
+  toggle(row: Row<TData>): void {
+    if (this.multiExpand()) {
+      row.toggleExpanded();
+      return;
+    }
+    // Accordion: collapse everything, then open this one unless it was the one
+    // already open.
+    const wasOpen = row.getIsExpanded();
+    this.expanded.set(wasOpen ? {} : { [row.id]: true });
+  }
 
   sortIndicator(direction: false | 'asc' | 'desc'): string {
     if (direction === 'asc') return '↑';

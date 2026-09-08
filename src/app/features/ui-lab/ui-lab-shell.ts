@@ -99,7 +99,8 @@ export const componentRegistry: readonly LabRegistryEntry[] = [
   { id: 'side-panel-inspector',    name: 'Side-Panel Inspector',  group: 'detail-surfaces',                                    description: 'Persistent inspector panel for richer detail and actions.' },
   { id: 'briefing-report',         name: 'Briefing Report',       group: 'detail-surfaces', selector: 'app-briefing-report',   description: 'Reading surface for v2 briefings — questions first, insights as pull-quotes, honest deadlines.' },
   { id: 'clarification-prompt',    name: 'Clarification Prompt',  group: 'detail-surfaces', selector: 'app-clarification-prompt', description: 'Inline question/answer with options, free text, dismiss, and the ✓ acknowledgement beat. All states.' },
-  { id: 'expandable-rows',         name: 'Expandable Rows',       group: 'detail-surfaces',                                    description: 'Whole-row trigger revealing inline context without leaving the table.' },
+  { id: 'expandable-rows',         name: 'Expandable Rows',       group: 'detail-surfaces',                                    description: 'Whole-row trigger revealing inline context without leaving the table. Plain table — no sorting.' },
+  { id: 'sortable-expandable-table', name: 'Sortable + Expandable Table', group: 'detail-surfaces',                              description: 'ui-data-table with a rowDetail panel. Reach for this once a column is worth sorting.' },
 
   // Utilities — async / time / refresh primitives
   { id: 'loading-states',          name: 'Loading States',        group: 'utilities',       selector: 'app-ui-loading-state',  description: 'Labelled loading spinner for async content.' },
