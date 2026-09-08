@@ -16,6 +16,20 @@ import { environment } from '../../../../environments/environment';
 
 export type PipelineScope = 'all' | 'priority_1_only';
 
+/** One note in a stage's next-up preview. Server-projected — see QueuedNote in
+ *  jimbo-api/src/services/pipeline-pump.ts. */
+export interface QueuedNote {
+  id: string;
+  seq: number | null;
+  title: string;
+  type: string | null;
+  assigned_to: string | null;
+  ai_priority: number | null;
+  /** At pipeline.max_retries the note leaves the queue for a human. */
+  retry_count: number;
+  created_at: string;
+}
+
 export interface StageQueue {
   stage: string;
   /** Everything sitting at this stage's grooming_status. */
@@ -27,12 +41,20 @@ export interface StageQueue {
   arrived_7d: number;
   /** Moved on by this stage in the last 7 days. */
   cleared_7d: number;
+  /**
+   * Head of the queue in the order the pump will take it (created_at ASC).
+   * Empty when the caller asked for `?next=0` — length says nothing about
+   * queue depth, `eligible` does.
+   */
+  next_up: QueuedNote[];
 }
 
 export interface PipelineQueue {
   ts: string;
   stages: StageQueue[];
   ticks_per_day: number;
+  /** How many next_up rows each stage was asked for. */
+  next_up_limit: number;
 }
 
 /** The one place the key strings live. Mirrors `SETTINGS` in pipeline-pump.ts. */

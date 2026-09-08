@@ -1,0 +1,84 @@
+<app-ui-page width="wide">
+<app-ui-stack gap="lg">
+
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Grooming report</h1>
+    <p uiPageHeaderHint>{{ headerHint() }}</p>
+    <div uiPageHeaderActions class="report__actions">
+      <app-ui-refresh-control
+        [loading]="loading()"
+        [lastFetch]="lastFetch()"
+        (refresh)="refresh()" />
+      <app-ui-button-link routerLink="/grooming" variant="ghost" size="sm">Board</app-ui-button-link>
+      <app-ui-button-link routerLink="/pipeline" variant="ghost" size="sm">Levers</app-ui-button-link>
+    </div>
+  </app-ui-page-header>
+
+  @if (error(); as message) {
+    <p class="report__error" role="alert">{{ message }}</p>
+  }
+
+  <!-- Running now. The only genuinely live block: a pass takes ~40-60s, and
+       everything else on the page moves only when a tick fires. -->
+  <app-ui-section
+    title="Running now"
+    [meta]="runningNow().length + ' in flight'"
+    [collapsible]="false">
+    @if (runningNow().length === 0) {
+      <p class="report__idle">
+        Nothing grooming right now. That is the resting state between ticks, not a stall —
+        compare the funnel's <em>eligible</em> column to see whether there is work to take.
+      </p>
+    } @else {
+      <ul class="report__running" data-testid="grooming-running-now">
+        @for (d of runningNow(); track d.id) {
+          <li class="report__running-row">
+            <span class="report__running-stage">{{ d.stage }}</span>
+            <span class="report__running-title">{{ d.title }}</span>
+            <span class="report__running-by">{{ d.executor }}</span>
+          </li>
+        }
+      </ul>
+    }
+  </app-ui-section>
+
+  <!-- The funnel. Selecting a row filters the runs table below. -->
+  <app-ui-section
+    title="Stages"
+    meta="click a stage to filter the passes below"
+    [collapsible]="false">
+    <app-grooming-funnel
+      [stages]="stages()"
+      [runsToday]="runsByStage()"
+      [selected]="selectedStage()"
+      (stagePicked)="onStagePicked($event)" />
+  </app-ui-section>
+
+  <!-- What each pass read, and what it changed. -->
+  <app-ui-section
+    title="Passes today"
+    [meta]="runsCaption()"
+    [collapsible]="false">
+    <p class="report__legend">
+      <strong>Read as</strong> is what the pass understood the item to be, in its own words, before
+      it judged it. Only intake records one; other stages show the note title, marked
+      <em>title</em>. <strong>Result</strong> is the grooming status it actually moved the note to
+      — the thing the board can only ever show you the end of.
+      <em>Click any row</em> for the model's full reasoning: why it ruled that way, and what it
+      thinks “done” looks like.
+    </p>
+    <app-grooming-runs-table
+      [runs]="runs()"
+      [stageFilter]="selectedStage()" />
+  </app-ui-section>
+
+  <!-- What the pump takes next. Server-ordered; grooming is FIFO. -->
+  <app-ui-section
+    title="Next up"
+    meta="oldest first — grooming is FIFO, not priority-ordered"
+    [collapsible]="false">
+    <app-grooming-next-up [stages]="stages()" />
+  </app-ui-section>
+
+</app-ui-stack>
+</app-ui-page>

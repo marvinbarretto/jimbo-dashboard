@@ -11,6 +11,7 @@
 .board__toolbar {
   display: flex;
   justify-content: flex-end;
+  gap: 0.4rem;
 }
 
 // Wrapper around <app-vault-card> that owns drag behaviour. The card itself
