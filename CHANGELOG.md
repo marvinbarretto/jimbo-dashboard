@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.220](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.219...v0.0.220) (2026-09-08)
+
+
+### Features
+
+* **grooming:** add the grooming report — flow, not just state ([fce9734](https://github.com/marvinbarretto/jimbo-dashboard/commit/fce9734a1c647eb80cc662d17b2530b5002acd51))
+* **ui-data-table:** optional row expansion, so a table can sort AND open ([3a9664a](https://github.com/marvinbarretto/jimbo-dashboard/commit/3a9664a84b43a2fb7eca88ff66799ba70e626c65))
+
+
+### Bug Fixes
+
+* **fleet-proto:** reserve the live treatment for an actual dispatch ([2234af7](https://github.com/marvinbarretto/jimbo-dashboard/commit/2234af7186fd0268de7f06c0e2465d6f29a55de6))
+* **project-landing:** label the note_recurred activity action ([9ea80f8](https://github.com/marvinbarretto/jimbo-dashboard/commit/9ea80f84125b2b28f1690af1102b7b961f443b0f))
+* **projects:** an unmeasured figure has no reading yet, not a failed one ([7324569](https://github.com/marvinbarretto/jimbo-dashboard/commit/7324569c8bbffba0697b4e3cc430be801b01c0a5))
+* **projects:** balance the identity zone against real project data ([a1020c7](https://github.com/marvinbarretto/jimbo-dashboard/commit/a1020c7c33daa8f9e922fd2b3dd4c12397aa163c))
+
+
+### Code Refactoring
+
+* **projects:** rank the project landing page into six zones ([51b5449](https://github.com/marvinbarretto/jimbo-dashboard/commit/51b5449561a2aa2e3adeb0507e420422fb627635))
+
 ### [0.0.219](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.218...v0.0.219) (2026-09-07)
 
 
