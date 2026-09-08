@@ -1,0 +1,413 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Fleet — direction C: Triage</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+/* ── Direction C: TRIAGE ───────────────────────────────────────────────────
+   Organising principle: THE ANSWER, IN WORDS.
+
+   The best writing already on /fleet is prose — "nothing approved is waiting,
+   so a still queue here is idle, not stuck". It is buried under nine sections
+   of tiles that make you assemble the same sentence yourself, from counts.
+
+   So invert it: the page is a written answer with the evidence folded up
+   underneath. Reading register (serif, 46rem measure) for the answers,
+   scanning register (sans, tabular) for the tables you open to check them.
+   The switch between the two registers IS the information hierarchy — no
+   second colour, no second border, no card.
+
+   The bet: on a page you visit ten times a day and act on twice, ten seconds
+   of reading beats ten seconds of decoding. And it is the only one of the
+   three that survives being read on a phone.                              */
+
+.page { max-width: 62rem; margin: 0 auto; padding: 2.5rem 2rem 6rem; }
+
+.dateline {
+  font-size: var(--label-size); letter-spacing: var(--label-tracking); text-transform: uppercase;
+  color: var(--color-text-muted); margin-bottom: 1rem;
+  display: flex; gap: .75rem; align-items: center; flex-wrap: wrap;
+}
+.dateline .dot { margin-right: -.35rem; }
+
+/* The lede. This one paragraph is the whole page for most visits. */
+.lede {
+  font-family: var(--prose-family); font-size: 1.5rem; line-height: 1.45;
+  letter-spacing: -.005em; max-width: var(--prose-measure); margin-bottom: .9rem;
+  color: var(--color-text);
+}
+.lede b { color: var(--tone); font-weight: 600; }
+.lede .n { font-variant-numeric: tabular-nums; color: var(--tone); font-weight: 600; }
+.sub {
+  font-family: var(--prose-family); font-size: 1.02rem; line-height: var(--prose-line);
+  color: var(--color-text-muted); max-width: var(--prose-measure); margin-bottom: 2.75rem;
+}
+.sub a { border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent); }
+
+/* ── The cast, right after the lede ────────────────────────────────────────
+   Still prose-adjacent: one line per actor, read top to bottom like a list of
+   people rather than a rack of boxes. The machine is a footnote on the line,
+   because that is what a machine is until it breaks. */
+.cast { margin: 0 0 2.75rem; border-top: 1px solid var(--color-border); }
+.cast__r {
+  display: grid; grid-template-columns: 7rem 6.5rem 1fr auto; gap: 1rem;
+  align-items: baseline; padding: .7rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+}
+.cast__id { font-family: var(--font-mono); font-size: .88rem; font-weight: 600; color: var(--actor); }
+.cast__id small { display: block; font-family: var(--scan-family); font-weight: 400;
+                  font-size: .64rem; color: var(--color-text-muted); margin-top: .1rem; }
+.cast__v { font-size: .64rem; letter-spacing: .09em; text-transform: uppercase;
+           font-weight: 600; color: var(--tone); }
+.cast__w { font-family: var(--prose-family); font-size: .98rem; line-height: 1.5; color: var(--color-text); min-width: 0; }
+.cast__w code { font-family: var(--font-mono); font-size: .8em; background: none; border: none; padding: 0; color: var(--color-text-soft); }
+.cast__l { font-family: var(--scan-family); font-size: .7rem; color: var(--color-text-muted); text-align: right; white-space: nowrap; }
+.cast__l b { color: var(--color-text-soft); font-weight: 500; font-family: var(--font-mono); }
+.cast__r--live { background: color-mix(in srgb, var(--color-success) 6%, transparent); }
+.cast__r--bad { background: color-mix(in srgb, var(--color-danger) 7%, transparent); }
+
+/* ── A question and its answer ─────────────────────────────────────────── */
+.qa { margin-bottom: 2.75rem; }
+.qa > h2 {
+  font-family: var(--prose-family); font-size: 1.22rem; font-weight: 600;
+  letter-spacing: -.01em; margin-bottom: .55rem; color: var(--color-text);
+  display: flex; align-items: baseline; gap: .6rem;
+}
+.qa > h2 .dot { align-self: center; }
+.a {
+  font-family: var(--prose-family); font-size: var(--prose-size); line-height: var(--prose-line);
+  color: var(--color-text-soft); max-width: var(--prose-measure);
+}
+.a + .a { margin-top: .7rem; }
+/* Figures inside prose. The number is the load-bearing part of the sentence,
+   so it gets the weight — not a tile of its own three sections away. */
+.a b { color: var(--color-text); font-weight: 600; }
+.a .n { font-variant-numeric: tabular-nums; color: var(--color-text); font-weight: 600; }
+.a .bad { color: var(--color-danger); font-weight: 600; }
+.a .warn { color: var(--color-warning); font-weight: 600; }
+.a code { font-family: var(--font-mono); font-size: .82em; background: var(--color-surface-soft);
+          padding: .05em .3em; border: 1px solid var(--color-border); }
+
+/* ── Actions, inline in the sentence's wake ────────────────────────────── */
+.do { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .9rem; }
+.do button {
+  font-family: var(--scan-family); font-size: .78rem; padding: .35rem .8rem; cursor: pointer;
+  background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-soft);
+}
+.do button:hover { border-color: var(--color-border-strong); color: var(--color-text); }
+.do button.danger { border-color: color-mix(in srgb, var(--color-danger) 40%, var(--color-border)); }
+.do button.danger:hover { border-color: var(--color-danger); }
+
+/* ── The evidence, folded ──────────────────────────────────────────────── */
+details.ev { margin-top: 1.1rem; max-width: 100%; }
+details.ev > summary {
+  cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: .4rem;
+  font-family: var(--scan-family); font-size: .74rem; color: var(--color-text-muted);
+  border-bottom: 1px dashed var(--color-border); padding-bottom: .15rem;
+}
+details.ev > summary::-webkit-details-marker { display: none; }
+details.ev > summary::before { content: '▸'; font-size: .7em; }
+details.ev[open] > summary::before { content: '▾'; }
+details.ev > summary:hover { color: var(--color-text-soft); }
+.ev__body { margin-top: .8rem; overflow-x: auto; }
+
+table.ev-t { width: 100%; font-family: var(--scan-family); font-size: .76rem; }
+table.ev-t th {
+  text-align: left; font-size: var(--label-size); letter-spacing: var(--label-tracking);
+  text-transform: uppercase; color: var(--color-text-muted); font-weight: 500;
+  padding: .4rem .7rem .4rem 0; border-bottom: 1px solid var(--color-border); white-space: nowrap;
+}
+table.ev-t td { padding: .45rem .7rem .45rem 0; border-bottom: 1px solid color-mix(in srgb, var(--color-border) 35%, transparent); }
+table.ev-t td.r, table.ev-t th.r { text-align: right; }
+table.ev-t tr.failed td { color: var(--color-danger); }
+.mutedc { color: var(--color-text-muted); }
+.na { color: var(--color-text-muted); font-style: italic; }
+
+/* ── A fault, still prose, but it cannot be folded away ────────────────── */
+.f { margin-bottom: 1.5rem; padding-left: 1rem; border-left: 2px solid var(--tone); }
+.f__t {
+  font-family: var(--prose-family); font-size: 1.08rem; font-weight: 600;
+  color: var(--tone); margin-bottom: .3rem;
+}
+.f__d { font-family: var(--prose-family); font-size: 1rem; line-height: 1.65;
+        color: var(--color-text-soft); max-width: var(--prose-measure); }
+.f__e { font-family: var(--scan-family); font-size: .72rem; color: var(--color-text-muted); margin-top: .4rem; }
+
+/* Sparkline in the flow of a sentence — a shape, not a chart. */
+.inline-spark { display: inline-flex; align-items: flex-end; gap: 1.5px; height: 1em;
+                vertical-align: -.15em; margin: 0 .25em; }
+.inline-spark i { width: 4px; background: color-mix(in srgb, var(--color-accent) 55%, transparent); min-height: 1px; }
+.inline-spark i:last-child { background: var(--color-accent); }
+
+hr.rule { border: none; border-top: 1px solid var(--color-border); margin: 2.5rem 0; }
+</style>
+
+<div class="proto-bar">
+  <strong>Direction C — Triage</strong>
+  <span>The page is a written answer; the evidence folds up underneath it.</span>
+  <a href="concepts.html">← all directions</a>
+</div>
+
+<div class="page" id="app"></div>
+
+<script src="data.js"></script>
+<script>
+const el = document.getElementById('app');
+const shortModel = m => m == null ? '—' : m.replace(/^claude-/, '').replace(/-\d{8}$/, '').replace(/-4-5$/, '-4.5');
+const n = v => `<span class="n">${v}</span>`;
+
+function render(s) {
+  const v = verdict(s);
+  const ls = lanes(s);
+  const real = v.faults.filter(f => f.tone !== 'yours');
+  const yours = v.faults.filter(f => f.tone === 'yours');
+  const days = RAW.costs_by_day, maxD = Math.max(...days.map(d => d.total));
+  const today = days[days.length - 1], mean = days.slice(0, -1).reduce((a, d) => a + d.total, 0) / (days.length - 1);
+  const bt = s.burn.reduce((a, r) => ({ t: a.t + r.turns, c: a.c + (r.estimated_cost ?? 0) }), { t: 0, c: 0 });
+  const unpriced = [...new Set(s.burn.filter(r => r.estimated_cost === null).map(r => r.model))];
+  const jam = s.pulse.approved_waiting > 0 && s.pulse.transition_ago > 240;
+  const silent = s.workers.filter(w => ['lost', 'covered'].includes(workerTone(w, s.machines)));
+  const parked = s.workers.filter(w => workerTone(w, s.machines) === 'parked');
+  const working = s.workers.filter(w => workerTone(w, s.machines) === 'live');
+  const totQ = ls.reduce((a, l) => a + l.approved + l.running + l.proposed, 0);
+  const proposed = ls.reduce((a, l) => a + l.proposed, 0);
+
+  el.innerHTML = `
+  <div class="dateline t-${v.tone}">
+    <span class="dot ${v.tone === 'ok' ? 'dot--pulse' : ''}"></span>
+    <span>Fleet · ${new Date().toLocaleString('en-GB', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</span>
+    <span>polled 4s ago</span>
+    <a href="#">refresh</a>
+  </div>
+
+  <p class="lede t-${v.tone}">${
+    real.length
+      ? `<b>${real.length} thing${real.length === 1 ? '' : 's'} ${real.length === 1 ? 'is' : 'are'} wrong</b>, and ${
+          real.filter(f => f.tone === 'alert').length ? 'work has stopped on the affected lanes' : 'work is continuing'}.`
+      : `<b>Everything is running.</b> ${working.length + parked.length} of ${s.workers.length} workers reporting, nothing has failed in 24 hours, and the queue moved ${age(s.pulse.transition_ago)} ago.`
+  }</p>
+  <p class="sub">${
+    real.length
+      ? real.map(f => f.title).join(' · ') + '.'
+      : `Two machines up, ${totQ} items queued and draining, ${cost(today.total)} of pressure today against a ${cost(mean)} daily mean.`
+  }${yours.length ? ` ${proposed} dispatches are waiting on <a href="#">your approval</a>.` : ''}</p>
+
+  <div class="cast">
+    ${actorNow(s).map(a => {
+      const tone = ACT_TONE[a.kind];
+      return `<div class="cast__r t-${tone} ${a.kind === 'running' ? 'cast__r--live' : ''} ${
+          ['hung', 'lost'].includes(a.kind) ? 'cast__r--bad' : ''}"
+        style="--actor: var(--actor-color-${a.id}, var(--actor-color-default))">
+        <span class="cast__id">${a.id}<small>${a.machine ?? 'human'}</small></span>
+        <span class="cast__v">${a.act.verb}</span>
+        <span class="cast__w">${a.act.skill ? `<code>${a.act.skill}</code> — ` : ''}${a.act.what}${
+          a.act.skill && a.act.ago !== null ? `, ${age(a.act.ago)} in` : ''}</span>
+        <span class="cast__l">${a.last ? `last shipped <b>${a.last.skill ?? a.last.flow}</b> ${ago(a.last.completedAgo)}`
+          : a.lane.approved ? `<b>${a.lane.approved}</b> approved and waiting` : ''}</span>
+      </div>`;
+    }).join('')}
+  </div>
+
+  <!-- ── 1 ─────────────────────────────────────────────────────────── -->
+  <section class="qa">
+    <h2><span class="dot t-${real.length ? (real.some(f => f.tone === 'alert') ? 'alert' : 'warn') : 'ok'}"></span>Is anything broken?</h2>
+    ${real.length ? real.map(f => `
+      <div class="f t-${f.tone}">
+        <div class="f__t">${f.title}</div>
+        <div class="f__d">${f.detail}.</div>
+        <div class="f__e">Expected: ${f.expect}.</div>
+        <div class="do">${
+          f.key.startsWith('machine-') ? '<button>Ping it over Tailscale</button><button>Declare a planned outage</button>'
+          : f.key === 'jam' ? '<button>Re-dispatch the approved queue</button><button>Open the oldest item</button>'
+          : f.key === 'failures' ? `<button>Retry all ${s.failures.length}</button><button>Open the first error</button>`
+          : f.key === 'stuck' ? '<button class="danger">Release both locks</button>'
+          : f.key === 'pump' ? '<button>Kick the pump now</button><button>Open the cron log</button>'
+          : f.key.startsWith('fold-') ? '<button>Enqueue it now</button>'
+          : f.key.startsWith('hung-') ? '<button class="danger">Reap it</button><button>Open the session log</button>'
+          : f.key === 'hermes' ? '<button>Open the control room</button>' : ''}</div>
+      </div>`).join('')
+    : `<p class="a">No. That is not "no alerts fired" — it is ${n(6)} standing checks, each of which currently holds:
+        every machine has spoken inside its own threshold, no worker is silent while its machine is up,
+        nothing failed in the last 24 hours, no grooming lock is orphaned, the pump enqueued
+        <b>${ago(s.pumpAgo)}</b>, and every fold has recurred inside its cadence.</p>`}
+    ${s.failures.length ? `<details class="ev"><summary>the ${s.failures.length} failures, with their errors</summary>
+      <div class="ev__body"><table class="ev-t">
+        <thead><tr><th>#</th><th>skill</th><th>note</th><th>error</th><th class="r">tries</th><th class="r">failed</th></tr></thead>
+        <tbody>${s.failures.map(f => `<tr class="failed">
+          <td class="mutedc">${f.id}</td><td class="mono">${f.skill}</td>
+          <td>${f.note_title ?? f.task_id}</td><td>${f.error_message}</td>
+          <td class="r">${f.retry_count}</td><td class="r">${age(f.completedAgo)}</td></tr>`).join('')}</tbody>
+      </table></div></details>` : ''}
+  </section>
+
+  <hr class="rule">
+
+  <!-- ── 2 ─────────────────────────────────────────────────────────── -->
+  <section class="qa">
+    <h2><span class="dot t-${silent.length ? 'alert' : 'ok'}"></span>Who is getting anything done?</h2>
+    <p class="a">${
+      working.length ? `${n(working.length)} ${working.length === 1 ? 'worker is' : 'workers are'} live — <b>${working.map(w => w.id).join('</b>, <b>')}</b>.` : 'Nothing is live.'}
+      ${parked.length ? ` ${n(parked.length)} ${parked.length === 1 ? 'is' : 'are'} idle on purpose: ${
+        parked.map(w => `<b>${w.id}</b> ${w.status === 'gated' ? `is ${w.reason}` : `is in quota cooldown, ${w.nextIn <= 0 ? 'due back now' : `back in ${age(w.nextIn)}`}`}`).join(', and ')}.
+        Neither is a fault — a gated worker still checks in every five minutes; it is only quiet about <em>work</em>, never about itself.` : ''}
+      ${silent.length ? ` <span class="bad">${silent.length} ${silent.length === 1 ? 'is' : 'are'} silent</span> — ${
+        silent.map(w => `<b>${w.id}</b>`).join(', ')} — and ${silent.every(w => workerTone(w, s.machines) === 'covered')
+          ? `all of them sit on <b>${silent[0].machine}</b>, which is itself unreachable. That is one outage, not ${silent.length}.`
+          : 'their machines are up, so the workers are the fault.'}` : ''}</p>
+    <p class="a">${(() => {
+      // Dispatches are one to five minutes of work, so an empty running list is
+      // the normal case and says almost nothing on its own. What answers the
+      // question is what each actor last SHIPPED — that is what separates
+      // between-jobs from stopped.
+      const shipped = actorNow(s).filter(a => a.last);
+      if (!shipped.length) return 'Nobody has shipped anything inside this window at all, which is itself the finding.';
+      const lead = shipped[0];
+      return `The freshest work is <b>${lead.id}</b>'s — <code>${lead.last.skill ?? lead.last.flow}</code>, finished ${ago(lead.last.completedAgo)}${
+        lead.last.completed_model ? ` on ${shortModel(lead.last.completed_model)}` : ''}. ` + (shipped.length > 1
+        ? `Behind that: ${shipped.slice(1).map(a => `<b>${a.id}</b> ${ago(a.last.completedAgo)}`).join(', ')}.` : '');
+    })()}</p>
+    ${s.now.length ? `<p class="a">In flight this second: ${s.now.map(j =>
+      `<b>${j.executor}</b> on <code>${j.skill}</code> — ${j.note_title ?? j.task_id}, ${
+        j.startedAgo >= 120 ? `<span class="bad">${age(j.startedAgo)} in, which is hung</span>` : `${age(j.startedAgo)} in`}`).join('; ')}.</p>`
+      : `<p class="a">Nothing is in flight this second. The last dispatch finished ${n(ago(s.pulse.completed_ago))}, so that is a gap between jobs, not a stoppage.</p>`}
+    <p class="a">On the VPS, <b>hermes</b> runs the metered half of the fleet: ${n(s.hermes.active)} active jobs, ${n(s.hermes.paused)} paused${
+      s.hermes.failing ? `, and <span class="bad">${s.hermes.failing} failing</span>` : ''}.
+      ${s.hermes.staleErrors} paused jobs still carry old errors — the oldest is <code>${s.hermes.oldestStale.name}</code>, from ${ago(s.hermes.oldestStale.ago)}.
+      Those are <span class="warn">stale, not failing</span>: they carry an error but are not running, so nothing is going wrong right now.</p>
+    <details class="ev"><summary>every worker, with its last heartbeat</summary>
+      <div class="ev__body"><table class="ev-t">
+        <thead><tr><th>worker</th><th>machine</th><th>status</th><th>reading</th><th class="r">last heard</th></tr></thead>
+        <tbody>${s.workers.map(w => {
+          const t = workerTone(w, s.machines);
+          return `<tr><td class="mono" style="color:var(--actor-color-${w.id}, var(--actor-color-default))">${w.id}</td>
+            <td class="mutedc">${w.machine}</td><td class="mono mutedc">${w.status}</td>
+            <td>${{ live: 'reporting', parked: w.reason ?? 'idle by design', covered: `silent with ${w.machine}`,
+                    late: 'overdue', lost: 'stopped' }[t]}</td>
+            <td class="r num">${age(w.ago)}</td></tr>`;
+        }).join('')}
+        ${s.machines.map(m => `<tr><td class="mono">${m.id}</td><td class="mutedc">machine</td>
+          <td class="mono mutedc">${m.stale ? 'unreachable' : 'up'}</td>
+          <td>threshold ${m.stale_after_minutes}m · ${m.workers.length} workers</td>
+          <td class="r num">${age(m.ago)}</td></tr>`).join('')}</tbody>
+      </table></div></details>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ── 3 ─────────────────────────────────────────────────────────── -->
+  <section class="qa">
+    <h2><span class="dot t-${jam ? 'alert' : 'ok'}"></span>Is work moving?</h2>
+    <p class="a">${n(totQ)} items are queued. ${
+      /* INVARIANT: the discriminator between idle and jammed is APPROVED
+         work, never total depth — proposed work is supposed to sit. */
+      s.pulse.approved_waiting === 0
+        ? `None of them is approved, so a still queue is idle rather than stuck: they are waiting on a decision from you, not on a worker.`
+        : jam ? `<span class="bad">${s.pulse.approved_waiting} of them were cleared to run and nothing has moved for ${age(s.pulse.transition_ago)}</span> — past two commission ticks, which makes this a jam rather than a lull.`
+        : `${n(s.pulse.approved_waiting)} are approved and waiting, and the last thing moved ${age(s.pulse.transition_ago)} ago, so the queue is draining normally.`}
+      ${proposed ? ` ${n(proposed)} sit at <em>proposed</em> — the oldest since ${ago(s.pulse.oldest_proposed_ago)}.` : ''}</p>
+    <p class="a">The grooming pump last offered work ${
+      s.pumpAgo > 70 ? `<span class="warn">${ago(s.pumpAgo)}</span>, which is ${Math.floor(s.pumpAgo / 30)} missed ticks. That matters more than it looks: the pump failing and the vault being empty produce the identical empty queue.`
+      : `<b>${ago(s.pumpAgo)}</b>, inside its 30-minute cadence.`}</p>
+    <p class="a">Over 12 weeks, the lanes convert very differently, and one of the zeroes is not like the others.
+      <b>groom</b> ships nothing <em>by design</em> — it prepares work rather than producing output, so its blank is a category statement.
+      <b>recon</b> took ${n(180)} items, shipped ${n(0)}, and <span class="bad">its valves are fully open</span>, which is the only zero here worth investigating.</p>
+    <div class="do"><button>Open the recon lane</button><button>Adjust the valves</button>${proposed ? `<button>Review ${proposed} proposals</button>` : ''}</div>
+    <details class="ev"><summary>queue depth and 12-week conversion</summary>
+      <div class="ev__body"><table class="ev-t">
+        <thead><tr><th>lane</th><th class="r">running</th><th class="r">approved</th><th class="r">proposed</th></tr></thead>
+        <tbody>${ls.map(l => `<tr><td class="mono">${l.executor}</td>
+          <td class="r num">${l.running}</td><td class="r num">${l.approved}</td><td class="r num">${l.proposed}</td></tr>`).join('')}</tbody>
+      </table>
+      <table class="ev-t" style="margin-top:1.25rem">
+        <thead><tr><th>lane</th><th class="r">intake</th><th class="r">output</th><th class="r">wip</th><th class="r">conv.</th><th>gate</th></tr></thead>
+        <tbody>${RAW.lanes.map(l => {
+          /* INVARIANT: never a bare zero — an unmeasured metric says so. */
+          const m = (x, pct) => x.state === 'not_applicable' ? '<span class="na">n/a</span>'
+            : x.state === 'not_measured' ? '<span class="na">not measured</span>'
+            : x.value === null ? '<span class="na">—</span>'
+            : pct ? `${(x.value * 100).toFixed(1)}%` : x.value;
+          return `<tr><td class="mono">${l.lane}</td><td class="r num">${m(l.totals.intake)}</td>
+            <td class="r num">${m(l.totals.output)}</td><td class="r num">${m(l.totals.wip)}</td>
+            <td class="r num">${m(l.totals.conversion, true)}</td>
+            <td class="mutedc" title="${l.reason ?? ''}">${l.gate}</td></tr>`;
+        }).join('')}</tbody>
+      </table></div></details>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ── 4 ─────────────────────────────────────────────────────────── -->
+  <section class="qa">
+    <h2><span class="dot t-ok"></span>What has it been doing?</h2>
+    <p class="a">${(() => {
+      const c = new Map();
+      for (const r of s.recent) c.set(r.flow, (c.get(r.flow) ?? 0) + 1);
+      const parts = [...c.entries()].sort((a, b) => b[1] - a[1])
+        .map(([f, k]) => `${n(k)} <b style="color:${flowHue(f)}">${f}</b>`);
+      const span = Math.max(...s.recent.map(r => r.startedAgo)) - Math.min(...s.recent.map(r => r.completedAgo));
+      return `The last ${n(s.recent.length)} dispatches, over ${age(span)}: ${parts.join(', ')}.
+        <b>jeffrey</b> does the volume — short haiku grooming runs, a minute each — while <b>boris</b> does the
+        expensive work in bursts. Reading the ledger straight, that ratio is invisible: sixteen groom rows
+        push the four commissions off the bottom by volume rather than by mattering less.`;
+    })()}</p>
+    <p class="a">Four folds re-point Hermes jobs onto the queue.
+      ${(() => {
+        const stale = s.folds.filter(f => f.enqAgo > 60 * 24 * 3);
+        return stale.length
+          ? `<span class="warn">${stale.map(f => `<code>${f.skill}</code>`).join(' and ')} last enqueued ${age(stale[0].enqAgo)} ago</span> —
+             and because the transport fails closed, a broken fold shows up as an empty queue rather than an error.
+             Cadence is the only thing that can catch it.`
+          : `All four have recurred inside their cadence; the busiest, <code>${[...s.folds].sort((a, b) => b.runs_7d - a.runs_7d)[0].skill}</code>,
+             ran ${n([...s.folds].sort((a, b) => b.runs_7d - a.runs_7d)[0].runs_7d)} times this week.`;
+      })()}</p>
+    <details class="ev"><summary>the last ${s.recent.length} dispatches</summary>
+      <div class="ev__body"><table class="ev-t">
+        <thead><tr><th class="r">finished</th><th>executor</th><th>skill</th><th>what</th>
+          <th class="r">ran</th><th>model</th><th class="r">cost eq.</th></tr></thead>
+        <tbody>${s.recent.map(r => `<tr class="${r.status === 'failed' ? 'failed' : ''}">
+          <td class="r num mutedc">${age(r.completedAgo)}</td>
+          <td style="color:var(--actor-color-${r.executor}, var(--actor-color-default))">${r.executor}</td>
+          <td class="mono" style="border-left:3px solid ${flowHue(r.flow)};padding-left:.5rem">${r.skill ?? '—'}</td>
+          <td class="mutedc">${r.status === 'failed' ? r.error_message : (r.note_title ?? r.task_id)}</td>
+          <td class="r num mutedc">${age(r.startedAgo - r.completedAgo)}</td>
+          <td class="mono mutedc">${shortModel(r.completed_model)}</td>
+          <td class="r num">${cost(r.estimated_cost)}</td></tr>`).join('')}</tbody>
+      </table></div></details>
+    <details class="ev"><summary>fold cadence</summary>
+      <div class="ev__body"><table class="ev-t">
+        <thead><tr><th>skill</th><th class="r">last enqueued</th><th class="r">last completed</th><th>status</th><th class="r">runs 7d</th></tr></thead>
+        <tbody>${s.folds.map(f => `<tr class="${f.enqAgo > 60 * 24 * 3 ? 'failed' : ''}">
+          <td class="mono">${f.skill}</td><td class="r num">${age(f.enqAgo)}</td>
+          <td class="r num">${age(f.doneAgo)}</td><td class="mutedc">${f.last_status}</td>
+          <td class="r num">${f.runs_7d}</td></tr>`).join('')}</tbody>
+      </table></div></details>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ── 5 ─────────────────────────────────────────────────────────── -->
+  <section class="qa">
+    <h2><span class="dot t-ok"></span>What is it costing?</h2>
+    <p class="a">${cost(today.total)} today against a ${cost(mean)} daily mean
+      <span class="inline-spark">${days.map(d => `<i style="height:${(d.total / maxD * 100).toFixed(0)}%" title="${d.day} — ${cost(d.total)}"></i>`).join('')}</span>
+      — ${today.total > mean * 1.2 ? 'above trend' : today.total < mean * 0.6 ? 'well below trend' : 'on trend'}.
+      Over the trailing five hours the workers burned ${n(bt.t)} turns for ${cost(bt.c)} of equivalent.</p>
+    <p class="a">All of which is a <b>pressure proxy, not a bill</b>. Worker turns run flat-rate on the Max plan,
+      so the dollar figure says how hard the fleet is leaning, not what it charged — and interactive Claude use
+      never lands in this table at all.
+      ${unpriced.length ? `<span class="warn">${unpriced.join(', ')} carries no pricing row</span>, so its cost is
+        <em>unknown</em> rather than zero; every figure here is a floor.` : ''}</p>
+    <details class="ev"><summary>burn by actor and model, trailing 5h</summary>
+      <div class="ev__body"><table class="ev-t">
+        <thead><tr><th>actor</th><th>model</th><th class="r">turns</th><th class="r">in</th><th class="r">out</th><th class="r">cost eq.</th></tr></thead>
+        <tbody>${s.burn.map(r => `<tr>
+          <td style="color:var(--actor-color-${r.actor}, var(--actor-color-default))">${r.actor}</td>
+          <td class="mono mutedc" title="${r.model}">${shortModel(r.model)}</td>
+          <td class="r num">${r.turns}</td><td class="r num">${tok(r.input_tokens)}</td>
+          <td class="r num">${tok(r.output_tokens)}</td><td class="r num">${cost(r.estimated_cost)}</td></tr>`).join('')}</tbody>
+      </table></div></details>
+  </section>`;
+}
+
+document.querySelector('.proto-bar').insertAdjacentHTML('beforeend', SWITCH_HTML);
+mountSwitch(render);
+</script>

@@ -1,0 +1,297 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Fleet redesign — three directions</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+.wrap { max-width: 72rem; margin: 0 auto; padding: 2.5rem 2rem 6rem; }
+h1 { font-family: var(--font-serif); font-size: 2rem; font-weight: 600; letter-spacing: -.02em; margin-bottom: .7rem; }
+.lede { font-family: var(--font-serif); font-size: 1.15rem; line-height: 1.7;
+        color: var(--color-text-soft); max-width: 48rem; margin-bottom: .9rem; }
+.lede b { color: var(--color-text); font-weight: 600; }
+h2 { font-family: var(--font-serif); font-size: 1.35rem; font-weight: 600; margin: 3rem 0 1rem; letter-spacing: -.015em; }
+h3 { font-size: var(--label-size); letter-spacing: var(--label-tracking); text-transform: uppercase;
+     color: var(--color-text-muted); font-weight: 600; margin: 2rem 0 .8rem; }
+p.n { font-size: .84rem; line-height: 1.75; color: var(--color-text-muted); max-width: 52rem; margin-bottom: .8rem; }
+p.n b { color: var(--color-text-soft); font-weight: 600; }
+code { font-family: var(--font-mono); font-size: .85em; background: var(--color-surface-soft);
+       padding: .05em .3em; border: 1px solid var(--color-border); }
+
+/* ── Direction cards ───────────────────────────────────────────────────── */
+.dirs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--color-border);
+        border: 1px solid var(--color-border); margin-bottom: 1.5rem; }
+.dir { background: var(--color-bg); padding: 1.4rem 1.35rem; display: flex; flex-direction: column; }
+.dir__k { font-size: var(--label-size); letter-spacing: var(--label-tracking); text-transform: uppercase;
+          color: var(--color-text-muted); margin-bottom: .5rem; }
+.dir__n { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 600; margin-bottom: .1rem; }
+.dir__p { font-size: .78rem; color: var(--color-accent); margin-bottom: .8rem; }
+.dir__b { font-size: .82rem; line-height: 1.65; color: var(--color-text-soft); margin-bottom: 1rem; flex: 1; }
+.dir__b em { color: var(--color-text-muted); font-style: normal; display: block; margin-top: .6rem; font-size: .78rem; }
+.dir a.open {
+  display: block; text-align: center; padding: .55rem; font-size: .8rem;
+  border: 1px solid var(--color-accent); color: var(--color-text);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+.dir a.open:hover { text-decoration: none; background: color-mix(in srgb, var(--color-accent) 24%, transparent); }
+
+table { width: 100%; font-size: .8rem; margin-bottom: .5rem; }
+th { text-align: left; font-size: var(--label-size); letter-spacing: var(--label-tracking);
+     text-transform: uppercase; color: var(--color-text-muted); font-weight: 500;
+     padding: .5rem .7rem .5rem 0; border-bottom: 1px solid var(--color-border); vertical-align: bottom; }
+td { padding: .55rem .7rem .55rem 0; border-bottom: 1px solid color-mix(in srgb, var(--color-border) 35%, transparent);
+     vertical-align: top; line-height: 1.55; }
+th.c, td.c { text-align: center; width: 4.5rem; }
+.y { color: var(--color-success); font-weight: 600; }
+.n- { color: var(--color-danger); }
+.p { color: var(--color-warning); }
+.new { color: var(--color-accent); font-weight: 600; font-size: .68rem; letter-spacing: .08em;
+       text-transform: uppercase; border: 1px solid color-mix(in srgb, var(--color-accent) 45%, transparent);
+       padding: .05rem .3rem; }
+.keep { color: var(--color-text-muted); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+.mono { font-family: var(--font-mono); font-size: .76rem; }
+.muted { color: var(--color-text-muted); }
+ul.pts { margin: 0 0 1rem 1.15rem; font-size: .84rem; line-height: 1.8; color: var(--color-text-muted); max-width: 52rem; }
+ul.pts b { color: var(--color-text-soft); font-weight: 600; }
+ul.pts code { font-size: .8em; }
+.callout {
+  border-left: 2px solid var(--color-warning); padding: .8rem 0 .8rem 1rem; margin: 1.25rem 0;
+  font-size: .84rem; line-height: 1.7; color: var(--color-text-soft); max-width: 52rem;
+}
+.callout b { color: var(--color-warning); font-weight: 600; }
+</style>
+
+<div class="proto-bar">
+  <strong>Fleet redesign</strong>
+  <span>Three directions, one shared fixture. Nothing here touches production code.</span>
+</div>
+
+<div class="wrap">
+  <h1>Three ways to rebuild <code>/fleet</code></h1>
+  <p class="lede">
+    The page today is <b>nine flat sections in one scroll</b> — Right now, Needs attention, Machines,
+    Workers, Queue, Lanes, Burn, Folds, Recent completions — each rendered at the same weight, so a
+    dead machine and a fold cadence table compete equally for the eye. It answers
+    <em>"what is in <code>GET /api/dispatch/stats</code>?"</em> rather than
+    <em>"is the fleet healthy, and if not, what do I do about it?"</em>
+  </p>
+  <p class="lede">
+    All three directions below keep every judgement the current page fought for, and differ only in
+    what they organise <b>by</b>. Each runs on the same fixture, with a calm/incident switch top-right,
+    because a monitoring redesign judged only on the all-green case tells you nothing.
+  </p>
+
+  <div class="dirs">
+    <div class="dir">
+      <div class="dir__k">Direction A</div>
+      <div class="dir__n">Console</div>
+      <div class="dir__p">organised by the question you arrived with</div>
+      <div class="dir__b">
+        An always-on actor strip — <em style="display:inline">who is doing what, right now</em> — over five tabs,
+        each one a question: <em style="display:inline">Anything broken? · Who is doing what? · What is queued? ·
+        What is it costing? · What happened?</em> Each tab carries a right-hand rail with the knobs that
+        question makes you reach for. The verdict line, the actor strip and the fault counts never hide inside a tab.
+        <em>Best when you arrive knowing what you want. The valve rail turns the page from a readout into a control surface.</em>
+      </div>
+      <a class="open" href="console.html">Open A →</a>
+    </div>
+    <div class="dir">
+      <div class="dir__k">Direction B</div>
+      <div class="dir__n">Timeline</div>
+      <div class="dir__p">organised by time</div>
+      <div class="dir__b">
+        One swimlane per actor over a trailing window, each labelled with what that actor is doing this
+        second. Dispatches are blocks, reporting is a bar, silence is a shaded band, and the queue sits in a
+        gutter to the right of <em style="display:inline">now</em> — work drawn in the future.
+        <em>Best for the diagnosis. Three lanes stopping at the same vertical is a machine, and you read it off the shape before you read a word.</em>
+      </div>
+      <a class="open" href="timeline.html">Open B →</a>
+    </div>
+    <div class="dir">
+      <div class="dir__k">Direction C</div>
+      <div class="dir__n">Triage</div>
+      <div class="dir__p">organised by the answer, in words</div>
+      <div class="dir__b">
+        One written page: a verdict paragraph, the cast listed one actor per line, then five questions
+        answered in prose with their evidence folded up underneath. Serif reading register for the answers,
+        sans scanning register for the tables — the switch between registers <em style="display:inline">is</em>
+        the hierarchy, so there is no second colour system.
+        <em>Best for the ten-times-a-day glance, and the only one of the three that survives a phone.</em>
+      </div>
+      <a class="open" href="triage.html">Open C →</a>
+    </div>
+  </div>
+
+  <p class="n">
+    They are not mutually exclusive. C's verdict paragraph is the natural top of A; B is a plausible
+    sixth tab of A rather than a whole page. <b>My recommendation: C's lede + A's tabs, with B as the
+    "What happened?" tab</b> — but the point of three files is that you can disagree by clicking.
+  </p>
+
+  <h2>The fleet is a cast, not a rack</h2>
+  <p class="n">
+    The current page leads with <b>Machines</b>, then <b>Workers</b> — infrastructure first, and the same
+    fact stated twice. But a machine matters exactly twice: when it explains a silence, and when you need to go
+    and restart it. Both of those are facts <em>about an actor</em>, so all three directions demote the box to an
+    attribute on the actor's row and let it surface only when it becomes the diagnosis.
+  </p>
+  <ul class="pts">
+    <li><b>The cast is six, not four.</b> <code>boris</code>, <code>jeffrey</code>, <code>steward</code>,
+      <code>kipper</code>, plus <code>hermes</code> on the VPS — and <code>marvin</code>. The proposal queue is
+      Marvin's lane, and drawing it as a property of boris blames a worker that is polling perfectly normally.</li>
+    <li><b>Every actor states its current action first.</b> Not its status enum — the verb and the thing:
+      <em>running <code>code/doc-refresh</code> — "doc:auth", 3m in</em>.</li>
+    <li><b>"Nothing is running" is the normal case, and useless alone.</b> A dispatch is one to five minutes of
+      work, so the live list is empty most of the time. Every actor therefore carries its current action
+      <em>and</em> the last thing it shipped — which is the pair that separates idle-between-jobs from stopped.
+      This is the single biggest thing the fixture exposed.</li>
+    <li><b>Ordering is by activity.</b> Live work first, then whoever shipped most recently. Ambient hermes and
+      the human sort to the back unless something is wrong with them.</li>
+  </ul>
+
+  <!-- ── Invariants ──────────────────────────────────────────────────── -->
+  <h2>The invariants a redesign must not drop</h2>
+  <p class="n">
+    Every one of these is a distinction the current page's code comments record as having been got
+    <em>wrong</em> first. They are the real specification; the layout is negotiable.
+    Toggle each prototype to <b>incident</b> to check them.
+  </p>
+  <table>
+    <thead><tr><th>Must stay true</th><th>Because</th><th class="c">A</th><th class="c">B</th><th class="c">C</th></tr></thead>
+    <tbody>
+      <tr><td>A machine owns its workers' silence</td>
+        <td class="muted">One dropped box read as four alarms. The workers defer to the machine card.</td>
+        <td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td></tr>
+      <tr><td>A worker silent while its machine is up is the worker's fault</td>
+        <td class="muted">The inverse, and the more useful half — it names what to restart.</td>
+        <td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td></tr>
+      <tr><td>Deliberate quiet is never red</td>
+        <td class="muted">Kipper napping on battery, boris in quota cooldown. Alarming on either teaches you to ignore the page.</td>
+        <td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td></tr>
+      <tr><td>A jam is <em>approved</em> work standing still, never total depth</td>
+        <td class="muted">Proposed work is supposed to sit until you clear it, so its age proves nothing.</td>
+        <td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td></tr>
+      <tr><td>Pump-silent ≠ queue-empty</td>
+        <td class="muted">A dead pump and an empty vault produce the identical empty queue.</td>
+        <td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td></tr>
+      <tr><td>A fold's silence is only visible as broken cadence</td>
+        <td class="muted">The Hermes→queue transport fails closed: a broken fold raises no error at all.</td>
+        <td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td></tr>
+      <tr><td>An unmeasured zero says which kind of zero it is</td>
+        <td class="muted"><code>groom</code> ships nothing by design; <code>recon</code> ships nothing with its valves open. Drawing those alike is the failure the state endpoint exists to prevent.</td>
+        <td class="c y">✓</td><td class="c p">—</td><td class="c y">✓</td></tr>
+      <tr><td>An unpriced model costs <code>—</code>, never <code>$0.00</code></td>
+        <td class="muted">$0.00 reads as "this was free". Every total is stated as a floor.</td>
+        <td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td></tr>
+      <tr><td>Cost is a pressure proxy, not a bill</td>
+        <td class="muted">Worker turns are flat-rate on the Max plan; interactive use never lands in the table.</td>
+        <td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td></tr>
+      <tr><td>Hermes red only for <em>failing</em>; stale errors amber, with a date</td>
+        <td class="muted">The page spent 42 days red for two paused jobs. An undated amber badge is just a quieter red.</td>
+        <td class="c y">✓</td><td class="c p">—</td><td class="c y">✓</td></tr>
+      <tr><td>The machine is a footnote on the actor, not a container round it</td>
+        <td class="muted">You watch who is doing what; the box only matters when it turns out to be the diagnosis.</td>
+        <td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td></tr>
+      <tr><td>An idle actor still says what it last shipped</td>
+        <td class="muted">The running list is empty most of the time, so "nothing running" alone cannot distinguish between-jobs from stopped.</td>
+        <td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td></tr>
+      <tr><td>Work waiting on <em>you</em> is shown, but never as a fault</td>
+        <td class="muted">Proposals pile up waiting on Marvin, not on boris. Blaming a polling worker is a manufactured alarm.</td>
+        <td class="c y">✓</td><td class="c y">✓</td><td class="c y">✓</td></tr>
+    </tbody>
+  </table>
+  <p class="n">B scores <span class="p">—</span> on two rows not because it breaks them but because it does not carry
+  lane conversion or the Hermes roll-up at all — which is the honest argument for it being a tab rather than the page.</p>
+
+  <!-- ── Primitives ──────────────────────────────────────────────────── -->
+  <h2>Do we need new primitives?</h2>
+  <p class="n">
+    Mostly no — and that is the finding. The current <code>/fleet</code> hand-rolls
+    <code>&lt;table class="fleet__table"&gt;</code> four times, its own <code>.fleet-worker__dot</code>,
+    its own stat grid and its own spark strip, while <b>eleven</b> shared components already
+    cover those jobs. Two things are genuinely missing, and both are named below.
+  </p>
+  <table>
+    <thead><tr><th style="width:15rem">Region</th><th style="width:8rem">Verdict</th><th>Component, or spec if new</th></tr></thead>
+    <tbody>
+      <tr><td>Verdict banner</td><td><span class="new">new</span></td>
+        <td><code class="mono">app-ui-verdict-bar</code> — tone, headline, evidence line, meta slot. Nothing existing states a
+          <em>roll-up judgement with its evidence</em>: <code>notification-bar</code> interrupts, <code>lifecycle-banner</code>
+          is per-item and takes a fixed state set. Small, and used by all three directions.</td></tr>
+      <tr><td>Fault list</td><td><span class="p">extend</span></td>
+        <td><code class="mono">ui-readiness-panel</code> is already <em>checks with an ok flag and a blocker string</em>, which is
+          exactly this shape. Needs a <code>tone</code> beyond ok/blocked (warn vs alert vs "yours"), and an actions slot per row.</td></tr>
+      <tr><td>Tabs (A)</td><td><span class="keep">reuse</span></td>
+        <td><code class="mono">ui-inline-tabs</code> — already takes <code>value/label/count/dotColor</code>. The count badge wants a tone.</td></tr>
+      <tr><td>Actor row / card</td><td><span class="keep">reuse</span></td>
+        <td><code class="mono">ui-card</code> + <code class="mono">actor-chip</code> / <code class="mono">actor-avatar</code>. The per-actor colours are already
+          tokens (<code>--actor-color-*</code>) and the fleet page uses <em>none</em> of them — every worker on it renders
+          identically grey.</td></tr>
+      <tr><td>"Right now" strip</td><td><span class="new">new</span></td>
+        <td><code class="mono">app-actor-now-strip</code> — one cell per actor: current verb, what it is on, and what it last
+          shipped. Thin, but it is the component that answers the question the page is actually opened with, and it
+          belongs on the journal and the daily report too.</td></tr>
+      <tr><td>Status dots &amp; pills</td><td><span class="keep">reuse</span></td>
+        <td><code class="mono">ui-badge</code>, <code class="mono">dispatch-status-badge</code>, <code class="mono">job-chip</code>. The hand-rolled
+          <code>.fleet-worker__dot--{tone}</code> can go.</td></tr>
+      <tr><td>Every table</td><td><span class="keep">reuse</span></td>
+        <td><code class="mono">ui-data-table</code> (TanStack, sortable, its own empty state). Four hand-rolled tables collapse into column defs,
+          and the ledger becomes sortable for free.</td></tr>
+      <tr><td>Cost figures</td><td><span class="keep">swap</span></td>
+        <td><code class="mono">ui-metric</code>, not <code class="mono">ui-stat-card</code>. Its own doc comment draws the distinction the fleet page
+          gets backwards: a stat card states a <em>fact</em>, <code>ui-metric</code> states a <em>measurement</em> — and it already carries a
+          baseline, a delta and a sparkline. "$7.81 over five hours" is precisely a measurement with no baseline.</td></tr>
+      <tr><td>7-day line</td><td><span class="keep">reuse</span></td>
+        <td><code class="mono">ui-sparkline</code> (already inside <code>ui-metric</code>).</td></tr>
+      <tr><td>Queue depth bar</td><td><span class="p">extend</span></td>
+        <td><code class="mono">ui-progress-meter</code> is a single fill against a target; this wants
+          <em>segments</em> (running / approved / proposed). One <code>segments[]</code> input, or a sibling <code class="mono">ui-stacked-bar</code>.</td></tr>
+      <tr><td>Flow filter</td><td><span class="keep">reuse</span></td>
+        <td><code class="mono">ui-filter-pills</code> — the current page already uses it; it just wants a colour dot per option.</td></tr>
+      <tr><td>Folded evidence (C)</td><td><span class="keep">reuse</span></td>
+        <td><code class="mono">ui-section</code> with <code>collapsible</code>, and <code class="mono">ui-prose</code> for the reading register.</td></tr>
+      <tr><td>Swimlanes (B)</td><td><span class="new">new</span></td>
+        <td><code class="mono">app-ui-swimlane-chart</code> — lanes × a time window; spans, instants, shaded gaps, a now-line and an
+          optional future gutter. The only substantial new component here, and it earns its place beyond this page:
+          the same chart draws the journal's day stream and the retro timeline.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <b>The verdict engine already exists, and <code>/fleet</code> does not use it.</b>
+    <code>src/app/features/journal/utils/fleet-health.ts</code> holds
+    <code>workerRows()</code>, <code>healthAlerts()</code>, <code>backlogReason()</code> and
+    <code>healthHeadline()</code> — every judgement above, tested, with the reasoning written down.
+    The journal widget consumes it. <code>/fleet</code> hand-rolls its own <code>heartbeatTone()</code>
+    and <code>queueVerdict()</code> instead, so the two surfaces can disagree about the same fleet.
+    Whichever direction wins, step one is hoisting that module out of <code>features/journal/utils/</code>
+    into a shared domain service and pointing both at it. The prototypes here run on a JS port of it, which is
+    how they get their verdict lines for free.
+  </div>
+
+  <!-- ── Data gaps ───────────────────────────────────────────────────── -->
+  <h2>What the API cannot currently answer</h2>
+  <ul class="pts">
+    <li><b>No heartbeat history.</b> <code>workers[].checked_at</code> is one instant. B can draw silence
+      truthfully (it starts at the last beat) but has to <em>assume</em> continuity before it.
+      Wants <code>GET /api/dispatch/heartbeats?since=</code>.</li>
+    <li><b>No pump tick history.</b> Same shape — <code>last_pipeline_enqueue_at</code> is a single instant, so
+      B extrapolates the earlier ticks at the 30-minute cadence.</li>
+    <li><b>No per-fold expected cadence.</b> The 3-day staleness threshold is hard-coded in the component.
+      A fold that legitimately runs weekly would read as broken.</li>
+    <li><b>Actions are all read-only today.</b> Every button in A and C is drawn but inert. Retry, reap,
+      release-lock and kick-pump need endpoints; the valve knobs would go through the existing
+      settings write path (<code>state_set_valve</code>).</li>
+    <li><b>The valves are already there and nothing renders them.</b> <code>GET /api/state/pipeline</code> returns
+      17 keyed, labelled controls with their values and an <code>is_default</code> flag — including
+      <code>pipeline.deepread_items_per_tick = 0</code>, which is the actual answer to "why does groom ship nothing".
+      A's rail is the first thing to draw them.</li>
+  </ul>
+
+  <h3>Fixture</h3>
+  <p class="n">
+    <code>data.js</code> holds a real production snapshot (<code>2026-09-08T14:51Z</code>) plus a reconstructed
+    incident: m2 drops, its three workers go silent with it, 27 approved jobs jam behind them, the pump stops,
+    a fold dies quietly, and kipper stays fine throughout — which is the case that separates a page that
+    attributes faults from one that just counts them. Every instant is stored as an offset and rebuilt at load,
+    so the calm state still looks calm whenever you open this.
+  </p>
+</div>

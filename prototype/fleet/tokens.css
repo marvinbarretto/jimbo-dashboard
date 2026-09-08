@@ -1,0 +1,126 @@
+/* The dashboard's real tokens, lifted verbatim from src/styles.scss and
+   src/styles/_typography.scss, so what is judged here transfers 1:1.
+   Do not "improve" a value in this file — change it in the app instead. */
+:root {
+  --color-bg: #060b12;
+  --color-surface: #0d1520;
+  --color-surface-raised: #101b28;
+  --color-surface-soft: #091119;
+  --color-border: #1f394c;
+  --color-border-strong: #3dd6ff;
+  --color-text: #e6f7ff;
+  --color-text-muted: #83a6b8;
+  --color-text-soft: #aac8d6;
+  --color-accent: #3dd6ff;
+  --color-danger: #ff5d7a;
+  --color-success: #6dffb3;
+  --color-warning: #ffd86b;
+  --color-info: #69b8ff;
+  --color-accent-glow: color-mix(in srgb, var(--color-accent) 30%, transparent);
+  --color-danger-glow: color-mix(in srgb, var(--color-danger) 28%, transparent);
+
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', ui-monospace, Menlo, monospace;
+  --font-serif: 'Iowan Old Style', Palatino, 'Palatino Linotype', Georgia, serif;
+
+  --radius: 2px;
+  --space: 1rem;
+  --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
+
+  --actor-color-marvin: #e08850;
+  --actor-color-kipper: #5fb3a1;
+  --actor-color-boris: #6b95d6;
+  --actor-color-jeffrey: #7fc4e8;
+  --actor-color-jimbo: #a878d6;
+  --actor-color-steward: #9aa8bd;
+  --actor-color-hermes: #c98fb0;
+  --actor-color-default: #8b93a7;
+
+  /* Reading register — prose meant to be read. */
+  --prose-family: var(--font-serif);
+  --prose-size: 1.1rem;
+  --prose-line: 1.7;
+  --prose-measure: 46rem;
+  /* Scanning register — text meant to be scanned. */
+  --scan-family: var(--font-sans);
+  --scan-size: 0.8rem;
+  --scan-line: 1.55;
+  /* Label register — micro-caps section labels. */
+  --label-size: 0.68rem;
+  --label-tracking: 0.1em;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--scan-family);
+  font-size: var(--scan-size);
+  line-height: var(--scan-line);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Every figure on a monitoring surface is compared against the one above it.
+   Tabular numerals are not a polish item here — they are what makes a column
+   of costs or ages legible as a column. */
+.num { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--font-mono); }
+.label-caps {
+  font-family: var(--scan-family);
+  font-size: var(--label-size);
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* ── Tone vocabulary, shared by all three directions ──────────────────────
+   alert  = work is not happening, and a human is needed
+   warn   = something is degrading, but work continues
+   yours  = waiting on Marvin — shown, never coloured as a fault
+   ok     = nominal
+   parked = deliberately idle (cooldown / gated / suspended). NEVER red.  */
+.t-alert  { --tone: var(--color-danger); }
+.t-warn   { --tone: var(--color-warning); }
+.t-yours  { --tone: var(--color-accent); }
+.t-ok     { --tone: var(--color-success); }
+.t-parked { --tone: var(--color-text-muted); }
+
+.dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--tone, var(--color-text-muted));
+  flex: none; display: inline-block;
+}
+.dot--ring { background: none; border: 2px solid var(--tone); }
+.dot--pulse { box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 25%, transparent); }
+
+.pill {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .62rem; letter-spacing: .06em; text-transform: uppercase;
+  padding: .12rem .4rem; border-radius: 2px; white-space: nowrap;
+  border: 1px solid color-mix(in srgb, var(--tone, var(--color-border)) 55%, transparent);
+  color: var(--tone, var(--color-text-muted));
+}
+
+a { color: var(--color-accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Prototype chrome — not part of any proposed design ─────────────────── */
+.proto-bar {
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  padding: .5rem 1.25rem; border-bottom: 1px dashed var(--color-border);
+  background: #05080d; font-size: .7rem; color: var(--color-text-muted);
+}
+.proto-bar strong { color: var(--color-text-soft); font-weight: 600; }
+.proto-switch { display: flex; gap: 0; margin-left: auto; }
+.proto-switch button {
+  font: inherit; font-size: .68rem; cursor: pointer;
+  background: var(--color-surface); color: var(--color-text-muted);
+  border: 1px solid var(--color-border); padding: .25rem .6rem;
+}
+.proto-switch button + button { border-left: none; }
+.proto-switch button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface));
+  color: var(--color-text); border-color: var(--color-accent);
+}
+.proto-switch button:focus-visible { outline: none; box-shadow: var(--focus-ring); }

@@ -1,0 +1,755 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Fleet — direction A: Console</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+/* ── Direction A: CONSOLE ──────────────────────────────────────────────────
+   Organising principle: THE QUESTION YOU CAME WITH.
+
+   Nobody opens /fleet to read it. They open it holding one of five questions,
+   and the current page answers all five at once, in nine equally-weighted
+   sections, so every visit is a scan past four irrelevant ones. So: one
+   question per tab, each tab spacious enough to be read rather than decoded,
+   and a rail of the knobs THAT question makes you want to reach for.
+
+   Two things refuse to live in a tab, because a tab is a thing you can fail
+   to open:
+     • the verdict line — the answer to "is it fine?", always on screen
+     • the fault count on the tabs themselves — you cannot hide a fire behind
+       a tab the reader never clicked                                        */
+
+.page { padding: 0 0 5rem; }
+
+/* ── Standing header ───────────────────────────────────────────────────── */
+.verdict {
+  display: grid; grid-template-columns: 1fr auto; gap: .5rem 2rem;
+  align-items: center; padding: 1.5rem 2rem 1.35rem;
+  border-left: 3px solid var(--tone);
+  background: linear-gradient(100deg, color-mix(in srgb, var(--tone) 12%, var(--color-bg)) 0%, var(--color-bg) 100%);
+}
+.verdict__head {
+  font-size: 1.6rem; font-weight: 600; letter-spacing: -.02em; color: var(--tone);
+  line-height: 1.15; margin-bottom: .3rem;
+}
+.verdict__line { color: var(--color-text-soft); font-size: .85rem; line-height: 1.6; max-width: 58rem; }
+.verdict__meta { display: flex; gap: 1.5rem; align-items: center; font-size: .72rem; color: var(--color-text-muted); }
+.verdict__meta b { color: var(--color-text); font-weight: 600; }
+
+/* ── The right-now strip ───────────────────────────────────────────────────
+   Above the tabs, on every tab, because "what is happening right now" is not
+   one of the five questions — it is the thing you glance at before you decide
+   which of them you have.
+
+   The fleet's running list is empty most of the time (a dispatch is one to
+   five minutes of work), so a strip that only drew live jobs would read as
+   "nothing is happening" almost always. Pairing the live action with the last
+   completed one is what makes it honest: idle-between-jobs and stopped look
+   nothing alike once you can see what each actor last shipped and when. */
+.now {
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);
+  border-bottom: 1px solid var(--color-border); background: var(--color-surface-soft);
+  overflow-x: auto;
+}
+.now__a {
+  padding: .85rem 1rem; border-right: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  min-width: 12rem; display: grid; gap: .3rem; align-content: start;
+}
+.now__a:last-child { border-right: none; }
+.now__who { display: flex; align-items: center; gap: .4rem; }
+.now__id { font-family: var(--font-mono); font-size: .82rem; font-weight: 600; color: var(--actor); }
+.now__box { font-size: .62rem; color: var(--color-text-muted); margin-left: auto; }
+.now__verb {
+  font-size: .64rem; letter-spacing: .09em; text-transform: uppercase; color: var(--tone); font-weight: 600;
+}
+.now__what {
+  font-size: .78rem; line-height: 1.45; color: var(--color-text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.now__what .sk { font-family: var(--font-mono); font-size: .95em; }
+.now__last { font-size: .68rem; color: var(--color-text-muted); line-height: 1.45;
+             overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.now__last b { color: var(--color-text-soft); font-weight: 500; font-family: var(--font-mono); font-size: .95em; }
+/* A live job needs to be the thing your eye lands on in a strip of six. */
+.now__a--live { background: color-mix(in srgb, var(--color-success) 7%, transparent); }
+.now__a--live .now__verb::before {
+  content: ''; display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--tone); margin-right: .35rem; vertical-align: 1.5px;
+  animation: beat 1.8s ease-in-out infinite;
+}
+@keyframes beat { 0%, 100% { opacity: 1 } 50% { opacity: .25 } }
+@media (prefers-reduced-motion: reduce) { .now__a--live .now__verb::before { animation: none } }
+.now__a--bad { background: color-mix(in srgb, var(--color-danger) 8%, transparent); }
+.now__a--yours { background: color-mix(in srgb, var(--color-accent) 7%, transparent); }
+
+/* ── Tabs = the questions ──────────────────────────────────────────────── */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--color-border); padding: 0 2rem; overflow-x: auto; }
+.tab {
+  font: inherit; font-size: .82rem; cursor: pointer; white-space: nowrap;
+  background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--color-text-muted); padding: .8rem 1.15rem; display: flex; gap: .5rem; align-items: center;
+}
+.tab:first-child { padding-left: 0; }
+.tab:hover { color: var(--color-text-soft); }
+.tab[aria-selected="true"] { color: var(--color-text); border-bottom-color: var(--color-accent); }
+.tab__n {
+  font-variant-numeric: tabular-nums; font-size: .68rem; font-weight: 600;
+  padding: .1rem .38rem; border-radius: 2px; line-height: 1.4;
+  background: color-mix(in srgb, var(--tone) 22%, transparent); color: var(--tone);
+}
+.tab:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+/* ── Tab body + action rail ────────────────────────────────────────────── */
+.body { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; align-items: start; }
+.main { padding: 1.75rem 2rem; min-width: 0; }
+.rail {
+  padding: 1.75rem 2rem 1.75rem 1.5rem; border-left: 1px solid var(--color-border);
+  position: sticky; top: 0; align-self: stretch; min-height: 60vh;
+  background: var(--color-surface-soft);
+}
+.rail h3, .main h3 {
+  font-size: var(--label-size); letter-spacing: var(--label-tracking); text-transform: uppercase;
+  color: var(--color-text-muted); font-weight: 600; margin-bottom: .9rem;
+}
+.rail p.why { font-size: .72rem; color: var(--color-text-muted); line-height: 1.6; margin-bottom: 1.1rem; }
+
+.act {
+  display: block; width: 100%; text-align: left; font: inherit; font-size: .78rem;
+  background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text);
+  padding: .55rem .75rem; margin-bottom: .45rem; cursor: pointer;
+}
+.act:hover { border-color: var(--color-border-strong); }
+.act small { display: block; color: var(--color-text-muted); font-size: .68rem; margin-top: .15rem; }
+.act--danger { border-color: color-mix(in srgb, var(--color-danger) 40%, var(--color-border)); }
+.act--danger:hover { border-color: var(--color-danger); }
+.act:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ── Valves — the real knobs, from the pipeline payload ────────────────── */
+.valve { padding: .6rem 0; border-bottom: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent); }
+.valve__k { font-family: var(--font-mono); font-size: .68rem; color: var(--color-text-muted); display: block; margin-bottom: .3rem; }
+.valve__row { display: flex; align-items: center; gap: .5rem; }
+.valve__label { font-size: .76rem; flex: 1; min-width: 0; }
+.stepper { display: inline-flex; border: 1px solid var(--color-border); background: var(--color-surface); }
+.stepper button { font: inherit; width: 1.5rem; height: 1.5rem; border: none; background: none;
+                  color: var(--color-text-soft); cursor: pointer; padding: 0; font-size: .8rem; }
+.stepper button:hover { background: var(--color-surface-raised); color: var(--color-text); }
+.stepper b { min-width: 1.9rem; text-align: center; font-variant-numeric: tabular-nums;
+             font-size: .78rem; align-self: center; }
+.sw { display: inline-flex; border: 1px solid var(--color-border); }
+.sw button { font: inherit; font-size: .66rem; padding: .12rem .5rem; border: none; cursor: pointer;
+             background: var(--color-surface); color: var(--color-text-muted); }
+.sw button[aria-pressed="true"] { background: color-mix(in srgb, var(--color-accent) 20%, var(--color-surface)); color: var(--color-text); }
+/* Most of these have been moved off their defaults, so a chip on 15 of 17 rows
+   says nothing. A quiet left accent carries "someone chose this"; the chip is
+   reserved for an edit made right now and not yet written back. */
+.valve--set { border-left: 2px solid color-mix(in srgb, var(--color-text-muted) 45%, transparent);
+              padding-left: .6rem; margin-left: -.6rem; }
+.valve--dirty { border-left-color: var(--color-accent); }
+.valve--dirty .valve__label::after {
+  content: 'edited'; font-size: .56rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--color-accent); margin-left: .45rem; vertical-align: 1px;
+}
+/* A per-tick cap of zero is why a lane ships nothing. Not a fault — but it is
+   the line you came to this rail to find, so it must not look like the rest. */
+.valve--zero .valve__label { color: var(--color-warning); }
+.valve__group { font-family: var(--font-mono); font-size: .7rem; color: var(--color-text-soft);
+                margin: 1.15rem 0 .5rem; padding-bottom: .3rem; border-bottom: 1px solid var(--color-border); }
+.valve__group:first-of-type { margin-top: 0; }
+.valve__more { margin-top: .5rem; }
+.valve__more summary { cursor: pointer; font-size: .72rem; color: var(--color-text-muted); padding: .35rem 0; }
+.valve__more summary:hover { color: var(--color-text-soft); }
+.apply {
+  position: sticky; bottom: 0; margin-top: 1rem; padding: .75rem 0 0;
+  background: linear-gradient(transparent, var(--color-surface-soft) 35%);
+}
+.apply button { width: 100%; font: inherit; font-size: .78rem; cursor: pointer; padding: .6rem;
+  background: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface));
+  border: 1px solid var(--color-accent); color: var(--color-text); }
+.apply small { display: block; font-size: .68rem; color: var(--color-text-muted); margin-top: .4rem; line-height: 1.5; }
+
+/* ── Fault cards — one per fault, room to actually read it ─────────────── */
+.fault {
+  border: 1px solid color-mix(in srgb, var(--tone) 30%, var(--color-border));
+  border-left: 3px solid var(--tone);
+  background: color-mix(in srgb, var(--tone) 5%, var(--color-bg));
+  padding: 1rem 1.25rem; margin-bottom: .9rem;
+  display: grid; grid-template-columns: 1fr auto; gap: .5rem 1.5rem; align-items: start;
+}
+.fault__title { font-size: .95rem; font-weight: 600; color: var(--tone); letter-spacing: -.01em; }
+.fault__detail { grid-column: 1 / -1; color: var(--color-text-soft); font-size: .82rem; line-height: 1.65; max-width: 54rem; }
+.fault__expect { font-size: .7rem; color: var(--color-text-muted); white-space: nowrap; padding-top: .15rem; }
+.fault__do { grid-column: 1 / -1; display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .35rem; }
+.fault__do button {
+  font: inherit; font-size: .72rem; padding: .3rem .7rem; cursor: pointer;
+  background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-soft);
+}
+.fault__do button:hover { border-color: var(--tone); color: var(--color-text); }
+
+.allclear { padding: 3rem 0; max-width: 44rem; }
+.allclear h2 { font-size: 1.15rem; font-weight: 600; margin-bottom: .6rem; color: var(--color-success); }
+.allclear p { color: var(--color-text-muted); font-size: .84rem; line-height: 1.7; }
+.allclear ul { margin: 1rem 0 0 1.1rem; color: var(--color-text-muted); font-size: .78rem; line-height: 1.9; }
+.allclear b { color: var(--color-text-soft); font-weight: 600; }
+
+/* ── Actor cards ───────────────────────────────────────────────────────── */
+.mnote {
+  display: flex; gap: .6rem; align-items: baseline; padding: .8rem 1rem; margin-bottom: 1.25rem;
+  border-left: 2px solid var(--tone); background: color-mix(in srgb, var(--tone) 7%, transparent);
+  font-size: .82rem; line-height: 1.6; color: var(--color-text-soft);
+}
+.mnote b { color: var(--tone); font-weight: 600; }
+.mnote > .dot { align-self: center; }
+
+.ac {
+  border: 1px solid var(--color-border); border-left: 2px solid var(--tone);
+  padding: 1rem 1.2rem; margin-bottom: .8rem;
+}
+.ac__head { display: flex; align-items: baseline; gap: .6rem; margin-bottom: .7rem; }
+.ac__head > .dot { align-self: center; }
+.ac__id { font-family: var(--font-mono); font-size: 1rem; font-weight: 600; color: var(--actor); }
+.ac__role { font-size: .74rem; color: var(--color-text-muted); }
+.ac__box { margin-left: auto; font-size: .7rem; color: var(--color-text-muted); white-space: nowrap; }
+.ac__box b { color: var(--color-text-soft); font-weight: 500; font-family: var(--font-mono); }
+
+/* The current action is the biggest thing on the card, because it is the
+   thing the card exists to say. */
+.ac__now { display: flex; align-items: baseline; gap: .7rem; margin-bottom: .6rem; }
+.ac__verb {
+  font-size: .64rem; letter-spacing: .09em; text-transform: uppercase; font-weight: 600;
+  color: var(--tone); border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent);
+  padding: .12rem .4rem; white-space: nowrap;
+}
+.ac__what { font-size: .95rem; line-height: 1.5; color: var(--color-text); min-width: 0; }
+.ac__what code { font-family: var(--font-mono); font-size: .85em; }
+
+.ac__facts { display: flex; gap: 1.4rem; flex-wrap: wrap; font-size: .74rem; color: var(--color-text-muted); }
+.ac__facts b { color: var(--color-text-soft); font-weight: 600; }
+.ac__do { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .8rem; }
+.ac__do button { font: inherit; font-size: .74rem; padding: .3rem .7rem; cursor: pointer;
+  background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-soft); }
+.ac__do button:hover { border-color: var(--tone); color: var(--color-text); }
+.ac__do button.danger { border-color: color-mix(in srgb, var(--color-danger) 40%, var(--color-border)); }
+
+/* ── Queue ─────────────────────────────────────────────────────────────── */
+.q { border: 1px solid var(--color-border); padding: 1.1rem 1.25rem; margin-bottom: 1rem; }
+.q__top { display: flex; align-items: baseline; gap: .7rem; margin-bottom: .7rem; }
+.q__name { font-family: var(--font-mono); font-size: .95rem; font-weight: 600; }
+.q__tot { font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.q__tot small { font-size: .72rem; font-weight: 400; color: var(--color-text-muted); margin-left: .3rem; }
+.q__bar { display: flex; height: 20px; background: var(--color-surface-soft); margin-bottom: .55rem; }
+.q__bar i { display: block; height: 100%; }
+.q__bar i.running { background: var(--color-success); }
+.q__bar i.approved { background: var(--color-accent); }
+.q__bar i.proposed { background: color-mix(in srgb, var(--color-accent) 26%, var(--color-surface)); }
+.q__key { display: flex; gap: 1.4rem; font-size: .75rem; color: var(--color-text-muted); }
+.q__key b { color: var(--color-text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.q__note { margin-top: .7rem; font-size: .78rem; color: var(--color-text-muted); line-height: 1.6; max-width: 46rem; }
+.q__note--jam { color: var(--color-danger); }
+
+table.grid { width: 100%; font-size: .8rem; margin-top: .4rem; }
+table.grid th { text-align: left; font-size: var(--label-size); letter-spacing: var(--label-tracking);
+  text-transform: uppercase; color: var(--color-text-muted); font-weight: 500;
+  padding: .5rem .7rem; border-bottom: 1px solid var(--color-border); }
+table.grid td { padding: .6rem .7rem; border-bottom: 1px solid color-mix(in srgb, var(--color-border) 35%, transparent); }
+table.grid td.r, table.grid th.r { text-align: right; }
+table.grid tr:hover td { background: var(--color-surface-soft); }
+.na { color: var(--color-text-muted); font-style: italic; font-size: .74rem; }
+
+/* ── Spend ─────────────────────────────────────────────────────────────── */
+.figs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--color-border);
+        border: 1px solid var(--color-border); margin-bottom: 1.5rem; }
+.fig { background: var(--color-bg); padding: 1.1rem 1.25rem; }
+.fig dt { font-size: var(--label-size); letter-spacing: var(--label-tracking); text-transform: uppercase;
+          color: var(--color-text-muted); margin-bottom: .45rem; }
+.fig dd { font-size: 2rem; font-weight: 600; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.fig small { display: block; margin-top: .5rem; font-size: .72rem; color: var(--color-text-muted); }
+.spark { display: flex; align-items: flex-end; gap: 3px; height: 70px; }
+.spark i { flex: 1; background: color-mix(in srgb, var(--color-accent) 40%, transparent);
+           border-top: 2px solid var(--color-accent); min-height: 2px; }
+.spark-x { display: flex; justify-content: space-between; margin-top: .35rem; font-size: .68rem; color: var(--color-text-muted); }
+
+/* ── Log ───────────────────────────────────────────────────────────────── */
+.pills { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.pills button {
+  font: inherit; font-size: .72rem; padding: .25rem .6rem; cursor: pointer;
+  background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-muted);
+  display: inline-flex; gap: .4rem; align-items: center;
+}
+.pills button[aria-pressed="true"] { color: var(--color-text); border-color: var(--flow, var(--color-accent)); }
+.pills button i { width: 8px; height: 8px; background: var(--flow, var(--color-text-muted)); }
+.pills button span { font-variant-numeric: tabular-nums; opacity: .6; }
+.log td.flowcell { border-left: 3px solid var(--flow); }
+.log tr.failed td { background: color-mix(in srgb, var(--color-danger) 8%, transparent); }
+.err { color: var(--color-danger); }
+.muted { color: var(--color-text-muted); }
+.caveat { font-size: .74rem; color: var(--color-text-muted); line-height: 1.7; max-width: 46rem; margin-top: 1.1rem; }
+
+@media (max-width: 1150px) {
+  .body { grid-template-columns: 1fr; }
+  .rail { border-left: none; border-top: 1px solid var(--color-border); position: static; padding: 1.5rem 2rem; }
+  .verdict { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="proto-bar">
+  <strong>Direction A — Console</strong>
+  <span>One question per tab, and the knobs that question makes you reach for.</span>
+  <a href="concepts.html">← all directions</a>
+</div>
+
+<div class="page" id="app"></div>
+
+<script src="data.js"></script>
+<script>
+const el = document.getElementById('app');
+let TAB = 'broken';
+let FLOW = null;           // ledger filter
+let S = null;
+const VALVE_STATE = {};    // local edits, so the knobs actually move
+
+const shortModel = m => m == null ? '—'
+  : m.replace(/^claude-/, '').replace(/-\d{8}$/, '').replace(/-4-5$/, '-4.5');
+
+const TABS = [
+  { id: 'broken', label: 'Anything broken?' },
+  { id: 'who',    label: 'Who is doing what?' },
+  { id: 'queue',  label: 'What is queued?' },
+  { id: 'spend',  label: 'What is it costing?' },
+  { id: 'log',    label: 'What happened?' },
+];
+
+function tabCount(id, s, v) {
+  if (id === 'broken') {
+    const n = v.faults.filter(f => f.tone !== 'yours').length;
+    return n ? { n, tone: v.faults.some(f => f.tone === 'alert') ? 'alert' : 'warn' } : null;
+  }
+  if (id === 'who') {
+    const down = s.workers.filter(w => ['lost', 'covered'].includes(workerTone(w, s.machines))).length;
+    return down ? { n: down, tone: 'alert' } : null;
+  }
+  if (id === 'queue') {
+    const prop = s.queue.filter(q => q.status === 'proposed').reduce((a, b) => a + b.count, 0);
+    // The tab badge counts what is WAITING ON MARVIN, not total depth. A
+    // number he cannot act on is not worth a badge.
+    return prop ? { n: prop, tone: 'yours' } : null;
+  }
+  return null;
+}
+
+// ── Tab bodies ───────────────────────────────────────────────────────────
+
+function tabBroken(s, v) {
+  const real = v.faults.filter(f => f.tone !== 'yours');
+  const yours = v.faults.filter(f => f.tone === 'yours');
+  const fixes = {
+    'machine-m2': [['Ping m2 over Tailscale', 0], ['Open the machine log', 0], ['Declare a planned outage', 0]],
+    'jam':        [['Re-dispatch the approved queue', 0], ['Inspect the oldest approved item', 0]],
+    'failures':   [['Retry all 3', 0], ['Open the first error', 0]],
+    'stuck':      [['Release both grooming locks', 1], ['Reset retry counters', 0]],
+    'pump':       [['Kick the pump now', 0], ['Open the cron log', 0]],
+    'hermes':     [['Open the Hermes control room', 0]],
+    'approval':   [['Review the 3 proposals', 0], ['Approve all', 1]],
+  };
+  const doFor = f => (fixes[f.key] ?? fixes[f.key.split('-')[0] + '-' + f.key.split('-')[1]] ??
+                      (f.key.startsWith('worker-') ? [['Restart ' + f.key.slice(7), 1], ['Open its log', 0]] :
+                       f.key.startsWith('hung-')   ? [['Reap the hung dispatch', 1], ['Open the session log', 0]] :
+                       f.key.startsWith('fold-')   ? [['Enqueue it now', 0], ['Open the Hermes job', 0]] : []));
+
+  const card = f => `<div class="fault t-${f.tone}">
+      <div class="fault__title">${f.title}</div>
+      <div class="fault__expect">expected: ${f.expect}</div>
+      <div class="fault__detail">${f.detail}</div>
+      <div class="fault__do">${doFor(f).map(([label, danger]) =>
+        `<button type="button" class="${danger ? 'act--danger' : ''}">${label}</button>`).join('')}</div>
+    </div>`;
+
+  return {
+    main: real.length ? `
+      <h3>${real.length} needing a human</h3>
+      ${real.map(card).join('')}
+      ${yours.length ? `<h3 style="margin-top:1.75rem">Waiting on you</h3>${yours.map(card).join('')}` : ''}`
+    : `<div class="allclear">
+        <h2>Nothing is broken.</h2>
+        <p>Not "no alerts fired" — these are the things actively checked, and each one currently holds:</p>
+        <ul>
+          <li>every machine has spoken inside its threshold — <b>m2</b> ${ago(s.machines[0].ago)}, <b>m4</b> ${ago(s.machines[1].ago)}</li>
+          <li>no worker is silent while its machine is up</li>
+          <li>nothing failed in the last 24h, and no grooming lock is orphaned</li>
+          <li>the queue moved <b>${ago(s.pulse.transition_ago)}</b>, and the pump enqueued <b>${ago(s.pumpAgo)}</b></li>
+          <li>every fold has recurred inside its cadence</li>
+        </ul>
+        ${yours.length ? `<h3 style="margin-top:2rem">Waiting on you</h3>${yours.map(card).join('')}` : ''}
+      </div>`,
+    rail: `
+      <h3>Fleet-wide</h3>
+      <p class="why">Blunt instruments. Reach for these when a fault above has no button of its own.</p>
+      <button class="act">Refresh now<small>last polled 4s ago · auto every 30s</small></button>
+      <button class="act">Open the daily report<small>what the fleet did yesterday, written up</small></button>
+      <button class="act">Open the Hermes control room<small>the metered lane on the VPS</small></button>
+      <button class="act act--danger">Drain and stop all workers<small>finish in-flight work, then claim nothing new</small></button>`,
+  };
+}
+
+function whatWorker(w, s) {
+  const job = s.now.find(j => j.executor === w.id);
+  if (job) return `<b>${job.skill}</b><small>${job.note_title ?? job.task_id} · ${age(job.startedAgo)} in</small>`;
+  const t = workerTone(w, s.machines);
+  if (t === 'covered') return `Silent because ${w.machine} is<small>the machine owns this outage — not a separate fault</small>`;
+  if (t === 'lost')    return `Stopped reporting<small>${w.machine} is up and its other workers are checking in, so the worker is the fault</small>`;
+  // INVARIANT: deliberate quiet is reported as intent, never as an outage.
+  if (w.status === 'cooldown') return `Throttled<small>quota cooldown — next claim ${w.nextIn <= 0 ? 'due now' : 'in ' + age(w.nextIn)}</small>`;
+  if (w.status === 'gated')    return `Standing by<small>${w.reason ?? 'gated'} — this is the runner behaving correctly</small>`;
+  return `Polling<small>idle, nothing claimed</small>`;
+}
+
+function tabWho(s) {
+  const rows = actorNow(s);
+  // Machines are not gone — they are demoted. A box matters exactly twice:
+  // when it explains a silence, and when you need to go and restart it.
+  // Both of those are facts ABOUT an actor, so that is where they are drawn.
+  const badMachines = s.machines.filter(m => m.stale && !m.suspended);
+
+  return {
+    main: `
+      ${badMachines.length ? `<div class="mnote t-alert">
+        <span class="dot"></span>
+        <b>${badMachines.map(m => m.id).join(', ')} unreachable</b> —
+        ${badMachines.map(m => `${m.id} last spoke ${ago(m.ago)}, past its ${m.stale_after_minutes}m threshold, taking ${m.workers.join(', ')} with it`).join('; ')}.
+        One outage, not ${badMachines.reduce((a, m) => a + m.workers.length, 0)}.
+      </div>` : ''}
+
+      ${rows.map(a => {
+        const tone = ACT_TONE[a.kind];
+        const box = s.machines.find(m => m.id === a.machine) ?? null;
+        return `<div class="ac t-${tone}" style="--actor: var(--actor-color-${a.id}, var(--actor-color-default))">
+          <div class="ac__head">
+            <span class="dot ${a.kind === 'running' ? 'dot--pulse' : ''}"></span>
+            <span class="ac__id">${a.id}</span>
+            <span class="ac__role">${a.role ?? ''}</span>
+            <span class="ac__box">${a.machine ? `on <b>${a.machine}</b>${box ? ` · ${box.stale ? 'unreachable' : 'up'}, threshold ${box.stale_after_minutes}m` : ''}` : 'human'}</span>
+          </div>
+
+          <div class="ac__now">
+            <span class="ac__verb">${a.act.verb}</span>
+            <span class="ac__what">${a.act.skill ? `<code>${a.act.skill}</code> — ` : ''}${a.act.what}${
+              a.act.skill && a.act.ago !== null ? ` <span class="muted num">· ${age(a.act.ago)} in</span>` : ''}</span>
+          </div>
+
+          <div class="ac__facts">
+            ${a.last ? `<span><b class="mono">${a.last.skill ?? a.last.flow}</b> shipped ${ago(a.last.completedAgo)}${
+              a.last.completed_model ? ` on ${shortModel(a.last.completed_model)}` : ''}</span>` : ''}
+            ${a.lane.approved ? `<span><b class="num">${a.lane.approved}</b> approved and waiting</span>` : ''}
+            ${a.lane.proposed ? `<span><b class="num">${a.lane.proposed}</b> proposed</span>` : ''}
+            ${(() => {
+              const n = s.recent.filter(r => r.executor === a.id).length;
+              const spend = s.recent.filter(r => r.executor === a.id).reduce((x, r) => x + (r.estimated_cost ?? 0), 0);
+              return n ? `<span><b class="num">${n}</b> in this window · ${cost(spend)}</span>` : '';
+            })()}
+          </div>
+
+          <div class="ac__do">${
+            a.id === 'marvin' ? '<button>Review the proposals</button>'
+            : a.id === 'hermes' ? '<button>Open the control room</button>'
+            : a.kind === 'hung' ? '<button class="danger">Reap the hung dispatch</button><button>Open its log</button>'
+            : a.kind === 'covered' ? `<button>Ping ${a.machine}</button>`
+            : a.kind === 'lost' ? `<button class="danger">Restart ${a.id}</button><button>Open its log</button>`
+            : `<button>Suspend ${a.id}</button><button>Open its log</button>`}</div>
+        </div>`;
+      }).join('')}`,
+    rail: `
+      <h3>Per actor</h3>
+      <p class="why">A declared outage is not an outage. Suspending an actor changes what this page <em>expects</em> of it, so a machine you switched off yourself stops reading as a fire.</p>
+      ${s.workers.map(w => `<button class="act">Suspend ${w.id}<small>declare a reason and a return time</small></button>`).join('')}
+      <h3 style="margin-top:1.5rem">The boxes underneath</h3>
+      <p class="why">Only two things here are ever worth touching, which is why they are down at the bottom of the rail rather than up in the page.</p>
+      ${s.machines.map(m => `<button class="act">${m.id} — heartbeat threshold<small>currently ${m.stale_after_minutes}m · ${m.workers.join(', ')} · kipper naps by design, boris does not</small></button>`).join('')}`,
+  };
+}
+
+/** INVARIANT: never a bare zero — a metric with no reading says which kind. */
+function metric(m, fmt) {
+  if (m.state === 'not_applicable') return `<span class="na">n/a</span>`;
+  if (m.state === 'not_measured')   return `<span class="na">not measured</span>`;
+  if (m.value === null)             return `<span class="na">—</span>`;
+  if (fmt === 'pct')                return `<span class="num">${(m.value * 100).toFixed(1)}%</span>`;
+  return `<span class="num">${m.value}</span>`;
+}
+
+function laneVerdict(l) {
+  const o = l.totals.output, i = l.totals.intake;
+  if (o.state === 'not_applicable') return { tone: 'parked', text: 'ships nothing by design' };
+  if (o.state !== 'measured')       return { tone: 'parked', text: 'no reading' };
+  if ((o.value ?? 0) > 0)           return { tone: 'ok', text: 'shipping' };
+  if ((i.value ?? 0) === 0)         return { tone: 'parked', text: 'no reading' };
+  if (l.gate === 'gated')           return { tone: 'parked', text: 'ships nothing by design' };
+  if (l.gate === 'throttled')       return { tone: 'warn', text: 'zero is the throttle' };
+  return { tone: 'alert', text: 'nothing out, valves open' };
+}
+
+const HOT_VALVES = new Set([
+  'pipeline.commission_enabled', 'pipeline.commission_items_per_tick',
+  'pipeline.commission_tick_minutes', 'pipeline.commission_concurrency_cap',
+  'pipeline.enabled', 'pipeline.deepread_items_per_tick',
+  'pipeline.decompose_items_per_tick', 'pipeline.classify_items_per_tick',
+  'pipeline.intake_items_per_tick', 'pipeline.concurrency_cap',
+]);
+
+/** A valve, rendered as the control its value type implies. */
+function valve(v) {
+  const cur = VALVE_STATE[v.key] ?? v.value;
+  const isBool = cur === 'true' || cur === 'false';
+  const asNum = Number(cur);
+  const numeric = !isBool && Number.isFinite(asNum) && cur.trim() !== '';
+  const dirty = String(cur) !== String(v.value);
+  const moved = dirty || !v.is_default;
+  // A per-tick cap of 0 is why a lane ships nothing. It is a setting, not a
+  // fault — but it is the setting you came here to find.
+  const zeroed = numeric && asNum === 0;
+  return `<div class="valve ${moved ? 'valve--set' : ''} ${dirty ? 'valve--dirty' : ''} ${zeroed ? 'valve--zero' : ''}">
+    <span class="valve__k">${v.key}</span>
+    <div class="valve__row">
+      <span class="valve__label">${v.label}</span>
+      ${isBool ? `<span class="sw" data-key="${v.key}">
+          <button type="button" data-v="true" aria-pressed="${cur === 'true'}">on</button>
+          <button type="button" data-v="false" aria-pressed="${cur === 'false'}">off</button></span>`
+        : numeric ? `<span class="stepper" data-key="${v.key}">
+          <button type="button" data-d="-1">−</button><b>${asNum}</b><button type="button" data-d="1">+</button></span>`
+        : `<code class="mono" style="font-size:.7rem">${cur}</code>`}
+    </div>
+  </div>`;
+}
+
+function tabQueue(s) {
+  const ls = lanes(s);
+  const maxQ = Math.max(1, ...ls.map(l => l.approved + l.running + l.proposed));
+  return {
+    main: `
+      <h3>Right now</h3>
+      ${ls.map(l => {
+        const tot = l.approved + l.running + l.proposed;
+        const w = n => (n / maxQ * 100).toFixed(1) + '%';
+        const jam = l.approved > 0 && s.pulse.transition_ago > 240;
+        return `<div class="q">
+          <div class="q__top">
+            <span class="q__name" style="color:var(--actor-color-${l.executor}, var(--actor-color-default))">${l.executor}</span>
+            <span class="q__tot num">${tot}<small>queued</small></span>
+            <span style="margin-left:auto" class="pill ${jam ? 't-alert' : 't-parked'}">${jam ? 'jammed' : 'draining'}</span>
+          </div>
+          <div class="q__bar">
+            <i class="running" style="width:${w(l.running)}"></i>
+            <i class="approved" style="width:${w(l.approved)}"></i>
+            <i class="proposed" style="width:${w(l.proposed)}"></i>
+          </div>
+          <div class="q__key">
+            <span><b>${l.running}</b> running</span><span><b>${l.approved}</b> approved</span><span><b>${l.proposed}</b> proposed</span>
+          </div>
+          <p class="q__note ${jam ? 'q__note--jam' : ''}">${
+            /* INVARIANT: proposed work is SUPPOSED to sit until approved, so
+               its age proves nothing. Only approved work standing still is a
+               jam — that distinction is the whole answer to "is this normal?" */
+            l.approved === 0
+              ? 'Nothing approved is waiting, so a still queue here is idle, not stuck. The ' + l.proposed + ' proposed items are waiting on you, not on ' + l.executor + '.'
+              : jam ? `${l.approved} were cleared to run and nothing has moved for ${age(s.pulse.transition_ago)} — past two commission ticks, so this is a jam.`
+              : `${l.approved} cleared to run · last movement ${ago(s.pulse.transition_ago)}.`}</p>
+        </div>`;
+      }).join('')}
+
+      <h3 style="margin-top:2rem">Conversion <span class="muted" style="text-transform:none;letter-spacing:0">— what each lane takes in and what it ships, over 12 weeks</span></h3>
+      <table class="grid">
+        <thead><tr><th>lane</th><th class="r">intake</th><th class="r">output</th><th class="r">wip</th><th class="r">conv.</th><th>reading</th></tr></thead>
+        <tbody>${RAW.lanes.map(l => {
+          const lv = laneVerdict(l);
+          return `<tr class="t-${lv.tone}">
+            <td class="mono">${l.lane}</td>
+            <td class="r">${metric(l.totals.intake)}</td>
+            <td class="r">${metric(l.totals.output)}</td>
+            <td class="r">${metric(l.totals.wip)}</td>
+            <td class="r">${metric(l.totals.conversion, 'pct')}</td>
+            <td><span class="pill">${lv.text}</span></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+      <p class="caveat">${RAW.warnings.join('<br><br>')}</p>`,
+    rail: `
+      <h3>Valves</h3>
+      <p class="why">Every one of these already ships in <code>GET /api/state/pipeline</code>, keyed and labelled, and no page has ever rendered one. A lane showing zero output usually has its answer here — <code>deepread_items_per_tick</code> is set to 0.</p>
+      ${['commission', 'groom'].map(lane => {
+        const all = VALVES.filter(v => v.lane === lane);
+        const hot = all.filter(v => HOT_VALVES.has(v.key));
+        const rest = all.filter(v => !HOT_VALVES.has(v.key));
+        return `<div class="valve__group">${lane}</div>
+          ${hot.map(valve).join('')}
+          ${rest.length ? `<details class="valve__more"><summary>${rest.length} more ${lane} keys</summary>${rest.map(valve).join('')}</details>` : ''}`;
+      }).join('')}
+      ${Object.keys(VALVE_STATE).length ? `<div class="apply">
+        <button type="button">Apply ${Object.keys(VALVE_STATE).length} change${Object.keys(VALVE_STATE).length === 1 ? '' : 's'}</button>
+        <small>Writes to settings. Takes effect on the next tick — up to ${VALVE_STATE['pipeline.commission_tick_minutes'] ?? 120}m for commission.</small>
+      </div>` : ''}
+      <button class="act" style="margin-top:1rem">Approve all proposed<small>${s.queue.filter(q => q.status === 'proposed').reduce((a, b) => a + b.count, 0)} items</small></button>`,
+  };
+}
+
+function tabSpend(s) {
+  const days = RAW.costs_by_day, maxD = Math.max(...days.map(d => d.total));
+  const today = days[days.length - 1], prior = days.slice(0, -1);
+  const mean = prior.reduce((a, d) => a + d.total, 0) / prior.length;
+  const bt = s.burn.reduce((a, r) => ({ turns: a.turns + r.turns, out: a.out + r.output_tokens,
+                                        cost: a.cost + (r.estimated_cost ?? 0) }), { turns: 0, out: 0, cost: 0 });
+  const unpriced = [...new Set(s.burn.filter(r => r.estimated_cost === null).map(r => r.model))];
+  return {
+    main: `
+      <dl class="figs">
+        <div class="fig"><dt>trailing 5h</dt><dd>${cost(bt.cost)}</dd>
+          <small>${bt.turns} worker turns · ${tok(bt.out)} tokens out</small></div>
+        <div class="fig"><dt>today</dt><dd>${cost(today.total)}</dd>
+          <small>${today.count} priced calls · daily mean ${cost(mean)}</small></div>
+        <div class="fig"><dt>7 days</dt><dd>${cost(RAW.costs_total)}</dd>
+          <small>${RAW.costs_unpriced} unpriced rows excluded</small></div>
+      </dl>
+      <h3>7-day line</h3>
+      <div class="spark">${days.map(d =>
+        `<i style="height:${(d.total / maxD * 100).toFixed(0)}%" title="${d.day} — ${cost(d.total)} over ${d.count} calls"></i>`).join('')}</div>
+      <div class="spark-x"><span>${days[0].day}</span><span>${cost(maxD)} peak</span><span>today</span></div>
+
+      <h3 style="margin-top:2rem">Who is burning it <span class="muted" style="text-transform:none;letter-spacing:0">— trailing 5h</span></h3>
+      <table class="grid">
+        <thead><tr><th>actor</th><th>model</th><th class="r">turns</th><th class="r">in</th><th class="r">out</th><th class="r">cost eq.</th></tr></thead>
+        <tbody>${s.burn.map(r => `<tr>
+          <td style="color:var(--actor-color-${r.actor}, var(--actor-color-default))">${r.actor ?? '—'}</td>
+          <td class="mono muted" title="${r.model}">${shortModel(r.model)}</td>
+          <td class="r num">${r.turns}</td><td class="r num">${tok(r.input_tokens)}</td>
+          <td class="r num">${tok(r.output_tokens)}</td><td class="r num">${cost(r.estimated_cost)}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+      <p class="caveat">
+        Worker turns run flat-rate on the Max plan, so every dollar here is a <b>pressure proxy, not a bill</b> — it says how hard the fleet is leaning, not what it charged.
+        Interactive Claude use never lands in this table at all.
+        ${unpriced.length ? `<br><br>Excludes <b>${unpriced.join(', ')}</b>: no pricing row, so the cost is <em>unknown</em>, not zero. Every figure above is a floor.` : ''}
+      </p>`,
+    rail: `
+      <h3>Model policy</h3>
+      <p class="why">The lever that actually moves this number is which tier a skill runs on. Haiku did ${s.burn.find(r => r.model.includes('haiku'))?.turns ?? 0} of the last ${s.burn.reduce((a, r) => a + r.turns, 0)} turns for a fraction of the spend.</p>
+      <button class="act">Open skill tier map<small>which skills pin a model, and which fall through to haiku</small></button>
+      <button class="act">Set a daily ceiling<small>alert when today passes a figure you choose</small></button>
+      <button class="act">Backfill missing pricing<small>${RAW.costs_unpriced} rows over 7 days have no price row</small></button>`,
+  };
+}
+
+function tabLog(s) {
+  const counts = new Map();
+  for (const r of s.recent) counts.set(r.flow, (counts.get(r.flow) ?? 0) + 1);
+  const rows = FLOW ? s.recent.filter(r => r.flow === FLOW) : s.recent;
+  return {
+    main: `
+      <div class="pills">
+        <button type="button" data-flow="" aria-pressed="${!FLOW}">all <span>${s.recent.length}</span></button>
+        ${[...counts.entries()].sort((a, b) => b[1] - a[1]).map(([f, n]) =>
+          `<button type="button" data-flow="${f}" aria-pressed="${FLOW === f}" style="--flow:${flowHue(f)}"><i></i>${f} <span>${n}</span></button>`).join('')}
+      </div>
+      <table class="grid log">
+        <thead><tr><th>finished</th><th>executor</th><th>skill</th><th>what</th>
+          <th class="r">ran</th><th class="r">model</th><th class="r">out</th><th class="r">cost eq.</th></tr></thead>
+        <tbody>${rows.map(r => `<tr class="${r.status === 'failed' ? 'failed' : ''}">
+          <td class="num muted">${age(r.completedAgo)}</td>
+          <td style="color:var(--actor-color-${r.executor}, var(--actor-color-default))">${r.executor ?? '—'}</td>
+          <td class="flowcell mono" style="--flow:${flowHue(r.flow)}">${r.skill ?? '—'}</td>
+          <td class="${r.status === 'failed' ? 'err' : 'muted'}">${r.status === 'failed' ? r.error_message : (r.note_title ?? r.task_id)}</td>
+          <td class="r num muted">${age(r.startedAgo - r.completedAgo)}</td>
+          <td class="r mono muted">${shortModel(r.completed_model)}</td>
+          <td class="r num">${r.output_tokens ? tok(r.output_tokens) : '—'}</td>
+          <td class="r num">${cost(r.estimated_cost)}</td>
+        </tr>`).join('')}</tbody>
+      </table>`,
+    rail: `
+      <h3>Folds</h3>
+      <p class="why">Hermes jobs re-pointed onto the queue. The transport fails closed, so a broken fold shows up as an <em>empty queue</em> rather than an error — which is why cadence is the only thing worth watching here.</p>
+      <table class="grid" style="font-size:.74rem">
+        <thead><tr><th>skill</th><th class="r">last</th><th class="r">7d</th></tr></thead>
+        <tbody>${s.folds.map(f => {
+          const stale = f.enqAgo > 60 * 24 * 3;
+          return `<tr class="${stale ? 't-warn' : ''}">
+            <td class="mono" style="${stale ? 'color:var(--color-warning)' : ''}">${f.skill}</td>
+            <td class="r num muted">${age(f.enqAgo)}</td><td class="r num">${f.runs_7d}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+      <button class="act" style="margin-top:1rem">Export this window<small>csv of the ${rows.length} shown dispatches</small></button>`,
+  };
+}
+
+const BUILD = { broken: tabBroken, who: tabWho, queue: tabQueue, spend: tabSpend, log: tabLog };
+
+function render(s) {
+  S = s;
+  const v = verdict(s);
+  const built = BUILD[TAB](s, v);
+
+  el.innerHTML = `
+  <header class="verdict t-${v.tone}">
+    <div>
+      <div class="verdict__head">${v.head}</div>
+      <div class="verdict__line">${v.line}</div>
+    </div>
+    <div class="verdict__meta">
+      <span>pump <b class="num">${ago(s.pumpAgo)}</b></span>
+      <span>queue moved <b class="num">${ago(s.pulse.transition_ago)}</b></span>
+      <a href="#">daily report →</a>
+    </div>
+  </header>
+
+  <div class="now">
+    ${actorNow(s).map(a => {
+      const tone = ACT_TONE[a.kind];
+      return `<div class="now__a t-${tone} ${a.kind === 'running' ? 'now__a--live' : ''} ${
+          ['hung', 'lost'].includes(a.kind) ? 'now__a--bad' : ''} ${a.kind === 'yours' ? 'now__a--yours' : ''}"
+        style="--actor: var(--actor-color-${a.id}, var(--actor-color-default))">
+        <div class="now__who">
+          <span class="now__id">${a.id}</span>
+          ${a.machine ? `<span class="now__box">${a.machine}</span>` : ''}
+        </div>
+        <div class="now__verb">${a.act.verb}</div>
+        <div class="now__what" title="${a.act.what}">${
+          a.act.skill ? `<span class="sk">${a.act.skill}</span> · ` : ''}${a.act.what}${
+          a.act.skill && a.act.ago !== null ? ` <span class="muted num">${age(a.act.ago)} in</span>` : ''}</div>
+        <div class="now__last">${
+          a.last ? `last shipped <b>${a.last.skill ?? a.last.flow}</b> ${ago(a.last.completedAgo)}`
+          : a.lane.approved ? `<span class="num">${a.lane.approved}</span> approved and waiting`
+          : a.id === 'marvin' ? '&nbsp;'
+          : 'nothing in this window'}</div>
+      </div>`;
+    }).join('')}
+  </div>
+
+  <div class="tabs" role="tablist">
+    ${TABS.map(t => {
+      const c = tabCount(t.id, s, v);
+      return `<button type="button" class="tab ${c ? 't-' + c.tone : ''}" role="tab"
+        data-tab="${t.id}" aria-selected="${TAB === t.id}">
+        ${t.label}${c ? `<span class="tab__n">${c.n}</span>` : ''}</button>`;
+    }).join('')}
+  </div>
+
+  <div class="body">
+    <div class="main">${built.main}</div>
+    <aside class="rail">${built.rail}</aside>
+  </div>`;
+}
+
+document.addEventListener('click', e => {
+  const tab = e.target.closest('[data-tab]');
+  if (tab) { TAB = tab.dataset.tab; render(S); return; }
+  const pill = e.target.closest('[data-flow]');
+  if (pill) { FLOW = pill.dataset.flow || null; render(S); return; }
+  const step = e.target.closest('.stepper button');
+  if (step) {
+    const key = step.closest('.stepper').dataset.key;
+    const cur = Number(VALVE_STATE[key] ?? VALVES.find(v => v.key === key).value);
+    VALVE_STATE[key] = String(Math.max(0, cur + Number(step.dataset.d)));
+    render(S); return;
+  }
+  const sw = e.target.closest('.sw button');
+  if (sw) { VALVE_STATE[sw.closest('.sw').dataset.key] = sw.dataset.v; render(S); return; }
+});
+
+document.querySelector('.proto-bar').insertAdjacentHTML('beforeend', SWITCH_HTML);
+mountSwitch(render);
+</script>

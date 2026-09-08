@@ -1,0 +1,437 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Fleet — direction B: Timeline</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+/* ── Direction B: TIMELINE ─────────────────────────────────────────────────
+   Organising principle: TIME. Every fact this fleet produces is an event with
+   an instant on it, and the current page renders all of them as "4h 10m ago"
+   strings you have to hold in your head and compare by hand.
+
+   Put them on a shared axis and three things become visible that no table can
+   show: rhythm (jeffrey ticks every few minutes, boris in bursts), silence
+   (a lane going flat), and SIMULTANEITY — three lanes stopping at the same
+   instant is a machine, not three workers. That last one is the whole
+   diagnosis of the 2026-09-04 outage, drawn rather than argued.           */
+
+.page { padding: 0 0 4rem; }
+
+.verdict {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 1rem 1.25rem;
+  align-items: baseline; padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  border-left: 3px solid var(--tone);
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--tone) 11%, var(--color-bg)), var(--color-bg) 65%);
+}
+.verdict__head { font-size: 1.35rem; font-weight: 600; letter-spacing: -.015em; color: var(--tone); line-height: 1.1; }
+.verdict__line { color: var(--color-text-soft); font-size: .82rem; line-height: 1.5; }
+
+/* ── Controls ──────────────────────────────────────────────────────────── */
+.bar {
+  display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap;
+  padding: .6rem 1.5rem; border-bottom: 1px solid var(--color-border);
+}
+.range { display: flex; }
+.range button {
+  font: inherit; font-size: .7rem; cursor: pointer; padding: .2rem .65rem;
+  background: var(--color-surface); color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+.range button + button { border-left: none; }
+.range button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface));
+  color: var(--color-text); border-color: var(--color-accent);
+}
+.legend { display: flex; gap: .9rem; font-size: .68rem; color: var(--color-text-muted); flex-wrap: wrap; margin-left: auto; }
+.legend span { display: inline-flex; align-items: center; gap: .35rem; }
+.legend i { width: 11px; height: 9px; display: inline-block; }
+.legend i.hatch { background: repeating-linear-gradient(45deg, var(--color-danger) 0 2px, transparent 2px 4px), color-mix(in srgb, var(--color-danger) 30%, transparent); }
+.legend i.silence { background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--color-danger) 45%, transparent) 0 3px, transparent 3px 7px); }
+
+/* ── The rig ───────────────────────────────────────────────────────────── */
+.rig {
+  --gutter: 6.5rem;   /* the queue gutter, to the right of now */
+  --labels: 13rem;
+  display: grid; grid-template-columns: var(--labels) 1fr var(--gutter);
+  border-bottom: 1px solid var(--color-border);
+}
+.rig__labels, .rig__track, .rig__gutter { display: grid; grid-auto-rows: min-content; }
+.rig__track { position: relative; border-left: 1px solid var(--color-border); border-right: 1px solid var(--color-accent); }
+.rig__gutter { background: var(--color-surface-soft); }
+
+.lab {
+  display: grid; align-content: center; gap: .15rem;
+  padding: 0 .7rem; height: var(--h); border-bottom: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+  font-family: var(--font-mono); font-size: .75rem; font-weight: 600;
+  color: var(--actor, var(--color-text-soft));
+}
+.lab__top { display: flex; align-items: baseline; gap: .35rem; }
+/* The machine is a footnote on the actor, not a container around it — it is
+   only ever interesting when it turns out to be the diagnosis. */
+.lab__box { font-family: var(--scan-family); font-weight: 400; font-size: .6rem; color: var(--color-text-muted); margin-left: auto; }
+/* What this actor is doing at the right-hand edge of its own lane. */
+.lab__now {
+  font-family: var(--scan-family); font-weight: 500; font-size: .64rem; color: var(--tone);
+  letter-spacing: .06em; text-transform: uppercase;
+}
+.lab__what {
+  font-family: var(--scan-family); font-weight: 400; font-size: .66rem; color: var(--color-text-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lab--rail { font-family: var(--scan-family); font-size: var(--label-size); letter-spacing: var(--label-tracking);
+             text-transform: uppercase; color: var(--color-text-muted); font-weight: 600; }
+
+.lane {
+  position: relative; height: var(--h);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+}
+/* Zebra. Without it the reporting bar at the foot of one lane reads as
+   belonging to the lane below, which inverts the diagnosis. */
+.lane--alt, .lab--alt { background: var(--color-surface); }
+/* A firm rule between lanes. The reporting bar sits at the foot of its own
+   lane, and with a hairline border it reads as belonging to the lane below —
+   which inverts the diagnosis the chart exists to deliver. */
+.lane--exec, .lab { border-bottom-color: var(--color-border); }
+.lane--exec { --h: 56px; }
+.lane--rail { --h: 30px; }
+.lab { --h: 56px; }
+.lab--rail { --h: 30px; }
+
+/* Hour gridlines. Drawn on the track, not per lane, so they read as one grid. */
+.grid { position: absolute; inset: 0; pointer-events: none; }
+.grid i { position: absolute; top: 0; bottom: 0; width: 1px; background: color-mix(in srgb, var(--color-border) 55%, transparent); }
+
+/* A dispatch. Width is duration; most are under 5 minutes, so a floor keeps
+   them clickable — this chart is about rhythm and coincidence, not stopwatch
+   accuracy, and the tooltip carries the exact figure. */
+.blk {
+  position: absolute; top: 8px; height: 18px; min-width: 5px;
+  background: var(--flow); border-radius: 1px; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--flow) 100%, transparent);
+}
+.blk:hover { outline: 1px solid var(--color-text); outline-offset: 1px; z-index: 3; }
+.blk--failed {
+  background: repeating-linear-gradient(45deg, var(--color-danger) 0 2px, transparent 2px 4px),
+              color-mix(in srgb, var(--color-danger) 30%, transparent);
+  border-color: var(--color-danger);
+}
+.blk--running {
+  background: repeating-linear-gradient(90deg, var(--flow) 0 6px, color-mix(in srgb, var(--flow) 40%, transparent) 6px 12px);
+  border-style: dashed;
+}
+
+/* Reporting continuity. INVARIANT: silence is DRAWN, not left as whitespace —
+   an absent collector and an idle one look identical until you shade one. */
+.hb { position: absolute; bottom: 6px; height: 3px; }
+.hb--up { background: color-mix(in srgb, var(--color-success) 55%, transparent); }
+.hb--parked { background: repeating-linear-gradient(90deg, var(--color-text-muted) 0 2px, transparent 2px 6px); }
+.hb--silent {
+  background: repeating-linear-gradient(-45deg,
+    color-mix(in srgb, var(--color-danger) 55%, transparent) 0 3px, transparent 3px 7px);
+  height: 5px; bottom: 5px;
+}
+.hb-note {
+  position: absolute; bottom: 14px; font-size: .62rem; white-space: nowrap;
+  color: var(--color-danger); padding-left: .3rem;
+}
+
+/* Pipeline / fold events — instants, not spans. */
+.tick { position: absolute; top: 9px; width: 2px; height: 12px; background: var(--color-accent); }
+.tick--fold { background: var(--color-info); height: 14px; top: 8px; }
+/* Where a tick SHOULD have been. The ghost is the point: a fail-closed
+   transport produces nothing at all, so only the expected cadence can show
+   you that something is missing. */
+.tick--ghost {
+  background: none; border-left: 2px dashed var(--color-warning); width: 0; height: 14px; top: 8px; opacity: .8;
+}
+.rail-gap {
+  position: absolute; top: 6px; height: 18px;
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--color-warning) 45%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--color-warning) 45%, transparent);
+}
+.rail-gap b {
+  position: absolute; left: 50%; transform: translateX(-50%); top: 3px;
+  font-size: .62rem; color: var(--color-warning); white-space: nowrap; font-weight: 500;
+}
+
+/* Cost, on the same axis as everything above it. */
+.lane--cost { --h: 54px; }
+.lab--cost { --h: 54px; }
+.stair { position: absolute; inset: 0; width: 100%; height: 100%; }
+.stair path { fill: color-mix(in srgb, var(--color-accent) 22%, transparent);
+              stroke: var(--color-accent); stroke-width: .6; vector-effect: non-scaling-stroke; }
+.cost-cap { position: absolute; right: .5rem; top: .35rem; font-size: .66rem; color: var(--color-text-soft); }
+.cost-empty { position: absolute; left: .6rem; top: .8rem; font-size: .68rem; color: var(--color-text-muted); font-style: italic; }
+
+/* ── The gutter: work that has not started yet, drawn in the future ─────── */
+.gut {
+  height: var(--h); border-bottom: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+  padding: .4rem .5rem; display: flex; flex-direction: column; gap: 2px; justify-content: center;
+}
+.gut__row { display: flex; align-items: center; gap: .3rem; font-size: .64rem; color: var(--color-text-muted); }
+.gut__row b { font-variant-numeric: tabular-nums; color: var(--color-text); font-weight: 600; }
+.gut__chips { display: flex; gap: 1px; flex-wrap: wrap; }
+.gut__chips i { width: 4px; height: 9px; background: var(--color-accent); display: block; }
+.gut__chips i.prop { background: color-mix(in srgb, var(--color-accent) 28%, var(--color-surface)); }
+.gut__none { font-size: .64rem; color: var(--color-text-muted); font-style: italic; }
+.gut--jam { background: color-mix(in srgb, var(--color-danger) 10%, transparent); }
+.gut--jam .gut__row b { color: var(--color-danger); }
+
+.axis { display: grid; grid-template-columns: var(--labels) 1fr var(--gutter); }
+.axis__t { position: relative; height: 22px; }
+.axis__t span { position: absolute; top: 4px; transform: translateX(-50%); font-size: .64rem; color: var(--color-text-muted); }
+.axis__now { display: flex; align-items: center; justify-content: center; font-size: .62rem;
+             letter-spacing: .08em; text-transform: uppercase; color: var(--color-accent); }
+
+/* ── Inspector ─────────────────────────────────────────────────────────── */
+.insp {
+  padding: .8rem 1.5rem; border-bottom: 1px solid var(--color-border);
+  min-height: 3.6rem; display: flex; gap: 1.5rem; align-items: baseline; flex-wrap: wrap;
+  font-size: .76rem; background: var(--color-surface-soft);
+}
+.insp b { font-weight: 600; }
+.insp .k { color: var(--color-text-muted); font-size: .66rem; letter-spacing: .06em; text-transform: uppercase; margin-right: .35rem; }
+.insp--empty { color: var(--color-text-muted); font-style: italic; }
+
+.note { padding: .9rem 1.5rem; font-size: .72rem; color: var(--color-text-muted); line-height: 1.6; max-width: 62rem; }
+.note b { color: var(--color-text-soft); font-weight: 600; }
+</style>
+
+<div class="proto-bar">
+  <strong>Direction B — Timeline</strong>
+  <span>Time is the organising principle: rhythm, silence and simultaneity, drawn rather than argued.</span>
+  <a href="concepts.html">← all directions</a>
+</div>
+
+<div class="page" id="app"></div>
+
+<script src="data.js"></script>
+<script>
+const el = document.getElementById('app');
+let WINDOW_MIN = 360;
+let STATE = null;
+
+const EXECUTORS = ['boris', 'jeffrey', 'steward', 'kipper'];
+
+/** x-position as a percentage of the window; 0 = window start, 100 = now. */
+const x = mins => ((WINDOW_MIN - mins) / WINDOW_MIN) * 100;
+
+function blocks(s, executor) {
+  const rows = s.recent.filter(r => r.executor === executor && r.completedAgo < WINDOW_MIN);
+  const live = s.now.filter(j => j.executor === executor);
+  return [
+    ...rows.map(r => ({
+      left: x(r.startedAgo), width: Math.max(0.35, x(r.completedAgo) - x(r.startedAgo)),
+      flow: r.flow, failed: r.status === 'failed', running: false, row: r,
+    })),
+    ...live.map(j => ({
+      left: x(j.startedAgo), width: Math.max(0.35, x(0) - x(j.startedAgo)),
+      flow: j.flow, failed: false, running: true, row: { ...j, status: 'running' },
+    })),
+  ];
+}
+
+/** The reporting bar and, where it stops, the shaded silence after it. */
+function heartbeat(w, s) {
+  const t = workerTone(w, s.machines);
+  const cut = Math.min(w.ago, WINDOW_MIN);
+  const parts = [];
+  // Everything before last-seen is inferred, not observed: the payload carries
+  // one timestamp per worker, not a history. Rendering the whole window as
+  // "up" would be a claim the API cannot back — see the note below the rig.
+  parts.push(`<i class="hb hb--${t === 'parked' ? 'parked' : 'up'}"
+    style="left:0;width:${x(cut).toFixed(2)}%"></i>`);
+  if (w.ago > (w.id === 'kipper' ? 600 : 15)) {
+    parts.push(`<i class="hb hb--silent" style="left:${x(cut).toFixed(2)}%;right:0"></i>`);
+    parts.push(`<span class="hb-note" style="left:${x(cut).toFixed(2)}%">silent ${age(w.ago)}${
+      t === 'covered' ? ` — with ${w.machine}` : ''}</span>`);
+  }
+  return parts.join('');
+}
+
+/**
+ * Cumulative spend across THIS window, stepped at each completion.
+ *
+ * Deliberately not the 7-day daily series: laying a day-resolution series over
+ * a six-hour axis draws a shape whose x-positions mean nothing, which is worse
+ * than no chart. Every other lane on this rig is literally on this axis, so
+ * this one has to be too.
+ *
+ * INVARIANT: unpriced rows add nothing rather than NaN-ing the line, so the
+ * curve is a floor — stated on the lane, not left to be assumed complete.
+ */
+function costStair(s) {
+  const rows = s.recent.filter(r => r.completedAgo < WINDOW_MIN)
+    .slice().sort((a, b) => b.completedAgo - a.completedAgo);
+  if (!rows.length) return '<span class="cost-empty">nothing completed in this window</span>';
+  let run = 0;
+  const pts = rows.map(r => { run += r.estimated_cost ?? 0; return { x: x(r.completedAgo), y: run }; });
+  const total = run || 1;
+  const unpriced = rows.filter(r => r.estimated_cost === null).length;
+  const d = ['M 0 100', ...pts.map(p => `L ${p.x.toFixed(2)} ${(100 - p.y / total * 88).toFixed(2)}`),
+             `L 100 ${(100 - 88).toFixed(2)}`, 'L 100 100 Z'].join(' ');
+  return `<svg class="stair" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${d}"/></svg>
+    <span class="cost-cap num">${cost(run)}${unpriced ? ` + ${unpriced} unpriced` : ''} in ${WINDOW_MIN >= 60 ? WINDOW_MIN / 60 + 'h' : WINDOW_MIN + 'm'}</span>`;
+}
+
+function render(s) {
+  STATE = s;
+  const v = verdict(s);
+  const ls = lanes(s);
+  const byExec = new Map(ls.map(l => [l.executor, l]));
+  const hours = [];
+  for (let m = 0; m <= WINDOW_MIN; m += WINDOW_MIN <= 60 ? 15 : WINDOW_MIN <= 360 ? 60 : 240) hours.push(m);
+
+  // Lane order follows the actor strip: whoever is doing something, first.
+  const order = actorNow(s).map(a => a.id);
+  const rows = EXECUTORS.map(id => s.workers.find(w => w.id === id)).filter(Boolean)
+    .sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+
+
+  el.innerHTML = `
+  <header class="verdict t-${v.tone}">
+    <div class="verdict__head">${v.head}</div>
+    <div class="verdict__line">${v.line}</div>
+    <div><a href="#">daily report →</a></div>
+  </header>
+
+  <div class="bar">
+    <div class="range" role="group" aria-label="Window">
+      ${[['1h', 60], ['6h', 360], ['24h', 1440]].map(([l, m]) =>
+        `<button type="button" data-win="${m}" aria-pressed="${m === WINDOW_MIN}">${l}</button>`).join('')}
+    </div>
+    <span class="label-caps">trailing ${WINDOW_MIN >= 60 ? WINDOW_MIN / 60 + 'h' : WINDOW_MIN + 'm'}</span>
+    <div class="legend">
+      ${['fold','groom','recon','commission'].map(f => `<span><i style="background:${flowHue(f)}"></i>${f}</span>`).join('')}
+      <span><i class="hatch"></i>failed</span>
+      <span><i class="silence"></i>not reporting</span>
+    </div>
+  </div>
+
+  <div class="insp insp--empty" id="insp">Hover a block for its dispatch. Every lane shares one axis — a fault that spans lanes is one fault.</div>
+
+  <div class="rig">
+    <div class="rig__labels">
+      <div class="lab lab--rail"><span class="lab__top">pipeline</span></div>
+      ${rows.map((w, i) => {
+        const a = actorNow(s).find(x => x.id === w.id);
+        return `<div class="lab ${i % 2 ? 'lab--alt' : ''} t-${ACT_TONE[a.kind]}"
+          style="--actor: var(--actor-color-${w.id}, var(--actor-color-default))">
+          <span class="lab__top">${w.id}<span class="lab__box">${w.machine}</span></span>
+          <span class="lab__now">${a.act.verb}</span>
+          <span class="lab__what" title="${a.act.what}">${a.act.skill ?? a.act.what}</span>
+        </div>`;
+      }).join('')}
+      <div class="lab lab--rail"><span class="lab__top">folds</span></div>
+      <div class="lab lab--rail lab--cost"><span class="lab__top">spend</span><span class="lab__what">cumulative</span></div>
+    </div>
+
+    <div class="rig__track">
+      <div class="grid">${hours.map(m => `<i style="left:${x(m)}%"></i>`).join('')}</div>
+
+      <!-- Pipeline rail: every pump tick that offered work. A gap here is the
+           difference between "nothing to do" and "nothing is being offered". -->
+      <div class="lane lane--rail">
+        ${(() => {
+          const ticks = [];
+          // The pump ticks every ~30m; draw back from the last one we know of.
+          for (let m = s.pumpAgo; m < WINDOW_MIN; m += 30) ticks.push(`<i class="tick" style="left:${x(m)}%"></i>`);
+          const gap = s.pumpAgo > 70 ? `<div class="rail-gap" style="left:${x(s.pumpAgo)}%;right:0">
+              <b>pump silent ${age(s.pumpAgo)} — ${Math.floor(s.pumpAgo / 30)} ticks missed</b></div>` : '';
+          return ticks.join('') + gap;
+        })()}
+      </div>
+
+      ${rows.map((w, i) => `<div class="lane lane--exec ${i % 2 ? 'lane--alt' : ''}">
+        ${blocks(s, w.id).map((b, i) => `<i class="blk ${b.failed ? 'blk--failed' : ''} ${b.running ? 'blk--running' : ''}"
+            style="left:${b.left.toFixed(2)}%;width:${b.width.toFixed(2)}%;--flow:${flowHue(b.flow)}"
+            data-exec="${w.id}" data-i="${i}"></i>`).join('')}
+        ${heartbeat(w, s)}
+      </div>`).join('')}
+
+      <!-- Folds: Hermes jobs re-pointed onto the queue. The ghost tick is
+           where the next one was due. -->
+      <div class="lane lane--rail">
+        ${s.folds.map(f => f.enqAgo < WINDOW_MIN
+          ? `<i class="tick tick--fold" style="left:${x(f.enqAgo)}%" title="${f.skill} enqueued ${ago(f.enqAgo)}"></i>` : '').join('')}
+        ${(() => {
+          const dead = s.folds.filter(f => f.enqAgo > 60 * 24 * 3);
+          if (!dead.length) return '';
+          return `<div class="rail-gap" style="left:0;right:0">
+            <b>${dead.map(f => f.skill).join(', ')} — last enqueued ${age(dead[0].enqAgo)} ago, before this window opened</b></div>`;
+        })()}
+      </div>
+
+      <div class="lane lane--rail lane--cost">${costStair(s)}</div>
+    </div>
+
+    <!-- ── The future gutter ───────────────────────────────────────────── -->
+    <div class="rig__gutter">
+      <div class="gut lane--rail"><span class="label-caps">waiting</span></div>
+      ${rows.map((w, i) => {
+        const l = byExec.get(w.id);
+        const alt = i % 2 ? 'lane--alt' : '';
+        if (!l) return `<div class="gut ${alt}"><span class="gut__none">nothing queued</span></div>`;
+        const jam = l.approved > 0 && s.pulse.transition_ago > 240;
+        return `<div class="gut ${alt} ${jam ? 'gut--jam' : ''}">
+          <div class="gut__row"><b>${l.approved}</b> approved</div>
+          <div class="gut__chips">${'<i></i>'.repeat(Math.min(l.approved, 30))}${'<i class="prop"></i>'.repeat(Math.min(l.proposed, 10))}</div>
+          ${l.proposed ? `<div class="gut__row"><b>${l.proposed}</b> proposed</div>` : ''}
+        </div>`;
+      }).join('')}
+      <div class="gut lane--rail"></div>
+      <div class="gut lane--cost"></div>
+    </div>
+  </div>
+
+  <div class="axis">
+    <div></div>
+    <div class="axis__t">${hours.map(m =>
+      `<span style="left:${x(m)}%;${m === WINDOW_MIN ? 'transform:none' : ''}">${
+        m === 0 ? '' : '−' + (m >= 60 ? m / 60 + 'h' : m + 'm')}</span>`).join('')}</div>
+    <div class="axis__now">now →</div>
+  </div>
+
+  <p class="note">
+    <b>What this needs that the API does not have.</b> The green reporting bar is drawn from
+    a single <code>checked_at</code> per worker — the payload carries the last heartbeat, not a
+    history — so continuity <em>before</em> that instant is assumed. The silence after it is real
+    and is the half that matters, but a truthful version of this lane wants a heartbeat series
+    (<code>GET /api/dispatch/heartbeats?since=</code>). Same for the pipeline rail: ticks are
+    extrapolated back at the 30m cadence from <code>last_pipeline_enqueue_at</code>.
+    <br><b>What it already does that no table can.</b> Switch to the incident: boris, jeffrey and
+    steward stop at the same vertical, and kipper does not. That is a machine, and you read it
+    off the shape before you read a word.
+  </p>`;
+
+  // ── Inspector ──────────────────────────────────────────────────────────
+  const insp = document.getElementById('insp');
+  el.querySelectorAll('.blk').forEach(node => {
+    node.addEventListener('mouseenter', () => {
+      const b = blocks(STATE, node.dataset.exec)[+node.dataset.i], r = b.row;
+      insp.className = 'insp';
+      insp.innerHTML = `
+        <span><span class="k">skill</span><b class="mono">${r.skill ?? r.flow}</b></span>
+        <span><span class="k">flow</span><b style="color:${flowHue(r.flow)}">${r.flow}</b></span>
+        <span><span class="k">what</span>${r.note_title ?? r.task_id}</span>
+        <span><span class="k">status</span><b style="color:${r.status === 'failed' ? 'var(--color-danger)' : 'inherit'}">${r.status}</b></span>
+        <span><span class="k">ran</span><span class="num">${age((r.startedAgo - (r.completedAgo ?? 0)))}</span>, ending ${ago(r.completedAgo ?? 0)}</span>
+        ${r.completed_model ? `<span><span class="k">model</span><span class="mono">${r.completed_model}</span></span>` : ''}
+        <span><span class="k">cost eq.</span><span class="num">${cost(r.estimated_cost ?? null)}</span></span>
+        ${r.error_message ? `<span style="color:var(--color-danger)">${r.error_message}</span>` : ''}`;
+    });
+  });
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-win]');
+  if (!b) return;
+  WINDOW_MIN = +b.dataset.win;
+  render(STATE);
+});
+
+document.querySelector('.proto-bar').insertAdjacentHTML('beforeend', SWITCH_HTML);
+mountSwitch(render);
+</script>
