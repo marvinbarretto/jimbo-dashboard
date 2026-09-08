@@ -188,7 +188,11 @@ function render(s) {
   <p class="sub">${
     real.length
       ? real.map(f => f.title).join(' · ') + '.'
-      : `Two machines up, ${totQ} items queued and draining, ${cost(today.total)} of pressure today against a ${cost(mean)} daily mean.`
+      : `${(() => {
+          const cast = actorNow(s);
+          const busy = cast.filter(a => a.last).length;
+          return `${busy} of ${cast.length} actors moved work inside this window`;
+        })()}, ${totQ} items queued and draining, ${cost(today.total)} of pressure today against a ${cost(mean)} daily mean.`
   }${yours.length ? ` ${proposed} dispatches are waiting on <a href="#">your approval</a>.` : ''}</p>
 
   <div class="cast">

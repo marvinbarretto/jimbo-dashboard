@@ -1277,9 +1277,20 @@ function verdict(s) {
     return { tone: 'warn', head: 'Fleet running, with caveats',
              line: warns.map(a => a.title).join(' · '), faults: f };
   }
-  const live = s.workers.filter(w => ['live', 'parked'].includes(workerTone(w, s.machines))).length;
+  // Actor-first: who shipped what, how recently. The old line led with
+  // "2 machines up", which is the rack — and counted four workers directly
+  // above a strip showing six actors.
+  const cast = actorNow(s);
+  const shipped = cast.filter(a => a.last).slice(0, 2)
+    .map(a => `${a.id} shipped ${ago(a.last.completedAgo)}`);
+  // Don't name the same actor twice: "boris shipped 10m ago · boris throttled"
+  // is one actor's state split across two clauses.
+  const named = new Set(shipped.map(t => t.split(' ')[0]));
+  const standing = cast.filter(a => a.kind === 'parked' && !named.has(a.id))
+    .map(a => `${a.id} ${a.act.verb}`);
   return { tone: 'ok', head: 'Fleet nominal',
-           line: `${live} of ${s.workers.length} workers reporting · ${s.machines.length} machines up · queue moved ${ago(s.pulse.transition_ago)} · nothing failed in 24h`,
+           line: [shipped.join(', ') || 'nothing shipped in this window',
+                  standing.join(', '), 'nothing failed in 24h'].filter(Boolean).join(' · '),
            faults: f };
 }
 
@@ -1517,8 +1528,13 @@ function actorNow(s) {
 
   rows.push({
     id: 'hermes', machine: 'vps', role: ACTOR_ROLE.hermes,
-    kind: s.hermes.failing ? 'lost' : 'running',
-    act: { verb: s.hermes.failing ? 'failing' : 'running', skill: null,
+    // 'ambient', never 'running'. Hermes is a scheduler, not a claimant: it is
+    // continuously on and has no discrete job with a start time. Giving it the
+    // live treatment made it the ONLY pulsing row in the calm state, pointing
+    // the one "something is happening" signal at the actor doing nothing
+    // identifiable, while the actors who actually shipped sat grey.
+    kind: s.hermes.failing ? 'lost' : 'ambient',
+    act: { verb: s.hermes.failing ? 'failing' : 'on schedule', skill: null,
            what: s.hermes.failing ? `${s.hermes.failing} scheduled jobs erroring`
                                   : `${s.hermes.active} ambient jobs on schedule`, ago: null },
     // Ambient, continuous, and never a discrete action — so it ranks behind
@@ -1545,5 +1561,7 @@ function actorNow(s) {
 }
 
 /** Tone vocabulary for an actor's current kind. */
-const ACT_TONE = { running: 'ok', hung: 'alert', lost: 'alert', covered: 'parked',
-                   parked: 'parked', idle: 'parked', yours: 'yours' };
+// 'running' is the only kind that earns the live treatment, and it requires a
+// dispatch with a start time behind it.
+const ACT_TONE = { running: 'ok', ambient: 'ok', hung: 'alert', lost: 'alert',
+                   covered: 'parked', parked: 'parked', idle: 'parked', yours: 'yours' };
