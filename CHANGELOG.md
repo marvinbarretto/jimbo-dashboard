@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.221](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.220...v0.0.221) (2026-09-09)
+
+
+### Bug Fixes
+
+* **projects:** assertions can now reach "needs a decision" ([b06073b](https://github.com/marvinbarretto/jimbo-dashboard/commit/b06073be7b2679605f8392061d7a90b52eff971a))
+* **projects:** stop the landing page hiding its own state ([0ed6323](https://github.com/marvinbarretto/jimbo-dashboard/commit/0ed6323eba571663022baba2752e0aab9468c65d))
+
 ### [0.0.220](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.219...v0.0.220) (2026-09-08)
 
 
