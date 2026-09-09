@@ -110,9 +110,14 @@ export class ProjectRightNowSection {
   });
 
   isFlagged(item: VaultItem): boolean {
-    // `assertion` — a system-generated "these facts don't add up" note. The
-    // dashboard's VaultItemType union predates the type, hence the cast.
-    return (item.type as string) === 'assertion';
+    // `assertion` — a system-generated "these facts don't add up" note.
+    // It lives on `category`, not `type`: splitType() in vault-items.service
+    // puts everything that isn't task/bookmark/note onto the category axis and
+    // sets type to 'note'. This used to test `type === 'assertion'`, which that
+    // mapping makes permanently false — so assertions never once counted
+    // towards "needs a decision", and the panel read zero while a P0 assertion
+    // sat on the page.
+    return item.category === 'assertion';
   }
 
   taskWhen(task: DispatchTask): string | null {

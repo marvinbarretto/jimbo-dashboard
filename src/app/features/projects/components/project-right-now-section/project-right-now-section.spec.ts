@@ -130,10 +130,17 @@ describe('ProjectRightNowSection', () => {
     expect(component.meta()).toBeNull();
   });
 
-  it('recognises system-flagged assertion items', async () => {
+  // Built the way splitType() in vault-items.service actually delivers it:
+  // anything that isn't task/bookmark/note arrives as type 'note' with the
+  // production type on `category`. The previous version of this test asserted
+  // `type: 'assertion'` — a shape the mapper cannot produce — so it passed
+  // while the panel could never flag a real assertion.
+  it('recognises system-flagged assertion items as the mapper delivers them', async () => {
     await set({});
-    expect(component.isFlagged(makeItem({ type: 'assertion' as VaultItem['type'] }))).toBe(true);
+    expect(component.isFlagged(makeItem({ type: 'note', category: 'assertion' }))).toBe(true);
     expect(component.isFlagged(makeItem())).toBe(false);
+    // The shape the old test used must not be what we key on.
+    expect(component.isFlagged(makeItem({ type: 'assertion' as VaultItem['type'] }))).toBe(false);
   });
 
   it('dates a dispatch by the most advanced timestamp it has', async () => {

@@ -492,7 +492,8 @@ export class ProjectLanding {
   });
 
   isFlagged(item: VaultItem): boolean {
-    return (item.type as string) === 'assertion';
+    // On `category`, not `type` — see splitType() in vault-items.service.
+    return item.category === 'assertion';
   }
 
   isOverdue(item: VaultItem, now = Date.now()): boolean {
