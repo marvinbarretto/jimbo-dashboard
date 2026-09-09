@@ -45,6 +45,7 @@
       [proposedTasks]="proposedTasks()"
       [inFlightTasks]="inFlightTasks()"
       [pendingProposals]="pendingProposals()"
+      [unroutedItems]="unassignedActive().length"
       [dispatchUnmeasured]="dispatchUnmeasured()"
       [proposalsUnmeasured]="proposalsUnmeasured()"
     />
@@ -179,7 +180,7 @@
              and a one-click way to bring an issue into the jimbo pipeline. -->
         @if (p.repo_url) {
           <app-ui-section
-            [title]="'GitHub issues (' + visibleGithubIssues().length + ' of ' + githubIssues().length + ')'"
+            [title]="githubSectionTitle()"
             [collapsible]="true"
             [expanded]="isOpen('github')"
             (toggled)="toggleSection('github')">

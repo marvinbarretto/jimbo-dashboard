@@ -59,6 +59,13 @@ export class ProjectRightNowSection {
   readonly proposedTasks  = input<readonly DispatchTask[]>([]);
   readonly inFlightTasks  = input<readonly DispatchTask[]>([]);
   readonly pendingProposals = input<number>(0);
+  /**
+   * Active items not filed under an epic this project owns. Routing one is a
+   * decision only the operator can make, so an unrouted pile is emphatically
+   * *not* "nothing waiting" — the panel claimed all-clear while 73 of these sat
+   * in a table further down the same page.
+   */
+  readonly unroutedItems = input<number>(0);
 
   /** The dispatch queue read has not answered (loading or failed). */
   readonly dispatchUnmeasured  = input(false);
@@ -79,6 +86,9 @@ export class ProjectRightNowSection {
       { key: 'proposed',  label: 'Awaiting approval', count: proposed, unmeasured: dispatchDark,  alert: false },
       { key: 'inflight',  label: 'In flight',         count: inFlight, unmeasured: dispatchDark,  alert: false },
       { key: 'beliefs',   label: 'Belief proposals',  count: beliefs,  unmeasured: proposalsDark, alert: false },
+      // Read off the same in-memory rows as the unassigned table below, so it
+      // cannot disagree with it and never goes dark.
+      { key: 'unrouted',  label: 'Unrouted',          count: this.unroutedItems(), unmeasured: false, alert: false },
     ];
   });
 
@@ -93,7 +103,10 @@ export class ProjectRightNowSection {
 
   readonly meta = computed<string | null>(() => {
     const n = this.attentionItems().length;
-    return n > 0 ? `${n} needing a decision` : null;
+    const unrouted = this.unroutedItems();
+    if (n > 0 && unrouted > 0) return `${n} needing a decision · ${unrouted} unrouted`;
+    if (n > 0) return `${n} needing a decision`;
+    return unrouted > 0 ? `${unrouted} unrouted` : null;
   });
 
   isFlagged(item: VaultItem): boolean {

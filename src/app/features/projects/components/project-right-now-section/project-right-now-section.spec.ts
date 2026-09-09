@@ -74,9 +74,20 @@ describe('ProjectRightNowSection', () => {
     await Promise.resolve();
   }
 
-  it('reports four figures in rank order', async () => {
+  it('reports five figures in rank order', async () => {
     await set({});
-    expect(component.figures().map(f => f.key)).toEqual(['attention', 'proposed', 'inflight', 'beliefs']);
+    expect(component.figures().map(f => f.key))
+      .toEqual(['attention', 'proposed', 'inflight', 'beliefs', 'unrouted']);
+  });
+
+  // The panel claimed "nothing is waiting on you here" while 73 unrouted items
+  // sat in a table lower down the same page. Routing is a decision only the
+  // operator can make, so an unrouted pile defeats all-clear.
+  it('does not claim all clear while items are unrouted', async () => {
+    await set({ unroutedItems: 73 });
+    expect(component.figures().find(f => f.key === 'unrouted')!.count).toBe(73);
+    expect(component.allClear()).toBe(false);
+    expect(component.meta()).toBe('73 unrouted');
   });
 
   // The whole point of this panel over the old stat tiles: a zero that came

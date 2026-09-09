@@ -19,6 +19,13 @@
     border-radius: 0;
     padding: 0.7rem 0.85rem;
     resize: vertical;
+    // Grow to fit the content: `rows` is the floor, not the ceiling. It was
+    // acting as both, so a three-line current_blocker rendered in a two-row box
+    // and clipped mid-sentence — the one field on the page you most need to
+    // read without clicking into it. Browsers without `field-sizing` keep the
+    // old fixed-rows behaviour, so this is additive.
+    field-sizing: content;
+    max-height: 22rem;
     min-height: 2.6rem;
     line-height: 1.55;
     width: 100%;

@@ -347,6 +347,16 @@ export class ProjectLanding {
     });
   });
 
+  /**
+   * "115 of 161" made absence look like a defect. Count what is there; only
+   * show the fraction when a filter is actually narrowing the list.
+   */
+  readonly githubSectionTitle = computed<string>(() => {
+    const total = this.githubIssues().length;
+    const shown = this.visibleGithubIssues().length;
+    return shown === total ? `GitHub issues (${total})` : `GitHub issues (${shown} of ${total})`;
+  });
+
   onGithubFilterToggle(event: { groupId: string; value: string | number }): void {
     this.githubFilter.toggle(event.groupId, event.value);
   }
@@ -666,9 +676,12 @@ export class ProjectLanding {
 
 
   constructor() {
-    // Default the GitHub issues panel to "not yet in Jimbo" — the actionable
-    // subset — so a large backlog doesn't bury it under already-linked rows.
-    this.githubFilter.toggle(GH_STATUS, GH_UNLINKED);
+    // No default filter. This used to open pre-filtered to "not yet in Jimbo"
+    // on the theory that unlinked issues were "the actionable subset" — but the
+    // `jimbo` label is a promotion gate, not a mirror, so *not* being in Jimbo
+    // is the normal resting state of an issue, not a backlog. Leading with it
+    // rendered 115 rows of PROMOTE buttons and read as 115 unprocessed things.
+    // The filter is still one click away for when you actually want it.
 
     // Open vault items in a CDK Dialog when a row is clicked; URL ?detail=
     // becomes the source of truth so back-button closes the modal.
