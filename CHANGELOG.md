@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.222](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.221...v0.0.222) (2026-09-10)
+
+
+### Features
+
+* **vault-items:** show epic, unrouted and ungroomed states in the table ([0d27dd0](https://github.com/marvinbarretto/jimbo-dashboard/commit/0d27dd00966a92a823daddaf53bb4e203c872bdd))
+
+
+### Bug Fixes
+
+* **vault-items:** board captures keep the owner the server stored ([af43dd0](https://github.com/marvinbarretto/jimbo-dashboard/commit/af43dd0939870ba28a3efb885100f908ed1a4b6e))
+
 ### [0.0.221](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.220...v0.0.221) (2026-09-09)
 
 
