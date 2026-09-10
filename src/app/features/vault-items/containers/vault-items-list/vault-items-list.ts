@@ -317,6 +317,44 @@ export class VaultItemsList {
     return actor?.display_name ?? item.assigned_to;
   }
 
+  // 'unrouted' is a sentinel, not an actor — it means "no routing decision has
+  // been made yet" (jimbo-api schemas/actors.ts). It has a kind='system' row in
+  // the actors table purely so foreign keys hold, which is why it otherwise
+  // renders as a peer of @Boris and @Marvin. Called out here so the table can
+  // show it as an absent-owner state instead.
+  isUnrouted(item: VaultItem): boolean {
+    return item.assigned_to === 'unrouted' || item.assigned_to === 'unassigned';
+  }
+
+  // Epic-ness is the deliberate is_epic flag, not the type vocabulary — an epic
+  // is stored as type 'task'/'note' with is_epic set. Rendering the raw type
+  // made a filed epic indistinguishable from the stories under it.
+  typeLabel(item: VaultItem): string {
+    return item.is_epic ? 'epic' : item.type;
+  }
+
+  // Parent-epic titles, resolved once per item-list change rather than per row.
+  // A `parentEpicFor(id)` service accessor would allocate a computed per call
+  // and the vault table renders thousands of rows.
+  private readonly parentById = computed(() => {
+    const byId = new Map<VaultItemId, VaultItem>();
+    for (const item of this.vaultItemsService.items()) byId.set(item.id, item);
+    return byId;
+  });
+
+  parentEpic(item: VaultItem): VaultItem | null {
+    if (!item.parent_id) return null;
+    return this.parentById().get(item.parent_id) ?? null;
+  }
+
+  // An item captured straight onto a board has never been through grooming, so
+  // it carries no priority, no acceptance criteria and no route. That is a
+  // legitimate state — the pump picks it up — but an empty priority cell alone
+  // reads as a bug rather than as "not scored yet".
+  isUngroomed(item: VaultItem): boolean {
+    return item.grooming_status === 'ungroomed';
+  }
+
   projectColor(id: string | null | undefined): string | null {
     if (!id) return null;
     return this.projectsService.getById(id)?.color_token ?? null;

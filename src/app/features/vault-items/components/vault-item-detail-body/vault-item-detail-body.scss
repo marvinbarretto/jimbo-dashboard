@@ -155,6 +155,10 @@
   color: var(--color-text-muted);
   b { color: var(--color-text-soft); font-weight: 600; }
 }
+.v3__meta--raw {
+  border-bottom: 1px dotted var(--color-border);
+  cursor: help;
+}
 .v3__meta-spacer { flex: 1; }
 
 .v3__link {

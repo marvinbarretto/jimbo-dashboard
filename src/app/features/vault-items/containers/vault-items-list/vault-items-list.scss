@@ -286,6 +286,26 @@
     letter-spacing: 0.04em;
     color: var(--color-text-muted);
   }
+  // Epics are containers, not work — they read as the spine of the table.
+  &__type--epic {
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--color-text);
+  }
+  &__epic {
+    max-width: 180px;
+    font-size: 0.78rem;
+
+    a {
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: bottom;
+      color: var(--color-text-muted);
+    }
+  }
 
   a { color: var(--color-accent); text-decoration: none; }
   a:hover { text-decoration: underline; }
@@ -325,6 +345,20 @@
   &--ready     { border-color: #3b7a3b; color: #3b7a3b; }
   &--not_ready { border-color: #8a6d00; color: #8a6d00; }
   &--blocked   { border-color: #a33; color: #a33; }
+}
+
+// Both of these are ABSENCE states, deliberately not chips: an unrouted item
+// has no owner and an ungroomed one has no priority. Styling them like the
+// actor/priority chips they sit among is what made "@Unrouted" read as a
+// person and an empty priority read as a bug.
+.unrouted,
+.ungroomed {
+  display: inline-block;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  border-bottom: 1px dotted var(--color-border);
+  cursor: help;
 }
 
 .muted { color: var(--color-text-muted); }

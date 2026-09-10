@@ -155,6 +155,7 @@
           <th>Category</th>
           <th>Status</th>
           <th>Owner</th>
+          <th>Epic</th>
           <th>Project</th>
           <th>Priority</th>
           <th>Added</th>
@@ -181,7 +182,7 @@
             <td class="vault-items-table__title">
               <a [routerLink]="[item.seq]">{{ item.title }}</a>
             </td>
-            <td>{{ item.type }}</td>
+            <td [class.vault-items-table__type--epic]="item.is_epic">{{ typeLabel(item) }}</td>
             <td class="vault-items-table__category">
               @if (item.category) { {{ item.category }} } @else { <span class="muted">—</span> }
             </td>
@@ -189,8 +190,17 @@
               <span [class]="'status status--' + lifecycleOf(item)">{{ lifecycleOf(item) }}</span>
             </td>
             <td>
-              @if (item.assigned_to) {
+              @if (isUnrouted(item)) {
+                <span class="unrouted" title="No routing decision yet — nobody owns this until grooming or you assign it">unrouted</span>
+              } @else if (item.assigned_to) {
                 <app-entity-chip type="actor" size="sm" [id]="item.assigned_to" [label]="ownerLabel(item)" />
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td class="vault-items-table__epic">
+              @if (parentEpic(item); as epic) {
+                <a [routerLink]="[epic.seq]" [title]="epic.title">{{ epic.title }}</a>
               } @else {
                 <span class="muted">—</span>
               }
@@ -207,6 +217,8 @@
                 <span [class]="'priority-badge priority-P' + effectivePriority(item)">
                   {{ priorityLabel(effectivePriority(item)) }}
                 </span>
+              } @else if (isUngroomed(item)) {
+                <span class="ungroomed" title="Captured straight into the vault — not yet groomed, so no priority has been set">ungroomed</span>
               } @else {
                 <span class="muted">—</span>
               }
@@ -220,7 +232,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="11" class="empty">No items match the current filters.</td>
+            <td colspan="12" class="empty">No items match the current filters.</td>
           </tr>
         }
       </tbody>

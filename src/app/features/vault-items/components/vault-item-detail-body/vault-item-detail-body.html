@@ -183,6 +183,12 @@
       @if (store.lastActivityAt(); as la) {
         <span class="v3__meta">· last activity <b>{{ la | relativeTime }}</b></span>
       }
+      <!-- Captured straight into the vault rather than shaped by grooming, so
+           there is no priority, no acceptance criteria and no route yet. Said
+           out loud because those empty fields otherwise read as broken. -->
+      @if (item.grooming_status === 'ungroomed') {
+        <span class="v3__meta v3__meta--raw" title="Captured raw — not yet groomed, so it has no priority, criteria or route">· raw capture</span>
+      }
 
       <span class="v3__meta-spacer"></span>
 
