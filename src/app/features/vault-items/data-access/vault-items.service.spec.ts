@@ -675,6 +675,17 @@ describe('VaultItemsService mutations (HTTP mode, withOptimistic-backed)', () =>
 
   // ── createOnBoard ─────────────────────────────────────────────────────
   describe('createOnBoard', () => {
+    // Every board create ends with a reconciliation GET of the new row in the
+    // enriched board shape — the notes-POST response carries no project name,
+    // child counts or column age. Answer it, optionally with the row the server
+    // would really return, so `http.verify()` sees no dangling request.
+    function flushReconcile(id: string, row?: Record<string, unknown>) {
+      const req = http.expectOne(
+        r => r.url.includes('/api/vault/board') && r.params.get('id') === id,
+      );
+      req.flush({ items: row ? [row] : [], total: row ? 1 : 0, limit: 1 });
+    }
+
     it('POSTs the slim body, prepends the optimistic row, swaps real id on success', () => {
       const beforeCount = service.items().length;
       service.createOnBoard({ title: 'fresh capture', manual_priority: 1 });
@@ -692,8 +703,13 @@ describe('VaultItemsService mutations (HTTP mode, withOptimistic-backed)', () =>
         source_kind: 'manual',
         source_ref: 'board',
         manual_priority: 1,
+        // A human typing into a board has routed the item — to himself. Without
+        // this the server applies the UNROUTED sentinel and the card reads
+        // "@Unrouted" after the next reload.
+        assigned_to: 'marvin',
       });
       req.flush({ id: 'item-2', seq: '101', title: 'fresh capture', assigned_to: 'marvin' });
+      flushReconcile('item-2');
 
       // Temp id replaced with real; row stays in original (prepended) position.
       expect(service.items()[0].id).toBe('item-2');
@@ -717,10 +733,58 @@ describe('VaultItemsService mutations (HTTP mode, withOptimistic-backed)', () =>
 
       const post = http.expectOne(r => r.method === 'POST');
       post.flush({ id: 'item-3', seq: '102', title: 'queued ready', assigned_to: 'marvin' });
+      flushReconcile('item-3');
 
       const patch = http.expectOne(r => r.method === 'PATCH' && r.url.endsWith('/by-seq/102'));
       expect(patch.request.body).toMatchObject({ grooming_status: 'ready' });
       patch.flush({ id: 'item-3', seq: '102' });
+    });
+
+    it('fires no follow-up PATCH for a default (ungroomed) capture — ownership rides the POST', () => {
+      service.createOnBoard({ title: 'plain capture' });
+
+      const post = http.expectOne(r => r.method === 'POST');
+      post.flush({ id: 'item-4', seq: '103', title: 'plain capture', assigned_to: 'marvin' });
+      flushReconcile('item-4');
+
+      http.expectNone(r => r.method === 'PATCH');
+      expect(service.getById(vaultItemId('item-4'))?.assigned_to).toBe('marvin');
+    });
+
+    // Deliberately flushes an owner the client did NOT ask for. Asserting the
+    // optimistic value here would pass no matter what the server said — which
+    // is exactly how the row could read "@Marvin" while the database held
+    // 'unrouted', until a reload revealed it.
+    it('takes the owner from the response, not the optimistic row', () => {
+      service.createOnBoard({ title: 'server overrides me' });
+
+      const post = http.expectOne(r => r.method === 'POST');
+      post.flush({ id: 'item-5', seq: '104', title: 'server overrides me', assigned_to: 'unrouted' });
+      flushReconcile('item-5');
+
+      expect(service.getById(vaultItemId('item-5'))?.assigned_to).toBe('unrouted');
+    });
+
+    // The notes-POST response has no board embeds, so a project the server
+    // resolved on its own — inherited from the parent epic, in the case that
+    // prompted this — is invisible to the optimistic row. The reconciliation
+    // GET is the only thing that can fill it in before the next bulk reload.
+    it('reconciles board-only fields (project, counts) from the follow-up GET', () => {
+      service.createOnBoard({ title: 'child of an epic', parent_id: 'note_epic' });
+
+      const post = http.expectOne(r => r.method === 'POST');
+      post.flush({ id: 'item-6', seq: '105', title: 'child of an epic', assigned_to: 'marvin' });
+
+      flushReconcile('item-6', fakeApiItem({
+        id: 'item-6',
+        seq: 105,
+        title: 'child of an epic',
+        parent_id: 'note_epic',
+        primary_project_id: 'admin',
+        primary_project_name: 'Admin',
+      }));
+
+      expect(service.getById(vaultItemId('item-6'))?.primary_project_name).toBe('Admin');
     });
   });
 

@@ -312,11 +312,19 @@ export class VaultItemsService {
 
     // source_kind/source_ref tag the row as operator-created so the execution
     // board's manual-track filter (`source.kind === 'manual'`) survives reload.
+    //
+    // assigned_to goes in the CREATE body, not a follow-up PATCH. The server
+    // defaults an unspecified assignee to the UNROUTED sentinel ("nobody has
+    // decided who does this"), which is right for machine capture and wrong
+    // for a human typing into a board — Marvin adding a card HAS routed it,
+    // to himself. Stating it at create time also means the row is never
+    // briefly unrouted, so the pump can't claim it in the gap.
     const body: Record<string, unknown> = {
       title: trimmed,
       type,
       source_kind: 'manual',
       source_ref: 'board',
+      assigned_to: this.currentActorId,
     };
     if (input.manual_priority != null) body['manual_priority'] = input.manual_priority;
     // parent_id is accepted by the create endpoint; the project link is reflected
@@ -335,10 +343,33 @@ export class VaultItemsService {
       optimistic,
       // Default 'prepend' — board capture inputs add fresh items at the top.
       request: this.http.post<ApiVaultNoteResponse>(this.url, body),
-      realFromResponse: (note) => ({ ...optimistic, id: vaultItemId(note.id), seq: Number(note.seq) }),
+      // Ownership is read back off the response rather than carried over from
+      // `optimistic`. Spreading the optimistic row wholesale is what let the
+      // old owner bug hide: the store agreed with itself, so nothing could
+      // notice the server had stored something else until the next reload.
+      //
+      // This is the instant paint; `refreshOne` in onSuccess is the complete
+      // reconciliation a round-trip later. Both, because the operator sees this
+      // row before that response lands.
+      realFromResponse: (note) => ({
+        ...optimistic,
+        id: vaultItemId(note.id),
+        seq: Number(note.seq),
+        assigned_to: note.assigned_to ? actorId(note.assigned_to) : optimistic.assigned_to,
+      }),
       errorMessage: `Failed to create "${trimmed}"`,
       onSuccess: (real) => {
         this.toast.success(`"${trimmed}" created · #${real.seq}`);
+
+        // Reconcile the whole row against the server, not just the fields this
+        // method happens to think about. `realFromResponse` can only carry the
+        // notes-POST shape, which has no board embeds — no primary_project_name,
+        // no children_count, no days_in_column — so an item that the server
+        // filed under a project (inherited from its parent epic, say) renders
+        // with a blank project chip until the next bulk reload. Every "the card
+        // said one thing and the database said another" bug in board capture is
+        // this same gap, so it's closed once here rather than per field.
+        this.refreshOne(real.id);
         // Caller (typically a board) gets the real seq so it can deep-link
         // straight into the detail dialog for in-place editing.
         onCreated?.(real);
@@ -367,21 +398,23 @@ export class VaultItemsService {
             : i));
         }
 
-        // CreateNoteBody doesn't accept grooming_status or assigned_to overrides
-        // for board-driven flows — the server defaults to ungroomed/jimbo. PATCH
-        // any drift in a follow-up so the UI sees what we asked for.
-        const patch: Record<string, unknown> = {};
-        if (groomingStatus !== 'ungroomed') patch['grooming_status'] = groomingStatus;
-        // Server sets assigned_to from session; we asked for currentActorId. If
-        // they differ, push the override.
-        const realRow = this.getById(real.id);
-        if (realRow?.assigned_to !== this.currentActorId) patch['assigned_to'] = this.currentActorId;
-        if (Object.keys(patch).length === 0) return;
-        this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${real.seq}`, patch).subscribe({
+        // CreateNoteBody has no grooming_status field (the server always starts
+        // a note ungroomed), so a non-default grooming state still needs a
+        // follow-up PATCH. Ownership does NOT — it travels in the create body
+        // above. The owner half of this used to be dead code: it compared the
+        // store row against currentActorId, but `realFromResponse` builds that
+        // row by spreading `optimistic`, which already holds currentActorId, so
+        // the guard was never true and the PATCH never fired. Board captures
+        // therefore rendered as "@Marvin" until the next reload, then flipped to
+        // "@Unrouted" — the server value they had carried all along.
+        if (groomingStatus === 'ungroomed') return;
+        this.http.patch<ApiVaultNoteResponse>(`${this.url}/by-seq/${real.seq}`, {
+          grooming_status: groomingStatus,
+        }).subscribe({
           next: () => this._items.update(items => items.map(i => i.id === real.id
-            ? { ...i, grooming_status: groomingStatus, assigned_to: this.currentActorId }
+            ? { ...i, grooming_status: groomingStatus }
             : i)),
-          error: () => this.toast.error('Created but status/owner follow-up failed'),
+          error: () => this.toast.error('Created but grooming-status follow-up failed'),
         });
       },
     });
