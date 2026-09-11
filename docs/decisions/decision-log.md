@@ -1,5 +1,10 @@
 # Decision Log
 
+> **Superseded as the live record on 2026-09-11.** These entries were imported
+> verbatim into numbered ADRs at `jimbo/docs/adr/` (index: `docs/adr/README.md`).
+> This file is kept as history — **do not add to it.** New decisions go in a new
+> ADR; see `docs/adr/README-format.md`.
+
 ## 2026-04-22
 
 ### Decision: use `dashboard` as the repo name
