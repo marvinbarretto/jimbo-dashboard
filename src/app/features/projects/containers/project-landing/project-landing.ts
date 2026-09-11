@@ -397,6 +397,9 @@ export class ProjectLanding {
     return all.filter(i => this.itemBelongsToProject(i, p.id));
   });
 
+  /** The vault rows have not answered yet — a zero count means unknown, not empty. */
+  readonly scaleUnmeasured = computed(() => this.vault.isLoading());
+
   readonly activeItems = computed(() => this.items().filter(isActive));
   readonly doneItems = computed(() => this.items().filter(isDone));
   readonly epicItems = computed(() => this.items().filter(i => i.is_epic));

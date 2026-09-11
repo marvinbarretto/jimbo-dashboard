@@ -61,6 +61,14 @@ export class ProjectIdentitySection {
    * puts the store and its rendering side by side — it folds away instead.
    */
   readonly hasStructuredBeliefs = input(false);
+  /**
+   * The vault read has not answered yet. Without this, `scale.items === 0`
+   * reads identically whether the project is genuinely empty or the rows are
+   * still in flight — and the page asserted "No vault items linked to this
+   * project yet" on a project with 170 of them, every load, for several
+   * seconds. Same `unmeasured` discipline the Right now panel already uses.
+   */
+  readonly scaleUnmeasured = input(false);
 
   readonly saved = output<UpdateProjectPayload>();
 
@@ -87,7 +95,9 @@ export class ProjectIdentitySection {
     const s = this.scale();
     const parts: string[] = [];
 
-    if (s.items === 0) {
+    if (this.scaleUnmeasured()) {
+      parts.push('Counting vault items…');
+    } else if (s.items === 0) {
       parts.push('No vault items linked to this project yet.');
     } else {
       const base = `${plural(s.items, 'item')} linked, ${s.active} active and ${s.done} done`;

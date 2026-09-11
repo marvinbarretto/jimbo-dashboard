@@ -104,4 +104,21 @@ describe('ProjectIdentitySection', () => {
     await setup(makeProject({ synced_at: '2025-06-01T00:00:00Z' }), makeScale());
     expect(component.isRepoSynced()).toBe(true);
   });
+
+  // A zero count while the read is in flight is unknown, not empty. The page
+  // asserted "No vault items linked" on a project with 170 of them, on every
+  // load, until the rows arrived.
+  it('does not claim an empty project while the vault read is outstanding', async () => {
+    await setup(makeProject(), makeScale({ items: 0, active: 0, done: 0, epics: 0 }));
+
+    // Settled and genuinely empty: the assertion is fair.
+    expect(component.scaleLine()).toContain('No vault items linked');
+
+    // Same zero, read still in flight: unknown, not empty.
+    fixture.componentRef.setInput('scaleUnmeasured', true);
+    await fixture.whenStable();
+    expect(component.scaleLine()).toContain('Counting vault items…');
+    expect(component.scaleLine()).not.toContain('No vault items linked');
+  });
+
 });

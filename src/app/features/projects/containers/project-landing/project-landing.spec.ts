@@ -94,8 +94,14 @@ class FakeProjectsService {
 
 class FakeVaultItemsService {
   private readonly _items = signal<VaultItem[]>([]);
+  private readonly _loading = signal(false);
   items = this._items.asReadonly();
+  // The real service starts true and flips on first answer; the fake defaults
+  // to "answered" so existing tests read a settled page, and setLoading() lets
+  // a test assert the in-flight shape.
+  isLoading = this._loading.asReadonly();
   setItems(items: VaultItem[]) { this._items.set(items); }
+  setLoading(v: boolean) { this._loading.set(v); }
 }
 
 class FakeJunctions {
