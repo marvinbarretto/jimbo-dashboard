@@ -35,6 +35,33 @@ export interface SkillUsage {
   last_run_at: string | null;
 }
 
+/**
+ * What a skill costs and what it actually ran on, over a trailing window.
+ *
+ * Separate from `SkillUsage` because it answers a different question. Usage
+ * says whether a skill runs; this says whether it is worth what it costs —
+ * and the model column reports `completed_model` from the dispatch row, not
+ * the tier declared in SKILL.md, because most skills declare none and take
+ * the worker's haiku default silently.
+ *
+ * A skill with no dispatch in the window is ABSENT, and `cost_usd` is null
+ * when nothing was billed. Both render as a dash: "did not run" and "ran for
+ * free" are different answers and must not look alike.
+ */
+export interface SkillEconomics {
+  skill_id: string;
+  dispatches: number;
+  completed: number;
+  failed: number;
+  declined: number;
+  cost_usd: number | null;
+  turns: number;
+  avg_input_tokens: number | null;
+  avg_output_tokens: number | null;
+  models: string[];
+  last_run_at: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SkillsService {
   private readonly http = inject(HttpClient);
@@ -44,9 +71,21 @@ export class SkillsService {
   private readonly _loading = signal(true);
   private readonly _error = signal<string | null>(null);
   private readonly _usage = signal<Map<string, SkillUsage>>(new Map());
+  private readonly _economics = signal<Map<string, SkillEconomics>>(new Map());
+  private readonly _economicsDays = signal(30);
 
   /** Dispatch outcomes keyed by skill id. Empty map until loaded, or on failure. */
   readonly usage = this._usage.asReadonly();
+
+  /** Cost + model mix keyed by skill id, over `economicsDays`. */
+  readonly economics = this._economics.asReadonly();
+  readonly economicsDays = this._economicsDays.asReadonly();
+
+  /** Total spend across every skill in the window — null when nothing is priced. */
+  readonly totalCost = computed(() => {
+    const priced = [...this._economics().values()].filter(e => e.cost_usd !== null);
+    return priced.length ? priced.reduce((sum, e) => sum + (e.cost_usd ?? 0), 0) : null;
+  });
 
   readonly skills = this._skills.asReadonly();
   readonly activeSkills = computed(() =>
@@ -77,6 +116,22 @@ export class SkillsService {
       next: r => this._usage.set(new Map(r.items.map(u => [u.skill_id, u]))),
       error: () => this._usage.set(new Map()),
     });
+    this.loadEconomics(this._economicsDays());
+  }
+
+  /**
+   * Refetch the cost window. Same non-blocking contract as usage: on failure
+   * the map empties and the columns go blank, rather than showing stale costs
+   * for a window the reader thinks they changed.
+   */
+  loadEconomics(days: number): void {
+    this._economicsDays.set(days);
+    if (isSeedMode()) return;
+    this.http.get<{ items: SkillEconomics[] }>(`${this.url}/economics`, { params: { days } })
+      .subscribe({
+        next: r => this._economics.set(new Map(r.items.map(e => [e.skill_id, e]))),
+        error: () => this._economics.set(new Map()),
+      });
   }
 
   reload(): void {

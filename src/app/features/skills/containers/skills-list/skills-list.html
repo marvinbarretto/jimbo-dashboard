@@ -4,6 +4,8 @@
     <h1 uiPageHeaderTitle>Skills</h1>
     <p uiPageHeaderHint>
       Edits commit + push to <code>hub/skills/</code> via jimbo-api.
+      Cost and model are what dispatches actually did over the last
+      {{ economicsDays() }} days &mdash; not what the frontmatter declares.
     </p>
     <app-ui-button-link uiPageHeaderActions routerLink="new" variant="primary">Add skill</app-ui-button-link>
   </app-ui-page-header>
@@ -15,6 +17,22 @@
       title="Failed to load skills"
       [message]="'The skill registry could not be loaded. ' + error()" />
   } @else {
+    <app-ui-cluster class="skills-list__window" gap="sm">
+      <span id="cost-window-label" class="hint">Cost window</span>
+      <div role="group" aria-labelledby="cost-window-label">
+        @for (d of windows; track d) {
+          <button type="button"
+                  class="window-btn"
+                  [class.window-btn--on]="economicsDays() === d"
+                  [attr.aria-pressed]="economicsDays() === d"
+                  (click)="setWindow(d)">{{ d }}d</button>
+        }
+      </div>
+      @if (totalCost(); as total) {
+        <span class="hint">&pound;{{ total | number: '1.2-2' }} total</span>
+      }
+    </app-ui-cluster>
+
     <app-ui-data-table
       ariaLabel="Skills"
       caption="Track active skills, who can run them, and what is actually being used."
@@ -94,6 +112,45 @@
       </span>
     } @else {
       <span class="hint">—</span>
+    }
+  </ng-template>
+
+  <!-- Three distinct absences, three different renderings, because they are
+       three different verdicts: no dispatch in the window is a dash, a run
+       that was never billed is "unpriced", and a real zero is a zero. -->
+  <ng-template #costCell let-context>
+    @if (economicsFor(context.row.original.id); as e) {
+      @if (e.cost_usd === null) {
+        <span class="hint" title="Ran, but no turn carried a priced model">unpriced</span>
+      } @else {
+        <app-ui-badge [tone]="costTone(context.row.original.id)"
+                      [subtle]="true"
+                      [title]="e.dispatches + ' dispatches, ' + e.turns + ' billed turns'
+                               + (costPerRun(context.row.original.id) !== null
+                                  ? ' — £' + (costPerRun(context.row.original.id) | number: '1.2-2') + ' per completed run'
+                                  : '')">
+          &pound;{{ e.cost_usd | number: '1.2-2' }}
+        </app-ui-badge>
+        @if (costSharePct(context.row.original.id); as pct) {
+          <span class="cost-share" [title]="pct + '% of spend in this window'">{{ pct }}%</span>
+        }
+      }
+    } @else {
+      <span class="hint" title="No dispatch in this window">&mdash;</span>
+    }
+  </ng-template>
+
+  <ng-template #modelCell let-context>
+    @if (modelLabels(context.row.original.id); as models) {
+      @if (models.length) {
+        <app-ui-cluster gap="xs">
+          @for (m of models; track m) {
+            <app-ui-badge tone="neutral" [subtle]="true">{{ m }}</app-ui-badge>
+          }
+        </app-ui-cluster>
+      } @else {
+        <span class="hint">&mdash;</span>
+      }
     }
   </ng-template>
 

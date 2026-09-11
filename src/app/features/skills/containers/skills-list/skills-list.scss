@@ -21,3 +21,44 @@
   font-size: 0.85rem;
 }
 
+
+// Cost-window toggle. Buttons rather than a select: three options, and the
+// current window must be readable without opening anything.
+.skills-list__window {
+  align-items: baseline;
+}
+
+.window-btn {
+  border: 1px solid var(--border, #d0d0d0);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8125rem;
+  padding: 0.15rem 0.5rem;
+  cursor: pointer;
+
+  &:first-of-type { border-radius: 4px 0 0 4px; }
+  &:last-of-type { border-radius: 0 4px 4px 0; }
+  &:not(:first-of-type) { border-left: 0; }
+
+  &--on {
+    background: var(--accent-subtle, #e8e8f0);
+    font-weight: 600;
+  }
+
+  // AXE: a 1px outline on a 1px border is not a visible focus ring.
+  &:focus-visible {
+    outline: 2px solid var(--focus, #4a4ae0);
+    outline-offset: 1px;
+    position: relative;
+  }
+}
+
+// Share-of-spend rides beside the cost badge, deliberately quieter: the badge
+// is the number to act on, this is the number that says whether to bother.
+.cost-share {
+  margin-left: 0.35rem;
+  font-size: 0.75rem;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}

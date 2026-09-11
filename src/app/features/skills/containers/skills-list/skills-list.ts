@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, TemplateRef, computed, inject, viewChild } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { type CellContext, createColumnHelper, type ColumnDef } from '@tanstack/angular-table';
 import { UiBadge } from '@shared/components/ui-badge/ui-badge';
@@ -11,12 +12,13 @@ import { UiPage } from '@shared/components/ui-page/ui-page';
 import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
-import { SkillsService, type SkillUsage } from '../../data-access/skills.service';
+import { SkillsService, type SkillUsage, type SkillEconomics } from '../../data-access/skills.service';
 import { skillNamespace, skillLocalName, type Skill } from '@domain/skills';
 
 @Component({
   selector: 'app-skills-list',
   imports: [
+    DecimalPipe,
     RouterLink,
     UiBadge,
     UiButtonLink,
@@ -75,6 +77,74 @@ export class SkillsList {
     viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, number> }>>('runsCell');
   private readonly declinedCell =
     viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, number> }>>('declinedCell');
+  private readonly costCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, number> }>>('costCell');
+  private readonly modelCell =
+    viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, number> }>>('modelCell');
+
+  readonly economicsDays = this.service.economicsDays;
+  readonly totalCost = this.service.totalCost;
+
+  /** Windows offered above the table. 7 catches a skill that got expensive this week. */
+  readonly windows = [7, 30, 90] as const;
+
+  setWindow(days: number): void {
+    this.service.loadEconomics(days);
+  }
+
+  /** Cost + model mix for a skill, or undefined if it did not run in the window. */
+  economicsFor(id: string): SkillEconomics | undefined {
+    return this.service.economics().get(id);
+  }
+
+  /**
+   * Cost per completed dispatch — the figure that makes skills comparable when
+   * one runs twice a day and another six hundred times a month. Null whenever
+   * the numerator or denominator is missing, so it can render as a dash rather
+   * than as a confident zero.
+   */
+  costPerRun(id: string): number | null {
+    const e = this.economicsFor(id);
+    if (!e || e.cost_usd === null || !e.completed) return null;
+    return e.cost_usd / e.completed;
+  }
+
+  /**
+   * Share of window spend. Sorting by total cost already surfaces the dearest
+   * skill; this says whether "dearest" means a third of the bill or a rounding
+   * error, which is the difference between acting and not.
+   */
+  costSharePct(id: string): number | null {
+    const total = this.totalCost();
+    const cost = this.economicsFor(id)?.cost_usd;
+    if (!total || cost == null) return null;
+    return Math.round(100 * cost / total);
+  }
+
+  /**
+   * Model labels stripped of vendor prefix and date suffix, so the column reads
+   * `opus×53` rather than `claude-opus-5×53` and stays scannable at width.
+   */
+  modelLabels(id: string): string[] {
+    return (this.economicsFor(id)?.models ?? []).map(m => {
+      const [model, count] = m.split('\u00d7');
+      const short = model
+        .replace(/^claude-/, '')
+        .replace(/-\d{8}$/, '')
+        .replace(/-\d+-\d+$/, '')
+        .replace(/-\d+$/, '');
+      return count ? `${short}\u00d7${count}` : short;
+    });
+  }
+
+  /** Dearer than a pound a run is worth a second look, whatever the skill. */
+  costTone(id: string): 'danger' | 'warning' | 'neutral' {
+    const per = this.costPerRun(id);
+    if (per === null) return 'neutral';
+    if (per >= 1) return 'danger';
+    if (per >= 0.25) return 'warning';
+    return 'neutral';
+  }
 
   /** Dispatch outcomes for a skill, or undefined if it has never been dispatched. */
   usageFor(id: string): SkillUsage | undefined {
@@ -138,6 +208,24 @@ export class SkillsList {
       header: 'Declined',
       cell: () => this.declinedCell(),
       sortingFn: 'basic',
+    }),
+    // Cost sits beside runs because neither means much alone: 600 cheap runs
+    // and 53 dear ones can land on the same bill, and only one of them is a
+    // volume problem. `-1` for "did not run in the window" so it sorts below a
+    // genuine zero rather than above it.
+    this.columnHelper.accessor(row => this.economicsFor(row.id)?.cost_usd ?? -1, {
+      id: 'cost',
+      header: 'Cost',
+      cell: () => this.costCell(),
+      sortingFn: (a, b, columnId) => b.getValue<number>(columnId) - a.getValue<number>(columnId),
+    }),
+    // What it ACTUALLY ran on, from the dispatch row — not the tier declared in
+    // frontmatter, which 27 of 34 skills omit and silently take haiku for.
+    this.columnHelper.accessor(row => this.modelLabels(row.id).join(' '), {
+      id: 'model',
+      header: 'Model',
+      cell: () => this.modelCell(),
+      enableSorting: false,
     }),
     this.columnHelper.accessor('type', {
       header: 'Type',
