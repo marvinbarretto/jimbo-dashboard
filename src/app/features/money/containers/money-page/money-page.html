@@ -61,6 +61,11 @@
               on {{ a.monthly_burn | currency:s.budget.currency:'symbol':'1.0-0' }}/mo actually spent,
               averaged over {{ a.basis_months.join(', ') }}.
             </span>
+            @if (measuredAge(); as age) {
+              <span class="money-sourced" data-testid="money-sourced">
+                Sourced {{ age.phrase }}<span class="money-sourced__date"> · {{ age.generated }}</span>
+              </span>
+            }
           </article>
 
           <article class="money-card" [class.money-card--flag]="(a.personal_only_runway_months ?? 99) < 6"
@@ -123,8 +128,10 @@
           <p class="money-note">
             Measured from bank exports, averaged over the last
             {{ recentWindow().length }} complete months ({{ recentWindow()[0] }} to
-            {{ recentWindow()[recentWindow().length - 1] }}). Published
-            {{ agg.generated }}.
+            {{ recentWindow()[recentWindow().length - 1] }}).
+            @if (measuredAge(); as age) {
+              Sourced {{ age.phrase }}, on {{ age.generated }}.
+            }
           </p>
           <table class="money-table" data-testid="money-categories">
             <caption class="visually-hidden">Average monthly spend by category</caption>

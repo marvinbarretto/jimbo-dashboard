@@ -18,6 +18,15 @@ import {
  */
 const RECENT_MONTHS = 6;
 
+/** Days as a phrase someone reads rather than a number they have to weigh. */
+function relativeDays(days: number): string {
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 60) return `${days} days ago`;
+  const months = Math.round(days / 30);
+  return `${months} months ago`;
+}
+
 @Component({
   selector: 'app-money-page',
   imports: [CurrencyPipe, DatePipe, DecimalPipe, UiPage],
@@ -41,6 +50,33 @@ export class MoneyPage {
 
   /** The measured block on /summary — null until the pipeline has published. */
   readonly actual = computed(() => this.summary()?.actual ?? null);
+
+  /**
+   * When the measured numbers were last sourced, in days rather than as a date.
+   *
+   * The date alone was already on the page and did not do the job: reading
+   * "2026-09-11" and working out whether that is recent is arithmetic, and
+   * arithmetic you have to volunteer is arithmetic you skip. "sourced 34 days
+   * ago" is read, not computed.
+   *
+   * Deliberately NOT a threshold or a warning colour — this tells you the age
+   * and trusts you to judge it. A nag would be a different feature, and one
+   * that is not worth building until a publish has actually been missed.
+   */
+  readonly measuredAge = computed(() => {
+    const generated = this.actual()?.generated;
+    if (!generated) return null;
+    const then = new Date(`${generated}T00:00:00Z`);
+    if (Number.isNaN(then.getTime())) return null;
+
+    // Whole days between calendar dates, both pinned to UTC midnight, so the
+    // answer does not flip because the page was opened late in the evening.
+    const now = new Date();
+    const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    const days = Math.round((today - then.getTime()) / 86_400_000);
+
+    return { generated, days, phrase: relativeDays(days) };
+  });
 
   /**
    * The gap between intent and measurement, which is the whole point of

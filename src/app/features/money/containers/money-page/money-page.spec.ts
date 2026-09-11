@@ -293,3 +293,64 @@ describe('MoneyPage measured series', () => {
     expect(page.breakEven()).toEqual([]);
   });
 });
+
+describe('MoneyPage measured age', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        MoneyPage,
+      ],
+    });
+  });
+
+  afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+  /** A `generated` date exactly `days` before today, in the pipeline's format. */
+  const generatedDaysAgo = (days: number): string => {
+    const now = new Date();
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - days));
+    return d.toISOString().slice(0, 10);
+  };
+
+  const aged = (days: number) => {
+    const s = clean();
+    s.actual = measured({ generated: generatedDaysAgo(days) });
+    return pageWith(s, published()).measuredAge();
+  };
+
+  it('says nothing when nothing has been published', () => {
+    expect(pageWith(clean()).measuredAge()).toBeNull();
+  });
+
+  it('reads as today on the day it was published', () => {
+    expect(aged(0)).toMatchObject({ days: 0, phrase: 'today' });
+  });
+
+  it('reads as yesterday the next day', () => {
+    expect(aged(1)).toMatchObject({ days: 1, phrase: 'yesterday' });
+  });
+
+  it('counts days while that is still a useful unit', () => {
+    expect(aged(34)).toMatchObject({ days: 34, phrase: '34 days ago' });
+  });
+
+  it('switches to months once days stop meaning anything', () => {
+    // The case this whole line exists for: a publish missed for a season. "97
+    // days ago" is a number to weigh; "3 months ago" is a sentence.
+    expect(aged(97)?.phrase).toBe('3 months ago');
+  });
+
+  it('keeps the exact date alongside the phrase, as the audit trail', () => {
+    const age = aged(5)!;
+    expect(age.generated).toBe(generatedDaysAgo(5));
+  });
+
+  it('never reports a negative age from a clock skew', () => {
+    // The M4 and the VPS are different machines; a report generated "tomorrow"
+    // must read as today rather than as "-1 days ago".
+    expect(aged(-1)).toMatchObject({ phrase: 'today' });
+  });
+});

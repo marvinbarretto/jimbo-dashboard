@@ -208,3 +208,25 @@
   .money-table th:last-child,
   .money-table td:last-child { display: none; }
 }
+
+// How old the measured numbers are. Sits with the figure it qualifies rather
+// than in a footnote — the date was already on the page further down and that
+// was not enough, because a date you have to go and look for is a date you do
+// not look for.
+//
+// No threshold colour on purpose. This reports the age and leaves the judgement
+// alone; a figure that nags at N days is a different feature, and not one worth
+// building before a publish has actually been missed.
+.money-sourced {
+  margin-top: 0.35rem;
+  color: var(--color-text-muted, #666);
+  font-size: 0.75rem;
+}
+
+// The exact date is the audit trail, not the message. Kept, but demoted — and
+// dropped entirely on a narrow screen where the phrase is the whole point.
+.money-sourced__date { opacity: 0.75; }
+
+@media (max-width: 40rem) {
+  .money-sourced__date { display: none; }
+}
