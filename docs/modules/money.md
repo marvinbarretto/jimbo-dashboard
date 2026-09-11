@@ -5,7 +5,7 @@ description: Read-only page showing live budget position, planned runway, and th
 source_paths:
   - src/app/features/money/**
 generated_at: 2026-09-11
-reviewed_commit: 10a05d2
+reviewed_commit: 3f431d9
 sections:
   purpose: asserted
   responsibilities: asserted
