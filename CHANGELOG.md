@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.224](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.223...v0.0.224) (2026-09-11)
+
+
+### Features
+
+* **money:** a read-only money page under Life ([3f431d9](https://github.com/marvinbarretto/jimbo-dashboard/commit/3f431d954e4ae7e2df602597aab38041f1e7d3c2))
+
 ### [0.0.223](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.222...v0.0.223) (2026-09-11)
 
 
