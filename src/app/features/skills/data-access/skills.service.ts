@@ -145,6 +145,10 @@ export class SkillsService {
   /**
    * Set a skill's lifecycle verdict.
    *
+   * See ADR-0039: one verdict vocabulary per thing judged. Skills are judged by
+   * `metadata.status`; hermes jobs by `agent_job_ratings`. Do not give a skill a
+   * second keep/watch/cut rating — it could disagree with this one.
+   *
    * Writes `metadata.status` through the ordinary skill PATCH, which merges
    * into the existing metadata server-side (services/skills.ts:431) and then
    * commits and pushes SKILL.md to hub. Slow and auditable, on purpose: this
