@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.223](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.222...v0.0.223) (2026-09-11)
+
+
+### Features
+
+* **skills:** make the lifecycle verdict editable from the list ([0970bee](https://github.com/marvinbarretto/jimbo-dashboard/commit/0970bee9c456cd052bc4106d84d1a958a072227d))
+* **skills:** show what each skill costs and what it actually ran on ([ac96142](https://github.com/marvinbarretto/jimbo-dashboard/commit/ac961429bb8330fa6d0fb24b5738e8825240e09c))
+
+
+### Bug Fixes
+
+* **projects:** a zero count mid-load is unknown, not empty ([798d5bf](https://github.com/marvinbarretto/jimbo-dashboard/commit/798d5bfea175dc08cb32962b423cb27e8b78beb0))
+
+
+### Code Refactoring
+
+* **skills:** drop the invented cost thresholds from the cost badge ([514161a](https://github.com/marvinbarretto/jimbo-dashboard/commit/514161a21ca20cc6c70d1eef41ca29c7f8243baa))
+
 ### [0.0.222](https://github.com/marvinbarretto/jimbo-dashboard/compare/v0.0.221...v0.0.222) (2026-09-10)
 
 
