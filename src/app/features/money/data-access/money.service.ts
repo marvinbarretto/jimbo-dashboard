@@ -9,7 +9,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
-import type { MoneyCategory, MoneyCategoryList, MoneySummary } from './money';
+import type { MoneyAggregates, MoneyCategory, MoneyCategoryList, MoneySummary } from './money';
 
 @Injectable({ providedIn: 'root' })
 export class MoneyService {
@@ -18,11 +18,17 @@ export class MoneyService {
 
   private readonly _summary = signal<MoneySummary | null>(null);
   private readonly _categories = signal<MoneyCategory[]>([]);
+  private readonly _aggregates = signal<MoneyAggregates | null>(null);
+  private readonly _aggregatesMissing = signal(false);
   private readonly _loading = signal(true);
   private readonly _error = signal<string | null>(null);
 
   readonly summary = this._summary.asReadonly();
   readonly categories = this._categories.asReadonly();
+  readonly aggregates = this._aggregates.asReadonly();
+  /** True only for a 404 — the pipeline has never published, which is a real
+   * state with its own empty message, not a failure to report. */
+  readonly aggregatesMissing = this._aggregatesMissing.asReadonly();
   readonly isLoading = this._loading.asReadonly();
   readonly error = this._error.asReadonly();
 
@@ -59,6 +65,20 @@ export class MoneyService {
     this.http.get<MoneyCategoryList>(`${this.base}/categories${q}`).subscribe({
       next: res => this._categories.set(res.categories),
       error: () => this._categories.set([]),
+    });
+
+    // The measured series, pushed from the M4 pipeline. Not affected by
+    // `fresh`, which is a YNAB cache-bypass and means nothing here — this data
+    // changes only when publish.py runs.
+    this.http.get<MoneyAggregates>(`${this.base}/aggregates`).subscribe({
+      next: res => {
+        this._aggregates.set(res);
+        this._aggregatesMissing.set(false);
+      },
+      error: err => {
+        this._aggregates.set(null);
+        this._aggregatesMissing.set(err?.status === 404);
+      },
     });
   }
 

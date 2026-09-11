@@ -136,7 +136,75 @@
   color: var(--color-warning, #d97706);
 }
 
+
+// The plan-vs-measured gap. Given its own weight on the page: it is the single
+// finding this whole module exists to produce, and burying it in a table would
+// make it just another number.
+.money-gap {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+
+  strong { font-size: 1.35rem; }
+}
+
+.money-gap--over strong { color: var(--color-warning, #d97706); }
+
+// Basis lines — which months, which accounts, published when. Muted but never
+// hidden: a measured figure read without its basis is how two honest numbers
+// turn into an argument.
+.money-note {
+  margin: 0 0 0.75rem;
+  max-width: 60ch;
+  color: var(--color-text-muted, #666);
+  font-size: 0.85rem;
+}
+
+// A caveat is not a note. It changes how the number above it must be read —
+// a floor rather than a total, money excluded from a runway — so it carries the
+// warning colour rather than the muted one.
+.money-caveat {
+  margin: 0 0 0.4rem;
+  max-width: 60ch;
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--color-warning, #d97706);
+  font-size: 0.85rem;
+}
+
+.money-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th, td {
+    padding: 0.4rem 0.6rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border, #e0e0e0);
+  }
+
+  // Amounts line up for comparison down the column, which is the only reason
+  // to read this table at all.
+  td {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  thead th {
+    color: var(--color-text-muted, #666);
+    font-weight: 500;
+    font-size: 0.8rem;
+  }
+
+  thead th:not(:first-child) { text-align: right; }
+
+  tbody th { font-weight: 500; }
+}
+
 @media (max-width: 40rem) {
   .money-assumptions { grid-template-columns: 1fr; gap: 0.2rem; }
   .money-assumptions dt { margin-top: 0.6rem; }
+
+  // The latest-month column is the first thing to go: the per-month average is
+  // the number being compared, and the table must not scroll sideways.
+  .money-table th:last-child,
+  .money-table td:last-child { display: none; }
 }

@@ -21666,6 +21666,99 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/money/aggregates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The latest published aggregates, in full
+         * @description The whole monthly series, for charting. `/summary` carries only the headline figures. Returns 404 when the pipeline has never published — deliberately an error rather than an empty document, because "no data" and "zero spend" must not render the same way.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Latest published aggregates */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MoneyAggregates"];
+                    };
+                };
+                /** @description Nothing published yet */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        /**
+         * Publish measured monthly aggregates from the local pipeline
+         * @description Accepts month-granularity aggregates ONLY. Individual transactions must never reach this server: every amount is reachable only under a YYYY-MM key and every object is closed, so a dated row has no slot to occupy. An unrecognised field is refused (400) rather than dropped — if the pipeline learns to emit something new, that is a deliberate change here. Idempotent by content hash: re-posting unchanged data returns duplicate=true and moves only last_received_at.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["MoneyAggregateIngest"];
+                };
+            };
+            responses: {
+                /** @description Stored (or already held) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MoneyAggregateIngestResult"];
+                    };
+                };
+                /** @description Payload is not aggregate-shaped */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Payload carries transaction detail */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/discord/poll-attachments": {
         parameters: {
             query?: never;
@@ -28863,6 +28956,7 @@ export interface components {
                 /** @description null when nothing is budgeted yet */
                 runway_months: number | null;
             };
+            actual: components["schemas"]["MoneyActual"];
             month: {
                 month: string;
                 to_be_budgeted: number;
@@ -28886,6 +28980,30 @@ export interface components {
                 tracking_accounts_excluded: string[];
             };
         };
+        /** @description Measured from bank exports by the local pipeline — what he HAS spent. null until the pipeline publishes. A consumer must render "not published yet" rather than falling back to `plan`: the two legitimately disagree (ADR-0036). */
+        MoneyActual: {
+            /** @description Measured spend per month over basis_months */
+            monthly_spend: number | null;
+            /** @description Measured spend minus measured income — what runway divides into */
+            monthly_burn: number | null;
+            runway_months: number | null;
+            /** @description Excludes company money, which cannot be spent without extraction */
+            personal_only_runway_months: number | null;
+            /** @description The months averaged. Deliberately explicit — a sliding window would silently move every headline figure. */
+            basis_months: string[];
+            /** @description Balances held but NOT counted in runway_months — no agreed conversion. Not decoration: dropping it overstates how complete the figure is. */
+            excluded_currencies: {
+                [key: string]: number;
+            };
+            /** @description An account has no known balance, so every figure here is a FLOOR, not a total */
+            incomplete: boolean;
+            /** @description The date the pipeline computed this */
+            generated: string;
+            /** @description When this content first arrived — how stale the DATA is */
+            first_received_at: string;
+            /** @description When it was last re-posted — how stale the PIPELINE is. A different question. */
+            last_received_at: string;
+        } | null;
         LumpyCategory: {
             name: string;
             budgeted: number;
@@ -28927,6 +29045,80 @@ export interface components {
             is_transfer: boolean;
             approved: boolean;
             needs_category: boolean;
+        };
+        MoneyAggregateIngestResult: {
+            stored: boolean;
+            /** @description This exact content was already held — a re-post, not new data */
+            duplicate: boolean;
+            generated: string;
+            bytes: number;
+            first_received_at: string;
+            last_received_at: string;
+        };
+        MoneyAggregateIngest: {
+            /** @description The date the pipeline ran. The only day-level date permitted, and it describes the RUN, not a payment. */
+            generated: string;
+            months: string[];
+            /** @description Months with complete data. A partial current month must not be averaged into a baseline. */
+            full_months: string[];
+            /** @description Spend per category per month. */
+            categories: {
+                [key: string]: {
+                    [key: string]: number;
+                };
+            };
+            totals: {
+                [key: string]: number;
+            };
+            /** @description Spend per watched payee per month. Monthly totals only — see the note on merchant names in the source. */
+            watchlist: {
+                [key: string]: {
+                    [key: string]: number;
+                };
+            };
+            household: {
+                [key: string]: {
+                    income: number;
+                    spend: number;
+                    net: number;
+                };
+            };
+            baseline: {
+                income: number;
+                spend: number;
+                burn: number;
+                /** @description The months averaged. Explicit, because a sliding window silently moves every headline figure. */
+                months: string[];
+            };
+            runway: {
+                burn_per_month: number;
+                months_gbp: number;
+                personal_only_months_gbp: number;
+                /** @description Real money held but not counted — no agreed conversion rate. */
+                excluded_currencies: {
+                    [key: string]: number;
+                };
+                /** @description An account balance is unknown, so every figure is a FLOOR. */
+                incomplete: boolean;
+            };
+            /** @description Day rate → billable days needed to cover burn. */
+            break_even_days_per_month: {
+                [key: string]: number;
+            };
+            coverage: {
+                cross_account_from: string;
+                monzo_only_before: boolean;
+                basis_note: string;
+            };
+        };
+        MoneyAggregates: {
+            /** @description The date the pipeline computed this */
+            generated: string;
+            /** @description When this content first arrived — how stale the DATA is */
+            first_received_at: string;
+            /** @description When it was last re-posted — how stale the PIPELINE is. A different question. */
+            last_received_at: string;
+            payload: components["schemas"]["MoneyAggregateIngest"];
         };
         DiscordNotifyResponse: {
             /** @description The posted message id, or null if DISCORD_BOT_TOKEN is unset or the post failed — always 200 either way, since this is best-effort */

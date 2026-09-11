@@ -49,15 +49,144 @@
           </span>
         </article>
 
-        <article class="money-card money-card--empty" data-testid="money-actual">
-          <span class="money-card__label">Runway at measured burn</span>
-          <span class="money-card__value">not yet published</span>
-          <span class="money-card__detail">
-            Needs the push path from the local pipeline. The two figures
-            legitimately disagree — the gap is the useful part.
-          </span>
-        </article>
+        @if (actual(); as a) {
+          <article class="money-card" data-testid="money-actual">
+            <span class="money-card__label">Runway <em>{{ actualBasis }}</em></span>
+            <span class="money-card__value">
+              @if (a.runway_months !== null) {
+                {{ a.runway_months | number:'1.0-1' }} months
+              } @else { — }
+            </span>
+            <span class="money-card__detail">
+              on {{ a.monthly_burn | currency:s.budget.currency:'symbol':'1.0-0' }}/mo actually spent,
+              averaged over {{ a.basis_months.join(', ') }}.
+            </span>
+          </article>
+
+          <article class="money-card" [class.money-card--flag]="(a.personal_only_runway_months ?? 99) < 6"
+                   data-testid="money-personal-runway">
+            <span class="money-card__label">Personal-only runway</span>
+            <span class="money-card__value">
+              @if (a.personal_only_runway_months !== null) {
+                {{ a.personal_only_runway_months | number:'1.0-1' }} months
+              } @else { — }
+            </span>
+            <span class="money-card__detail">
+              excluding company money, which cannot be spent without extracting it first.
+            </span>
+          </article>
+        } @else {
+          <article class="money-card money-card--empty" data-testid="money-actual">
+            <span class="money-card__label">Runway <em>{{ actualBasis }}</em></span>
+            <span class="money-card__value">not yet published</span>
+            <span class="money-card__detail">
+              @if (aggregatesMissing()) {
+                Run <code>publish.py --live</code> in hub/scripts/money on the M4.
+              } @else {
+                The measured figures could not be read. The planned figures above are unaffected.
+              }
+            </span>
+          </article>
+        }
       </section>
+
+      @if (planVsActual(); as g) {
+        <section class="money-section" aria-label="Plan against measurement">
+          <h2>Plan against measurement</h2>
+          <p class="money-gap" [class.money-gap--over]="g.overspending" data-testid="money-gap">
+            <strong>{{ g.gap < 0 ? '-' : '' }}{{ (g.gap < 0 ? -g.gap : g.gap) | currency:s.budget.currency:'symbol':'1.0-0' }}/mo</strong>
+            @if (g.overspending) {
+              more than planned —
+              {{ g.measured | currency:s.budget.currency:'symbol':'1.0-0' }} spent against
+              {{ g.planned | currency:s.budget.currency:'symbol':'1.0-0' }} budgeted.
+            } @else {
+              under plan —
+              {{ g.measured | currency:s.budget.currency:'symbol':'1.0-0' }} spent against
+              {{ g.planned | currency:s.budget.currency:'symbol':'1.0-0' }} budgeted.
+            }
+          </p>
+          <p class="money-note">
+            The two are different kinds of number and are not meant to agree. The
+            budget is what the next month is supposed to look like; the burn is
+            what the last three actually did. The gap is the finding, not an error
+            to reconcile away.
+          </p>
+          @for (c of measuredCaveats(); track c) {
+            <p class="money-caveat">{{ c }}</p>
+          }
+        </section>
+      }
+
+      @if (aggregates(); as agg) {
+        <section class="money-section" aria-label="Where the money goes">
+          <h2>Where it goes</h2>
+          <p class="money-note">
+            Measured from bank exports, averaged over the last
+            {{ recentWindow().length }} complete months ({{ recentWindow()[0] }} to
+            {{ recentWindow()[recentWindow().length - 1] }}). Published
+            {{ agg.generated }}.
+          </p>
+          <table class="money-table" data-testid="money-categories">
+            <caption class="visually-hidden">Average monthly spend by category</caption>
+            <thead>
+              <tr><th scope="col">Category</th><th scope="col">Per month</th><th scope="col">Latest month</th></tr>
+            </thead>
+            <tbody>
+              @for (row of categorySpend(); track row.label) {
+                <tr>
+                  <th scope="row">{{ row.label }}</th>
+                  <td>{{ row.perMonth | currency:s.budget.currency:'symbol':'1.0-0' }}</td>
+                  <td>{{ row.latest === null ? '—' : (row.latest | currency:s.budget.currency:'symbol':'1.0-0') }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </section>
+
+        @if (watchlistSpend().length) {
+          <section class="money-section" aria-label="Watched payees">
+            <h2>Watched payees</h2>
+            <p class="money-note">
+              Monthly totals only. A payee's name is here on purpose — a dated
+              row never is, and never leaves the M4.
+            </p>
+            <table class="money-table" data-testid="money-watchlist">
+              <caption class="visually-hidden">Average monthly spend by watched payee</caption>
+              <thead>
+                <tr><th scope="col">Payee</th><th scope="col">Per month</th><th scope="col">Latest month</th></tr>
+              </thead>
+              <tbody>
+                @for (row of watchlistSpend(); track row.label) {
+                  <tr>
+                    <th scope="row">{{ row.label }}</th>
+                    <td>{{ row.perMonth | currency:s.budget.currency:'symbol':'1.0-0' }}</td>
+                    <td>{{ row.latest === null ? '—' : (row.latest | currency:s.budget.currency:'symbol':'1.0-0') }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </section>
+        }
+
+        @if (breakEven().length) {
+          <section class="money-section" aria-label="Break-even">
+            <h2>Break-even</h2>
+            <p class="money-note">
+              Billable days a month needed to cover measured burn. The only
+              figure here about earning rather than spending.
+            </p>
+            <div class="money-blocks">
+              @for (b of breakEven(); track b.rate) {
+                <article class="money-card">
+                  <span class="money-card__label">{{ b.rate | currency:s.budget.currency:'symbol':'1.0-0' }}/day</span>
+                  <span class="money-card__value">{{ b.days | number:'1.0-1' }}</span>
+                  <span class="money-card__detail">days per month</span>
+                </article>
+              }
+            </div>
+          </section>
+        }
+      }
 
       <section class="money-section" aria-label="Needs attention">
         <h2>Needs attention</h2>
