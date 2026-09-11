@@ -12,6 +12,7 @@
     "e2e:headed": "playwright test --headed",
     "lint": "npm run check:forms && eslint 'src/app/**/*.ts'",
     "check:forms": "tsx scripts/check-form-submit.ts",
+    "check": "npm run lint && ng test --no-watch && npm run build",
     "coverage:update": "ng test --no-watch --coverage && node scripts/coverage-report.mjs",
     "docs:staleness": "tsx scripts/doc-staleness.ts",
     "deploy": "bash deploy.sh",

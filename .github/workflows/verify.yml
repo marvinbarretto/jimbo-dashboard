@@ -1,0 +1,56 @@
+name: Verify
+
+# Reusable on purpose. `deploy.yml` calls this via `workflow_call` and its
+# deploy job `needs` it, so shipping to production cannot happen without the
+# gate passing — the two can never drift because there is only one definition.
+#
+# Runs on master pushes for now so the gate is VISIBLE while it is still red —
+# `npm run lint` currently fails on 18 pre-existing VAULT-COMMANDS-001
+# violations across 11 files that were never added to the known-violations
+# ratchet in eslint.config.js. They accumulated precisely because nothing ran
+# lint in CI, so the ratchet had nothing enforcing it.
+#
+# Once those are resolved, drop the `push` trigger and have deploy.yml call
+# this via `workflow_call` with `needs: verify` — otherwise the gate runs twice
+# per master commit. Until then deploy stays ungated, because a gate that
+# blocks every deploy on day one gets deleted rather than fixed.
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+  workflow_call: {}
+
+jobs:
+  verify:
+    name: Lint, Test, and Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # `npm run check` — lint (eslint + the form-submit checker), the unit
+      # suite, then the production build. Kept as one script so an agent
+      # running the gate locally before landing runs exactly what CI runs.
+      #
+      # E2E is deliberately absent. The specs are hermetic (seed mode, API
+      # mocks, a clock frozen at 2026-04-25) so they COULD run here, but they
+      # are not currently green, and a gate that is expected to be red is a
+      # gate people learn to click past. Add them as a separate job once they
+      # pass reliably.
+      - name: Run the verification gate
+        run: npm run check
