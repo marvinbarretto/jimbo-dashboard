@@ -62,3 +62,51 @@
   opacity: 0.6;
   font-variant-numeric: tabular-nums;
 }
+
+// Verdict picker. A bare select rather than a badge-that-becomes-a-control:
+// the row is dense and a hover-to-reveal affordance in a table this wide is a
+// good way to never find the control again.
+.status-edit {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+
+  &__select {
+    font: inherit;
+    font-size: 0.8125rem;
+    padding: 0.1rem 0.25rem;
+    border: 1px solid var(--border, #d0d0d0);
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+
+    &:focus-visible {
+      outline: 2px solid var(--focus, #4a4ae0);
+      outline-offset: 1px;
+    }
+  }
+
+  &__pending {
+    font-size: 0.75rem;
+    opacity: 0.6;
+  }
+
+  // Loud on purpose. The page is the record of what was decided, so a verdict
+  // that failed to save has to be more visible than one that saved.
+  &__error {
+    font-size: 0.75rem;
+    color: var(--danger, #b3261e);
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

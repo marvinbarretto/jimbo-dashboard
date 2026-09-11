@@ -13,7 +13,7 @@ import { UiPageHeader } from '@shared/components/ui-page-header/ui-page-header';
 import { UiProse } from '@shared/components/ui-prose/ui-prose';
 import { UiStack } from '@shared/components/ui-stack/ui-stack';
 import { SkillsService, type SkillUsage, type SkillEconomics } from '../../data-access/skills.service';
-import { skillNamespace, skillLocalName, type Skill } from '@domain/skills';
+import { skillNamespace, skillLocalName, type Skill, type SkillMetadata } from '@domain/skills';
 
 @Component({
   selector: 'app-skills-list',
@@ -83,6 +83,24 @@ export class SkillsList {
     viewChild.required<TemplateRef<{ $implicit: CellContext<Skill, number> }>>('modelCell');
 
   readonly economicsDays = this.service.economicsDays;
+  readonly pendingStatus = this.service.pendingStatus;
+  readonly statusError = this.service.statusError;
+
+  /**
+   * The verdict vocabulary, and the only one on this page.
+   *
+   * Deliberately `metadata.status` rather than a separate keep/watch/cut
+   * rating: that vocabulary already exists for hermes jobs in
+   * `agent_job_ratings`, and giving skills a second one would let a skill read
+   * `keep` in the registry and `cut` in the database with no rule for which
+   * wins. One field, one answer, stored beside the skill it judges.
+   */
+  readonly statuses: readonly NonNullable<SkillMetadata['status']>[] =
+    ['keep', 'refine', 'wire-ambient', 'shelve', 'infra'];
+
+  setStatus(id: string, value: string): void {
+    this.service.setStatus(id, (value || undefined) as SkillMetadata['status']);
+  }
   readonly totalCost = this.service.totalCost;
 
   /** Windows offered above the table. 7 catches a skill that got expensive this week. */

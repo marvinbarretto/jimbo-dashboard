@@ -91,12 +91,31 @@
     }
   </ng-template>
 
+  <!-- Editable in place, because the decision is made while looking at the cost
+       beside it and a verdict recorded three clicks later is a verdict lost.
+       Saving pushes a commit to hub, so the row says when it is still in flight
+       and says so out loud when it failed — not disabled, per the errors-over-
+       disabled-states convention. -->
   <ng-template #statusCell let-context>
-    @if (context.getValue(); as status) {
-      <app-ui-badge [tone]="statusTone(status)">{{ status }}</app-ui-badge>
-    } @else {
-      <span class="hint">—</span>
-    }
+    <label class="status-edit">
+      <span class="visually-hidden">Verdict for {{ context.row.original.id }}</span>
+      <select class="status-edit__select"
+              [value]="context.getValue() ?? ''"
+              [attr.data-status]="context.getValue() ?? 'none'"
+              [attr.aria-busy]="pendingStatus().has(context.row.original.id)"
+              (change)="setStatus(context.row.original.id, $any($event.target).value)">
+        <option value="">—</option>
+        @for (s of statuses; track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+      @if (pendingStatus().has(context.row.original.id)) {
+        <span class="status-edit__pending" role="status">saving…</span>
+      }
+      @if (statusError().get(context.row.original.id); as err) {
+        <span class="status-edit__error" role="alert">{{ err }}</span>
+      }
+    </label>
   </ng-template>
 
   <ng-template #descriptionCell let-context>

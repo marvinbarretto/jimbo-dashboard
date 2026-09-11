@@ -73,6 +73,8 @@ export class SkillsService {
   private readonly _usage = signal<Map<string, SkillUsage>>(new Map());
   private readonly _economics = signal<Map<string, SkillEconomics>>(new Map());
   private readonly _economicsDays = signal(30);
+  private readonly _pendingStatus = signal<ReadonlySet<string>>(new Set());
+  private readonly _statusError = signal<ReadonlyMap<string, string>>(new Map());
 
   /** Dispatch outcomes keyed by skill id. Empty map until loaded, or on failure. */
   readonly usage = this._usage.asReadonly();
@@ -86,6 +88,12 @@ export class SkillsService {
     const priced = [...this._economics().values()].filter(e => e.cost_usd !== null);
     return priced.length ? priced.reduce((sum, e) => sum + (e.cost_usd ?? 0), 0) : null;
   });
+
+  /** Skill ids with a verdict write in flight — the row shows it is not settled yet. */
+  readonly pendingStatus = this._pendingStatus.asReadonly();
+
+  /** Last failed verdict write, keyed by skill id. Cleared when that row retries. */
+  readonly statusError = this._statusError.asReadonly();
 
   readonly skills = this._skills.asReadonly();
   readonly activeSkills = computed(() =>
@@ -132,6 +140,53 @@ export class SkillsService {
         next: r => this._economics.set(new Map(r.items.map(e => [e.skill_id, e]))),
         error: () => this._economics.set(new Map()),
       });
+  }
+
+  /**
+   * Set a skill's lifecycle verdict.
+   *
+   * Writes `metadata.status` through the ordinary skill PATCH, which merges
+   * into the existing metadata server-side (services/skills.ts:431) and then
+   * commits and pushes SKILL.md to hub. Slow and auditable, on purpose: this
+   * is the durable answer to "what did we decide about this skill", and it
+   * belongs in the same file as the skill rather than in a second table with a
+   * second vocabulary that could disagree with it.
+   *
+   * Optimistic, then reconciled: the row moves immediately and is replaced
+   * with the server's authoritative skill on success. On failure it goes back
+   * to what it was and the error is surfaced against that row — a verdict that
+   * silently failed to save is worse than one that never moved, because the
+   * page is the record.
+   */
+  setStatus(id: string, status: SkillMetadata['status']): void {
+    const before = this._skills().find(s => s.id === id);
+    if (!before || before.metadata.status === status) return;
+
+    this._statusError.update(m => { const next = new Map(m); next.delete(id); return next; });
+    this._pendingStatus.update(set => new Set(set).add(id));
+    this._skills.update(ss => ss.map(s =>
+      s.id === id ? { ...s, metadata: { ...s.metadata, status } } : s));
+
+    this.update(id, { metadata: { status } }).subscribe({
+      // `update` already replaces the row with the server's response.
+      next: () => this.clearPending(id),
+      error: (err: { error?: { error?: string }; message?: string }) => {
+        this._skills.update(ss => ss.map(s => s.id === id ? before : s));
+        this._statusError.update(m => new Map(m).set(
+          id,
+          err?.error?.error ?? err?.message ?? 'could not save',
+        ));
+        this.clearPending(id);
+      },
+    });
+  }
+
+  private clearPending(id: string): void {
+    this._pendingStatus.update(set => {
+      const next = new Set(set);
+      next.delete(id);
+      return next;
+    });
   }
 
   reload(): void {
