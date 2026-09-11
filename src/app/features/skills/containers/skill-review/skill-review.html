@@ -1,0 +1,292 @@
+<app-ui-page width="wide">
+<app-ui-stack class="review" gap="lg">
+  <app-ui-page-header>
+    <h1 uiPageHeaderTitle>Skill review</h1>
+    <p uiPageHeaderHint>
+      What each thing costs, what it actually ran on, and whether its output was wanted —
+      with the verdict next to the evidence. The registry itself is on
+      <a routerLink="/skills">Skills</a>; per-tick outcome detail is on
+      <a routerLink="/hermes">Hermes</a>.
+    </p>
+  </app-ui-page-header>
+
+  <app-ui-cluster class="review__controls" gap="sm">
+    <span id="review-window" class="hint">Window</span>
+    <div role="group" aria-labelledby="review-window">
+      @for (d of windows; track d) {
+        <button type="button"
+                class="win"
+                [class.win--on]="days() === d"
+                [attr.aria-pressed]="days() === d"
+                (click)="setWindow(d)">{{ d }}d</button>
+      }
+    </div>
+  </app-ui-cluster>
+
+  <!-- ── Boris dispatch ─────────────────────────────────────────── -->
+  <section class="review__section">
+    <h2 class="review__h2">Boris dispatch</h2>
+    @if (!registryError()) {
+      <p class="review__lede">
+        @if (totalCost(); as total) {
+          <strong>&pound;{{ total | number: '1.2-2' }}</strong> across {{ ranked().length }} skills
+          in {{ days() }} days. This is the real money — the hermes fleet below is flat-billed.
+        } @else {
+          Nothing in this window carried a price. That is <em>unpriced</em>, not free.
+        }
+      </p>
+    }
+
+    @if (isLoading()) {
+      <p class="hint">Loading…</p>
+    } @else if (registryError(); as err) {
+      <!-- Never fall through to the empty-table branch here. A failed registry
+           load and a genuinely idle window look identical once rendered, and
+           only one of them is a fact about the fleet. -->
+      <p class="err" role="alert" data-testid="review-registry-error">
+        The skill registry could not be loaded, so this section is not showing what ran —
+        it is showing nothing at all. {{ err }}
+      </p>
+    } @else if (!ranked().length) {
+      <p class="hint">No skill was dispatched in this window.</p>
+    } @else {
+      <div class="tablewrap">
+        <table class="rev">
+          <caption class="visually-hidden">Dispatch skills ranked by spend</caption>
+          <thead>
+            <tr>
+              <th scope="col">Skill</th>
+              <th scope="col" class="num">Cost</th>
+              <th scope="col" class="num">Share</th>
+              <th scope="col" class="num">Runs</th>
+              <th scope="col" class="num">Per run</th>
+              <th scope="col" class="num">Declined</th>
+              <th scope="col">Ran on</th>
+              <th scope="col">Verdict</th>
+              <th scope="col" class="num">Last</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of ranked(); track r.id) {
+              <tr [attr.data-testid]="'review-row'" [attr.data-skill]="r.id">
+                <th scope="row" class="skill">
+                  @if (r.unregistered) {
+                    {{ r.name }}
+                  } @else {
+                    <a [routerLink]="skillLink(r.id)">{{ r.name }}</a>
+                  }
+                  @if (r.namespace) { <span class="ns">{{ r.namespace }}</span> }
+                  @if (r.unregistered) {
+                    <span class="desc">Runs from <code>hub/hermes/skills</code>, not in the
+                      registry — no description and no verdict to set here.</span>
+                  } @else {
+                    <span class="desc">{{ r.description }}</span>
+                  }
+                </th>
+
+                <!-- Unpriced is not free, and neither is a dash. Three states. -->
+                <td class="num">
+                  @if (r.cost !== null) {
+                    &pound;{{ r.cost | number: '1.2-2' }}
+                  } @else {
+                    <span class="hint" title="Ran, but no turn carried a priced model">unpriced</span>
+                  }
+                </td>
+                <td class="num muted">
+                  @if (r.sharePct !== null) { {{ r.sharePct | number: '1.0-1' }}% } @else { — }
+                </td>
+                <td class="num">{{ r.dispatches }}</td>
+                <td class="num muted">
+                  @if (r.costPerRun !== null) { &pound;{{ r.costPerRun | number: '1.2-2' }} } @else { — }
+                </td>
+                <td class="num">
+                  @if (r.declinedPct !== null && r.declinedPct > 0) {
+                    <app-ui-badge tone="warning" [subtle]="true"
+                      title="Rejected or never approved, as a share of dispatches">
+                      {{ r.declinedPct }}%
+                    </app-ui-badge>
+                  } @else { <span class="muted">—</span> }
+                </td>
+
+                <!-- From dispatch_queue.completed_model, never the declared tier:
+                     27 of 34 skills declare none and take the worker's haiku
+                     default, so frontmatter shows nothing useful here. -->
+                <td>
+                  @if (r.models.length) {
+                    <app-ui-cluster gap="xs">
+                      @for (m of r.models; track m) {
+                        <app-ui-badge tone="neutral" [subtle]="true">{{ m }}</app-ui-badge>
+                      }
+                    </app-ui-cluster>
+                    @if (r.mixedModels) {
+                      <span class="mixed" title="More than one model family in this window — check this is intended">mixed</span>
+                    }
+                  } @else { <span class="muted">—</span> }
+                </td>
+
+                <td>
+                  @if (r.unregistered) {
+                    <span class="hint" title="No SKILL.md in the registry to write a verdict to">n/a</span>
+                  } @else {
+                    <label class="verdict">
+                      <span class="visually-hidden">Verdict for {{ r.id }}</span>
+                      <select [value]="r.status ?? ''"
+                              [attr.aria-busy]="pendingStatus().has(r.id)"
+                              (change)="setStatus(r.id, $any($event.target).value)">
+                        <option value="">—</option>
+                        @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
+                      </select>
+                      @if (pendingStatus().has(r.id)) { <span class="hint">saving…</span> }
+                      @if (statusError().get(r.id); as err) {
+                        <span class="err" role="alert">{{ err }}</span>
+                      }
+                    </label>
+                  }
+                </td>
+                <td class="num muted">{{ ago(r.lastRun) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Never dispatched: collapsed, never rendered as zeros. Most of these are
+         slash commands run by hand, which dispatch_queue cannot see — so the
+         zero is unmeasured, not evidence. -->
+    @if (neverRan().length) {
+      <button type="button" class="disclose" [attr.aria-expanded]="showNeverRun()" (click)="toggleNeverRun()">
+        {{ showNeverRun() ? '▾' : '▸' }} {{ neverRan().length }} skills not dispatched in this window
+      </button>
+      @if (showNeverRun()) {
+        <p class="review__lede hint">
+          Most are invoked by hand as slash commands, which <code>dispatch_queue</code> cannot
+          observe. A zero here is an unmeasured zero and is not grounds to cut anything —
+          the prior review's <strong>potential</strong> and verdict are the evidence that exists.
+        </p>
+        <div class="tablewrap">
+          <table class="rev rev--quiet">
+            <caption class="visually-hidden">Skills with no dispatch in this window</caption>
+            <thead>
+              <tr>
+                <th scope="col">Skill</th>
+                <th scope="col" class="num">Potential</th>
+                <th scope="col">Verdict</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of neverRan(); track r.id) {
+                <tr [attr.data-testid]="'review-row-idle'" [attr.data-skill]="r.id">
+                  <th scope="row" class="skill">
+                    <a [routerLink]="skillLink(r.id)">{{ r.name }}</a>
+                    @if (r.namespace) { <span class="ns">{{ r.namespace }}</span> }
+                    <span class="desc">{{ r.description }}</span>
+                  </th>
+                  <td class="num muted">
+                    @if (r.potential != null) { {{ r.potential }}/5 } @else { — }
+                  </td>
+                  <td>
+                    <label class="verdict">
+                      <span class="visually-hidden">Verdict for {{ r.id }}</span>
+                      <select [value]="r.status ?? ''"
+                              [attr.aria-busy]="pendingStatus().has(r.id)"
+                              (change)="setStatus(r.id, $any($event.target).value)">
+                        <option value="">—</option>
+                        @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
+                      </select>
+                      @if (pendingStatus().has(r.id)) { <span class="hint">saving…</span> }
+                      @if (statusError().get(r.id); as err) {
+                        <span class="err" role="alert">{{ err }}</span>
+                      }
+                    </label>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  </section>
+
+  <!-- ── Hermes cron ────────────────────────────────────────────── -->
+  <section class="review__section">
+    <h2 class="review__h2">Hermes cron</h2>
+    <p class="review__lede">
+      Flat-billed, so cost is &pound;0 by definition and <strong>tokens</strong> are the scarce
+      resource. {{ totalTokens() | number }} tokens across {{ jobs().length }} jobs in
+      {{ days() }} days. Outcome detail per tick is on <a routerLink="/hermes">Hermes</a>.
+    </p>
+
+    @if (!jobs().length) {
+      <p class="hint">No job fired in this window, or the run data could not be loaded.</p>
+    } @else {
+      <div class="tablewrap">
+        <table class="rev">
+          <caption class="visually-hidden">Hermes cron jobs ranked by tokens</caption>
+          <thead>
+            <tr>
+              <th scope="col">Job</th>
+              <th scope="col">On</th>
+              <th scope="col" class="num">Fires</th>
+              <th scope="col" class="num">Silent</th>
+              <th scope="col" class="num">Tokens</th>
+              <th scope="col">Answered</th>
+              <th scope="col">Verdict</th>
+              <th scope="col" class="num">Last</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (j of jobs(); track j.job_name) {
+              <tr [attr.data-testid]="'review-row-job'" [attr.data-job]="j.job_name">
+                <th scope="row" class="skill">{{ j.job_name }}</th>
+                <td>
+                  @if (j.enabled === null) {
+                    <span class="hint" title="Not in the hermes job list">n/a</span>
+                  } @else {
+                    <app-ui-badge [tone]="j.enabled ? 'success' : 'neutral'" [subtle]="true">
+                      {{ j.enabled ? 'on' : 'off' }}
+                    </app-ui-badge>
+                  }
+                </td>
+                <td class="num">{{ j.fires }}</td>
+                <td class="num muted">
+                  @if (j.silentPct !== null) { {{ j.silentPct }}% } @else { — }
+                </td>
+                <td class="num">
+                  @if (j.tokens !== null) { {{ j.tokens | number }} } @else { <span class="muted">—</span> }
+                </td>
+
+                <!-- Never a bare 0%. A job that asked nothing has no rate; a job
+                     whose channel we cannot hear has one we cannot know. -->
+                <td [class.unobs]="j.asked > 0 && !j.answers_attributable">
+                  {{ askLabel(j) }}
+                </td>
+
+                <td>
+                  <label class="verdict">
+                    <span class="visually-hidden">Verdict for {{ j.job_name }}</span>
+                    <select [value]="j.rating ?? ''"
+                            (change)="setRating(j.job_name, $any($event.target).value)">
+                      <option value="">—</option>
+                      @for (r of ratings; track r) { <option [value]="r">{{ r }}</option> }
+                    </select>
+                  </label>
+                </td>
+                <td class="num muted">{{ ago(j.last_run_at) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="review__foot hint">
+        <strong>unobservable</strong> means the job delivers where a reply cannot be seen —
+        it is not a 0% answer rate. Four jobs send on a second Telegram bot whose inbound never
+        reaches this API (ADR-0037). Two verdict vocabularies are in play here on purpose:
+        skills carry <code>keep / refine / wire-ambient / shelve / infra</code>, jobs carry
+        <code>keep / watch / cut</code>, and they are not merged (ADR-0039).
+      </p>
+    }
+  </section>
+</app-ui-stack>
+</app-ui-page>

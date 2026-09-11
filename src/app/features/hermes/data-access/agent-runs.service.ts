@@ -66,6 +66,13 @@ export interface JobEffectivenessRow {
   answered: number;
   last_response_at: string | null;
   response_rate: number | null;
+  /**
+   * False when the job delivers where we cannot observe a reply, so a
+   * non-response and an unseen response are indistinguishable. See ADR-0037 —
+   * four jobs deliver on a second Telegram bot whose inbound never reaches the
+   * API, and read `response_rate: null` rather than a confident 0%.
+   */
+  answers_attributable: boolean;
   rating: JobRatingValue | null;
   rating_note: string | null;
 }
