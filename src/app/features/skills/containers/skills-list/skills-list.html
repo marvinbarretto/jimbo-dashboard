@@ -123,7 +123,7 @@
       @if (e.cost_usd === null) {
         <span class="hint" title="Ran, but no turn carried a priced model">unpriced</span>
       } @else {
-        <app-ui-badge [tone]="costTone(context.row.original.id)"
+        <app-ui-badge [tone]="costTone"
                       [subtle]="true"
                       [title]="e.dispatches + ' dispatches, ' + e.turns + ' billed turns'
                                + (costPerRun(context.row.original.id) !== null

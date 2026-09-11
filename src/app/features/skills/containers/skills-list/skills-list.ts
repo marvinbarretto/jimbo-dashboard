@@ -137,14 +137,17 @@ export class SkillsList {
     });
   }
 
-  /** Dearer than a pound a run is worth a second look, whatever the skill. */
-  costTone(id: string): 'danger' | 'warning' | 'neutral' {
-    const per = this.costPerRun(id);
-    if (per === null) return 'neutral';
-    if (per >= 1) return 'danger';
-    if (per >= 0.25) return 'warning';
-    return 'neutral';
-  }
+  /**
+   * Cost badges carry no judgement tone.
+   *
+   * The obvious thing is to redden anything over some cost-per-run, but every
+   * threshold I could pick would be invented rather than derived: a £2 briefing
+   * may be the best value here and a £0.05 groom pass that never refuses
+   * anything is the actual waste. Colour would dress that guess as a finding.
+   * Sorting by spend and showing share-of-spend already point at the rows worth
+   * opening, and they do it with measurements.
+   */
+  readonly costTone = 'neutral' as const;
 
   /** Dispatch outcomes for a skill, or undefined if it has never been dispatched. */
   usageFor(id: string): SkillUsage | undefined {
