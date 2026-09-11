@@ -1,0 +1,142 @@
+.money-page__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.money-page__hint {
+  color: var(--color-text-muted, #666);
+  font-size: 0.875rem;
+  margin-top: 1rem;
+}
+
+.money-page__refresh {
+  font: inherit;
+  font-size: 0.8125rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.5; cursor: default; }
+  &:not(:disabled):hover { border-color: var(--color-text-muted, #666); }
+}
+
+.money-alert {
+  padding: 0.9rem 1.1rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+
+  h2 { font-size: 0.875rem; margin: 0 0 0.5rem; }
+  ul { margin: 0; padding-left: 1.1rem; }
+  li + li { margin-top: 0.35rem; }
+}
+
+// Drift and errors are the one thing on this page that must not be missed:
+// every number below them is suspect while they are showing.
+.money-alert--error {
+  border: 1px solid var(--color-danger, #dc2626);
+  color: var(--color-danger, #dc2626);
+}
+
+.money-alert--warn {
+  border: 1px solid var(--color-warning, #d97706);
+  color: var(--color-warning, #d97706);
+}
+
+.money-blocks {
+  display: grid;
+  // Cards stay readable rather than locking to a column count, so the block
+  // reflows on a narrow window instead of squeezing the currency figures.
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+.money-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 6px;
+}
+
+.money-card__label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted, #666);
+
+  // The basis qualifier ("at planned spend") is part of the label, never
+  // decoration — a runway figure without it is a defect. See ADR-0036.
+  em { font-style: normal; text-transform: none; letter-spacing: 0; }
+}
+
+.money-card__value {
+  font-size: 1.6rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.money-card__detail {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted, #666);
+}
+
+.money-card--primary .money-card__value { font-size: 2rem; }
+
+.money-card--flag { border-color: var(--color-warning, #d97706); }
+
+// The unpublished `actual` half is shown deliberately rather than omitted, so
+// the seam is visible on the page the day the pipeline fills it.
+.money-card--empty {
+  border-style: dashed;
+
+  .money-card__value {
+    font-size: 1rem;
+    color: var(--color-text-muted, #666);
+  }
+}
+
+.money-section {
+  margin-top: 2rem;
+
+  h2 { font-size: 1rem; margin: 0 0 0.75rem; }
+}
+
+.money-assumptions {
+  display: grid;
+  grid-template-columns: minmax(10rem, max-content) 1fr;
+  gap: 0.5rem 1.25rem;
+  margin: 0;
+  font-size: 0.875rem;
+
+  dt { color: var(--color-text-muted, #666); }
+  dd { margin: 0; }
+}
+
+.money-chip {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  margin: 0 0.3rem 0.3rem 0;
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 999px;
+  font-size: 0.75rem;
+
+  em { font-style: normal; color: var(--color-text-muted, #666); }
+}
+
+.money-chip--warn {
+  border-color: var(--color-warning, #d97706);
+  color: var(--color-warning, #d97706);
+}
+
+@media (max-width: 40rem) {
+  .money-assumptions { grid-template-columns: 1fr; gap: 0.2rem; }
+  .money-assumptions dt { margin-top: 0.6rem; }
+}

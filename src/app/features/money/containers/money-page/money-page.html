@@ -1,0 +1,128 @@
+<app-ui-page width="standard">
+  <div class="money-page" data-testid="money-page">
+    <header class="money-page__header">
+      <h1>Money</h1>
+      <button type="button" class="money-page__refresh" data-testid="money-refresh"
+              [disabled]="isLoading()" (click)="refresh()">
+        Refresh from YNAB
+      </button>
+    </header>
+
+    @if (error(); as e) {
+      <p class="money-alert money-alert--error" role="alert" data-testid="money-error">{{ e }}</p>
+    }
+
+    @if (summary(); as s) {
+      <!-- Drift first: if an assumption broke, every number below it is suspect. -->
+      @if (driftWarnings().length) {
+        <section class="money-alert money-alert--warn" data-testid="money-drift">
+          <h2>Check these before trusting the numbers</h2>
+          <ul>
+            @for (w of driftWarnings(); track w) { <li>{{ w }}</li> }
+          </ul>
+        </section>
+      }
+
+      <section class="money-blocks" aria-label="Position">
+        <article class="money-card money-card--primary">
+          <span class="money-card__label">Personal position</span>
+          <span class="money-card__value" data-testid="money-personal">
+            {{ s.position.personal | currency:s.budget.currency:'symbol':'1.0-0' }}
+          </span>
+          <span class="money-card__detail">
+            {{ s.position.total_cash | currency:s.budget.currency:'symbol':'1.0-0' }} on budget,
+            less {{ s.position.company_fenced | currency:s.budget.currency:'symbol':'1.0-0' }} fenced
+            @if (s.assumptions.company_group_matched) { in {{ s.assumptions.company_group_matched }} }
+          </span>
+        </article>
+
+        <article class="money-card">
+          <span class="money-card__label">Runway <em>{{ planBasis }}</em></span>
+          <span class="money-card__value" data-testid="money-runway">
+            @if (s.plan.runway_months !== null) {
+              {{ s.plan.runway_months | number:'1.0-1' }} months
+            } @else { — }
+          </span>
+          <span class="money-card__detail">
+            on {{ s.plan.monthly_spend | currency:s.budget.currency:'symbol':'1.0-0' }}/mo budgeted.
+            This is intent, not measured spend.
+          </span>
+        </article>
+
+        <article class="money-card money-card--empty" data-testid="money-actual">
+          <span class="money-card__label">Runway at measured burn</span>
+          <span class="money-card__value">not yet published</span>
+          <span class="money-card__detail">
+            Needs the push path from the local pipeline. The two figures
+            legitimately disagree — the gap is the useful part.
+          </span>
+        </article>
+      </section>
+
+      <section class="money-section" aria-label="Needs attention">
+        <h2>Needs attention</h2>
+        <div class="money-blocks">
+          <article class="money-card" [class.money-card--flag]="s.attention.uncategorised > 0">
+            <span class="money-card__label">Uncategorised</span>
+            <span class="money-card__value" data-testid="money-uncategorised">{{ s.attention.uncategorised }}</span>
+            <span class="money-card__detail">transactions since {{ s.attention.since }}</span>
+          </article>
+          <article class="money-card" [class.money-card--flag]="s.attention.unapproved > 0">
+            <span class="money-card__label">Unapproved</span>
+            <span class="money-card__value">{{ s.attention.unapproved }}</span>
+            <span class="money-card__detail">imported, not yet reviewed</span>
+          </article>
+          <article class="money-card">
+            <span class="money-card__label">Age of money</span>
+            <span class="money-card__value">{{ s.month.age_of_money ?? '—' }}</span>
+            <span class="money-card__detail">days</span>
+          </article>
+          <article class="money-card" [class.money-card--flag]="s.month.to_be_budgeted !== 0">
+            <span class="money-card__label">Ready to assign</span>
+            <span class="money-card__value">
+              {{ s.month.to_be_budgeted | currency:s.budget.currency:'symbol':'1.0-0' }}
+            </span>
+            <span class="money-card__detail">{{ s.month.month }}</span>
+          </article>
+        </div>
+      </section>
+
+      <!-- The trust surface: the rules these numbers were computed under. -->
+      <section class="money-section" aria-label="Assumptions">
+        <h2>Computed under these assumptions</h2>
+        <dl class="money-assumptions" data-testid="money-assumptions">
+          <dt>Company money fenced by</dt>
+          <dd>{{ s.assumptions.company_group_matched ?? 'nothing matched' }}</dd>
+
+          <dt>Planned spend counts</dt>
+          <dd>{{ s.assumptions.spend_groups_counted.join(', ') || '—' }}</dd>
+
+          <dt>Excluded as lumpy</dt>
+          <dd>
+            @for (l of s.assumptions.lumpy_excluded; track l.name) {
+              <span class="money-chip" [class.money-chip--warn]="l.detected_by === 'name'">
+                {{ l.name }} <em>{{ l.detected_by }}</em>
+              </span>
+            } @empty { — }
+          </dd>
+
+          <dt>Tracking accounts excluded</dt>
+          <dd>{{ s.assumptions.tracking_accounts_excluded.join(', ') || 'none' }}</dd>
+        </dl>
+        <p class="money-page__hint">
+          Lumpy categories are top-ups toward a one-off, so they are kept out of the
+          runway divisor. <em>goal</em> means YNAB says so; <em>name</em> is a fallback
+          that should never appear.
+        </p>
+      </section>
+
+      <p class="money-page__hint" data-testid="money-freshness">
+        {{ s.budget.name }} · pulled {{ s.pulled_at | date:'short' }}
+        @if (s.cached) { (cached) }
+        · pending transactions are invisible to the YNAB API, so today's spend may be understated.
+      </p>
+    } @else if (!error()) {
+      <p data-testid="money-loading">Loading…</p>
+    }
+  </div>
+</app-ui-page>

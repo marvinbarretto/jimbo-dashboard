@@ -161,6 +161,11 @@ const desktopRoutes: Routes = [
   },
 
   {
+    path: 'money',
+    title: 'Money',
+    loadComponent: () => import('./features/money/containers/money-page/money-page').then(m => m.MoneyPage),
+  },
+  {
     path: 'coverage',
     title: 'Coverage',
     loadComponent: () => import('./features/coverage/coverage-page/coverage-page').then(m => m.CoveragePage),

@@ -38,6 +38,7 @@ export const navSections: readonly NavSection[] = [
       { href: '/nutrition', label: 'Nutrition' },
       { href: '/exercise', label: 'Exercise' },
       { href: '/checkins', label: 'Check-ins' },
+      { href: '/money', label: 'Money' },
       { href: '/pomo', label: 'Pomo' },
       { href: '/picture', label: 'Picture' },
     ],

@@ -1088,6 +1088,8 @@ export interface paths {
          * @description The deterministic half of a report. Counts, fleet rollups, per-project movement and carried debt are computed in SQL here; the writer supplies only prose (headline, narrative, arcs) and PUTs the merged payload back. A model asked to total a column will produce a plausible total, so it is never asked to.
          *
          *     `sessions` and `commits` are raw material for the prose — they are not report sections and should not be echoed back verbatim. Note `sessions[].project_id_guess`: a hint from the cwd prefix map that mislabels routinely, so attribute from the narrative text instead.
+         *
+         *     `self_report` is the watchdog checkpoint answers, and it is the only material here that a sensor did not produce. Everything else says what happened; this says why, and it outranks any inference drawn from telemetry. Weave it into the narrative — do not quote it back as a section, do not average it, do not score it. Three hard rules: quote `answer_text` verbatim if you quote it at all, because the phrasing is the evidence; `answered: false` means he was asked and did not answer, which is a fact about the day and never a blank to fill in from the data next to it; and never invent a number he did not give — ratings were removed from these questions on 2026-09-06 precisely because asking for one stopped the answer arriving. If the telemetry and his account disagree, report both and say they disagree.
          */
         get: {
             parameters: {
@@ -11605,10 +11607,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Per-stage queue depth — what is waiting vs what is eligible */
+        /** Per-stage queue depth — what is waiting, what is eligible, and what runs next */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description Rows of next_up per stage (0–50, default 10). 0 omits the preview. */
+                    next?: number | null;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -11760,7 +11765,7 @@ export interface paths {
                 query?: {
                     note_id?: string;
                     actor?: string;
-                    action?: "note_created" | "assigned" | "unassigned" | "priority_changed" | "priority_scored" | "actionability_changed" | "grooming_status_changed" | "grooming_override_changed" | "status_changed" | "dispatch_started" | "submitted_analysis" | "submitted_decomposition" | "submitted_deepread" | "question_raised" | "question_answered" | "thread_message_posted" | "reassigned" | "feedback_reject" | "feedback_archive" | "feedback_accept" | "commission_completed" | "recon_completed" | "review_approved" | "review_done_unreviewed" | "review_archived" | "review_sent_back" | "commit_linked";
+                    action?: "note_created" | "note_recurred" | "assigned" | "unassigned" | "priority_changed" | "priority_scored" | "actionability_changed" | "grooming_status_changed" | "grooming_override_changed" | "status_changed" | "dispatch_started" | "submitted_analysis" | "submitted_decomposition" | "submitted_deepread" | "question_raised" | "question_answered" | "thread_message_posted" | "reassigned" | "feedback_reject" | "feedback_archive" | "feedback_accept" | "commission_completed" | "recon_completed" | "review_approved" | "review_done_unreviewed" | "review_archived" | "review_sent_back" | "commit_linked";
                     /** @description ISO timestamp — return rows after this ts */
                     since?: string;
                     limit?: number;
@@ -12169,6 +12174,228 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/verify-lock/acquire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Take the verification lock, or find out who holds it
+         * @description Serialises the pre-push gate. Git already serialises the merge — a push either fast-forwards or is rejected — but the test suite is pinned to one Postgres whose setup drops the schema, so two agents verifying at once corrupt each other. 200 with acquired:false is the normal busy answer, not an error: wait for expires_in_seconds and retry.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["VerifyLockAcquire"];
+                };
+            };
+            responses: {
+                /** @description Lock state. Check `acquired`. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VerifyLockAcquireResult"];
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/verify-lock/extend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Heartbeat the lease
+         * @description Call periodically during a long gate. Only the holder can extend, and only while the lease is still live — once it lapses the lock is up for grabs and may already belong to someone else.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["VerifyLockExtend"];
+                };
+            };
+            responses: {
+                /** @description Lease extended */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VerifyLock"];
+                    };
+                };
+                /** @description Not the holder, or the lease already lapsed */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/verify-lock/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Release the lock
+         * @description Holder-scoped: an agent whose lease lapsed and was taken over cannot release the new holder's lock on its way out. `released:false` means there was nothing of yours to release.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["VerifyLockRelease"];
+                };
+            };
+            responses: {
+                /** @description Release result */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VerifyLockReleaseResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/verify-lock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List held locks */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Locks currently held, oldest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VerifyLockList"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/verify-lock/reap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Drop lapsed leases
+         * @description Cosmetic, not required for correctness — acquire already takes over an expired lock, so a dead holder blocks nobody. This stops a list of stale rows reading as a jammed fleet.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Number of lapsed leases removed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VerifyLockReapResult"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -12806,7 +13033,7 @@ export interface paths {
         };
         /**
          * Per-job effort and answer rate
-         * @description Effort from agent.end runs, value from job_ask_events. response_rate is null when the job asked nothing — a poller that never interrupts is not a job with a 0% answer rate.
+         * @description Effort from agent.end runs, value from job_ask_events. response_rate is null when the job asked nothing — a poller that never interrupts is not a job with a 0% answer rate — and also when answers_attributable is false, meaning the job asks somewhere we cannot see the reply.
          */
         get: {
             parameters: {
@@ -17381,6 +17608,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/skills/economics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Per-skill cost and model mix over a window
+         * @description Joins costs.dispatch_id to dispatch_queue.skill. Dearest first. A skill with no dispatch in the window is ABSENT rather than zeroed: did not run and ran for free are different answers and must not look alike.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Trailing window over dispatch created_at. */
+                    days?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Economics per skill, dearest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["SkillEconomicsRow"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/skills/routable": {
         parameters: {
             query?: never;
@@ -21215,6 +21486,184 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/money/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Current position, planned runway, and what needs attention
+         * @description Personal position excludes the Fourfold company category group. Never quote net worth or Ready to Assign as a personal figure. Tax categories sit at £0 by design pending the accountant — never populate them with an estimate. Everything under `plan` is derived from the BUDGET, i.e. intent: quote it as "at planned spend", never as measured burn (ADR-0036).
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Bypass the 15-minute cache. Costs one of YNAB’s 200 requests/hour. */
+                    fresh?: boolean | null;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Money summary */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MoneySummary"];
+                    };
+                };
+                /** @description YNAB rejected the request */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description YNAB_TOKEN / YNAB_BUDGET_ID not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/money/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Visible categories with budgeted / activity / balance */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Bypass the 15-minute cache. Costs one of YNAB’s 200 requests/hour. */
+                    fresh?: boolean | null;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Categories */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MoneyCategoryList"];
+                    };
+                };
+                /** @description YNAB rejected the request */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description YNAB_TOKEN / YNAB_BUDGET_ID not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/money/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent transactions, optionally only those needing a category */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Bypass the 15-minute cache. Costs one of YNAB’s 200 requests/hour. */
+                    fresh?: boolean | null;
+                    /** @description Lookback window in days */
+                    days?: number;
+                    /** @description Only return transactions with no category */
+                    needs_category?: boolean | null;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Transactions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MoneyTransactionList"];
+                    };
+                };
+                /** @description YNAB rejected the request */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description YNAB_TOKEN / YNAB_BUDGET_ID not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/discord/poll-attachments": {
@@ -25589,6 +26038,8 @@ export interface components {
             ts: string;
             stages: components["schemas"]["StageQueue"][];
             ticks_per_day: number;
+            /** @description How many next_up rows each stage was asked for. */
+            next_up_limit: number;
         };
         StageQueue: {
             /** @enum {string} */
@@ -25596,6 +26047,23 @@ export interface components {
             at_status: number;
             eligible: number;
             per_tick: number;
+            /** @description Items that arrived at this stage in the last 7 days. */
+            arrived_7d: number;
+            /** @description Items this stage moved on in the last 7 days. Below arrived_7d means the queue is growing and has no drain time. */
+            cleared_7d: number;
+            /** @description Head of the queue in the order the pump will take it (created_at ASC — grooming is FIFO, not priority-ordered). Length is capped by the `next` query param, so a short list can mean a short queue: compare against `eligible`. */
+            next_up: components["schemas"]["QueuedNote"][];
+        };
+        QueuedNote: {
+            id: string;
+            seq: number | null;
+            title: string;
+            type: string | null;
+            assigned_to: string | null;
+            ai_priority: number | null;
+            /** @description Attempts already burned. At pipeline.max_retries the note leaves the queue for a human. */
+            retry_count: number;
+            created_at: string;
         };
         PipelineTickResult: {
             ts: string;
@@ -25670,7 +26138,7 @@ export interface components {
             from_actor: string;
             /** @description Who performed the handoff */
             actor: string;
-            action: ("note_created" | "assigned" | "unassigned" | "priority_changed" | "priority_scored" | "actionability_changed" | "grooming_status_changed" | "grooming_override_changed" | "status_changed" | "dispatch_started" | "submitted_analysis" | "submitted_decomposition" | "submitted_deepread" | "question_raised" | "question_answered" | "thread_message_posted" | "reassigned" | "feedback_reject" | "feedback_archive" | "feedback_accept" | "commission_completed" | "recon_completed" | "review_approved" | "review_done_unreviewed" | "review_archived" | "review_sent_back" | "commit_linked") | string;
+            action: ("note_created" | "note_recurred" | "assigned" | "unassigned" | "priority_changed" | "priority_scored" | "actionability_changed" | "grooming_status_changed" | "grooming_override_changed" | "status_changed" | "dispatch_started" | "submitted_analysis" | "submitted_decomposition" | "submitted_deepread" | "question_raised" | "question_answered" | "thread_message_posted" | "reassigned" | "feedback_reject" | "feedback_archive" | "feedback_accept" | "commission_completed" | "recon_completed" | "review_approved" | "review_done_unreviewed" | "review_archived" | "review_sent_back" | "commit_linked") | string;
             reason: string | null;
             priority: number | null;
         };
@@ -25795,6 +26263,62 @@ export interface components {
             table: number;
             index: number;
             diff: number;
+            /** @description Index was built by a different source definition than the registry holds now. Row counts cannot detect this — the rows exist, but their indexed text is stale. Cleared by a restart (boot re-backfills drifted sources) or npm run search:reindex. */
+            definition_drift: boolean;
+        };
+        VerifyLockAcquireResult: {
+            acquired: boolean;
+            lock: components["schemas"]["VerifyLock"];
+            blocked_by?: {
+                holder: string;
+                purpose: string | null;
+                expires_in_seconds: number;
+            };
+        };
+        VerifyLock: {
+            resource: string;
+            holder: string;
+            purpose: string | null;
+            acquired_at: string;
+            expires_at: string;
+            takeovers: number;
+        };
+        VerifyLockAcquire: {
+            /**
+             * @description What is being serialised, e.g. "jimbo-api:verify". Agents landing work in the same repo must use the same string.
+             * @example jimbo-api:verify
+             */
+            resource: string;
+            /**
+             * @description Actor id taking the lock
+             * @example boris
+             */
+            holder: string;
+            /**
+             * @description What the holder is doing. Shown to whoever is queued behind it, and to a human deciding whether a stuck lock is safe to break.
+             * @example LOC-6241 — rebase + verify
+             */
+            purpose?: string;
+            /** @description Lease length. Clamped to 30..3600; default 600. Heartbeat with PATCH rather than asking for a long lease. */
+            ttl_seconds?: number;
+        };
+        VerifyLockExtend: {
+            resource: string;
+            holder: string;
+            ttl_seconds?: number;
+        };
+        VerifyLockReleaseResult: {
+            released: boolean;
+        };
+        VerifyLockRelease: {
+            resource: string;
+            holder: string;
+        };
+        VerifyLockList: {
+            items: components["schemas"]["VerifyLock"][];
+        };
+        VerifyLockReapResult: {
+            reaped: number;
         };
         HermesModelPrefs: {
             tiers: components["schemas"]["HermesModelTiers"];
@@ -25930,8 +26454,10 @@ export interface components {
             asked: number;
             answered: number;
             last_response_at: string | null;
-            /** @description null when the job asked nothing in the window — "no data", not 0%. */
+            /** @description null when the rate is not knowable — either the job asked nothing in the window, or its channel cannot surface a reply (answers_attributable = false). Never 0 for "we were not watching". `asked` is reported either way. */
             response_rate: number | null;
+            /** @description False when the job delivers where inbound is not observable, so a non-response and an unseen response are indistinguishable. Four jobs deliver on the hermes Telegram bot, whose webhook is not this API. */
+            answers_attributable: boolean;
             /** @enum {string|null} */
             rating: "keep" | "watch" | "cut" | null;
             rating_note: string | null;
@@ -27110,6 +27636,22 @@ export interface components {
             rejected: number;
             proposed: number;
             failed: number;
+            last_run_at: string | null;
+        };
+        SkillEconomicsRow: {
+            skill_id: string;
+            dispatches: number;
+            completed: number;
+            failed: number;
+            /** @description Rejected plus proposed-but-never-approved — work offered and turned down. */
+            declined: number;
+            /** @description Null when no turn in the window carried a priced model. Render as "—", never £0. */
+            cost_usd: number | null;
+            turns: number;
+            avg_input_tokens: number | null;
+            avg_output_tokens: number | null;
+            /** @description Models actually used, commonest first, as `model×count`. */
+            models: string[];
             last_run_at: string | null;
         };
         RoutableSkill: {
@@ -28293,6 +28835,98 @@ export interface components {
             distance_km?: number | null;
             avg_heart_rate?: number | null;
             notes?: string | null;
+        };
+        MoneySummary: {
+            budget: {
+                id: string;
+                name: string;
+                currency: string;
+                first_month: string;
+                last_month: string;
+            };
+            /** @description When this data was fetched from YNAB */
+            pulled_at: string;
+            /** @description Served from the 15-minute cache rather than a fresh pull */
+            cached: boolean;
+            position: {
+                /** @description On-budget cash across open accounts, company money included */
+                total_cash: number;
+                /** @description Balance held in the Fourfold category group */
+                company_fenced: number;
+                /** @description total_cash minus company_fenced. The ONLY figure to quote as his own money. */
+                personal: number;
+            };
+            /** @description Derived from the YNAB budget — what he INTENDS to spend, not what he has spent. Never quote as a measured figure; any surface showing it must say "at planned spend". The sibling `actual` key is reserved for the measured-transaction pipeline. See ADR-0036. */
+            plan: {
+                /** @description Budgeted across the spend groups, less lumpy top-ups */
+                monthly_spend: number;
+                /** @description null when nothing is budgeted yet */
+                runway_months: number | null;
+            };
+            month: {
+                month: string;
+                to_be_budgeted: number;
+                age_of_money: number | null;
+                income: number;
+                budgeted: number;
+                activity: number;
+            };
+            attention: {
+                uncategorised: number;
+                unapproved: number;
+                since: string;
+            };
+            /** @description The rules this response was computed under, so drift is visible rather than silent */
+            assumptions: {
+                company_group_matched: string | null;
+                spend_groups_counted: string[];
+                /** @description Expected spend groups absent from the budget — a rename makes runway look longer */
+                spend_groups_missing: string[];
+                lumpy_excluded: components["schemas"]["LumpyCategory"][];
+                tracking_accounts_excluded: string[];
+            };
+        };
+        LumpyCategory: {
+            name: string;
+            budgeted: number;
+            /**
+             * @description How it was identified. "name" is a fallback — set a real YNAB goal to make it "goal".
+             * @enum {string}
+             */
+            detected_by: "goal" | "name";
+        };
+        MoneyCategoryList: {
+            pulled_at: string;
+            cached: boolean;
+            categories: components["schemas"]["MoneyCategory"][];
+        };
+        MoneyCategory: {
+            group: string;
+            name: string;
+            budgeted: number;
+            activity: number;
+            balance: number;
+            goal_type: string | null;
+            lumpy: boolean;
+        };
+        MoneyTransactionList: {
+            pulled_at: string;
+            cached: boolean;
+            since: string;
+            count: number;
+            transactions: components["schemas"]["MoneyTransaction"][];
+        };
+        MoneyTransaction: {
+            id: string;
+            date: string;
+            /** @description Negative for outflow, positive for inflow */
+            amount: number;
+            payee: string | null;
+            /** @description null means genuinely uncategorised */
+            category: string | null;
+            is_transfer: boolean;
+            approved: boolean;
+            needs_category: boolean;
         };
         DiscordNotifyResponse: {
             /** @description The posted message id, or null if DISCORD_BOT_TOKEN is unset or the post failed — always 200 either way, since this is best-effort */
